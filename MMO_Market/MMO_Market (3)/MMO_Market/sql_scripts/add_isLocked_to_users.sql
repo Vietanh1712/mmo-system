@@ -1,0 +1,5 @@
+IF COL_LENGTH('Users', 'isLocked') IS NULL
+BEGIN
+    ALTER TABLE Users ADD isLocked BIT NOT NULL CONSTRAINT DF_Users_isLocked DEFAULT 0;
+END;
+GO
