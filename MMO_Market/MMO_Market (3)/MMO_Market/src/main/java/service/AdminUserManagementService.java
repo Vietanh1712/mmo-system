@@ -6,6 +6,7 @@ import controller.dto.AdminActionResponse;
 import controller.dto.AdminUserResponse;
 import controller.dto.StaffUpsertRequest;
 import dal.AuditLogRepository;
+import dal.AuthenticationRepository;
 import dal.UserRepository;
 import model.AuditLog;
 import model.User;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.time.LocalDateTime;
 
 @Service
 public class AdminUserManagementService {
@@ -28,15 +30,18 @@ public class AdminUserManagementService {
 
     private final UserRepository userRepository;
     private final AuditLogRepository auditLogRepository;
+    private final AuthenticationRepository authenticationRepository;
     private final ObjectMapper objectMapper;
     private final PasswordEncoder passwordEncoder;
 
     public AdminUserManagementService(UserRepository userRepository,
                                       AuditLogRepository auditLogRepository,
+                                      AuthenticationRepository authenticationRepository,
                                       ObjectMapper objectMapper,
                                       PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.auditLogRepository = auditLogRepository;
+        this.authenticationRepository = authenticationRepository;
         this.objectMapper = objectMapper;
         this.passwordEncoder = passwordEncoder;
     }
@@ -47,7 +52,7 @@ public class AdminUserManagementService {
         List<AdminUserResponse> users = filteredUsers(null, null);
         Map<String, Object> summary = new HashMap<>();
         summary.put("totalAccounts", users.size());
-        summary.put("activeAccounts", users.stream().filter(user -> !Boolean.TRUE.equals(user.getIsLocked())).count());
+        summary.put("activeAccounts", users.stream().filter(user -> Boolean.TRUE.equals(user.getIsOnline()) && !Boolean.TRUE.equals(user.getIsLocked())).count());
         summary.put("lockedAccounts", users.stream().filter(user -> Boolean.TRUE.equals(user.getIsLocked())).count());
         summary.put("staffAccounts", users.stream().filter(user -> "Staff".equals(user.getRole())).count());
         summary.put("verifiedAccounts", users.stream().filter(user -> Boolean.TRUE.equals(user.getIsVerified())).count());
@@ -146,16 +151,9 @@ public class AdminUserManagementService {
     public AdminUserResponse updateStaff(Long operatorId, Long staffId, StaffUpsertRequest request) {
         User operator = requireAdmin(operatorId);
         User staff = requireStaff(staffId);
-        validateStaffPayload(request, false);
+        validateStaffUpdatePayload(request);
 
-        String newEmail = request.getEmail().trim().toLowerCase(Locale.ROOT);
-        if (!newEmail.equalsIgnoreCase(staff.getEmail()) && Boolean.TRUE.equals(userRepository.existsByEmailAndIsDeleteFalse(newEmail))) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email da ton tai trong he thong.");
-        }
-
-        staff.setEmail(newEmail);
         staff.setFullName(request.getFullName().trim());
-        staff.setPhone(blankToNull(request.getPhone()));
         if (request.getPassword() != null && !request.getPassword().isBlank()) {
             staff.setPassword(passwordEncoder.encode(request.getPassword()));
         }
@@ -253,8 +251,13 @@ public class AdminUserManagementService {
                 .balanceVnd(user.getBalanceVnd())
                 .isVerified(Boolean.TRUE.equals(user.getIsVerified()))
                 .isLocked(Boolean.TRUE.equals(user.getIsLocked()))
+                .isOnline(isUserOnline(user.getId()))
                 .createdAt(user.getCreatedAt())
                 .build();
+    }
+
+    private boolean isUserOnline(Long userId) {
+        return authenticationRepository.existsByUserIdAndIsRevokedFalseAndIsDeleteFalseAndCreatedAtAfter(userId, LocalDateTime.now().minusMinutes(15));
     }
 
     private String normalizeRole(String roleValue) {
@@ -316,6 +319,18 @@ public class AdminUserManagementService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mat khau Staff phai co it nhat 6 ky tu.");
         }
         if (!requirePassword && request.getPassword() != null && !request.getPassword().isBlank() && request.getPassword().length() < 6) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mat khau Staff phai co it nhat 6 ky tu.");
+        }
+    }
+
+    private void validateStaffUpdatePayload(StaffUpsertRequest request) {
+        if (request == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Du lieu Staff khong hop le.");
+        }
+        if (request.getFullName() == null || request.getFullName().trim().length() < 3) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ho ten Staff phai co it nhat 3 ky tu.");
+        }
+        if (request.getPassword() != null && !request.getPassword().isBlank() && request.getPassword().length() < 6) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mat khau Staff phai co it nhat 6 ky tu.");
         }
     }

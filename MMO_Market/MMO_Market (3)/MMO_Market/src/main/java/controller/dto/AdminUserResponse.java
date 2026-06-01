@@ -17,5 +17,6 @@ public class AdminUserResponse {
     private Long balanceVnd;
     private Boolean isVerified;
     private Boolean isLocked;
+    private Boolean isOnline;
     private LocalDateTime createdAt;
 }

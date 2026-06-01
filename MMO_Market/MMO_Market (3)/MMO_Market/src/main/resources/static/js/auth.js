@@ -1,10 +1,15 @@
 const API_BASE = 'http://localhost:8080/api';
+['accessToken', 'refreshToken', 'loginTimestamp', 'userInfo', 'user'].forEach(key => {
+    if (!sessionStorage.getItem('accessToken')) {
+        localStorage.removeItem(key);
+    }
+});
 
 // =======================================================
 // 1. UTILITIES & AUTH FETCH
 // =======================================================
 async function authFetch(url, options = {}) {
-    const token = localStorage.getItem('accessToken');
+    const token = sessionStorage.getItem('accessToken');
     const headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -17,12 +22,36 @@ async function authFetch(url, options = {}) {
         if (typeof logout === 'function') {
             logout();
         } else {
-            localStorage.clear();
+            sessionStorage.clear();
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('loginTimestamp');
+            localStorage.removeItem('userInfo');
+            localStorage.removeItem('user');
             window.location.href = '/login';
         }
         throw new Error('Phiên đăng nhập hết hạn hoặc không hợp lệ.');
     }
     return response;
+}
+
+function logout() {
+    const refreshToken = sessionStorage.getItem('refreshToken');
+    if (refreshToken) {
+        fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken }),
+            keepalive: true
+        }).catch(() => {});
+    }
+    sessionStorage.clear();
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('loginTimestamp');
+    localStorage.removeItem('userInfo');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
 }
 
 // =======================================================
@@ -99,13 +128,13 @@ async function topUp(amount) {
 }
 
 function updateUserBalance(newBalance) {
-    const userString = localStorage.getItem('user');
+    const userString = sessionStorage.getItem('user');
     if (!userString) return;
 
     try {
         const user = JSON.parse(userString);
         user.balanceVnd = newBalance;
-        localStorage.setItem('user', JSON.stringify(user));
+        sessionStorage.setItem('user', JSON.stringify(user));
 
         if (typeof updateHeaderForLoggedInUser === 'function') {
             updateHeaderForLoggedInUser();
@@ -318,11 +347,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     alertBox.className = 'message success';
                     alertBox.style.display = 'block';
 
-                    localStorage.setItem('accessToken', res.body.accessToken);
+                    sessionStorage.setItem('accessToken', res.body.accessToken);
                     if (res.body.refreshToken) {
-                        localStorage.setItem('refreshToken', res.body.refreshToken);
+                        sessionStorage.setItem('refreshToken', res.body.refreshToken);
                     }
-                    localStorage.setItem('loginTimestamp', Date.now().toString());
+                    sessionStorage.setItem('loginTimestamp', Date.now().toString());
 
                     const userInfo = {
                         id: res.body.userId,
@@ -331,8 +360,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         role: res.body.role,
                         balanceVnd: res.body.balanceVnd || 0
                     };
-                    localStorage.setItem('userInfo', JSON.stringify(userInfo));
-                    localStorage.setItem('user', JSON.stringify(userInfo));
+                    sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
+                    sessionStorage.setItem('user', JSON.stringify(userInfo));
 
                     const redirectUrl = normalizeRole(userInfo.role) === 'Admin' ? '/admin/users' : '/';
                     setTimeout(() => window.location.href = redirectUrl, 1000);

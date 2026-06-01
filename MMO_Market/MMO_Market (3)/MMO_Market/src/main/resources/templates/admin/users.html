@@ -697,7 +697,7 @@
     }
 
     function guardAdminAccess() {
-        const token = localStorage.getItem('accessToken');
+        const token = sessionStorage.getItem('accessToken');
         const user = readCurrentUser();
         if (!token || !user) {
             window.location.href = '/login';
@@ -797,6 +797,10 @@
         tbody.innerHTML = list.map(user => {
             const initial = String(user.fullName || user.email || '?').charAt(0).toUpperCase();
             const locked = Boolean(user.isLocked);
+            const online = Boolean(user.isOnline);
+            const statusClass = locked ? 'locked' : (online ? 'ok' : 'pending');
+            const statusIcon = locked ? 'fa-lock' : (online ? 'fa-check' : 'fa-clock-o');
+            const statusText = locked ? 'Bị khóa' : (online ? 'Đang hoạt động' : 'Chưa hoạt động');
             const role = user.role || 'Customer';
             const roleClass = `role-${role.toLowerCase().replace('_', '-')}`;
             const balance = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(user.balanceVnd || 0);
@@ -817,7 +821,7 @@
                         </div>
                     </td>
                     <td><span class="badge ${roleClass}">${escapeHtml(role)}</span></td>
-                    <td><span class="badge ${locked ? 'locked' : 'ok'}"><i class="fa ${locked ? 'fa-lock' : 'fa-check'}"></i>${locked ? 'Bị khóa' : 'Hoạt động'}</span></td>
+                    <td><span class="badge ${statusClass}"><i class="fa ${statusIcon}"></i>${statusText}</span></td>
                     <td><span class="badge ${user.isVerified ? 'ok' : 'pending'}">${user.isVerified ? 'Đã xác thực' : 'Chưa xác thực'}</span></td>
                     <td><strong>${balance}</strong></td>
                     <td>${createdAt}</td>
@@ -871,6 +875,8 @@
         document.getElementById('staffFullName').value = staff?.fullName || '';
         document.getElementById('staffPhone').value = staff?.phone || '';
         document.getElementById('staffPassword').value = '';
+        document.getElementById('staffEmail').disabled = isEdit;
+        document.getElementById('staffPhone').disabled = isEdit;
         document.getElementById('staffPassword').placeholder = isEdit ? 'Để trống nếu không đổi' : 'Tối thiểu 6 ký tự';
         document.getElementById('staffPassword').required = !isEdit;
         document.getElementById('staffModal').classList.add('active');
@@ -880,6 +886,8 @@
         document.getElementById('staffModal').classList.remove('active');
         document.getElementById('staffForm').reset();
         document.getElementById('staffId').value = '';
+        document.getElementById('staffEmail').disabled = false;
+        document.getElementById('staffPhone').disabled = false;
     }
 
     async function submitStaff() {
@@ -890,7 +898,11 @@
             phone: document.getElementById('staffPhone').value.trim(),
             password: document.getElementById('staffPassword').value
         };
-        if (!payload.email || !payload.fullName || (!id && !payload.password)) {
+        if (id) {
+            delete payload.email;
+            delete payload.phone;
+        }
+        if ((!id && !document.getElementById('staffEmail').value.trim()) || !payload.fullName || (!id && !payload.password)) {
             showToast('Vui lòng nhập đủ email, họ tên và mật khẩu khi tạo Staff.', true);
             return;
         }
@@ -943,7 +955,7 @@
 
     function readCurrentUser() {
         try {
-            return JSON.parse(localStorage.getItem('userInfo') || localStorage.getItem('user') || 'null');
+            return JSON.parse(sessionStorage.getItem('userInfo') || sessionStorage.getItem('user') || 'null');
         } catch (error) {
             return null;
         }
@@ -952,4 +964,33 @@
     function normalizeRole(roleValue) {
         if (!roleValue) return 'Customer';
         try {
-            const parsed = J
+            const parsed = JSON.parse(roleValue);
+            return parsed.role || 'Customer';
+        } catch (error) {
+            const role = String(roleValue).replaceAll('"', '').trim();
+            if (role.toLowerCase().includes('admin')) return 'Admin';
+            if (role.toLowerCase().includes('staff')) return 'Staff';
+            if (role.toLowerCase().includes('seller')) return 'Seller';
+            return 'Customer';
+        }
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
+
+    function debounce(fn, wait) {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => fn.apply(null, args), wait);
+        };
+    }
+</script>
+</body>
+</html>
