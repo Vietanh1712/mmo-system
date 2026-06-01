@@ -43,6 +43,9 @@ public class User {
     @Column(name = "isVerified")
     private Boolean isVerified; // Default: false
 
+    @Column(name = "isLocked")
+    private Boolean isLocked; // Default: false
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -66,6 +69,9 @@ public class User {
         if (isVerified == null) {
             isVerified = false;
         }
+        if (isLocked == null) {
+            isLocked = false;
+        }
         if (isDelete == null) {
             isDelete = false;
         }
@@ -79,4 +85,3 @@ public class User {
         updatedAt = LocalDateTime.now();
     }
 }
-

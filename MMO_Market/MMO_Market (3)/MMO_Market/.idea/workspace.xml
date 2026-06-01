@@ -5,61 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/../.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/MMO_Market.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources/11990a64-5c66-4ae7-9a29-663ece8c977e/storage_v2/_src_/database/MMO_System.350aVw.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources/11990a64-5c66-4ae7-9a29-663ece8c977e/storage_v2/_src_/database/MMO_System.350aVw/schema/INFORMATION_SCHEMA.NBgcMw.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources/11990a64-5c66-4ae7-9a29-663ece8c977e/storage_v2/_src_/database/MMO_System.350aVw/schema/dbo.sYMBAA.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources/11990a64-5c66-4ae7-9a29-663ece8c977e/storage_v2/_src_/database/MMO_System.350aVw/schema/dbo.sYMBAA.zip" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources/11990a64-5c66-4ae7-9a29-663ece8c977e/storage_v2/_src_/database/MMO_System.350aVw/schema/sys.zb4BAA.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.vscode/settings.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/MMO_Market.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/node_modules/lines-and-columns/build/index.d.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/node_modules/lines-and-columns/build/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/node_modules/tailwindcss/lib/cli/build/deps.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/node_modules/tailwindcss/lib/cli/build/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/node_modules/tailwindcss/lib/cli/build/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/node_modules/tailwindcss/lib/cli/build/utils.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/node_modules/tailwindcss/lib/cli/build/watching.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/node_modules/tailwindcss/src/cli/build/deps.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/node_modules/tailwindcss/src/cli/build/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/node_modules/tailwindcss/src/cli/build/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/node_modules/tailwindcss/src/cli/build/utils.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/node_modules/tailwindcss/src/cli/build/watching.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/controller/dto/AdminUserResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/service/AdminUserManagementService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/templates/admin/users.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/java/service/AdminUserManagementServiceTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/classes/application.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/classes/static/components/AdvancedSearchBar.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/classes/static/css/AdvancedSearchBar.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/classes/static/css/authen/authen.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/classes/static/css/common.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/classes/static/css/home.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/classes/static/images/.gitkeep" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/classes/static/images/login-bg.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/classes/static/js/auth.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/classes/templates/admin/users.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/classes/templates/auth/forgot-password.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/classes/templates/auth/login.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/classes/templates/auth/register.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/classes/templates/auth/reset-password.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/classes/templates/auth/verify-otp.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/classes/templates/dashboard/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/classes/templates/fragments/footer.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/classes/templates/fragments/header.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/classes/templates/home.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/classes/templates/homepage/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../MMO_Market.zip" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/dal/AuthenticationRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/dal/AuthenticationRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/auth.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/auth.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/profile.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/profile.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/header.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/header.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/security/SecurityConfig.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -426,7 +373,7 @@
     "Spring Boot.MMOMarketApplication.executor": "Debug",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "Merging AnhTV",
+    "git-widget-placeholder": "AnhTV",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/SU26/SWP/mmo-system/MMO_Market/MMO_Market (3)/MMO_Market",
@@ -579,6 +526,7 @@
       <workItem from="1780307648486" duration="2312000" />
       <workItem from="1780323063155" duration="3236000" />
       <workItem from="1780331115437" duration="389000" />
+      <workItem from="1780333477696" duration="1699000" />
     </task>
     <servers />
   </component>
