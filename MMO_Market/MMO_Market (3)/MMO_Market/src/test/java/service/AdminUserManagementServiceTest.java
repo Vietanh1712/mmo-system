@@ -2,6 +2,7 @@ package service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dal.AuditLogRepository;
+import dal.AuthenticationRepository;
 import dal.UserRepository;
 import model.AuditLog;
 import model.User;
@@ -28,13 +29,16 @@ class AdminUserManagementServiceTest {
     private AuditLogRepository auditLogRepository;
 
     @Mock
+    private AuthenticationRepository authenticationRepository;
+
+    @Mock
     private PasswordEncoder passwordEncoder;
 
     private AdminUserManagementService service;
 
     @BeforeEach
     void setUp() {
-        service = new AdminUserManagementService(userRepository, auditLogRepository, new ObjectMapper(), passwordEncoder);
+        service = new AdminUserManagementService(userRepository, auditLogRepository, authenticationRepository, new ObjectMapper(), passwordEncoder);
     }
 
     @Test

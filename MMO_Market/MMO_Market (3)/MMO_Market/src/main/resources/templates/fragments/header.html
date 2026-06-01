@@ -31,7 +31,7 @@
             <i class="fa fa-users"></i> Quản lý người dùng
         </div>
         <div class="dropdown-divider"></div>
-        <div class="dropdown-item" onclick="if(typeof logout === 'function') logout(); else { localStorage.clear(); window.location.href='/login'; }">
+        <div class="dropdown-item" onclick="if(typeof logout === 'function') logout(); else { sessionStorage.clear(); localStorage.removeItem('accessToken'); localStorage.removeItem('refreshToken'); localStorage.removeItem('loginTimestamp'); localStorage.removeItem('userInfo'); localStorage.removeItem('user'); window.location.href='/login'; }">
             <i class="fa fa-sign-out-alt"></i> Đăng xuất
         </div>
     </div>
@@ -50,25 +50,30 @@
     <script th:inline="javascript">
         // 1. CÀI ĐẶT THỜI GIAN HẾT HẠN PHIÊN ĐĂNG NHẬP
         const SESSION_TIMEOUT_MS = 15 * 60 * 1000;        document.addEventListener('DOMContentLoaded', () => {
-            const token = localStorage.getItem("accessToken");
-            const userString = localStorage.getItem("userInfo") || localStorage.getItem("user");
+            ['accessToken', 'refreshToken', 'loginTimestamp', 'userInfo', 'user'].forEach(key => {
+                if (!sessionStorage.getItem('accessToken')) {
+                    localStorage.removeItem(key);
+                }
+            });
+            const token = sessionStorage.getItem("accessToken");
+            const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user");
 
             const authArea = document.getElementById('headerAuthArea');
             const dropdown = document.getElementById('userDropdown');
 
             // 2. KIỂM TRA HẾT HẠN PHIÊN ĐĂNG NHẬP (AUTO-LOGOUT)
             if (token && token !== "null" && token !== "undefined") {
-                const loginTimestamp = localStorage.getItem("loginTimestamp");
+                const loginTimestamp = sessionStorage.getItem("loginTimestamp");
                 const currentTime = Date.now();
 
                 if (!loginTimestamp) {
                     // Nếu chưa có mốc thời gian, tạo mới mốc thời gian đăng nhập
-                    localStorage.setItem("loginTimestamp", currentTime.toString());
+                    sessionStorage.setItem("loginTimestamp", currentTime.toString());
                 } else {
                     // Kiểm tra nếu thời gian trôi qua lớn hơn thời gian cho phép
                     if (currentTime - parseInt(loginTimestamp) > SESSION_TIMEOUT_MS) {
                         console.warn("Phiên đăng nhập đã hết hạn. Đang đăng xuất...");
-                        localStorage.clear(); // Xóa toàn bộ dữ liệu (token, user, timestamp)
+                        sessionStorage.clear(); // Xóa toàn bộ dữ liệu (token, user, timestamp)
                         window.location.href = '/login';
                         return; // Dừng chạy đoạn code bên dưới
                     }
@@ -99,7 +104,7 @@
                         }
 
                         authArea.innerHTML = `
-                            <button class="auth-btn btn-login" type="button" onclick="if(typeof logout === 'function') logout(); else { localStorage.clear(); window.location.href='/login'; }">
+                            <button class="auth-btn btn-login" type="button" onclick="if(typeof logout === 'function') logout(); else { sessionStorage.clear(); localStorage.removeItem('accessToken'); localStorage.removeItem('refreshToken'); localStorage.removeItem('loginTimestamp'); localStorage.removeItem('userInfo'); localStorage.removeItem('user'); window.location.href='/login'; }">
                                 Đăng xuất
                             </button>
                         `;
@@ -135,7 +140,7 @@
                     }
                 } catch (error) {
                     console.error("Lỗi khi parse thông tin user:", error);
-                    localStorage.clear();
+                    sessionStorage.clear();
                     window.location.reload();
                 }
             } else {
@@ -159,7 +164,7 @@
 
         // Hàm hỗ trợ kiểm tra trạng thái đăng nhập bảo mật hơn
         function checkAuthAndRedirect(url) {
-            const token = localStorage.getItem("accessToken");
+            const token = sessionStorage.getItem("accessToken");
             if (!token || token === "null" || token === "undefined") {
                 window.location.href = '/login';
             } else {
