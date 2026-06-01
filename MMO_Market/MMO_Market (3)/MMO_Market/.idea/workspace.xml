@@ -1,0 +1,600 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/MMO_Market.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/dataSources/11990a64-5c66-4ae7-9a29-663ece8c977e/storage_v2/_src_/database/MMO_System.350aVw.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/dataSources/11990a64-5c66-4ae7-9a29-663ece8c977e/storage_v2/_src_/database/MMO_System.350aVw/schema/INFORMATION_SCHEMA.NBgcMw.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/dataSources/11990a64-5c66-4ae7-9a29-663ece8c977e/storage_v2/_src_/database/MMO_System.350aVw/schema/dbo.sYMBAA.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/dataSources/11990a64-5c66-4ae7-9a29-663ece8c977e/storage_v2/_src_/database/MMO_System.350aVw/schema/dbo.sYMBAA.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/dataSources/11990a64-5c66-4ae7-9a29-663ece8c977e/storage_v2/_src_/database/MMO_System.350aVw/schema/sys.zb4BAA.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.vscode/settings.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/MMO_Market.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/lines-and-columns/build/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/lines-and-columns/build/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/tailwindcss/lib/cli/build/deps.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/tailwindcss/lib/cli/build/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/tailwindcss/lib/cli/build/plugin.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/tailwindcss/lib/cli/build/utils.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/tailwindcss/lib/cli/build/watching.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/tailwindcss/src/cli/build/deps.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/tailwindcss/src/cli/build/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/tailwindcss/src/cli/build/plugin.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/tailwindcss/src/cli/build/utils.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/tailwindcss/src/cli/build/watching.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/controller/dto/AdminUserResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/service/AdminUserManagementService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/templates/admin/users.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/service/AdminUserManagementServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/target/classes/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/target/classes/static/components/AdvancedSearchBar.jsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/target/classes/static/css/AdvancedSearchBar.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/target/classes/static/css/authen/authen.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/target/classes/static/css/common.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/target/classes/static/css/home.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/target/classes/static/images/.gitkeep" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/target/classes/static/images/login-bg.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/target/classes/static/js/auth.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/target/classes/templates/admin/users.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/target/classes/templates/auth/forgot-password.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/target/classes/templates/auth/login.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/target/classes/templates/auth/register.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/target/classes/templates/auth/reset-password.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/target/classes/templates/auth/verify-otp.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/target/classes/templates/dashboard/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/target/classes/templates/fragments/footer.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/target/classes/templates/fragments/header.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/target/classes/templates/home.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/target/classes/templates/homepage/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../MMO_Market.zip" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/dal/AuthenticationRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/dal/AuthenticationRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/auth.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/auth.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/profile.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/profile.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/header.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/header.html" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CopilotChats">
+    <option name="panelChat">
+      <chat>
+        <option name="activeSessionId" value="fbc8d278-d5ba-43f4-bd8f-0a6445e586bf" />
+        <option name="sessions">
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="cb9b9b00-4e17-41b0-a54f-e306c97be818" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+            <option name="status" value="Stopped" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="9de2b300-518e-4a55-9c8c-5793bd024f6a" />
+            <option name="modeId" value="Ask" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="b21d410d-7a0f-41ba-aecc-9c6c5401a457" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="69eb03cd-134c-4253-bd3f-99125799f0dc" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="085c57d4-1e96-4ce1-9429-4b9658c27f00" />
+            <option name="modeId" value="Ask" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="auto" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="302fe74a-230c-400c-8bc3-1e4473c438c0" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+            <option name="status" value="Stopped" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="bfee8dea-9ced-4a05-af1e-c155ac78bf03" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="30643523-d6a2-4d10-8e35-45eb4f361d19" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="db2f9d16-6a63-474f-855f-c62c03ad2c21" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="5bb2e0fa-8301-4599-9756-c1762ea3a2c6" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="a2875ff2-80d2-45bc-bcf4-60b0277e1de3" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="34196c5f-7bb9-43e3-afde-bfdf0684808d" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+            <option name="status" value="Stopped" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="5e877925-a3f9-4eb5-96c1-2034285ae865" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="auto" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="b012e004-dda0-4755-a909-6a0233e92c59" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+            <option name="status" value="Stopped" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="59db6089-aebc-4278-9640-0e0bd7ef3232" />
+            <option name="modeId" value="Ask" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="auto" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="8e3eb17c-9a68-4b0c-acb5-ce4d04b94aa0" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+            <option name="status" value="Stopped" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="c746db4d-b74a-4122-aff8-225ae458612b" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="dfb6e7c2-36ec-494d-8b60-44f9c7b4e0b3" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="d1921bae-ec46-467a-a44a-674dcd8c9728" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+            <option name="status" value="Stopped" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="0c39ee84-d0ad-4371-a627-3aec2095b292" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="a47fe657-7ade-4584-bff4-2261dc55a4c2" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="bd229253-b93a-4e3f-a9df-50a5638bdbfd" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="6fa30ccf-f23d-40f4-9df4-60dc0396cb2f" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="fbc8d278-d5ba-43f4-bd8f-0a6445e586bf" />
+            <option name="modeId" value="Ask" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="auto" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+        </option>
+        <option name="type" value="PANEL" />
+      </chat>
+    </option>
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_C:/SU26/SWP/mmo-system/MMO_Market/MMO_Market (3)/MMO_Market" value="3EWlRNqVPYsSgSRh0jYGZPFRH3X" />
+      <entry key="_C:/Users/pc/Downloads/MMO_Market" value="3EUOi3apsbWwdIoQdHdHnFqF4Pa" />
+      <entry key="_C:/Users/pc/IdeaProjects/MMO_Market" value="3ELTrS0JIZMH30ZqfkiIKUzUnpE" />
+    </persistenceIdMap>
+  </component>
+  <component name="CopilotUserSelectedModel">
+    <selectedModels>
+      <entry key="agent-panel" value="Claude Haiku 4.5" />
+      <entry key="chat-panel" value="Claude Haiku 4.5" />
+    </selectedModels>
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="112" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+        <option value="Spring Repository" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../../.." />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="jar://$MAVEN_REPOSITORY$/org/springframework/security/spring-security-config/6.1.5/spring-security-config-6.1.5-sources.jar!/org/springframework/security/config/annotation/authentication/configuration/AuthenticationConfiguration.java" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="HttpClientEndpointsTabState">
+    <option name="cachedRequestData" value="&lt;CachedHttpClientTabRequests&gt;&#10;  &lt;entry key=&quot;074ebdd144d72534723332fdb2263732b040aa77&quot; value=&quot;###&amp;#10;GET http://localhost:8080/api/auth/health&quot; /&gt;&#10;&lt;/CachedHttpClientTabRequests&gt;" />
+  </component>
+  <component name="HttpClientOnboardingState">{
+  &quot;isOnboardingCommentShown&quot;: true
+}</component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0000000000597862" />
+      <entry key="S5" value="1.000337780320689" />
+      <entry key="S10" value="1.060812179903021" />
+      <entry key="S30" value="3.062557434433626" />
+      <entry key="S60" value="6.766574716274428" />
+      <entry key="M2" value="11.677049268511993" />
+      <entry key="M5" value="17.24289276234749" />
+      <entry key="M10" value="19.857667384652842" />
+      <entry key="M15" value="20.841027011665783" />
+      <entry key="M30" value="21.886977043232" />
+      <entry key="H1" value="22.434811302080703" />
+      <entry key="H2" value="22.715198528361668" />
+      <entry key="H4" value="22.85704268047285" />
+      <entry key="D1" value="22.97609606554527" />
+      <entry key="W1" value="22.996583243620872" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.55864356903611" />
+      <entry key="MS500" value="0.8900757332524964" />
+      <entry key="S2" value="0.9713074955969447" />
+      <entry key="S5" value="0.9887521626631365" />
+      <entry key="S10" value="1.0543139826703376" />
+      <entry key="S30" value="3.0534255212957473" />
+      <entry key="S60" value="6.756491560004086" />
+      <entry key="M2" value="11.668877259236396" />
+      <entry key="M5" value="17.238344170331168" />
+      <entry key="M10" value="19.855107247900328" />
+      <entry key="M15" value="20.83924977784894" />
+      <entry key="M30" value="21.88605125705061" />
+      <entry key="H1" value="22.43433873470978" />
+      <entry key="H2" value="22.71495977653792" />
+      <entry key="H4" value="22.856922681212602" />
+      <entry key="D1" value="22.976075978550938" />
+      <entry key="W1" value="22.996580371909673" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
+  <component name="ProjectId" id="3ELTrS0JIZMH30ZqfkiIKUzUnpE" />
+  <component name="ProjectSessionTemplates">
+    <option name="panelTemplate">
+      <template>
+        <option name="modeId" value="Agent" />
+        <option name="model">
+          <model>
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+          </model>
+        </option>
+        <option name="targetType" value="LOCAL" />
+      </template>
+    </option>
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "JUnit.All in MMO_Market (1).executor": "Run",
+    "JUnit.All in MMO_Market (2).executor": "Run",
+    "JUnit.All in MMO_Market (3).executor": "Run",
+    "JUnit.All in MMO_Market (4).executor": "Run",
+    "JUnit.All in MMO_Market (5).executor": "Run",
+    "JUnit.All in MMO_Market.executor": "Run",
+    "JUnit.DBTest.executor": "Run",
+    "JUnit.DBTest.testConnection.executor": "Run",
+    "JUnit.test in MMO_Market.executor": "Run",
+    "Maven. [org.apache.maven.plugins:maven-archetype-plugin:RELEASE:generate].executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "Spring Boot.MMOMarketApplication (1).executor": "Run",
+    "Spring Boot.MMOMarketApplication.executor": "Debug",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "Merging AnhTV",
+    "junie.onboarding.icon.badge.shown": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/SU26/SWP/mmo-system/MMO_Market/MMO_Market (3)/MMO_Market",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "sqlserver"
+    ]
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\pc\IdeaProjects\MMO_Market\src\main\webapp" />
+      <recent name="C:\Users\pc\IdeaProjects\MMO_Market\src\main\resources" />
+      <recent name="C:\Users\pc\IdeaProjects\MMO_Market\src" />
+      <recent name="C:\Users\pc\IdeaProjects\MMO_Market\src\main\java" />
+      <recent name="C:\Users\pc\IdeaProjects\MMO_Market\src\main\java\model" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\pc\IdeaProjects\MMO_Market\src\main\resources\static\css\templates" />
+      <recent name="C:\Users\pc\IdeaProjects\MMO_Market\src\main\webapp\css\authen" />
+      <recent name="C:\Users\pc\IdeaProjects\MMO_Market" />
+    </key>
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="model" />
+      <recent name="dal" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Spring Boot.MMOMarketApplication (1)">
+    <configuration name="All in MMO_Market (2)" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="MMO_Market" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="TEST_OBJECT" value="package" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="All in MMO_Market" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="MMO_Market" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="TEST_OBJECT" value="package" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="DBTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="MMO_Market" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="MAIN_CLASS_NAME" value="DBTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="DBTest.testConnection" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="MMO_Market" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="MAIN_CLASS_NAME" value="DBTest" />
+      <option name="METHOD_NAME" value="testConnection" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MMOMarketApplication (1)" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
+      <module name="MMO_Market" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.mmo.MMOMarketApplication" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.mmo.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MMOMarketApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="MMO_Market" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="MMOMarketApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="JUnit.All in MMO_Market" />
+      <item itemvalue="JUnit.DBTest.testConnection" />
+      <item itemvalue="JUnit.All in MMO_Market (2)" />
+      <item itemvalue="JUnit.DBTest" />
+      <item itemvalue="Spring Boot.MMOMarketApplication" />
+      <item itemvalue="Spring Boot.MMOMarketApplication (1)" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Spring Boot.MMOMarketApplication (1)" />
+        <item itemvalue="JUnit.DBTest.testConnection" />
+        <item itemvalue="JUnit.DBTest" />
+        <item itemvalue="JUnit.All in MMO_Market" />
+        <item itemvalue="JUnit.All in MMO_Market (2)" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-fbdcb00ec9e3-intellij.indexing.shared.core-IU-251.26094.121" />
+        <option value="bundled-js-predefined-d6986cc7102b-b26f3e71634d-JavaScript-IU-251.26094.121" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="" />
+      <created>1779957051929</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1779957051929</updated>
+      <workItem from="1779957053139" duration="5928000" />
+      <workItem from="1779978801223" duration="1103000" />
+      <workItem from="1779981177542" duration="327000" />
+      <workItem from="1780060658662" duration="980000" />
+      <workItem from="1780061666811" duration="171000" />
+      <workItem from="1780061864442" duration="7419000" />
+      <workItem from="1780099333503" duration="530000" />
+      <workItem from="1780099907905" duration="47000" />
+      <workItem from="1780099972731" duration="9341000" />
+      <workItem from="1780109453846" duration="1996000" />
+      <workItem from="1780148697118" duration="112000" />
+      <workItem from="1780149683050" duration="502000" />
+      <workItem from="1780150219713" duration="150000" />
+      <workItem from="1780151008070" duration="18000" />
+      <workItem from="1780190972364" duration="179000" />
+      <workItem from="1780192611834" duration="633000" />
+      <workItem from="1780193261948" duration="13584000" />
+      <workItem from="1780218670267" duration="5102000" />
+      <workItem from="1780229807176" duration="6553000" />
+      <workItem from="1780280171400" duration="1268000" />
+      <workItem from="1780302200615" duration="3311000" />
+      <workItem from="1780307648486" duration="2312000" />
+      <workItem from="1780323063155" duration="3236000" />
+      <workItem from="1780331115437" duration="389000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+  <component name="github-copilot-workspace">
+    <instructionFileLocations>
+      <option value=".github/instructions" />
+    </instructionFileLocations>
+    <promptFileLocations>
+      <option value=".github/prompts" />
+    </promptFileLocations>
+  </component>
+</project>

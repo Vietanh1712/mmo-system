@@ -12,7 +12,7 @@ function initializeProfilePage() {
 }
 
 async function loadProfile() {
-    const token = localStorage.getItem('accessToken');
+    const token = sessionStorage.getItem('accessToken');
     if (!token || token === 'null' || token === 'undefined') {
         window.location.href = '/login';
         return;
@@ -201,6 +201,6 @@ function updateCachedProfile(profile) {
         balanceVnd: profile.balanceVnd
     };
 
-    localStorage.setItem('userInfo', JSON.stringify(cachedProfile));
-    localStorage.setItem('user', JSON.stringify(cachedProfile));
+    sessionStorage.setItem('userInfo', JSON.stringify(cachedProfile));
+    sessionStorage.setItem('user', JSON.stringify(cachedProfile));
 }

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="fca031ef-6e01-406d-a126-647ed2019a7c" name="Changes" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_C:/Users/pc/Downloads/MMO_Market (3)" value="3EWY1feXgdq4m7d6XKKcGmyjx8E" />
+    </persistenceIdMap>
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="191" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.000000219389832" />
+      <entry key="MS500" value="1.0465846995874664" />
+      <entry key="S2" value="1.4645803371254567" />
+      <entry key="S5" value="1.7359093653951765" />
+      <entry key="S10" value="1.8578515987017665" />
+      <entry key="S30" value="1.9501759964610397" />
+      <entry key="S60" value="1.9747697145793153" />
+      <entry key="M2" value="1.9873042664646574" />
+      <entry key="M5" value="1.9949022327327046" />
+      <entry key="M10" value="1.997447859656185" />
+      <entry key="M15" value="1.9982978485686318" />
+      <entry key="M30" value="1.999148561810821" />
+      <entry key="H1" value="1.9995741902484383" />
+      <entry key="H2" value="1.9997870724551494" />
+      <entry key="H4" value="1.9998935305597039" />
+      <entry key="D1" value="1.9999822543060284" />
+      <entry key="W1" value="1.9999974648815808" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.10584325376501358" />
+      <entry key="MS500" value="0.6771206717355732" />
+      <entry key="S2" value="1.3380525049278327" />
+      <entry key="S5" value="1.6789437787704882" />
+      <entry key="S10" value="1.8280075598543946" />
+      <entry key="S30" value="1.9398901426368806" />
+      <entry key="S60" value="1.9695821313795228" />
+      <entry key="M2" value="1.9846991200493087" />
+      <entry key="M5" value="1.9938574242137033" />
+      <entry key="M10" value="1.9969249949886627" />
+      <entry key="M15" value="1.997949169655882" />
+      <entry key="M30" value="1.9989741710818127" />
+      <entry key="H1" value="1.9994869820585022" />
+      <entry key="H2" value="1.9997434651529136" />
+      <entry key="H4" value="1.9998717261066554" />
+      <entry key="D1" value="1.9999786201191314" />
+      <entry key="W1" value="1.9999969457092959" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 3,
+  "fromUser": false
+}]]></component>
+  <component name="ProjectId" id="3EWY1feXgdq4m7d6XKKcGmyjx8E" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "Spring Boot.MMOMarketApplication.executor": "Run",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/pc/Downloads/MMO_Market (3)",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RunManager">
+    <configuration name="MMOMarketApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="MMO_Market" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.mmo.MMOMarketApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.24374.151" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="fca031ef-6e01-406d-a126-647ed2019a7c" name="Changes" comment="" />
+      <created>1780295579147</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1780295579147</updated>
+      <workItem from="1780295580504" duration="2711000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

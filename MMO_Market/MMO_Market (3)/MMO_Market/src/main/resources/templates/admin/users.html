@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <style>
+        :root {
+            --admin-bg: #f8fafc;
+            --admin-surface: #ffffff;
+            --admin-ink: #0f172a;
+            --admin-muted: #64748b;
+            --admin-border: #e2e8f0;
+            --admin-primary: #fbceb5;
+            --admin-primary-strong: #e08350;
+            --admin-danger: #dc2626;
+            --admin-success: #16a34a;
+            --admin-warning: #d97706;
+        }
+
+        body {
+            background: var(--admin-bg);
+            color: var(--admin-ink);
+            font-family: "Roboto", Arial, sans-serif;
+        }
+
+        .admin-shell {
+            max-width: 1240px;
+            min-height: 68vh;
+            margin: 0 auto;
+            padding: 32px 40px 56px;
+        }
+
+        .admin-heading {
+            display: flex;
+            justify-content: space-between;
+            gap: 24px;
+            align-items: flex-end;
+            margin-bottom: 22px;
+        }
+
+        .admin-kicker {
+            margin: 0 0 8px;
+            color: var(--admin-primary-strong);
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .admin-title {
+            margin: 0;
+            font-size: 32px;
+            line-height: 1.2;
+        }
+
+        .admin-subtitle {
+            max-width: 720px;
+            margin: 10px 0 0;
+            color: var(--admin-muted);
+            line-height: 1.55;
+        }
+
+        .admin-identity {
+            min-width: 220px;
+            color: var(--admin-muted);
+            font-size: 14px;
+            line-height: 1.5;
+            text-align: right;
+        }
+
+        .admin-layout {
+            display: block;
+        }
+
+        .admin-panel,
+        .stat-card,
+        .modal-card {
+            background: var(--admin-surface);
+            border: 1px solid var(--admin-border);
+            border-radius: 8px;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, .06);
+        }
+
+        .admin-view {
+            display: none;
+        }
+
+        .admin-view.active {
+            display: block;
+        }
+
+        .view-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .view-header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .view-header p {
+            margin: 5px 0 0;
+            color: var(--admin-muted);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .stat-card {
+            padding: 18px;
+        }
+
+        .stat-card span {
+            display: block;
+            color: var(--admin-muted);
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .stat-card strong {
+            font-size: 30px;
+            line-height: 1;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .insight-card {
+            min-height: 152px;
+            padding: 20px;
+        }
+
+        .insight-card h3 {
+            margin: 0 0 10px;
+            font-size: 18px;
+        }
+
+        .insight-card p {
+            margin: 0;
+            color: var(--admin-muted);
+            line-height: 1.6;
+        }
+
+        .admin-panel {
+            overflow: hidden;
+        }
+
+        .panel-toolbar {
+            display: grid;
+            grid-template-columns: minmax(260px, 1fr) 160px 132px 148px;
+            gap: 12px;
+            padding: 16px;
+            border-bottom: 1px solid var(--admin-border);
+        }
+
+        .field {
+            position: relative;
+        }
+
+        .field i {
+            position: absolute;
+            top: 50%;
+            left: 14px;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            pointer-events: none;
+        }
+
+        .control {
+            width: 100%;
+            height: 42px;
+            border: 1px solid var(--admin-border);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--admin-ink);
+            font-size: 14px;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .field .control {
+            padding: 0 14px 0 42px;
+        }
+
+        input.control,
+        select.control {
+            padding: 0 14px;
+        }
+
+        .field input.control {
+            padding-left: 42px;
+        }
+
+        .control:focus {
+            border-color: var(--admin-primary-strong);
+            box-shadow: 0 0 0 3px rgba(251, 206, 181, .45);
+        }
+
+        .admin-button {
+            min-height: 42px;
+            border: 1px solid var(--admin-border);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--admin-ink);
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 0 14px;
+            transition: .2s;
+        }
+
+        .admin-button:hover {
+            border-color: var(--admin-primary-strong);
+            color: var(--admin-primary-strong);
+        }
+
+        .admin-button.primary {
+            background: var(--admin-primary);
+            color: #000;
+            border-color: var(--admin-primary);
+        }
+
+        .admin-button.primary:hover {
+            background: #f0b99a;
+            color: #000;
+        }
+
+        .admin-button.danger {
+            border-color: #fecaca;
+            color: var(--admin-danger);
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        .users-table {
+            width: 100%;
+            min-width: 1040px;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .users-table th,
+        .users-table td {
+            padding: 15px 16px;
+            border-bottom: 1px solid var(--admin-border);
+            vertical-align: middle;
+            text-align: left;
+        }
+
+        .users-table th {
+            background: #f8fafc;
+            color: var(--admin-muted);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .users-table tbody tr:hover {
+            background: #fff7f3;
+        }
+
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #0f172a;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            flex: 0 0 auto;
+        }
+
+        .user-name {
+            margin-bottom: 3px;
+            font-weight: 800;
+        }
+
+        .muted {
+            color: var(--admin-muted);
+            font-size: 13px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 999px;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .badge.role-admin { background: #fee2e2; color: #991b1b; }
+        .badge.role-staff { background: #ffedd5; color: #9a3412; }
+        .badge.role-seller { background: #dbeafe; color: #1d4ed8; }
+        .badge.role-customer { background: #f1f5f9; color: #334155; }
+        .badge.ok { background: #dcfce7; color: #166534; }
+        .badge.locked { background: #fee2e2; color: #991b1b; }
+        .badge.pending { background: #fef3c7; color: #92400e; }
+
+        .row-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .icon-button {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--admin-border);
+            background: #fff;
+            color: var(--admin-ink);
+            cursor: pointer;
+            transition: .2s;
+        }
+
+        .icon-button:hover {
+            border-color: var(--admin-primary-strong);
+            color: var(--admin-primary-strong);
+        }
+
+        .icon-button.danger {
+            color: var(--admin-danger);
+        }
+
+        .icon-button.success {
+            color: var(--admin-success);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-top: 1px solid var(--admin-border);
+            color: var(--admin-muted);
+            font-size: 14px;
+        }
+
+        .pagination-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .empty-state {
+            padding: 44px 18px;
+            text-align: center;
+            color: var(--admin-muted);
+        }
+
+        .placeholder {
+            padding: 28px;
+            color: var(--admin-muted);
+            line-height: 1.7;
+        }
+
+        .toast {
+            position: fixed;
+            right: 28px;
+            top: 112px;
+            max-width: 380px;
+            background: #0f172a;
+            color: #fff;
+            border-radius: 8px;
+            padding: 13px 16px;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, .24);
+            display: none;
+            z-index: 1200;
+            font-weight: 700;
+        }
+
+        .toast.error {
+            background: var(--admin-danger);
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(15, 23, 42, .55);
+            z-index: 1300;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-card {
+            width: min(520px, 100%);
+            padding: 24px;
+            box-sizing: border-box;
+        }
+
+        .modal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .modal-head h3 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .modal-close {
+            width: 34px;
+            height: 34px;
+            border: 0;
+            border-radius: 8px;
+            background: #f1f5f9;
+            cursor: pointer;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .form-row-full {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 7px;
+            color: var(--admin-muted);
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 22px;
+        }
+
+        @media (max-width: 960px) {
+            .admin-shell { padding: 24px 18px 44px; }
+            .admin-heading { display: block; }
+            .admin-identity { text-align: left; margin-top: 14px; }
+            .panel-toolbar { grid-template-columns: 1fr 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 640px) {
+            .panel-toolbar,
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<header th:replace="fragments/header :: header"></header>
+
+<main class="admin-shell">
+    <section class="admin-heading">
+        <div>
+            <p class="admin-kicker">Admin Dashboard</p>
+            <h1 class="admin-title">Bảng điều khiển quản trị</h1>
+            <p class="admin-subtitle">Theo dõi tài khoản hệ thống, quản lý người dùng và CRUD tài khoản Staff.</p>
+        </div>
+        <div id="adminIdentity" class="admin-identity"></div>
+    </section>
+
+    <div class="admin-layout">
+        <section>
+            <div id="dashboardView" class="admin-view active">
+                <div class="view-header">
+                    <div>
+                        <h2>Dashboard</h2>
+                        <p>Tổng quan trạng thái tài khoản trong hệ thống.</p>
+                    </div>
+                    <button class="admin-button" type="button" onclick="loadDashboard()">
+                        <i class="fa fa-refresh"></i> Làm mới
+                    </button>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card"><span>Tổng tài khoản</span><strong id="statTotal">0</strong></div>
+                    <div class="stat-card"><span>Đang hoạt động</span><strong id="statActive">0</strong></div>
+                    <div class="stat-card"><span>Bị khóa</span><strong id="statLocked">0</strong></div>
+                    <div class="stat-card"><span>Staff</span><strong id="statStaff">0</strong></div>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="admin-panel insight-card">
+                        <h3>Tài khoản đã xác thực</h3>
+                        <p><strong id="statVerified">0</strong> tài khoản đã hoàn tất xác thực email và có thể đăng nhập nếu không bị khóa.</p>
+                    </div>
+                    <div class="admin-panel insight-card">
+                        <h3>Người bán</h3>
+                        <p><strong id="statSeller">0</strong> tài khoản đang có vai trò Seller hoặc được nâng cấp từ Customer.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="usersView" class="admin-view">
+                <div class="view-header">
+                    <div>
+                        <h2>Quản lý người dùng</h2>
+                        <p>Xem tất cả tài khoản, phân trang, khóa/mở khóa, tạo/sửa/xóa Staff.</p>
+                    </div>
+                    <button class="admin-button primary" type="button" onclick="openStaffModal()">
+                        <i class="fa fa-plus"></i> Tạo Staff
+                    </button>
+                </div>
+
+                <section class="admin-panel">
+                    <div class="panel-toolbar">
+                        <label class="field" for="searchInput">
+                            <i class="fa fa-search"></i>
+                            <input id="searchInput" class="control" type="search" placeholder="Tìm theo email, họ tên hoặc số điện thoại">
+                        </label>
+                        <select id="roleFilter" class="control" aria-label="Lọc theo vai trò">
+                            <option value="">Tất cả vai trò</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Staff">Staff</option>
+                            <option value="Seller">Seller</option>
+                            <option value="Customer">Customer</option>
+                        </select>
+                        <select id="pageSize" class="control" aria-label="Số dòng mỗi trang">
+                            <option value="10">10 dòng</option>
+                            <option value="20">20 dòng</option>
+                            <option value="50">50 dòng</option>
+                        </select>
+                        <button id="reloadBtn" class="admin-button" type="button">
+                            <i class="fa fa-refresh"></i> Làm mới
+                        </button>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table class="users-table">
+                            <thead>
+                            <tr>
+                                <th>Người dùng</th>
+                                <th>Vai trò</th>
+                                <th>Trạng thái</th>
+                                <th>Xác thực</th>
+                                <th>Số dư ví</th>
+                                <th>Ngày tạo</th>
+                                <th style="text-align: right;">Thao tác</th>
+                            </tr>
+                            </thead>
+                            <tbody id="usersBody">
+                            <tr><td colspan="7" class="empty-state">Đang tải dữ liệu người dùng...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination">
+                        <span id="paginationInfo">Trang 1/1</span>
+                        <div class="pagination-actions">
+                            <button id="prevPageBtn" class="admin-button" type="button">Trước</button>
+                            <button id="nextPageBtn" class="admin-button" type="button">Sau</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div id="permissionsView" class="admin-view">
+                <div class="view-header">
+                    <div>
+                        <h2>Quản lý quyền</h2>
+                        <p>Mục này để sẵn cho giai đoạn sau.</p>
+                    </div>
+                </div>
+                <section class="admin-panel placeholder">
+                    Chưa triển khai cấu hình quyền chi tiết. Hiện tại hệ thống đã có phân quyền cơ bản theo role Admin, Staff, Seller và Customer.
+                </section>
+            </div>
+        </section>
+    </div>
+</main>
+
+<div id="staffModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="staffModalTitle">
+    <div class="modal-card">
+        <div class="modal-head">
+            <h3 id="staffModalTitle">Tạo Staff</h3>
+            <button class="modal-close" type="button" onclick="closeStaffModal()" aria-label="Đóng">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+        <form id="staffForm" class="form-grid">
+            <input type="hidden" id="staffId">
+            <div class="form-row-full">
+                <label class="form-label" for="staffEmail">Email</label>
+                <input id="staffEmail" class="control" type="email" required>
+            </div>
+            <div class="form-row-full">
+                <label class="form-label" for="staffFullName">Họ tên</label>
+                <input id="staffFullName" class="control" type="text" minlength="3" required>
+            </div>
+            <div>
+                <label class="form-label" for="staffPhone">Số điện thoại</label>
+                <input id="staffPhone" class="control" type="tel">
+            </div>
+            <div>
+                <label class="form-label" for="staffPassword">Mật khẩu</label>
+                <input id="staffPassword" class="control" type="password" minlength="6">
+            </div>
+        </form>
+        <div class="modal-actions">
+            <button class="admin-button" type="button" onclick="closeStaffModal()">Hủy</button>
+            <button id="saveStaffBtn" class="admin-button primary" type="button" onclick="submitStaff()">
+                <i class="fa fa-save"></i> Lưu Staff
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<footer th:replace="fragments/footer :: footer"></footer>
+<script th:src="@{/js/auth.js}"></script>
+<script>
+    const ENDPOINT = '/admin/user-management';
+    let users = [];
+    let currentPage = 0;
+    let totalPages = 1;
+    let totalElements = 0;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!guardAdminAccess()) return;
+        bindEvents();
+        switchAdminView((window.location.hash || '#dashboard').replace('#', ''));
+        loadDashboard();
+        loadUsers();
+    });
+
+    function bindEvents() {
+        window.addEventListener('hashchange', () => switchAdminView((window.location.hash || '#dashboard').replace('#', '')));
+        document.getElementById('searchInput').addEventListener('input', debounce(() => {
+            currentPage = 0;
+            loadUsers();
+        }, 300));
+        document.getElementById('roleFilter').addEventListener('change', () => {
+            currentPage = 0;
+            loadUsers();
+        });
+        document.getElementById('pageSize').addEventListener('change', () => {
+            currentPage = 0;
+            loadUsers();
+        });
+        document.getElementById('reloadBtn').addEventListener('click', () => loadUsers());
+        document.getElementById('prevPageBtn').addEventListener('click', () => {
+            if (currentPage > 0) {
+                currentPage -= 1;
+                loadUsers();
+            }
+        });
+        document.getElementById('nextPageBtn').addEventListener('click', () => {
+            if (currentPage + 1 < totalPages) {
+                currentPage += 1;
+                loadUsers();
+            }
+        });
+    }
+
+    function guardAdminAccess() {
+        const token = sessionStorage.getItem('accessToken');
+        const user = readCurrentUser();
+        if (!token || !user) {
+            window.location.href = '/login';
+            return false;
+        }
+        if (normalizeRole(user.role) !== 'Admin') {
+            showToast('Bạn không có quyền truy cập trang quản trị.', true);
+            setTimeout(() => window.location.href = '/', 900);
+            return false;
+        }
+        document.getElementById('adminIdentity').innerHTML = `
+            <strong>${escapeHtml(user.fullName || user.email || 'Admin')}</strong><br>
+            <span>${escapeHtml(user.email || '')}</span>
+        `;
+        return true;
+    }
+
+    window.switchAdminView = function(viewName) {
+        const viewMap = {
+            dashboard: 'dashboardView',
+            users: 'usersView',
+            permissions: 'permissionsView'
+        };
+        const normalizedName = viewMap[viewName] ? viewName : 'dashboard';
+        const viewId = viewMap[normalizedName];
+        if (window.location.hash !== `#${normalizedName}`) {
+            window.history.replaceState(null, '', `#${normalizedName}`);
+        }
+        document.querySelectorAll('.admin-view').forEach(view => view.classList.toggle('active', view.id === viewId));
+        highlightHeaderAdminNav(normalizedName);
+        if (viewId === 'dashboardView') loadDashboard();
+        if (viewId === 'usersView') loadUsers();
+    }
+
+    function highlightHeaderAdminNav(viewName) {
+        const activeMap = {
+            dashboard: 'adminDashboardNav',
+            users: 'adminUsersNav',
+            permissions: 'adminPermissionsNav'
+        };
+        Object.values(activeMap).forEach(id => {
+            const item = document.getElementById(id);
+            if (item) item.style.color = '';
+        });
+        const active = document.getElementById(activeMap[viewName] || activeMap.dashboard);
+        if (active) active.style.color = '#fbceb5';
+    }
+
+    async function loadDashboard() {
+        try {
+            const response = await authFetch(`${ENDPOINT}/summary`);
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Không thể tải dashboard.');
+            document.getElementById('statTotal').textContent = data.totalAccounts || 0;
+            document.getElementById('statActive').textContent = data.activeAccounts || 0;
+            document.getElementById('statLocked').textContent = data.lockedAccounts || 0;
+            document.getElementById('statStaff').textContent = data.staffAccounts || 0;
+            document.getElementById('statVerified').textContent = data.verifiedAccounts || 0;
+            document.getElementById('statSeller').textContent = data.sellerAccounts || 0;
+        } catch (error) {
+            showToast(error.message, true);
+        }
+    }
+
+    async function loadUsers() {
+        setLoading(true);
+        const params = new URLSearchParams({
+            page: String(currentPage),
+            size: document.getElementById('pageSize').value,
+            search: document.getElementById('searchInput').value.trim(),
+            role: document.getElementById('roleFilter').value
+        });
+        try {
+            const response = await authFetch(`${ENDPOINT}/users?${params.toString()}`);
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Không thể tải danh sách người dùng.');
+            users = data.content || [];
+            currentPage = data.page || 0;
+            totalPages = Math.max(data.totalPages || 1, 1);
+            totalElements = data.totalElements || 0;
+            renderUsers(users);
+            renderPagination();
+            loadDashboard();
+        } catch (error) {
+            document.getElementById('usersBody').innerHTML = `<tr><td colspan="7" class="empty-state">${escapeHtml(error.message)}</td></tr>`;
+            showToast(error.message, true);
+        }
+    }
+
+    function renderUsers(list) {
+        const tbody = document.getElementById('usersBody');
+        if (!list.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Không tìm thấy người dùng phù hợp.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = list.map(user => {
+            const initial = String(user.fullName || user.email || '?').charAt(0).toUpperCase();
+            const locked = Boolean(user.isLocked);
+            const online = Boolean(user.isOnline);
+            const statusClass = locked ? 'locked' : (online ? 'ok' : 'pending');
+            const statusIcon = locked ? 'fa-lock' : (online ? 'fa-check' : 'fa-clock-o');
+            const statusText = locked ? 'Bị khóa' : (online ? 'Đang hoạt động' : 'Chưa hoạt động');
+            const role = user.role || 'Customer';
+            const roleClass = `role-${role.toLowerCase().replace('_', '-')}`;
+            const balance = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(user.balanceVnd || 0);
+            const createdAt = user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : 'N/A';
+            const self = user.id === readCurrentUser()?.id;
+            const isStaff = role === 'Staff';
+
+            return `
+                <tr>
+                    <td>
+                        <div class="user-cell">
+                            <div class="avatar">${escapeHtml(initial)}</div>
+                            <div>
+                                <div class="user-name">${escapeHtml(user.fullName || 'Chưa cập nhật')}</div>
+                                <div class="muted">${escapeHtml(user.email || '')}</div>
+                                <div class="muted">${escapeHtml(user.phone || 'Chưa có số điện thoại')}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="badge ${roleClass}">${escapeHtml(role)}</span></td>
+                    <td><span class="badge ${statusClass}"><i class="fa ${statusIcon}"></i>${statusText}</span></td>
+                    <td><span class="badge ${user.isVerified ? 'ok' : 'pending'}">${user.isVerified ? 'Đã xác thực' : 'Chưa xác thực'}</span></td>
+                    <td><strong>${balance}</strong></td>
+                    <td>${createdAt}</td>
+                    <td>
+                        <div class="row-actions">
+                            ${isStaff ? `
+                                <button class="icon-button" title="Sửa Staff" onclick="openStaffModal(${user.id})"><i class="fa fa-pencil"></i></button>
+                                <button class="icon-button danger" title="Xóa Staff" ${self ? 'disabled' : ''} onclick="deleteStaff(${user.id})"><i class="fa fa-trash"></i></button>
+                            ` : ''}
+                            <button class="icon-button ${locked ? 'success' : 'danger'}" title="${locked ? 'Mở khóa' : 'Khóa tài khoản'}" ${self ? 'disabled' : ''} onclick="toggleLock(${user.id})">
+                                <i class="fa ${locked ? 'fa-unlock' : 'fa-lock'}"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderPagination() {
+        const from = totalElements === 0 ? 0 : currentPage * Number(document.getElementById('pageSize').value) + 1;
+        const to = Math.min((currentPage + 1) * Number(document.getElementById('pageSize').value), totalElements);
+        document.getElementById('paginationInfo').textContent = `Hiển thị ${from}-${to} / ${totalElements} tài khoản | Trang ${currentPage + 1}/${totalPages}`;
+        document.getElementById('prevPageBtn').disabled = currentPage <= 0;
+        document.getElementById('nextPageBtn').disabled = currentPage + 1 >= totalPages;
+    }
+
+    async function toggleLock(userId) {
+        const user = users.find(item => item.id === userId);
+        if (!user) return;
+        const action = user.isLocked ? 'mở khóa' : 'khóa';
+        if (!confirm(`Xác nhận ${action} tài khoản ${user.email}?`)) return;
+
+        try {
+            const response = await authFetch(`${ENDPOINT}/users/${userId}/toggle-lock`, { method: 'POST' });
+            const data = await response.json();
+            if (!response.ok || !data.success) throw new Error(data.message || 'Thao tác thất bại.');
+            showToast(data.message || 'Cập nhật trạng thái thành công.');
+            loadUsers();
+        } catch (error) {
+            showToast(error.message, true);
+        }
+    }
+
+    function openStaffModal(userId = null) {
+        const isEdit = userId !== null;
+        const staff = isEdit ? users.find(item => item.id === userId) : null;
+        document.getElementById('staffModalTitle').textContent = isEdit ? 'Cập nhật Staff' : 'Tạo Staff';
+        document.getElementById('staffId').value = staff?.id || '';
+        document.getElementById('staffEmail').value = staff?.email || '';
+        document.getElementById('staffFullName').value = staff?.fullName || '';
+        document.getElementById('staffPhone').value = staff?.phone || '';
+        document.getElementById('staffPassword').value = '';
+        document.getElementById('staffEmail').disabled = isEdit;
+        document.getElementById('staffPhone').disabled = isEdit;
+        document.getElementById('staffPassword').placeholder = isEdit ? 'Để trống nếu không đổi' : 'Tối thiểu 6 ký tự';
+        document.getElementById('staffPassword').required = !isEdit;
+        document.getElementById('staffModal').classList.add('active');
+    }
+
+    function closeStaffModal() {
+        document.getElementById('staffModal').classList.remove('active');
+        document.getElementById('staffForm').reset();
+        document.getElementById('staffId').value = '';
+        document.getElementById('staffEmail').disabled = false;
+        document.getElementById('staffPhone').disabled = false;
+    }
+
+    async function submitStaff() {
+        const id = document.getElementById('staffId').value;
+        const payload = {
+            email: document.getElementById('staffEmail').value.trim(),
+            fullName: document.getElementById('staffFullName').value.trim(),
+            phone: document.getElementById('staffPhone').value.trim(),
+            password: document.getElementById('staffPassword').value
+        };
+        if (id) {
+            delete payload.email;
+            delete payload.phone;
+        }
+        if ((!id && !document.getElementById('staffEmail').value.trim()) || !payload.fullName || (!id && !payload.password)) {
+            showToast('Vui lòng nhập đủ email, họ tên và mật khẩu khi tạo Staff.', true);
+            return;
+        }
+
+        try {
+            const response = await authFetch(id ? `${ENDPOINT}/staff/${id}` : `${ENDPOINT}/staff`, {
+                method: id ? 'PUT' : 'POST',
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Không thể lưu Staff.');
+            closeStaffModal();
+            showToast(id ? 'Đã cập nhật Staff.' : 'Đã tạo Staff.');
+            loadUsers();
+        } catch (error) {
+            showToast(error.message, true);
+        }
+    }
+
+    async function deleteStaff(userId) {
+        const staff = users.find(item => item.id === userId);
+        if (!staff) return;
+        if (!confirm(`Xóa tài khoản Staff ${staff.email}?`)) return;
+
+        try {
+            const response = await authFetch(`${ENDPOINT}/staff/${userId}`, { method: 'DELETE' });
+            const data = await response.json();
+            if (!response.ok || !data.success) throw new Error(data.message || 'Không thể xóa Staff.');
+            showToast(data.message || 'Đã xóa Staff.');
+            loadUsers();
+        } catch (error) {
+            showToast(error.message, true);
+        }
+    }
+
+    function setLoading(isLoading) {
+        if (isLoading) {
+            document.getElementById('usersBody').innerHTML = '<tr><td colspan="7" class="empty-state">Đang tải dữ liệu người dùng...</td></tr>';
+        }
+    }
+
+    function showToast(message, isError = false) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `toast${isError ? ' error' : ''}`;
+        toast.style.display = 'block';
+        clearTimeout(window.__adminToastTimer);
+        window.__adminToastTimer = setTimeout(() => toast.style.display = 'none', 2800);
+    }
+
+    function readCurrentUser() {
+        try {
+            return JSON.parse(sessionStorage.getItem('userInfo') || sessionStorage.getItem('user') || 'null');
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function normalizeRole(roleValue) {
+        if (!roleValue) return 'Customer';
+        try {
+            const parsed = JSON.parse(roleValue);
+            return parsed.role || 'Customer';
+        } catch (error) {
+            const role = String(roleValue).replaceAll('"', '').trim();
+            if (role.toLowerCase().includes('admin')) return 'Admin';
+            if (role.toLowerCase().includes('staff')) return 'Staff';
+            if (role.toLowerCase().includes('seller')) return 'Seller';
+            return 'Customer';
+        }
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
+
+    function debounce(fn, wait) {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => fn.apply(null, args), wait);
+        };
+    }
+</script>
+</body>
+</html>

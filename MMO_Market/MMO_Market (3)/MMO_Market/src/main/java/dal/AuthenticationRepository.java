@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 @Repository
 public interface AuthenticationRepository extends JpaRepository<Authentication, Long> {
@@ -13,4 +14,5 @@ public interface AuthenticationRepository extends JpaRepository<Authentication, 
     Optional<Authentication> findByUserIdAndIsDeleteFalse(Long userId);
     Optional<Authentication> findByRefreshToken(String refreshToken);
     List<Authentication> findAllByUserIdAndIsRevokedFalse(Long userId);
+    boolean existsByUserIdAndIsRevokedFalseAndIsDeleteFalseAndCreatedAtAfter(Long userId, LocalDateTime threshold);
 }
