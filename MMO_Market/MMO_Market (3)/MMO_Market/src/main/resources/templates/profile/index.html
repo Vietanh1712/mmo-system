@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông tin cá nhân - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="profile-page">
+        <div class="profile-layout">
+            <aside th:replace="~{fragments/account-sidebar :: accountSidebar('profile')}"></aside>
+
+            <section class="profile-card">
+            <div class="profile-card__header">
+                <div class="profile-card__avatar" id="profileAvatar">?</div>
+                <div>
+                    <h1 class="profile-card__title">Thông tin cá nhân</h1>
+                    <p class="profile-card__subtitle">Thông tin tài khoản hiện tại của bạn</p>
+                </div>
+            </div>
+
+            <div class="profile-message" id="profileMessage">Đang tải thông tin...</div>
+
+            <dl class="profile-details" id="profileDetails" hidden>
+                <div class="profile-details__row">
+                    <dt>Họ và tên</dt>
+                    <dd id="profileFullName">-</dd>
+                </div>
+                <div class="profile-details__row">
+                    <dt>Email</dt>
+                    <dd id="profileEmail">-</dd>
+                </div>
+                <div class="profile-details__row">
+                    <dt>Số điện thoại</dt>
+                    <dd id="profilePhone">-</dd>
+                </div>
+                <div class="profile-details__row">
+                    <dt>Vai trò</dt>
+                    <dd id="profileRole">-</dd>
+                </div>
+                <div class="profile-details__row" id="profileShopStatusRow" hidden>
+                    <dt>Trạng thái cửa hàng</dt>
+                    <dd id="profileShopStatus">-</dd>
+                </div>
+                <div class="profile-details__row">
+                    <dt>Số dư ví</dt>
+                    <dd id="profileBalance">0 VNĐ</dd>
+                </div>
+            </dl>
+
+            <div class="profile-actions" id="profileActions" hidden>
+                <button class="profile-button profile-button--primary" id="editProfileButton" type="button">
+                    Chỉnh sửa thông tin
+                </button>
+            </div>
+
+            <form class="profile-edit-form" id="profileEditForm" hidden novalidate>
+                <div class="profile-edit-form__group">
+                    <label for="profileFullNameInput">Họ và tên</label>
+                    <input id="profileFullNameInput" name="fullName" type="text" maxlength="255" autocomplete="name">
+                    <small class="profile-edit-form__error" id="profileFullNameError"></small>
+                </div>
+
+                <div class="profile-edit-form__group">
+                    <label for="profilePhoneInput">Số điện thoại</label>
+                    <input id="profilePhoneInput" name="phone" type="tel" maxlength="10" autocomplete="tel">
+                    <small class="profile-edit-form__hint">Để trống hoặc nhập 10 chữ số, bắt đầu bằng số 0.</small>
+                    <small class="profile-edit-form__error" id="profilePhoneError"></small>
+                </div>
+
+                <div class="profile-message" id="profileFormMessage" hidden></div>
+
+                <div class="profile-actions">
+                    <button class="profile-button profile-button--primary" id="saveProfileButton" type="submit">
+                        Lưu thay đổi
+                    </button>
+                    <button class="profile-button profile-button--secondary" id="cancelEditButton" type="button">
+                        Hủy
+                    </button>
+                </div>
+            </form>
+            </section>
+        </div>
+    </main>
+
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/account-sidebar.js}"></script>
+    <script th:src="@{/js/profile.js}"></script>
+</body>
+</html>

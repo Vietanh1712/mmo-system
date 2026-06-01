@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMO Market - Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/authen/authen.css}">
+</head>
+<body class="auth-layout">
+
+    <div class="bg-blur"></div>
+    <div class="bg-overlay"></div>
+
+    <div class="container" style="max-width: 500px;">
+        <div class="login-wrap">
+            <h3 style="font-size: 22px;">💎 MMO Market System</h3>
+            <div id="dash-msg" class="message"></div>
+            <div class="user-info">
+                <p><strong>Welcome:</strong> <span id="dash-fullname"></span></p>
+                <p><strong>Account:</strong> <span id="dash-email"></span></p>
+                <p><strong>Role:</strong> <span id="dash-role"></span></p>
+                <p><strong>Balance:</strong> <span id="dash-balance"></span></p> <!-- Thêm dòng hiển thị số dư ví -->
+            </div>
+            <p style="text-align: center; color: #87ff9d; font-size: 14px; margin-bottom: 20px;">
+                <i class="fa fa-check-circle"></i> You have successfully logged into the system.
+            </p>
+            <div class="form-group">
+                <button class="btn logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+    <script src="/js/auth.js"></script>
+</body>
+</html>

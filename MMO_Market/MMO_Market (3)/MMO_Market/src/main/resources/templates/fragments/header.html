@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<header class="header" th:fragment="header">
+    <div class="header__top">
+        <a href="/" class="header__logo">
+            <i class="fa fa-diamond"></i>
+            MMO <span>Market</span>
+        </a>
+
+        <div class="header__search-area"></div>
+
+        <div class="header__auth" id="headerAuthArea">
+            <a th:href="@{/login}" class="auth-btn btn-login">Đăng nhập</a>
+            <a th:href="@{/register}" class="auth-btn btn-register">Đăng ký</a>
+        </div>
+    </div>
+
+    <div id="userDropdown" class="user-profile-dropdown">
+        <div class="dropdown-item" onclick="checkAuthAndRedirect('/profile')">
+            <i class="fa fa-user"></i> Thông tin cá nhân
+        </div>
+        <div class="dropdown-item" onclick="window.location.href='/history'">
+            <i class="fa fa-history"></i> Lịch sử giao dịch
+        </div>
+        <div class="dropdown-item" onclick="window.location.href='/topup'">
+            <i class="fa fa-credit-card"></i> Nạp tiền
+        </div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item" onclick="if(typeof logout === 'function') logout(); else { localStorage.clear(); window.location.href='/login'; }">
+            <i class="fa fa-sign-out-alt"></i> Đăng xuất
+        </div>
+    </div>
+
+    <nav class="nav">
+        <ul class="nav__list">
+            <li class="nav__item" onclick="window.location.href='/'">Trang chủ</li>
+            <li class="nav__item" onclick="window.location.href='/products'">Sản phẩm</li>
+            <li class="nav__item" onclick="checkAuthAndRedirect('/topup')">Nạp tiền</li>
+            <li class="nav__item">Hỗ trợ</li>
+            <li class="nav__item">Câu hỏi thường gặp</li>
+        </ul>
+    </nav>
+
+    <script th:inline="javascript">
+        // 1. CÀI ĐẶT THỜI GIAN HẾT HẠN PHIÊN ĐĂNG NHẬP
+        const SESSION_TIMEOUT_MS = 15 * 60 * 1000;        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem("accessToken");
+            const userString = localStorage.getItem("userInfo") || localStorage.getItem("user");
+
+            const authArea = document.getElementById('headerAuthArea');
+            const dropdown = document.getElementById('userDropdown');
+
+            // 2. KIỂM TRA HẾT HẠN PHIÊN ĐĂNG NHẬP (AUTO-LOGOUT)
+            if (token && token !== "null" && token !== "undefined") {
+                const loginTimestamp = localStorage.getItem("loginTimestamp");
+                const currentTime = Date.now();
+
+                if (!loginTimestamp) {
+                    // Nếu chưa có mốc thời gian, tạo mới mốc thời gian đăng nhập
+                    localStorage.setItem("loginTimestamp", currentTime.toString());
+                } else {
+                    // Kiểm tra nếu thời gian trôi qua lớn hơn thời gian cho phép
+                    if (currentTime - parseInt(loginTimestamp) > SESSION_TIMEOUT_MS) {
+                        console.warn("Phiên đăng nhập đã hết hạn. Đang đăng xuất...");
+                        localStorage.clear(); // Xóa toàn bộ dữ liệu (token, user, timestamp)
+                        window.location.href = '/login';
+                        return; // Dừng chạy đoạn code bên dưới
+                    }
+                }
+            }
+
+            // 3. HIỂN THỊ GIAO DIỆN KIỂM TRA AN TOÀN CHẶT CHẼ
+            if (token && token !== "null" && token !== "undefined" &&
+                userString && userString !== "null" && userString !== "undefined" && authArea) {
+
+                try {
+                    const user = JSON.parse(userString);
+                    const fullName = user.fullName || 'Người dùng';
+                    const initial = fullName.charAt(0).toUpperCase();
+
+                    const userBalance = user.balanceVnd || 0;
+                    const balance = typeof formatCurrency === 'function'
+                        ? formatCurrency(userBalance)
+                        : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(userBalance);
+
+                    // Hiển thị Profile
+                    authArea.innerHTML = `
+                        <div class="user-profile" id="userProfileToggle" style="cursor: pointer;">
+                            <div class="user-profile__info">
+                                <p class="user-profile__name">${fullName}</p>
+                                <p class="user-profile__balance"><i class="fa fa-wallet"></i> ${balance}</p>
+                            </div>
+                            <div class="user-profile__avatar">
+                                ${initial}
+                            </div>
+                        </div>
+                    `;
+
+                    // Gắn sự kiện Dropdown
+                    const toggleBtn = document.getElementById('userProfileToggle');
+                    if (toggleBtn) {
+                        toggleBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            dropdown.classList.toggle('active');
+                        });
+                    }
+                } catch (error) {
+                    console.error("Lỗi khi parse thông tin user:", error);
+                    localStorage.clear();
+                    window.location.reload();
+                }
+            } else {
+                // Đảm bảo nút Đăng nhập / Đăng ký hiển thị đúng khi không có tài khoản
+                if (authArea && !authArea.querySelector('.btn-login')) {
+                    authArea.innerHTML = `
+                        <a href="/login" class="auth-btn btn-login">Đăng nhập</a>
+                        <a href="/register" class="auth-btn btn-register">Đăng ký</a>
+                    `;
+                }
+            }
+        });
+
+        // Đóng dropdown menu khi click ra ngoài
+        window.addEventListener('click', () => {
+            const dropdown = document.getElementById('userDropdown');
+            if (dropdown && dropdown.classList.contains('active')) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+        // Hàm hỗ trợ kiểm tra trạng thái đăng nhập bảo mật hơn
+        function checkAuthAndRedirect(url) {
+            const token = localStorage.getItem("accessToken");
+            if (!token || token === "null" || token === "undefined") {
+                window.location.href = '/login';
+            } else {
+                window.location.href = url;
+            }
+        }
+    </script>
+</header>
+
+</body>
+</html>
