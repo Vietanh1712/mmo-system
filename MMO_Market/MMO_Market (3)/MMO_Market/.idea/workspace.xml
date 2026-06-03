@@ -5,8 +5,26 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/11990a64-5c66-4ae7-9a29-663ece8c977e/storage_v2/_src_/database/MMO_System.350aVw.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/11990a64-5c66-4ae7-9a29-663ece8c977e/storage_v2/_src_/database/MMO_System.350aVw/schema/INFORMATION_SCHEMA.NBgcMw.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/11990a64-5c66-4ae7-9a29-663ece8c977e/storage_v2/_src_/database/MMO_System.350aVw/schema/dbo.sYMBAA.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/11990a64-5c66-4ae7-9a29-663ece8c977e/storage_v2/_src_/database/MMO_System.350aVw/schema/dbo.sYMBAA.zip" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/11990a64-5c66-4ae7-9a29-663ece8c977e/storage_v2/_src_/database/MMO_System.350aVw/schema/sys.zb4BAA.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/security/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/authen/authen.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/authen/authen.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/common.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/common.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/auth/forgot-password.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/auth/forgot-password.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/auth/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/auth/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/auth/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/auth/register.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/auth/reset-password.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/auth/reset-password.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/static/css/authen/authen.css" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/css/authen/authen.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/static/css/common.css" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/css/common.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/auth/forgot-password.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/auth/forgot-password.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/auth/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/auth/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/auth/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/auth/register.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/auth/reset-password.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/auth/reset-password.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -267,61 +285,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.0" />
-      <entry key="S2" value="1.0000000000597862" />
-      <entry key="S5" value="1.000337780320689" />
-      <entry key="S10" value="1.060812179903021" />
-      <entry key="S30" value="3.062557434433626" />
-      <entry key="S60" value="6.766574716274428" />
-      <entry key="M2" value="11.677049268511993" />
-      <entry key="M5" value="17.24289276234749" />
-      <entry key="M10" value="19.857667384652842" />
-      <entry key="M15" value="20.841027011665783" />
-      <entry key="M30" value="21.886977043232" />
-      <entry key="H1" value="22.434811302080703" />
-      <entry key="H2" value="22.715198528361668" />
-      <entry key="H4" value="22.85704268047285" />
-      <entry key="D1" value="22.97609606554527" />
-      <entry key="W1" value="22.996583243620872" />
+      <entry key="MS100" value="4.04638558569942E-19" />
+      <entry key="MS500" value="2.09610702255311E-4" />
+      <entry key="S2" value="0.12032430538771895" />
+      <entry key="S5" value="0.42868801831708586" />
+      <entry key="S10" value="0.6547427115417825" />
+      <entry key="S30" value="0.8683410805362478" />
+      <entry key="S60" value="0.9327130436137756" />
+      <entry key="M2" value="1.0202684700781668" />
+      <entry key="M5" value="1.6889854317928565" />
+      <entry key="M10" value="2.7618991988610584" />
+      <entry key="M15" value="3.9038340437902392" />
+      <entry key="M30" value="8.717467334216936" />
+      <entry key="H1" value="17.102413594589056" />
+      <entry key="H2" value="25.439522118931432" />
+      <entry key="H4" value="31.394930016199194" />
+      <entry key="D1" value="37.59954682765519" />
+      <entry key="W1" value="38.79640896426549" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="0.0" />
-      <entry key="MS500" value="0.0" />
-      <entry key="S2" value="0.0" />
-      <entry key="S5" value="0.0" />
-      <entry key="S10" value="0.0" />
-      <entry key="S30" value="0.0" />
-      <entry key="S60" value="0.0" />
-      <entry key="M2" value="0.0" />
-      <entry key="M5" value="0.0" />
-      <entry key="M10" value="0.0" />
-      <entry key="M15" value="0.0" />
-      <entry key="M30" value="0.0" />
-      <entry key="H1" value="0.0" />
-      <entry key="H2" value="0.0" />
-      <entry key="H4" value="0.0" />
-      <entry key="D1" value="0.0" />
-      <entry key="W1" value="0.0" />
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0000995651236986" />
+      <entry key="S2" value="1.0998911031759786" />
+      <entry key="S5" value="1.397933703443064" />
+      <entry key="S10" value="1.6308198695042289" />
+      <entry key="S30" value="1.859145870955075" />
+      <entry key="S60" value="1.9676315841689709" />
+      <entry key="M2" value="2.2373260647471405" />
+      <entry key="M5" value="3.1773560574953432" />
+      <entry key="M10" value="4.129249137341365" />
+      <entry key="M15" value="4.646843761492386" />
+      <entry key="M30" value="5.492561486163295" />
+      <entry key="H1" value="6.32196309298258" />
+      <entry key="H2" value="6.999154367081236" />
+      <entry key="H4" value="7.448748673723744" />
+      <entry key="D1" value="7.8999572806436165" />
+      <entry key="W1" value="7.98549186081666" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.55864356903611" />
-      <entry key="MS500" value="0.8900757332524964" />
-      <entry key="S2" value="0.9713074955969447" />
-      <entry key="S5" value="0.9887521626631365" />
-      <entry key="S10" value="1.0543139826703376" />
-      <entry key="S30" value="3.0534255212957473" />
-      <entry key="S60" value="6.756491560004086" />
-      <entry key="M2" value="11.668877259236396" />
-      <entry key="M5" value="17.238344170331168" />
-      <entry key="M10" value="19.855107247900328" />
-      <entry key="M15" value="20.83924977784894" />
-      <entry key="M30" value="21.88605125705061" />
-      <entry key="H1" value="22.43433873470978" />
-      <entry key="H2" value="22.71495977653792" />
-      <entry key="H4" value="22.856922681212602" />
-      <entry key="D1" value="22.976075978550938" />
-      <entry key="W1" value="22.996580371909673" />
+      <entry key="MS100" value="5.803783033780925E-14" />
+      <entry key="MS500" value="0.0023548603059658905" />
+      <entry key="S2" value="0.3507686929268296" />
+      <entry key="S5" value="1.196605549641299" />
+      <entry key="S10" value="1.8730622141835573" />
+      <entry key="S30" value="2.5587313037728228" />
+      <entry key="S60" value="2.809900676240247" />
+      <entry key="M2" value="3.2061658141163663" />
+      <entry key="M5" value="4.835001480552824" />
+      <entry key="M10" value="6.869226765108347" />
+      <entry key="M15" value="8.533494896190302" />
+      <entry key="M30" value="14.198803806509778" />
+      <entry key="H1" value="23.41720708140961" />
+      <entry key="H2" value="32.43441444307999" />
+      <entry key="H4" value="38.84131835134187" />
+      <entry key="D1" value="45.499072042592076" />
+      <entry key="W1" value="46.78183805056435" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -346,55 +364,55 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "JUnit.All in MMO_Market (1).executor": "Run",
-    "JUnit.All in MMO_Market (2).executor": "Run",
-    "JUnit.All in MMO_Market (3).executor": "Run",
-    "JUnit.All in MMO_Market (4).executor": "Run",
-    "JUnit.All in MMO_Market (5).executor": "Run",
-    "JUnit.All in MMO_Market.executor": "Run",
-    "JUnit.DBTest.executor": "Run",
-    "JUnit.DBTest.testConnection.executor": "Run",
-    "JUnit.test in MMO_Market.executor": "Run",
-    "Maven. [org.apache.maven.plugins:maven-archetype-plugin:RELEASE:generate].executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RequestMappingsPanelOrder0": "0",
-    "RequestMappingsPanelOrder1": "1",
-    "RequestMappingsPanelWidth0": "75",
-    "RequestMappingsPanelWidth1": "75",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "Spring Boot.MMOMarketApplication (1).executor": "Run",
-    "Spring Boot.MMOMarketApplication.executor": "Debug",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "AnhTV",
-    "junie.onboarding.icon.badge.shown": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/SU26/SWP/mmo-system/MMO_Market/MMO_Market (3)/MMO_Market",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Modules",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
-    "to.speed.mode.migration.done": "true",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;JUnit.All in MMO_Market (1).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in MMO_Market (2).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in MMO_Market (3).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in MMO_Market (4).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in MMO_Market (5).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in MMO_Market.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.DBTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.DBTest.testConnection.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.test in MMO_Market.executor&quot;: &quot;Run&quot;,
+    &quot;Maven. [org.apache.maven.plugins:maven-archetype-plugin:RELEASE:generate].executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;Spring Boot.MMOMarketApplication (1).executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.MMOMarketApplication.executor&quot;: &quot;Debug&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/SU26/SWP/mmo-system/MMO_Market/MMO_Market (3)/MMO_Market&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "DatabaseDriversLRU": [
-      "sqlserver"
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;sqlserver&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\pc\IdeaProjects\MMO_Market\src\main\webapp" />
@@ -490,8 +508,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-fbdcb00ec9e3-intellij.indexing.shared.core-IU-251.26094.121" />
-        <option value="bundled-js-predefined-d6986cc7102b-b26f3e71634d-JavaScript-IU-251.26094.121" />
+        <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.24374.151" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-IU-261.24374.151" />
       </set>
     </attachedChunks>
   </component>
@@ -527,6 +545,10 @@
       <workItem from="1780323063155" duration="3236000" />
       <workItem from="1780331115437" duration="389000" />
       <workItem from="1780333477696" duration="1699000" />
+      <workItem from="1780391630956" duration="3809000" />
+      <workItem from="1780407407353" duration="6980000" />
+      <workItem from="1780415862230" duration="83000" />
+      <workItem from="1780415959262" duration="358000" />
     </task>
     <servers />
   </component>
