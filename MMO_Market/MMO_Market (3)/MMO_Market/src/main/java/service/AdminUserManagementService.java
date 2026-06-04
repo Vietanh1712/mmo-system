@@ -61,6 +61,12 @@ public class AdminUserManagementService {
     }
 
     @Transactional(readOnly = true)
+    public AdminUserResponse getUser(Long operatorId, Long userId) {
+        requireAdmin(operatorId);
+        return toResponse(requireExistingUser(userId));
+    }
+
+    @Transactional(readOnly = true)
     public Map<String, Object> getUsers(Long operatorId, String email, String phone, String name, String gender, String role, String status, int page, int size) {
         requireAdmin(operatorId);
         int safePage = Math.max(page, 0);
@@ -150,11 +156,15 @@ public class AdminUserManagementService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName().trim())
                 .phone(blankToNull(request.getPhone()))
+                .gender(normalizeGender(request.getGender()))
+                .address(blankToNull(request.getAddress()))
+                .nationalId(blankToNull(request.getNationalId()))
+                .dateOfBirth(request.getDateOfBirth())
                 .role(toRoleJson("Staff"))
                 .shopStatus("Approved")
                 .balanceVnd(0L)
                 .isVerified(true)
-                .isLocked(false)
+                .isLocked(resolveLockedFromActive(request.getActive()))
                 .isDelete(false)
                 .build();
         User saved = userRepository.save(staff);
@@ -170,6 +180,14 @@ public class AdminUserManagementService {
         validateStaffUpdatePayload(request);
 
         staff.setFullName(request.getFullName().trim());
+        staff.setPhone(blankToNull(request.getPhone()));
+        staff.setGender(normalizeGender(request.getGender()));
+        staff.setAddress(blankToNull(request.getAddress()));
+        staff.setNationalId(blankToNull(request.getNationalId()));
+        staff.setDateOfBirth(request.getDateOfBirth());
+        if (request.getActive() != null) {
+            staff.setIsLocked(!Boolean.TRUE.equals(request.getActive()));
+        }
         if (request.getPassword() != null && !request.getPassword().isBlank()) {
             staff.setPassword(passwordEncoder.encode(request.getPassword()));
         }
@@ -177,6 +195,27 @@ public class AdminUserManagementService {
         audit(operator, "UPDATE_STAFF", String.format("%s (%d) da cap nhat tai khoan Staff %s (%d)",
                 displayName(operator), operator.getId(), saved.getEmail(), saved.getId()));
         return toResponse(saved);
+    }
+
+    @Transactional
+    public AdminActionResponse softDeleteUser(Long operatorId, Long targetUserId) {
+        User operator = requireAdmin(operatorId);
+        User target = requireExistingUser(targetUserId);
+        if (operator.getId().equals(target.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Khong the xoa tai khoan dang dang nhap.");
+        }
+        if ("Admin".equalsIgnoreCase(normalizeRole(target.getRole()))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Khong the xoa tai khoan Admin.");
+        }
+
+        target.setIsDelete(true);
+        userRepository.save(target);
+        audit(operator, "SOFT_DELETE_USER", String.format("%s (%d) da xoa mem tai khoan %s (%d)",
+                displayName(operator), operator.getId(), target.getEmail(), target.getId()));
+        return AdminActionResponse.builder()
+                .success(true)
+                .message("Da xoa tai khoan khoi he thong.")
+                .build();
     }
 
     @Transactional
@@ -270,7 +309,28 @@ public class AdminUserManagementService {
                 .isOnline(isUserOnline(user.getId()))
                 .createdAt(user.getCreatedAt())
                 .gender(user.getGender())
+                .address(user.getAddress())
+                .nationalId(user.getNationalId())
+                .dateOfBirth(user.getDateOfBirth())
                 .build();
+    }
+
+    private boolean resolveLockedFromActive(Boolean active) {
+        if (active == null) {
+            return false;
+        }
+        return !Boolean.TRUE.equals(active);
+    }
+
+    private String normalizeGender(String gender) {
+        if (gender == null || gender.isBlank()) {
+            return "Nam";
+        }
+        String value = gender.trim();
+        if (value.equalsIgnoreCase("nu") || value.equalsIgnoreCase("nữ") || value.equalsIgnoreCase("female")) {
+            return "Nữ";
+        }
+        return "Nam";
     }
 
     private boolean isUserOnline(Long userId) {

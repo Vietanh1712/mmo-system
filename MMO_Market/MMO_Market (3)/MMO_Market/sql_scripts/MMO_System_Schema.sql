@@ -20,7 +20,6 @@ CREATE TABLE Users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255),
     full_name NVARCHAR(255),
-    gender NVARCHAR(50),
     role NVARCHAR(MAX) NOT NULL, -- Ví dụ: {"role": "Customer"}, {"role": "Seller"}
     phone VARCHAR(20),
     shop_status VARCHAR(20) DEFAULT 'Pending',
@@ -429,9 +428,9 @@ DECLARE @PasswordHash VARCHAR(255) = '$2y$10$uRFrFYP.Ld32A.LSRCm10.LlUfbJH7vgelU
 IF NOT EXISTS (SELECT 1 FROM Users WHERE email = 'customer01@gmail.com')
 BEGIN
     INSERT INTO Users
-    (email, password, full_name, gender, role, phone, shop_status, balance_vnd, permissions, isVerified, isDelete)
+    (email, password, full_name, role, phone, shop_status, balance_vnd, permissions, isVerified, isDelete)
     VALUES
-    ('customer01@gmail.com', @PasswordHash, N'Nguyễn Văn Customer', N'Nam', '{"role": "Customer"}', '0901234567', 'Pending', 0, NULL, 1, 0);
+    ('customer01@gmail.com', @PasswordHash, N'Nguyễn Văn Customer', '{"role": "Customer"}', '0901234567', 'Pending', 0, NULL, 1, 0);
 END
 GO
 
@@ -440,9 +439,9 @@ DECLARE @PasswordHash VARCHAR(255) = '$2y$10$uRFrFYP.Ld32A.LSRCm10.LlUfbJH7vgelU
 IF NOT EXISTS (SELECT 1 FROM Users WHERE email = 'seller01@gmail.com')
 BEGIN
     INSERT INTO Users
-    (email, password, full_name, gender, role, phone, shop_status, balance_vnd, permissions, isVerified, isDelete)
+    (email, password, full_name, role, phone, shop_status, balance_vnd, permissions, isVerified, isDelete)
     VALUES
-    ('seller01@gmail.com', @PasswordHash, N'Trần Văn Seller', N'Nữ', '{"role": "Seller"}', '0902345678', 'Active', 0, NULL, 1, 0);
+    ('seller01@gmail.com', @PasswordHash, N'Trần Văn Seller', '{"role": "Seller"}', '0902345678', 'Active', 0, NULL, 1, 0);
 END
 GO
 
@@ -451,9 +450,9 @@ DECLARE @PasswordHash VARCHAR(255) = '$2y$10$uRFrFYP.Ld32A.LSRCm10.LlUfbJH7vgelU
 IF NOT EXISTS (SELECT 1 FROM Users WHERE email = 'staff01@gmail.com')
 BEGIN
     INSERT INTO Users
-    (email, password, full_name, gender, role, phone, shop_status, balance_vnd, permissions, isVerified, isDelete)
+    (email, password, full_name, role, phone, shop_status, balance_vnd, permissions, isVerified, isDelete)
     VALUES
-    ('staff01@gmail.com', @PasswordHash, N'Lê Văn Staff', N'Nam', '{"role": "Staff"}', '0903456789', 'Approved', 0, NULL, 1, 0);
+    ('staff01@gmail.com', @PasswordHash, N'Lê Văn Staff', '{"role": "Staff"}', '0903456789', 'Approved', 0, NULL, 1, 0);
 END
 GO
 
@@ -462,9 +461,9 @@ DECLARE @PasswordHash VARCHAR(255) = '$2y$10$uRFrFYP.Ld32A.LSRCm10.LlUfbJH7vgelU
 IF NOT EXISTS (SELECT 1 FROM Users WHERE email = 'admin01@gmail.com')
 BEGIN
     INSERT INTO Users
-    (email, password, full_name, gender, role, phone, shop_status, balance_vnd, permissions, isVerified, isDelete)
+    (email, password, full_name, role, phone, shop_status, balance_vnd, permissions, isVerified, isDelete)
     VALUES
-    ('admin01@gmail.com', @PasswordHash, N'Admin MMO System', N'Nam', '{"role": "Admin"}', '0904567890', 'Active', 0, '{"all": true}', 1, 0);
+    ('admin01@gmail.com', @PasswordHash, N'Admin MMO System', '{"role": "Admin"}', '0904567890', 'Active', 0, '{"all": true}', 1, 0);
 END
 GO
 

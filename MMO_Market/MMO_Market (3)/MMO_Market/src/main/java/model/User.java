@@ -3,6 +3,7 @@ package model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -27,6 +28,15 @@ public class User {
 
     @Column
     private String gender;
+
+    @Column(columnDefinition = "NVARCHAR(500)")
+    private String address;
+
+    @Column(name = "national_id")
+    private String nationalId;
+
+    @Column(name = "date_of_birth")
+    private LocalDate dateOfBirth;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String role; // JSON format: {"role": "Customer"} or {"role": "Seller"}

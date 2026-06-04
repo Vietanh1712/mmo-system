@@ -6,7 +6,7 @@
     const MOCK_KEY = 'mmo_admin_mock';
 
     const VIEWS = [
-        'dashboard', 'audit-logs', 'revenue', 'add-staff', 'system-config',
+        'dashboard', 'audit-logs', 'revenue', 'add-staff', 'account-detail', 'system-config',
         'commissions', 'maintenance', 'accounts', 'permissions'
     ];
 
@@ -79,6 +79,10 @@
     let revPage = 0;
     let revPageSize = 10;
     let revFiltered = [];
+    let accountFormMode = 'create';
+    let accountFormUserId = null;
+    let accountFormReturnView = 'accounts';
+    let accountFormActive = true;
 
     const ROLE_LABELS = {
         Admin: 'Quản trị viên',
@@ -109,15 +113,30 @@
 
     const ICON_VIEW = `<svg class="ds-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2.25 12C3.73 8.12 7.49 5.25 12 5.25C16.51 5.25 20.27 8.12 21.75 12C20.27 15.88 16.51 18.75 12 18.75C7.49 18.75 3.73 15.88 2.25 12Z" stroke="currentColor" stroke-width="2"/><path d="M12 15.25C13.79 15.25 15.25 13.79 15.25 12C15.25 10.21 13.79 8.75 12 8.75C10.21 8.75 8.75 10.21 8.75 12C8.75 13.79 10.21 15.25 12 15.25Z" stroke="currentColor" stroke-width="2"/></svg>`;
 
-    const ICON_EDIT = `<svg class="ds-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 20H20M14.5 4.5L19.5 9.5M14.5 4.5L8 11V14H11L17.5 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const ICON_DELETE = `<svg class="ds-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 7L7 20C7.08 21.1 7.9 22 9 22H15C16.1 22 16.92 21.1 17 20L18 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 7V4C9 3.45 9.45 3 10 3H14C14.55 3 15 3.45 15 4V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
     document.addEventListener('DOMContentLoaded', () => {
         if (!guardAdminAccess()) return;
         initMock();
         bindEvents();
-        const hash = (window.location.hash || '#dashboard').replace('#', '');
-        switchAdminView(hash);
+        navigateFromHash();
     });
+
+    function navigateFromHash() {
+        const raw = (window.location.hash || '#dashboard').slice(1);
+        if (raw.startsWith('account-detail')) {
+            const qIndex = raw.indexOf('?');
+            const params = new URLSearchParams(qIndex >= 0 ? raw.slice(qIndex + 1) : '');
+            const id = params.get('id');
+            if (id) {
+                accountFormUserId = Number(id);
+                accountFormMode = 'detail';
+                switchAdminView('account-detail');
+                return;
+            }
+        }
+        switchAdminView(raw.split('?')[0] || 'dashboard');
+    }
 
     function initMock() {
         try {
@@ -134,38 +153,26 @@
     }
 
     function bindEvents() {
-        window.addEventListener('hashchange', () => {
-            switchAdminView((window.location.hash || '#dashboard').replace('#', ''));
-        });
+        window.addEventListener('hashchange', navigateFromHash);
 
         document.getElementById('accountsSearchBtn')?.addEventListener('click', () => {
             currentPage = 0;
             loadUsers();
         });
         document.getElementById('accountsResetFilter')?.addEventListener('click', () => {
-            const email = document.getElementById('searchEmail');
-            const phone = document.getElementById('searchPhone');
-            const name = document.getElementById('searchName');
-            const gender = document.getElementById('genderFilter');
+            const search = document.getElementById('searchInput');
             const role = document.getElementById('roleFilter');
-            const status = document.getElementById('statusFilter');
-            if (email) email.value = '';
-            if (phone) phone.value = '';
-            if (name) name.value = '';
-            if (gender) gender.value = '';
+            if (search) search.value = '';
             if (role) role.value = '';
-            if (status) status.value = '';
             currentPage = 0;
             loadUsers();
         });
-        ['searchEmail', 'searchPhone', 'searchName'].forEach(id => {
-            document.getElementById(id)?.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    currentPage = 0;
-                    loadUsers();
-                }
-            });
+        document.getElementById('searchInput')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                currentPage = 0;
+                loadUsers();
+            }
         });
 
         document.getElementById('auditSearchBtn')?.addEventListener('click', () => {
@@ -195,10 +202,42 @@
             renderRevenueView();
         });
 
-        document.getElementById('addStaffForm')?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            submitAddStaffPage();
+        document.getElementById('accountFormStatusToggle')?.addEventListener('click', () => {
+            if (accountFormMode === 'detail-readonly') return;
+            setAccountFormActive(!accountFormActive);
         });
+        document.getElementById('accountFormSubmitBtn')?.addEventListener('click', () => submitAccountForm());
+        document.getElementById('accountFormEmail')?.addEventListener('input', syncAccountFormProfile);
+        document.getElementById('accountFormFullName')?.addEventListener('input', syncAccountFormProfile);
+    }
+
+    function syncAccountFormProfile() {
+        const name = document.getElementById('accountFormFullName')?.value.trim();
+        const email = document.getElementById('accountFormEmail')?.value.trim();
+        const avatar = document.getElementById('accountFormAvatar');
+        const nameEl = document.getElementById('accountFormProfileName');
+        const emailEl = document.getElementById('accountFormProfileEmail');
+        const displayName = name || (accountFormMode === 'create' ? 'Nhân viên mới' : '—');
+        const displayEmail = email || '—';
+        if (nameEl) nameEl.textContent = displayName;
+        if (emailEl) emailEl.textContent = displayEmail;
+        if (avatar) avatar.textContent = String(displayName).charAt(0).toUpperCase();
+    }
+
+    function setAccountFormLayoutMode(mode) {
+        const isDetail = mode === 'detail';
+        const createAside = document.getElementById('accountFormAsideCreate');
+        const statsAside = document.getElementById('accountFormAsideStats');
+        const profileRole = document.getElementById('accountFormProfileRole');
+        const modeBadge = document.getElementById('accountFormModeBadge');
+        if (createAside) createAside.style.display = isDetail ? 'none' : 'block';
+        if (statsAside) statsAside.style.display = isDetail ? 'grid' : 'none';
+        if (profileRole) profileRole.style.display = isDetail ? 'inline-flex' : 'none';
+        if (modeBadge) {
+            modeBadge.textContent = isDetail ? 'Chi tiết' : 'Tạo mới';
+            modeBadge.className = `ds-badge account-form-mode-badge ${isDetail ? 'ds-badge-muted' : 'ds-badge-info'}`;
+        }
+        setText('accountFormKicker', isDetail ? 'Hồ sơ thành viên' : 'Quản lý tài khoản');
     }
 
     function sttNumber(page, pageSize, index) {
@@ -298,15 +337,21 @@
         return `<button type="button" class="ds-icon-btn ds-icon-btn-view" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}" onclick="${onclick}">${ICON_VIEW}</button>`;
     }
 
-    function tableActionsEdit(onclick, title) {
-        return `<button type="button" class="ds-icon-btn ds-icon-btn-reset" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}" onclick="${onclick}">${ICON_EDIT}</button>`;
+    function tableActionsDelete(onclick, title) {
+        return `<button type="button" class="ds-icon-btn ds-icon-btn-delete" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}" onclick="${onclick}">${ICON_DELETE}</button>`;
+    }
+
+    function resolveViewElementId(target) {
+        if (target === 'accounts') return 'accountsView';
+        if (target === 'add-staff' || target === 'account-detail') return 'accountFormView';
+        return `${target}View`;
     }
 
     window.switchAdminView = function (viewName) {
         const target = VIEWS.includes(viewName) ? viewName : 'dashboard';
-        const viewId = target === 'accounts' ? 'accountsView' : `${target}View`;
+        const viewId = resolveViewElementId(target);
 
-        if (window.location.hash !== `#${target}`) {
+        if (target !== 'account-detail' && window.location.hash !== `#${target}`) {
             window.history.replaceState(null, '', `#${target}`);
         }
 
@@ -325,7 +370,8 @@
             case 'dashboard': loadDashboard(); break;
             case 'audit-logs': filterAuditLogs(); break;
             case 'revenue': renderRevenueView(); break;
-            case 'add-staff': break;
+            case 'add-staff': prepareAccountFormCreate(); break;
+            case 'account-detail': loadAccountFormDetail(); break;
             case 'system-config': loadSystemConfigForm(); break;
             case 'commissions': loadCommissionsForm(); break;
             case 'maintenance': loadMaintenanceForm(); break;
@@ -502,14 +548,12 @@
         setLoading(true);
         const params = new URLSearchParams({
             page: String(currentPage),
-            size: String(currentPageSize),
-            email: document.getElementById('searchEmail').value.trim(),
-            phone: document.getElementById('searchPhone').value.trim(),
-            name: document.getElementById('searchName').value.trim(),
-            gender: document.getElementById('genderFilter').value,
-            role: document.getElementById('roleFilter').value,
-            status: document.getElementById('statusFilter').value
+            size: String(currentPageSize)
         });
+        const keyword = document.getElementById('searchInput').value.trim();
+        if (keyword) params.set('name', keyword);
+        const roleVal = document.getElementById('roleFilter').value;
+        if (roleVal) params.set('role', roleVal);
         try {
             const response = await authFetch(`${ENDPOINT}/users?${params.toString()}`);
             const data = await response.json();
@@ -537,15 +581,12 @@
         tbody.innerHTML = list.map((user, index) => {
             const initial = String(user.fullName || user.email || '?').charAt(0).toUpperCase();
             const locked = Boolean(user.isLocked);
-            const online = Boolean(user.isOnline);
             const role = user.role || 'Customer';
             const balance = formatVnd(user.balanceVnd || 0);
             const createdAt = user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : '—';
             const self = user.id === readCurrentUser()?.id;
-            const isStaff = role === 'Staff';
-            const statusText = locked ? 'Bị khóa' : (online ? 'Đang hoạt động' : 'Chưa hoạt động');
-            const lockTitle = locked ? 'Mở khóa tài khoản' : 'Khóa tài khoản';
-            const lockBtnClass = locked ? 'ds-icon-btn-view' : 'ds-icon-btn-delete';
+            const isAdmin = role === 'Admin';
+            const canDelete = !self && !isAdmin;
 
             return `
                 <tr>
@@ -561,15 +602,14 @@
                         </div>
                     </td>
                     <td class="ds-table-center"><span class="ds-badge ${roleBadgeClass(role)}">${escapeHtml(roleLabel(role))}</span></td>
-                    <td class="ds-table-center"><span class="ds-badge ${statusBadgeClass(locked, online)}">${statusText}</span></td>
                     <td class="ds-table-center"><span class="ds-badge ${user.isVerified ? 'ds-badge-success' : 'ds-badge-warning'}">${user.isVerified ? 'Đã xác thực' : 'Chưa xác thực'}</span></td>
                     <td><span class="ds-money">${balance}</span></td>
                     <td>${createdAt}</td>
+                    <td class="ds-table-center">${statusToggleCell(user, self)}</td>
                     <td>
                         <div class="ds-table-actions">
-                            ${tableActionsView(`AdminConsole.openUserDetail(${user.id})`, 'Xem chi tiết')}
-                            ${isStaff ? tableActionsEdit(`AdminConsole.openStaffModal(${user.id})`, 'Sửa nhân viên') : ''}
-                            <button type="button" class="ds-icon-btn ${lockBtnClass}" title="${lockTitle}" aria-label="${lockTitle}" ${self ? 'disabled' : ''} onclick="AdminConsole.toggleLock(${user.id})"><i class="fa ${locked ? 'fa-unlock' : 'fa-lock'}"></i></button>
+                            ${tableActionsView(`AdminConsole.openAccountDetail(${user.id})`, 'Xem chi tiết')}
+                            ${canDelete ? tableActionsDelete(`AdminConsole.softDeleteUser(${user.id})`, 'Xóa tài khoản') : ''}
                         </div>
                     </td>
                 </tr>
@@ -596,137 +636,255 @@
         });
     }
 
-    window.AdminConsole.toggleLock = async function (userId) {
+    function statusToggleCell(user, disabled) {
+        const locked = Boolean(user.isLocked);
+        const inactive = locked ? ' ds-toggle-inactive' : '';
+        const label = locked ? 'Tạm dừng' : 'Đang hoạt động';
+        return `
+            <button type="button" class="ds-toggle${inactive}" aria-pressed="${!locked}" ${disabled ? 'disabled' : ''}
+                onclick="AdminConsole.toggleStatus(${user.id}, this)">
+                <span class="ds-toggle-track"><span class="ds-toggle-knob"></span></span>
+                <span class="ds-toggle-label">${label}</span>
+            </button>
+        `;
+    }
+
+    window.AdminConsole.toggleStatus = async function (userId, btn) {
         const user = users.find(u => u.id === userId);
-        if (!user) return;
-        const action = user.isLocked ? 'mở khóa' : 'khóa';
-        if (!confirm(`Xác nhận ${action} tài khoản ${user.email}?`)) return;
+        if (!user || userId === readCurrentUser()?.id) return;
         try {
             const response = await authFetch(`${ENDPOINT}/users/${userId}/toggle-lock`, { method: 'POST' });
             const data = await response.json();
-            if (!response.ok || !data.success) throw new Error(data.message || 'Thao tác thất bại.');
-            showToast(data.message || 'Cập nhật thành công.');
+            if (!response.ok || !data.success) throw new Error(data.message || 'Không thể đổi trạng thái.');
+            user.isLocked = data.isLocked;
+            const locked = Boolean(data.isLocked);
+            btn.classList.toggle('ds-toggle-inactive', locked);
+            btn.setAttribute('aria-pressed', String(!locked));
+            const labelEl = btn.querySelector('.ds-toggle-label');
+            if (labelEl) labelEl.textContent = locked ? 'Tạm dừng' : 'Đang hoạt động';
+            showToast(data.message || 'Đã cập nhật trạng thái.');
+        } catch (error) {
+            showToast(error.message, true);
+        }
+    };
+
+    window.AdminConsole.softDeleteUser = async function (userId) {
+        const user = users.find(u => u.id === userId);
+        if (!user) return;
+        if (!confirm(`Xác nhận xóa (mềm) tài khoản ${user.email}?`)) return;
+        try {
+            const response = await authFetch(`${ENDPOINT}/users/${userId}`, { method: 'DELETE' });
+            const data = await response.json();
+            if (!response.ok || !data.success) throw new Error(data.message || 'Không thể xóa tài khoản.');
+            showToast(data.message || 'Đã xóa tài khoản.');
             loadUsers();
         } catch (error) {
             showToast(error.message, true);
         }
     };
 
-    /* ---------- Staff modal & add-staff page (API) ---------- */
-    window.AdminConsole.openStaffModal = function (userId = null) {
-        const isEdit = userId != null;
-        const staff = isEdit ? users.find(u => u.id === userId) : null;
-        document.getElementById('staffModalTitle').textContent = isEdit ? 'Cập nhật nhân viên' : 'Tạo nhân viên';
-        document.getElementById('staffId').value = staff?.id || '';
-        document.getElementById('staffEmail').value = staff?.email || '';
-        document.getElementById('staffFullName').value = staff?.fullName || '';
-        document.getElementById('staffPhone').value = staff?.phone || '';
-        document.getElementById('staffPassword').value = '';
-        document.getElementById('staffEmail').disabled = isEdit;
-        document.getElementById('staffPhone').disabled = isEdit;
-        document.getElementById('staffPassword').placeholder = isEdit ? 'Để trống nếu không đổi' : 'Tối thiểu 6 ký tự';
-        document.getElementById('staffPassword').required = !isEdit;
-        document.getElementById('staffModal').classList.add('active');
+    /* ---------- Form thêm / chi tiết tài khoản ---------- */
+    window.AdminConsole.openCreateStaff = function () {
+        accountFormMode = 'create';
+        accountFormUserId = null;
+        accountFormReturnView = 'accounts';
+        switchAdminView('add-staff');
     };
 
-    window.AdminConsole.closeStaffModal = function () {
-        document.getElementById('staffModal').classList.remove('active');
-        document.getElementById('staffForm').reset();
-        document.getElementById('staffId').value = '';
-        document.getElementById('staffEmail').disabled = false;
-        document.getElementById('staffPhone').disabled = false;
+    window.AdminConsole.openAccountDetail = function (userId) {
+        accountFormMode = 'detail';
+        accountFormUserId = userId;
+        accountFormReturnView = 'accounts';
+        window.history.replaceState(null, '', `#account-detail?id=${userId}`);
+        switchAdminView('account-detail');
     };
 
-    window.AdminConsole.submitStaff = async function () {
-        const id = document.getElementById('staffId').value;
-        const payload = {
-            email: document.getElementById('staffEmail').value.trim(),
-            fullName: document.getElementById('staffFullName').value.trim(),
-            phone: document.getElementById('staffPhone').value.trim(),
-            password: document.getElementById('staffPassword').value
-        };
-        if (id) { delete payload.email; delete payload.phone; }
-        if ((!id && !payload.email) || !payload.fullName || (!id && !payload.password)) {
-            showToast('Vui lòng nhập đủ thông tin bắt buộc.', true);
+    window.AdminConsole.backFromAccountForm = function () {
+        switchAdminView(accountFormReturnView || 'accounts');
+    };
+
+    function prepareAccountFormCreate() {
+        accountFormMode = 'create';
+        accountFormUserId = null;
+        setAccountFormLayoutMode('create');
+        setText('accountFormTitle', 'Thêm tài khoản nhân viên');
+        setText('accountFormCaption', 'Điền thông tin để tạo tài khoản nhân viên mới.');
+        setText('accountFormSubmitLabel', 'Tạo nhân viên');
+        const submitBtn = document.getElementById('accountFormSubmitBtn');
+        if (submitBtn) submitBtn.style.display = '';
+        const actionsBar = document.querySelector('.account-form-actions');
+        if (actionsBar) actionsBar.style.display = '';
+        resetAccountFormFields();
+        setAccountFormEditable(true);
+        setAccountFormActive(true);
+        document.getElementById('accountFormEmail').disabled = false;
+        document.getElementById('accountFormPasswordWrap').style.display = '';
+        document.getElementById('accountFormPassword').required = true;
+        document.getElementById('accountFormPasswordRequired').style.display = '';
+        syncAccountFormProfile();
+    }
+
+    async function loadAccountFormDetail() {
+        if (!accountFormUserId) {
+            AdminConsole.backFromAccountForm();
             return;
         }
         try {
-            const response = await authFetch(id ? `${ENDPOINT}/staff/${id}` : `${ENDPOINT}/staff`, {
-                method: id ? 'PUT' : 'POST',
-                body: JSON.stringify(payload)
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Không thể lưu nhân viên.');
-            AdminConsole.closeStaffModal();
-            showToast(id ? 'Đã cập nhật nhân viên.' : 'Đã tạo nhân viên.');
-            loadUsers();
+            const response = await authFetch(`${ENDPOINT}/users/${accountFormUserId}`);
+            const user = await response.json();
+            if (!response.ok) throw new Error(user.message || 'Không tải được tài khoản.');
+            fillAccountForm(user);
         } catch (error) {
             showToast(error.message, true);
-        }
-    };
-
-    async function submitAddStaffPage() {
-        const payload = {
-            email: document.getElementById('pageStaffEmail').value.trim(),
-            fullName: document.getElementById('pageStaffFullName').value.trim(),
-            phone: document.getElementById('pageStaffPhone').value.trim(),
-            password: document.getElementById('pageStaffPassword').value
-        };
-        if (!payload.email || !payload.fullName || !payload.password) {
-            showToast('Vui lòng nhập đủ email, họ tên và mật khẩu.', true);
-            return;
-        }
-        try {
-            const response = await authFetch(`${ENDPOINT}/staff`, { method: 'POST', body: JSON.stringify(payload) });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Không thể tạo nhân viên.');
-            document.getElementById('addStaffForm').reset();
-            showToast('Đã tạo tài khoản nhân viên.');
-            switchAdminView('accounts');
-        } catch (error) {
-            showToast(error.message, true);
+            AdminConsole.backFromAccountForm();
         }
     }
 
-    /* ---------- User detail modal ---------- */
-    let detailUserId = null;
-
-    window.AdminConsole.openUserDetail = function (userId) {
-        const user = users.find(u => u.id === userId);
-        if (!user) return;
-        detailUserId = userId;
-        const initial = String(user.fullName || user.email).charAt(0).toUpperCase();
-        document.getElementById('detailAvatar').textContent = initial;
-        document.getElementById('detailFullName').textContent = user.fullName || '—';
-        document.getElementById('detailEmail').textContent = user.email || '—';
-        document.getElementById('detailPhone').textContent = user.phone || 'Chưa cập nhật';
+    function fillAccountForm(user) {
         const role = user.role || 'Customer';
-        document.getElementById('detailRoleBadge').textContent = roleLabel(role);
-        document.getElementById('detailRoleBadge').className = `ds-badge ${roleBadgeClass(role)}`;
-        document.getElementById('detailBalance').textContent = formatVnd(user.balanceVnd || 0);
-        document.getElementById('detailCreatedAt').textContent = user.createdAt ? formatDateTime(user.createdAt) : '—';
-        document.getElementById('detailStatusText').innerHTML = user.isLocked
-            ? '<span class="ds-badge ds-badge-danger">Bị khóa</span>'
-            : '<span class="ds-badge ds-badge-success">Đang hoạt động</span>';
-        document.getElementById('detailVerifyText').innerHTML = user.isVerified
+        const isStaff = role === 'Staff';
+        accountFormMode = isStaff ? 'detail-edit' : 'detail-readonly';
+
+        setAccountFormLayoutMode('detail');
+        setText('accountFormTitle', user.fullName || 'Chi tiết tài khoản');
+        setText('accountFormCaption', `Mã #${user.id} · ${user.email || ''}`);
+        setText('accountFormSubmitLabel', 'Lưu thay đổi');
+
+        document.getElementById('accountFormId').value = user.id || '';
+        document.getElementById('accountFormEmail').value = user.email || '';
+        document.getElementById('accountFormFullName').value = user.fullName || '';
+        document.getElementById('accountFormPhone').value = user.phone || '';
+        document.getElementById('accountFormAddress').value = user.address || '';
+        document.getElementById('accountFormNationalId').value = user.nationalId || '';
+        document.getElementById('accountFormBirthDate').value = user.dateOfBirth || '';
+        const gender = (user.gender || 'Nam').toLowerCase();
+        document.querySelectorAll('input[name="accountFormGender"]').forEach(r => {
+            r.checked = (gender.startsWith('n') && r.value === 'Nữ') || (!gender.startsWith('n') && r.value === 'Nam');
+        });
+        setAccountFormActive(!user.isLocked);
+        syncAccountFormProfile();
+
+        setText('accountFormIdDisplay', user.id ? `#${user.id}` : '—');
+        const roleEl = document.getElementById('accountFormRoleBadge');
+        roleEl.textContent = roleLabel(role);
+        roleEl.className = `ds-badge ${roleBadgeClass(role)}`;
+        const profileRole = document.getElementById('accountFormProfileRole');
+        if (profileRole) {
+            profileRole.textContent = roleLabel(role);
+            profileRole.className = `ds-badge ${roleBadgeClass(role)}`;
+            profileRole.style.display = 'inline-flex';
+        }
+        document.getElementById('accountFormVerifyBadge').innerHTML = user.isVerified
             ? '<span class="ds-badge ds-badge-success">Đã xác thực</span>'
             : '<span class="ds-badge ds-badge-warning">Chưa xác thực</span>';
+        document.getElementById('accountFormBalance').textContent = formatVnd(user.balanceVnd || 0);
+        document.getElementById('accountFormCreatedAt').textContent = user.createdAt
+            ? new Date(user.createdAt).toLocaleString('vi-VN') : '—';
 
-        const isStaff = user.role === 'Staff';
-        document.getElementById('detailStaffActions').style.display = isStaff ? 'flex' : 'none';
-        document.getElementById('userDetailModal').classList.add('active');
-    };
+        const submitBtn = document.getElementById('accountFormSubmitBtn');
+        const actionsBar = document.querySelector('.account-form-actions');
+        if (isStaff) {
+            document.getElementById('accountFormEmail').disabled = true;
+            document.getElementById('accountFormPasswordWrap').style.display = '';
+            document.getElementById('accountFormPassword').value = '';
+            document.getElementById('accountFormPassword').required = false;
+            document.getElementById('accountFormPasswordRequired').style.display = 'none';
+            if (submitBtn) submitBtn.style.display = '';
+            if (actionsBar) actionsBar.style.display = '';
+            setAccountFormEditable(true);
+        } else {
+            document.getElementById('accountFormEmail').disabled = true;
+            document.getElementById('accountFormPasswordWrap').style.display = 'none';
+            if (submitBtn) submitBtn.style.display = 'none';
+            if (actionsBar) actionsBar.style.display = 'none';
+            setAccountFormEditable(false);
+        }
+    }
 
-    window.AdminConsole.closeUserDetail = function () {
-        document.getElementById('userDetailModal').classList.remove('active');
-        detailUserId = null;
-    };
+    function resetAccountFormFields() {
+        document.getElementById('accountForm').reset();
+        document.getElementById('accountFormId').value = '';
+        document.querySelector('input[name="accountFormGender"][value="Nam"]').checked = true;
+    }
 
-    window.AdminConsole.editStaffFromDetail = function () {
-        if (!detailUserId) return;
-        AdminConsole.closeUserDetail();
-        AdminConsole.openStaffModal(detailUserId);
-    };
+    function setAccountFormEditable(editable) {
+        ['accountFormFullName', 'accountFormPhone', 'accountFormAddress', 'accountFormNationalId', 'accountFormBirthDate'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.disabled = !editable;
+        });
+        document.querySelectorAll('input[name="accountFormGender"]').forEach(r => { r.disabled = !editable; });
+        const toggle = document.getElementById('accountFormStatusToggle');
+        if (toggle) toggle.disabled = !editable;
+    }
+
+    function setAccountFormActive(active) {
+        accountFormActive = active;
+        const btn = document.getElementById('accountFormStatusToggle');
+        const label = document.getElementById('accountFormStatusLabel');
+        if (!btn || !label) return;
+        btn.classList.toggle('ds-toggle-inactive', !active);
+        btn.setAttribute('aria-pressed', String(active));
+        label.textContent = active ? 'Đang hoạt động' : 'Tạm dừng';
+    }
+
+    function readAccountFormPayload() {
+        const gender = document.querySelector('input[name="accountFormGender"]:checked')?.value || 'Nam';
+        const birth = document.getElementById('accountFormBirthDate').value;
+        return {
+            email: document.getElementById('accountFormEmail').value.trim(),
+            fullName: document.getElementById('accountFormFullName').value.trim(),
+            phone: document.getElementById('accountFormPhone').value.trim(),
+            password: document.getElementById('accountFormPassword').value,
+            gender,
+            address: document.getElementById('accountFormAddress').value.trim(),
+            nationalId: document.getElementById('accountFormNationalId').value.trim(),
+            dateOfBirth: birth || null,
+            active: accountFormActive
+        };
+    }
+
+    async function submitAccountForm() {
+        const id = document.getElementById('accountFormId').value;
+        const payload = readAccountFormPayload();
+
+        if (accountFormMode === 'create') {
+            if (!payload.email || !payload.fullName || !payload.password) {
+                showToast('Vui lòng nhập email, họ tên và mật khẩu.', true);
+                return;
+            }
+            try {
+                const response = await authFetch(`${ENDPOINT}/staff`, { method: 'POST', body: JSON.stringify(payload) });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || 'Không thể tạo nhân viên.');
+                showToast('Đã tạo tài khoản nhân viên.');
+                switchAdminView('accounts');
+                loadUsers();
+            } catch (error) {
+                showToast(error.message, true);
+            }
+            return;
+        }
+
+        if (accountFormMode === 'detail-edit' && id) {
+            if (!payload.fullName) {
+                showToast('Họ tên không được để trống.', true);
+                return;
+            }
+            const body = { ...payload };
+            delete body.email;
+            if (!body.password) delete body.password;
+            try {
+                const response = await authFetch(`${ENDPOINT}/staff/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || 'Không thể lưu.');
+                showToast('Đã cập nhật nhân viên.');
+                loadUsers();
+                AdminConsole.openAccountDetail(Number(id));
+            } catch (error) {
+                showToast(error.message, true);
+            }
+        }
+    }
 
     /* ---------- Mock: Audit logs ---------- */
     function filterAuditLogs() {
@@ -1018,7 +1176,7 @@
     function setLoading(on) {
         if (!on) return;
         const body = document.getElementById('usersBody');
-        if (body) body.innerHTML = '<tr><td colspan="8" class="ds-empty-state">Đang tải dữ liệu...</td></tr>';
+        if (body) body.innerHTML = '<tr><td colspan="9" class="ds-empty-state">Đang tải dữ liệu...</td></tr>';
     }
 
     function roleBadgeClass(role) {
