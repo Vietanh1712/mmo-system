@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <title>MMO Market Icons Export</title>
+    <link rel="stylesheet" href="../../../src/main/resources/static/css/design-system.css">
+    <link rel="stylesheet" href="../../../src/main/resources/static/css/icons.css">
+    <style>
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .icon-card {
+            display: flex;
+            min-height: 140px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            border: 1px solid var(--ds-border);
+            border-radius: var(--ds-radius-lg);
+            background: #ffffff;
+            color: #000000;
+            box-shadow: var(--ds-shadow-sm);
+        }
+
+        .icon-card .ds-icon {
+            width: 32px;
+            height: 32px;
+        }
+
+        .icon-name {
+            font-weight: 700;
+            color: var(--ds-text);
+        }
+
+        .icon-class {
+            color: var(--ds-text-subtle);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body class="ds-page">
+    <h1 class="ds-page-title">Icons</h1>
+    <p class="ds-page-subtitle">Icon CSS mask dùng `currentColor`, mặc định hiển thị màu đen và có thể đổi màu bằng CSS.</p>
+
+    <div class="icon-grid">
+        <div class="icon-card">
+            <span class="ds-icon ds-icon-sort" aria-hidden="true"></span>
+            <div class="icon-name">Sort arrows</div>
+            <code class="icon-class">ds-icon-sort</code>
+        </div>
+
+        <div class="icon-card">
+            <span class="ds-icon ds-icon-cloud-upload" aria-hidden="true"></span>
+            <div class="icon-name">Cloud Upload</div>
+            <code class="icon-class">ds-icon-cloud-upload</code>
+        </div>
+
+        <div class="icon-card">
+            <span class="ds-icon ds-icon-flag" aria-hidden="true"></span>
+            <div class="icon-name">Flag</div>
+            <code class="icon-class">ds-icon-flag</code>
+        </div>
+
+        <div class="icon-card">
+            <span class="ds-icon ds-icon-bell" aria-hidden="true"></span>
+            <div class="icon-name">Notification Bell</div>
+            <code class="icon-class">ds-icon-bell</code>
+        </div>
+    </div>
+</body>
+</html>

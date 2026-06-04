@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/messages.css}">
+</head>
+
+<body class="messages-page">
+
+    <header th:replace="fragments/header :: header"></header>
+
+    <div class="messages-layout">
+
+        <!-- Sidebar -->
+        <aside class="messages-sidebar" aria-label="Danh sách tin nhắn">
+            <div class="messages-sidebar__header">
+                <h2 class="messages-sidebar__title">Messages</h2>
+                <div class="messages-sidebar__search">
+                    <i class="fa fa-search"></i>
+                    <input type="search" id="chat-list-search" placeholder="Tìm cuộc trò chuyện..." oninput="filterChatList(this.value)">
+                </div>
+            </div>
+            <ul class="messages-chat-list" id="messages-chat-list">
+                <li class="messages-chat-item is-active" data-chat-id="1" onclick="selectChat(1)">
+                    <div class="messages-chat-item__avatar-wrap">
+                        <div class="messages-chat-item__avatar">SM</div>
+                        <span class="messages-chat-item__status"></span>
+                    </div>
+                    <div class="messages-chat-item__body">
+                        <div class="messages-chat-item__top">
+                            <span class="messages-chat-item__name">StoreMaster Official</span>
+                            <span class="messages-chat-item__time">10:24</span>
+                        </div>
+                        <div class="messages-chat-item__preview">
+                            <span>Dạ em đã gửi lại tài khoản Netflix ạ...</span>
+                            <span class="messages-chat-item__badge">2</span>
+                        </div>
+                    </div>
+                </li>
+                <li class="messages-chat-item" data-chat-id="2" onclick="selectChat(2)">
+                    <div class="messages-chat-item__avatar-wrap">
+                        <div class="messages-chat-item__avatar">NV</div>
+                        <span class="messages-chat-item__status"></span>
+                    </div>
+                    <div class="messages-chat-item__body">
+                        <div class="messages-chat-item__top">
+                            <span class="messages-chat-item__name">Netflix_Vip_Store</span>
+                            <span class="messages-chat-item__time">Hôm qua</span>
+                        </div>
+                        <div class="messages-chat-item__preview">
+                            <span>Cảm ơn bạn đã mua hàng!</span>
+                        </div>
+                    </div>
+                </li>
+                <li class="messages-chat-item" data-chat-id="3" onclick="selectChat(3)">
+                    <div class="messages-chat-item__avatar-wrap">
+                        <div class="messages-chat-item__avatar">CS</div>
+                        <span class="messages-chat-item__status messages-chat-item__status--offline"></span>
+                    </div>
+                    <div class="messages-chat-item__body">
+                        <div class="messages-chat-item__top">
+                            <span class="messages-chat-item__name">MMO Market Support</span>
+                            <span class="messages-chat-item__time">T2</span>
+                        </div>
+                        <div class="messages-chat-item__preview">
+                            <span>Ticket #1024 đã được xử lý xong.</span>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main chat -->
+        <section class="messages-main" aria-label="Cửa sổ chat">
+            <header class="messages-main__header">
+                <div class="messages-main__header-left">
+                    <div class="messages-main__header-avatar" id="chat-header-avatar">SM</div>
+                    <div>
+                        <p class="messages-main__shop-name" id="chat-header-name">StoreMaster Official</p>
+                        <p class="messages-main__online" id="chat-header-status"><i class="fa fa-circle"></i> Online Now</p>
+                    </div>
+                </div>
+                <div class="messages-main__header-actions">
+                    <button type="button" class="messages-main__action-btn" title="Gọi"><i class="fa fa-phone"></i></button>
+                    <button type="button" class="messages-main__action-btn" title="Báo cáo"><i class="fa fa-flag"></i></button>
+                    <button type="button" class="messages-main__action-btn" title="Tùy chọn"><i class="fa fa-ellipsis-v"></i></button>
+                </div>
+            </header>
+
+            <div class="messages-main__body" id="messages-main-body">
+                <div class="messages-date-badge">TODAY</div>
+
+                <article class="messages-context-card" onclick="window.location.href='/products/1'">
+                    <div class="messages-context-card__thumb"><i class="fa fa-play-circle"></i></div>
+                    <div class="messages-context-card__info">
+                        <div class="messages-context-card__label">ITEM OF DISCUSSION</div>
+                        <div class="messages-context-card__name" id="context-product-name">Tài khoản Netflix Premium 4K UHD 1 Tháng</div>
+                        <div class="messages-context-card__meta">
+                            <span class="messages-context-card__price" id="context-product-price">65.000 VNĐ</span>
+                            <span class="messages-context-card__stock">IN STOCK</span>
+                        </div>
+                    </div>
+                    <i class="fa fa-chevron-right messages-context-card__chevron"></i>
+                </article>
+
+                <div class="msg-row msg-row--left">
+                    <div class="msg-row__avatar">SM</div>
+                    <div class="msg-bubble-wrap">
+                        <div class="msg-bubble msg-bubble--in">Chào bạn! Cảm ơn bạn đã mua sản phẩm tại cửa hàng. Nếu cần hỗ trợ kích hoạt, cứ nhắn em nhé.</div>
+                        <span class="msg-meta">10:15</span>
+                    </div>
+                </div>
+
+                <div class="msg-row msg-row--right">
+                    <div class="msg-bubble-wrap">
+                        <div class="msg-bubble msg-bubble--out">Shop ơi, em chưa nhận được thông tin tài khoản trong đơn #ORD-8842 ạ.</div>
+                        <span class="msg-meta">10:18 <i class="fa fa-check"></i><i class="fa fa-check"></i></span>
+                    </div>
+                </div>
+
+                <div class="msg-row msg-row--left">
+                    <div class="msg-row__avatar">SM</div>
+                    <div class="msg-bubble-wrap">
+                        <div class="msg-bubble msg-bubble--in">Dạ em đã gửi lại tài khoản Netflix qua phần chi tiết đơn hàng. Bạn kiểm tra lại giúp em nhé!</div>
+                        <span class="msg-meta">10:24</span>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="messages-main__footer">
+                <div class="messages-input-row">
+                    <button type="button" class="messages-input-row__attach" title="Đính kèm"><i class="fa fa-plus"></i></button>
+                    <div class="messages-input-row__field">
+                        <input type="text" id="message-input" placeholder="Nhập tin nhắn..." autocomplete="off"
+                            onkeypress="if(event.key==='Enter'){event.preventDefault();sendMessage();}">
+                        <i class="fa fa-smile-o messages-input-row__emoji" title="Emoji"></i>
+                    </div>
+                    <button type="button" class="messages-input-row__send" onclick="sendMessage()" title="Gửi">
+                        <i class="fa fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="messages-input-sub">
+                    <a href="#"><i class="fa fa-image"></i> Send Image</a>
+                    <a href="#"><i class="fa fa-paperclip"></i> Attach Files</a>
+                </div>
+            </footer>
+        </section>
+
+    </div>
+
+    <footer th:replace="fragments/footer :: footer"></footer>
+
+    <script th:src="@{/js/auth.js}"></script>
+    <script>
+        const CHAT_DATA = {
+            1: {
+                name: 'StoreMaster Official',
+                avatar: 'SM',
+                online: true,
+                product: 'Tài khoản Netflix Premium 4K UHD 1 Tháng',
+                price: '65.000 VNĐ'
+            },
+            2: {
+                name: 'Netflix_Vip_Store',
+                avatar: 'NV',
+                online: true,
+                product: 'Netflix Premium 4K Gói 1 Năm',
+                price: '650.000 VNĐ'
+            },
+            3: {
+                name: 'MMO Market Support',
+                avatar: 'CS',
+                online: false,
+                product: 'Hỗ trợ kỹ thuật — Ticket #1024',
+                price: '—'
+            }
+        };
+
+        function selectChat(id) {
+            document.querySelectorAll('.messages-chat-item').forEach(el => {
+                el.classList.toggle('is-active', parseInt(el.getAttribute('data-chat-id')) === id);
+                const badge = el.querySelector('.messages-chat-item__badge');
+                if (badge && parseInt(el.getAttribute('data-chat-id')) === id) badge.remove();
+            });
+
+            const chat = CHAT_DATA[id];
+            if (!chat) return;
+
+            document.getElementById('chat-header-name').textContent = chat.name;
+            document.getElementById('chat-header-avatar').textContent = chat.avatar;
+            document.getElementById('context-product-name').textContent = chat.product;
+            document.getElementById('context-product-price').textContent = chat.price;
+
+            const statusEl = document.getElementById('chat-header-status');
+            if (chat.online) {
+                statusEl.innerHTML = '<i class="fa fa-circle"></i> Online Now';
+                statusEl.style.color = '#10b981';
+            } else {
+                statusEl.innerHTML = '<i class="fa fa-circle"></i> Offline';
+                statusEl.style.color = '#94a3b8';
+            }
+        }
+
+        function filterChatList(q) {
+            const term = q.trim().toLowerCase();
+            document.querySelectorAll('.messages-chat-item').forEach(item => {
+                const name = item.querySelector('.messages-chat-item__name').textContent.toLowerCase();
+                const preview = item.querySelector('.messages-chat-item__preview span').textContent.toLowerCase();
+                item.style.display = (!term || name.includes(term) || preview.includes(term)) ? '' : 'none';
+            });
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const body = document.getElementById('messages-main-body');
+            const row = document.createElement('div');
+            row.className = 'msg-row msg-row--right';
+            const now = new Date();
+            const time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            row.innerHTML = `
+                <div class="msg-bubble-wrap">
+                    <div class="msg-bubble msg-bubble--out"></div>
+                    <span class="msg-meta">${time} <i class="fa fa-check"></i></span>
+                </div>
+            `;
+            row.querySelector('.msg-bubble').textContent = text;
+            body.appendChild(row);
+            input.value = '';
+            body.scrollTop = body.scrollHeight;
+        }
+    </script>
+</body>
+
+</html>

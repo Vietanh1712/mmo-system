@@ -1,9 +1,27 @@
 const API_BASE = 'http://localhost:8080/api';
-['accessToken', 'refreshToken', 'loginTimestamp', 'userInfo', 'user'].forEach(key => {
-    if (!sessionStorage.getItem('accessToken')) {
+
+// Sync localStorage to sessionStorage if sessionStorage is empty (e.g. new tab or page refresh)
+if (!sessionStorage.getItem('accessToken') && localStorage.getItem('accessToken')) {
+    ['accessToken', 'refreshToken', 'loginTimestamp', 'userInfo', 'user'].forEach(key => {
+        const val = localStorage.getItem(key);
+        if (val) {
+            sessionStorage.setItem(key, val);
+        }
+    });
+} else if (sessionStorage.getItem('accessToken')) {
+    // Keep localStorage in sync if sessionStorage has the token
+    ['accessToken', 'refreshToken', 'loginTimestamp', 'userInfo', 'user'].forEach(key => {
+        const val = sessionStorage.getItem(key);
+        if (val) {
+            localStorage.setItem(key, val);
+        }
+    });
+} else {
+    // Both are empty, ensure clean state
+    ['accessToken', 'refreshToken', 'loginTimestamp', 'userInfo', 'user'].forEach(key => {
         localStorage.removeItem(key);
-    }
-});
+    });
+}
 
 // =======================================================
 // 1. UTILITIES & AUTH FETCH
@@ -43,7 +61,7 @@ function logout() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ refreshToken }),
             keepalive: true
-        }).catch(() => {});
+        }).catch(() => { });
     }
     sessionStorage.clear();
     localStorage.removeItem('accessToken');
@@ -174,7 +192,7 @@ function togglePassword(inputId, icon) {
 // =======================================================
 // 4. LOGIC TRANG QUÊN MẬT KHẨU (FORGOT PASSWORD)
 // =======================================================
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('forgotPasswordForm');
     if (!form) return; // Rào chắn: Không phải trang quên mật khẩu thì thoát
 
@@ -203,7 +221,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ĐÃ BỔ SUNG VALIDATE REAL-TIME CHO EMAIL
-    emailInput.addEventListener('input', function() {
+    emailInput.addEventListener('input', function () {
         alertBox.style.display = 'none';
         const val = this.value.trim();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -217,7 +235,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', function (e) {
         e.preventDefault();
         alertBox.style.display = 'none';
         const emailValue = emailInput.value.trim();
@@ -265,7 +283,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // =======================================================
 // 5. LOGIC TRANG ĐĂNG NHẬP (LOGIN)
 // =======================================================
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('loginForm');
     if (!form) return; // Rào chắn: Không phải trang đăng nhập thì thoát
 
@@ -288,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (errorEl) errorEl.textContent = '';
     }
 
-    emailInput.addEventListener('input', function() {
+    emailInput.addEventListener('input', function () {
         const val = this.value.trim();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (val === '') {
@@ -300,7 +318,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    passwordInput.addEventListener('input', function() {
+    passwordInput.addEventListener('input', function () {
         if (this.value === '') {
             showFieldError('password', 'Mật khẩu không được để trống.');
         } else {
@@ -308,7 +326,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', function (e) {
         e.preventDefault();
         alertBox.style.display = 'none';
 
@@ -348,10 +366,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     alertBox.style.display = 'block';
 
                     sessionStorage.setItem('accessToken', res.body.accessToken);
+                    localStorage.setItem('accessToken', res.body.accessToken);
                     if (res.body.refreshToken) {
                         sessionStorage.setItem('refreshToken', res.body.refreshToken);
+                        localStorage.setItem('refreshToken', res.body.refreshToken);
                     }
                     sessionStorage.setItem('loginTimestamp', Date.now().toString());
+                    localStorage.setItem('loginTimestamp', Date.now().toString());
 
                     const userInfo = {
                         id: res.body.userId,
@@ -362,6 +383,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     };
                     sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
                     sessionStorage.setItem('user', JSON.stringify(userInfo));
+                    localStorage.setItem('userInfo', JSON.stringify(userInfo));
+                    localStorage.setItem('user', JSON.stringify(userInfo));
 
                     const redirectUrl = normalizeRole(userInfo.role) === 'Admin' ? '/admin/users' : '/';
                     setTimeout(() => window.location.href = redirectUrl, 1000);
@@ -387,7 +410,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // =======================================================
 // 6. LOGIC TRANG ĐĂNG KÝ (REGISTER)
 // =======================================================
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('registerForm');
     if (!form) return; // Rào chắn: Không phải trang đăng ký thì thoát
 
@@ -412,7 +435,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (errorEl) errorEl.textContent = '';
     }
 
-    fullNameInput.addEventListener('input', function() {
+    fullNameInput.addEventListener('input', function () {
         const val = this.value.trim();
         if (val === '') {
             showFieldError('fullName', 'Họ và tên không được để trống.');
@@ -423,7 +446,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    emailInput.addEventListener('input', function() {
+    emailInput.addEventListener('input', function () {
         const val = this.value.trim();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (val === '') {
@@ -435,7 +458,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    phoneInput.addEventListener('input', function() {
+    phoneInput.addEventListener('input', function () {
         const val = this.value.trim();
         if (val !== '') {
             const phoneRegex = /^0\d{9}$/;
@@ -449,7 +472,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    passwordInput.addEventListener('input', function() {
+    passwordInput.addEventListener('input', function () {
         const val = this.value;
         const passwordRegex = /^(?=.*[A-Z])(?=.*[\W_]).{6,}$/;
         if (val === '') {
@@ -461,7 +484,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', function (e) {
         e.preventDefault();
         alertBox.style.display = 'none';
 
@@ -554,7 +577,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // =======================================================
 // 7. LOGIC TRANG ĐẶT LẠI MẬT KHẨU (RESET PASSWORD)
 // =======================================================
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('resetPasswordForm');
     if (!form) return; // Rào chắn: Không phải trang đặt lại mật khẩu thì thoát
 
@@ -600,13 +623,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (errorEl) errorEl.textContent = '';
     }
 
-    form.addEventListener('submit', function(e) { e.preventDefault(); });
+    form.addEventListener('submit', function (e) { e.preventDefault(); });
 
-    otpInput.addEventListener('keypress', function(e) {
+    otpInput.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') { e.preventDefault(); btnNextStep.click(); }
     });
 
-    otpInput.addEventListener('input', function() {
+    otpInput.addEventListener('input', function () {
         let val = this.value.replace(/[^0-9]/g, '');
         if (val.length > 6) val = val.slice(0, 6);
         this.value = val;
@@ -616,7 +639,7 @@ document.addEventListener('DOMContentLoaded', function() {
         else clearFieldError('reset-otp');
     });
 
-    passwordInput.addEventListener('input', function() {
+    passwordInput.addEventListener('input', function () {
         const val = this.value;
         if (val === '') showFieldError('new-password', 'Mật khẩu mới không được để trống.');
         else if (!passwordPattern.test(val)) showFieldError('new-password', 'Mật khẩu phải ít nhất 6 ký tự, gồm 1 chữ HOA và 1 ký tự đặc biệt.');
@@ -628,7 +651,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    confirmInput.addEventListener('input', function() {
+    confirmInput.addEventListener('input', function () {
         const val = this.value;
         if (val === '') showFieldError('confirm-password', 'Vui lòng xác nhận lại mật khẩu.');
         else if (val !== passwordInput.value) showFieldError('confirm-password', 'Mật khẩu xác nhận không trùng khớp.');
@@ -636,7 +659,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     let countdownTimer = null;
-    resendBtn.addEventListener('click', function(e) {
+    resendBtn.addEventListener('click', function (e) {
         e.preventDefault();
         if (this.classList.contains('disabled')) return;
 
@@ -676,7 +699,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     });
 
-    btnNextStep.addEventListener('click', function() {
+    btnNextStep.addEventListener('click', function () {
         const otpValue = otpInput.value.trim();
         if (otpValue === '' || otpValue.length < 6) {
             showFieldError('reset-otp', 'Vui lòng nhập đủ 6 chữ số trước khi tiếp tục.');
@@ -713,14 +736,14 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     });
 
-    btnBackToStep1.addEventListener('click', function() {
+    btnBackToStep1.addEventListener('click', function () {
         step2.style.display = 'none';
         step1.style.display = 'block';
         loginLink.style.display = 'block';
         alertBox.style.display = 'none';
     });
 
-    btnSubmitReset.addEventListener('click', function() {
+    btnSubmitReset.addEventListener('click', function () {
         alertBox.style.display = 'none';
         const otpValue = otpInput.value.trim();
         const passwordValue = passwordInput.value;
@@ -776,7 +799,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // =======================================================
 // 8. LOGIC TRANG XÁC THỰC OTP TÀI KHOẢN MỚI (VERIFY OTP)
 // =======================================================
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('verifyOtpForm');
     if (!form) return; // Rào chắn: Không phải trang xác thực tài khoản OTP thì thoát hoàn toàn
 
@@ -816,7 +839,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     displayEmailSpan.textContent = registeredEmail;
 
-    otpInput.addEventListener('input', function() {
+    otpInput.addEventListener('input', function () {
         alertBox.style.display = 'none';
         let val = this.value.replace(/[^0-9]/g, '');
         if (val.length > 6) val = val.slice(0, 6);
@@ -831,7 +854,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', function (e) {
         e.preventDefault();
         alertBox.style.display = 'none';
         const otp = otpInput.value.trim();
@@ -871,7 +894,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     let countdownTimer = null;
-    resendBtn.addEventListener('click', function(e) {
+    resendBtn.addEventListener('click', function (e) {
         e.preventDefault();
         if (this.classList.contains('disabled')) return;
 
