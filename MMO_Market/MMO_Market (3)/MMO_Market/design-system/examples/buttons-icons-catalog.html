@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <title>MMO Market Buttons & Icons Catalog</title>
+    <link rel="stylesheet" href="../../../src/main/resources/static/css/design-system.css">
+    <link rel="stylesheet" href="../../../src/main/resources/static/css/buttons.css">
+    <link rel="stylesheet" href="../../../src/main/resources/static/css/icons.css">
+    <style>
+        .catalog-section {
+            margin-top: 24px;
+        }
+
+        .catalog-card {
+            padding: 20px;
+        }
+
+        .catalog-title {
+            margin: 0 0 14px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .catalog-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .catalog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 14px;
+        }
+
+        .catalog-item {
+            display: flex;
+            min-height: 126px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border: 1px solid var(--ds-border);
+            border-radius: var(--ds-radius-lg);
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .catalog-item .ds-icon {
+            width: 32px;
+            height: 32px;
+        }
+
+        .catalog-code {
+            color: var(--ds-text-subtle);
+            font-size: 12px;
+        }
+
+        .catalog-note {
+            margin: 10px 0 0;
+            color: var(--ds-text-muted);
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body class="ds-page">
+    <h1 class="ds-page-title">Buttons & Icons Catalog</h1>
+    <p class="ds-page-subtitle">Tổng hợp toàn bộ button và icon đang có CSS trong design system.</p>
+
+    <section class="catalog-section ds-card catalog-card">
+        <h2 class="catalog-title">Button variants</h2>
+        <div class="catalog-row">
+            <button class="ds-btn ds-btn-primary" type="button">Primary</button>
+            <button class="ds-btn ds-btn-secondary" type="button">Secondary</button>
+            <button class="ds-btn ds-btn-success" type="button">Success</button>
+            <button class="ds-btn ds-btn-outline" type="button">Outline</button>
+            <button class="ds-btn ds-btn-danger" type="button">Danger</button>
+        </div>
+        <p class="catalog-note">Base class bắt buộc: <code>.ds-btn</code>. Variant class chọn theo ngữ cảnh hành động.</p>
+    </section>
+
+    <section class="catalog-section ds-card catalog-card">
+        <h2 class="catalog-title">Button states</h2>
+        <div class="catalog-row">
+            <button class="ds-btn ds-btn-primary" type="button" disabled>Disabled attribute</button>
+            <button class="ds-btn ds-btn-secondary ds-disabled" type="button">Disabled class</button>
+            <a class="ds-btn ds-btn-outline" href="#">Anchor button</a>
+        </div>
+        <p class="catalog-note">Dùng `disabled` cho button thật, dùng `.ds-disabled` khi element không hỗ trợ disabled như link.</p>
+    </section>
+
+    <section class="catalog-section ds-card catalog-card">
+        <h2 class="catalog-title">Buttons with icons</h2>
+        <div class="catalog-row">
+            <button class="ds-btn ds-btn-primary" type="button">
+                <span class="ds-icon ds-icon-cloud-upload" aria-hidden="true"></span>
+                Upload
+            </button>
+            <button class="ds-btn ds-btn-outline" type="button">
+                <span class="ds-icon ds-icon-sort" aria-hidden="true"></span>
+                Sắp xếp
+            </button>
+            <button class="ds-btn ds-btn-danger" type="button">
+                <span class="ds-icon ds-icon-flag" aria-hidden="true"></span>
+                Báo cáo
+            </button>
+            <button class="ds-btn ds-btn-secondary" type="button">
+                <span class="ds-icon ds-icon-bell" aria-hidden="true"></span>
+                Thông báo
+            </button>
+        </div>
+    </section>
+
+    <section class="catalog-section ds-card catalog-card">
+        <h2 class="catalog-title">Icon glyphs</h2>
+        <div class="catalog-grid">
+            <div class="catalog-item">
+                <span class="ds-icon ds-icon-sort" aria-hidden="true"></span>
+                <strong>Sort arrows</strong>
+                <code class="catalog-code">ds-icon-sort</code>
+            </div>
+            <div class="catalog-item">
+                <span class="ds-icon ds-icon-cloud-upload" aria-hidden="true"></span>
+                <strong>Cloud Upload</strong>
+                <code class="catalog-code">ds-icon-cloud-upload</code>
+            </div>
+            <div class="catalog-item">
+                <span class="ds-icon ds-icon-flag" aria-hidden="true"></span>
+                <strong>Flag</strong>
+                <code class="catalog-code">ds-icon-flag</code>
+            </div>
+            <div class="catalog-item">
+                <span class="ds-icon ds-icon-bell" aria-hidden="true"></span>
+                <strong>Notification Bell</strong>
+                <code class="catalog-code">ds-icon-bell</code>
+            </div>
+        </div>
+        <p class="catalog-note">Icon dùng `currentColor`, nên đổi màu bằng `color` của chính icon hoặc phần tử cha.</p>
+    </section>
+
+    <section class="catalog-section ds-card catalog-card">
+        <h2 class="catalog-title">Icon buttons</h2>
+        <div class="catalog-row">
+            <button class="ds-icon-btn ds-icon-btn-view" type="button" aria-label="Sắp xếp">
+                <span class="ds-icon ds-icon-sort" aria-hidden="true"></span>
+            </button>
+            <button class="ds-icon-btn ds-icon-btn-delete" type="button" aria-label="Báo cáo">
+                <span class="ds-icon ds-icon-flag" aria-hidden="true"></span>
+            </button>
+            <button class="ds-icon-btn ds-icon-btn-reset" type="button" aria-label="Upload">
+                <span class="ds-icon ds-icon-cloud-upload" aria-hidden="true"></span>
+            </button>
+            <button class="ds-icon-btn ds-disabled" type="button" aria-label="Thông báo bị khóa">
+                <span class="ds-icon ds-icon-bell" aria-hidden="true"></span>
+            </button>
+            <button class="ds-icon-btn" type="button" disabled aria-label="Disabled attribute">
+                <span class="ds-icon ds-icon-bell" aria-hidden="true"></span>
+            </button>
+        </div>
+        <p class="catalog-note">Button chỉ có icon cần `aria-label` để hỗ trợ accessibility.</p>
+    </section>
+</body>
+</html>

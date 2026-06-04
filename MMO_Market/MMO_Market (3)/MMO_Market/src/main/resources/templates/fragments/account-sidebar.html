@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<aside class="account-sidebar" th:fragment="accountSidebar(activeMenu)">
+    <div class="account-sidebar__user">
+        <div class="account-sidebar__avatar" data-account-sidebar="avatar">?</div>
+        <div class="account-sidebar__identity">
+            <strong class="account-sidebar__name" data-account-sidebar="name">Người dùng</strong>
+            <span class="account-sidebar__email" data-account-sidebar="email">-</span>
+        </div>
+    </div>
+
+    <div class="account-sidebar__wallet">
+        <div>
+            <span class="account-sidebar__wallet-label">Số dư</span>
+            <strong class="account-sidebar__balance" data-account-sidebar="balance">0 VNĐ</strong>
+        </div>
+        <a class="account-sidebar__topup" th:href="@{/topup}">Nạp</a>
+    </div>
+
+    <nav class="account-sidebar__menu" aria-label="Menu tài khoản">
+        <a class="account-sidebar__menu-link"
+           th:classappend="${activeMenu == 'profile'} ? ' account-sidebar__menu-link--active' : ''"
+           th:href="@{/profile}">
+            <i class="fa fa-user-o" aria-hidden="true"></i>
+            <span>Thông tin cá nhân</span>
+        </a>
+        <a class="account-sidebar__menu-link account-sidebar__menu-link--disabled"
+           href="#"
+           aria-disabled="true"
+           onclick="return false;">
+            <i class="fa fa-shopping-bag" aria-hidden="true"></i>
+            <span>Lịch sử đơn hàng</span>
+        </a>
+        <a class="account-sidebar__menu-link account-sidebar__menu-link--disabled"
+           href="#"
+           aria-disabled="true"
+           onclick="return false;">
+            <i class="fa fa-heart-o" aria-hidden="true"></i>
+            <span>Sản phẩm yêu thích</span>
+        </a>
+    </nav>
+</aside>
+
+</body>
+</html>

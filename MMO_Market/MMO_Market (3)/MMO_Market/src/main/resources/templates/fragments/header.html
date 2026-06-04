@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<header class="header" th:fragment="header">
+    <div class="header__top">
+        <a href="/" class="header__logo">
+            <i class="fa fa-diamond"></i>
+            MMO <span>Market</span>
+        </a>
+
+        <div class="header__search-area">
+            <form class="search-form" action="/search" method="get" autocomplete="off">
+                <input type="text" name="q" id="header-search-input" placeholder="Tìm kiếm sản phẩm..." th:value="${searchQuery != null ? searchQuery : ''}">
+                <button type="submit">
+                    <i class="fa fa-search"></i>
+                </button>
+                <ul class="header-search-suggestions" id="headerSearchSuggestions"></ul>
+            </form>
+        </div>
+
+        <div class="header__auth" id="headerAuthArea">
+            <a th:href="@{/login}" class="auth-btn btn-login">Đăng nhập</a>
+            <a th:href="@{/register}" class="auth-btn btn-register">Đăng ký</a>
+        </div>
+    </div>
+
+    <div id="userDropdown" class="user-profile-dropdown">
+        <div class="dropdown-item" onclick="checkAuthAndRedirect('/profile')">
+            <i class="fa fa-user"></i> Thông tin cá nhân
+        </div>
+        <div class="dropdown-item" onclick="window.location.href='/history'">
+            <i class="fa fa-history"></i> Lịch sử giao dịch
+        </div>
+        <div class="dropdown-item" onclick="checkAuthAndRedirect('/pre-orders')">
+            <i class="fa fa-hourglass-half"></i> Đơn đặt trước
+        </div>
+        <div class="dropdown-item" onclick="checkAuthAndRedirect('/cart')">
+            <i class="fa fa-shopping-cart"></i> Giỏ hàng của tôi
+        </div>
+        <div class="dropdown-item" onclick="window.location.href='/topup'">
+            <i class="fa fa-credit-card"></i> Nạp tiền
+        </div>
+        <div class="dropdown-item" id="adminUsersDropdownItem" style="display: none;" onclick="window.location.href='/admin/users'">
+            <i class="fa fa-users"></i> Quản lý người dùng
+        </div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item" onclick="if(typeof logout === 'function') logout(); else { sessionStorage.clear(); localStorage.removeItem('accessToken'); localStorage.removeItem('refreshToken'); localStorage.removeItem('loginTimestamp'); localStorage.removeItem('userInfo'); localStorage.removeItem('user'); window.location.href='/login'; }">
+            <i class="fa fa-sign-out-alt"></i> Đăng xuất
+        </div>
+    </div>
+
+    <nav class="nav">
+        <ul class="nav__list" id="mainNavList">
+            <li class="nav__item" onclick="window.location.href='/'">Trang chủ</li>
+            <li class="nav__item" onclick="window.location.href='/products'">Sản phẩm</li>
+            <li class="nav__item" onclick="checkAuthAndRedirect('/topup')">Nạp tiền</li>
+            <li class="nav__item" id="adminUsersNavItem" style="display: none;" onclick="window.location.href='/admin/users'">Quản lý người dùng</li>
+            <li class="nav__item" onclick="window.location.href='/support'">Hỗ trợ</li>
+            <li class="nav__item" onclick="window.location.href='/support#faq'">Câu hỏi thường gặp</li>
+        </ul>
+    </nav>
+
+    <script th:inline="javascript">
+        // 1. CÀI ĐẶT THỜI GIAN HẾT HẠN PHIÊN ĐĂNG NHẬP
+        const SESSION_TIMEOUT_MS = 15 * 60 * 1000;        document.addEventListener('DOMContentLoaded', () => {
+            // Sync localStorage to sessionStorage if sessionStorage is empty (e.g. new tab or page refresh)
+            if (!sessionStorage.getItem('accessToken') && localStorage.getItem('accessToken')) {
+                ['accessToken', 'refreshToken', 'loginTimestamp', 'userInfo', 'user'].forEach(key => {
+                    const val = localStorage.getItem(key);
+                    if (val) {
+                        sessionStorage.setItem(key, val);
+                    }
+                });
+            } else if (sessionStorage.getItem('accessToken')) {
+                // Keep localStorage in sync if sessionStorage has the token
+                ['accessToken', 'refreshToken', 'loginTimestamp', 'userInfo', 'user'].forEach(key => {
+                    const val = sessionStorage.getItem(key);
+                    if (val) {
+                        localStorage.setItem(key, val);
+                    }
+                });
+            } else {
+                // Both are empty, ensure clean state
+                ['accessToken', 'refreshToken', 'loginTimestamp', 'userInfo', 'user'].forEach(key => {
+                    localStorage.removeItem(key);
+                });
+            }
+            const token = sessionStorage.getItem("accessToken");
+            const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user");
+
+            const authArea = document.getElementById('headerAuthArea');
+            const dropdown = document.getElementById('userDropdown');
+
+            // 2. KIỂM TRA HẾT HẠN PHIÊN ĐĂNG NHẬP (AUTO-LOGOUT) & GIA HẠN PHIÊN (SLIDING EXPIRATION)
+            if (token && token !== "null" && token !== "undefined") {
+                const loginTimestamp = sessionStorage.getItem("loginTimestamp");
+                const currentTime = Date.now();
+
+                if (!loginTimestamp) {
+                    // Nếu chưa có mốc thời gian, tạo mới mốc thời gian đăng nhập
+                    sessionStorage.setItem("loginTimestamp", currentTime.toString());
+                    localStorage.setItem("loginTimestamp", currentTime.toString());
+                } else {
+                    // Kiểm tra nếu thời gian trôi qua lớn hơn thời gian cho phép
+                    if (currentTime - parseInt(loginTimestamp) > SESSION_TIMEOUT_MS) {
+                        console.warn("Phiên đăng nhập đã hết hạn. Đang đăng xuất...");
+                        sessionStorage.clear(); // Xóa toàn bộ dữ liệu (token, user, timestamp)
+                        ['accessToken', 'refreshToken', 'loginTimestamp', 'userInfo', 'user'].forEach(key => {
+                            localStorage.removeItem(key);
+                        });
+                        window.location.href = '/login';
+                        return; // Dừng chạy đoạn code bên dưới
+                    } else {
+                        // Reset timestamp on page interaction to keep session active (Sliding Expiration)
+                        sessionStorage.setItem("loginTimestamp", currentTime.toString());
+                        localStorage.setItem("loginTimestamp", currentTime.toString());
+                    }
+                }
+            }
+
+            // 3. HIỂN THỊ GIAO DIỆN KIỂM TRA AN TOÀN CHẶT CHẼ
+            if (token && token !== "null" && token !== "undefined" &&
+                userString && userString !== "null" && userString !== "undefined" && authArea) {
+
+                try {
+                    const user = JSON.parse(userString);
+                    const fullName = user.fullName || 'Người dùng';
+                    const initial = fullName.charAt(0).toUpperCase();
+                    const currentRole = parseHeaderRole(user.role);
+                    const adminDropdownItem = document.getElementById('adminUsersDropdownItem');
+                    const adminNavItem = document.getElementById('adminUsersNavItem');
+                    const mainNavList = document.getElementById('mainNavList');
+                    if (currentRole === 'Admin') {
+                        if (adminDropdownItem) adminDropdownItem.style.display = 'flex';
+                        if (adminNavItem) adminNavItem.style.display = 'block';
+                        if (mainNavList) {
+                            mainNavList.innerHTML = `
+                                <li class="nav__item" id="adminDashboardNav" onclick="openAdminView('dashboard')">Dashboard</li>
+                                <li class="nav__item" id="adminUsersNav" onclick="openAdminView('users')">Quản lý người dùng</li>
+                                <li class="nav__item" id="adminPermissionsNav" onclick="openAdminView('permissions')">Quản lý quyền</li>
+                            `;
+                        }
+
+                        authArea.innerHTML = `
+                            <button class="auth-btn btn-login" type="button" onclick="if(typeof logout === 'function') logout(); else { sessionStorage.clear(); localStorage.removeItem('accessToken'); localStorage.removeItem('refreshToken'); localStorage.removeItem('loginTimestamp'); localStorage.removeItem('userInfo'); localStorage.removeItem('user'); window.location.href='/login'; }">
+                                Đăng xuất
+                            </button>
+                        `;
+                        highlightAdminNav();
+                        return;
+                    }
+
+                    const userBalance = user.balanceVnd || 0;
+                    const balance = typeof formatCurrency === 'function'
+                        ? formatCurrency(userBalance)
+                        : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(userBalance);
+
+                    // Hiển thị Profile
+                    authArea.innerHTML = `
+                        <div class="header__account-actions">
+                            <button class="header-cart-button" type="button" id="headerCartButton" title="Giỏ hàng của tôi" aria-label="Giỏ hàng của tôi" onclick="checkAuthAndRedirect('/cart')">
+                                <i class="fa fa-shopping-cart"></i>
+                                <span class="header-cart-button__badge" id="headerCartCount">0</span>
+                            </button>
+                            <div class="user-profile" id="userProfileToggle" style="cursor: pointer;">
+                                <div class="user-profile__info">
+                                    <p class="user-profile__name">${fullName}</p>
+                                    <p class="user-profile__balance">${balance}</p>
+                                </div>
+                                <div class="user-profile__avatar">
+                                    ${initial}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Gắn sự kiện Dropdown
+                    const toggleBtn = document.getElementById('userProfileToggle');
+                    if (toggleBtn) {
+                        toggleBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            dropdown.classList.toggle('active');
+                        });
+                    }
+                    refreshHeaderCartBadge();
+                } catch (error) {
+                    console.error("Lỗi khi parse thông tin user:", error);
+                    sessionStorage.clear();
+                    window.location.reload();
+                }
+            } else {
+                // Đảm bảo nút Đăng nhập / Đăng ký hiển thị đúng khi không có tài khoản
+                if (authArea && !authArea.querySelector('.btn-login')) {
+                    authArea.innerHTML = `
+                        <a href="/login" class="auth-btn btn-login">Đăng nhập</a>
+                        <a href="/register" class="auth-btn btn-register">Đăng ký</a>
+                    `;
+                }
+            }
+
+            // === GLOBAL NAV ACTIVE HIGHLIGHT ===
+            // Dynamically apply .nav__item--active based on current URL path
+            // This ensures consistent underline effect across ALL pages (Home, Products, etc.)
+            const currentPath = window.location.pathname;
+            const navItemsList = document.querySelectorAll('#mainNavList .nav__item');
+            const navRouteMap = {
+                'Trang chủ': '/',
+                'Sản phẩm': '/products',
+                'Nạp tiền': '/topup',
+                'Hỗ trợ': '/support',
+                'Câu hỏi thường gặp': '/faq'
+            };
+
+            navItemsList.forEach(item => {
+                const label = item.innerText.trim();
+                const targetPath = navRouteMap[label];
+
+                if (targetPath) {
+                    // Exact match for Home ('/'), startsWith match for other pages
+                    const isActive = (targetPath === '/')
+                        ? (currentPath === '/')
+                        : currentPath.startsWith(targetPath);
+
+                    if (isActive) {
+                        item.classList.add('nav__item--active');
+                    } else {
+                        item.classList.remove('nav__item--active');
+                    }
+                }
+            });
+        });
+
+        // Đóng dropdown menu khi click ra ngoài
+        window.addEventListener('click', () => {
+            const dropdown = document.getElementById('userDropdown');
+            if (dropdown && dropdown.classList.contains('active')) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+        // Hàm hỗ trợ kiểm tra trạng thái đăng nhập bảo mật hơn
+        function checkAuthAndRedirect(url) {
+            const token = sessionStorage.getItem("accessToken");
+            if (!token || token === "null" || token === "undefined") {
+                window.location.href = '/login';
+            } else {
+                window.location.href = url;
+            }
+        }
+
+        function parseHeaderRole(roleValue) {
+            if (!roleValue) return 'Customer';
+            try {
+                const parsed = JSON.parse(roleValue);
+                return parsed.role || 'Customer';
+            } catch (error) {
+                const role = String(roleValue).replaceAll('"', '').trim();
+                if (role.toLowerCase().includes('admin')) return 'Admin';
+                if (role.toLowerCase().includes('staff')) return 'Staff';
+                if (role.toLowerCase().includes('seller')) return 'Seller';
+                return 'Customer';
+            }
+        }
+
+        function openAdminView(viewName) {
+            if (window.location.pathname.startsWith('/admin') && typeof window.switchAdminView === 'function') {
+                window.switchAdminView(viewName);
+                return;
+            }
+            window.location.href = `/admin/users#${viewName}`;
+        }
+
+        function highlightAdminNav() {
+            const hash = (window.location.hash || '#dashboard').replace('#', '');
+            const activeMap = {
+                dashboard: 'adminDashboardNav',
+                users: 'adminUsersNav',
+                permissions: 'adminPermissionsNav'
+            };
+            Object.values(activeMap).forEach(id => {
+                const item = document.getElementById(id);
+                if (item) item.style.color = '';
+            });
+            const active = document.getElementById(activeMap[hash] || activeMap.dashboard);
+            if (active) active.style.color = '#fbceb5';
+        }
+
+        function refreshHeaderCartBadge() {
+            const badge = document.getElementById('headerCartCount');
+            if (!badge) return;
+            try {
+                const cart = JSON.parse(localStorage.getItem('mmoCart') || '[]');
+                const count = cart.reduce((sum, item) => sum + Number(item.quantity || 1), 0);
+                badge.innerText = count > 99 ? '99+' : String(count);
+                badge.style.display = count > 0 ? 'inline-flex' : 'none';
+            } catch (error) {
+                badge.innerText = '0';
+                badge.style.display = 'none';
+            }
+        }
+
+        window.refreshHeaderCartBadge = refreshHeaderCartBadge;
+        window.addEventListener('storage', refreshHeaderCartBadge);
+        document.addEventListener('DOMContentLoaded', refreshHeaderCartBadge);
+
+        const HEADER_SEARCH_SUGGESTIONS = [
+            'Netflix',
+            'ChatGPT Plus',
+            'Facebook',
+            'Youtube Premium',
+            'Gmail',
+            'Tool Facebook',
+            'Tài khoản Facebook',
+            'Spotify Premium',
+            'Canva Pro',
+            'Trust Wallet'
+        ];
+
+        function normalizeHeaderSearchText(value) {
+            return (value || '')
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/\bclone\s*fb\b/g, 'facebook')
+                .replace(/\bfb\b/g, 'facebook')
+                .trim();
+        }
+
+        function renderHeaderSearchSuggestions(keyword) {
+            const list = document.getElementById('headerSearchSuggestions');
+            if (!list) return;
+
+            const normalizedKeyword = normalizeHeaderSearchText(keyword);
+            const matches = normalizedKeyword
+                ? HEADER_SEARCH_SUGGESTIONS.filter(item => normalizeHeaderSearchText(item).includes(normalizedKeyword))
+                : HEADER_SEARCH_SUGGESTIONS.slice(0, 6);
+
+            const suggestions = matches.length > 0 ? matches : [
+                `${keyword} giá rẻ`,
+                `Tài khoản ${keyword}`,
+                `Mua ${keyword} tự động`
+            ];
+
+            list.innerHTML = suggestions.slice(0, 8).map(item => `
+                <li class="header-search-suggestions__item" onclick="selectHeaderSuggestion('${String(item).replace(/'/g, "\\'")}')">
+                    <i class="fa fa-search"></i>
+                    <span>${item}</span>
+                </li>
+            `).join('');
+            list.classList.add('is-open');
+        }
+
+        function selectHeaderSuggestion(value) {
+            const input = document.getElementById('header-search-input');
+            const list = document.getElementById('headerSearchSuggestions');
+            if (input) input.value = value;
+            if (list) list.classList.remove('is-open');
+            window.location.href = `/search?q=${encodeURIComponent(value)}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.getElementById('header-search-input');
+            const list = document.getElementById('headerSearchSuggestions');
+            if (!input || !list) return;
+
+            input.addEventListener('focus', () => renderHeaderSearchSuggestions(input.value));
+            input.addEventListener('input', () => renderHeaderSearchSuggestions(input.value));
+            document.addEventListener('click', (event) => {
+                if (!event.target.closest('.header__search-area')) {
+                    list.classList.remove('is-open');
+                }
+            });
+        });
+    </script>
+</header>
+
+</body>
+</html>

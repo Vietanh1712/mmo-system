@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt trước sản phẩm - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/font-awesome@4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/pre-order-request.css}">
+</head>
+
+<body>
+    <header th:replace="~{fragments/header :: header}"></header>
+    <div class="preorder-toast" id="preOrderToast" role="status" aria-live="polite">
+        <i class="fa fa-check-circle"></i>
+        <span id="preOrderToastText">Gửi yêu cầu đặt trước thành công.</span>
+    </div>
+
+    <main class="preorder-shell">
+        <div class="preorder-breadcrumb">
+            <a href="/"><i class="fa fa-home"></i> Trang chủ</a>
+            <span>&gt;</span>
+            <a href="/products">Sản phẩm</a>
+            <span>&gt;</span>
+            <span>Đặt trước sản phẩm</span>
+        </div>
+
+        <section class="preorder-layout">
+            <div class="preorder-panel">
+                <h1 class="preorder-title">Màn hình Đặt trước sản phẩm</h1>
+                <p class="preorder-subtitle">Nhập số lượng và ghi chú cho Seller. Tổng giá đặt trước sẽ tự tính theo giá tham chiếu của sản phẩm.</p>
+
+                <div class="product-summary">
+                    <div class="product-summary__thumb" id="productThumb">
+                        <i class="fa fa-shopping-basket"></i>
+                    </div>
+                    <div>
+                        <div class="status-pill"><i class="fa fa-exclamation-circle"></i> Hết hàng</div>
+                        <h2 class="product-summary__name" id="productNameText">Sản phẩm chưa được chọn</h2>
+                        <div class="product-summary__meta">
+                            <span><i class="fa fa-university"></i> <span id="sellerNameText">Seller</span></span>
+                            <span><i class="fa fa-cubes"></i> Kho: <span id="stockText">0</span></span>
+                            <span><i class="fa fa-tag"></i> Giá tham chiếu: <strong id="referencePriceText">0 VNĐ</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="preOrderForm">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="quantityInput">Số lượng</label>
+                            <input id="quantityInput" type="number" min="1" step="1" value="1" required>
+                        </div>
+                        <div class="field full">
+                            <label for="notesInput">Ghi chú cho Seller</label>
+                            <textarea id="notesInput" placeholder="Ví dụ: Nếu có hàng lại, ưu tiên báo sớm."></textarea>
+                            <div class="helper">Bạn có thể mô tả nhu cầu về số lượng hoặc thời điểm cần hàng.</div>
+                        </div>
+                    </div>
+
+                    <button class="submit-btn" type="submit">
+                        <i class="fa fa-paper-plane"></i> Gửi yêu cầu đặt trước
+                    </button>
+                </form>
+
+                <div class="success-box" id="successBox">
+                    <h3><i class="fa fa-check-circle"></i> Đã gửi yêu cầu thành công</h3>
+                    <p id="successMessage">Yêu cầu đặt trước của bạn đã được ghi nhận.</p>
+                    <div style="display: flex; gap: 10px; margin-top: 14px;">
+                        <button type="button" onclick="backToProduct()" style="margin-top: 0; background: var(--brand-dark, #0f172a);">
+                            <i class="fa fa-arrow-left"></i> Quay lại sản phẩm
+                        </button>
+                        <button type="button" onclick="window.location.href='/pre-orders'" style="margin-top: 0; background: var(--success);">
+                            <i class="fa fa-list"></i> Xem đơn đặt trước
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="preorder-panel">
+                <div class="summary-box">
+                    <h2 class="summary-title">Tóm tắt yêu cầu</h2>
+                    <div class="summary-list">
+                        <div class="summary-row">
+                            <strong>Sản phẩm</strong>
+                            <span class="value" id="summaryProductText">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <strong>Seller</strong>
+                            <span class="value" id="summarySellerText">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <strong>Số lượng</strong>
+                            <span class="value" id="summaryQuantityText">1</span>
+                        </div>
+                        <div class="summary-row">
+                            <strong>Giá hiện tại</strong>
+                            <span class="value" id="summaryCurrentPriceText">0 VNĐ</span>
+                        </div>
+                        <div class="summary-row summary-total">
+                            <strong>Tổng giá đặt trước</strong>
+                            <span class="value" id="summaryExpectedPriceText">0 VNĐ</span>
+                        </div>
+                        <div class="summary-note">(Tổng giá = giá tham chiếu x số lượng.)</div>
+                    </div>
+
+                    <div class="trust-list">
+                        <span><i class="fa fa-shield"></i> Giao dịch an toàn &amp; bảo mật</span>
+                        <span><i class="fa fa-bolt"></i> Thông báo đến Seller nhanh chóng</span>
+                        <span><i class="fa fa-clock-o"></i> Hỗ trợ đặt trước 24/7</span>
+                    </div>
+                </div>
+            </aside>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <script th:inline="javascript">
+        const fallbackProduct = {
+            productId: /*[[${productId}]]*/ null,
+            productName: /*[[${productName}]]*/ '',
+            sellerName: /*[[${sellerName}]]*/ '',
+            price: /*[[${price}]]*/ 0,
+            icon: /*[[${icon}]]*/ 'fa-shopping-basket',
+            iconColor: /*[[${iconColor}]]*/ '#ea580c',
+            stock: /*[[${stock}]]*/ 0
+        };
+
+        const productParams = new URLSearchParams(window.location.search);
+
+        function readParam(name, fallback) {
+            const value = productParams.get(name);
+            return value === null || value === '' ? fallback : value;
+        }
+
+        function parseNumber(value, fallback = 0) {
+            const parsed = Number(value);
+            return Number.isFinite(parsed) ? parsed : fallback;
+        }
+
+        function formatVND(value) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
+                .format(Math.max(0, Number(value) || 0))
+                .replace('₫', 'VNĐ');
+        }
+
+        const preorderProduct = {
+            productId: parseNumber(readParam('productId', fallbackProduct.productId)),
+            productName: readParam('productName', fallbackProduct.productName || 'Sản phẩm'),
+            sellerName: readParam('sellerName', fallbackProduct.sellerName || 'Seller'),
+            price: parseNumber(readParam('price', fallbackProduct.price), fallbackProduct.price || 0),
+            icon: readParam('icon', fallbackProduct.icon || 'fa-shopping-basket'),
+            iconColor: readParam('iconColor', fallbackProduct.iconColor || '#ea580c'),
+            stock: parseNumber(readParam('stock', fallbackProduct.stock), fallbackProduct.stock || 0)
+        };
+
+        const unitPrice = preorderProduct.price > 0 ? preorderProduct.price : 1;
+
+        function getQuantity() {
+            return Math.max(1, parseInt(document.getElementById('quantityInput')?.value || '1', 10) || 1);
+        }
+
+        function getExpectedPriceVnd() {
+            return unitPrice * getQuantity();
+        }
+
+        function updatePreOrderSummary() {
+            const quantity = getQuantity();
+            document.getElementById('summaryQuantityText').innerText = String(quantity);
+            document.getElementById('summaryExpectedPriceText').innerText = formatVND(getExpectedPriceVnd());
+        }
+
+        function getAccessToken() {
+            const token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+            if (!token || token === 'null' || token === 'undefined') return null;
+            return token;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (preorderProduct.stock > 0 && preorderProduct.productId) {
+                alert('Sản phẩm này còn hàng, vui lòng mua trực tiếp thay vì đặt trước.');
+                window.location.href = `/products/${preorderProduct.productId}`;
+                return;
+            }
+
+            const thumb = document.getElementById('productThumb');
+            thumb.innerHTML = `<i class="fa ${preorderProduct.icon}"></i>`;
+            thumb.style.color = preorderProduct.iconColor;
+
+            document.getElementById('productNameText').innerText = preorderProduct.productName || 'Sản phẩm';
+            document.getElementById('sellerNameText').innerText = preorderProduct.sellerName || 'Seller';
+            document.getElementById('stockText').innerText = String(Math.max(0, preorderProduct.stock));
+            document.getElementById('referencePriceText').innerText = formatVND(preorderProduct.price);
+            document.getElementById('summaryProductText').innerText = preorderProduct.productName || '-';
+            document.getElementById('summarySellerText').innerText = preorderProduct.sellerName || '-';
+            document.getElementById('summaryCurrentPriceText').innerText = formatVND(preorderProduct.price);
+
+            const quantityInput = document.getElementById('quantityInput');
+            quantityInput.addEventListener('input', updatePreOrderSummary);
+            updatePreOrderSummary();
+
+            document.getElementById('preOrderForm').addEventListener('submit', submitPreOrder);
+        });
+
+        async function submitPreOrder(event) {
+            event.preventDefault();
+
+            const token = getAccessToken();
+            if (!token) {
+                alert('Vui lòng đăng nhập để gửi yêu cầu đặt trước.');
+                window.location.href = '/login';
+                return;
+            }
+
+            const quantity = getQuantity();
+            const expectedPriceVnd = getExpectedPriceVnd();
+            const notes = document.getElementById('notesInput').value.trim();
+
+            if (!preorderProduct.productId) {
+                alert('Thiếu thông tin sản phẩm để gửi yêu cầu đặt trước.');
+                return;
+            }
+
+            if (quantity < 1 || expectedPriceVnd < 1) {
+                alert('Vui lòng nhập số lượng hợp lệ.');
+                return;
+            }
+
+            const submitBtn = document.querySelector('.submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang gửi...';
+
+            // Simulate processing time (UX feedback)
+            await new Promise(resolve => setTimeout(resolve, 900));
+
+            try {
+                const response = await fetch('/api/v1/pre-orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ productId: preorderProduct.productId, quantity, expectedPriceVnd, notes })
+                });
+
+                if (response.status === 401) {
+                    sessionStorage.clear();
+                    localStorage.removeItem('accessToken');
+                    window.location.href = '/login';
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error('Gửi yêu cầu đặt trước thất bại.');
+                }
+
+                // Hide the pre-order form
+                document.getElementById('preOrderForm').style.display = 'none';
+
+                // Update success message & show success box inline
+                const successMsgEl = document.getElementById('successMessage');
+                if (successMsgEl) {
+                    successMsgEl.innerText = `Yêu cầu đặt trước sản phẩm "${preorderProduct.productName}" với số lượng ${quantity} đã được ghi nhận thành công.`;
+                }
+                const successBox = document.getElementById('successBox');
+                if (successBox) {
+                    successBox.classList.add('active');
+                }
+
+                // Show toast notification
+                showPreOrderSuccess(`Đặt trước thành công sản phẩm "${preorderProduct.productName}"!`);
+            } catch (err) {
+                alert(err.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa fa-paper-plane"></i> Gửi yêu cầu đặt trước';
+            }
+        }
+
+        function backToProduct() {
+            if (preorderProduct.productId) {
+                window.location.href = `/products/${preorderProduct.productId}`;
+                return;
+            }
+            window.location.href = '/products';
+        }
+
+        function showPreOrderSuccess(message) {
+            const toast = document.getElementById('preOrderToast');
+            const toastText = document.getElementById('preOrderToastText');
+            if (!toast || !toastText) return;
+            toastText.innerText = message;
+            toast.classList.add('active');
+            window.setTimeout(() => {
+                toast.classList.remove('active');
+            }, 4200);
+        }
+    </script>
+</body>
+
+</html>
