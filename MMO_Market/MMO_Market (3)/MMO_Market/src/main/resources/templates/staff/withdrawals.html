@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Quản lý rút tiền')}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('withdrawals')}"></aside>
+
+            <section class="ds-section">
+                <div class="staff-page-header">
+                    <div>
+                        <h1 class="ds-page-title">Quản lý yêu cầu rút tiền</h1>
+                        <p class="ds-page-subtitle">Kiểm tra và xử lý các giao dịch rút tiền từ seller.</p>
+                    </div>
+                </div>
+
+                <div class="staff-stat-grid">
+                    <div class="ds-card staff-stat-card">
+                        <p class="staff-stat-card__label">Tổng yêu cầu</p>
+                        <p class="staff-stat-card__value">187</p>
+                    </div>
+                    <div class="ds-card staff-stat-card">
+                        <p class="staff-stat-card__label">Chờ duyệt</p>
+                        <p class="staff-stat-card__value">15</p>
+                    </div>
+                    <div class="ds-card staff-stat-card">
+                        <p class="staff-stat-card__label">Hoàn tất</p>
+                        <p class="staff-stat-card__value">162</p>
+                    </div>
+                    <div class="ds-card staff-stat-card">
+                        <p class="staff-stat-card__label">Từ chối</p>
+                        <p class="staff-stat-card__value">10</p>
+                    </div>
+                </div>
+
+                <div class="ds-card">
+                    <div class="ds-filter-panel">
+                        <h2 class="ds-card-title">Bộ lọc rút tiền</h2>
+                        <div class="ds-filter-grid">
+                            <input class="ds-input" type="search" placeholder="Tìm mã giao dịch, seller...">
+                            <select class="ds-input">
+                                <option value="">Trạng thái</option>
+                                <option>Chờ duyệt</option>
+                                <option>Hoàn tất</option>
+                                <option>Từ chối</option>
+                            </select>
+                            <input class="ds-input" type="text" placeholder="Số tiền tối thiểu">
+                        </div>
+                        <div class="ds-filter-actions">
+                            <button class="ds-btn ds-btn-secondary" type="button">Làm mới</button>
+                            <button class="ds-btn ds-btn-primary" type="button">Tìm kiếm</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ds-card">
+                    <div class="ds-table-wrap">
+                        <table class="ds-table">
+                            <thead>
+                            <tr>
+                                <th>Mã GD</th>
+                                <th>Seller</th>
+                                <th>Số tiền</th>
+                                <th>Ngân hàng</th>
+                                <th class="ds-table-center">Trạng thái</th>
+                                <th>Ngày tạo</th>
+                                <th class="ds-table-center">Thao tác</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>#WD-8821</td>
+                                <td>
+                                    <div class="ds-entity">
+                                        <span class="ds-avatar ds-avatar-sm ds-avatar-success">GH</span>
+                                        <div>
+                                            <div class="ds-entity-title">GameHub Pro</div>
+                                            <div class="ds-entity-subtitle">seller.gamehub@mmo.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="ds-money">12.500.000 đ</td>
+                                <td>Vietcombank — ****8821</td>
+                                <td class="ds-table-center"><span class="ds-badge ds-badge-warning">Chờ duyệt</span></td>
+                                <td>05/06/2026</td>
+                                <td class="ds-table-center">
+                                    <a class="ds-btn ds-btn-outline" href="/staff/withdrawals/detail">Chi tiết</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#WD-8815</td>
+                                <td>
+                                    <div class="ds-entity">
+                                        <span class="ds-avatar ds-avatar-sm">DK</span>
+                                        <div>
+                                            <div class="ds-entity-title">Digital Keys</div>
+                                            <div class="ds-entity-subtitle">keys.shop@mmo.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="ds-money">8.200.000 đ</td>
+                                <td>Techcombank — ****5510</td>
+                                <td class="ds-table-center"><span class="ds-badge ds-badge-warning">Chờ duyệt</span></td>
+                                <td>04/06/2026</td>
+                                <td class="ds-table-center">
+                                    <a class="ds-btn ds-btn-outline" href="/staff/withdrawals/detail">Chi tiết</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#WD-8790</td>
+                                <td>
+                                    <div class="ds-entity">
+                                        <span class="ds-avatar ds-avatar-sm ds-avatar-primary">SV</span>
+                                        <div>
+                                            <div class="ds-entity-title">SoftVault</div>
+                                            <div class="ds-entity-subtitle">softvault@mmo.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="ds-money">3.000.000 đ</td>
+                                <td>MB Bank — ****3399</td>
+                                <td class="ds-table-center"><span class="ds-badge ds-badge-success">Hoàn tất</span></td>
+                                <td>03/06/2026</td>
+                                <td class="ds-table-center">
+                                    <a class="ds-btn ds-btn-outline" href="/staff/withdrawals/detail">Chi tiết</a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="ds-pagination">
+                        <div class="ds-pagination-pages">
+                            <span class="ds-page-link ds-page-link-active">1</span>
+                            <span class="ds-page-link">2</span>
+                        </div>
+                        <div class="ds-pagination-meta">
+                            <span>Tổng số: 187 bản ghi</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/auth.js}"></script>
+<script th:src="@{/js/staff-ui.js}"></script>
+</body>
+</html>
