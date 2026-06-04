@@ -16,6 +16,7 @@ import security.JwtTokenProvider;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Random;
 
@@ -309,6 +310,7 @@ public class AuthenticationService {
                 .fullName(user.getFullName())
                 .role(user.getRole())
                 .balanceVnd(user.getBalanceVnd())
+                .redirectPath(resolveRedirectPath(user.getRole()))
                 .message("Đăng nhập thành công")
                 .build();
     }
@@ -387,8 +389,52 @@ public class AuthenticationService {
                 .fullName(user.getFullName())
                 .role(user.getRole())
                 .balanceVnd(user.getBalanceVnd())
+                .redirectPath(resolveRedirectPath(user.getRole()))
                 .message("Làm mới token thành công")
                 .build();
+    }
+
+    private String resolveRedirectPath(String roleValue) {
+        return switch (canonicalRole(roleValue)) {
+            case "Admin" -> "/admin/users";
+            case "Seller", "Customer_Seller" -> "/seller/dashboard";
+            default -> "/";
+        };
+    }
+
+    private String canonicalRole(String roleValue) {
+        if (roleValue == null || roleValue.isBlank()) {
+            return "Customer";
+        }
+        String raw = roleValue.trim();
+        if (raw.startsWith("{") && raw.contains("role")) {
+            int start = raw.indexOf("\"role\"");
+            if (start >= 0) {
+                int colon = raw.indexOf(':', start);
+                if (colon >= 0) {
+                    int firstQuote = raw.indexOf('"', colon + 1);
+                    int secondQuote = raw.indexOf('"', firstQuote + 1);
+                    if (firstQuote >= 0 && secondQuote > firstQuote) {
+                        raw = raw.substring(firstQuote + 1, secondQuote);
+                    }
+                }
+            }
+        }
+        raw = raw.replace("\"", "").trim();
+        String normalized = raw.toLowerCase(Locale.ROOT);
+        if (normalized.contains("admin")) {
+            return "Admin";
+        }
+        if (normalized.contains("staff")) {
+            return "Staff";
+        }
+        if (normalized.equals("customer_seller")) {
+            return "Customer_Seller";
+        }
+        if (normalized.contains("seller")) {
+            return "Seller";
+        }
+        return "Customer";
     }
 
     private void revokeAllUserTokens(Long userId) {

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phản hồi khiếu nại - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/seller.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="seller-page">
+        <div class="seller-layout">
+            <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('transactions')}"></aside>
+
+            <section class="seller-card">
+                <div class="seller-card__header">
+                    <div class="seller-card__header-main">
+                        <div class="seller-card__icon"><i class="fa fa-comments"></i></div>
+                        <div>
+                            <h1 class="seller-card__title">Phản hồi khiếu nại</h1>
+                            <p class="seller-card__subtitle">Hồ sơ #CMP-204 — Đơn #TX-10458</p>
+                        </div>
+                    </div>
+                    <span class="badge open"><i class="fa fa-warning"></i> Open</span>
+                </div>
+
+                <dl class="seller-info-grid">
+                    <dt>Mã giao dịch</dt>
+                    <dd>#TX-10458</dd>
+                    <dt>Sản phẩm</dt>
+                    <dd>Canva Pro — 1 năm</dd>
+                    <dt>Khách hàng</dt>
+                    <dd>le.van.c@email.com</dd>
+                    <dt>Lý do khiếu nại</dt>
+                    <dd>Tài khoản không đăng nhập được sau 2 ngày sử dụng.</dd>
+                    <dt>Số tiền tranh chấp</dt>
+                    <dd>350.000 VNĐ</dd>
+                    <dt>Hạn escrow</dt>
+                    <dd>05/06/2026 — Tiền đang bị đóng băng</dd>
+                </dl>
+
+                <div class="seller-section">
+                    <h2 class="seller-section__title">Kênh trao đổi (ComplaintChats)</h2>
+                    <div class="chat-panel">
+                        <div class="chat-messages">
+                            <div class="chat-bubble chat-bubble--customer">
+                                <span class="chat-bubble__meta">Customer — 03/06/2026 10:20</span>
+                                Tôi không đăng nhập được tài khoản Canva, đã thử đổi mật khẩu nhưng vẫn lỗi.
+                            </div>
+                            <div class="chat-bubble chat-bubble--staff">
+                                <span class="chat-bubble__meta">Staff — 03/06/2026 11:05</span>
+                                Vui lòng Seller cung cấp thông tin đăng nhập mới hoặc bằng chứng tài khoản còn hoạt động trong vòng 24h.
+                            </div>
+                            <div class="chat-bubble chat-bubble--seller">
+                                <span class="chat-bubble__meta">Seller — 03/06/2026 14:30</span>
+                                Shop đã kiểm tra, tài khoản hoạt động bình thường. Đính kèm video hướng dẫn đăng nhập (mock).
+                            </div>
+                            <div class="chat-bubble chat-bubble--customer">
+                                <span class="chat-bubble__meta">Customer — 04/06/2026 09:00</span>
+                                Vẫn không được, yêu cầu hoàn tiền 100%.
+                            </div>
+                        </div>
+                        <div class="chat-compose">
+                            <label for="sellerReply" style="display:block;margin-bottom:8px;font-weight:600;font-size:14px;">Phản hồi của Seller</label>
+                            <textarea id="sellerReply" placeholder="Nhập giải trình, bằng chứng hoặc đề xuất xử lý..."></textarea>
+                            <div class="profile-actions" style="margin-top:12px;">
+                                <button class="profile-button profile-button--primary" type="button">Gửi phản hồi</button>
+                                <a class="profile-button profile-button--secondary" th:href="@{/seller/transactions}">Quay lại lịch sử bán</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

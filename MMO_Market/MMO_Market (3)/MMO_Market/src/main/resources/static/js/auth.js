@@ -1,5 +1,5 @@
 const API_BASE = 'http://localhost:8080/api';
-['accessToken', 'refreshToken', 'loginTimestamp', 'userInfo', 'user'].forEach(key => {
+['accessToken', 'refreshToken', 'loginTimestamp', 'userInfo', 'user', 'redirectPath'].forEach(key => {
     if (!sessionStorage.getItem('accessToken')) {
         localStorage.removeItem(key);
     }
@@ -51,6 +51,7 @@ function logout() {
     localStorage.removeItem('loginTimestamp');
     localStorage.removeItem('userInfo');
     localStorage.removeItem('user');
+    localStorage.removeItem('redirectPath');
     window.location.href = '/login';
 }
 
@@ -145,18 +146,90 @@ function updateUserBalance(newBalance) {
 }
 
 function normalizeRole(roleValue) {
-    if (!roleValue) return 'Customer';
+    if (roleValue == null || roleValue === '') return 'Customer';
+
+    let raw = String(roleValue).trim();
     try {
-        const parsed = JSON.parse(roleValue);
-        return parsed.role || 'Customer';
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && parsed.role) {
+            raw = String(parsed.role);
+        } else if (typeof parsed === 'string') {
+            raw = parsed;
+        }
     } catch (error) {
-        const role = String(roleValue).replaceAll('"', '').trim();
-        if (role.toLowerCase().includes('admin')) return 'Admin';
-        if (role.toLowerCase().includes('staff')) return 'Staff';
-        if (role.toLowerCase().includes('seller')) return 'Seller';
-        return 'Customer';
+        // keep raw string
+    }
+
+    try {
+        const nested = JSON.parse(raw);
+        if (nested && typeof nested === 'object' && nested.role) {
+            raw = String(nested.role);
+        }
+    } catch (error) {
+        // keep raw string
+    }
+
+    const normalized = raw.replaceAll('"', '').trim().toLowerCase();
+    if (normalized.includes('admin')) return 'Admin';
+    if (normalized.includes('staff')) return 'Staff';
+    if (normalized.includes('seller')) return 'Seller';
+    return 'Customer';
+}
+
+function isSellerRole(role) {
+    const normalized = normalizeRole(role);
+    return normalized === 'Seller' || normalized === 'Customer_Seller';
+}
+
+function resolvePostLoginRedirect(roleValue, redirectPathFromApi) {
+    const role = normalizeRole(roleValue);
+    let roleTarget = '/';
+    if (role === 'Admin') {
+        roleTarget = '/admin/users';
+    } else if (isSellerRole(role)) {
+        roleTarget = '/seller/dashboard';
+    }
+
+    if (redirectPathFromApi && typeof redirectPathFromApi === 'string') {
+        const path = redirectPathFromApi.trim();
+        if (path.startsWith('/') && path !== '/' && path !== '/index') {
+            return path;
+        }
+    }
+    return roleTarget;
+}
+
+function applyAuthenticatedRedirect() {
+    const token = sessionStorage.getItem('accessToken');
+    if (!token || token === 'null' || token === 'undefined') return;
+
+    const userString = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
+    if (!userString || userString === 'null') return;
+
+    try {
+        const user = JSON.parse(userString);
+        const path = window.location.pathname;
+        const target = resolvePostLoginRedirect(user.role, sessionStorage.getItem('redirectPath'));
+
+        if (path === '/login' || path.endsWith('/login')) {
+            window.location.replace(target);
+        }
+    } catch (error) {
+        console.error('Không đọc được thông tin user để chuyển hướng:', error);
     }
 }
+
+function goToSystemHome() {
+    sessionStorage.setItem('redirectPath', '/');
+    window.location.href = '/';
+}
+
+window.normalizeRole = normalizeRole;
+window.isSellerRole = isSellerRole;
+window.resolvePostLoginRedirect = resolvePostLoginRedirect;
+window.goToSystemHome = goToSystemHome;
+
+document.addEventListener('DOMContentLoaded', applyAuthenticatedRedirect);
 
 function togglePassword(inputId, icon) {
     const input = document.getElementById(inputId);
@@ -363,8 +436,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
                     sessionStorage.setItem('user', JSON.stringify(userInfo));
 
-                    const redirectUrl = normalizeRole(userInfo.role) === 'Admin' ? '/admin/users' : '/';
-                    setTimeout(() => window.location.href = redirectUrl, 1000);
+                    const redirectUrl = resolvePostLoginRedirect(userInfo.role, res.body.redirectPath);
+                    sessionStorage.setItem('redirectPath', redirectUrl);
+                    window.location.replace(redirectUrl);
                 } else {
                     alertBox.textContent = res.body.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.';
                     alertBox.className = 'message error';
