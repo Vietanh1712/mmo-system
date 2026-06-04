@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán đơn hàng - MMO Market</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/font-awesome@4.7.0/css/font-awesome.min.css">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    
+    <style>
+        :root {
+            --brand-primary: #fbceb5;
+            --brand-dark: #0f172a;
+            --brand-hover: #f0b99a;
+            --brand-accent: #ea580c;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --shadow-light: 0 4px 20px rgba(0,0,0,0.04);
+            --danger: #dc2626;
+            --action-orange: #fd761a;
+            --action-blue: #0058be;
+            --status-green: #16a34a;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: "Roboto", Arial, sans-serif;
+        }
+
+
+
+        .breadcrumb-container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 16px 40px 8px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .breadcrumb-container a {
+            color: var(--brand-dark);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .breadcrumb-container a:hover {
+            color: var(--action-blue);
+        }
+
+        .checkout-layout {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 12px 40px 60px;
+            display: grid;
+            grid-template-columns: 7fr 3fr;
+            gap: 24px;
+        }
+
+        .checkout-main {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .checkout-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-light);
+            padding: 24px;
+        }
+
+        .checkout-card__title {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--brand-dark);
+            margin-bottom: 20px;
+            border-bottom: 1.5px solid var(--border-color);
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Product Row details */
+        .checkout-product {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .checkout-product__icon {
+            width: 80px;
+            height: 80px;
+            background-color: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+        }
+
+        .checkout-product__info {
+            flex: 1;
+        }
+
+        .checkout-product__name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--brand-dark);
+            margin-bottom: 6px;
+        }
+
+        .checkout-product__meta {
+            font-size: 13.5px;
+            color: var(--text-muted);
+            display: flex;
+            gap: 15px;
+        }
+
+        .checkout-product__seller strong {
+            color: var(--brand-dark);
+        }
+
+        .checkout-cart-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .checkout-cart-item {
+            display: grid;
+            grid-template-columns: 52px minmax(0, 1fr) auto;
+            gap: 14px;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            background: #f8fafc;
+        }
+
+        .checkout-cart-item__icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 8px;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+        }
+
+        .checkout-cart-item__name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--brand-dark);
+            margin: 0 0 4px;
+            line-height: 1.35;
+        }
+
+        .checkout-cart-item__meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .checkout-cart-item__price {
+            color: var(--danger);
+            font-size: 16px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        /* Payment balance block */
+        .balance-info-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background-color: #f0fdf4;
+            border: 1px solid rgba(22, 163, 74, 0.15);
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .balance-info-box.insufficient {
+            background-color: #fef2f2;
+            border-color: rgba(220, 38, 38, 0.15);
+        }
+
+        .balance-label {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .balance-label span:first-child {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .balance-label span:last-child {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--brand-dark);
+        }
+
+        .balance-status {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-ok {
+            color: var(--status-green);
+        }
+
+        .status-error {
+            color: var(--danger);
+        }
+
+        /* Escrow disclaimer */
+        .escrow-box {
+            display: flex;
+            gap: 12px;
+            padding: 16px;
+            background-color: #fffbeb;
+            border: 1px solid rgba(217, 119, 6, 0.15);
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .escrow-box i {
+            font-size: 20px;
+            color: #d97706;
+            margin-top: 2px;
+        }
+
+        .escrow-text h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 4px;
+        }
+
+        .escrow-text p {
+            font-size: 13px;
+            line-height: 1.5;
+            color: #b45309;
+        }
+
+        .escrow-agree-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 15px;
+            cursor: pointer;
+            font-size: 13.5px;
+            font-weight: 500;
+        }
+
+        .escrow-agree-checkbox input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--brand-accent);
+            cursor: pointer;
+        }
+
+        /* Right Column - Order summary sidebar */
+        .checkout-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .summary-row > span:last-child {
+            color: var(--danger);
+            font-weight: 900;
+        }
+
+        .summary-row.total {
+            border-top: 1.5px solid var(--border-color);
+            padding-top: 15px;
+            margin-top: 15px;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--brand-dark);
+        }
+
+        .summary-row.total .total-price {
+            font-size: 22px;
+            color: var(--danger);
+            font-weight: 900;
+        }
+
+        #unitPriceText,
+        #totalPriceText,
+        #invAmount {
+            color: var(--danger) !important;
+            font-weight: 900;
+        }
+
+        .btn-confirm-payment {
+            width: 100%;
+            background-color: var(--action-orange);
+            color: #ffffff;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 14px rgba(253, 118, 26, 0.2);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .btn-confirm-payment:hover {
+            background-color: #e0600f;
+            box-shadow: 0 6px 18px rgba(253, 118, 26, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-confirm-payment:disabled {
+            background-color: #cbd5e1;
+            color: #94a3b8;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .btn-confirm-payment.topup-style {
+            background-color: var(--action-blue);
+            box-shadow: 0 4px 14px rgba(0, 88, 190, 0.2);
+        }
+
+        .btn-confirm-payment.topup-style:hover {
+            background-color: #00479d;
+            box-shadow: 0 6px 18px rgba(0, 88, 190, 0.3);
+        }
+
+        /* Success modal design */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: #ffffff;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 480px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-success-icon {
+            width: 70px;
+            height: 70px;
+            background-color: #f0fdf4;
+            color: var(--status-green);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            margin: 0 auto 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--brand-dark);
+            margin-bottom: 10px;
+        }
+
+        .modal-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .invoice-details {
+            background-color: #f8fafc;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: left;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+            font-size: 13.5px;
+        }
+
+        .invoice-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .invoice-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .invoice-label {
+            color: var(--text-muted);
+        }
+
+        .invoice-value {
+            font-weight: 600;
+            color: var(--brand-dark);
+        }
+
+        .invoice-value--money {
+            color: var(--danger);
+            font-weight: 900;
+        }
+
+        .btn-modal-close {
+            background-color: var(--action-blue);
+            color: #ffffff;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-modal-close:hover {
+            background-color: #00479d;
+        }
+
+        @media (max-width: 900px) {
+            .checkout-layout {
+                grid-template-columns: 1fr;
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. HEADER (REPLACED WITH SHARED FRAGMENT) -->
+    <header th:replace="~{fragments/header :: header}"></header>
+
+    <!-- BREADCRUMB -->
+    <div class="breadcrumb-container">
+        <a href="/"><i class="fa fa-home"></i> Trang chủ</a> &gt; 
+        <a href="/search">Sản phẩm</a> &gt; 
+        <span>Thanh toán đơn hàng</span>
+    </div>
+
+    <!-- MAIN LAYOUT -->
+    <main class="checkout-layout">
+        
+        <!-- LEFT COLUMN: Payment details -->
+        <section class="checkout-main">
+            
+            <!-- Card 1: Product detail confirmation -->
+            <div class="checkout-card">
+                <h3 class="checkout-card__title"><i class="fa fa-shopping-cart" style="color: var(--brand-accent);"></i>Xác nhận thông tin sản phẩm</h3>
+                <div class="checkout-product">
+                    <div class="checkout-product__icon">
+                        <i class="fa fa-play-circle" id="productIcon" style="color: #E50914;"></i>
+                    </div>
+                    <div class="checkout-product__info">
+                        <h4 class="checkout-product__name" id="productName">Tài khoản Netflix Premium UltraHD 4K (Xem riêng tư)</h4>
+                        <div class="checkout-product__meta">
+                            <span class="checkout-product__duration">Thời hạn: <strong id="productDuration">1 Tháng</strong></span>
+                            <span class="checkout-product__seller">Cửa hàng: <strong id="productSeller">NetflixVN Store</strong></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="checkout-cart-list" id="checkoutItemsContainer"></div>
+            </div>
+
+            <!-- Card 2: Payment method -->
+            <div class="checkout-card">
+                <h3 class="checkout-card__title"><i class="fa fa-credit-card" style="color: var(--brand-accent);"></i>Phương thức thanh toán</h3>
+                
+                <!-- Wallet balance info box -->
+                <div class="balance-info-box" id="balanceBox">
+                    <div class="balance-label">
+                        <span>Số dư ví của bạn:</span>
+                        <span id="userBalanceText">0 VNĐ</span>
+                    </div>
+                    <div class="balance-status" id="balanceStatus">
+                        <i class="fa fa-check-circle status-ok"></i>
+                        <span class="status-ok">Đủ số dư</span>
+                    </div>
+                </div>
+
+                <!-- Escrow hold notification -->
+                <div class="escrow-box">
+                    <i class="fa fa-shield"></i>
+                    <div class="escrow-text">
+                        <h4>Giao dịch bảo lãnh Escrow 3 ngày (72h)</h4>
+                        <p>Số tiền này sẽ được hệ thống MMO Market đóng băng an toàn trong 3 ngày. Người bán chỉ nhận được tiền sau khi hết thời hạn bảo lãnh mà không có bất kỳ tranh chấp nào được mở ra.</p>
+                    </div>
+                </div>
+
+                <!-- Agree checkbox -->
+                <label class="escrow-agree-checkbox">
+                    <input type="checkbox" id="agreeEscrow" onchange="togglePayButton()">
+                    <span>Tôi đồng ý với điều khoản giao dịch bảo lãnh Escrow của hệ thống.</span>
+                </label>
+            </div>
+
+        </section>
+
+        <!-- RIGHT COLUMN: Order Summary sidebar -->
+        <aside class="checkout-sidebar">
+            
+            <div class="checkout-card">
+                <h3 class="checkout-card__title"><i class="fa fa-file-text-o" style="color: var(--brand-accent);"></i>Tóm tắt đơn hàng</h3>
+                
+                <div class="summary-row">
+                    <span id="summaryPriceLabel">Giá tiền sản phẩm:</span>
+                    <span id="unitPriceText">79.000đ</span>
+                </div>
+                <div class="summary-row">
+                    <span id="summaryQuantityLabel">Số lượng:</span>
+                    <span id="summaryQuantityText">1</span>
+                </div>
+                <div class="summary-row">
+                    <span id="summaryDurationLabel">Thời hạn gia hạn:</span>
+                    <span id="summaryDurationText">1 tháng</span>
+                </div>
+                <div class="summary-row">
+                    <span id="summaryServiceLabel">Phí dịch vụ:</span>
+                    <span id="summaryServiceValue" style="color: var(--status-green); font-weight: 600;">Miễn phí</span>
+                </div>
+
+                <div class="summary-row total">
+                    <span>Tổng thanh toán:</span>
+                    <span class="total-price" id="totalPriceText">79.000đ</span>
+                </div>
+
+                <button class="btn-confirm-payment" id="btnPay" disabled onclick="handlePaymentSubmit()">
+                    <i class="fa fa-lock"></i> Xác nhận thanh toán
+                </button>
+            </div>
+
+        </aside>
+
+    </main>
+
+    <!-- SUCCESS PAYMENT MODAL -->
+    <div class="modal-overlay" id="successModal">
+        <div class="modal-card">
+            <div class="modal-success-icon">
+                <i class="fa fa-check"></i>
+            </div>
+            <h3 class="modal-title">Giao dịch thành công!</h3>
+            <p class="modal-desc">Đơn hàng của bạn đã được thanh toán và lưu trữ an toàn trong ví Escrow bảo lãnh của hệ thống.</p>
+            
+            <div class="invoice-details">
+                <div class="invoice-row">
+                    <span class="invoice-label">Mã giao dịch:</span>
+                    <span class="invoice-value" id="invTxnId">TXN9482749</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="invoice-label">Sản phẩm:</span>
+                    <span class="invoice-value" id="invProduct">Tài khoản Netflix Premium</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="invoice-label">Số tiền thanh toán:</span>
+                    <span class="invoice-value invoice-value--money" id="invAmount">79.000 VNĐ</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="invoice-label">Thời gian giữ tiền (Escrow):</span>
+                    <span class="invoice-value" style="color: #d97706;"><i class="fa fa-clock-o"></i> 72 giờ</span>
+                </div>
+            </div>
+
+            <button class="btn-modal-close" onclick="closeSuccessModal()">Đóng & Về trang chủ</button>
+        </div>
+    </div>
+
+    <!-- 2. FOOTER (REPLACED WITH SHARED FRAGMENT) -->
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <!-- INTERACTIVE SCRIPTS -->
+    <script th:inline="javascript">
+        // Extract Thymeleaf variables
+        const productId = /*[[${productId}]]*/ 1;
+        const duration = /*[[${duration}]]*/ 1;
+
+        // Mock products database matching homepage and search page styling/pricing
+        const PRODUCTS_DB = {
+            1: { name: "Tài khoản Netflix Premium UltraHD 4K (Xem riêng tư) 1 Tháng", icon: "fa-play-circle", color: "#E50914", seller: "NetflixVN Store", prices: {1: 65000, 3: 180000, 6: 340000} },
+            2: { name: "Tài khoản Netflix Premium 4K UHD Gói 1 Năm (Chính chủ gia hạn ổn định)", icon: "fa-play-circle", color: "#E50914", seller: "Netflix_Vip_Store", prices: {12: 650000} },
+            3: { name: "Tài khoản ChatGPT Plus (OpenAI GPT-4o) Chính Chủ Sẵn 20$ Hạn 1 Tháng", icon: "fa-comments", color: "#10a37f", seller: "AI_Helper Store", prices: {1: 150000} },
+            4: { name: "Spotify Premium 1 Năm Giá Siêu Rẻ (Nâng cấp Family email của bạn)", icon: "fa-music", color: "#1DB954", seller: "MusicLovers Store", prices: {12: 250000} },
+            5: { name: "Key Windows 11 Pro Bản Quyền Vĩnh Viễn (Kèm hướng dẫn active chi tiết)", icon: "fa-windows", color: "#0078d4", seller: "Microsoft_Reseller Store", prices: {1: 99000} },
+            6: { name: "Youtube Premium Không Quảng Cáo 6 Tháng (Add Family bao chạy mượt)", icon: "fa-youtube-play", color: "#FF0000", seller: "RedPremium Store", prices: {6: 120000} },
+            7: { name: "Gói Tài Khoản Canva Pro Thiết Kế 1 Năm Trọn Gói", icon: "fa-paint-brush", color: "#00c4cc", seller: "DesignHub Store", prices: {12: 180000} },
+            8: { name: "Combo 10 Gmail Việt Cổ 2018 - 2020 Cực Sạch Có Sẵn Kênh Youtube", icon: "fa-envelope", color: "#ea4335", seller: "MailMaster Store", prices: {1: 35000} },
+            9: { name: "Tool Nuôi Nick Facebook Auto Like Post Share Độc Quyền", icon: "fa-facebook-square", color: "#1877F2", seller: "MMO_Coder Store", prices: {1: 850000} },
+            10: { name: "Tài khoản NordVPN Premium 1 Năm Bảo Mật Mã Hóa Cao", icon: "fa-shield", color: "#4682b4", seller: "SecureNet Store", prices: {12: 350000} },
+            11: { name: "Tăng 1000 Follower Thật TikTok Việt Tốc Độ Nhanh Tự Nhiên", icon: "fa-video-camera", color: "#010101", seller: "SocialMediaUp Store", prices: {1: 95000} },
+            12: { name: "Ví Điện Tử Trust Wallet Hạn Cổ Có Sẵn Cụm Từ Bảo Mật", icon: "fa-btc", color: "#f7931a", seller: "CryptoSafe Store", prices: {1: 150000} },
+            13: { name: "Gói Dịch Vụ Thiết Kế Logo & Banner Chuyên Nghiệp (Không thuộc danh mục chính)", icon: "fa-paint-brush", color: "#7c3aed", seller: "CreativeHub Store", prices: {1: 299000} },
+            14: { name: "Gmail Việt Cổ 2019 Siêu Sạch - Bảo hành đổi 1-1 trong 7 ngày", icon: "fa-envelope", color: "#ea4335", seller: "GmailPro_VN Store", prices: {1: 28000} }
+        };
+
+        const checkoutUrlParams = new URLSearchParams(window.location.search);
+        const checkoutMode = checkoutUrlParams.get('mode') || 'single';
+        // State
+        let selectedProduct = PRODUCTS_DB[productId] || PRODUCTS_DB[1];
+        let price = selectedProduct.prices[duration] || selectedProduct.prices[1];
+        let checkoutItems = [];
+        let checkoutTotal = 0;
+        let hasEnoughBalance = true;
+        let currentUser = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Search bar is templated in header.html
+
+            // Read URL params that may have been passed from product-detail page
+            if (checkoutMode === 'cart') {
+                checkoutItems = loadCartCheckoutItems();
+                if (checkoutItems.length === 0) {
+                    alert('Giỏ hàng của bạn đang trống hoặc chưa chọn sản phẩm nào.');
+                    window.location.href = '/cart';
+                    return;
+                }
+                price = checkoutItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                checkoutTotal = price + Math.round(price * 0.02);
+                selectedProduct = {
+                    name: `Đơn hàng nhiều sản phẩm (${checkoutItems.reduce((sum, item) => sum + item.quantity, 0)} món)`,
+                    icon: 'fa-shopping-cart',
+                    color: '#ea580c',
+                    seller: 'Nhiều người bán',
+                    prices: {}
+                };
+            }
+            const paramProductName = checkoutUrlParams.get('productName');
+            const paramSellerName = checkoutUrlParams.get('sellerName');
+            const paramPrice = checkoutUrlParams.get('price');
+            const paramIcon = checkoutUrlParams.get('icon');
+            const paramIconColor = checkoutUrlParams.get('iconColor');
+
+            // Override selectedProduct with URL params if available (ensures sync with product-detail page)
+            if (checkoutMode !== 'cart') {
+                if (paramProductName) selectedProduct.name = paramProductName;
+                if (paramSellerName) selectedProduct.seller = paramSellerName;
+                if (paramPrice) price = parseInt(paramPrice);
+                if (paramIcon) selectedProduct.icon = paramIcon;
+                if (paramIconColor) selectedProduct.color = paramIconColor;
+                checkoutTotal = price;
+            }
+
+            // 2. Load product details to UI
+            document.getElementById('productName').innerText = selectedProduct.name;
+            document.getElementById('productDuration').innerText = checkoutMode === 'cart'
+                ? `${checkoutItems.reduce((sum, item) => sum + item.quantity, 0)} sản phẩm`
+                : duration + " Tháng";
+            document.getElementById('productSeller').innerText = selectedProduct.seller;
+            
+            const prodIconEl = document.getElementById('productIcon');
+            prodIconEl.className = `fa ${selectedProduct.icon}`;
+            prodIconEl.style.color = selectedProduct.color;
+
+            // Load Prices
+            if (checkoutMode === 'cart') {
+                document.getElementById('summaryPriceLabel').innerText = 'Tổng giá trị sản phẩm:';
+                document.getElementById('summaryQuantityLabel').innerText = 'Số lượng sản phẩm:';
+                document.getElementById('summaryDurationLabel').innerText = 'Trạng thái đơn hàng:';
+                document.getElementById('summaryServiceLabel').innerText = 'Phí dịch vụ (2%):';
+                document.getElementById('summaryServiceValue').innerText = formatVND(Math.round(price * 0.02));
+                document.getElementById('summaryServiceValue').style.color = 'var(--danger)';
+                document.getElementById('unitPriceText').innerText = formatVND(price);
+                document.getElementById('summaryQuantityText').innerText = String(checkoutItems.reduce((sum, item) => sum + item.quantity, 0));
+                document.getElementById('summaryDurationText').innerText = 'Nhiều sản phẩm';
+                document.getElementById('totalPriceText').innerText = formatVND(checkoutTotal);
+                renderCheckoutItems();
+            } else {
+                document.getElementById('unitPriceText').innerText = formatVND(price);
+                document.getElementById('summaryQuantityText').innerText = '1';
+                document.getElementById('summaryDurationText').innerText = duration + " tháng";
+                document.getElementById('totalPriceText').innerText = formatVND(price);
+                document.getElementById('summaryServiceValue').innerText = 'Miễn phí';
+                document.getElementById('summaryServiceValue').style.color = 'var(--status-green)';
+            }
+
+            // 3. Check Session Storage user info & Balance
+            const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
+            if (!userStr) {
+                alert("Vui lòng đăng nhập trước khi thực hiện thanh toán!");
+                window.location.href = "/login";
+                return;
+            }
+
+            try {
+                currentUser = JSON.parse(userStr);
+                const userBalance = currentUser.balanceVnd || 0;
+                document.getElementById('userBalanceText').innerText = formatVND(userBalance);
+
+                const balanceBox = document.getElementById('balanceBox');
+                const balanceStatus = document.getElementById('balanceStatus');
+                const btnPay = document.getElementById('btnPay');
+
+                if (userBalance < checkoutTotal) {
+                    hasEnoughBalance = false;
+                    balanceBox.classList.add('insufficient');
+                    balanceStatus.innerHTML = `<i class="fa fa-times-circle status-error"></i> <span class="status-error">Không đủ số dư</span>`;
+                    
+                    // Modify buy button to point to Topup (nạp tiền)
+                    btnPay.innerHTML = `<i class="fa fa-credit-card"></i> Nạp thêm tiền vào ví`;
+                    btnPay.classList.add('topup-style');
+                } else {
+                    hasEnoughBalance = true;
+                    balanceBox.classList.remove('insufficient');
+                    balanceStatus.innerHTML = `<i class="fa fa-check-circle status-ok"></i> <span class="status-ok">Đủ số dư</span>`;
+                }
+            } catch (err) {
+                console.error("Lỗi đọc thông tin tài khoản:", err);
+            }
+        });
+
+        // Toggle confirm payment button disabled state based on check box
+        function togglePayButton() {
+            const agreed = document.getElementById('agreeEscrow').checked;
+            const btnPay = document.getElementById('btnPay');
+            if (agreed) {
+                btnPay.removeAttribute('disabled');
+            } else {
+                btnPay.setAttribute('disabled', 'true');
+            }
+        }
+
+        // Format Currency Helper
+        function formatVND(value) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
+                .format(value)
+                .replace('₫', 'VNĐ');
+        }
+
+        // Trigger search from header search input
+        function triggerHeaderSearch(e) {
+            e.preventDefault();
+            const keyword = document.getElementById('header-search-input').value.trim();
+            if (keyword) {
+                window.location.href = `/search?q=${encodeURIComponent(keyword)}`;
+            } else {
+                window.location.href = `/search`;
+            }
+        }
+
+        // Handle Submit Button Click
+        function handlePaymentSubmit() {
+            if (!hasEnoughBalance) {
+                // If insufficient balance, redirect to Top Up (Nạp tiền)
+                window.location.href = "/topup";
+                return;
+            }
+
+            // Perform transaction: Subtract price from balance, save back, show success modal
+            const currentBalance = currentUser.balanceVnd || 0;
+            const finalBalance = currentBalance - checkoutTotal;
+            
+            // Update local user info state
+            currentUser.balanceVnd = finalBalance;
+            sessionStorage.setItem('userInfo', JSON.stringify(currentUser));
+            sessionStorage.setItem('user', JSON.stringify(currentUser));
+
+            // Generate mock transaction code
+            const txnCode = "TXN" + Math.floor(10000000 + Math.random() * 90000000);
+            
+            // Inject into success modal
+            document.getElementById('invTxnId').innerText = txnCode;
+            document.getElementById('invProduct').innerText = checkoutMode === 'cart'
+                ? `${checkoutItems.reduce((sum, item) => sum + item.quantity, 0)} sản phẩm`
+                : selectedProduct.name;
+            document.getElementById('invAmount').innerText = formatVND(checkoutTotal);
+
+            if (checkoutMode === 'cart') {
+                clearPurchasedCartItems();
+            }
+
+            // Show success modal
+            const modal = document.getElementById('successModal');
+            modal.classList.add('active');
+        }
+
+        // Close Success Modal
+        function closeSuccessModal() {
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('active');
+            window.location.href = "/";
+        }
+
+        function loadCartCheckoutItems() {
+            try {
+                const rawParam = checkoutUrlParams.get('items');
+                if (rawParam) {
+                    const parsed = JSON.parse(rawParam);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        return parsed.map(item => ({
+                            productId: Number(item.productId),
+                            duration: Number(item.duration || 1),
+                            productName: item.productName,
+                            sellerName: item.sellerName || 'VipStore',
+                            price: Number(item.price || 0),
+                            icon: item.icon || 'fa-cube',
+                            iconColor: item.iconColor || '#ea580c',
+                            quantity: Math.max(1, Number(item.quantity || 1))
+                        }));
+                    }
+                }
+            } catch (error) {
+                console.error('Không đọc được items từ URL:', error);
+            }
+
+            try {
+                const cart = JSON.parse(localStorage.getItem('mmoCart') || '[]');
+                return cart
+                    .filter(item => item.selected !== false)
+                    .map(item => ({
+                        productId: Number(item.productId),
+                        duration: Number(item.duration || 1),
+                        productName: item.productName,
+                        sellerName: item.sellerName || 'VipStore',
+                        price: Number(item.price || 0),
+                        icon: item.icon || 'fa-cube',
+                        iconColor: item.iconColor || '#ea580c',
+                        quantity: Math.max(1, Number(item.quantity || 1))
+                    }));
+            } catch (error) {
+                console.error('Không đọc được giỏ hàng:', error);
+                return [];
+            }
+        }
+
+        function renderCheckoutItems() {
+            const container = document.getElementById('checkoutItemsContainer');
+            if (!container) return;
+
+            container.innerHTML = checkoutItems.map(item => `
+                <div class="checkout-cart-item">
+                    <div class="checkout-cart-item__icon">
+                        <i class="fa ${item.icon}" style="color: ${item.iconColor}"></i>
+                    </div>
+                    <div>
+                        <div class="checkout-cart-item__name">${item.productName}</div>
+                        <div class="checkout-cart-item__meta">Bán bởi: ${item.sellerName} · SL: ${item.quantity}</div>
+                    </div>
+                    <div class="checkout-cart-item__price">${formatVND(item.price * item.quantity)}</div>
+                </div>
+            `).join('');
+        }
+
+        function clearPurchasedCartItems() {
+            try {
+                const cart = JSON.parse(localStorage.getItem('mmoCart') || '[]');
+                const purchasedKeys = new Set(checkoutItems.map(item => `${Number(item.productId)}:${Number(item.duration || 1)}`));
+                const remaining = cart.filter(item => !item.selected || !purchasedKeys.has(`${Number(item.productId)}:${Number(item.duration || 1)}`));
+                localStorage.setItem('mmoCart', JSON.stringify(remaining));
+                if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
+            } catch (error) {
+                console.error('Không thể cập nhật giỏ hàng sau thanh toán:', error);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -2,8 +2,6 @@ package service;
 
 import controller.dto.ProfileResponse;
 import controller.dto.UpdateProfileRequest;
-import dal.UserRepository;
-import model.User;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,14 +22,14 @@ import static org.mockito.Mockito.when;
 class UserServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    private dal.UserRepository userRepository;
 
     @InjectMocks
-    private UserService userService;
+    private service.UserService userService;
 
     @Test
     void getMyProfileReturnsActiveUserProfile() {
-        User user = createUser();
+        model.User user = createUser();
         when(userRepository.findByIdAndIsDeleteFalse(1L)).thenReturn(Optional.of(user));
 
         ProfileResponse response = userService.getMyProfile(1L);
@@ -45,7 +43,7 @@ class UserServiceTest {
 
     @Test
     void updateMyProfileUpdatesOnlyEditableFields() {
-        User user = createUser();
+        model.User user = createUser();
         UpdateProfileRequest request = new UpdateProfileRequest();
         request.setFullName("  Nguyễn Văn B  ");
         request.setPhone("");
@@ -64,7 +62,7 @@ class UserServiceTest {
 
     @Test
     void updateMyProfileRejectsInvalidPhone() {
-        User user = createUser();
+        model.User user = createUser();
         UpdateProfileRequest request = new UpdateProfileRequest();
         request.setFullName("Nguyễn Văn B");
         request.setPhone("123");
@@ -91,8 +89,8 @@ class UserServiceTest {
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
     }
 
-    private User createUser() {
-        return User.builder()
+    private model.User createUser() {
+        return model.User.builder()
                 .id(1L)
                 .email("customer@example.com")
                 .fullName("Nguyễn Văn A")

@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ hàng của tôi - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <style>
+        .cart-page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 28px 40px 56px;
+        }
+
+        .cart-breadcrumb {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 18px;
+        }
+
+        .cart-breadcrumb a {
+            color: var(--brand-dark);
+            font-weight: 600;
+        }
+
+        .cart-shell {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 360px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .cart-panel,
+        .order-summary {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow-light);
+        }
+
+        .cart-panel {
+            padding: 24px;
+        }
+
+        .cart-panel__header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .cart-panel__title,
+        .recommendations__title,
+        .order-summary__title {
+            color: var(--brand-dark);
+            margin: 0;
+            font-weight: 800;
+        }
+
+        .cart-panel__title {
+            font-size: 26px;
+        }
+
+        .cart-panel__count {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 6px;
+        }
+
+        .cart-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding: 20px 0;
+        }
+
+        .cart-item {
+            display: grid;
+            grid-template-columns: 28px 92px minmax(0, 1fr) 180px;
+            gap: 14px;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px;
+            background: #ffffff;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .cart-item:hover {
+            border-color: var(--brand-primary);
+            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.07);
+        }
+
+        .cart-item__check {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cart-item__checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--brand-accent);
+            cursor: pointer;
+        }
+
+        .cart-item__thumb {
+            width: 92px;
+            height: 92px;
+            border-radius: 10px;
+            background: #f8fafc;
+            border: 1px solid #edf2f7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+        }
+
+        .cart-item__tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--brand-accent);
+            background: rgba(251, 206, 181, 0.28);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 9px;
+        }
+
+        .cart-item__name {
+            color: var(--brand-dark);
+            font-size: 16px;
+            line-height: 1.4;
+            font-weight: 800;
+            margin: 0 0 8px;
+        }
+
+        .cart-item__seller {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .cart-item__seller strong {
+            color: var(--text-main);
+        }
+
+        .cart-item__side {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .qty-control {
+            display: inline-grid;
+            grid-template-columns: 34px 42px 34px;
+            height: 34px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .qty-control button {
+            border: none;
+            background: #f8fafc;
+            color: var(--brand-dark);
+            cursor: pointer;
+            font-weight: 800;
+        }
+
+        .qty-control button:hover {
+            background: #fff7f3;
+            color: var(--brand-accent);
+        }
+
+        .qty-control span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            color: var(--brand-dark);
+            font-weight: 800;
+        }
+
+        .cart-item__price {
+            color: var(--danger);
+            font-size: 21px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .cart-item__remove {
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 700;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .cart-item__remove:hover {
+            color: #dc2626;
+            text-decoration: underline;
+        }
+
+        .cart-panel__footer {
+            border-top: 1px solid var(--border-color);
+            padding-top: 18px;
+        }
+
+        .continue-shopping {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--brand-dark);
+            font-weight: 800;
+        }
+
+        .continue-shopping:hover {
+            color: var(--brand-accent);
+        }
+
+        .order-summary {
+            position: sticky;
+            top: 118px;
+            padding: 22px;
+        }
+
+        .order-summary__title {
+            font-size: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .summary-lines {
+            display: flex;
+            flex-direction: column;
+            gap: 13px;
+            padding: 18px 0;
+        }
+
+        .summary-line {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            color: var(--text-main);
+            font-size: 14px;
+        }
+
+        .summary-line strong {
+            color: var(--danger);
+            font-weight: 900;
+        }
+
+        .summary-total {
+            padding: 18px 0 14px;
+        }
+
+        .summary-total__label {
+            color: var(--brand-dark);
+            font-weight: 900;
+            margin-bottom: 6px;
+        }
+
+        .summary-total__value {
+            color: var(--danger);
+            font-size: 30px;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .summary-total__note {
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            min-height: 48px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #fd761a 0%, #ff9100 100%);
+            color: #fff;
+            font-weight: 900;
+            letter-spacing: 0.3px;
+            cursor: pointer;
+            box-shadow: 0 8px 18px rgba(253, 118, 26, 0.28);
+        }
+
+        .checkout-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 24px rgba(253, 118, 26, 0.36);
+        }
+
+        .trust-badges {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 16px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .trust-badges span {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .trust-badges i {
+            color: #16a34a;
+            width: 16px;
+        }
+
+        .cart-empty {
+            text-align: center;
+            padding: 56px 18px;
+        }
+
+        .cart-empty i {
+            font-size: 50px;
+            color: #cbd5e1;
+            margin-bottom: 14px;
+        }
+
+        .cart-empty h2 {
+            color: var(--brand-dark);
+            margin: 0 0 8px;
+        }
+
+        .recommendations {
+            margin-top: 34px;
+        }
+
+        .recommendations__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .recommendations__title {
+            font-size: 24px;
+        }
+
+        .recommendations__subtitle {
+            margin: 6px 0 0;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .recommendations__all {
+            color: var(--brand-dark);
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .recommendations__all:hover {
+            color: var(--brand-accent);
+        }
+
+        .recommendation-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+        }
+
+        .recommend-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow-light);
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .recommend-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--brand-primary);
+        }
+
+        .recommend-card__cover {
+            position: relative;
+            height: 132px;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 44px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .recommend-card__badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #10b981;
+            color: #fff;
+            border-radius: 5px;
+            padding: 4px 7px;
+            font-size: 10px;
+            font-weight: 900;
+        }
+
+        .recommend-card__body {
+            padding: 14px;
+        }
+
+        .recommend-card__category {
+            color: var(--brand-accent);
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 7px;
+        }
+
+        .recommend-card__name {
+            min-height: 42px;
+            margin: 0 0 14px;
+            color: var(--brand-dark);
+            font-size: 14px;
+            line-height: 1.45;
+            font-weight: 800;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .recommend-card__bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .recommend-card__price {
+            color: var(--danger);
+            font-size: 17px;
+            font-weight: 900;
+        }
+
+        .recommend-card__cart {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            border: 1.5px solid var(--brand-primary);
+            color: var(--brand-accent);
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .recommend-card__cart:hover {
+            background: #fff7f3;
+            border-color: var(--brand-accent);
+        }
+
+        @media (max-width: 1024px) {
+            .cart-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .order-summary {
+                position: static;
+            }
+
+            .recommendation-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .cart-page {
+                padding: 20px;
+            }
+
+        .cart-item {
+                grid-template-columns: 28px 76px 1fr;
+            }
+
+            .cart-item__thumb {
+                width: 76px;
+                height: 76px;
+            }
+
+            .cart-item__side {
+                grid-column: 1 / -1;
+                align-items: flex-start;
+            }
+
+            .cart-item__info {
+                min-width: 0;
+            }
+
+            .recommendations__header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .recommendation-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="cart-page">
+    <div class="cart-breadcrumb">
+        <a href="/"><i class="fa fa-home"></i> Trang chủ</a> &gt; <span>Giỏ hàng</span>
+    </div>
+
+    <section class="cart-shell" aria-label="Giỏ hàng và thanh toán">
+        <div class="cart-panel">
+            <div class="cart-panel__header">
+                <div>
+                    <h1 class="cart-panel__title">Giỏ hàng của bạn</h1>
+                    <div class="cart-panel__count" id="cartCountLabel">0/0 sản phẩm được chọn</div>
+                </div>
+            </div>
+
+            <div class="cart-list" id="cartList"></div>
+
+            <div class="cart-panel__footer">
+                <a class="continue-shopping" href="/products">
+                    <i class="fa fa-arrow-left"></i>
+                    Tiếp tục mua sắm
+                </a>
+            </div>
+        </div>
+
+        <aside class="order-summary" aria-label="Tóm tắt đơn hàng">
+            <h2 class="order-summary__title">Tóm tắt đơn hàng</h2>
+
+            <div class="summary-lines">
+                <div class="summary-line">
+                    <span>Tạm tính</span>
+                    <strong id="subtotalValue">0 VNĐ</strong>
+                </div>
+                <div class="summary-line">
+                    <span>Phí dịch vụ (2%)</span>
+                    <strong id="serviceFeeValue">0 VNĐ</strong>
+                </div>
+            </div>
+
+            <div class="summary-total">
+                <div class="summary-total__label">Tổng thanh toán</div>
+                <div class="summary-total__value" id="totalValue">0 VNĐ</div>
+                <div class="summary-total__note">(Đã bao gồm VAT nếu có)</div>
+            </div>
+
+            <button class="checkout-btn" type="button" onclick="checkoutCart()">
+                THANH TOÁN NGAY
+            </button>
+
+            <div class="trust-badges">
+                <span><i class="fa fa-shield"></i> Giao dịch an toàn &amp; Bảo mật</span>
+                <span><i class="fa fa-bolt"></i> Giao hàng tự động trong 5-10 phút</span>
+            </div>
+        </aside>
+    </section>
+
+    <section class="recommendations" aria-label="Sản phẩm có thể bạn quan tâm">
+        <div class="recommendations__header">
+            <div>
+                <h2 class="recommendations__title">Sản phẩm có thể bạn quan tâm</h2>
+                <p class="recommendations__subtitle">Gợi ý dựa trên các mặt hàng trong giỏ hàng của bạn</p>
+            </div>
+            <a class="recommendations__all" href="/products">Xem tất cả <i class="fa fa-angle-right"></i></a>
+        </div>
+
+        <div class="recommendation-grid" id="recommendationGrid"></div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+<script th:src="@{/js/auth.js}"></script>
+<script>
+    let cart = [];
+
+    const RECOMMENDATIONS = [
+        {
+            productId: 6,
+            productName: 'Youtube Premium Không Quảng Cáo 6 Tháng',
+            categoryName: 'Premium Subscription',
+            sellerName: 'RedPremium',
+            price: 120000,
+            icon: 'fa-youtube-play',
+            iconColor: '#FF0000',
+            isReady: true
+        },
+        {
+            productId: 8,
+            productName: 'Combo 10 Gmail Việt Cổ 2018 - 2020',
+            categoryName: 'Email',
+            sellerName: 'MailMaster',
+            price: 35000,
+            icon: 'fa-envelope',
+            iconColor: '#ea4335',
+            isReady: true
+        },
+        {
+            productId: 7,
+            productName: 'Gói Tài Khoản Canva Pro Thiết Kế 1 Năm',
+            categoryName: 'Design Tool',
+            sellerName: 'DesignHub',
+            price: 180000,
+            icon: 'fa-paint-brush',
+            iconColor: '#00c4cc',
+            isReady: false
+        },
+        {
+            productId: 10,
+            productName: 'Tài khoản NordVPN Premium 1 Năm',
+            categoryName: 'Security',
+            sellerName: 'SecureNet',
+            price: 350000,
+            icon: 'fa-shield',
+            iconColor: '#4682b4',
+            isReady: true
+        }
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const token = sessionStorage.getItem('accessToken');
+        if (!token || token === 'null' || token === 'undefined') {
+            window.location.href = '/login';
+            return;
+        }
+
+        cart = normalizeCart(JSON.parse(localStorage.getItem('mmoCart') || '[]'));
+        saveCart();
+        renderCart();
+        renderRecommendations();
+    });
+
+    function normalizeCart(items) {
+        return items.map(item => ({
+            productId: Number(item.productId),
+            duration: Number(item.duration || 1),
+            productName: item.productName,
+            sellerName: item.sellerName || 'VipStore',
+            price: Number(item.price || 0),
+            icon: item.icon || 'fa-cube',
+            iconColor: item.iconColor || '#ea580c',
+            quantity: Math.max(1, Number(item.quantity || 1)),
+            selected: item.selected !== false
+        }));
+    }
+
+    function saveCart() {
+        localStorage.setItem('mmoCart', JSON.stringify(cart));
+        if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
+    }
+
+    function formatVND(value) {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
+            .format(Math.max(0, value))
+            .replace('₫', 'VNĐ');
+    }
+
+    function getProductTag(item) {
+        const name = (item.productName || '').toLowerCase();
+        if (name.includes('premium') || name.includes('netflix') || name.includes('youtube') || name.includes('spotify')) {
+            return 'Premium Subscription';
+        }
+        if (name.includes('facebook') || name.includes('gmail')) {
+            return 'Digital Account';
+        }
+        if (name.includes('tool') || name.includes('canva')) {
+            return 'Software Tool';
+        }
+        return 'Digital Product';
+    }
+
+    function renderCart() {
+        const list = document.getElementById('cartList');
+        const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+        const selectedCount = getSelectedItems().reduce((sum, item) => sum + item.quantity, 0);
+        document.getElementById('cartCountLabel').innerText = `${selectedCount}/${totalCount} sản phẩm được chọn`;
+
+        if (cart.length === 0) {
+            list.innerHTML = `
+                <div class="cart-empty">
+                    <i class="fa fa-shopping-cart"></i>
+                    <h2>Giỏ hàng đang trống</h2>
+                    <p>Hãy chọn sản phẩm bạn muốn mua rồi thêm vào giỏ hàng.</p>
+                </div>
+            `;
+            updateSummary();
+            return;
+        }
+
+        list.innerHTML = cart.map((item, index) => `
+            <article class="cart-item">
+                <div class="cart-item__check">
+                    <input class="cart-item__checkbox" type="checkbox" ${item.selected !== false ? 'checked' : ''} onchange="toggleSelected(${index}, this.checked)">
+                </div>
+                <div class="cart-item__thumb">
+                    <i class="fa ${item.icon}" style="color: ${item.iconColor}"></i>
+                </div>
+                <div class="cart-item__info">
+                    <div class="cart-item__tag"><i class="fa fa-tag"></i>${getProductTag(item)}</div>
+                    <h2 class="cart-item__name">${item.productName}</h2>
+                    <div class="cart-item__seller">Bán bởi: <strong>${item.sellerName}</strong></div>
+                </div>
+                <div class="cart-item__side">
+                    <div class="qty-control" aria-label="Điều chỉnh số lượng">
+                        <button type="button" onclick="changeQuantity(${index}, -1)">-</button>
+                        <span>${item.quantity}</span>
+                        <button type="button" onclick="changeQuantity(${index}, 1)">+</button>
+                    </div>
+                    <div class="cart-item__price">${formatVND(item.price * item.quantity)}</div>
+                    <button class="cart-item__remove" type="button" onclick="removeCartItem(${index})">Xóa khỏi giỏ</button>
+                </div>
+            </article>
+        `).join('');
+
+        updateSummary();
+    }
+
+    function updateSummary() {
+        const selectedItems = getSelectedItems();
+        const subtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        const serviceFee = Math.round(subtotal * 0.02);
+        const total = subtotal + serviceFee;
+
+        document.getElementById('subtotalValue').innerText = formatVND(subtotal);
+        document.getElementById('serviceFeeValue').innerText = formatVND(serviceFee);
+        document.getElementById('totalValue').innerText = formatVND(total);
+    }
+
+    function getSelectedItems() {
+        return cart.filter(item => item.selected !== false);
+    }
+
+    function toggleSelected(index, checked) {
+        cart[index].selected = checked;
+        saveCart();
+        renderCart();
+    }
+
+    function changeQuantity(index, delta) {
+        cart[index].quantity = Math.max(1, cart[index].quantity + delta);
+        saveCart();
+        renderCart();
+    }
+
+    function removeCartItem(index) {
+        cart.splice(index, 1);
+        saveCart();
+        renderCart();
+    }
+
+    function checkoutCart() {
+        const selectedItems = getSelectedItems();
+        if (selectedItems.length === 0) {
+            alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán.');
+            return;
+        }
+
+        window.location.href = `/checkout?mode=cart`;
+    }
+
+    function renderRecommendations() {
+        const grid = document.getElementById('recommendationGrid');
+        grid.innerHTML = RECOMMENDATIONS.map(item => `
+            <article class="recommend-card">
+                <div class="recommend-card__cover">
+                    ${item.isReady ? '<span class="recommend-card__badge">HÀNG CÓ SẴN</span>' : ''}
+                    <i class="fa ${item.icon}" style="color: ${item.iconColor}"></i>
+                </div>
+                <div class="recommend-card__body">
+                    <div class="recommend-card__category">${item.categoryName}</div>
+                    <h3 class="recommend-card__name">${item.productName}</h3>
+                    <div class="recommend-card__bottom">
+                        <div class="recommend-card__price">${formatVND(item.price)}</div>
+                        <button class="recommend-card__cart" type="button" title="Thêm vào giỏ hàng" onclick="addRecommendationToCart(${item.productId})">
+                            <i class="fa fa-shopping-cart"></i>
+                        </button>
+                    </div>
+                </div>
+            </article>
+        `).join('');
+    }
+
+    function addRecommendationToCart(productId) {
+        const product = RECOMMENDATIONS.find(item => item.productId === productId);
+        if (!product) return;
+
+        const existing = cart.find(item => item.productId === product.productId && item.duration === 1);
+        if (existing) {
+            existing.quantity += 1;
+        } else {
+            cart.push({
+                productId: product.productId,
+                duration: 1,
+                productName: product.productName,
+                sellerName: product.sellerName,
+                price: product.price,
+                icon: product.icon,
+                iconColor: product.iconColor,
+                quantity: 1
+            });
+        }
+
+        saveCart();
+        renderCart();
+        alert('Đã thêm sản phẩm vào giỏ hàng thành công!');
+        if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
+    }
+</script>
+</body>
+</html>

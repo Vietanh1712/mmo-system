@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trung tâm hỗ trợ - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/support.css}">
+</head>
+
+<body class="support-page">
+
+    <header th:replace="fragments/header :: header"></header>
+
+    <!-- Hero Search Banner -->
+    <section class="support-hero" aria-label="Tìm kiếm trợ giúp">
+        <div class="support-hero__inner">
+            <h1 class="support-hero__title">Chúng tôi có thể <span>giúp gì</span> cho bạn?</h1>
+            <div class="support-hero__search-wrapper">
+                <form id="support-search-form" role="search" onsubmit="handleSupportSearch(event)">
+                    <div class="support-hero__search-bar">
+                        <div class="support-hero__search-field">
+                            <input type="search" id="support-search-input" class="support-hero__input"
+                                placeholder="Tìm câu trả lời, hướng dẫn, chính sách..."
+                                autocomplete="off" aria-label="Tìm kiếm trợ giúp">
+                        </div>
+                        <button type="submit" class="support-hero__search-btn">
+                            <i class="fa fa-search"></i> Tìm kiếm
+                        </button>
+                    </div>
+                </form>
+                <div class="support-hero__quick-links">
+                    <a href="#faq" data-faq-query="nạp tiền">Nạp tiền</a>
+                    <a href="#faq" data-faq-query="mua hàng">Mua hàng</a>
+                    <a href="#faq" data-faq-query="khiếu nại">Khiếu nại</a>
+                    <a href="#faq" data-faq-query="bảo mật">Bảo mật tài khoản</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="support-container">
+
+        <!-- Topics Grid -->
+        <section class="support-section" id="topics" aria-labelledby="topics-title">
+            <div class="support-section__header">
+                <h2 class="support-section__title" id="topics-title">Chủ đề hỗ trợ</h2>
+                <p class="support-section__subtitle">Chọn chủ đề phù hợp để xem hướng dẫn nhanh và câu hỏi liên quan.</p>
+            </div>
+            <div class="support-topics-grid">
+                <article class="support-topic-card" tabindex="0" data-topic="buyer"
+                    onclick="filterFaqGroup('buyer')" onkeypress="if(event.key==='Enter')filterFaqGroup('buyer')">
+                    <div class="support-topic-card__icon-wrap"><i class="fa fa-shopping-cart"></i></div>
+                    <h3 class="support-topic-card__title">Người mua</h3>
+                    <p class="support-topic-card__desc">Hướng dẫn mua hàng, nạp tiền, khiếu nại và chính sách Escrow 3 ngày.</p>
+                </article>
+                <article class="support-topic-card" tabindex="0" data-topic="seller"
+                    onclick="filterFaqGroup('seller')" onkeypress="if(event.key==='Enter')filterFaqGroup('seller')">
+                    <div class="support-topic-card__seller-logo" aria-hidden="true">
+                        <span class="support-topic-card__seller-logo-icon"><i class="fa fa-diamond"></i></span>
+                        <span class="support-topic-card__seller-logo-badge"><i class="fa fa-store"></i></span>
+                    </div>
+                    <h3 class="support-topic-card__title">Người bán</h3>
+                    <p class="support-topic-card__desc">Đăng sản phẩm, đặt giá, phí hoa hồng, rút tiền và xử lý khiếu nại.</p>
+                </article>
+                <article class="support-topic-card" tabindex="0"
+                    onclick="scrollToFaq('khiếu nại')" onkeypress="if(event.key==='Enter')scrollToFaq('khiếu nại')">
+                    <div class="support-topic-card__icon-wrap"><i class="fa fa-gavel"></i></div>
+                    <h3 class="support-topic-card__title">Giao dịch &amp; Khiếu nại</h3>
+                    <p class="support-topic-card__desc">Escrow 3 ngày, tranh chấp đơn hàng và quy trình hoàn tiền.</p>
+                </article>
+                <article class="support-topic-card" tabindex="0"
+                    onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})" onkeypress="if(event.key==='Enter')document.getElementById('contact').scrollIntoView({behavior:'smooth'})">
+                    <div class="support-topic-card__icon-wrap"><i class="fa fa-life-ring"></i></div>
+                    <h3 class="support-topic-card__title">Liên hệ hỗ trợ</h3>
+                    <p class="support-topic-card__desc">Ticket, chat trực tuyến và email — đội ngũ hỗ trợ 8h–22h hàng ngày.</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- FAQ Accordion -->
+        <section class="support-section" id="faq" aria-labelledby="faq-title">
+            <div class="support-section__header">
+                <h2 class="support-section__title" id="faq-title">Câu hỏi thường gặp</h2>
+                <p class="support-section__subtitle">Giải đáp nhanh các thắc mắc phổ biến khi sử dụng MMO Market.</p>
+            </div>
+
+            <div class="support-faq-tabs" role="tablist">
+                <button type="button" class="support-faq-tab is-active" data-filter="all" onclick="filterFaqGroup('all')">Tất cả</button>
+                <button type="button" class="support-faq-tab" data-filter="buyer" onclick="filterFaqGroup('buyer')">Người mua</button>
+                <button type="button" class="support-faq-tab" data-filter="seller" onclick="filterFaqGroup('seller')">Người bán</button>
+            </div>
+
+            <div class="support-faq-groups" id="support-faq-groups">
+
+                <!-- NGƯỜI MUA -->
+                <div class="support-faq-group" data-group="buyer">
+                    <h3 class="support-faq-group__title"><i class="fa fa-shopping-cart"></i> Người mua</h3>
+                    <div class="support-faq-list">
+
+                        <div class="support-faq-item" data-group="buyer" data-keywords="mua hàng mua sản phẩm">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">Làm sao để mua sản phẩm?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Rất đơn giản! Các bước mua sản phẩm trên <strong>MMO Market</strong>: <strong>Nạp tiền</strong> vào ví → <strong>Tìm sản phẩm</strong> phù hợp (theo từ khóa hoặc danh mục như Gmail) → <strong>Nhấn Mua ngay</strong> → sản phẩm được giao tự động ngay sau khi thanh toán thành công. Lưu ý: Nạp đúng cú pháp chuyển khoản thì hệ thống tự cộng tiền, không cần chờ xác nhận thủ công.</p></div>
+                        </div>
+
+                        <div class="support-faq-item" data-group="buyer" data-keywords="nạp tiền ví chuyển khoản">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">Chọn "Nạp tiền tự động" nhưng vẫn chưa nhận được tiền thì sao?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Kiểm tra lại nội dung chuyển khoản đã đúng cú pháp hướng dẫn chưa. Nếu đã đúng mà sau <strong>5 phút</strong> vẫn chưa thấy số dư, hãy liên hệ hỗ trợ qua trang <strong>Hỗ trợ</strong>, gửi ticket hoặc email kèm ảnh biên lai giao dịch.</p></div>
+                        </div>
+
+                        <div class="support-faq-item" data-group="buyer" data-keywords="hết hàng email sản phẩm kho">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">Hết Email/sản phẩm thì sao?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">MMO Market là sàn giao dịch trung gian — bạn mua từ nhiều shop khác nhau. Nếu hết hàng, shop sẽ cập nhật kho sau; bạn có thể theo dõi shop hoặc tìm sản phẩm tương tự từ người bán khác.</p></div>
+                        </div>
+
+                        <div class="support-faq-item" data-group="buyer" data-keywords="khiếu nại hỗ trợ tranh chấp">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">Việc hỗ trợ và khiếu nại sản phẩm như thế nào?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Nếu không dùng được sản phẩm, hãy xác định lỗi thuộc shop hay do thao tác của bạn. Đọc kỹ mô tả và hướng dẫn từ người bán. Nếu không phải lỗi của bạn (sai mật khẩu, tài khoản die từ trước…), mở khiếu nại trong <strong>Lịch sử giao dịch</strong> hoặc liên hệ MMO Market để được hỗ trợ.</p></div>
+                        </div>
+
+                        <div class="support-faq-item" data-group="buyer" data-keywords="khiếu nại 3 ngày escrow">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">Tôi có thể khiếu nại trong bao lâu?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Chính sách MMO Market cho phép khiếu nại trong vòng <strong>3 ngày</strong> kể từ khi mua. Trong thời gian này tiền được giữ (Escrow), chưa chuyển cho người bán. Có vấn đề hãy khiếu nại sớm để được xử lý.</p></div>
+                        </div>
+
+                        <div class="support-faq-item" data-group="buyer" data-keywords="check trùng sản phẩm">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">Tôi có thể check sản phẩm trước khi mua không?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Sản phẩm trên hệ thống được cam kết không trùng lặp và chưa từng bán cho người khác (tùy loại sản phẩm). Hệ thống kiểm tra và từ chối các tài khoản/key đã phát hành trước đó khi shop upload đúng quy trình.</p></div>
+                        </div>
+
+                        <div class="support-faq-item" data-group="buyer" data-keywords="uy tín sàn escrow">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">MMO Market hoạt động thế nào? Sản phẩm có uy tín không?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">MMO Market là sàn trung gian uy tín: giữ tiền <strong>3 ngày</strong> trước khi chuyển cho người bán, bảo vệ người mua. Có cơ chế check trùng và đánh giá shop. Nên chọn shop có tick xác minh và đọc mô tả kỹ trước khi mua.</p></div>
+                        </div>
+
+                        <div class="support-faq-item" data-group="buyer" data-keywords="số lượng mua giới hạn">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">Mua sản phẩm cần lưu ý gì về số lượng?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Mỗi sản phẩm có thể có giới hạn số lượng mua tối đa do người bán cài đặt. Bạn có thể mua nhiều lần để đủ số lượng cần. Giới hạn giúp công bằng cho mọi người mua và hạn chế đầu cơ.</p></div>
+                        </div>
+
+                        <div class="support-faq-item" data-group="buyer" data-keywords="rút tiền nạp credit ví">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">Tiền nạp vào MMO Market có rút ra được không?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Tiền nạp chuyển thành <strong>số dư ví (credit)</strong> dùng mua hàng trên sàn — <strong>không thể rút</strong> thành tiền mặt. Chỉ tiền từ <strong>bán hàng thành công</strong> (đối với người bán) mới được rút theo quy trình. Số dư ví là credit nội bộ, không phải tiền gửi ngân hàng.</p></div>
+                        </div>
+
+                        <div class="support-faq-item" data-group="buyer" data-keywords="bản quyền vi phạm">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">Nếu sản phẩm tôi mua vi phạm bản quyền thì sao?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">MMO Market là sàn trung gian — trách nhiệm pháp lý về nội dung thuộc <strong>người bán</strong>. Khi nhận khiếu nại hợp lệ, chúng tôi gỡ sản phẩm và xử lý shop vi phạm. Nếu bạn nghi ngờ sản phẩm vừa mua, liên hệ hỗ trợ ngay.</p></div>
+                        </div>
+
+                        <div class="support-faq-item" data-group="buyer" data-keywords="gmail danh mục tìm kiếm">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">Tìm sản phẩm theo danh mục (ví dụ Gmail) không cần từ khóa?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Tại trang chủ: chọn <strong>Email</strong> → <strong>Gmail</strong> → bấm <strong>TÌM</strong>. Trang kết quả hiển thị sản phẩm Gmail mà không bắt buộc nhập từ khóa.</p></div>
+                        </div>
+
+                        <div class="support-faq-item" data-group="buyer" data-keywords="xác minh shop tick">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">Tick xanh "Đã xác minh" trên cửa hàng là gì?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Shop đã qua kiểm duyệt danh tính / lịch sử giao dịch tốt. Bạn vẫn nên đọc mô tả sản phẩm và đánh giá trước khi mua.</p></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- NGƯỜI BÁN -->
+                <div class="support-faq-group" data-group="seller">
+                    <h3 class="support-faq-group__title"><i class="fa fa-store"></i> Người bán</h3>
+                    <div class="support-faq-list">
+
+                        <div class="support-faq-item" data-group="seller" data-keywords="bán hàng đăng ký shop">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">Làm sao để bắt đầu bán hàng trên MMO Market?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Đăng ký tài khoản và chọn vai trò <strong>Người bán</strong> (hoặc nâng cấp từ tài khoản mua). Sau khi được duyệt, vào <strong>Quản lý gian hàng</strong> để đăng sản phẩm. Nên nghiên cứu thị trường và đặt giá cạnh tranh.</p></div>
+                        </div>
+
+                        <div class="support-faq-item" data-group="seller" data-keywords="đặt giá sản phẩm">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">Làm sao để đặt giá sản phẩm phù hợp?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Tham khảo giá các shop cùng danh mục trên sàn. Đặt giá cạnh tranh nhưng vẫn đảm bảo lợi nhuận. Theo dõi xu hướng và điều chỉnh linh hoạt.</p></div>
+                        </div>
+
+                        <div class="support-faq-item" data-group="seller" data-keywords="tạo sản phẩm đăng bán">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">Làm sao để tạo sản phẩm bán hàng?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer"><strong>Quản lý gian hàng</strong> → <strong>Thêm sản phẩm mới</strong> → Điền tên, mô tả, giá, danh mục, upload dữ liệu sản phẩm (file hoặc text) → Lưu và chờ duyệt (nếu có).</p></div>
+                        </div>
+
+                        <div class="support-faq-item" data-group="seller" data-keywords="yêu cầu bán hàng quy định">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">MMO Market có yêu cầu gì khi bán hàng?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Sản phẩm phải hợp pháp, không vi phạm điều khoản sử dụng. Người bán phải giao đúng mô tả. Hệ thống có thể từ chối hoặc gỡ sản phẩm không đạt yêu cầu.</p></div>
+                        </div>
+
+                        <div class="support-faq-item" data-group="seller" data-keywords="khiếu nại shop hoàn tiền">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">Nếu sản phẩm bị khiếu nại thì xử lý thế nào?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Khiếu nại trong 3 ngày: nếu lỗi thuộc shop, tiền hoàn cho người mua. Admin/trọng tài xem xét từng trường hợp và ra quyết định công bằng.</p></div>
+                        </div>
+
+                        <div class="support-faq-item" data-group="seller" data-keywords="tiền về ví 3 ngày">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">Tiền bán hàng khi nào về tài khoản?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Tiền chuyển vào ví người bán sau <strong>3 ngày</strong> kể từ giao dịch thành công nếu không có khiếu nại — chính sách bảo vệ người mua của MMO Market.</p></div>
+                        </div>
+
+                        <div class="support-faq-item" data-group="seller" data-keywords="phí hoa hồng 5%">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">Phí bán hàng trên MMO Market là bao nhiêu?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Phí hoa hồng <strong>5%</strong> trên mỗi giao dịch thành công, trừ tự động khi đơn hoàn tất và tiền chuyển về ví người bán.</p></div>
+                        </div>
+
+                        <div class="support-faq-item" data-group="seller" data-keywords="rút tiền ngân hàng 300000">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">Làm thế nào để rút tiền?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer"><strong>Quản lý gian hàng</strong> → <strong>Rút tiền</strong> → Nhập số tiền và thông tin ngân hàng → Gửi yêu cầu. Xử lý trong 24–48h làm việc. Số tiền tối thiểu rút: <strong>300.000đ</strong>. Chỉ tiền từ bán hàng được rút, tiền nạp để mua hàng không rút được.</p></div>
+                        </div>
+
+                        <div class="support-faq-item" data-group="seller" data-keywords="tăng doanh số bán">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">Làm sao để tăng doanh số bán hàng?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Mô tả chi tiết, giá cạnh tranh, đảm bảo chất lượng để có đánh giá tốt. Chọn đúng danh mục để khách dễ tìm thấy (Email, Premium, v.v.).</p></div>
+                        </div>
+
+                        <div class="support-faq-item" data-group="seller" data-keywords="liên hệ hỗ trợ seller">
+                            <button type="button" class="support-faq-item__trigger" aria-expanded="false">
+                                <span class="support-faq-item__question">Làm sao liên hệ hỗ trợ khi gặp vấn đề (người bán)?</span>
+                                <i class="fa fa-chevron-down support-faq-item__chevron"></i>
+                            </button>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Vào trang <strong>Hỗ trợ</strong>, gửi ticket, chat trực tuyến hoặc email <strong>support@mmomarket.vn</strong>. Đội ngũ hỗ trợ 8h–22h hàng ngày.</p></div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- Contact -->
+        <section class="support-section" id="contact" aria-labelledby="contact-title">
+            <div class="support-section__header">
+                <h2 class="support-section__title" id="contact-title">Vẫn cần sự trợ giúp?</h2>
+                <p class="support-section__subtitle">Đội ngũ hỗ trợ sẵn sàng tiếp nhận yêu cầu qua các kênh dưới đây.</p>
+            </div>
+            <div class="support-contact-grid">
+
+                <article class="support-contact-card">
+                    <div class="support-contact-card__icon-wrap">
+                        <i class="fa fa-ticket"></i>
+                    </div>
+                    <h3 class="support-contact-card__title">Gửi ticket</h3>
+                    <p class="support-contact-card__desc">Mô tả chi tiết vấn đề, đính kèm mã đơn hàng. Phản hồi trong 24 giờ làm việc.</p>
+                    <button type="button" class="support-contact-card__btn" onclick="openTicketForm()">Tạo ticket mới</button>
+                </article>
+
+                <article class="support-contact-card">
+                    <div class="support-contact-card__icon-wrap">
+                        <span class="support-contact-card__badge">ONLINE</span>
+                        <i class="fa fa-comments"></i>
+                    </div>
+                    <h3 class="support-contact-card__title">Chat trực tuyến</h3>
+                    <p class="support-contact-card__desc">Trò chuyện nhanh với nhân viên CSKH khi cần hỗ trợ gấp trong giờ hành chính.</p>
+                    <button type="button" class="support-contact-card__btn" onclick="openLiveChat()">Bắt đầu chat</button>
+                </article>
+
+                <article class="support-contact-card">
+                    <div class="support-contact-card__icon-wrap">
+                        <i class="fa fa-envelope"></i>
+                    </div>
+                    <h3 class="support-contact-card__title">Email</h3>
+                    <p class="support-contact-card__desc">Gửi email cho bộ phận hỗ trợ khi cần trao đổi chi tiết hoặc đính kèm tài liệu.</p>
+                    <a href="mailto:support@mmomarket.vn" class="support-contact-card__email-link">support@mmomarket.vn</a>
+                    <p class="support-contact-card__note">Thời gian phản hồi: 1–2 ngày làm việc</p>
+                </article>
+
+            </div>
+        </section>
+
+    </div>
+
+    <footer th:replace="fragments/footer :: footer"></footer>
+
+    <!-- Modal tạo ticket -->
+    <div class="support-ticket-modal" id="support-ticket-modal" aria-hidden="true">
+        <div class="support-ticket-modal__backdrop" onclick="closeTicketForm()"></div>
+        <div class="support-ticket-modal__dialog" role="dialog" aria-labelledby="ticket-modal-title">
+            <button type="button" class="support-ticket-modal__close" onclick="closeTicketForm()" aria-label="Đóng">
+                <i class="fa fa-times"></i>
+            </button>
+            <h3 id="ticket-modal-title" class="support-ticket-modal__title">Tạo ticket hỗ trợ</h3>
+            <p class="support-ticket-modal__subtitle">Mô tả vấn đề để đội ngũ kỹ thuật hỗ trợ bạn.</p>
+            <form id="support-ticket-form" onsubmit="submitTicketForm(event)">
+                <div class="support-ticket-field">
+                    <label for="ticket-category">Danh mục</label>
+                    <select id="ticket-category" required>
+                        <option value="technical" selected>Hỗ trợ kỹ thuật</option>
+                    </select>
+                </div>
+                <div class="support-ticket-field">
+                    <label for="ticket-subject">Tiêu đề</label>
+                    <input type="text" id="ticket-subject" required maxlength="200" placeholder="VD: Không nhận được sản phẩm sau khi mua">
+                </div>
+                <div class="support-ticket-field">
+                    <label for="ticket-order">Mã đơn hàng (nếu có)</label>
+                    <input type="text" id="ticket-order" placeholder="VD: ORD-12345">
+                </div>
+                <div class="support-ticket-field">
+                    <label for="ticket-detail">Chi tiết</label>
+                    <textarea id="ticket-detail" rows="5" required placeholder="Mô tả chi tiết vấn đề, thời gian xảy ra, bước đã thử..."></textarea>
+                </div>
+                <button type="submit" class="support-ticket-modal__submit">Gửi ticket</button>
+            </form>
+        </div>
+    </div>
+
+    <script th:src="@{/js/auth.js}"></script>
+    <script>
+        let currentFaqFilter = 'all';
+
+        // FAQ Accordion
+        document.querySelectorAll('.support-faq-item__trigger').forEach(trigger => {
+            trigger.addEventListener('click', () => {
+                const item = trigger.closest('.support-faq-item');
+                const isOpen = item.classList.contains('is-open');
+
+                document.querySelectorAll('.support-faq-item.is-open').forEach(openItem => {
+                    openItem.classList.remove('is-open');
+                    openItem.querySelector('.support-faq-item__trigger').setAttribute('aria-expanded', 'false');
+                });
+
+                if (!isOpen) {
+                    item.classList.add('is-open');
+                    trigger.setAttribute('aria-expanded', 'true');
+                }
+            });
+        });
+
+        function setActiveFaqTab(filter) {
+            document.querySelectorAll('.support-faq-tab').forEach(tab => {
+                tab.classList.toggle('is-active', tab.getAttribute('data-filter') === filter);
+            });
+        }
+
+        function setActiveTopicCard(filter) {
+            document.querySelectorAll('.support-topic-card[data-topic]').forEach(card => {
+                card.classList.toggle('is-active', card.getAttribute('data-topic') === filter);
+            });
+        }
+
+        function applyFaqGroupFilter() {
+            document.querySelectorAll('.support-faq-group').forEach(group => {
+                const groupName = group.getAttribute('data-group');
+                if (currentFaqFilter === 'all') {
+                    group.classList.remove('is-hidden');
+                } else {
+                    group.classList.toggle('is-hidden', groupName !== currentFaqFilter);
+                }
+            });
+
+            document.querySelectorAll('.support-faq-item').forEach(item => {
+                if (item.style.display === 'none' && item.dataset.searchHidden === '1') return;
+                if (currentFaqFilter === 'all') {
+                    if (item.dataset.searchHidden !== '1') item.style.display = '';
+                } else {
+                    if (item.dataset.searchHidden !== '1') {
+                        item.style.display = item.getAttribute('data-group') === currentFaqFilter ? '' : 'none';
+                    }
+                }
+            });
+        }
+
+        function filterFaqGroup(group) {
+            currentFaqFilter = group;
+            document.getElementById('support-search-input').value = '';
+
+            document.querySelectorAll('.support-faq-item').forEach(item => {
+                item.dataset.searchHidden = '0';
+                item.style.display = '';
+            });
+
+            setActiveFaqTab(group);
+            if (group === 'buyer' || group === 'seller') {
+                setActiveTopicCard(group);
+            } else {
+                document.querySelectorAll('.support-topic-card[data-topic]').forEach(c => c.classList.remove('is-active'));
+            }
+
+            applyFaqGroupFilter();
+
+            document.getElementById('faq').scrollIntoView({ behavior: 'smooth' });
+
+            const targetGroup = document.querySelector('.support-faq-group[data-group="' + group + '"]');
+            if (targetGroup && group !== 'all') {
+                setTimeout(() => targetGroup.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+            }
+        }
+
+        function resetFaqSearch() {
+            document.querySelectorAll('.support-faq-item').forEach(item => {
+                item.dataset.searchHidden = '0';
+                item.style.display = '';
+            });
+            applyFaqGroupFilter();
+        }
+
+        function handleSupportSearch(e) {
+            e.preventDefault();
+            const q = document.getElementById('support-search-input').value.trim().toLowerCase();
+            if (!q) {
+                resetFaqSearch();
+                return;
+            }
+
+            currentFaqFilter = 'all';
+            setActiveFaqTab('all');
+            document.querySelectorAll('.support-topic-card[data-topic]').forEach(c => c.classList.remove('is-active'));
+
+            document.querySelectorAll('.support-faq-group').forEach(g => g.classList.remove('is-hidden'));
+
+            const items = document.querySelectorAll('.support-faq-item');
+            let firstMatch = null;
+
+            items.forEach(item => {
+                const keywords = (item.getAttribute('data-keywords') || '').toLowerCase();
+                const question = item.querySelector('.support-faq-item__question').innerText.toLowerCase();
+                const answer = item.querySelector('.support-faq-item__answer').innerText.toLowerCase();
+                const match = keywords.includes(q) || question.includes(q) || answer.includes(q);
+                item.style.display = match ? '' : 'none';
+                item.dataset.searchHidden = match ? '0' : '1';
+                if (match && !firstMatch) firstMatch = item;
+            });
+
+            document.getElementById('faq').scrollIntoView({ behavior: 'smooth' });
+
+            if (firstMatch) {
+                document.querySelectorAll('.support-faq-item.is-open').forEach(el => {
+                    el.classList.remove('is-open');
+                    el.querySelector('.support-faq-item__trigger').setAttribute('aria-expanded', 'false');
+                });
+                firstMatch.classList.add('is-open');
+                firstMatch.querySelector('.support-faq-item__trigger').setAttribute('aria-expanded', 'true');
+            }
+        }
+
+        function scrollToFaq(keyword) {
+            filterFaqGroup('all');
+            document.getElementById('support-search-input').value = keyword;
+            handleSupportSearch({ preventDefault: () => {} });
+        }
+
+        document.querySelectorAll('.support-hero__quick-links a[data-faq-query]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const q = link.getAttribute('data-faq-query');
+                scrollToFaq(q);
+            });
+        });
+
+        document.getElementById('support-search-input').addEventListener('input', function () {
+            if (!this.value.trim()) resetFaqSearch();
+        });
+
+        function openTicketForm() {
+            const modal = document.getElementById('support-ticket-modal');
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeTicketForm() {
+            const modal = document.getElementById('support-ticket-modal');
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }
+
+        function submitTicketForm(e) {
+            e.preventDefault();
+            const subject = document.getElementById('ticket-subject').value.trim();
+            const detail = document.getElementById('ticket-detail').value.trim();
+            if (!subject || !detail) return;
+            closeTicketForm();
+            document.getElementById('support-ticket-form').reset();
+            alert('Ticket đã được gửi! Đội ngũ hỗ trợ kỹ thuật sẽ phản hồi trong vòng 24 giờ làm việc.');
+        }
+
+        function openLiveChat() {
+            window.location.href = '/messages';
+        }
+
+        // Mở FAQ khi vào từ menu "Câu hỏi thường gặp"
+        if (window.location.hash === '#faq') {
+            setTimeout(() => {
+                document.getElementById('faq').scrollIntoView({ behavior: 'smooth' });
+            }, 300);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,9 +1,23 @@
 const API_BASE = 'http://localhost:8080/api';
-['accessToken', 'refreshToken', 'loginTimestamp', 'userInfo', 'user'].forEach(key => {
-    if (!sessionStorage.getItem('accessToken')) {
-        localStorage.removeItem(key);
-    }
-});
+const AUTH_STORAGE_KEYS = ['accessToken', 'refreshToken', 'loginTimestamp', 'userInfo', 'user'];
+
+if (!sessionStorage.getItem('accessToken') && localStorage.getItem('accessToken')) {
+    AUTH_STORAGE_KEYS.forEach(key => {
+        const value = localStorage.getItem(key);
+        if (value) {
+            sessionStorage.setItem(key, value);
+        }
+    });
+} else if (sessionStorage.getItem('accessToken')) {
+    AUTH_STORAGE_KEYS.forEach(key => {
+        const value = sessionStorage.getItem(key);
+        if (value) {
+            localStorage.setItem(key, value);
+        }
+    });
+} else {
+    AUTH_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
+}
 
 // =======================================================
 // 1. UTILITIES & AUTH FETCH
@@ -384,11 +398,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (res.status === 200 && res.body.accessToken) {
                     showLoginAlert('Đăng nhập thành công!', 'success');
 
+                    const loginTimestamp = Date.now().toString();
+
                     sessionStorage.setItem('accessToken', res.body.accessToken);
+                    localStorage.setItem('accessToken', res.body.accessToken);
                     if (res.body.refreshToken) {
                         sessionStorage.setItem('refreshToken', res.body.refreshToken);
+                        localStorage.setItem('refreshToken', res.body.refreshToken);
                     }
-                    sessionStorage.setItem('loginTimestamp', Date.now().toString());
+                    sessionStorage.setItem('loginTimestamp', loginTimestamp);
+                    localStorage.setItem('loginTimestamp', loginTimestamp);
 
                     const userInfo = {
                         id: res.body.userId,
@@ -399,6 +418,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     };
                     sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
                     sessionStorage.setItem('user', JSON.stringify(userInfo));
+                    localStorage.setItem('userInfo', JSON.stringify(userInfo));
+                    localStorage.setItem('user', JSON.stringify(userInfo));
 
                     const redirectUrl = getSafeReturnUrl()
                         || (normalizeRole(userInfo.role) === 'Admin' ? '/admin/users' : '/');

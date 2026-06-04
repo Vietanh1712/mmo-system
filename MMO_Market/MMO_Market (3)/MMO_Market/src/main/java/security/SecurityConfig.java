@@ -68,7 +68,23 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/account/orders"),
                                 new AntPathRequestMatcher("/account/orders/**"),
                                 new AntPathRequestMatcher("/account/notifications"),
-                                new AntPathRequestMatcher("/admin/users")
+                                new AntPathRequestMatcher("/admin/users"),
+                                // Trang Kết quả Tìm kiếm - công khai theo spec (không cần đăng nhập)
+                                new AntPathRequestMatcher("/search"),
+                                new AntPathRequestMatcher("/support"),
+                                new AntPathRequestMatcher("/messages"),
+                                new AntPathRequestMatcher("/products"),
+                                new AntPathRequestMatcher("/products/**"),
+                                new AntPathRequestMatcher("/cart"),
+                                new AntPathRequestMatcher("/checkout"),
+                                new AntPathRequestMatcher("/pre-orders"),
+                                new AntPathRequestMatcher("/pre-orders/new"),
+                                new AntPathRequestMatcher("/pre-orders/**")
+                        ).permitAll()
+
+                        // Public Search API (không cần đăng nhập để xem sản phẩm)
+                        .requestMatchers(
+                                new AntPathRequestMatcher("/api/search/**")
                         ).permitAll()
 
                         // Public static resources (CSS, JS, Ảnh)

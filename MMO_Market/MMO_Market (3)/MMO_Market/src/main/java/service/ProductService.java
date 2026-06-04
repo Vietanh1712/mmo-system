@@ -7,6 +7,7 @@ import model.Product;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,13 +29,13 @@ public class ProductService {
     }
 
     public List<Product> searchProducts(String query, Long categoryId) {
-        if (categoryId == null || categoryId == 0) { // "All" category
+        if (categoryId == null || categoryId == 0) {
             return searchProducts(query);
         }
         Optional<Category> category = categoryRepository.findById(categoryId);
         if (category.isPresent()) {
             return productRepository.findByCategoryAndNameContainingIgnoreCaseOrCategoryAndDescriptionContainingIgnoreCaseAndIsDeleteFalse(category.get(), query, category.get(), query);
         }
-        return List.of(); // Return empty list if category not found
+        return new ArrayList<>();
     }
 }

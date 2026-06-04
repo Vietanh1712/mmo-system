@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Entity
 @Table(name = "Products")
 @Data
@@ -22,17 +25,30 @@ public class Product {
     @Column(nullable = false)
     private String name;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String description;
 
-    @Column(name = "image_url")
-    private String imageUrl; // URL for the product image
+    @Column(name = "image")
+    private String image; // Matches SQL schema
 
-    @Column(name = "is_delete", nullable = false)
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "isDelete", nullable = false)
     private Boolean isDelete = false;
 
-    // Assuming a seller_id exists to link to the User entity
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id", nullable = false)
     private User seller;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<ProductVariant> variants;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
 }
+    

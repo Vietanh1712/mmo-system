@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn đặt trước - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/pre-orders.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <!-- 2. BREADCRUMB -->
+    <div class="preorders-breadcrumb-container">
+        <div class="preorders-breadcrumb">
+            <a href="/"><i class="fa fa-home"></i> Trang chủ</a> &gt; <span>Đơn đặt trước của tôi</span>
+        </div>
+    </div>
+
+    <!-- 3. MAIN CONTENT (Bố cục độc lập căn giữa 1000px, không dùng sidebar) -->
+    <main class="preorders-page-container">
+        <section class="preorders-panel-card">
+            <div class="preorders-panel-card__header">
+                <div class="preorders-panel-card__avatar"><i class="fa fa-hourglass-half"></i></div>
+                <div>
+                    <h1 class="preorders-panel-card__title">Đơn hàng đặt trước của tôi</h1>
+                    <p class="preorders-panel-card__subtitle">Theo dõi quy trình và trạng thái các sản phẩm bạn đã yêu cầu đặt trước</p>
+                </div>
+            </div>
+
+            <div class="profile-message" id="preOrdersMessage">Đang tải danh sách đơn đặt trước...</div>
+
+            <div class="preorders-list" id="preOrdersList" hidden>
+                <!-- Dữ liệu render động dạng thẻ quy trình -->
+            </div>
+
+            <div class="preorders-empty" id="preOrdersEmpty" hidden>
+                <i class="fa fa-hourglass-o"></i>
+                <p>Bạn chưa có yêu cầu đặt trước nào.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="fragments/footer :: footer"></footer>
+
+    <script th:src="@{/js/auth.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = sessionStorage.getItem("accessToken");
+            if (!token || token === "null" || token === "undefined") {
+                window.location.href = '/login';
+                return;
+            }
+
+            fetchPreOrders(token);
+        });
+
+        function fetchPreOrders(token) {
+            const messageEl = document.getElementById('preOrdersMessage');
+            const listEl = document.getElementById('preOrdersList');
+            const emptyEl = document.getElementById('preOrdersEmpty');
+
+            fetch('/api/v1/pre-orders', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => {
+                if (res.status === 401) {
+                    sessionStorage.clear();
+                    window.location.href = '/login';
+                    throw new Error('Unauthorized');
+                }
+                if (!res.ok) {
+                    throw new Error('Lấy danh sách đơn đặt trước thất bại');
+                }
+                return res.json();
+            })
+            .then(data => {
+                messageEl.hidden = true;
+                if (!data || data.length === 0) {
+                    emptyEl.hidden = false;
+                    listEl.hidden = true;
+                    return;
+                }
+
+                emptyEl.hidden = true;
+                listEl.hidden = false;
+
+                listEl.innerHTML = data.map(po => {
+                    const formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(po.expectedPriceVnd || 0);
+                    const formattedDate = po.createdAt ? po.createdAt : '-';
+                    const notes = po.notes ? po.notes : '<span style="color: #94a3b8; font-style: italic;">Không có ghi chú</span>';
+                    
+                    // Determine workflow classes based on status
+                    const status = (po.status || 'pending').toLowerCase();
+                    let step1Class = 'workflow-step--active';
+                    let line1Class = '';
+                    let step2Class = '';
+                    let line2Class = '';
+                    let step3Class = '';
+                    let step2Label = 'Người bán chuẩn bị';
+                    let step3Label = 'Hoàn tất giao dịch';
+
+                    if (status === 'pending') {
+                        step1Class = 'workflow-step--success';
+                        line1Class = 'workflow-line--active';
+                        step2Class = 'workflow-step--active';
+                        step2Label = 'Chờ duyệt yêu cầu';
+                    } else if (status === 'approved' || status === 'accept' || status === 'accepted') {
+                        step1Class = 'workflow-step--success';
+                        line1Class = 'workflow-line--success';
+                        step2Class = 'workflow-step--success';
+                        line2Class = 'workflow-line--active';
+                        step3Class = 'workflow-step--active';
+                        step2Label = 'Đã duyệt - Chuẩn bị hàng';
+                    } else if (status === 'completed') {
+                        step1Class = 'workflow-step--success';
+                        line1Class = 'workflow-line--success';
+                        step2Class = 'workflow-step--success';
+                        line2Class = 'workflow-line--success';
+                        step3Class = 'workflow-step--success';
+                        step2Label = 'Đã duyệt';
+                        step3Label = 'Đã giao hàng';
+                    } else if (status === 'rejected' || status === 'reject') {
+                        step1Class = 'workflow-step--success';
+                        line1Class = 'workflow-line--error';
+                        step2Class = 'workflow-step--error';
+                        step2Label = 'Từ chối';
+                        step3Label = 'Giao dịch thất bại';
+                    } else if (status === 'cancelled' || status === 'cancel') {
+                        step1Class = 'workflow-step--success';
+                        line1Class = 'workflow-line--error';
+                        step2Class = 'workflow-step--error';
+                        step2Label = 'Đã hủy';
+                        step3Label = 'Đơn hàng đã hủy';
+                    }
+
+                    return `
+                        <article class="preorder-card">
+                            <div class="preorder-card__header">
+                                <span class="preorder-card__id"><i class="fa fa-hashtag"></i> Đơn đặt trước: <strong>#PO-${po.id}</strong></span>
+                                <span class="preorder-card__date"><i class="fa fa-calendar"></i> ${formattedDate}</span>
+                            </div>
+                            
+                            <div class="preorder-card__body">
+                                <div class="preorder-card__info-grid">
+                                    <div class="preorder-card__info-item">
+                                        <span class="preorder-card__label">Sản phẩm</span>
+                                        <a href="/products/${po.productId}" class="preorder-card__value preorder-card__link">${po.productName}</a>
+                                    </div>
+                                    <div class="preorder-card__info-item">
+                                        <span class="preorder-card__label">Số lượng</span>
+                                        <span class="preorder-card__value">${po.quantity}</span>
+                                    </div>
+                                    <div class="preorder-card__info-item">
+                                        <span class="preorder-card__label">Giá kỳ vọng</span>
+                                        <span class="preorder-card__value preorder-card__price">${formattedPrice}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="preorder-card__notes">
+                                    <span class="preorder-card__label">Ghi chú của bạn</span>
+                                    <p class="preorder-card__notes-text">${notes}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="preorder-card__workflow" aria-label="Quy trình đơn hàng">
+                                <div class="workflow-step ${step1Class}">
+                                    <div class="workflow-step__circle"><i class="fa fa-paper-plane"></i></div>
+                                    <span class="workflow-step__label">Đã gửi yêu cầu</span>
+                                </div>
+                                <div class="workflow-line ${line1Class}"></div>
+                                <div class="workflow-step ${step2Class}">
+                                    <div class="workflow-step__circle"><i class="fa fa-check"></i></div>
+                                    <span class="workflow-step__label">${step2Label}</span>
+                                </div>
+                                <div class="workflow-line ${line2Class}"></div>
+                                <div class="workflow-step ${step3Class}">
+                                    <div class="workflow-step__circle"><i class="fa fa-gift"></i></div>
+                                    <span class="workflow-step__label">${step3Label}</span>
+                                </div>
+                            </div>
+                        </article>
+                    `;
+                }).join('');
+            })
+            .catch(err => {
+                console.error(err);
+                messageEl.className = 'profile-message profile-message--error';
+                messageEl.innerText = err.message || 'Không thể tải danh sách đơn đặt trước. Vui lòng thử lại sau.';
+            });
+        }
+    </script>
+</body>
+</html>

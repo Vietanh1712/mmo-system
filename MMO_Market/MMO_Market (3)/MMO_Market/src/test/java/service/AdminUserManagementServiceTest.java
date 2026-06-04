@@ -1,11 +1,6 @@
 package service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dal.AuditLogRepository;
-import dal.AuthenticationRepository;
-import dal.UserRepository;
-import model.AuditLog;
-import model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,31 +15,32 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+// Using fully qualified class names since packages are at the root level
 @ExtendWith(MockitoExtension.class)
 class AdminUserManagementServiceTest {
     @Mock
-    private UserRepository userRepository;
+    private dal.UserRepository userRepository;
 
     @Mock
-    private AuditLogRepository auditLogRepository;
+    private dal.AuditLogRepository auditLogRepository;
 
     @Mock
-    private AuthenticationRepository authenticationRepository;
+    private dal.AuthenticationRepository authenticationRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    private AdminUserManagementService service;
+    private service.AdminUserManagementService service;
 
     @BeforeEach
     void setUp() {
-        service = new AdminUserManagementService(userRepository, auditLogRepository, authenticationRepository, new ObjectMapper(), passwordEncoder);
+        service = new service.AdminUserManagementService(userRepository, auditLogRepository, authenticationRepository, new ObjectMapper(), passwordEncoder);
     }
 
     @Test
     void toggleLockLocksActiveUserAndWritesAuditLog() {
-        User admin = user(1L, "admin@mmo.com", "{\"role\": \"Admin\"}", false);
-        User target = user(2L, "customer@mmo.com", "{\"role\": \"Customer\"}", false);
+        model.User admin = user(1L, "admin@mmo.com", "{\"role\": \"Admin\"}", false);
+        model.User target = user(2L, "customer@mmo.com", "{\"role\": \"Customer\"}", false);
         when(userRepository.findByIdAndIsDeleteFalse(1L)).thenReturn(Optional.of(admin));
         when(userRepository.findByIdAndIsDeleteFalse(2L)).thenReturn(Optional.of(target));
         when(userRepository.save(target)).thenReturn(target);
@@ -54,31 +50,31 @@ class AdminUserManagementServiceTest {
         assertTrue(response.isSuccess());
         assertTrue(response.getIsLocked());
         assertTrue(target.getIsLocked());
-        verify(auditLogRepository).save(any(AuditLog.class));
+        verify(auditLogRepository).save(any(model.AuditLog.class));
     }
 
     @Test
     void toggleLockRejectsSelfLock() {
-        User admin = user(1L, "admin@mmo.com", "{\"role\": \"Admin\"}", false);
+        model.User admin = user(1L, "admin@mmo.com", "{\"role\": \"Admin\"}", false);
         when(userRepository.findByIdAndIsDeleteFalse(1L)).thenReturn(Optional.of(admin));
 
         assertThrows(ResponseStatusException.class, () -> service.toggleLock(1L, 1L));
-        verify(userRepository, never()).save(any(User.class));
+        verify(userRepository, never()).save(any(model.User.class));
     }
 
     @Test
     void updateRoleRequiresAdminOperator() {
-        User staff = user(3L, "staff@mmo.com", "{\"role\": \"Staff\"}", false);
+        model.User staff = user(3L, "staff@mmo.com", "{\"role\": \"Staff\"}", false);
         when(userRepository.findByIdAndIsDeleteFalse(3L)).thenReturn(Optional.of(staff));
 
         assertThrows(ResponseStatusException.class, () -> service.updateRole(3L, 2L, "Staff"));
-        verify(userRepository, never()).save(any(User.class));
+        verify(userRepository, never()).save(any(model.User.class));
     }
 
     @Test
     void updateRoleAllowsAdminToAssignStaff() {
-        User admin = user(1L, "admin@mmo.com", "{\"role\": \"Admin\"}", false);
-        User target = user(2L, "customer@mmo.com", "{\"role\": \"Customer\"}", false);
+        model.User admin = user(1L, "admin@mmo.com", "{\"role\": \"Admin\"}", false);
+        model.User target = user(2L, "customer@mmo.com", "{\"role\": \"Customer\"}", false);
         when(userRepository.findByIdAndIsDeleteFalse(1L)).thenReturn(Optional.of(admin));
         when(userRepository.findByIdAndIsDeleteFalse(2L)).thenReturn(Optional.of(target));
         when(userRepository.save(target)).thenReturn(target);
@@ -88,11 +84,11 @@ class AdminUserManagementServiceTest {
         assertTrue(response.isSuccess());
         assertEquals("Staff", response.getNewRole());
         assertEquals("{\"role\": \"Staff\"}", target.getRole());
-        verify(auditLogRepository).save(any(AuditLog.class));
+        verify(auditLogRepository).save(any(model.AuditLog.class));
     }
 
-    private User user(Long id, String email, String role, boolean locked) {
-        return User.builder()
+    private model.User user(Long id, String email, String role, boolean locked) {
+        return model.User.builder()
                 .id(id)
                 .email(email)
                 .fullName(email)

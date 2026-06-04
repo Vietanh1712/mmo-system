@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh mục sản phẩm - MMO Market</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome 4.7 stable CDNs with fallbacks -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/font-awesome@4.7.0/css/font-awesome.min.css">
+    
+    <!-- CSS (đồng bộ với search-results) -->
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/search-results.css}">
+</head>
+
+<body>
+
+    <!-- 1. HEADER NAVBAR -->
+    <header th:replace="fragments/header :: header"></header>
+
+    <!-- 2. BREADCRUMB -->
+    <div class="breadcrumb-container">
+        <a href="/"><i class="fa fa-home"></i> Trang chủ</a> &gt; <span>Sản phẩm</span>
+    </div>
+
+    <!-- 3. TITLE SECTION -->
+    <div class="title-section title-section--catalog">
+        <h1>Danh mục sản phẩm: <span>tất cả sản phẩm</span></h1>
+        <p>Khám phá các sản phẩm số chất lượng, uy tín hàng đầu trên thị trường.</p>
+    </div>
+
+    <!-- 4. MAIN CONTENT (2 COLUMNS - giống search-results) -->
+    <main class="main-container">
+
+        <!-- Cột Trái - Bộ lọc -->
+        <aside class="sidebar">
+                <h3 class="filter-title">
+                    <i class="fa fa-filter" style="color: var(--brand-accent); margin-right: 8px;"></i> Bộ lọc sản phẩm
+                </h3>
+
+                <form id="filter-form" onsubmit="applyFilters(event)">
+                    <!-- 1. Categories Filter -->
+                    <div class="filter-group">
+                        <label for="category-filter"><i class="fa fa-tags"
+                                style="color: var(--text-muted); margin-right: 6px;"></i> Danh mục</label>
+                        <select id="category-filter" class="filter-select">
+                            <option value="">Tất cả danh mục</option>
+                            <option value="1">Email</option>
+                            <option value="2">Tài khoản Premium</option>
+                            <option value="3">Phần mềm</option>
+                            <option value="4">Tăng tương tác</option>
+                            <option value="5">Dịch vụ phần mềm</option>
+                            <option value="6">Blockchain</option>
+                            <option value="7">Khác</option>
+                        </select>
+                    </div>
+
+                    <!-- 2. Price Range Filter -->
+                    <div class="filter-group">
+                        <label><i class="fa fa-money" style="color: var(--text-muted); margin-right: 6px;"></i> Khoảng
+                            giá</label>
+                        <div class="price-range-wrapper">
+                            <input type="range" id="price-slider" min="0" max="5000000" step="50000" value="5000000"
+                                oninput="updatePriceLabel(this.value)">
+                            <div class="price-labels">
+                                <span>0đ</span>
+                                <span id="price-max-label">5.000.000đ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Stock Status Filter -->
+                    <div class="filter-group">
+                        <label><i class="fa fa-cubes" style="color: var(--text-muted); margin-right: 6px;"></i> Trạng thái
+                            kho</label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="stock-instock" checked>
+                            <span>Còn hàng</span>
+                        </label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="stock-outofstock">
+                            <span>Hết hàng</span>
+                        </label>
+                    </div>
+
+                    <!-- 4. Rating Filter -->
+                    <div class="filter-group">
+                        <label><i class="fa fa-star" style="color: var(--text-muted); margin-right: 6px;"></i> Đánh
+                            giá</label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" name="rating-filter" value="5">
+                            <span class="rating-stars">
+                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i
+                                    class="fa fa-star"></i><i class="fa fa-star"></i>
+                                5 sao
+                            </span>
+                        </label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" name="rating-filter" value="4">
+                            <span class="rating-stars">
+                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i
+                                    class="fa fa-star"></i><i class="fa fa-star-o"></i>
+                                4+ sao
+                            </span>
+                        </label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" name="rating-filter" value="3">
+                            <span class="rating-stars">
+                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i
+                                    class="fa fa-star-o"></i><i class="fa fa-star-o"></i>
+                                3+ sao
+                            </span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-apply"><i class="fa fa-check" style="margin-right: 6px;"></i> Áp dụng
+                        bộ lọc</button>
+                </form>
+        </aside>
+
+        <!-- Cột Phải - Lưới sản phẩm -->
+        <section class="product-content">
+            <div class="product-header">
+                <div class="result-summary">
+                    Hiển thị <span id="summary-range">0 - 0</span> sản phẩm trong số <strong id="summary-total">0</strong>
+                </div>
+                <select id="sort-select" class="sort-select" onchange="handleSortChange(this.value)">
+                    <option value="createdAt,desc">Sắp xếp: Mới nhất</option>
+                    <option value="price,asc">Giá: Thấp đến Cao</option>
+                    <option value="price,desc">Giá: Cao đến Thấp</option>
+                    <option value="averageRating,desc">Đánh giá cao nhất</option>
+                    <option value="productId,desc">Bán chạy nhất</option>
+                </select>
+            </div>
+
+            <div class="product-grid" id="products-container"></div>
+
+            <div class="pagination" id="pagination-container"></div>
+        </section>
+
+    </main>
+
+    <!-- 5. FOOTER -->
+    <footer th:replace="fragments/footer :: footer"></footer>
+
+    <!-- SCRIPT TƯƠNG TÁC -->
+    <script th:src="@{/js/auth.js}"></script>
+    <script>
+        // Mock Products Data (Dành cho Fallback khi database rỗng hoặc API lỗi)
+        const MOCK_PRODUCTS = [
+            {
+                productId: 1,
+                productName: "Tài khoản Netflix Premium 4K UHD 1 Tháng (Xem riêng 1 thiết bị, bảo hành 1 đổi 1)",
+                imageUrl: "",
+                categoryName: "Tài khoản Premium",
+                categoryId: 19,
+                parentCategoryId: 2,
+                sellerName: "StoreMaster",
+                sellerIsVerified: true,
+                price: 65000,
+                stock: 156,
+                averageRating: 5.0,
+                isInstant: true,
+                isBestseller: true
+            },
+            {
+                productId: 2,
+                productName: "Tài khoản Netflix Premium 4K UHD Gói 1 Năm (Chính chủ gia hạn ổn định)",
+                imageUrl: "",
+                categoryName: "Tài khoản Premium",
+                categoryId: 19,
+                parentCategoryId: 2,
+                sellerName: "Netflix_Vip_Store",
+                sellerIsVerified: true,
+                price: 650000,
+                stock: 42,
+                averageRating: 4.9,
+                isInstant: false,
+                isBestseller: true
+            },
+            {
+                productId: 3,
+                productName: "Tài khoản ChatGPT Plus (OpenAI GPT-4o) Chính Chủ Sẵn 20$ Hạn 1 Tháng",
+                imageUrl: "",
+                categoryName: "Tài khoản Premium",
+                categoryId: 31,
+                parentCategoryId: 7,
+                sellerName: "AI_Helper",
+                sellerIsVerified: true,
+                price: 150000,
+                stock: 89,
+                averageRating: 4.8,
+                isInstant: true,
+                isBestseller: false
+            },
+            {
+                productId: 4,
+                productName: "Spotify Premium 1 Năm Giá Siêu Rẻ (Nâng cấp Family email của bạn)",
+                imageUrl: "",
+                categoryName: "Tài khoản Premium",
+                categoryId: 31,
+                parentCategoryId: 7,
+                sellerName: "MusicLovers",
+                sellerIsVerified: false,
+                price: 250000,
+                stock: 45,
+                averageRating: 4.7,
+                isInstant: false,
+                isBestseller: true
+            },
+            {
+                productId: 5,
+                productName: "Key Windows 11 Pro Bản Quyền Vĩnh Viễn (Kèm hướng dẫn active chi tiết)",
+                imageUrl: "",
+                categoryName: "Phần mềm",
+                categoryId: 30,
+                parentCategoryId: 3,
+                sellerName: "Microsoft_Reseller",
+                sellerIsVerified: true,
+                price: 99000,
+                stock: 999,
+                averageRating: 5.0,
+                isInstant: true,
+                isBestseller: false
+            },
+            {
+                productId: 6,
+                productName: "Youtube Premium Không Quảng Cáo 6 Tháng (Add Family bao chạy mượt)",
+                imageUrl: "",
+                categoryName: "Tài khoản Premium",
+                categoryId: 31,
+                parentCategoryId: 7,
+                sellerName: "RedPremium",
+                sellerIsVerified: true,
+                price: 120000,
+                stock: 230,
+                averageRating: 4.9,
+                isInstant: false,
+                isBestseller: true
+            },
+            {
+                productId: 7,
+                productName: "Gói Tài Khoản Canva Pro Thiết Kế 1 Năm Trọn Gói",
+                imageUrl: "",
+                categoryName: "Dịch vụ phần mềm",
+                categoryId: 64,
+                parentCategoryId: 5,
+                sellerName: "DesignHub",
+                sellerIsVerified: true,
+                price: 180000,
+                stock: 120,
+                averageRating: 4.8,
+                isInstant: true,
+                isBestseller: false
+            },
+            {
+                productId: 8,
+                productName: "Combo 10 Gmail Việt Cổ 2018 - 2020 Cực Sạch Có Sẵn Kênh Youtube",
+                imageUrl: "",
+                categoryName: "Email",
+                categoryId: 9,
+                parentCategoryId: 1,
+                sellerName: "MailMaster",
+                sellerIsVerified: false,
+                price: 35000,
+                stock: 500,
+                averageRating: 4.6,
+                isInstant: true,
+                isBestseller: false
+            },
+            {
+                productId: 9,
+                productName: "Tool Nuôi Nick Facebook Auto Like Post Share Độc Quyền",
+                imageUrl: "",
+                categoryName: "Dịch vụ phần mềm",
+                categoryId: 59,
+                parentCategoryId: 5,
+                sellerName: "MMO_Coder",
+                sellerIsVerified: true,
+                price: 850000,
+                stock: 75,
+                averageRating: 4.7,
+                isInstant: true,
+                isBestseller: false
+            },
+            {
+                productId: 10,
+                productName: "Tài khoản NordVPN Premium 1 Năm Bảo Mật Mã Hóa Cao",
+                imageUrl: "",
+                categoryName: "Tài khoản Premium",
+                categoryId: 31,
+                parentCategoryId: 7,
+                sellerName: "SecureNet",
+                sellerIsVerified: true,
+                price: 350000,
+                stock: 15,
+                averageRating: 4.8,
+                isInstant: true,
+                isBestseller: false
+            },
+            {
+                productId: 11,
+                productName: "Tăng 1000 Follower Thật TikTok Việt Tốc Độ Nhanh Tự Nhiên",
+                imageUrl: "",
+                categoryName: "Tăng tương tác",
+                categoryId: 46,
+                parentCategoryId: 4,
+                sellerName: "SocialMediaUp",
+                sellerIsVerified: true,
+                price: 95000,
+                stock: 9999,
+                averageRating: 4.9,
+                isInstant: false,
+                isBestseller: true
+            },
+            {
+                productId: 12,
+                productName: "Ví Điện Tử Trust Wallet Hạn Cổ Có Sẵn Cụm Từ Bảo Mật",
+                imageUrl: "",
+                categoryName: "Blockchain",
+                categoryId: 75,
+                parentCategoryId: 6,
+                sellerName: "CryptoSafe",
+                sellerIsVerified: false,
+                price: 150000,
+                stock: 0,
+                averageRating: 4.5,
+                isInstant: true,
+                isBestseller: false
+            },
+            {
+                productId: 13,
+                productName: "Gói Dịch Vụ Thiết Kế Logo & Banner Chuyên Nghiệp (Không thuộc danh mục chính)",
+                imageUrl: "",
+                categoryName: "Khác",
+                categoryId: 31,
+                parentCategoryId: 7,
+                sellerName: "CreativeHub",
+                sellerIsVerified: true,
+                price: 299000,
+                stock: 50,
+                averageRating: 4.6,
+                isInstant: false,
+                isBestseller: false
+            }
+        ];
+
+        // Global State
+        let currentKeyword = '';
+        let currentSubCategory = '';
+        let currentCategory = '';
+        let currentMaxPrice = 5000000;
+        let currentStockStatus = '';
+        let currentSort = 'createdAt,desc';
+        let currentPage = 0;
+        let isUsingMock = false;
+
+        // Lọc theo danh mục cha (1–7), tương thích API parent_id
+        function matchesCategoryFilter(product, categoryFilter) {
+            if (!categoryFilter) return true;
+            const parentId = parseInt(categoryFilter, 10);
+            if (parentId === 7) {
+                // Hỗ trợ lọc "Khác": khớp nếu parentCategoryId là 7 hoặc tên danh mục có chữ "khác"
+                const categoryNameLower = (product.categoryName || '').toLowerCase();
+                const productNameLower = (product.productName || '').toLowerCase();
+                return product.parentCategoryId === 7 || categoryNameLower.includes('khác') || productNameLower.includes('khác');
+            }
+            if (product.parentCategoryId != null) {
+                return product.parentCategoryId === parentId;
+            }
+            return product.categoryId === parentId;
+        }
+
+        function matchesSubCategoryFilter(product, subCategory) {
+            if (!subCategory) return true;
+            const term = subCategory.toLowerCase().trim();
+            const name = (product.productName || '').toLowerCase();
+            const cat = (product.categoryName || '').toLowerCase();
+            return name.includes(term) || cat.includes(term);
+        }
+
+        const CATEGORY_NAMES = {
+            '1': 'Email',
+            '2': 'Tài khoản Premium',
+            '3': 'Phần mềm',
+            '4': 'Tăng tương tác',
+            '5': 'Dịch vụ phần mềm',
+            '6': 'Blockchain',
+            '7': 'Khác'
+        };
+
+        function getCatalogDisplayLabel() {
+            if (currentKeyword) return `Tìm kiếm "${currentKeyword}"`;
+            if (currentSubCategory) return currentSubCategory;
+            if (currentCategory) return CATEGORY_NAMES[currentCategory] || 'Tất cả';
+            return 'tất cả sản phẩm';
+        }
+
+        // Format Currency Helper
+        function formatVND(value) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
+                .format(value)
+                .replace('₫', 'VNĐ');
+        }
+
+        // Update Slider price label
+        function updatePriceLabel(value) {
+            document.getElementById('price-max-label').innerText = formatVND(value);
+        }
+
+        // Sync UI filters from URL parameters
+        function syncUIFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            currentKeyword = urlParams.get('q') || urlParams.get('keyword') || '';
+            currentSubCategory = urlParams.get('subCategory') || '';
+            currentCategory = urlParams.get('categoryId') || '';
+            currentMaxPrice = parseInt(urlParams.get('maxPrice')) || 5000000;
+            currentStockStatus = urlParams.get('stockStatus') || '';
+            currentSort = urlParams.get('sort') || 'createdAt,desc';
+            currentPage = parseInt(urlParams.get('page')) || 0;
+
+            // Search bar value is populated from state
+            const headerSearchInput = document.getElementById('header-search-input');
+            if (headerSearchInput) {
+                headerSearchInput.value = currentKeyword || currentSubCategory;
+            }
+
+            const titleSpan = document.querySelector('.title-section h1 span');
+            const displayLabel = getCatalogDisplayLabel();
+            if (titleSpan) titleSpan.innerText = displayLabel;
+
+            document.getElementById('category-filter').value = currentCategory;
+            document.getElementById('price-slider').value = currentMaxPrice;
+            updatePriceLabel(currentMaxPrice);
+            document.getElementById('sort-select').value = currentSort;
+
+            if (currentStockStatus === 'In Stock') {
+                document.getElementById('stock-instock').checked = true;
+                document.getElementById('stock-outofstock').checked = false;
+            } else if (currentStockStatus === 'Out of Stock') {
+                document.getElementById('stock-instock').checked = false;
+                document.getElementById('stock-outofstock').checked = true;
+            } else {
+                document.getElementById('stock-instock').checked = true;
+                document.getElementById('stock-outofstock').checked = true;
+            }
+
+            // Reset all ratings first
+            document.querySelectorAll('input[name="rating-filter"]').forEach(cb => cb.checked = false);
+            const ratings = urlParams.getAll('rating');
+            ratings.forEach(val => {
+                const cb = document.querySelector(`input[name="rating-filter"][value="${val}"]`);
+                if (cb) cb.checked = true;
+            });
+        }
+
+        // Helper to update the browser URL parameters dynamically
+        function updateBrowserURL() {
+            const params = new URLSearchParams();
+            if (currentKeyword) params.append('q', currentKeyword);
+            if (currentSubCategory) params.append('subCategory', currentSubCategory);
+            if (currentCategory) params.append('categoryId', currentCategory);
+            if (currentMaxPrice) params.append('maxPrice', currentMaxPrice.toString());
+            if (currentStockStatus) params.append('stockStatus', currentStockStatus);
+            if (currentSort) params.append('sort', currentSort);
+            params.append('page', currentPage.toString());
+
+            const ratingChecks = document.querySelectorAll('input[name="rating-filter"]:checked');
+            ratingChecks.forEach(cb => {
+                params.append('rating', cb.value);
+            });
+
+            const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+            window.history.pushState(null, '', newUrl);
+        }
+
+        // Apply filters (form submit)
+        function applyFilters(e) {
+            e.preventDefault();
+            currentPage = 0;
+            currentCategory = document.getElementById('category-filter').value;
+            currentMaxPrice = parseInt(document.getElementById('price-slider').value);
+
+            const instock = document.getElementById('stock-instock').checked;
+            const outofstock = document.getElementById('stock-outofstock').checked;
+            if (instock && !outofstock) {
+                currentStockStatus = 'In Stock';
+            } else if (!instock && outofstock) {
+                currentStockStatus = 'Out of Stock';
+            } else {
+                currentStockStatus = '';
+            }
+
+            updateBrowserURL();
+            fetchProducts();
+        }
+
+        // Handle Sort Dropdown changes
+        function handleSortChange(sortVal) {
+            currentSort = sortVal;
+            currentPage = 0;
+            updateBrowserURL();
+            fetchProducts();
+        }
+
+        // Fetch products from backend or load mock data on failure/empty
+        async function fetchProducts() {
+            const params = new URLSearchParams();
+            const apiKeyword = currentKeyword || currentSubCategory;
+            if (apiKeyword) params.append('keyword', apiKeyword);
+            if (currentCategory) params.append('categoryId', currentCategory);
+            if (currentMaxPrice) {
+                params.append('minPrice', '0');
+                params.append('maxPrice', currentMaxPrice.toString());
+            }
+            if (currentStockStatus) params.append('stockStatus', currentStockStatus);
+            params.append('page', currentPage.toString());
+            params.append('size', '12');
+
+            // Format sort parts
+            const sortParts = currentSort.split(',');
+            params.append('sort', sortParts[0] + ',' + (sortParts[1] || 'desc'));
+
+            try {
+                const response = await fetch(`/api/search/products?${params.toString()}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.content && data.content.length > 0) {
+                        isUsingMock = false;
+                        renderProducts(data.content);
+                        renderPagination(data.totalPages, data.number);
+                        updateResultSummary(data.totalElements, data.number * 12 + 1, Math.min((data.number + 1) * 12, data.totalElements));
+                    } else {
+                        loadInteractiveMock();
+                    }
+                } else {
+                    loadInteractiveMock();
+                }
+            } catch (err) {
+                console.error("API error, fallback to mock data", err);
+                loadInteractiveMock();
+            }
+        }
+
+        // Load interactive mock dataset locally (cùng logic search-results)
+        function loadInteractiveMock() {
+            isUsingMock = true;
+            let filtered = [...MOCK_PRODUCTS];
+
+            // 1. Keyword search
+            if (currentKeyword) {
+                const kw = currentKeyword.toLowerCase();
+                filtered = filtered.filter(p => p.productName.toLowerCase().includes(kw));
+            }
+
+            // 2. Category (theo danh mục cha, gồm "Khác" = 7)
+            if (currentCategory) {
+                filtered = filtered.filter(p => matchesCategoryFilter(p, currentCategory));
+            }
+
+            // 2b. Sub-category (vd: Gmail — không cần từ khóa ở ô tìm kiếm)
+            if (currentSubCategory) {
+                filtered = filtered.filter(p => matchesSubCategoryFilter(p, currentSubCategory));
+            }
+
+            // 3. Price
+            filtered = filtered.filter(p => p.price <= currentMaxPrice);
+
+            // 4. Stock
+            if (currentStockStatus === 'In Stock') {
+                filtered = filtered.filter(p => p.stock > 0);
+            } else if (currentStockStatus === 'Out of Stock') {
+                filtered = filtered.filter(p => p.stock === 0);
+            }
+
+            // 5. Rating Stars
+            const ratingChecks = document.querySelectorAll('input[name="rating-filter"]:checked');
+            if (ratingChecks.length > 0) {
+                const minRating = Math.min(...Array.from(ratingChecks).map(c => parseInt(c.value)));
+                filtered = filtered.filter(p => p.averageRating >= minRating);
+            }
+
+            // 6. Sort
+            if (currentSort === 'price,asc') {
+                filtered.sort((a, b) => a.price - b.price);
+            } else if (currentSort === 'price,desc') {
+                filtered.sort((a, b) => b.price - a.price);
+            } else if (currentSort === 'averageRating,desc') {
+                filtered.sort((a, b) => b.averageRating - a.averageRating);
+            } else if (currentSort === 'productId,desc') {
+                filtered.sort((a, b) => b.productId - a.productId);
+            } else {
+                filtered.sort((a, b) => b.productId - a.productId);
+            }
+
+            const totalElements = filtered.length;
+            const itemsPerPage = 12;
+            const totalPages = Math.max(1, Math.ceil(totalElements / itemsPerPage));
+
+            if (currentPage >= totalPages) currentPage = 0;
+
+            const startIndex = currentPage * itemsPerPage;
+            const paginatedItems = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+            renderProducts(paginatedItems);
+            renderPagination(totalPages, currentPage);
+            updateResultSummary(totalElements, totalElements > 0 ? startIndex + 1 : 0, Math.min(startIndex + itemsPerPage, totalElements));
+        }
+
+        // Helper to match products to homepage-styled icons exactly like search-results.html
+        function getProductIconAndColor(productName) {
+            const nameLower = productName.toLowerCase();
+            if (nameLower.includes('netflix')) { return { icon: 'fa-play-circle', color: '#E50914' }; }
+            else if (nameLower.includes('chatgpt') || nameLower.includes('gpt')) { return { icon: 'fa-comments', color: '#10a37f' }; }
+            else if (nameLower.includes('spotify')) { return { icon: 'fa-music', color: '#1DB954' }; }
+            else if (nameLower.includes('windows') || nameLower.includes('win')) { return { icon: 'fa-windows', color: '#0078d4' }; }
+            else if (nameLower.includes('youtube')) { return { icon: 'fa-youtube-play', color: '#FF0000' }; }
+            else if (nameLower.includes('canva')) { return { icon: 'fa-paint-brush', color: '#00c4cc' }; }
+            else if (nameLower.includes('gmail')) { return { icon: 'fa-envelope', color: '#ea4335' }; }
+            else if (nameLower.includes('facebook') || nameLower.includes('fb')) { return { icon: 'fa-facebook-square', color: '#1877F2' }; }
+            else if (nameLower.includes('vpn') || nameLower.includes('nordvpn')) { return { icon: 'fa-shield', color: '#4682b4' }; }
+            else if (nameLower.includes('tiktok')) { return { icon: 'fa-video-camera', color: '#010101' }; }
+            else if (nameLower.includes('wallet') || nameLower.includes('crypto') || nameLower.includes('trust')) { return { icon: 'fa-btc', color: '#f7931a' }; }
+            else if (nameLower.includes('logo') || nameLower.includes('thiết kế') || nameLower.includes('design') || nameLower.includes('banner')) { return { icon: 'fa-paint-brush', color: '#7c3aed' }; }
+            else { return { icon: 'fa-cube', color: '#94a3b8' }; }
+        }
+
+        // Render product grid (giống search-results.html)
+        function renderProducts(items) {
+            const container = document.getElementById('products-container');
+            container.innerHTML = '';
+            window.currentRenderedProducts = items;
+
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="no-results-container">
+                        <div class="no-results-icon"><i class="fa fa-search"></i></div>
+                        <div class="no-results-title">Không tìm thấy sản phẩm phù hợp</div>
+                        <div class="no-results-desc">Vui lòng thử lại với từ khóa khác hoặc điều chỉnh các bộ lọc bên trái.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            items.forEach(product => {
+                const starsCount = Math.floor(product.averageRating || 5);
+                let starHtml = '';
+                for (let i = 0; i < 5; i++) {
+                    if (i < starsCount) {
+                        starHtml += '<i class="fa fa-star"></i>';
+                    } else {
+                        starHtml += '<i class="fa fa-star-o"></i>';
+                    }
+                }
+
+                const verifiedBadge = product.sellerIsVerified ? '<i class="fa fa-check-circle tick-xanh" title="Đã xác minh"></i>' : '';
+                const iconInfo = getProductIconAndColor(product.productName);
+                const stock = Number(product.stock || 0);
+                const isOutOfStock = stock <= 0;
+                const stockClass = isOutOfStock ? 'stock stock--out' : 'stock';
+                const buyButtonHtml = isOutOfStock
+                    ? `<button class="btn-buy btn-buy--preorder" onclick="event.stopPropagation(); preOrderNow(${product.productId})"><i class="fa fa-clock-o"></i> Đặt trước</button>`
+                    : `<button class="btn-buy" onclick="event.stopPropagation(); buyNow(${product.productId})">Mua ngay</button>`;
+                const cartButtonHtml = isOutOfStock
+                    ? `<button class="btn-cart btn-cart--disabled" title="Sản phẩm hết hàng, vui lòng đặt trước" onclick="event.stopPropagation(); preOrderNow(${product.productId})"><i class="fa fa-shopping-cart"></i></button>`
+                    : `<button class="btn-cart" title="Thêm vào giỏ hàng" onclick="event.stopPropagation(); addToCartFromCard(${product.productId})"><i class="fa fa-shopping-cart"></i></button>`;
+
+                const cardHtml = `
+                    <div class="product-card" onclick="window.location.href='/products/${product.productId}' + window.location.search">
+                        <div class="product-card__image-container">
+                            <i class="fa ${iconInfo.icon} product-card__img-icon" style="color: ${iconInfo.color};"></i>
+                        </div>
+                        <div class="product-info">
+                            <div class="category-rating">
+                                <span class="category-badge">${product.categoryName || 'Sản phẩm số'}</span>
+                                <span class="rating-stars">${starHtml}</span>
+                            </div>
+                            <h4 class="product-title">${product.productName}</h4>
+                            <div class="seller-badge">
+                                <i class="fa fa-university"></i>
+                                <span>Cửa hàng: <strong>${product.sellerName || 'VipStore'}</strong></span>
+                                ${verifiedBadge}
+                            </div>
+                            <div class="price-stock">
+                                <div class="price">${formatVND(product.price)}</div>
+                                <div class="${stockClass}">Kho: <strong>${stock}</strong></div>
+                            </div>
+                            <div class="product-actions">
+                                ${buyButtonHtml}
+                                ${cartButtonHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            });
+        }
+
+        // Render Pagination (giống search-results.html)
+        function renderPagination(totalPages, activePage) {
+            const container = document.getElementById('pagination-container');
+            container.innerHTML = '';
+
+            if (totalPages <= 1) return;
+
+            const prevButton = document.createElement('button');
+            prevButton.className = 'page-btn';
+            prevButton.innerHTML = '<i class="fa fa-angle-left"></i>';
+            prevButton.disabled = activePage === 0;
+            prevButton.onclick = () => changePage(activePage - 1);
+            container.appendChild(prevButton);
+
+            for (let i = 0; i < totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.className = `page-btn ${i === activePage ? 'active' : ''}`;
+                pageButton.innerText = (i + 1).toString();
+                pageButton.onclick = () => changePage(i);
+                container.appendChild(pageButton);
+            }
+
+            const nextButton = document.createElement('button');
+            nextButton.className = 'page-btn';
+            nextButton.innerHTML = '<i class="fa fa-angle-right"></i>';
+            nextButton.disabled = activePage === totalPages - 1;
+            nextButton.onclick = () => changePage(activePage + 1);
+            container.appendChild(nextButton);
+        }
+
+        function changePage(pageNum) {
+            currentPage = pageNum;
+            updateBrowserURL();
+            if (isUsingMock) {
+                loadInteractiveMock();
+            } else {
+                fetchProducts();
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateResultSummary(total, start, end) {
+            const summaryTotal = document.getElementById('summary-total');
+            if (summaryTotal) summaryTotal.innerText = total;
+
+            const summaryRange = document.getElementById('summary-range');
+            if (summaryRange) summaryRange.innerText = total > 0 ? `${start} - ${end}` : '0';
+
+            const titleSpan = document.querySelector('.title-section h1 span');
+            const displayLabel = getCatalogDisplayLabel();
+            if (titleSpan) titleSpan.innerText = displayLabel;
+
+            const descText = document.querySelector('.title-section p');
+            if (descText) {
+                descText.innerHTML = total > 0
+                    ? `Chúng tôi có <strong>${total}</strong> sản phẩm số chất lượng phù hợp với bộ lọc của bạn.`
+                    : 'Khám phá các sản phẩm số chất lượng, uy tín hàng đầu trên thị trường.';
+            }
+        }
+
+        // Redirect to detail page when "Mua ngay" is clicked
+        function buyNow(productId) {
+            window.location.href = `/products/${productId}` + window.location.search;
+        }
+
+        function preOrderNow(productId) {
+            window.location.href = `/products/${productId}` + window.location.search;
+        }
+
+        function addToCartFromCard(productId) {
+            const product = (window.currentRenderedProducts || []).find(item => item.productId === productId);
+            if (!product) {
+                alert('Không tìm thấy thông tin sản phẩm để thêm vào giỏ hàng.');
+                return;
+            }
+            if (Number(product.stock || 0) <= 0) {
+                alert('Sản phẩm đã hết hàng, vui lòng đặt trước.');
+                preOrderNow(productId);
+                return;
+            }
+            const cartItem = {
+                productId: product.productId,
+                duration: 1,
+                productName: product.productName,
+                sellerName: product.sellerName || 'VipStore',
+                price: product.price,
+                icon: getProductIconAndColor(product.productName).icon,
+                iconColor: getProductIconAndColor(product.productName).color,
+                quantity: 1
+            };
+            const cart = JSON.parse(localStorage.getItem('mmoCart') || '[]');
+            const existing = cart.find(item => item.productId === cartItem.productId && item.duration === cartItem.duration);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push(cartItem);
+            }
+            localStorage.setItem('mmoCart', JSON.stringify(cart));
+            alert('Đã thêm sản phẩm vào giỏ hàng thành công!');
+            if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            syncUIFromURL();
+            fetchProducts();
+        });
+
+        // Listen for history popstate (Back/Forward buttons)
+        window.addEventListener('popstate', () => {
+            syncUIFromURL();
+            fetchProducts();
+        });
+    </script>
+</body>
+
+</html>
