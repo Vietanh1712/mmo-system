@@ -27,8 +27,8 @@
         <div class="dropdown-item" onclick="window.location.href='/topup'">
             <i class="fa fa-credit-card"></i> Nạp tiền
         </div>
-        <div class="dropdown-item" id="adminUsersDropdownItem" style="display: none;" onclick="window.location.href='/admin/users'">
-            <i class="fa fa-users"></i> Quản lý người dùng
+        <div class="dropdown-item" id="adminWorkbenchDropdownItem" style="display: none;" onclick="window.location.href='/admin/users'">
+            <i class="fa fa-briefcase"></i> Công việc
         </div>
         <div class="dropdown-divider"></div>
         <div class="dropdown-item" onclick="if(typeof logout === 'function') logout(); else { sessionStorage.clear(); localStorage.removeItem('accessToken'); localStorage.removeItem('refreshToken'); localStorage.removeItem('loginTimestamp'); localStorage.removeItem('userInfo'); localStorage.removeItem('user'); window.location.href='/login'; }">
@@ -41,7 +41,6 @@
             <li class="nav__item" onclick="window.location.href='/'">Trang chủ</li>
             <li class="nav__item" onclick="window.location.href='/products'">Sản phẩm</li>
             <li class="nav__item" onclick="checkAuthAndRedirect('/topup')">Nạp tiền</li>
-            <li class="nav__item" id="adminUsersNavItem" style="display: none;" onclick="window.location.href='/admin/users'">Quản lý người dùng</li>
             <li class="nav__item">Hỗ trợ</li>
             <li class="nav__item">Câu hỏi thường gặp</li>
         </ul>
@@ -49,7 +48,9 @@
 
     <script th:inline="javascript">
         // 1. CÀI ĐẶT THỜI GIAN HẾT HẠN PHIÊN ĐĂNG NHẬP
-        const SESSION_TIMEOUT_MS = 15 * 60 * 1000;        document.addEventListener('DOMContentLoaded', () => {
+        const SESSION_TIMEOUT_MS = 15 * 60 * 1000;
+
+        document.addEventListener('DOMContentLoaded', () => {
             ['accessToken', 'refreshToken', 'loginTimestamp', 'userInfo', 'user'].forEach(key => {
                 if (!sessionStorage.getItem('accessToken')) {
                     localStorage.removeItem(key);
@@ -89,27 +90,9 @@
                     const fullName = user.fullName || 'Người dùng';
                     const initial = fullName.charAt(0).toUpperCase();
                     const currentRole = parseHeaderRole(user.role);
-                    const adminDropdownItem = document.getElementById('adminUsersDropdownItem');
-                    const adminNavItem = document.getElementById('adminUsersNavItem');
-                    const mainNavList = document.getElementById('mainNavList');
-                    if (currentRole === 'Admin') {
-                        if (adminDropdownItem) adminDropdownItem.style.display = 'flex';
-                        if (adminNavItem) adminNavItem.style.display = 'block';
-                        if (mainNavList) {
-                            mainNavList.innerHTML = `
-                                <li class="nav__item" id="adminDashboardNav" onclick="openAdminView('dashboard')">Dashboard</li>
-                                <li class="nav__item" id="adminUsersNav" onclick="openAdminView('users')">Quản lý người dùng</li>
-                                <li class="nav__item" id="adminPermissionsNav" onclick="openAdminView('permissions')">Quản lý quyền</li>
-                            `;
-                        }
-
-                        authArea.innerHTML = `
-                            <button class="auth-btn btn-login" type="button" onclick="if(typeof logout === 'function') logout(); else { sessionStorage.clear(); localStorage.removeItem('accessToken'); localStorage.removeItem('refreshToken'); localStorage.removeItem('loginTimestamp'); localStorage.removeItem('userInfo'); localStorage.removeItem('user'); window.location.href='/login'; }">
-                                Đăng xuất
-                            </button>
-                        `;
-                        highlightAdminNav();
-                        return;
+                    const adminWorkbenchItem = document.getElementById('adminWorkbenchDropdownItem');
+                    if (currentRole === 'Admin' && adminWorkbenchItem) {
+                        adminWorkbenchItem.style.display = 'flex';
                     }
 
                     const userBalance = user.balanceVnd || 0;
@@ -186,28 +169,6 @@
             }
         }
 
-        function openAdminView(viewName) {
-            if (window.location.pathname.startsWith('/admin') && typeof window.switchAdminView === 'function') {
-                window.switchAdminView(viewName);
-                return;
-            }
-            window.location.href = `/admin/users#${viewName}`;
-        }
-
-        function highlightAdminNav() {
-            const hash = (window.location.hash || '#dashboard').replace('#', '');
-            const activeMap = {
-                dashboard: 'adminDashboardNav',
-                users: 'adminUsersNav',
-                permissions: 'adminPermissionsNav'
-            };
-            Object.values(activeMap).forEach(id => {
-                const item = document.getElementById(id);
-                if (item) item.style.color = '';
-            });
-            const active = document.getElementById(activeMap[hash] || activeMap.dashboard);
-            if (active) active.style.color = '#fbceb5';
-        }
     </script>
 </header>
 

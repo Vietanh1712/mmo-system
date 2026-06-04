@@ -11,6 +11,7 @@ public class AdminUserResponse {
     private Long id;
     private String email;
     private String fullName;
+    private String gender;
     private String role;
     private String phone;
     private String shopStatus;

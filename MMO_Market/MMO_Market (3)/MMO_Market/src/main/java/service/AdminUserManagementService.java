@@ -49,7 +49,7 @@ public class AdminUserManagementService {
     @Transactional(readOnly = true)
     public Map<String, Object> getDashboardSummary(Long operatorId) {
         requireAdmin(operatorId);
-        List<AdminUserResponse> users = filteredUsers(null, null);
+        List<AdminUserResponse> users = filteredUsers(null, null, null, null, null, null);
         Map<String, Object> summary = new HashMap<>();
         summary.put("totalAccounts", users.size());
         summary.put("activeAccounts", users.stream().filter(user -> Boolean.TRUE.equals(user.getIsOnline()) && !Boolean.TRUE.equals(user.getIsLocked())).count());
@@ -61,11 +61,11 @@ public class AdminUserManagementService {
     }
 
     @Transactional(readOnly = true)
-    public Map<String, Object> getUsers(Long operatorId, String search, String role, int page, int size) {
+    public Map<String, Object> getUsers(Long operatorId, String email, String phone, String name, String gender, String role, String status, int page, int size) {
         requireAdmin(operatorId);
         int safePage = Math.max(page, 0);
         int safeSize = Math.min(Math.max(size, 5), 50);
-        List<AdminUserResponse> users = filteredUsers(search, role);
+        List<AdminUserResponse> users = filteredUsers(email, phone, name, gender, role, status);
         int fromIndex = Math.min(safePage * safeSize, users.size());
         int toIndex = Math.min(fromIndex + safeSize, users.size());
 
@@ -78,16 +78,32 @@ public class AdminUserManagementService {
         return result;
     }
 
-    private List<AdminUserResponse> filteredUsers(String search, String role) {
-        String keyword = normalize(search);
+    private List<AdminUserResponse> filteredUsers(String email, String phone, String name, String gender, String role, String status) {
+        String emailKeyword = normalize(email);
+        String phoneKeyword = normalize(phone);
+        String nameKeyword = normalize(name);
+        String genderKeyword = normalize(gender);
         String roleFilter = normalize(role);
+        String statusFilter = normalize(status);
 
         return userRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc().stream()
-                .filter(user -> keyword == null || contains(user.getEmail(), keyword)
-                        || contains(user.getFullName(), keyword)
-                        || contains(user.getPhone(), keyword))
-                .filter(user -> roleFilter == null || normalizeRole(user.getRole()).toLowerCase(Locale.ROOT).contains(roleFilter))
                 .map(this::toResponse)
+                .filter(res -> emailKeyword == null || contains(res.getEmail(), emailKeyword))
+                .filter(res -> phoneKeyword == null || contains(res.getPhone(), phoneKeyword))
+                .filter(res -> nameKeyword == null || contains(res.getFullName(), nameKeyword))
+                .filter(res -> genderKeyword == null || (res.getGender() != null && res.getGender().equalsIgnoreCase(genderKeyword)))
+                .filter(res -> roleFilter == null || res.getRole().toLowerCase(Locale.ROOT).contains(roleFilter))
+                .filter(res -> {
+                    if (statusFilter == null) return true;
+                    if ("active".equals(statusFilter)) {
+                        return !Boolean.TRUE.equals(res.getIsLocked()) && Boolean.TRUE.equals(res.getIsOnline());
+                    } else if ("locked".equals(statusFilter)) {
+                        return Boolean.TRUE.equals(res.getIsLocked());
+                    } else if ("inactive".equals(statusFilter)) {
+                        return !Boolean.TRUE.equals(res.getIsLocked()) && !Boolean.TRUE.equals(res.getIsOnline());
+                    }
+                    return true;
+                })
                 .toList();
     }
 
@@ -253,6 +269,7 @@ public class AdminUserManagementService {
                 .isLocked(Boolean.TRUE.equals(user.getIsLocked()))
                 .isOnline(isUserOnline(user.getId()))
                 .createdAt(user.getCreatedAt())
+                .gender(user.getGender())
                 .build();
     }
 

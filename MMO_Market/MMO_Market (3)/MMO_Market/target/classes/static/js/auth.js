@@ -363,8 +363,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
                     sessionStorage.setItem('user', JSON.stringify(userInfo));
 
-                    const redirectUrl = normalizeRole(userInfo.role) === 'Admin' ? '/admin/users' : '/';
-                    setTimeout(() => window.location.href = redirectUrl, 1000);
+                    setTimeout(() => { window.location.href = '/'; }, 1000);
                 } else {
                     alertBox.textContent = res.body.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.';
                     alertBox.className = 'message error';

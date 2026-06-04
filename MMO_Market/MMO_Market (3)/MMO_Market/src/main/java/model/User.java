@@ -25,6 +25,9 @@ public class User {
     @Column(name = "full_name")
     private String fullName;
 
+    @Column
+    private String gender;
+
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String role; // JSON format: {"role": "Customer"} or {"role": "Seller"}
 

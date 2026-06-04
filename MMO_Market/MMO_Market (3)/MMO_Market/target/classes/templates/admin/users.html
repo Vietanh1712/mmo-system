@@ -3,994 +3,509 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - MMO Market</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <title>Quản Trị Hệ Thống Cấp Cao - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/home.css}">
-    <style>
-        :root {
-            --admin-bg: #f8fafc;
-            --admin-surface: #ffffff;
-            --admin-ink: #0f172a;
-            --admin-muted: #64748b;
-            --admin-border: #e2e8f0;
-            --admin-primary: #fbceb5;
-            --admin-primary-strong: #e08350;
-            --admin-danger: #dc2626;
-            --admin-success: #16a34a;
-            --admin-warning: #d97706;
-        }
-
-        body {
-            background: var(--admin-bg);
-            color: var(--admin-ink);
-            font-family: "Roboto", Arial, sans-serif;
-        }
-
-        .admin-shell {
-            max-width: 1240px;
-            min-height: 68vh;
-            margin: 0 auto;
-            padding: 32px 40px 56px;
-        }
-
-        .admin-heading {
-            display: flex;
-            justify-content: space-between;
-            gap: 24px;
-            align-items: flex-end;
-            margin-bottom: 22px;
-        }
-
-        .admin-kicker {
-            margin: 0 0 8px;
-            color: var(--admin-primary-strong);
-            font-size: 13px;
-            font-weight: 800;
-            letter-spacing: .04em;
-            text-transform: uppercase;
-        }
-
-        .admin-title {
-            margin: 0;
-            font-size: 32px;
-            line-height: 1.2;
-        }
-
-        .admin-subtitle {
-            max-width: 720px;
-            margin: 10px 0 0;
-            color: var(--admin-muted);
-            line-height: 1.55;
-        }
-
-        .admin-identity {
-            min-width: 220px;
-            color: var(--admin-muted);
-            font-size: 14px;
-            line-height: 1.5;
-            text-align: right;
-        }
-
-        .admin-layout {
-            display: block;
-        }
-
-        .admin-panel,
-        .stat-card,
-        .modal-card {
-            background: var(--admin-surface);
-            border: 1px solid var(--admin-border);
-            border-radius: 8px;
-            box-shadow: 0 10px 28px rgba(15, 23, 42, .06);
-        }
-
-        .admin-view {
-            display: none;
-        }
-
-        .admin-view.active {
-            display: block;
-        }
-
-        .view-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-
-        .view-header h2 {
-            margin: 0;
-            font-size: 24px;
-        }
-
-        .view-header p {
-            margin: 5px 0 0;
-            color: var(--admin-muted);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 16px;
-            margin-bottom: 18px;
-        }
-
-        .stat-card {
-            padding: 18px;
-        }
-
-        .stat-card span {
-            display: block;
-            color: var(--admin-muted);
-            font-size: 13px;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .stat-card strong {
-            font-size: 30px;
-            line-height: 1;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        .insight-card {
-            min-height: 152px;
-            padding: 20px;
-        }
-
-        .insight-card h3 {
-            margin: 0 0 10px;
-            font-size: 18px;
-        }
-
-        .insight-card p {
-            margin: 0;
-            color: var(--admin-muted);
-            line-height: 1.6;
-        }
-
-        .admin-panel {
-            overflow: hidden;
-        }
-
-        .panel-toolbar {
-            display: grid;
-            grid-template-columns: minmax(260px, 1fr) 160px 132px 148px;
-            gap: 12px;
-            padding: 16px;
-            border-bottom: 1px solid var(--admin-border);
-        }
-
-        .field {
-            position: relative;
-        }
-
-        .field i {
-            position: absolute;
-            top: 50%;
-            left: 14px;
-            transform: translateY(-50%);
-            color: #94a3b8;
-            pointer-events: none;
-        }
-
-        .control {
-            width: 100%;
-            height: 42px;
-            border: 1px solid var(--admin-border);
-            border-radius: 8px;
-            background: #fff;
-            color: var(--admin-ink);
-            font-size: 14px;
-            outline: none;
-            box-sizing: border-box;
-            transition: border-color .2s, box-shadow .2s;
-        }
-
-        .field .control {
-            padding: 0 14px 0 42px;
-        }
-
-        input.control,
-        select.control {
-            padding: 0 14px;
-        }
-
-        .field input.control {
-            padding-left: 42px;
-        }
-
-        .control:focus {
-            border-color: var(--admin-primary-strong);
-            box-shadow: 0 0 0 3px rgba(251, 206, 181, .45);
-        }
-
-        .admin-button {
-            min-height: 42px;
-            border: 1px solid var(--admin-border);
-            border-radius: 8px;
-            background: #fff;
-            color: var(--admin-ink);
-            font-weight: 800;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 0 14px;
-            transition: .2s;
-        }
-
-        .admin-button:hover {
-            border-color: var(--admin-primary-strong);
-            color: var(--admin-primary-strong);
-        }
-
-        .admin-button.primary {
-            background: var(--admin-primary);
-            color: #000;
-            border-color: var(--admin-primary);
-        }
-
-        .admin-button.primary:hover {
-            background: #f0b99a;
-            color: #000;
-        }
-
-        .admin-button.danger {
-            border-color: #fecaca;
-            color: var(--admin-danger);
-        }
-
-        .table-wrap {
-            overflow-x: auto;
-        }
-
-        .users-table {
-            width: 100%;
-            min-width: 1040px;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-
-        .users-table th,
-        .users-table td {
-            padding: 15px 16px;
-            border-bottom: 1px solid var(--admin-border);
-            vertical-align: middle;
-            text-align: left;
-        }
-
-        .users-table th {
-            background: #f8fafc;
-            color: var(--admin-muted);
-            font-size: 12px;
-            font-weight: 800;
-            letter-spacing: .04em;
-            text-transform: uppercase;
-        }
-
-        .users-table tbody tr:hover {
-            background: #fff7f3;
-        }
-
-        .user-cell {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #0f172a;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            flex: 0 0 auto;
-        }
-
-        .user-name {
-            margin-bottom: 3px;
-            font-weight: 800;
-        }
-
-        .muted {
-            color: var(--admin-muted);
-            font-size: 13px;
-        }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            border-radius: 999px;
-            padding: 5px 10px;
-            font-size: 12px;
-            font-weight: 800;
-            white-space: nowrap;
-        }
-
-        .badge.role-admin { background: #fee2e2; color: #991b1b; }
-        .badge.role-staff { background: #ffedd5; color: #9a3412; }
-        .badge.role-seller { background: #dbeafe; color: #1d4ed8; }
-        .badge.role-customer { background: #f1f5f9; color: #334155; }
-        .badge.ok { background: #dcfce7; color: #166534; }
-        .badge.locked { background: #fee2e2; color: #991b1b; }
-        .badge.pending { background: #fef3c7; color: #92400e; }
-
-        .row-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-        }
-
-        .icon-button {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            border: 1px solid var(--admin-border);
-            background: #fff;
-            color: var(--admin-ink);
-            cursor: pointer;
-            transition: .2s;
-        }
-
-        .icon-button:hover {
-            border-color: var(--admin-primary-strong);
-            color: var(--admin-primary-strong);
-        }
-
-        .icon-button.danger {
-            color: var(--admin-danger);
-        }
-
-        .icon-button.success {
-            color: var(--admin-success);
-        }
-
-        .pagination {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 16px;
-            border-top: 1px solid var(--admin-border);
-            color: var(--admin-muted);
-            font-size: 14px;
-        }
-
-        .pagination-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .empty-state {
-            padding: 44px 18px;
-            text-align: center;
-            color: var(--admin-muted);
-        }
-
-        .placeholder {
-            padding: 28px;
-            color: var(--admin-muted);
-            line-height: 1.7;
-        }
-
-        .toast {
-            position: fixed;
-            right: 28px;
-            top: 112px;
-            max-width: 380px;
-            background: #0f172a;
-            color: #fff;
-            border-radius: 8px;
-            padding: 13px 16px;
-            box-shadow: 0 12px 28px rgba(15, 23, 42, .24);
-            display: none;
-            z-index: 1200;
-            font-weight: 700;
-        }
-
-        .toast.error {
-            background: var(--admin-danger);
-        }
-
-        .modal {
-            position: fixed;
-            inset: 0;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-            background: rgba(15, 23, 42, .55);
-            z-index: 1300;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-card {
-            width: min(520px, 100%);
-            padding: 24px;
-            box-sizing: border-box;
-        }
-
-        .modal-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 16px;
-            margin-bottom: 18px;
-        }
-
-        .modal-head h3 {
-            margin: 0;
-            font-size: 20px;
-        }
-
-        .modal-close {
-            width: 34px;
-            height: 34px;
-            border: 0;
-            border-radius: 8px;
-            background: #f1f5f9;
-            cursor: pointer;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-        }
-
-        .form-row-full {
-            grid-column: 1 / -1;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 7px;
-            color: var(--admin-muted);
-            font-size: 13px;
-            font-weight: 800;
-        }
-
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 22px;
-        }
-
-        @media (max-width: 960px) {
-            .admin-shell { padding: 24px 18px 44px; }
-            .admin-heading { display: block; }
-            .admin-identity { text-align: left; margin-top: 14px; }
-            .panel-toolbar { grid-template-columns: 1fr 1fr; }
-            .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .dashboard-grid { grid-template-columns: 1fr; }
-        }
-
-        @media (max-width: 640px) {
-            .panel-toolbar,
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
 </head>
 <body>
 <header th:replace="fragments/header :: header"></header>
 
-<main class="admin-shell">
-    <section class="admin-heading">
-        <div>
-            <p class="admin-kicker">Admin Dashboard</p>
-            <h1 class="admin-title">Bảng điều khiển quản trị</h1>
-            <p class="admin-subtitle">Theo dõi tài khoản hệ thống, quản lý người dùng và CRUD tài khoản Staff.</p>
-        </div>
-        <div id="adminIdentity" class="admin-identity"></div>
-    </section>
+<main class="ds-container admin-shell">
+    <div class="admin-layout ds-two-column">
+        <aside class="admin-sidebar" aria-label="Menu quản trị">
+            <p class="admin-page-kicker">Quản trị cấp cao</p>
+            <div class="sidebar-section-title">Tổng quan &amp; Báo cáo</div>
+            <nav class="sidebar-menu">
+                <button type="button" class="sidebar-item active" data-target="dashboard" onclick="switchAdminView('dashboard')">
+                    <i class="fa fa-dashboard"></i> Bảng điều khiển
+                </button>
+                <button type="button" class="sidebar-item" data-target="audit-logs" onclick="switchAdminView('audit-logs')">
+                    <i class="fa fa-file-text-o"></i> Nhật ký hệ thống
+                </button>
+                <button type="button" class="sidebar-item" data-target="revenue" onclick="switchAdminView('revenue')">
+                    <i class="fa fa-money"></i> Doanh thu &amp; Dòng tiền
+                </button>
+            </nav>
+            <div class="sidebar-section-title">Quản lý tài khoản</div>
+            <nav class="sidebar-menu">
+                <button type="button" class="sidebar-item" data-target="accounts" onclick="switchAdminView('accounts')">
+                    <i class="fa fa-users"></i> Quản lý tài khoản
+                </button>
+                <button type="button" class="sidebar-item" data-target="permissions" onclick="switchAdminView('permissions')">
+                    <i class="fa fa-key"></i> Phân quyền nhân viên
+                </button>
+            </nav>
+            <div class="sidebar-section-title">Cấu hình hệ thống</div>
+            <nav class="sidebar-menu">
+                <button type="button" class="sidebar-item" data-target="system-config" onclick="switchAdminView('system-config')">
+                    <i class="fa fa-cogs"></i> Cấu hình chung
+                </button>
+                <button type="button" class="sidebar-item" data-target="commissions" onclick="switchAdminView('commissions')">
+                    <i class="fa fa-sliders"></i> Phí &amp; Hoa hồng
+                </button>
+                <button type="button" class="sidebar-item" data-target="maintenance" onclick="switchAdminView('maintenance')">
+                    <i class="fa fa-exclamation-triangle"></i> Chế độ bảo trì
+                </button>
+            </nav>
+        </aside>
 
-    <div class="admin-layout">
-        <section>
+        <section class="admin-workspace ds-page-shell">
+
+            <!-- 1. Dashboard -->
             <div id="dashboardView" class="admin-view active">
                 <div class="view-header">
                     <div>
-                        <h2>Dashboard</h2>
-                        <p>Tổng quan trạng thái tài khoản trong hệ thống.</p>
+                        <h2 class="ds-heading-lg">Tổng quan hệ thống</h2>
+                        <p class="ds-caption">Số liệu từ API · Biểu đồ minh họa dữ liệu mẫu.</p>
                     </div>
-                    <button class="admin-button" type="button" onclick="loadDashboard()">
+                    <button type="button" class="ds-btn ds-btn-outline" onclick="switchAdminView('dashboard')">
                         <i class="fa fa-refresh"></i> Làm mới
                     </button>
                 </div>
-                <div class="stats-grid">
-                    <div class="stat-card"><span>Tổng tài khoản</span><strong id="statTotal">0</strong></div>
-                    <div class="stat-card"><span>Đang hoạt động</span><strong id="statActive">0</strong></div>
-                    <div class="stat-card"><span>Bị khóa</span><strong id="statLocked">0</strong></div>
-                    <div class="stat-card"><span>Staff</span><strong id="statStaff">0</strong></div>
+                <div class="stats-grid-4">
+                    <div class="stat-card-modern"><span class="stat-card-label">Tổng tài khoản</span><div class="stat-card-value" id="statTotal">0</div></div>
+                    <div class="stat-card-modern green"><span class="stat-card-label">Đang hoạt động</span><div class="stat-card-value" id="statActive">0</div></div>
+                    <div class="stat-card-modern red"><span class="stat-card-label">Bị khóa</span><div class="stat-card-value" id="statLocked">0</div></div>
+                    <div class="stat-card-modern yellow"><span class="stat-card-label">Nhân viên</span><div class="stat-card-value" id="statStaff">0</div></div>
                 </div>
-                <div class="dashboard-grid">
-                    <div class="admin-panel insight-card">
-                        <h3>Tài khoản đã xác thực</h3>
-                        <p><strong id="statVerified">0</strong> tài khoản đã hoàn tất xác thực email và có thể đăng nhập nếu không bị khóa.</p>
+                <div class="stats-grid-4">
+                    <div class="stat-card-modern blue"><span class="stat-card-label">Đã xác thực</span><div class="stat-card-value" id="statVerified">0</div></div>
+                    <div class="stat-card-modern blue"><span class="stat-card-label">Người bán</span><div class="stat-card-value" id="statSeller">0</div></div>
+                </div>
+                <div class="admin-card">
+                    <div class="card-header-flex">
+                        <h3>Biểu đồ doanh thu tuần (VNĐ)</h3>
+                        <span class="ds-caption">Trục tung: doanh thu · Trục hoành: ngày trong tuần</span>
                     </div>
-                    <div class="admin-panel insight-card">
-                        <h3>Người bán</h3>
-                        <p><strong id="statSeller">0</strong> tài khoản đang có vai trò Seller hoặc được nâng cấp từ Customer.</p>
+                    <div id="chartSummary" class="chart-summary ds-cluster"></div>
+                    <div class="chart-svg-container chart-svg-container--labeled">
+                        <svg id="revenueChartSvg" width="100%" height="280" viewBox="0 0 800 280" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Biểu đồ doanh thu theo ngày">
+                            <defs>
+                                <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#2563eb" stop-opacity="0.35"/>
+                                    <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+                                </linearGradient>
+                            </defs>
+                            <text x="36" y="140" fill="#6b7280" font-size="11" font-weight="700" text-anchor="middle" transform="rotate(-90 36 140)">Doanh thu (VNĐ)</text>
+                            <g id="revenueChartGrid"></g>
+                            <g id="revenueChartYAxis"></g>
+                            <path id="revenueChartArea" d="" fill="url(#chartGrad)"/>
+                            <path id="revenueChartPath" d="" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <g id="revenueChartValueLabels"></g>
+                            <g id="revenueChartDots"></g>
+                            <g id="revenueChartXAxis"></g>
+                            <text x="480" y="272" fill="#6b7280" font-size="11" font-weight="700" text-anchor="middle">Ngày trong tuần</text>
+                        </svg>
+                        <div id="chartTooltip" class="chart-tooltip"></div>
+                    </div>
+                </div>
+                <div class="admin-card admin-list-card">
+                    <div class="ds-filter-panel" style="border-radius:0">
+                        <h2 class="ds-card-title">Hoạt động gần đây</h2>
+                    </div>
+                    <div class="ds-table-wrap">
+                        <table class="ds-table">
+                            <thead>
+                            <tr>
+                                <th class="ds-table-center">STT</th>
+                                <th>Thời gian</th>
+                                <th>Nhân viên</th>
+                                <th class="ds-table-center">Hành động</th>
+                                <th>Mô tả</th>
+                            </tr>
+                            </thead>
+                            <tbody id="dashLogsBody"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
-            <div id="usersView" class="admin-view">
+            <!-- 2. Audit logs -->
+            <div id="audit-logsView" class="admin-view">
                 <div class="view-header">
                     <div>
-                        <h2>Quản lý người dùng</h2>
-                        <p>Xem tất cả tài khoản, phân trang, khóa/mở khóa, tạo/sửa/xóa Staff.</p>
+                        <h2 class="ds-heading-lg">Giám sát hoạt động hệ thống</h2>
+                        <p class="ds-caption">Theo dõi nhật ký thao tác quản trị (dữ liệu mẫu).</p>
                     </div>
-                    <button class="admin-button primary" type="button" onclick="openStaffModal()">
-                        <i class="fa fa-plus"></i> Tạo Staff
-                    </button>
                 </div>
-
-                <section class="admin-panel">
-                    <div class="panel-toolbar">
-                        <label class="field" for="searchInput">
-                            <i class="fa fa-search"></i>
-                            <input id="searchInput" class="control" type="search" placeholder="Tìm theo email, họ tên hoặc số điện thoại">
-                        </label>
-                        <select id="roleFilter" class="control" aria-label="Lọc theo vai trò">
-                            <option value="">Tất cả vai trò</option>
-                            <option value="Admin">Admin</option>
-                            <option value="Staff">Staff</option>
-                            <option value="Seller">Seller</option>
-                            <option value="Customer">Customer</option>
-                        </select>
-                        <select id="pageSize" class="control" aria-label="Số dòng mỗi trang">
-                            <option value="10">10 dòng</option>
-                            <option value="20">20 dòng</option>
-                            <option value="50">50 dòng</option>
-                        </select>
-                        <button id="reloadBtn" class="admin-button" type="button">
-                            <i class="fa fa-refresh"></i> Làm mới
-                        </button>
+                <div class="admin-card admin-list-card">
+                    <div class="ds-filter-panel">
+                        <h2 class="ds-card-title">Bộ lọc nhật ký</h2>
+                        <div class="ds-filter-grid">
+                            <input id="logSearch" class="ds-input" type="search" placeholder="Tìm nhân viên, IP, mô tả...">
+                            <select id="logActionFilter" class="ds-input" aria-label="Loại hành động">
+                                <option value="">Tất cả hành động</option>
+                                <option value="KYC_Approve">Duyệt KYC</option>
+                                <option value="Fund_Withdraw">Duyệt rút tiền</option>
+                                <option value="Lock_User">Khóa tài khoản</option>
+                                <option value="Config_Update">Cập nhật cấu hình</option>
+                                <option value="Maintenance_Toggle">Bảo trì hệ thống</option>
+                            </select>
+                        </div>
+                        <div class="ds-filter-actions">
+                            <button type="button" class="ds-btn ds-btn-secondary" id="auditResetFilter">Làm mới bộ lọc</button>
+                            <button type="button" class="ds-btn ds-btn-primary" id="auditSearchBtn">Tìm kiếm</button>
+                            <button type="button" class="ds-btn ds-btn-outline" onclick="AdminConsole.mockExport('audit')"><i class="fa fa-file-excel-o"></i> Xuất Excel</button>
+                        </div>
                     </div>
-
-                    <div class="table-wrap">
-                        <table class="users-table">
+                    <div class="ds-table-wrap">
+                        <table class="ds-table">
                             <thead>
                             <tr>
-                                <th>Người dùng</th>
-                                <th>Vai trò</th>
-                                <th>Trạng thái</th>
-                                <th>Xác thực</th>
+                                <th class="ds-table-center">STT</th>
+                                <th class="ds-table-center">Mã</th>
+                                <th>Thời gian</th>
+                                <th>Nhân viên</th>
+                                <th class="ds-table-center">Hành động</th>
+                                <th>Chi tiết</th>
+                                <th>Địa chỉ IP</th>
+                                <th class="ds-table-center">Trạng thái</th>
+                                <th class="ds-table-center">Thao tác</th>
+                            </tr>
+                            </thead>
+                            <tbody id="auditLogsBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="auditPagination"></div>
+                </div>
+            </div>
+
+            <!-- 3. Revenue -->
+            <div id="revenueView" class="admin-view">
+                <div class="view-header">
+                    <div>
+                        <h2 class="ds-heading-lg">Báo cáo doanh thu &amp; Dòng tiền</h2>
+                        <p class="ds-caption">Báo cáo dòng tiền và phí sàn (dữ liệu mẫu).</p>
+                    </div>
+                </div>
+                <div class="stats-grid-4">
+                    <div class="stat-card-modern"><span class="stat-card-label">Hoa hồng</span><div class="stat-card-value ds-money" id="revCommissions">₫0</div></div>
+                    <div class="stat-card-modern blue"><span class="stat-card-label">Phí người mua</span><div class="stat-card-value ds-money" id="revBuyerFees">₫0</div></div>
+                    <div class="stat-card-modern green"><span class="stat-card-label">Phí rút tiền</span><div class="stat-card-value ds-money" id="revWithdrawalFees">₫0</div></div>
+                    <div class="stat-card-modern yellow"><span class="stat-card-label">Doanh thu ròng</span><div class="stat-card-value ds-money" id="revNetTotal">₫0</div></div>
+                </div>
+                <div class="admin-card admin-list-card">
+                    <div class="ds-filter-panel">
+                        <h2 class="ds-card-title">Bộ lọc giao dịch</h2>
+                        <div class="ds-filter-grid">
+                            <select id="revTimeFilter" class="ds-input" aria-label="Khoảng thời gian">
+                                <option value="today">Hôm nay</option>
+                                <option value="7days" selected>7 ngày qua</option>
+                                <option value="30days">30 ngày qua</option>
+                            </select>
+                        </div>
+                        <div class="ds-filter-actions">
+                            <button type="button" class="ds-btn ds-btn-secondary" id="revenueResetFilter">Làm mới bộ lọc</button>
+                            <button type="button" class="ds-btn ds-btn-primary" id="revenueSearchBtn">Tìm kiếm</button>
+                            <button type="button" class="ds-btn ds-btn-outline" onclick="AdminConsole.mockExport('revenue')"><i class="fa fa-file-pdf-o"></i> Xuất PDF</button>
+                        </div>
+                    </div>
+                    <div class="ds-table-wrap">
+                        <table class="ds-table">
+                            <thead>
+                            <tr>
+                                <th class="ds-table-center">STT</th>
+                                <th class="ds-table-center">Mã GD</th>
+                                <th>Thời gian</th>
+                                <th>Tài khoản</th>
+                                <th class="ds-table-center">Loại</th>
+                                <th>Số tiền</th>
+                                <th>Phí sàn</th>
+                                <th class="ds-table-center">Trạng thái</th>
+                            </tr>
+                            </thead>
+                            <tbody id="revTransactionsBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="revenuePagination"></div>
+                </div>
+            </div>
+
+            <!-- 4. Add Staff -->
+            <div id="add-staffView" class="admin-view">
+                <div class="view-header">
+                    <div>
+                        <h2 class="ds-heading-lg">Thêm tài khoản nhân viên</h2>
+                        <p class="ds-caption">Tạo tài khoản nhân viên qua API.</p>
+                    </div>
+                </div>
+                <div class="admin-card" style="max-width:640px">
+                    <form id="addStaffForm" class="ds-form-grid config-grid">
+                        <div class="ds-form-field config-full-row">
+                            <label class="ds-label" for="pageStaffEmail">Email</label>
+                            <input id="pageStaffEmail" class="ds-input control-input" type="email" required>
+                        </div>
+                        <div class="ds-form-field config-full-row">
+                            <label class="ds-label" for="pageStaffFullName">Họ và tên</label>
+                            <input id="pageStaffFullName" class="ds-input control-input" type="text" minlength="3" required>
+                        </div>
+                        <div class="ds-form-field">
+                            <label class="ds-label" for="pageStaffPhone">Số điện thoại</label>
+                            <input id="pageStaffPhone" class="ds-input control-input" type="tel">
+                        </div>
+                        <div class="ds-form-field">
+                            <label class="ds-label" for="pageStaffPassword">Mật khẩu</label>
+                            <input id="pageStaffPassword" class="ds-input control-input" type="password" minlength="6" required>
+                        </div>
+                        <div class="config-full-row ds-cluster" style="margin-top:8px">
+                            <button type="submit" class="ds-btn ds-btn-primary"><i class="fa fa-save"></i> Tạo nhân viên</button>
+                            <button type="button" class="ds-btn ds-btn-outline" onclick="switchAdminView('accounts')">Hủy</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 5. System config -->
+            <div id="system-configView" class="admin-view">
+                <div class="view-header">
+                    <div>
+                        <h2 class="ds-heading-lg">Cấu hình hệ thống</h2>
+                        <p class="ds-caption">Tham số vận hành hệ thống (lưu demo trên trình duyệt).</p>
+                    </div>
+                    <button type="button" class="ds-btn ds-btn-primary" onclick="AdminConsole.saveSystemConfig()"><i class="fa fa-save"></i> Lưu</button>
+                </div>
+                <div class="admin-card">
+                    <div class="config-grid ds-form-grid">
+                        <div class="ds-form-field"><label class="ds-label" for="cfgAppName">Tên ứng dụng</label><input id="cfgAppName" class="ds-input control-input" type="text"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="cfgAdminEmail">Email cảnh báo</label><input id="cfgAdminEmail" class="ds-input control-input" type="email"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="cfgSessionTimeout">Phiên (phút)</label><input id="cfgSessionTimeout" class="ds-input control-input" type="number" min="5"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="cfgOtpTimeout">OTP (phút)</label><input id="cfgOtpTimeout" class="ds-input control-input" type="number" min="1"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="cfgMaxLoginRetries">Số lần đăng nhập sai</label><input id="cfgMaxLoginRetries" class="ds-input control-input" type="number"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="cfgMinWithdrawal">Rút tối thiểu (VNĐ)</label><input id="cfgMinWithdrawal" class="ds-input control-input" type="number" min="0"></div>
+                        <div class="config-full-row ds-stack-sm">
+                            <label class="perm-label-checkbox"><input id="cfgAllowGoogle" type="checkbox"> Cho phép đăng nhập Google</label>
+                            <label class="perm-label-checkbox"><input id="cfgAllowRegister" type="checkbox"> Cho phép đăng ký mới</label>
+                            <label class="perm-label-checkbox"><input id="cfgWithdraw2FA" type="checkbox"> Bắt buộc 2FA khi rút tiền</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. Commissions -->
+            <div id="commissionsView" class="admin-view">
+                <div class="view-header">
+                    <div>
+                        <h2 class="ds-heading-lg">Phí giao dịch &amp; Hoa hồng</h2>
+                        <p class="ds-caption">Biểu phí và hoa hồng sàn (lưu demo trên trình duyệt).</p>
+                    </div>
+                    <button type="button" class="ds-btn ds-btn-primary" onclick="AdminConsole.saveCommissions()"><i class="fa fa-save"></i> Cập nhật</button>
+                </div>
+                <div class="admin-card" style="max-width:560px">
+                    <div class="config-grid">
+                        <div class="ds-form-field"><label class="ds-label" for="commBasePercent">Hoa hồng C2C (%)</label><input id="commBasePercent" class="ds-input control-input" type="number" step="0.1"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="commFlatBuyer">Phí cố định người mua (VNĐ)</label><input id="commFlatBuyer" class="ds-input control-input" type="number"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="commWithdrawPercent">Phí rút (%)</label><input id="commWithdrawPercent" class="ds-input control-input" type="number" step="0.1"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="commMinWithdrawFee">Phí rút tối thiểu (VNĐ)</label><input id="commMinWithdrawFee" class="ds-input control-input" type="number"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. Maintenance -->
+            <div id="maintenanceView" class="admin-view">
+                <div class="view-header">
+                    <div>
+                        <h2 class="ds-heading-lg">Chế độ bảo trì</h2>
+                        <p class="ds-caption">Bật/tắt bảo trì và thông báo người dùng (lưu demo).</p>
+                    </div>
+                    <button type="button" class="ds-btn ds-btn-primary" onclick="AdminConsole.saveMaintenance()"><i class="fa fa-save"></i> Áp dụng</button>
+                </div>
+                <div class="admin-card" style="max-width:640px">
+                    <label class="perm-label-checkbox" style="margin-bottom:16px">
+                        <input id="maintActive" type="checkbox"> Bật chế độ bảo trì
+                    </label>
+                    <div class="ds-form-field config-full-row">
+                        <label class="ds-label" for="maintMessage">Thông báo hiển thị</label>
+                        <textarea id="maintMessage" class="ds-input control-input" rows="3" style="height:auto;padding:10px 14px"></textarea>
+                    </div>
+                    <div class="ds-form-field"><label class="ds-label" for="maintWhitelist">IP whitelist</label><input id="maintWhitelist" class="ds-input control-input" type="text"></div>
+                    <div class="ds-form-field"><label class="ds-label" for="maintStart">Bắt đầu</label><input id="maintStart" class="ds-input control-input" type="datetime-local"></div>
+                    <div class="ds-form-field"><label class="ds-label" for="maintEnd">Kết thúc</label><input id="maintEnd" class="ds-input control-input" type="datetime-local"></div>
+                    <div id="maintPreview" class="maintenance-preview-banner"></div>
+                </div>
+            </div>
+
+            <!-- 8. Manage accounts -->
+            <div id="accountsView" class="admin-view">
+                <div class="view-header">
+                    <div>
+                        <h2 class="ds-heading-lg">Quản lý tài khoản</h2>
+                        <p class="ds-caption">Danh sách thành viên — dữ liệu từ API.</p>
+                    </div>
+                </div>
+                <div class="admin-card admin-list-card">
+                    <div class="ds-filter-panel">
+                        <h2 class="ds-card-title">Danh sách tài khoản</h2>
+                        <div class="ds-filter-grid">
+                            <input id="searchEmail" class="ds-input" type="search" placeholder="Tìm email">
+                            <input id="searchPhone" class="ds-input" type="search" placeholder="Tìm số điện thoại">
+                            <input id="searchName" class="ds-input" type="search" placeholder="Tìm họ tên">
+                            <select id="genderFilter" class="ds-input" aria-label="Giới tính">
+                                <option value="">Tất cả giới tính</option>
+                                <option value="Nam">Nam</option>
+                                <option value="Nữ">Nữ</option>
+                            </select>
+                            <select id="roleFilter" class="ds-input" aria-label="Vai trò">
+                                <option value="">Tất cả vai trò</option>
+                                <option value="Admin">Quản trị viên</option>
+                                <option value="Staff">Nhân viên</option>
+                                <option value="Seller">Người bán</option>
+                                <option value="Customer">Khách hàng</option>
+                            </select>
+                            <select id="statusFilter" class="ds-input" aria-label="Trạng thái">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="Active">Đang hoạt động</option>
+                                <option value="Locked">Bị khóa</option>
+                                <option value="Inactive">Chưa hoạt động</option>
+                            </select>
+                        </div>
+                        <div class="ds-filter-actions" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <div>
+                                <button type="button" class="ds-btn ds-btn-primary" onclick="AdminConsole.openStaffModal()"><i class="fa fa-user-plus"></i> Thêm staff</button>
+                            </div>
+                            <div class="ds-cluster" style="display: flex; gap: 12px; justify-content: flex-end; margin: 0;">
+                                <button type="button" class="ds-btn ds-btn-secondary" id="accountsResetFilter">Làm mới bộ lọc</button>
+                                <button type="button" class="ds-btn ds-btn-primary" id="accountsSearchBtn">Tìm kiếm</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ds-table-wrap">
+                        <table class="ds-table">
+                            <thead>
+                            <tr>
+                                <th class="ds-table-center">STT</th>
+                                <th class="ds-table-center">Mã</th>
+                                <th>Thành viên</th>
+                                <th class="ds-table-center">Vai trò</th>
+                                <th class="ds-table-center">Trạng thái</th>
+                                <th class="ds-table-center">Xác thực</th>
                                 <th>Số dư ví</th>
                                 <th>Ngày tạo</th>
-                                <th style="text-align: right;">Thao tác</th>
+                                <th class="ds-table-center">Thao tác</th>
                             </tr>
                             </thead>
                             <tbody id="usersBody">
-                            <tr><td colspan="7" class="empty-state">Đang tải dữ liệu người dùng...</td></tr>
+                            <tr><td colspan="9" class="ds-empty-state">Đang tải dữ liệu...</td></tr>
                             </tbody>
                         </table>
                     </div>
-                    <div class="pagination">
-                        <span id="paginationInfo">Trang 1/1</span>
-                        <div class="pagination-actions">
-                            <button id="prevPageBtn" class="admin-button" type="button">Trước</button>
-                            <button id="nextPageBtn" class="admin-button" type="button">Sau</button>
-                        </div>
-                    </div>
-                </section>
+                    <div id="accountsPagination"></div>
+                </div>
             </div>
 
+            <!-- 10. Permissions -->
             <div id="permissionsView" class="admin-view">
                 <div class="view-header">
                     <div>
-                        <h2>Quản lý quyền</h2>
-                        <p>Mục này để sẵn cho giai đoạn sau.</p>
+                        <h2 class="ds-heading-lg">Quản lý &amp; phân quyền nhân viên</h2>
+                        <p class="ds-caption">Gán quyền cho từng nhân viên (lưu demo).</p>
                     </div>
                 </div>
-                <section class="admin-panel placeholder">
-                    Chưa triển khai cấu hình quyền chi tiết. Hiện tại hệ thống đã có phân quyền cơ bản theo role Admin, Staff, Seller và Customer.
-                </section>
+                <div class="perm-grid">
+                    <div class="staff-list-box" id="staffPermList"></div>
+                    <div class="permissions-panel" id="permPanel">
+                        <p class="ds-caption">Chọn nhân viên ở cột trái.</p>
+                    </div>
+                </div>
             </div>
+
         </section>
     </div>
 </main>
 
-<div id="staffModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="staffModalTitle">
-    <div class="modal-card">
+<!-- 9. User detail modal -->
+<div id="userDetailModal" class="modal" role="dialog" aria-modal="true">
+    <div class="modal-card modal-card-lg">
         <div class="modal-head">
-            <h3 id="staffModalTitle">Tạo Staff</h3>
-            <button class="modal-close" type="button" onclick="closeStaffModal()" aria-label="Đóng">
-                <i class="fa fa-times"></i>
-            </button>
+            <h3 class="ds-heading-md">Chi tiết tài khoản</h3>
+            <button type="button" class="modal-close" onclick="AdminConsole.closeUserDetail()" aria-label="Đóng"><i class="fa fa-times"></i></button>
         </div>
-        <form id="staffForm" class="form-grid">
-            <input type="hidden" id="staffId">
-            <div class="form-row-full">
-                <label class="form-label" for="staffEmail">Email</label>
-                <input id="staffEmail" class="control" type="email" required>
+        <div style="display:grid;grid-template-columns:100px 1fr;gap:20px">
+            <div style="text-align:center">
+                <span id="detailAvatar" class="ds-avatar ds-avatar-lg ds-avatar-primary" style="width:80px;height:80px;font-size:28px;margin:0 auto 8px">?</span>
+                <span id="detailRoleBadge" class="ds-badge">—</span>
             </div>
-            <div class="form-row-full">
-                <label class="form-label" for="staffFullName">Họ tên</label>
-                <input id="staffFullName" class="control" type="text" minlength="3" required>
+            <div class="ds-stack-sm">
+                <h3 id="detailFullName" class="ds-heading-md" style="margin:0">—</h3>
+                <p id="detailEmail" class="ds-caption">—</p>
+                <p id="detailPhone" class="ds-caption">—</p>
+                <div class="ds-cluster" style="gap:16px">
+                    <div><span class="ds-caption">Trạng thái</span><div id="detailStatusText"></div></div>
+                    <div><span class="ds-caption">Xác thực</span><div id="detailVerifyText"></div></div>
+                    <div><span class="ds-caption">Ngày tạo</span><div id="detailCreatedAt">—</div></div>
+                    <div><span class="ds-caption">Số dư</span><div id="detailBalance" class="ds-money">—</div></div>
+                </div>
             </div>
-            <div>
-                <label class="form-label" for="staffPhone">Số điện thoại</label>
-                <input id="staffPhone" class="control" type="tel">
-            </div>
-            <div>
-                <label class="form-label" for="staffPassword">Mật khẩu</label>
-                <input id="staffPassword" class="control" type="password" minlength="6">
-            </div>
-        </form>
+        </div>
+        <div id="detailStaffActions" class="ds-cluster" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--ds-border);display:none">
+            <button type="button" class="ds-btn ds-btn-primary" onclick="AdminConsole.editStaffFromDetail()"><i class="fa fa-pencil"></i> Sửa thông tin nhân viên</button>
+        </div>
         <div class="modal-actions">
-            <button class="admin-button" type="button" onclick="closeStaffModal()">Hủy</button>
-            <button id="saveStaffBtn" class="admin-button primary" type="button" onclick="submitStaff()">
-                <i class="fa fa-save"></i> Lưu Staff
-            </button>
+            <button type="button" class="ds-btn ds-btn-outline" onclick="AdminConsole.closeUserDetail()">Đóng</button>
         </div>
     </div>
 </div>
 
-<div id="toast" class="toast"></div>
+<!-- Staff modal (quick create/edit) -->
+<div id="staffModal" class="modal" role="dialog" aria-modal="true">
+    <div class="modal-card">
+        <div class="modal-head">
+            <h3 id="staffModalTitle" class="ds-heading-md">Tạo nhân viên</h3>
+            <button type="button" class="modal-close" onclick="AdminConsole.closeStaffModal()" aria-label="Đóng"><i class="fa fa-times"></i></button>
+        </div>
+        <form id="staffForm" class="config-grid" onsubmit="event.preventDefault(); AdminConsole.submitStaff();">
+            <input type="hidden" id="staffId">
+            <div class="config-full-row ds-form-field">
+                <label class="ds-label" for="staffEmail">Email</label>
+                <input id="staffEmail" class="ds-input control-input" type="email" required>
+            </div>
+            <div class="config-full-row ds-form-field">
+                <label class="ds-label" for="staffFullName">Họ tên</label>
+                <input id="staffFullName" class="ds-input control-input" type="text" required>
+            </div>
+            <div class="ds-form-field">
+                <label class="ds-label" for="staffPhone">SĐT</label>
+                <input id="staffPhone" class="ds-input control-input" type="tel">
+            </div>
+            <div class="ds-form-field">
+                <label class="ds-label" for="staffPassword">Mật khẩu</label>
+                <input id="staffPassword" class="ds-input control-input" type="password">
+            </div>
+        </form>
+        <div class="modal-actions">
+            <button type="button" class="ds-btn ds-btn-outline" onclick="AdminConsole.closeStaffModal()">Hủy</button>
+            <button type="button" class="ds-btn ds-btn-primary" onclick="AdminConsole.submitStaff()"><i class="fa fa-save"></i> Lưu</button>
+        </div>
+    </div>
+</div>
+
+<!-- Log detail modal -->
+<div id="logDetailModal" class="modal" role="dialog" aria-modal="true">
+    <div class="modal-card">
+        <div class="modal-head">
+            <h3 class="ds-heading-md">Chi tiết nhật ký</h3>
+            <button type="button" class="modal-close" onclick="AdminConsole.closeLogDetail()" aria-label="Đóng"><i class="fa fa-times"></i></button>
+        </div>
+        <div class="ds-stack-sm">
+            <div><strong>Thời gian:</strong> <span id="logDetTime"></span></div>
+            <div><strong>Nhân viên:</strong> <span id="logDetOperator"></span></div>
+            <div><strong>Hành động:</strong> <span id="logDetAction" class="ds-badge"></span></div>
+            <div><strong>IP:</strong> <span id="logDetIp"></span></div>
+            <div><strong>Mô tả:</strong> <span id="logDetDesc"></span></div>
+            <pre id="logDetDiff" style="background:var(--ds-surface-muted);padding:12px;border-radius:var(--ds-radius-sm);font-size:12px;overflow:auto"></pre>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="ds-btn ds-btn-outline" onclick="AdminConsole.closeLogDetail()">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="admin-toast" role="status" aria-live="polite"></div>
 
 <footer th:replace="fragments/footer :: footer"></footer>
 <script th:src="@{/js/auth.js}"></script>
-<script>
-    const ENDPOINT = '/admin/user-management';
-    let users = [];
-    let currentPage = 0;
-    let totalPages = 1;
-    let totalElements = 0;
-
-    document.addEventListener('DOMContentLoaded', () => {
-        if (!guardAdminAccess()) return;
-        bindEvents();
-        switchAdminView((window.location.hash || '#dashboard').replace('#', ''));
-        loadDashboard();
-        loadUsers();
-    });
-
-    function bindEvents() {
-        window.addEventListener('hashchange', () => switchAdminView((window.location.hash || '#dashboard').replace('#', '')));
-        document.getElementById('searchInput').addEventListener('input', debounce(() => {
-            currentPage = 0;
-            loadUsers();
-        }, 300));
-        document.getElementById('roleFilter').addEventListener('change', () => {
-            currentPage = 0;
-            loadUsers();
-        });
-        document.getElementById('pageSize').addEventListener('change', () => {
-            currentPage = 0;
-            loadUsers();
-        });
-        document.getElementById('reloadBtn').addEventListener('click', () => loadUsers());
-        document.getElementById('prevPageBtn').addEventListener('click', () => {
-            if (currentPage > 0) {
-                currentPage -= 1;
-                loadUsers();
-            }
-        });
-        document.getElementById('nextPageBtn').addEventListener('click', () => {
-            if (currentPage + 1 < totalPages) {
-                currentPage += 1;
-                loadUsers();
-            }
-        });
-    }
-
-    function guardAdminAccess() {
-        const token = sessionStorage.getItem('accessToken');
-        const user = readCurrentUser();
-        if (!token || !user) {
-            window.location.href = '/login';
-            return false;
-        }
-        if (normalizeRole(user.role) !== 'Admin') {
-            showToast('Bạn không có quyền truy cập trang quản trị.', true);
-            setTimeout(() => window.location.href = '/', 900);
-            return false;
-        }
-        document.getElementById('adminIdentity').innerHTML = `
-            <strong>${escapeHtml(user.fullName || user.email || 'Admin')}</strong><br>
-            <span>${escapeHtml(user.email || '')}</span>
-        `;
-        return true;
-    }
-
-    window.switchAdminView = function(viewName) {
-        const viewMap = {
-            dashboard: 'dashboardView',
-            users: 'usersView',
-            permissions: 'permissionsView'
-        };
-        const normalizedName = viewMap[viewName] ? viewName : 'dashboard';
-        const viewId = viewMap[normalizedName];
-        if (window.location.hash !== `#${normalizedName}`) {
-            window.history.replaceState(null, '', `#${normalizedName}`);
-        }
-        document.querySelectorAll('.admin-view').forEach(view => view.classList.toggle('active', view.id === viewId));
-        highlightHeaderAdminNav(normalizedName);
-        if (viewId === 'dashboardView') loadDashboard();
-        if (viewId === 'usersView') loadUsers();
-    }
-
-    function highlightHeaderAdminNav(viewName) {
-        const activeMap = {
-            dashboard: 'adminDashboardNav',
-            users: 'adminUsersNav',
-            permissions: 'adminPermissionsNav'
-        };
-        Object.values(activeMap).forEach(id => {
-            const item = document.getElementById(id);
-            if (item) item.style.color = '';
-        });
-        const active = document.getElementById(activeMap[viewName] || activeMap.dashboard);
-        if (active) active.style.color = '#fbceb5';
-    }
-
-    async function loadDashboard() {
-        try {
-            const response = await authFetch(`${ENDPOINT}/summary`);
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Không thể tải dashboard.');
-            document.getElementById('statTotal').textContent = data.totalAccounts || 0;
-            document.getElementById('statActive').textContent = data.activeAccounts || 0;
-            document.getElementById('statLocked').textContent = data.lockedAccounts || 0;
-            document.getElementById('statStaff').textContent = data.staffAccounts || 0;
-            document.getElementById('statVerified').textContent = data.verifiedAccounts || 0;
-            document.getElementById('statSeller').textContent = data.sellerAccounts || 0;
-        } catch (error) {
-            showToast(error.message, true);
-        }
-    }
-
-    async function loadUsers() {
-        setLoading(true);
-        const params = new URLSearchParams({
-            page: String(currentPage),
-            size: document.getElementById('pageSize').value,
-            search: document.getElementById('searchInput').value.trim(),
-            role: document.getElementById('roleFilter').value
-        });
-        try {
-            const response = await authFetch(`${ENDPOINT}/users?${params.toString()}`);
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Không thể tải danh sách người dùng.');
-            users = data.content || [];
-            currentPage = data.page || 0;
-            totalPages = Math.max(data.totalPages || 1, 1);
-            totalElements = data.totalElements || 0;
-            renderUsers(users);
-            renderPagination();
-            loadDashboard();
-        } catch (error) {
-            document.getElementById('usersBody').innerHTML = `<tr><td colspan="7" class="empty-state">${escapeHtml(error.message)}</td></tr>`;
-            showToast(error.message, true);
-        }
-    }
-
-    function renderUsers(list) {
-        const tbody = document.getElementById('usersBody');
-        if (!list.length) {
-            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Không tìm thấy người dùng phù hợp.</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = list.map(user => {
-            const initial = String(user.fullName || user.email || '?').charAt(0).toUpperCase();
-            const locked = Boolean(user.isLocked);
-            const online = Boolean(user.isOnline);
-            const statusClass = locked ? 'locked' : (online ? 'ok' : 'pending');
-            const statusIcon = locked ? 'fa-lock' : (online ? 'fa-check' : 'fa-clock-o');
-            const statusText = locked ? 'Bị khóa' : (online ? 'Đang hoạt động' : 'Chưa hoạt động');
-            const role = user.role || 'Customer';
-            const roleClass = `role-${role.toLowerCase().replace('_', '-')}`;
-            const balance = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(user.balanceVnd || 0);
-            const createdAt = user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : 'N/A';
-            const self = user.id === readCurrentUser()?.id;
-            const isStaff = role === 'Staff';
-
-            return `
-                <tr>
-                    <td>
-                        <div class="user-cell">
-                            <div class="avatar">${escapeHtml(initial)}</div>
-                            <div>
-                                <div class="user-name">${escapeHtml(user.fullName || 'Chưa cập nhật')}</div>
-                                <div class="muted">${escapeHtml(user.email || '')}</div>
-                                <div class="muted">${escapeHtml(user.phone || 'Chưa có số điện thoại')}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td><span class="badge ${roleClass}">${escapeHtml(role)}</span></td>
-                    <td><span class="badge ${statusClass}"><i class="fa ${statusIcon}"></i>${statusText}</span></td>
-                    <td><span class="badge ${user.isVerified ? 'ok' : 'pending'}">${user.isVerified ? 'Đã xác thực' : 'Chưa xác thực'}</span></td>
-                    <td><strong>${balance}</strong></td>
-                    <td>${createdAt}</td>
-                    <td>
-                        <div class="row-actions">
-                            ${isStaff ? `
-                                <button class="icon-button" title="Sửa Staff" onclick="openStaffModal(${user.id})"><i class="fa fa-pencil"></i></button>
-                                <button class="icon-button danger" title="Xóa Staff" ${self ? 'disabled' : ''} onclick="deleteStaff(${user.id})"><i class="fa fa-trash"></i></button>
-                            ` : ''}
-                            <button class="icon-button ${locked ? 'success' : 'danger'}" title="${locked ? 'Mở khóa' : 'Khóa tài khoản'}" ${self ? 'disabled' : ''} onclick="toggleLock(${user.id})">
-                                <i class="fa ${locked ? 'fa-unlock' : 'fa-lock'}"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    }
-
-    function renderPagination() {
-        const from = totalElements === 0 ? 0 : currentPage * Number(document.getElementById('pageSize').value) + 1;
-        const to = Math.min((currentPage + 1) * Number(document.getElementById('pageSize').value), totalElements);
-        document.getElementById('paginationInfo').textContent = `Hiển thị ${from}-${to} / ${totalElements} tài khoản | Trang ${currentPage + 1}/${totalPages}`;
-        document.getElementById('prevPageBtn').disabled = currentPage <= 0;
-        document.getElementById('nextPageBtn').disabled = currentPage + 1 >= totalPages;
-    }
-
-    async function toggleLock(userId) {
-        const user = users.find(item => item.id === userId);
-        if (!user) return;
-        const action = user.isLocked ? 'mở khóa' : 'khóa';
-        if (!confirm(`Xác nhận ${action} tài khoản ${user.email}?`)) return;
-
-        try {
-            const response = await authFetch(`${ENDPOINT}/users/${userId}/toggle-lock`, { method: 'POST' });
-            const data = await response.json();
-            if (!response.ok || !data.success) throw new Error(data.message || 'Thao tác thất bại.');
-            showToast(data.message || 'Cập nhật trạng thái thành công.');
-            loadUsers();
-        } catch (error) {
-            showToast(error.message, true);
-        }
-    }
-
-    function openStaffModal(userId = null) {
-        const isEdit = userId !== null;
-        const staff = isEdit ? users.find(item => item.id === userId) : null;
-        document.getElementById('staffModalTitle').textContent = isEdit ? 'Cập nhật Staff' : 'Tạo Staff';
-        document.getElementById('staffId').value = staff?.id || '';
-        document.getElementById('staffEmail').value = staff?.email || '';
-        document.getElementById('staffFullName').value = staff?.fullName || '';
-        document.getElementById('staffPhone').value = staff?.phone || '';
-        document.getElementById('staffPassword').value = '';
-        document.getElementById('staffEmail').disabled = isEdit;
-        document.getElementById('staffPhone').disabled = isEdit;
-        document.getElementById('staffPassword').placeholder = isEdit ? 'Để trống nếu không đổi' : 'Tối thiểu 6 ký tự';
-        document.getElementById('staffPassword').required = !isEdit;
-        document.getElementById('staffModal').classList.add('active');
-    }
-
-    function closeStaffModal() {
-        document.getElementById('staffModal').classList.remove('active');
-        document.getElementById('staffForm').reset();
-        document.getElementById('staffId').value = '';
-        document.getElementById('staffEmail').disabled = false;
-        document.getElementById('staffPhone').disabled = false;
-    }
-
-    async function submitStaff() {
-        const id = document.getElementById('staffId').value;
-        const payload = {
-            email: document.getElementById('staffEmail').value.trim(),
-            fullName: document.getElementById('staffFullName').value.trim(),
-            phone: document.getElementById('staffPhone').value.trim(),
-            password: document.getElementById('staffPassword').value
-        };
-        if (id) {
-            delete payload.email;
-            delete payload.phone;
-        }
-        if ((!id && !document.getElementById('staffEmail').value.trim()) || !payload.fullName || (!id && !payload.password)) {
-            showToast('Vui lòng nhập đủ email, họ tên và mật khẩu khi tạo Staff.', true);
-            return;
-        }
-
-        try {
-            const response = await authFetch(id ? `${ENDPOINT}/staff/${id}` : `${ENDPOINT}/staff`, {
-                method: id ? 'PUT' : 'POST',
-                body: JSON.stringify(payload)
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Không thể lưu Staff.');
-            closeStaffModal();
-            showToast(id ? 'Đã cập nhật Staff.' : 'Đã tạo Staff.');
-            loadUsers();
-        } catch (error) {
-            showToast(error.message, true);
-        }
-    }
-
-    async function deleteStaff(userId) {
-        const staff = users.find(item => item.id === userId);
-        if (!staff) return;
-        if (!confirm(`Xóa tài khoản Staff ${staff.email}?`)) return;
-
-        try {
-            const response = await authFetch(`${ENDPOINT}/staff/${userId}`, { method: 'DELETE' });
-            const data = await response.json();
-            if (!response.ok || !data.success) throw new Error(data.message || 'Không thể xóa Staff.');
-            showToast(data.message || 'Đã xóa Staff.');
-            loadUsers();
-        } catch (error) {
-            showToast(error.message, true);
-        }
-    }
-
-    function setLoading(isLoading) {
-        if (isLoading) {
-            document.getElementById('usersBody').innerHTML = '<tr><td colspan="7" class="empty-state">Đang tải dữ liệu người dùng...</td></tr>';
-        }
-    }
-
-    function showToast(message, isError = false) {
-        const toast = document.getElementById('toast');
-        toast.textContent = message;
-        toast.className = `toast${isError ? ' error' : ''}`;
-        toast.style.display = 'block';
-        clearTimeout(window.__adminToastTimer);
-        window.__adminToastTimer = setTimeout(() => toast.style.display = 'none', 2800);
-    }
-
-    function readCurrentUser() {
-        try {
-            return JSON.parse(sessionStorage.getItem('userInfo') || sessionStorage.getItem('user') || 'null');
-        } catch (error) {
-            return null;
-        }
-    }
-
-    function normalizeRole(roleValue) {
-        if (!roleValue) return 'Customer';
-        try {
-            const parsed = JSON.parse(roleValue);
-            return parsed.role || 'Customer';
-        } catch (error) {
-            const role = String(roleValue).replaceAll('"', '').trim();
-            if (role.toLowerCase().includes('admin')) return 'Admin';
-            if (role.toLowerCase().includes('staff')) return 'Staff';
-            if (role.toLowerCase().includes('seller')) return 'Seller';
-            return 'Customer';
-        }
-    }
-
-    function escapeHtml(value) {
-        return String(value ?? '')
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#039;');
-    }
-
-    function debounce(fn, wait) {
-        let timeout;
-        return (...args) => {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => fn.apply(null, args), wait);
-        };
-    }
-</script>
+<script th:src="@{/js/admin-console.js}"></script>
 </body>
 </html>

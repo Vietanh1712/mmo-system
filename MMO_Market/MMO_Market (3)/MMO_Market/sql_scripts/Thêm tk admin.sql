@@ -1,4 +1,4 @@
-﻿-- 1. Xóa tài khoản cũ đã bị lỗi mật khẩu
+-- 1. Xóa tài khoản cũ đã bị lỗi mật khẩu
 DELETE FROM Users WHERE email = 'admin@mmo.com';
 GO
 
@@ -7,6 +7,7 @@ INSERT INTO Users (
     email,
     password,
     full_name,
+    gender,
     role,
     phone,
     shop_status,
@@ -22,6 +23,7 @@ VALUES (
     -- Chuỗi mã băm BCrypt thực tế được sinh từ thư viện của dự án
     '$2a$10$NcmOXXGkICk.davDnIvgbuUcscMw31mHDhb5oei/4hHOaWZRzE.g6', 
     N'Administrator',
+    N'Nam',
     '{"role": "Admin"}', 
     '0123456789',
     'Approved',
