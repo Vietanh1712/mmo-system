@@ -1,0 +1,38 @@
+/* MMO Market reusable loading, empty and validation states. */
+
+.ds-empty-state {
+    border: 1px dashed var(--ds-border-strong);
+    border-radius: var(--ds-radius-lg);
+    background: #ffffff;
+    color: var(--ds-text-muted);
+    padding: 32px 20px;
+    text-align: center;
+}
+
+.ds-loading {
+    opacity: 0.65;
+    pointer-events: none;
+}
+
+.ds-error-text {
+    color: var(--ds-danger);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.ds-success-text {
+    color: var(--ds-success);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.ds-skeleton {
+    overflow: hidden;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #f1f5f9, #e5e7eb, #f1f5f9);
+}
+
+.ds-skeleton-line {
+    height: 12px;
+    margin-top: 10px;
+}

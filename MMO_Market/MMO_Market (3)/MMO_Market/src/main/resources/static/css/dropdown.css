@@ -1,0 +1,36 @@
+/* MMO Market reusable simple menu. */
+
+.ds-menu {
+    width: 220px;
+    overflow: hidden;
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius-lg);
+    background: #ffffff;
+    box-shadow: var(--ds-shadow-md);
+}
+
+.ds-menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 14px;
+    color: var(--ds-text);
+    font-size: 13px;
+    text-decoration: none;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.ds-menu-item:hover {
+    background: var(--ds-surface-muted);
+    color: var(--ds-primary);
+}
+
+.ds-menu-item-danger {
+    color: var(--ds-danger);
+}
+
+.ds-menu-divider {
+    height: 1px;
+    background: var(--ds-border);
+}

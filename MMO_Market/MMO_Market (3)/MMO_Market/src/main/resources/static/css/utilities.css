@@ -1,0 +1,33 @@
+/* Small MMO Market utilities. Keep this file intentionally limited. */
+
+.ds-hidden {
+    display: none !important;
+}
+
+.ds-text-left {
+    text-align: left;
+}
+
+.ds-text-center {
+    text-align: center;
+}
+
+.ds-text-right {
+    text-align: right;
+}
+
+.ds-w-full {
+    width: 100%;
+}
+
+.ds-mt-sm {
+    margin-top: 8px;
+}
+
+.ds-mt-md {
+    margin-top: 16px;
+}
+
+.ds-mt-lg {
+    margin-top: 24px;
+}

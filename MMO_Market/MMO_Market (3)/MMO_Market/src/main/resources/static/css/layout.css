@@ -1,0 +1,80 @@
+/* MMO Market reusable layout primitives. */
+
+.ds-container {
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.ds-container-fluid {
+    width: 100%;
+    padding: 24px;
+}
+
+.ds-page-shell {
+    display: grid;
+    gap: 20px;
+}
+
+.ds-two-column {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 20px;
+}
+
+.ds-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.ds-stack-xs {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ds-stack-sm {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ds-stack-md {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.ds-stack-lg {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.ds-cluster {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.ds-cluster-between {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+@media (max-width: 768px) {
+    .ds-container,
+    .ds-container-fluid {
+        padding: 16px;
+    }
+
+    .ds-two-column {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,80 @@
+/* Source: Pages/AdminTeachers.cshtml, Pages/AdminStudents.cshtml, Pages/AdminClasses.cshtml */
+.ds-table-wrap {
+    overflow-x: auto;
+}
+
+.ds-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+    color: var(--ds-text);
+    text-align: left;
+}
+
+.ds-table thead tr {
+    border-bottom: 1px solid #cbd5e1;
+    background: var(--ds-table-head);
+    color: #1f2937;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.ds-table th,
+.ds-table td {
+    border-right: 1px solid var(--ds-border);
+    padding: 12px 14px;
+    vertical-align: middle;
+}
+
+.ds-table th:last-child,
+.ds-table td:last-child {
+    border-right: 0;
+}
+
+.ds-table tbody {
+    font-size: 13px;
+}
+
+.ds-table tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: background-color 0.2s;
+}
+
+.ds-table tbody tr:hover {
+    background: #f1f5f9;
+}
+
+.ds-table-center {
+    text-align: center;
+}
+
+.ds-entity {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ds-entity-title {
+    color: var(--ds-text);
+    font-weight: 700;
+}
+
+.ds-entity-subtitle {
+    margin-top: 2px;
+    color: var(--ds-text-subtle);
+    font-size: 12px;
+}
+
+.ds-table .ds-badge {
+    min-width: 92px;
+    padding: 6px 12px;
+}
+
+.ds-table-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+

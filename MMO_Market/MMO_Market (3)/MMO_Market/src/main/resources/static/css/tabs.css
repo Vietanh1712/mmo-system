@@ -1,0 +1,30 @@
+/* MMO Market reusable tab navigation. */
+
+.ds-tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid var(--ds-border);
+}
+
+.ds-tab {
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--ds-text-muted);
+    padding: 10px 4px;
+    font-family: var(--ds-font-family);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.ds-tab:hover {
+    color: var(--ds-primary);
+}
+
+.ds-tab-active,
+.ds-tab[aria-selected="true"] {
+    border-bottom-color: var(--ds-primary);
+    color: var(--ds-primary);
+}
