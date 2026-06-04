@@ -60,8 +60,7 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/reset-password"),
                                 new AntPathRequestMatcher("/verify-otp"),
                                 new AntPathRequestMatcher("/profile"),
-                                new AntPathRequestMatcher("/admin/users"),
-                                new AntPathRequestMatcher("/seller/**")
+                                new AntPathRequestMatcher("/admin/users")
                         ).permitAll()
 
                         // Public static resources (CSS, JS, Ảnh)
