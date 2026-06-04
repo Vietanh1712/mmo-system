@@ -56,9 +56,9 @@ body.auth-layout::after {
 
 .login-wrap {
     width: 100%;
-    max-width: 420px;
+    max-width: 440px;
 
-    padding: 5px;
+    padding: 36px 32px 30px;
 
     background: #fff;
 
@@ -74,10 +74,56 @@ body.auth-layout::after {
 .login-wrap h3 {
     text-align: center;
     color: #111;
-    font-size: 34px;
+    font-size: 30px;
     font-weight: 700;
-    margin-bottom: 25px;
+    margin-bottom: 22px;
     letter-spacing: .5px;
+}
+
+.login-wrap .form-group {
+    width: 80%;
+    margin: 0 auto 15px;
+}
+
+.login-wrap .form-control {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+.login-wrap .form-control:hover {
+    background: #ffffff;
+    border-color: var(--ds-primary, #2563eb);
+}
+
+.login-wrap .form-control:focus {
+    background: #ffffff;
+    border-color: var(--ds-primary, #2563eb);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.login-wrap .btn {
+    width: 80%;
+}
+
+.login-wrap .btn-primary {
+    background: var(--ds-primary, #2563eb) !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+.login-wrap .btn-primary:hover {
+    background: var(--ds-primary-hover, #1d4ed8) !important;
+    color: #ffffff !important;
+}
+
+.auth-subtitle {
+    width: 80%;
+    margin: -8px auto 20px;
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: center;
 }
 
 /* Các link điều hướng nhỏ */
@@ -98,7 +144,7 @@ body.auth-layout::after {
     display: block;
     margin-top: -10px;
     margin-bottom: 20px;
-    margin-right: 25px;
+    margin-right: 10%;
     font-size: 14px;
     color: #555;
     text-decoration: none;
@@ -106,7 +152,7 @@ body.auth-layout::after {
 }
 
 .forgot-link:hover {
-    color: var(--primary);
+    color: var(--ds-primary, #2563eb);
 }
 
  /*Nút Google đặc thù */
@@ -128,6 +174,14 @@ body.auth-layout::after {
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
+.btn-google:disabled,
+.btn-google.is-disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
 .btn-google .google-icon { /* Styling cho SVG Google icon */
     width: 20px; /* Kích thước icon */
     height: 20px;
@@ -140,10 +194,18 @@ body.auth-layout::after {
     color: #ff4d4f; /* Đỏ sáng nổi bật */
     font-size: 13px;
     margin-top: 5px;
-    margin-left: 25px;
+    margin-left: 0;
     display: block;
     text-align: left; /* Mặc định căn trái cho form login/register */
     font-weight: 500;
+}
+
+.auth-field-hint {
+    display: block;
+    margin-top: 6px;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.4;
 }
 
 .input-error {
@@ -160,14 +222,16 @@ body.auth-layout::after {
    ======================================================= */
 .verify-text {
     text-align: center;
-    color: rgba(255, 255, 255, 0.8);
-    margin-bottom: 25px;
+    width: 80%;
+    color: #64748b;
+    margin: -8px auto 22px;
     font-size: 15px;
+    line-height: 1.5;
 }
 
 .display-email {
     font-weight: 700;
-    color: var(--primary);
+    color: #0f172a;
 }
 
 .otp-input {
@@ -175,6 +239,7 @@ body.auth-layout::after {
     letter-spacing: 10px;
     font-size: 24px;
     font-weight: bold;
+    padding-left: 30px;
 }
 
 /* Ghi đè căn giữa lỗi riêng cho trang OTP */
@@ -184,21 +249,32 @@ body.auth-layout::after {
 
 .resend-text {
     text-align: center;
-    margin-top: 15px;
+    margin-top: 18px;
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.6);
+    color: #64748b;
+    line-height: 1.7;
 }
 
 .resend-text a {
-    color: var(--primary);
+    color: var(--ds-primary, #2563eb);
     text-decoration: none;
     cursor: pointer;
     transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.resend-text a:hover {
+    color: var(--ds-primary-hover, #1d4ed8);
+}
+
+.change-email-link {
+    display: inline-block;
+    margin-top: 5px;
 }
 
 /* Hiệu ứng mờ khi nút bị khóa (Tính năng đếm ngược) */
 .resend-text a.disabled {
-    color: rgba(255, 255, 255, 0.4) !important;
+    color: #94a3b8 !important;
     pointer-events: none; /* Khóa click chuột */
     cursor: not-allowed;
     text-decoration: none;
@@ -246,9 +322,40 @@ body.auth-layout::after {
     color: var(--primary, #fff); /* Sáng lên khi di chuột vào */
 }
 
+.auth-password-wrapper {
+    width: 100%;
+    margin: 0;
+}
+
+.auth-password-wrapper .form-control {
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+    padding-right: 48px !important;
+}
+
+.auth-toggle-password {
+    border: 0;
+    background: transparent;
+    color: #64748b;
+    padding: 0;
+    right: 16px;
+}
+
+.auth-toggle-password:hover {
+    color: var(--ds-primary, #2563eb);
+}
+
+.login-wrap .message {
+    width: 80%;
+    margin: 0 auto 18px;
+    box-sizing: border-box;
+    border-radius: 14px;
+}
+
 .auth-logo {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 
     color: #111;
 
@@ -271,7 +378,7 @@ body.auth-layout::after {
 }
 
 .back-home a:hover {
-    color: #fbceb5;
+    color: var(--ds-primary, #2563eb);
 }
 
 .toggle-link {
@@ -284,5 +391,53 @@ body.auth-layout::after {
 }
 
 .toggle-link a:hover {
-    color: #fbceb5;
+    color: var(--ds-primary, #2563eb);
+}
+
+body.auth-layout .message.error,
+body.auth-layout .message.success,
+body.auth-layout .message.info {
+    color: #111827;
+}
+
+body.auth-layout .message.error {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #dc2626;
+}
+
+body.auth-layout .message.success {
+    background: #dcfce7;
+    border-color: #bbf7d0;
+    color: #15803d;
+}
+
+body.auth-layout .message.info {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+}
+
+@media (max-width: 480px) {
+    body.auth-layout {
+        overflow: auto;
+        padding: 20px 14px;
+    }
+
+    .login-wrap {
+        padding: 28px 18px;
+    }
+
+    .form-control,
+    .login-wrap .form-group,
+    .auth-subtitle,
+    .auth-password-wrapper,
+    .login-wrap .message,
+    .btn {
+        width: 100%;
+    }
+
+    .forgot-link {
+        margin-right: 0;
+    }
 }

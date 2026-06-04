@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông báo hệ thống - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/notifications.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="profile-page ds-page">
+        <div class="ds-container">
+            <div class="profile-layout ds-two-column">
+                <aside th:replace="~{fragments/account-sidebar :: accountSidebar('notifications')}"></aside>
+
+                <section class="notifications-page ds-page-shell">
+                    <section class="notifications-hero ds-card">
+                        <div>
+                            <p class="ds-caption">Tài khoản của tôi</p>
+                            <h1 class="ds-heading-lg">Thông báo hệ thống</h1>
+                            <p class="ds-body notifications-hero__subtitle">
+                                Theo dõi các cập nhật quan trọng về tài khoản, ví, KYC, đơn hàng và bảo mật.
+                            </p>
+                        </div>
+                        <button class="ds-btn ds-btn-primary" id="markAllReadButton" type="button">
+                            <i class="fa fa-check" aria-hidden="true"></i>
+                            Đánh dấu tất cả đã đọc
+                        </button>
+                    </section>
+
+                    <div class="ds-alert ds-alert-info" id="notificationsMessage">
+                        Đang tải thông báo...
+                    </div>
+
+                    <section class="notifications-stat-grid" aria-label="Tổng quan thông báo">
+                        <article class="notifications-stat-card ds-card">
+                            <span class="notifications-stat-icon notifications-stat-icon--primary"><i class="fa fa-bell-o" aria-hidden="true"></i></span>
+                            <div>
+                                <p>Tổng thông báo</p>
+                                <strong id="notificationsTotalCount">0</strong>
+                            </div>
+                        </article>
+                        <article class="notifications-stat-card ds-card">
+                            <span class="notifications-stat-icon notifications-stat-icon--warning"><i class="fa fa-circle" aria-hidden="true"></i></span>
+                            <div>
+                                <p>Chưa đọc</p>
+                                <strong id="notificationsUnreadCount">0</strong>
+                            </div>
+                        </article>
+                        <article class="notifications-stat-card ds-card">
+                            <span class="notifications-stat-icon notifications-stat-icon--success"><i class="fa fa-credit-card" aria-hidden="true"></i></span>
+                            <div>
+                                <p>Ví & giao dịch</p>
+                                <strong id="notificationsWalletCount">0</strong>
+                            </div>
+                        </article>
+                        <article class="notifications-stat-card ds-card">
+                            <span class="notifications-stat-icon notifications-stat-icon--info"><i class="fa fa-shopping-bag" aria-hidden="true"></i></span>
+                            <div>
+                                <p>Đơn hàng</p>
+                                <strong id="notificationsOrderCount">0</strong>
+                            </div>
+                        </article>
+                    </section>
+
+                    <section class="notifications-list-card ds-card">
+                        <form class="ds-filter-panel notifications-filter" id="notificationsFilterForm">
+                            <div>
+                                <h2 class="ds-card-title">Bộ lọc thông báo</h2>
+                                <p class="ds-caption">Tìm theo tiêu đề, nội dung và lọc theo loại, trạng thái đọc.</p>
+                            </div>
+
+                            <div class="notifications-filter-grid">
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="notificationsSearchInput">Tìm kiếm</label>
+                                    <input class="ds-input" id="notificationsSearchInput" type="search" placeholder="Tiêu đề hoặc nội dung">
+                                </div>
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="notificationsTypeFilter">Loại thông báo</label>
+                                    <select class="ds-select" id="notificationsTypeFilter">
+                                        <option value="">Tất cả loại</option>
+                                        <option value="SYSTEM">Hệ thống</option>
+                                        <option value="ORDER">Đơn hàng</option>
+                                        <option value="WALLET">Ví</option>
+                                        <option value="KYC">KYC</option>
+                                        <option value="SECURITY">Bảo mật</option>
+                                        <option value="COMPLAINT">Khiếu nại</option>
+                                    </select>
+                                </div>
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="notificationsStatusFilter">Trạng thái</label>
+                                    <select class="ds-select" id="notificationsStatusFilter">
+                                        <option value="">Tất cả trạng thái</option>
+                                        <option value="UNREAD">Chưa đọc</option>
+                                        <option value="READ">Đã đọc</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="notifications-filter-bottom">
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="notificationsFromDateDisplay">Từ ngày</label>
+                                    <div class="ds-datepicker" data-ds-datepicker>
+                                        <input id="notificationsFromDate" type="hidden" data-ds-date-value>
+                                        <div class="ds-datepicker-field">
+                                            <input class="ds-datepicker-input" id="notificationsFromDateDisplay" type="text" placeholder="dd/mm/yyyy" data-ds-date-display>
+                                            <button class="ds-datepicker-button" type="button" data-ds-date-toggle aria-label="Chọn từ ngày">
+                                                <i class="fa fa-calendar" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="notificationsToDateDisplay">Đến ngày</label>
+                                    <div class="ds-datepicker" data-ds-datepicker>
+                                        <input id="notificationsToDate" type="hidden" data-ds-date-value>
+                                        <div class="ds-datepicker-field">
+                                            <input class="ds-datepicker-input" id="notificationsToDateDisplay" type="text" placeholder="dd/mm/yyyy" data-ds-date-display>
+                                            <button class="ds-datepicker-button" type="button" data-ds-date-toggle aria-label="Chọn đến ngày">
+                                                <i class="fa fa-calendar" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ds-filter-actions notifications-filter-actions">
+                                    <button class="ds-btn ds-btn-secondary" id="notificationsResetButton" type="button">
+                                        <i class="fa fa-refresh" aria-hidden="true"></i>
+                                        Làm mới bộ lọc
+                                    </button>
+                                    <button class="ds-btn ds-btn-primary" id="notificationsSearchButton" type="submit">
+                                        <i class="fa fa-search" aria-hidden="true"></i>
+                                        Tìm kiếm
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="notifications-list-content">
+                            <div class="ds-cluster-between">
+                                <div>
+                                    <h2 class="ds-heading-md">Danh sách thông báo</h2>
+                                    <p class="ds-caption" id="notificationsResultSummary">Hiển thị 0 thông báo.</p>
+                                </div>
+                            </div>
+
+                            <div class="ds-empty-state notifications-empty-state" id="notificationsEmptyState">
+                                <p>Chưa có thông báo phù hợp.</p>
+                            </div>
+
+                            <div class="notifications-list" id="notificationsList"></div>
+
+                            <div class="ds-pagination notifications-pagination" id="notificationsPagination" hidden>
+                                <div class="ds-pagination-pages" id="notificationsPaginationPages"></div>
+                                <div class="ds-pagination-meta">
+                                    <span id="notificationsPaginationInfo">Tổng số: 0 thông báo</span>
+                                    <select class="ds-page-size" id="notificationsPageSize" aria-label="Số thông báo mỗi trang">
+                                        <option value="5" selected>5</option>
+                                        <option value="10">10</option>
+                                        <option value="20">20</option>
+                                        <option value="50">50</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="fragments/footer :: footer"></footer>
+
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/account-sidebar.js}"></script>
+    <script th:src="@{/js/datepicker.js}"></script>
+    <script th:src="@{/js/account-notifications.js}"></script>
+</body>
+</html>

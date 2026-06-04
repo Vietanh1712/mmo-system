@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảo mật & đổi mật khẩu - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/security.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="profile-page ds-page">
+        <div class="ds-container">
+            <div class="profile-layout ds-two-column">
+                <aside th:replace="~{fragments/account-sidebar :: accountSidebar('security')}"></aside>
+
+                <section class="security-page ds-page-shell">
+                    <div class="security-hero ds-card">
+                        <div>
+                            <p class="ds-caption">Tài khoản của tôi</p>
+                            <h1 class="ds-heading-lg">Bảo mật & đổi mật khẩu</h1>
+                            <p class="ds-body security-hero__subtitle">
+                                Quản lý mật khẩu, xác thực 2 lớp và phiên đăng nhập để bảo vệ tài khoản MMO Market.
+                            </p>
+                        </div>
+                        <span class="ds-badge ds-badge-warning" id="securityStatusBadge">Nên bật 2FA</span>
+                    </div>
+
+                    <div class="ds-alert ds-alert-info" id="securityMessage">
+                        Đang tải trạng thái bảo mật...
+                    </div>
+
+                    <section class="security-overview ds-card">
+                        <div class="security-section-header">
+                            <h2 class="ds-heading-md">Tổng quan bảo mật</h2>
+                            <p class="ds-caption">Các trạng thái này đang được mô phỏng ở frontend để hoàn thiện luồng giao diện.</p>
+                        </div>
+
+                        <div class="security-status-grid">
+                            <div class="security-status-item">
+                                <span class="security-status-icon"><i class="fa fa-lock" aria-hidden="true"></i></span>
+                                <div>
+                                    <strong>Mật khẩu</strong>
+                                    <p id="passwordStatusText">Đã thiết lập</p>
+                                </div>
+                                <span class="ds-badge ds-badge-success">OK</span>
+                            </div>
+                            <div class="security-status-item">
+                                <span class="security-status-icon"><i class="fa fa-mobile" aria-hidden="true"></i></span>
+                                <div>
+                                    <strong>Bảo mật 2 lớp</strong>
+                                    <p id="twoFactorStatusText">Chưa kích hoạt</p>
+                                </div>
+                                <span class="ds-badge ds-badge-warning" id="twoFactorStatusBadge">Khuyến nghị</span>
+                            </div>
+                            <div class="security-status-item">
+                                <span class="security-status-icon"><i class="fa fa-envelope-o" aria-hidden="true"></i></span>
+                                <div>
+                                    <strong>Email</strong>
+                                    <p>Đã xác thực qua OTP</p>
+                                </div>
+                                <span class="ds-badge ds-badge-success">Đã xác thực</span>
+                            </div>
+                            <div class="security-status-item">
+                                <span class="security-status-icon"><i class="fa fa-id-card-o" aria-hidden="true"></i></span>
+                                <div>
+                                    <strong>KYC</strong>
+                                    <p id="securityKycStatusText">Chưa định danh</p>
+                                </div>
+                                <a class="ds-btn ds-btn-outline security-small-action" th:href="@{/account/kyc}">Xem KYC</a>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="security-card-grid">
+                        <form class="security-card ds-card" id="changePasswordForm" novalidate>
+                            <div class="security-section-header">
+                                <h2 class="ds-heading-md">Đổi mật khẩu</h2>
+                                <p class="ds-caption">Mật khẩu mạnh nên có chữ hoa, ký tự đặc biệt và không trùng mật khẩu cũ.</p>
+                            </div>
+
+                            <div class="ds-stack-md">
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="currentPassword">Mật khẩu hiện tại</label>
+                                    <div class="security-password-field">
+                                        <input class="ds-input" id="currentPassword" type="password" autocomplete="current-password">
+                                        <button class="security-password-toggle" type="button" data-toggle-password="currentPassword" aria-label="Hiện mật khẩu hiện tại">
+                                            <i class="fa fa-eye" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
+                                    <small class="ds-error-text" id="currentPasswordError"></small>
+                                </div>
+
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="newPassword">Mật khẩu mới</label>
+                                    <div class="security-password-field">
+                                        <input class="ds-input" id="newPassword" type="password" autocomplete="new-password">
+                                        <button class="security-password-toggle" type="button" data-toggle-password="newPassword" aria-label="Hiện mật khẩu mới">
+                                            <i class="fa fa-eye" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
+                                    <small class="ds-caption">Ít nhất 6 ký tự, gồm 1 chữ hoa và 1 ký tự đặc biệt.</small>
+                                    <small class="ds-error-text" id="newPasswordError"></small>
+                                </div>
+
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="confirmPassword">Xác nhận mật khẩu mới</label>
+                                    <div class="security-password-field">
+                                        <input class="ds-input" id="confirmPassword" type="password" autocomplete="new-password">
+                                        <button class="security-password-toggle" type="button" data-toggle-password="confirmPassword" aria-label="Hiện xác nhận mật khẩu">
+                                            <i class="fa fa-eye" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
+                                    <small class="ds-error-text" id="confirmPasswordError"></small>
+                                </div>
+                            </div>
+
+                            <div class="profile-message ds-alert ds-alert-danger" id="passwordFormMessage" hidden></div>
+
+                            <div class="profile-actions">
+                                <button class="ds-btn ds-btn-primary" id="changePasswordButton" type="submit">Đổi mật khẩu</button>
+                            </div>
+                        </form>
+
+                        <section class="security-card ds-card">
+                            <div class="security-section-header">
+                                <h2 class="ds-heading-md">Bảo mật 2 lớp (2FA)</h2>
+                                <p class="ds-caption">Bật 2FA để yêu cầu mã OTP khi thực hiện thao tác nhạy cảm.</p>
+                            </div>
+
+                            <div class="security-2fa-panel">
+                                <button class="ds-toggle ds-toggle-inactive" id="twoFactorToggle" type="button" aria-pressed="false">
+                                    <span class="ds-toggle-track"><span class="ds-toggle-knob"></span></span>
+                                    <span id="twoFactorToggleText">Chưa kích hoạt</span>
+                                </button>
+
+                                <p class="ds-body" id="twoFactorDescription">
+                                    Tài khoản của bạn nên bật 2FA để giảm rủi ro khi bị lộ mật khẩu.
+                                </p>
+                            </div>
+
+                            <div class="security-session-card">
+                                <div>
+                                    <h3 class="ds-heading-md">Phiên đăng nhập hiện tại</h3>
+                                    <p class="ds-caption" id="currentSessionText">Trình duyệt hiện tại · Windows</p>
+                                </div>
+                                <span class="ds-badge ds-badge-info">Đang hoạt động</span>
+                            </div>
+                        </section>
+                    </section>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <div class="ds-modal-backdrop" id="twoFactorModal" hidden>
+        <div class="ds-modal" role="dialog" aria-modal="true" aria-labelledby="twoFactorModalTitle">
+            <div class="ds-modal-header">
+                <h2 class="ds-heading-md" id="twoFactorModalTitle">Kích hoạt 2FA</h2>
+            </div>
+            <div class="ds-modal-body">
+                <p class="ds-body" id="twoFactorModalDescription">
+                    Nhập mã OTP 6 số để xác nhận kích hoạt bảo mật 2 lớp.
+                </p>
+                <div class="ds-form-field ds-mt-md" id="twoFactorOtpField">
+                    <label class="ds-label" for="twoFactorOtp">Mã OTP</label>
+                    <input class="ds-input security-otp-input" id="twoFactorOtp" maxlength="6" inputmode="numeric" placeholder="••••••">
+                    <small class="ds-error-text" id="twoFactorOtpError"></small>
+                </div>
+            </div>
+            <div class="ds-modal-footer">
+                <button class="ds-btn ds-btn-outline" id="twoFactorCancelButton" type="button">Hủy</button>
+                <button class="ds-btn ds-btn-primary" id="twoFactorConfirmButton" type="button">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="fragments/footer :: footer"></footer>
+
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/account-sidebar.js}"></script>
+    <script th:src="@{/js/account-security.js}"></script>
+</body>
+</html>

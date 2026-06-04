@@ -60,6 +60,14 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/reset-password"),
                                 new AntPathRequestMatcher("/verify-otp"),
                                 new AntPathRequestMatcher("/profile"),
+                                new AntPathRequestMatcher("/account/kyc"),
+                                new AntPathRequestMatcher("/account/security"),
+                                new AntPathRequestMatcher("/wallet"),
+                                new AntPathRequestMatcher("/wallet/topup"),
+                                new AntPathRequestMatcher("/wallet/transactions"),
+                                new AntPathRequestMatcher("/account/orders"),
+                                new AntPathRequestMatcher("/account/orders/**"),
+                                new AntPathRequestMatcher("/account/notifications"),
                                 new AntPathRequestMatcher("/admin/users")
                         ).permitAll()
 

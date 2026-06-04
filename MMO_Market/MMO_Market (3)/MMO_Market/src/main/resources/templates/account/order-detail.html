@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết đơn hàng - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/order-detail.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="profile-page ds-page">
+        <div class="ds-container">
+            <div class="profile-layout ds-two-column">
+                <aside th:replace="~{fragments/account-sidebar :: accountSidebar('orders')}"></aside>
+
+                <section class="order-detail-page ds-page-shell">
+                    <section class="order-detail-hero ds-card">
+                        <div>
+                            <p class="ds-caption">Mua hàng</p>
+                            <h1 class="ds-heading-lg">Chi tiết đơn hàng</h1>
+                            <p class="ds-body order-detail-hero__subtitle" id="orderDetailCode">Đang tải mã đơn...</p>
+                        </div>
+                        <div class="order-detail-hero__actions">
+                            <a class="ds-btn ds-btn-outline" th:href="@{/account/orders}">
+                                <i class="fa fa-arrow-left" aria-hidden="true"></i>
+                                Quay lại đơn hàng
+                            </a>
+                            <a class="ds-btn ds-btn-primary" th:href="@{/}">
+                                <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+                                Tiếp tục mua hàng
+                            </a>
+                        </div>
+                    </section>
+
+                    <div class="ds-alert ds-alert-info" id="orderDetailMessage">
+                        Đang tải chi tiết đơn hàng...
+                    </div>
+
+                    <section class="order-detail-overview ds-card" id="orderDetailOverview" hidden>
+                        <div>
+                            <p class="ds-caption">Trạng thái đơn</p>
+                            <h2 class="ds-heading-md" id="orderProductName">-</h2>
+                            <p class="ds-caption" id="orderSellerName">-</p>
+                        </div>
+                        <div class="order-detail-badges">
+                            <span class="ds-badge ds-badge-muted" id="orderStatusBadge">-</span>
+                            <span class="ds-badge ds-badge-muted" id="orderPaymentBadge">-</span>
+                        </div>
+                    </section>
+
+                    <section class="order-detail-grid" id="orderDetailContent" hidden>
+                        <article class="order-detail-card ds-card">
+                            <h2 class="ds-heading-md">Thông tin đơn hàng</h2>
+                            <dl class="order-detail-list">
+                                <div><dt>Mã đơn</dt><dd id="orderCodeValue">-</dd></div>
+                                <div><dt>Ngày mua</dt><dd id="orderCreatedAt">-</dd></div>
+                                <div><dt>Tổng tiền</dt><dd id="orderAmount">-</dd></div>
+                                <div><dt>Escrow release</dt><dd id="orderEscrowRelease">-</dd></div>
+                            </dl>
+                        </article>
+
+                        <article class="order-detail-card ds-card">
+                            <h2 class="ds-heading-md">Sản phẩm đã mua</h2>
+                            <div class="order-product-box">
+                                <span class="order-product-box__icon"><i class="fa fa-shopping-bag" aria-hidden="true"></i></span>
+                                <div>
+                                    <strong id="orderProductTitle">-</strong>
+                                    <p id="orderAccessInfo">Thông tin nhận hàng sẽ được backend cung cấp sau.</p>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="order-detail-card ds-card">
+                            <h2 class="ds-heading-md">Thanh toán & escrow</h2>
+                            <dl class="order-detail-list">
+                                <div><dt>Mã giao dịch</dt><dd id="orderTransactionCode">-</dd></div>
+                                <div><dt>Thanh toán</dt><dd id="orderPaymentText">-</dd></div>
+                                <div><dt>Số tiền</dt><dd id="orderPaymentAmount">-</dd></div>
+                            </dl>
+                        </article>
+
+                        <article class="order-detail-card ds-card">
+                            <h2 class="ds-heading-md">Thao tác</h2>
+                            <p class="ds-caption" id="orderActionHint">Các thao tác phụ thuộc trạng thái đơn hàng.</p>
+                            <div class="order-detail-actions">
+                                <button class="ds-btn ds-btn-outline" id="orderViewProductButton" type="button">Xem sản phẩm</button>
+                                <button class="ds-btn ds-btn-danger" id="orderComplaintButton" type="button">Khiếu nại</button>
+                            </div>
+                        </article>
+                    </section>
+
+                    <section class="order-detail-timeline ds-card" id="orderTimeline" hidden>
+                        <h2 class="ds-heading-md">Tiến trình xử lý</h2>
+                        <div class="order-timeline-list">
+                            <div class="order-timeline-item" data-order-step="created">
+                                <span>1</span>
+                                <div><strong>Đặt hàng</strong><p>Đơn hàng đã được tạo.</p></div>
+                            </div>
+                            <div class="order-timeline-item" data-order-step="paid">
+                                <span>2</span>
+                                <div><strong>Thanh toán</strong><p>Ghi nhận thanh toán ví.</p></div>
+                            </div>
+                            <div class="order-timeline-item" data-order-step="delivered">
+                                <span>3</span>
+                                <div><strong>Seller giao hàng</strong><p>Thông tin sản phẩm đã được bàn giao.</p></div>
+                            </div>
+                            <div class="order-timeline-item" data-order-step="completed">
+                                <span>4</span>
+                                <div><strong>Hoàn tất / tranh chấp</strong><p>Kết thúc đơn hoặc mở xử lý khiếu nại.</p></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="ds-empty-state order-detail-empty" id="orderDetailEmpty" hidden>
+                        <p>Không tìm thấy đơn hàng này trong dữ liệu mock frontend.</p>
+                        <a class="ds-btn ds-btn-primary" th:href="@{/account/orders}">Quay lại đơn hàng</a>
+                    </section>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="fragments/footer :: footer"></footer>
+
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/account-sidebar.js}"></script>
+    <script th:src="@{/js/account-order-detail.js}"></script>
+</body>
+</html>

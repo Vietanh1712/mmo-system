@@ -271,8 +271,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const alertBox = document.getElementById('alert-message');
     const btnLogin = document.getElementById('btnLogin');
+    const googleLoginButton = document.getElementById('googleLoginButton');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
+    const passwordToggle = document.querySelector('[data-toggle-password="password"]');
+
+    function showLoginAlert(message, type) {
+        alertBox.textContent = message;
+        alertBox.className = `message ${type}`;
+        alertBox.style.display = 'block';
+    }
+
+    function getSafeReturnUrl() {
+        const returnUrl = new URLSearchParams(window.location.search).get('returnUrl');
+        if (!returnUrl) return null;
+        if (!returnUrl.startsWith('/') || returnUrl.startsWith('//')) return null;
+        if (returnUrl.startsWith('/login') || returnUrl.startsWith('/register')) return null;
+        return returnUrl;
+    }
 
     function showFieldError(fieldId, message) {
         const inputEl = document.getElementById(fieldId);
@@ -288,7 +304,29 @@ document.addEventListener('DOMContentLoaded', function() {
         if (errorEl) errorEl.textContent = '';
     }
 
+    if (passwordToggle) {
+        passwordToggle.addEventListener('click', function() {
+            const isHidden = passwordInput.type === 'password';
+            passwordInput.type = isHidden ? 'text' : 'password';
+
+            const icon = passwordToggle.querySelector('i');
+            if (icon) {
+                icon.classList.toggle('fa-eye', !isHidden);
+                icon.classList.toggle('fa-eye-slash', isHidden);
+            }
+
+            passwordToggle.setAttribute('aria-label', isHidden ? 'Ẩn mật khẩu' : 'Hiển thị mật khẩu');
+        });
+    }
+
+    if (googleLoginButton) {
+        googleLoginButton.addEventListener('click', function() {
+            showLoginAlert('Đăng nhập Google sẽ được triển khai sau khi backend OAuth2 sẵn sàng.', 'info');
+        });
+    }
+
     emailInput.addEventListener('input', function() {
+        alertBox.style.display = 'none';
         const val = this.value.trim();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (val === '') {
@@ -301,6 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     passwordInput.addEventListener('input', function() {
+        alertBox.style.display = 'none';
         if (this.value === '') {
             showFieldError('password', 'Mật khẩu không được để trống.');
         } else {
@@ -343,9 +382,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json().then(data => ({ status: response.status, body: data })))
             .then(res => {
                 if (res.status === 200 && res.body.accessToken) {
-                    alertBox.textContent = 'Đăng nhập thành công!';
-                    alertBox.className = 'message success';
-                    alertBox.style.display = 'block';
+                    showLoginAlert('Đăng nhập thành công!', 'success');
 
                     sessionStorage.setItem('accessToken', res.body.accessToken);
                     if (res.body.refreshToken) {
@@ -363,21 +400,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
                     sessionStorage.setItem('user', JSON.stringify(userInfo));
 
-                    const redirectUrl = normalizeRole(userInfo.role) === 'Admin' ? '/admin/users' : '/';
+                    const redirectUrl = getSafeReturnUrl()
+                        || (normalizeRole(userInfo.role) === 'Admin' ? '/admin/users' : '/');
                     setTimeout(() => window.location.href = redirectUrl, 1000);
                 } else {
-                    alertBox.textContent = res.body.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.';
-                    alertBox.className = 'message error';
-                    alertBox.style.display = 'block';
+                    showLoginAlert(res.body.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.', 'error');
                     btnLogin.disabled = false;
                     btnLogin.innerHTML = '<span>Đăng nhập</span>';
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alertBox.textContent = 'Lỗi kết nối máy chủ. Vui lòng thử lại sau.';
-                alertBox.className = 'message error';
-                alertBox.style.display = 'block';
+                showLoginAlert('Lỗi kết nối máy chủ. Vui lòng thử lại sau.', 'error');
                 btnLogin.disabled = false;
                 btnLogin.innerHTML = '<span>Đăng nhập</span>';
             });
@@ -397,6 +431,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const emailInput = document.getElementById('email');
     const phoneInput = document.getElementById('phone');
     const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const passwordToggles = document.querySelectorAll('[data-toggle-password]');
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[\W_]).{6,}$/;
+
+    function showRegisterAlert(message, type) {
+        alertBox.textContent = message;
+        alertBox.className = `message ${type}`;
+        alertBox.style.display = 'block';
+    }
 
     function showFieldError(fieldId, message) {
         const inputEl = document.getElementById(fieldId);
@@ -412,7 +455,27 @@ document.addEventListener('DOMContentLoaded', function() {
         if (errorEl) errorEl.textContent = '';
     }
 
+    passwordToggles.forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            const inputId = this.dataset.togglePassword;
+            const input = document.getElementById(inputId);
+            if (!input) return;
+
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+
+            const icon = this.querySelector('i');
+            if (icon) {
+                icon.classList.toggle('fa-eye', !isHidden);
+                icon.classList.toggle('fa-eye-slash', isHidden);
+            }
+
+            this.setAttribute('aria-label', isHidden ? 'Ẩn mật khẩu' : 'Hiển thị mật khẩu');
+        });
+    });
+
     fullNameInput.addEventListener('input', function() {
+        alertBox.style.display = 'none';
         const val = this.value.trim();
         if (val === '') {
             showFieldError('fullName', 'Họ và tên không được để trống.');
@@ -424,6 +487,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     emailInput.addEventListener('input', function() {
+        alertBox.style.display = 'none';
         const val = this.value.trim();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (val === '') {
@@ -436,6 +500,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     phoneInput.addEventListener('input', function() {
+        alertBox.style.display = 'none';
         const val = this.value.trim();
         if (val !== '') {
             const phoneRegex = /^0\d{9}$/;
@@ -450,14 +515,33 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     passwordInput.addEventListener('input', function() {
+        alertBox.style.display = 'none';
         const val = this.value;
-        const passwordRegex = /^(?=.*[A-Z])(?=.*[\W_]).{6,}$/;
         if (val === '') {
             showFieldError('password', 'Mật khẩu không được để trống.');
         } else if (!passwordRegex.test(val)) {
             showFieldError('password', 'Mật khẩu phải có ít nhất 6 ký tự, gồm 1 chữ viết hoa và 1 ký tự đặc biệt.');
         } else {
             clearFieldError('password');
+        }
+
+        if (confirmPasswordInput.value !== '') {
+            if (confirmPasswordInput.value !== val) {
+                showFieldError('confirmPassword', 'Mật khẩu xác nhận không trùng khớp.');
+            } else {
+                clearFieldError('confirmPassword');
+            }
+        }
+    });
+
+    confirmPasswordInput.addEventListener('input', function() {
+        alertBox.style.display = 'none';
+        if (this.value === '') {
+            showFieldError('confirmPassword', 'Vui lòng nhập lại mật khẩu.');
+        } else if (this.value !== passwordInput.value) {
+            showFieldError('confirmPassword', 'Mật khẩu xác nhận không trùng khớp.');
+        } else {
+            clearFieldError('confirmPassword');
         }
     });
 
@@ -468,6 +552,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let isValid = true;
         const email = emailInput.value.trim();
         const password = passwordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
         const fullName = fullNameInput.value.trim();
         const phone = phoneInput.value.trim();
 
@@ -496,12 +581,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        const passwordRegex = /^(?=.*[A-Z])(?=.*[\W_]).{6,}$/;
         if (password === '') {
             showFieldError('password', 'Mật khẩu không được để trống.');
             isValid = false;
         } else if (!passwordRegex.test(password)) {
             showFieldError('password', 'Mật khẩu chưa đủ độ mạnh theo yêu cầu.');
+            isValid = false;
+        }
+
+        if (confirmPassword === '') {
+            showFieldError('confirmPassword', 'Vui lòng nhập lại mật khẩu.');
+            isValid = false;
+        } else if (confirmPassword !== password) {
+            showFieldError('confirmPassword', 'Mật khẩu xác nhận không trùng khớp.');
             isValid = false;
         }
 
@@ -526,25 +618,19 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json().then(data => ({ status: response.status, body: data })))
             .then(res => {
                 if (res.status === 201 && res.body.success) {
-                    alertBox.textContent = 'Tạo tài khoản thành công!';
-                    alertBox.className = 'message success';
-                    alertBox.style.display = 'block';
+                    showRegisterAlert('Tạo tài khoản thành công. Vui lòng xác thực OTP trong email.', 'success');
 
                     sessionStorage.setItem('registeredEmail', email);
                     setTimeout(() => window.location.href = '/verify-otp', 1500);
                 } else {
-                    alertBox.textContent = res.body.message || 'Đăng ký thất bại. Vui lòng thử lại.';
-                    alertBox.className = 'message error';
-                    alertBox.style.display = 'block';
+                    showRegisterAlert(res.body.message || 'Đăng ký thất bại. Vui lòng thử lại.', 'error');
                     btnRegister.disabled = false;
                     btnRegister.innerHTML = '<span>Tạo tài khoản</span>';
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alertBox.textContent = 'Lỗi kết nối máy chủ. Vui lòng thử lại sau.';
-                alertBox.className = 'message error';
-                alertBox.style.display = 'block';
+                showRegisterAlert('Lỗi kết nối máy chủ. Vui lòng thử lại sau.', 'error');
                 btnRegister.disabled = false;
                 btnRegister.innerHTML = '<span>Tạo tài khoản</span>';
             });

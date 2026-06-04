@@ -5,26 +5,28 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/11990a64-5c66-4ae7-9a29-663ece8c977e/storage_v2/_src_/database/MMO_System.350aVw.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/11990a64-5c66-4ae7-9a29-663ece8c977e/storage_v2/_src_/database/MMO_System.350aVw/schema/INFORMATION_SCHEMA.NBgcMw.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/11990a64-5c66-4ae7-9a29-663ece8c977e/storage_v2/_src_/database/MMO_System.350aVw/schema/dbo.sYMBAA.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/11990a64-5c66-4ae7-9a29-663ece8c977e/storage_v2/_src_/database/MMO_System.350aVw/schema/dbo.sYMBAA.zip" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/11990a64-5c66-4ae7-9a29-663ece8c977e/storage_v2/_src_/database/MMO_System.350aVw/schema/sys.zb4BAA.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/design-system/docs/EXPORT_REPORT.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/design-system/docs/EXPORT_REPORT.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/design-system/docs/UI_GUIDELINE.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/design-system/docs/UI_GUIDELINE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/design-system/examples/filter-search-sort-example.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/design-system/examples/filter-search-sort-example.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/design-system/examples/forms-example.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/design-system/examples/forms-example.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controller/mvc/ProfilePageController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/mvc/ProfilePageController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/security/SecurityConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/authen/authen.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/authen/authen.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/common.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/common.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/auth/forgot-password.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/auth/forgot-password.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/filters.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/filters.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/forms.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/forms.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/home.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/home.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/profile.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/profile.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/auth.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/auth.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/profile.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/profile.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/templates/auth/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/auth/login.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/templates/auth/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/auth/register.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/templates/auth/reset-password.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/auth/reset-password.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/static/css/authen/authen.css" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/css/authen/authen.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/static/css/common.css" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/css/common.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/auth/forgot-password.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/auth/forgot-password.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/auth/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/auth/login.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/auth/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/auth/register.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/auth/reset-password.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/auth/reset-password.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/auth/verify-otp.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/auth/verify-otp.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/account-sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/account-sidebar.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/design-system-styles.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/design-system-styles.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/header.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/header.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/profile/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/profile/index.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -391,7 +393,7 @@
     &quot;Spring Boot.MMOMarketApplication.executor&quot;: &quot;Debug&quot;,
     &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;AnhTV&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/SU26/SWP/mmo-system/MMO_Market/MMO_Market (3)/MMO_Market&quot;,
@@ -508,8 +510,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.24374.151" />
-        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-IU-261.24374.151" />
+        <option value="bundled-jdk-9823dce3aa75-fbdcb00ec9e3-intellij.indexing.shared.core-IU-251.26094.121" />
+        <option value="bundled-js-predefined-d6986cc7102b-b26f3e71634d-JavaScript-IU-251.26094.121" />
       </set>
     </attachedChunks>
   </component>
@@ -549,6 +551,9 @@
       <workItem from="1780407407353" duration="6980000" />
       <workItem from="1780415862230" duration="83000" />
       <workItem from="1780415959262" duration="358000" />
+      <workItem from="1780555178005" duration="7933000" />
+      <workItem from="1780568312769" duration="463000" />
+      <workItem from="1780572336460" duration="8273000" />
     </task>
     <servers />
   </component>

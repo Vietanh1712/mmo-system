@@ -18,6 +18,10 @@
 
 <div class="container">
     <div class="login-wrap">
+        <div class="auth-logo">
+            <span>💎</span>
+            MMO Market
+        </div>
         <h3>Xác thực tài khoản</h3>
 
         <p class="verify-text">Chúng tôi đã gửi mã gồm 6 chữ số đến <br><span class="display-email" id="displayEmail">email của bạn</span></p>
@@ -37,7 +41,11 @@
 
         <div class="resend-text">
             Không nhận được mã? <a href="#" id="resendOtp">Gửi lại</a><br>
-            hoặc <a th:href="@{/register}" style="color: rgba(255,255,255,0.8); text-decoration: underline; margin-top: 5px; display: inline-block;">Thay đổi email</a>
+            hoặc <a th:href="@{/register}" class="change-email-link">Thay đổi email</a>
+        </div>
+
+        <div class="back-home">
+            <a href="/">← Về trang chủ</a>
         </div>
     </div>
 </div>

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <title>MMO Market Datepicker Standard</title>
+    <link rel="stylesheet" href="../../../src/main/resources/static/css/design-system.css">
+    <link rel="stylesheet" href="../../../src/main/resources/static/css/layout.css">
+    <link rel="stylesheet" href="../../../src/main/resources/static/css/typography.css">
+    <link rel="stylesheet" href="../../../src/main/resources/static/css/buttons.css">
+    <link rel="stylesheet" href="../../../src/main/resources/static/css/forms.css">
+    <link rel="stylesheet" href="../../../src/main/resources/static/css/datepicker.css">
+    <link rel="stylesheet" href="../../../src/main/resources/static/css/alerts.css">
+    <style>
+        .date-standard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        .date-standard-card {
+            padding: 20px;
+        }
+
+        .date-code {
+            overflow-x: auto;
+            border-radius: var(--ds-radius-md);
+            background: #0f172a;
+            color: #e5e7eb;
+            padding: 12px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body class="ds-page">
+    <main class="ds-container">
+        <header>
+            <h1 class="ds-page-title">Datepicker Standard</h1>
+            <p class="ds-page-subtitle">
+                MMO Market thống nhất dùng custom datepicker cho cả ngày đơn và khoảng ngày filter.
+            </p>
+        </header>
+
+        <div class="ds-alert ds-alert-info ds-mt-lg">
+            Chuẩn chung: người dùng nhìn/nhập <strong>dd/mm/yyyy</strong>, form submit hidden value <strong>yyyy-MM-dd</strong>.
+        </div>
+
+        <section class="date-standard-grid">
+            <article class="ds-card date-standard-card ds-stack-md">
+                <div>
+                    <h2 class="ds-heading-md">Single Date</h2>
+                    <p class="ds-caption">Dùng cho KYC ngày sinh, profile, security, ngày cấp giấy tờ.</p>
+                </div>
+
+                <div class="ds-form-field">
+                    <label class="ds-label" for="singleDateDisplay">Ngày sinh</label>
+                    <div class="ds-datepicker" data-ds-datepicker>
+                        <input type="hidden" name="dateOfBirth" data-ds-date-value>
+                        <div class="ds-datepicker-field">
+                            <input id="singleDateDisplay" class="ds-datepicker-input" type="text" placeholder="dd/mm/yyyy" data-ds-date-display>
+                            <button type="button" class="ds-datepicker-button" data-ds-date-toggle aria-label="Chọn ngày">▣</button>
+                        </div>
+                    </div>
+                </div>
+
+                <pre class="date-code"><code>&lt;div class="ds-datepicker" data-ds-datepicker&gt;
+  &lt;input type="hidden" name="dateOfBirth" data-ds-date-value&gt;
+  &lt;div class="ds-datepicker-field"&gt;
+    &lt;input class="ds-datepicker-input" placeholder="dd/mm/yyyy" data-ds-date-display&gt;
+    &lt;button class="ds-datepicker-button" data-ds-date-toggle&gt;▣&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+            </article>
+
+            <article class="ds-card date-standard-card ds-stack-md">
+                <div>
+                    <h2 class="ds-heading-md">Date Range Filter</h2>
+                    <p class="ds-caption">Dùng hai datepicker custom cho filter từ ngày / đến ngày.</p>
+                </div>
+
+                <div class="ds-form-grid">
+                    <div class="ds-form-field">
+                        <label class="ds-label" for="dateFromDisplay">Từ ngày</label>
+                        <div class="ds-datepicker" data-ds-datepicker>
+                            <input type="hidden" name="dateFrom" data-ds-date-value>
+                            <div class="ds-datepicker-field">
+                                <input id="dateFromDisplay" class="ds-datepicker-input" type="text" placeholder="dd/mm/yyyy" data-ds-date-display>
+                                <button type="button" class="ds-datepicker-button" data-ds-date-toggle aria-label="Chọn từ ngày">▣</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ds-form-field">
+                        <label class="ds-label" for="dateToDisplay">Đến ngày</label>
+                        <div class="ds-datepicker" data-ds-datepicker>
+                            <input type="hidden" name="dateTo" data-ds-date-value>
+                            <div class="ds-datepicker-field">
+                                <input id="dateToDisplay" class="ds-datepicker-input" type="text" placeholder="dd/mm/yyyy" data-ds-date-display>
+                                <button type="button" class="ds-datepicker-button" data-ds-date-toggle aria-label="Chọn đến ngày">▣</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <pre class="date-code"><code>&lt;div class="ds-form-grid"&gt;
+  &lt;!-- dateFrom --&gt;
+  &lt;div class="ds-datepicker" data-ds-datepicker&gt;...&lt;/div&gt;
+  &lt;!-- dateTo --&gt;
+  &lt;div class="ds-datepicker" data-ds-datepicker&gt;...&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+            </article>
+        </section>
+    </main>
+
+    <script src="../../../src/main/resources/static/js/datepicker.js"></script>
+</body>
+</html>

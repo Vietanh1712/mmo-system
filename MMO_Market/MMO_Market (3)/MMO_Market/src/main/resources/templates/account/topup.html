@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nạp tiền vào ví - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/wallet.css}">
+    <link rel="stylesheet" th:href="@{/css/topup.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="profile-page ds-page">
+        <div class="ds-container">
+            <div class="profile-layout ds-two-column">
+                <aside th:replace="~{fragments/account-sidebar :: accountSidebar('topup')}"></aside>
+
+                <section class="topup-page ds-page-shell">
+                    <section class="topup-hero ds-card">
+                        <div>
+                            <p class="ds-caption">Ví & giao dịch</p>
+                            <h1 class="ds-heading-lg">Nạp tiền vào ví</h1>
+                            <p class="ds-body topup-hero__subtitle">
+                                Tạo yêu cầu nạp tiền và chuyển khoản đúng nội dung để hệ thống tự động cộng số dư.
+                            </p>
+                        </div>
+
+                        <div class="wallet-balance-card">
+                            <span>Số dư hiện tại</span>
+                            <strong id="topupBalance">0 đ</strong>
+                        </div>
+                    </section>
+
+                    <div class="ds-alert ds-alert-info" id="topupMessage">
+                        Đang tải thông tin tài khoản...
+                    </div>
+
+                    <div class="topup-layout">
+                        <section class="topup-form-card ds-card">
+                            <div class="ds-cluster-between">
+                                <div>
+                                    <h2 class="ds-heading-md">Thông tin nạp tiền</h2>
+                                    <p class="ds-caption">Nhập số tiền muốn nạp, sau đó tạo hướng dẫn chuyển khoản.</p>
+                                </div>
+                                <a class="ds-btn ds-btn-outline" th:href="@{/wallet}">
+                                    <i class="fa fa-arrow-left" aria-hidden="true"></i>
+                                    Về ví
+                                </a>
+                            </div>
+
+                            <form class="topup-form" id="topupForm" novalidate>
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="topupAmount">Số tiền nạp</label>
+                                    <div class="topup-amount-field">
+                                        <input class="ds-input" id="topupAmount" inputmode="numeric" autocomplete="off" placeholder="Ví dụ: 100000">
+                                        <span>VNĐ</span>
+                                    </div>
+                                    <p class="ds-validation" id="topupAmountError"></p>
+                                </div>
+
+                                <div class="topup-quick-list" aria-label="Chọn nhanh số tiền">
+                                    <button class="topup-quick-btn" type="button" data-amount="50000">50.000đ</button>
+                                    <button class="topup-quick-btn" type="button" data-amount="100000">100.000đ</button>
+                                    <button class="topup-quick-btn" type="button" data-amount="200000">200.000đ</button>
+                                    <button class="topup-quick-btn" type="button" data-amount="500000">500.000đ</button>
+                                    <button class="topup-quick-btn" type="button" data-amount="1000000">1.000.000đ</button>
+                                </div>
+
+                                <div class="topup-method">
+                                    <span class="topup-method__icon"><i class="fa fa-university" aria-hidden="true"></i></span>
+                                    <div>
+                                        <strong>Chuyển khoản ngân hàng / Sepay</strong>
+                                        <p>Frontend đang mock hướng dẫn chuyển khoản, backend Sepay sẽ nối ở bước sau.</p>
+                                    </div>
+                                </div>
+
+                                <button class="ds-btn ds-btn-primary topup-submit" id="topupSubmitButton" type="submit">
+                                    <i class="fa fa-plus-circle" aria-hidden="true"></i>
+                                    Tạo yêu cầu nạp
+                                </button>
+                            </form>
+                        </section>
+
+                        <aside class="topup-note-card ds-card">
+                            <h2 class="ds-heading-md">Lưu ý</h2>
+                            <ul class="topup-note-list">
+                                <li>Chuyển khoản đúng số tiền và nội dung được tạo.</li>
+                                <li>Không chỉnh sửa nội dung chuyển khoản để tránh lệch giao dịch.</li>
+                                <li>Số dư sẽ được cập nhật tự động khi backend webhook Sepay hoàn thiện.</li>
+                            </ul>
+                        </aside>
+                    </div>
+
+                    <section class="topup-instruction ds-card" id="topupInstruction" hidden>
+                        <div class="ds-cluster-between">
+                            <div>
+                                <p class="ds-caption">Yêu cầu nạp tiền</p>
+                                <h2 class="ds-heading-md">Hướng dẫn chuyển khoản</h2>
+                            </div>
+                            <span class="ds-badge ds-badge-warning">Đang chờ thanh toán</span>
+                        </div>
+
+                        <div class="topup-bank-grid">
+                            <div class="topup-bank-row">
+                                <span>Ngân hàng</span>
+                                <strong>MB Bank</strong>
+                            </div>
+                            <div class="topup-bank-row">
+                                <span>Số tài khoản</span>
+                                <strong id="topupBankAccount">0123456789</strong>
+                            </div>
+                            <div class="topup-bank-row">
+                                <span>Số tiền</span>
+                                <strong id="topupTransferAmount">0 đ</strong>
+                            </div>
+                            <div class="topup-bank-row topup-bank-row--content">
+                                <span>Nội dung chuyển khoản</span>
+                                <div>
+                                    <strong id="topupTransferContent">MMO TOPUP</strong>
+                                    <button class="ds-btn ds-btn-outline ds-btn-sm" id="copyTransferContentButton" type="button">
+                                        <i class="fa fa-copy" aria-hidden="true"></i>
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="topup-instruction-actions">
+                            <a class="ds-btn ds-btn-outline" th:href="@{/wallet}">
+                                <i class="fa fa-credit-card" aria-hidden="true"></i>
+                                Về ví của tôi
+                            </a>
+                            <button class="ds-btn ds-btn-outline" id="topupHistoryButton" type="button">
+                                <i class="fa fa-history" aria-hidden="true"></i>
+                                Xem lịch sử giao dịch
+                            </button>
+                        </div>
+                    </section>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="fragments/footer :: footer"></footer>
+
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/account-sidebar.js}"></script>
+    <script th:src="@{/js/account-topup.js}"></script>
+</body>
+</html>

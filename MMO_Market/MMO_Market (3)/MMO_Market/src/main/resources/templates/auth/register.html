@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,6 +24,7 @@
             MMO Market
         </div>
         <h3>Tạo tài khoản</h3>
+        <p class="auth-subtitle">Sau khi tạo tài khoản, hệ thống sẽ gửi mã OTP để xác thực email của bạn.</p>
 
         <div id="alert-message" class="message"></div>
 
@@ -44,10 +45,25 @@
             </div>
 
             <div class="form-group">
-                <input type="password" class="form-control" id="password" name="password" placeholder="Mật khẩu">
+                <div class="input-wrapper auth-password-wrapper">
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Mật khẩu" autocomplete="new-password">
+                    <button class="toggle-password auth-toggle-password" type="button" aria-label="Hiển thị mật khẩu" data-toggle-password="password">
+                        <i class="fa fa-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <small class="auth-field-hint">Tối thiểu 6 ký tự, gồm 1 chữ hoa và 1 ký tự đặc biệt.</small>
                 <small id="password-error" class="field-error"></small>
             </div>
 
+            <div class="form-group">
+                <div class="input-wrapper auth-password-wrapper">
+                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="Nhập lại mật khẩu" autocomplete="new-password">
+                    <button class="toggle-password auth-toggle-password" type="button" aria-label="Hiển thị mật khẩu xác nhận" data-toggle-password="confirmPassword">
+                        <i class="fa fa-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <small id="confirmPassword-error" class="field-error"></small>
+            </div>
 
             <button type="submit" class="btn btn-primary" id="btnRegister">
                 <span>Tạo tài khoản</span>

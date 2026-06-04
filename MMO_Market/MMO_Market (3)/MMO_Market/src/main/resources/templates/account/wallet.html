@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ví của tôi - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/wallet.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="profile-page ds-page">
+        <div class="ds-container">
+            <div class="profile-layout ds-two-column">
+                <aside th:replace="~{fragments/account-sidebar :: accountSidebar('wallet')}"></aside>
+
+                <section class="wallet-page ds-page-shell">
+                    <section class="wallet-hero ds-card">
+                        <div>
+                            <p class="ds-caption">Ví & giao dịch</p>
+                            <h1 class="ds-heading-lg">Ví của tôi</h1>
+                            <p class="ds-body wallet-hero__subtitle">
+                                Theo dõi số dư, giao dịch gần đây và các thao tác nạp tiền trong tài khoản MMO Market.
+                            </p>
+                        </div>
+
+                        <div class="wallet-balance-card">
+                            <span>Số dư khả dụng</span>
+                            <strong id="walletBalance">0 đ</strong>
+                        </div>
+                    </section>
+
+                    <div class="ds-alert ds-alert-info" id="walletMessage">
+                        Đang tải thông tin ví...
+                    </div>
+
+                    <section class="wallet-actions ds-card">
+                        <div>
+                            <h2 class="ds-heading-md">Thao tác nhanh</h2>
+                            <p class="ds-caption">Các màn nạp tiền và lịch sử giao dịch sẽ được triển khai ở bước tiếp theo.</p>
+                        </div>
+                        <div class="wallet-action-row">
+                            <button class="ds-btn ds-btn-primary" id="walletTopupButton" type="button">
+                                <i class="fa fa-plus-circle" aria-hidden="true"></i>
+                                Nạp tiền
+                            </button>
+                            <button class="ds-btn ds-btn-outline" id="walletHistoryButton" type="button">
+                                <i class="fa fa-history" aria-hidden="true"></i>
+                                Lịch sử giao dịch
+                            </button>
+                        </div>
+                    </section>
+
+                    <section class="wallet-stat-grid" aria-label="Thống kê ví">
+                        <article class="wallet-stat-card ds-card">
+                            <span class="wallet-stat-icon wallet-stat-icon--primary"><i class="fa fa-arrow-down" aria-hidden="true"></i></span>
+                            <div>
+                                <p>Tổng đã nạp</p>
+                                <strong id="walletTotalTopup">0 đ</strong>
+                            </div>
+                        </article>
+                        <article class="wallet-stat-card ds-card">
+                            <span class="wallet-stat-icon wallet-stat-icon--warning"><i class="fa fa-shopping-bag" aria-hidden="true"></i></span>
+                            <div>
+                                <p>Tổng đã chi</p>
+                                <strong id="walletTotalSpent">0 đ</strong>
+                            </div>
+                        </article>
+                        <article class="wallet-stat-card ds-card">
+                            <span class="wallet-stat-icon wallet-stat-icon--info"><i class="fa fa-clock-o" aria-hidden="true"></i></span>
+                            <div>
+                                <p>Đang xử lý</p>
+                                <strong id="walletPendingCount">0 giao dịch</strong>
+                            </div>
+                        </article>
+                        <article class="wallet-stat-card ds-card">
+                            <span class="wallet-stat-icon wallet-stat-icon--success"><i class="fa fa-shield" aria-hidden="true"></i></span>
+                            <div>
+                                <p>Đang giữ escrow</p>
+                                <strong id="walletEscrowAmount">0 đ</strong>
+                            </div>
+                        </article>
+                    </section>
+
+                    <section class="wallet-kyc-notice ds-card" id="walletKycNotice">
+                        <div>
+                            <h2 class="ds-heading-md" id="walletKycTitle">Xác minh tài khoản để dùng ví an toàn hơn</h2>
+                            <p class="ds-caption" id="walletKycDescription">
+                                Hoàn tất KYC để chuẩn bị cho các tính năng ví nâng cao.
+                            </p>
+                        </div>
+                        <a class="ds-btn ds-btn-outline" th:href="@{/account/kyc}">Xem KYC</a>
+                    </section>
+
+                    <section class="wallet-section ds-card">
+                        <div class="ds-cluster-between">
+                            <div>
+                                <h2 class="ds-heading-md">Giao dịch gần đây</h2>
+                                <p class="ds-caption">Dữ liệu hiện là mock frontend, chưa gọi API lịch sử ví.</p>
+                            </div>
+                            <button class="ds-btn ds-btn-outline" id="walletViewAllButton" type="button">Xem tất cả</button>
+                        </div>
+
+                        <div class="ds-empty-state wallet-empty-state" id="walletEmptyState">
+                            Chưa có giao dịch ví.
+                        </div>
+
+                        <div class="ds-table-wrap" id="walletRecentTableWrap" hidden>
+                            <table class="ds-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mã giao dịch</th>
+                                        <th>Loại</th>
+                                        <th>Số tiền</th>
+                                        <th class="ds-table-center">Trạng thái</th>
+                                        <th>Thời gian</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="walletRecentTableBody"></tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="wallet-guide ds-card">
+                        <h2 class="ds-heading-md">Quy trình nạp tiền tự động</h2>
+                        <ol class="wallet-guide-list">
+                            <li>Tạo yêu cầu nạp tiền.</li>
+                            <li>Chuyển khoản đúng nội dung hướng dẫn.</li>
+                            <li>Hệ thống xác nhận và cập nhật số dư ví.</li>
+                        </ol>
+                    </section>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="fragments/footer :: footer"></footer>
+
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/account-sidebar.js}"></script>
+    <script th:src="@{/js/account-wallet.js}"></script>
+</body>
+</html>

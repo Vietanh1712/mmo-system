@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -34,7 +34,12 @@
             </div>
 
             <div class="form-group">
-                <input type="password" class="form-control" id="password" name="password" placeholder="Mật khẩu">
+                <div class="input-wrapper auth-password-wrapper">
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Mật khẩu" autocomplete="current-password">
+                    <button class="toggle-password auth-toggle-password" type="button" aria-label="Hiển thị mật khẩu" data-toggle-password="password">
+                        <i class="fa fa-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
                 <small id="password-error" class="field-error"></small>
             </div>
 
@@ -47,7 +52,7 @@
 
         <div class="divider">HOẶC</div>
 
-        <button class="btn btn-google">
+        <button class="btn btn-google" id="googleLoginButton" type="button">
             <img
                     src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
                     alt="Google"

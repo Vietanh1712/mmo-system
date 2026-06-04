@@ -45,10 +45,10 @@ Không có thư mục `Views/` trong project hiện tại.
 | Outline/cancel button | `css/buttons.css` | `border border-gray-300 bg-white` | `.ds-btn .ds-btn-outline` |
 | Success button | `css/buttons.css` | `.btn-primary-green`, `.btn-save` | `.ds-btn .ds-btn-success` |
 | Form controls | `css/forms.css` | `.form-control`, admin `input/select/textarea` utilities | `.ds-input`, `.ds-select`, `.ds-textarea` |
-| Date field | `css/forms.css` | `[data-date-toggle]` calendar button | `.ds-date-field`, `.ds-date-button` |
+| Custom datepicker | `css/datepicker.css`, `js/datepicker.js` | generated picker + date fields | `.ds-datepicker-*`, `data-ds-datepicker` |
 | Filter/search/dropdown | `css/filters.css` | `[data-search-dropdown]`, `[data-dropdown-toggle]` | `.ds-filter-*`, `.ds-dropdown-*` |
 | Simple menu | `css/dropdown.css` | account/action menu pattern | `.ds-menu`, `.ds-menu-item`, `.ds-menu-divider` |
-| Date range | `css/filters.css` | `[data-date-range]`, `[data-range-toggle]` | `.ds-date-range-*` |
+| Date range filter | `css/datepicker.css`, `js/datepicker.js` | 2 custom datepickers from/to | `.ds-datepicker-*` |
 | Table | `css/tables.css` | admin tables using `w-full border-collapse`, `.attendance-table`, `.grades-table` | `.ds-table-*` |
 | Pagination | `css/pagination.css` | Admin pagination block | `.ds-pagination-*` |
 | Alert | `css/alerts.css` | inline success/warning/error message pattern | `.ds-alert`, `.ds-alert-*` |
@@ -77,6 +77,7 @@ Có thể copy ngay:
 - `badges.css`
 - `buttons.css`
 - `forms.css`
+- `datepicker.css`
 - `filters.css`
 - `dropdown.css`
 - `tables.css`
@@ -89,13 +90,14 @@ Có thể copy ngay:
 - `toast.css`
 - `icons.css`
 - `utilities.css`
+- `datepicker.js`
 
 Cần viết lại logic khi sang MMO:
 
 - Submit filter/search bằng Spring Controller hoặc fetch API.
 - Phân trang: backend phải nhận page/pageSize và trả total record.
 - Dropdown search: cần JS riêng nếu muốn search option.
-- Datepicker/date range: CSS đã export hình dạng, logic chọn ngày không export từ Razor.
+- Datepicker/date range: dùng chung `css/datepicker.css` và `js/datepicker.js`; date range dùng 2 datepicker `dateFrom/dateTo`.
 - Toast: CSS đã export, JS show/hide/stacking cần viết lại theo MMO.
 
 ## Giá trị suy ra trực tiếp

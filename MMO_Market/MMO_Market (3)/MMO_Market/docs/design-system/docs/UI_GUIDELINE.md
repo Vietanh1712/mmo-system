@@ -11,8 +11,8 @@ Bộ export này được tạo để copy sang project `MMO_System` dùng Sprin
 - Business badges: success, warning, danger, info, muted.
 - Buttons: primary, secondary/reset filter, danger, outline, success.
 - Icons/action buttons: view/edit, delete, reset/refresh.
-- Forms: input, select, textarea, date field, radio, validation text.
-- Filter/search/dropdown/date range.
+- Forms: input, select, textarea, custom datepicker, radio, validation text.
+- Filter/search/dropdown/date range bằng custom datepicker.
 - Tables: header, row hover, avatar/entity cell, badge, action cell.
 - Pagination.
 - Simple menu: menu item, divider, danger item.
@@ -42,6 +42,7 @@ Nếu dùng Thymeleaf, import CSS:
 <link rel="stylesheet" th:href="@{/css/badges.css}">
 <link rel="stylesheet" th:href="@{/css/buttons.css}">
 <link rel="stylesheet" th:href="@{/css/forms.css}">
+<link rel="stylesheet" th:href="@{/css/datepicker.css}">
 <link rel="stylesheet" th:href="@{/css/filters.css}">
 <link rel="stylesheet" th:href="@{/css/dropdown.css}">
 <link rel="stylesheet" th:href="@{/css/tables.css}">
@@ -72,9 +73,10 @@ Nếu dùng JSP:
 - Dùng `.ds-badge-*` cho trạng thái nghiệp vụ như seller, product, order, transaction, complaint.
 - Dùng `.ds-alert-*` cho thông báo nằm trong page; dùng `.ds-toast-*` cho thông báo nổi.
 - Dùng `.ds-menu` cho menu đơn giản như account menu; `.ds-dropdown` trong `filters.css` chỉ dùng cho filter/search dropdown.
+- Dùng duy nhất custom datepicker `.ds-datepicker` cho chọn ngày. Ngày đơn dùng 1 datepicker; date range dùng 2 datepicker `dateFrom/dateTo`.
 - Modal dùng `.ds-modal-backdrop`, `.ds-modal`, `.ds-modal-header`, `.ds-modal-body`, `.ds-modal-footer`.
 - Utility trong `utilities.css` chỉ dùng cho chỉnh nhỏ; nếu layout lặp lại nhiều lần thì phải đưa về component class riêng.
-- Logic như phân trang, filter, dropdown search, datepicker, toast stacking cần viết lại bằng JavaScript/Thymeleaf/Spring Controller của MMO.
+- Logic như phân trang, filter, dropdown search, toast stacking cần viết lại bằng JavaScript/Thymeleaf/Spring Controller của MMO. Datepicker dùng `js/datepicker.js`.
 - Các file HTML trong `examples/` mở trực tiếp bằng browser để xem nhanh hình dạng component.
 
 ## Example nên xem
@@ -82,5 +84,6 @@ Nếu dùng JSP:
 - `examples/ux-ui-sync-proposal-example.html`: preview toàn bộ nhóm layout, typography, avatar, badge, alert, tab, state, menu, modal.
 - `examples/buttons-icons-catalog.html`: toàn bộ button và icon hiện có.
 - `examples/table-example.html`: bảng có avatar, badge, icon action view/delete.
+- `examples/date-picker-comparison-example.html`: chuẩn custom datepicker cho ngày đơn và khoảng ngày filter.
 
 
