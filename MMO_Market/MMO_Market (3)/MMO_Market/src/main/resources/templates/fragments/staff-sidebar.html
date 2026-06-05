@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<aside class="staff-sidebar" th:fragment="staffSidebar(active)">
+    <div class="ds-card staff-sidebar__card">
+        <p class="staff-sidebar__title">Trung tâm Staff</p>
+        <p class="staff-sidebar__subtitle">Quản lý vận hành MMO Market</p>
+        <nav class="staff-sidebar__nav ds-stack-sm">
+            <a class="staff-sidebar__link"
+               th:classappend="${active == 'dashboard'} ? ' is-active' : ''"
+               href="/staff/dashboard">
+                <i class="fa fa-dashboard"></i> Tổng quan
+            </a>
+            <a class="staff-sidebar__link"
+               th:classappend="${active == 'complaints'} ? ' is-active' : ''"
+               href="/staff/complaints">
+                <i class="fa fa-exclamation-circle"></i> Khiếu nại
+                <span class="staff-sidebar__badge">32</span>
+            </a>
+            <a class="staff-sidebar__link"
+               th:classappend="${active == 'kyc'} ? ' is-active' : ''"
+               href="/staff/kyc">
+                <i class="fa fa-id-card"></i> Định danh KYC
+                <span class="staff-sidebar__badge">18</span>
+            </a>
+            <a class="staff-sidebar__link"
+               th:classappend="${active == 'withdrawals'} ? ' is-active' : ''"
+               href="/staff/withdrawals">
+                <i class="fa fa-money"></i> Rút tiền
+                <span class="staff-sidebar__badge">15</span>
+            </a>
+            <a class="staff-sidebar__link"
+               th:classappend="${active == 'flags'} ? ' is-active' : ''"
+               href="/staff/flags">
+                <i class="fa fa-flag"></i> Cờ cảnh báo
+                <span class="staff-sidebar__badge">7</span>
+            </a>
+            <a class="staff-sidebar__link"
+               th:classappend="${active == 'chat'} ? ' is-active' : ''"
+               href="/staff/chat">
+                <i class="fa fa-comments"></i> Chat người dùng
+            </a>
+        </nav>
+    </div>
+</aside>
+</body>
+</html>

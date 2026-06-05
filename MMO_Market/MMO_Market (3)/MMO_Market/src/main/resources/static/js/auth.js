@@ -200,6 +200,8 @@ function resolvePostLoginRedirect(roleValue, redirectPathFromApi) {
     let roleTarget = '/';
     if (role === 'Admin') {
         roleTarget = '/admin/users';
+    } else if (role === 'Staff') {
+        roleTarget = '/staff/dashboard';
     } else if (isSellerRole(role)) {
         roleTarget = '/seller/dashboard';
     }
@@ -233,17 +235,44 @@ function applyAuthenticatedRedirect() {
     }
 }
 
-function goToSystemHome() {
-    sessionStorage.setItem('redirectPath', '/');
-    window.location.href = '/';
-}
-
 window.normalizeRole = normalizeRole;
 window.isSellerRole = isSellerRole;
 window.resolvePostLoginRedirect = resolvePostLoginRedirect;
-window.goToSystemHome = goToSystemHome;
 
 document.addEventListener('DOMContentLoaded', applyAuthenticatedRedirect);
+
+function setupStaffAvatarMenu() {
+    const dropdown = document.getElementById('userDropdown');
+    if (!dropdown || document.getElementById('staffWorkDropdownItem')) return;
+
+    const token = sessionStorage.getItem('accessToken');
+    const userString = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
+    if (!token || token === 'null' || token === 'undefined' || !userString) return;
+
+    try {
+        const user = JSON.parse(userString);
+        if (normalizeRole(user.role) !== 'Staff') return;
+
+        const staffItem = document.createElement('div');
+        staffItem.id = 'staffWorkDropdownItem';
+        staffItem.className = 'dropdown-item';
+        staffItem.innerHTML = '<i class="fa fa-briefcase"></i> Công việc';
+        staffItem.addEventListener('click', () => {
+            window.location.href = '/staff/dashboard';
+        });
+
+        const divider = dropdown.querySelector('.dropdown-divider');
+        if (divider) {
+            dropdown.insertBefore(staffItem, divider);
+        } else {
+            dropdown.appendChild(staffItem);
+        }
+    } catch (error) {
+        console.error('Lỗi khi thiết lập menu staff:', error);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', setupStaffAvatarMenu);
 
 function togglePassword(inputId, icon) {
     const input = document.getElementById(inputId);

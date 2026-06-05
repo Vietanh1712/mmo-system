@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Chi tiết cờ cảnh báo')}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('flags')}"></aside>
+
+            <section class="ds-section">
+                <nav class="staff-breadcrumb">
+                    <a href="/staff/flags">Cờ cảnh báo</a>
+                    <span>/</span>
+                    <span>#FLG-220</span>
+                </nav>
+
+                <div class="staff-page-header">
+                    <div>
+                        <h1 class="ds-page-title">Chi tiết &amp; thao tác cờ shop</h1>
+                        <p class="ds-page-subtitle">Cờ #FLG-220 — GameHub Pro</p>
+                    </div>
+                    <span class="ds-badge ds-badge-danger">Mức cao</span>
+                </div>
+
+                <div class="staff-detail-grid">
+                    <div class="ds-stack-md">
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Thông tin cờ</h2>
+                            </div>
+                            <dl class="staff-info-list">
+                                <div class="staff-info-row">
+                                    <dt>Mã cờ</dt>
+                                    <dd>#FLG-220</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Shop</dt>
+                                    <dd>GameHub Pro (SH-1024)</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Chủ shop</dt>
+                                    <dd>seller.gamehub@mmo.com</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Lý do</dt>
+                                    <dd>Bán hàng không đúng mô tả, nhiều khiếu nại trùng lặp</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Staff xử lý</dt>
+                                    <dd>Nguyễn Văn Staff</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Ngày cắm cờ</dt>
+                                    <dd>04/06/2026 14:10</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Trạng thái</dt>
+                                    <dd><span class="ds-badge ds-badge-warning">Đang hiệu lực</span></dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Chỉnh sửa cờ</h2>
+                            </div>
+                            <div class="ds-form-grid">
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="flagLevel">Mức độ cảnh báo</label>
+                                    <select class="ds-input" id="flagLevel">
+                                        <option>Thấp</option>
+                                        <option>Trung bình</option>
+                                        <option selected>Cao</option>
+                                    </select>
+                                </div>
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="flagStatus">Trạng thái</label>
+                                    <select class="ds-input" id="flagStatus">
+                                        <option selected>Đang hiệu lực</option>
+                                        <option>Đã gỡ</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="ds-form-field">
+                                <label class="ds-label" for="flagReason">Lý do / ghi chú</label>
+                                <textarea class="ds-textarea" id="flagReason">Shop nhận 5 khiếu nại trong 7 ngày về sản phẩm Gmail Premium.</textarea>
+                            </div>
+                            <div class="ds-cluster">
+                                <button class="ds-btn ds-btn-primary" type="button" data-staff-action="save" data-staff-label="Đã cập nhật cờ cảnh báo">Lưu thay đổi</button>
+                                <button class="ds-btn ds-btn-outline" type="button" data-staff-action="resolve" data-staff-label="Đã gỡ cờ cảnh báo">Gỡ cờ</button>
+                            </div>
+                        </div>
+
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Lịch sử thao tác</h2>
+                            </div>
+                            <div class="staff-timeline">
+                                <div class="staff-timeline__item">
+                                    <span class="staff-timeline__dot"></span>
+                                    <div class="staff-timeline__content">
+                                        <strong>Cắm cờ mức cao</strong>
+                                        <p class="ds-caption">Nguyễn Văn Staff — 04/06/2026 14:10</p>
+                                    </div>
+                                </div>
+                                <div class="staff-timeline__item">
+                                    <span class="staff-timeline__dot"></span>
+                                    <div class="staff-timeline__content">
+                                        <strong>Nâng mức từ Trung bình → Cao</strong>
+                                        <p class="ds-caption">Nguyễn Văn Staff — 05/06/2026 08:00</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ds-card staff-action-card">
+                        <div class="ds-card-header">
+                            <h2 class="ds-card-title">Thao tác nhanh</h2>
+                        </div>
+                        <div class="ds-alert ds-alert-danger">Shop đang bị hạn chế hiển thị do cờ mức cao.</div>
+                        <div class="ds-stack-sm">
+                            <a class="ds-btn ds-btn-outline" href="/staff/complaints">Xem khiếu nại liên quan</a>
+                            <button class="ds-btn ds-btn-danger" type="button" data-staff-action="delete" data-staff-label="Đã xóa cờ cảnh báo">Xóa cờ</button>
+                            <a class="ds-btn ds-btn-outline" href="/staff/flags">Quay lại danh sách</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/auth.js}"></script>
+<script th:src="@{/js/staff-ui.js}"></script>
+</body>
+</html>

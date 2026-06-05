@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Chi tiết khiếu nại')}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('complaints')}"></aside>
+
+            <section class="ds-section">
+                <nav class="staff-breadcrumb">
+                    <a href="/staff/complaints">Khiếu nại</a>
+                    <span>/</span>
+                    <span>#CMP-3310</span>
+                </nav>
+
+                <div class="staff-page-header">
+                    <div>
+                        <h1 class="ds-page-title">Chi tiết &amp; xử lý khiếu nại</h1>
+                        <p class="ds-page-subtitle">Mã khiếu nại #CMP-3310 — Shop GameHub Pro</p>
+                    </div>
+                    <span class="ds-badge ds-badge-warning">Đang xử lý</span>
+                </div>
+
+                <div class="staff-detail-grid">
+                    <div class="ds-stack-md">
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Thông tin khiếu nại</h2>
+                            </div>
+                            <dl class="staff-info-list">
+                                <div class="staff-info-row">
+                                    <dt>Mã khiếu nại</dt>
+                                    <dd>#CMP-3310</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Người gửi</dt>
+                                    <dd>Nguyễn An — buyer@mmo.com</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Đối tượng</dt>
+                                    <dd>Shop GameHub Pro / Sản phẩm Gmail Premium</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Loại</dt>
+                                    <dd>Sản phẩm không đúng mô tả</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Số tiền liên quan</dt>
+                                    <dd class="ds-money">350.000 đ</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Ngày tạo</dt>
+                                    <dd>05/06/2026 08:12</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Nội dung khiếu nại</h2>
+                            </div>
+                            <p class="ds-body">Tôi mua tài khoản Gmail Premium nhưng nhận được tài khoản đã bị khóa sau 2 giờ sử dụng. Đã liên hệ shop nhưng không được phản hồi. Yêu cầu hoàn tiền hoặc cấp tài khoản thay thế.</p>
+                            <div class="ds-cluster ds-mt-md">
+                                <span class="ds-badge ds-badge-muted">Ảnh đính kèm x1</span>
+                                <span class="ds-badge ds-badge-muted">Chat log x3</span>
+                            </div>
+                        </div>
+
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Lịch sử xử lý</h2>
+                            </div>
+                            <div class="staff-timeline">
+                                <div class="staff-timeline__item">
+                                    <span class="staff-timeline__dot"></span>
+                                    <div class="staff-timeline__content">
+                                        <strong>Tiếp nhận khiếu nại</strong>
+                                        <p class="ds-caption">Hệ thống — 05/06/2026 08:12</p>
+                                    </div>
+                                </div>
+                                <div class="staff-timeline__item">
+                                    <span class="staff-timeline__dot"></span>
+                                    <div class="staff-timeline__content">
+                                        <strong>Staff phân công xử lý</strong>
+                                        <p class="ds-caption">Nguyễn Văn Staff — 05/06/2026 09:00</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ds-card staff-action-card">
+                        <div class="ds-card-header">
+                            <h2 class="ds-card-title">Xử lý khiếu nại</h2>
+                        </div>
+                        <div class="ds-alert ds-alert-info">Đây là giao diện demo. Các nút thao tác chưa kết nối backend.</div>
+                        <div class="ds-form-field">
+                            <label class="ds-label" for="complaintStatus">Trạng thái xử lý</label>
+                            <select class="ds-input" id="complaintStatus">
+                                <option>Đang xử lý</option>
+                                <option>Đã giải quyết</option>
+                                <option>Từ chối</option>
+                            </select>
+                        </div>
+                        <div class="ds-form-field">
+                            <label class="ds-label" for="complaintResolution">Kết quả / ghi chú</label>
+                            <textarea class="ds-textarea" id="complaintResolution" placeholder="Mô tả cách xử lý, hoàn tiền, cảnh báo shop..."></textarea>
+                        </div>
+                        <div class="ds-cluster">
+                            <button class="ds-btn ds-btn-success" type="button" data-staff-action="resolve" data-staff-label="Đã giải quyết khiếu nại">Giải quyết</button>
+                            <button class="ds-btn ds-btn-danger" type="button" data-staff-action="reject" data-staff-label="Đã từ chối khiếu nại">Từ chối</button>
+                        </div>
+                        <a class="ds-btn ds-btn-outline" href="/staff/complaints">Quay lại danh sách</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/auth.js}"></script>
+<script th:src="@{/js/staff-ui.js}"></script>
+</body>
+</html>

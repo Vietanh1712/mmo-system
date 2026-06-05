@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Phê duyệt rút tiền')}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('withdrawals')}"></aside>
+
+            <section class="ds-section">
+                <nav class="staff-breadcrumb">
+                    <a href="/staff/withdrawals">Rút tiền</a>
+                    <span>/</span>
+                    <span>#WD-8821</span>
+                </nav>
+
+                <div class="staff-page-header">
+                    <div>
+                        <h1 class="ds-page-title">Phê duyệt / từ chối rút tiền</h1>
+                        <p class="ds-page-subtitle">Giao dịch #WD-8821 — GameHub Pro</p>
+                    </div>
+                    <span class="ds-badge ds-badge-warning">Chờ duyệt</span>
+                </div>
+
+                <div class="staff-detail-grid">
+                    <div class="ds-stack-md">
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Thông tin yêu cầu</h2>
+                            </div>
+                            <dl class="staff-info-list">
+                                <div class="staff-info-row">
+                                    <dt>Mã giao dịch</dt>
+                                    <dd>#WD-8821</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Seller</dt>
+                                    <dd>GameHub Pro — seller.gamehub@mmo.com</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Số tiền rút</dt>
+                                    <dd class="ds-money">12.500.000 đ</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Phí giao dịch</dt>
+                                    <dd class="ds-money">25.000 đ</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Số tiền thực nhận</dt>
+                                    <dd class="ds-money">12.475.000 đ</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Ngày tạo</dt>
+                                    <dd>05/06/2026 06:30</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Thông tin ngân hàng</h2>
+                            </div>
+                            <dl class="staff-info-list">
+                                <div class="staff-info-row">
+                                    <dt>Ngân hàng</dt>
+                                    <dd>Vietcombank</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Số tài khoản</dt>
+                                    <dd>1023 **** 8821</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Chủ tài khoản</dt>
+                                    <dd>NGUYEN VAN A</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Chi nhánh</dt>
+                                    <dd>TP. Hồ Chí Minh</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Kiểm tra số dư seller</h2>
+                            </div>
+                            <div class="ds-alert ds-alert-success">Số dư khả dụng: 18.200.000 đ — đủ điều kiện rút.</div>
+                            <p class="ds-caption">Demo: dữ liệu số dư tĩnh, chưa kết nối backend.</p>
+                        </div>
+                    </div>
+
+                    <div class="ds-card staff-action-card">
+                        <div class="ds-card-header">
+                            <h2 class="ds-card-title">Quyết định rút tiền</h2>
+                        </div>
+                        <div class="ds-form-field">
+                            <label class="ds-label" for="withdrawNote">Ghi chú xử lý</label>
+                            <textarea class="ds-textarea" id="withdrawNote" placeholder="Mã chuyển khoản, lý do từ chối..."></textarea>
+                        </div>
+                        <div class="ds-form-field">
+                            <label class="ds-label" for="withdrawRef">Mã tham chiếu chuyển khoản</label>
+                            <input class="ds-input" id="withdrawRef" type="text" placeholder="FT25234...">
+                        </div>
+                        <div class="ds-cluster">
+                            <button class="ds-btn ds-btn-success" type="button" data-staff-action="approve" data-staff-label="Đã phê duyệt rút tiền">Phê duyệt</button>
+                            <button class="ds-btn ds-btn-danger" type="button" data-staff-action="reject" data-staff-label="Đã từ chối rút tiền">Từ chối</button>
+                        </div>
+                        <a class="ds-btn ds-btn-outline" href="/staff/withdrawals">Quay lại danh sách</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/auth.js}"></script>
+<script th:src="@{/js/staff-ui.js}"></script>
+</body>
+</html>
