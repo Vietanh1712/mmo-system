@@ -1,4 +1,4 @@
-﻿-- 1. Xóa tài khoản cũ đã bị lỗi mật khẩu
+-- 1. Xóa tài khoản cũ đã bị lỗi mật khẩu
 DELETE FROM Users WHERE email = 'admin@mmo.com';
 GO
 
