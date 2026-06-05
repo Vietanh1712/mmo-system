@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div class="row-actions" th:fragment="productRowActions(editHref)">
+    <a class="icon-button" th:href="${editHref}" title="Sửa sản phẩm"><i class="fa fa-pencil"></i></a>
+    <a class="icon-button danger" href="#" title="Xóa sản phẩm" onclick="return false;"><i class="fa fa-trash"></i></a>
+    <a class="icon-button danger" href="#" title="Ẩn sản phẩm" onclick="return false;"><i class="fa fa-lock"></i></a>
+</div>
+
+<div class="row-actions" th:fragment="variantRowActions(editHref)">
+    <a class="icon-button" th:href="${editHref}" title="Sửa biến thể"><i class="fa fa-pencil"></i></a>
+    <a class="icon-button danger" href="#" title="Xóa biến thể" onclick="return false;"><i class="fa fa-trash"></i></a>
+    <a class="icon-button danger" href="#" title="Khóa biến thể" onclick="return false;"><i class="fa fa-lock"></i></a>
+</div>
+
+<div class="row-actions" th:fragment="withdrawalRowActions(detailHref)">
+    <a class="icon-button" th:href="${detailHref}" title="Xem chi tiết"><i class="fa fa-pencil"></i></a>
+</div>
+
+<div class="row-actions" th:fragment="transactionRowActions(complaintHref)">
+    <a class="icon-button" th:href="${complaintHref}" title="Xem khiếu nại"><i class="fa fa-pencil"></i></a>
+</div>
+
+</body>
+</html>

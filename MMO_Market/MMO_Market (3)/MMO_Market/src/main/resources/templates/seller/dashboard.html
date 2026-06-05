@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tổng quan Shop - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/seller.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="seller-page">
+        <div class="seller-layout">
+            <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('dashboard')}"></aside>
+
+            <section class="seller-card">
+                <div class="seller-card__header">
+                    <div class="seller-card__header-main">
+                        <div class="seller-card__icon"><i class="fa fa-dashboard"></i></div>
+                        <div>
+                            <h1 class="seller-card__title">Tổng quan Shop</h1>
+                            <p class="seller-card__subtitle">Tóm tắt hoạt động cửa hàng trong tháng</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <p class="stat-card__label">Doanh thu tháng</p>
+                        <p class="stat-card__value">28.750.000 ₫</p>
+                        <p class="stat-card__hint">Sau hoa hồng sàn 5%</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-card__label">Đơn hoàn tất</p>
+                        <p class="stat-card__value">142</p>
+                        <p class="stat-card__hint">Trạng thái Completed</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-card__label">Sản phẩm đang bán</p>
+                        <p class="stat-card__value">18</p>
+                        <p class="stat-card__hint">Đang hiển thị công khai</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-card__label">Khiếu nại mở</p>
+                        <p class="stat-card__value">2</p>
+                        <p class="stat-card__hint">Cần phản hồi</p>
+                    </div>
+                </div>
+
+                <div class="seller-section">
+                    <h2 class="seller-section__title">Truy cập nhanh</h2>
+                    <div class="shortcut-grid">
+                        <a class="shortcut-card" th:href="@{/seller/inventory}">
+                            <i class="fa fa-cubes"></i>
+                            <strong>Quản lý kho</strong>
+                        </a>
+                        <a class="shortcut-card" th:href="@{/seller/transactions}">
+                            <i class="fa fa-exchange"></i>
+                            <strong>Lịch sử bán</strong>
+                        </a>
+                        <a class="shortcut-card" th:href="@{/seller/withdrawals}">
+                            <i class="fa fa-money"></i>
+                            <strong>Rút tiền</strong>
+                        </a>
+                        <a class="shortcut-card" th:href="@{/seller/statistics}">
+                            <i class="fa fa-bar-chart"></i>
+                            <strong>Thống kê</strong>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="seller-section">
+                    <h2 class="seller-section__title">Đơn hàng gần đây</h2>
+                    <div class="seller-table-wrap">
+                        <table class="seller-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã GD</th>
+                                    <th>Sản phẩm</th>
+                                    <th>Khách hàng</th>
+                                    <th class="text-right">Số tiền</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>#TX-10482</td>
+                                    <td>Netflix Premium 1 tháng</td>
+                                    <td>nguyen.van.a@email.com</td>
+                                    <td class="text-right">89.000 ₫</td>
+                                    <td><span class="badge held"><i class="fa fa-clock-o"></i> Held</span></td>
+                                </tr>
+                                <tr>
+                                    <td>#TX-10471</td>
+                                    <td>Spotify Family</td>
+                                    <td>tran.thi.b@email.com</td>
+                                    <td class="text-right">120.000 ₫</td>
+                                    <td><span class="badge ok"><i class="fa fa-check"></i> Completed</span></td>
+                                </tr>
+                                <tr>
+                                    <td>#TX-10465</td>
+                                    <td>Canva Pro 1 năm</td>
+                                    <td>le.van.c@email.com</td>
+                                    <td class="text-right">350.000 ₫</td>
+                                    <td><span class="badge pending"><i class="fa fa-clock-o"></i> Pending</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="profile-actions" style="margin-top: 16px;">
+                        <a class="profile-button profile-button--secondary" th:href="@{/seller/transactions}">Xem tất cả giao dịch</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    <script th:src="@{/js/auth.js}"></script>
+</body>
+</html>

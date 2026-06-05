@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông tin cửa hàng - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/seller.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="seller-page">
+        <div class="seller-layout">
+            <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('shop-info')}"></aside>
+
+            <section class="seller-card">
+                <div class="seller-card__header">
+                    <div class="seller-card__header-main">
+                        <div class="seller-card__icon"><i class="fa fa-store"></i></div>
+                        <div>
+                            <h1 class="seller-card__title">Cài đặt thông tin Shop</h1>
+                            <p class="seller-card__subtitle">Thông tin hiển thị công khai và tài khoản nhận tiền</p>
+                        </div>
+                    </div>
+                    <span class="badge ok"><i class="fa fa-check"></i> Active</span>
+                </div>
+
+                <form class="profile-edit-form seller-form-panel" novalidate>
+                    <div class="profile-edit-form__group">
+                        <label for="shopName">Tên cửa hàng</label>
+                        <input id="shopName" type="text" value="Shop MMO Pro">
+                    </div>
+                    <div class="profile-edit-form__group">
+                        <label for="shopDesc">Mô tả cửa hàng</label>
+                        <input id="shopDesc" type="text" value="Chuyên tài khoản premium, key bản quyền uy tín.">
+                    </div>
+                    <div class="profile-edit-form__group">
+                        <label for="shopLogo">Logo cửa hàng</label>
+                        <input id="shopLogo" type="file" disabled>
+                        <small class="profile-edit-form__hint">Tính năng upload sẽ được kích hoạt ở phiên bản sau.</small>
+                    </div>
+
+                    <h2 class="seller-section__title">Thông tin ngân hàng (SellerBankInfo)</h2>
+                    <div class="profile-edit-form__group">
+                        <label for="bankName">Ngân hàng</label>
+                        <input id="bankName" type="text" value="Vietcombank">
+                    </div>
+                    <div class="profile-edit-form__group">
+                        <label for="accountNumber">Số tài khoản</label>
+                        <input id="accountNumber" type="text" value="0123456789">
+                    </div>
+                    <div class="profile-edit-form__group">
+                        <label for="accountHolder">Chủ tài khoản</label>
+                        <input id="accountHolder" type="text" value="NGUYEN VAN A">
+                    </div>
+
+                    <div class="profile-actions">
+                        <button class="profile-button profile-button--primary" type="button" disabled>Lưu thay đổi</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

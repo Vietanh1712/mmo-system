@@ -79,7 +79,8 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/checkout"),
                                 new AntPathRequestMatcher("/pre-orders"),
                                 new AntPathRequestMatcher("/pre-orders/new"),
-                                new AntPathRequestMatcher("/pre-orders/**")
+                                new AntPathRequestMatcher("/pre-orders/**"),
+                                new AntPathRequestMatcher("/seller/**")
                         ).permitAll()
 
                         // Public Search API (không cần đăng nhập để xem sản phẩm)

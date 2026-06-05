@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng bán sản phẩm - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/seller.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="seller-page">
+        <div class="seller-layout">
+            <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('product-add')}"></aside>
+
+            <section class="seller-card">
+                <div class="seller-card__header">
+                    <div class="seller-card__header-main">
+                        <div class="seller-card__icon"><i class="fa fa-plus-square-o"></i></div>
+                        <div>
+                            <h1 class="seller-card__title">Đăng bán sản phẩm</h1>
+                            <p class="seller-card__subtitle">Tạo sản phẩm mới, sau đó thêm biến thể và tồn kho</p>
+                        </div>
+                    </div>
+                </div>
+
+                <form class="profile-edit-form seller-form-panel" novalidate>
+                    <div class="profile-edit-form__group">
+                        <label for="productName">Tên sản phẩm</label>
+                        <input id="productName" type="text" placeholder="VD: Tài khoản Netflix Premium">
+                    </div>
+                    <div class="profile-edit-form__group">
+                        <label for="category">Danh mục</label>
+                        <select id="category" style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;">
+                            <option>Streaming</option>
+                            <option>Phần mềm</option>
+                            <option>Game</option>
+                            <option>Tài khoản MXH</option>
+                        </select>
+                    </div>
+                    <div class="profile-edit-form__group">
+                        <label for="description">Mô tả sản phẩm</label>
+                        <input id="description" type="text" placeholder="Mô tả ngắn cho người mua">
+                    </div>
+                    <div class="profile-edit-form__group">
+                        <label for="productImage">Hình ảnh sản phẩm</label>
+                        <input id="productImage" type="file" disabled>
+                        <small class="profile-edit-form__hint">Ảnh minh họa (mock — chưa upload).</small>
+                    </div>
+
+                    <div class="profile-actions">
+                        <a class="profile-button profile-button--primary" th:href="@{/seller/variants/new}">Tiếp tục → Thêm biến thể</a>
+                        <a class="profile-button profile-button--secondary" th:href="@{/seller/inventory}">Hủy</a>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </main>
+</body>
+</html>
