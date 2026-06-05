@@ -53,6 +53,7 @@ a {
     font-weight: 700;
     color: #0f172a;
     display: flex;
+    flex: 0 0 auto;
     align-items: center;
     gap: 10px;
 }
@@ -62,8 +63,11 @@ a {
 }
 
 .header__search-area {
-    flex: 1;
-    margin: 0 40px;
+    display: flex;
+    flex: 1 1 auto;
+    justify-content: center;
+    min-width: 280px;
+    margin: 0 32px;
 }
 
 .header__search-area .search-form {
@@ -74,6 +78,7 @@ a {
     background: #f8fafc;
     padding: 0 12px;
     height: 38px;
+    width: 100%;
     max-width: 400px;
     transition: all 0.2s ease-in-out;
     position: relative;
@@ -147,7 +152,9 @@ a {
 /* Container chứa Auth/Profile (cần relative để làm mốc cho menu thả xuống) */
 .header__auth {
     display: flex;
+    flex: 0 0 auto;
     align-items: center;
+    justify-content: flex-end;
     gap: 15px;
     position: relative;
 }
@@ -155,12 +162,14 @@ a {
 .header__account-actions {
     display: flex;
     align-items: center;
+    flex-wrap: nowrap;
     gap: 10px;
 }
 
 .header-cart-button {
     width: 40px;
     height: 40px;
+    flex: 0 0 40px;
     border-radius: 10px;
     border: 1px solid #cbd5e1;
     background: #fff;
@@ -232,6 +241,7 @@ a {
    ================================================== */
 .user-profile {
     display: flex;
+    flex: 0 0 auto;
     align-items: center;
     gap: 12px;
     cursor: pointer;
@@ -852,7 +862,3 @@ a {
     font-size: 14px;
 }
 
-/* Hide header search bar ONLY on the homepage */
-.home-page .header__search-area {
-    display: none !important;
-}
