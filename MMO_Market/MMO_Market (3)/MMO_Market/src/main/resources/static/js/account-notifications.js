@@ -46,18 +46,68 @@ async function loadNotificationsPage() {
 }
 
 function readNotifications() {
+    let personal = [];
     try {
         const saved = JSON.parse(sessionStorage.getItem(ACCOUNT_NOTIFICATIONS_MOCK_KEY));
         if (Array.isArray(saved) && saved.length) {
-            return saved;
+            personal = saved;
+        } else {
+            personal = createSeedNotifications();
+            saveNotifications(personal);
         }
     } catch {
-        // fallback to seeded data below
+        personal = createSeedNotifications();
+        saveNotifications(personal);
     }
 
-    const seeded = createSeedNotifications();
-    saveNotifications(seeded);
-    return seeded;
+    // Load public broadcast notifications
+    let broadcasts = [];
+    try {
+        const stored = sessionStorage.getItem('mmo_admin_mock');
+        const mockData = stored ? JSON.parse(stored) : {};
+        broadcasts = mockData.notifications || [];
+    } catch (e) {
+        broadcasts = [];
+    }
+
+    const readTimestamps = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
+    const mappedBroadcasts = broadcasts.map(item => {
+        let type = 'SYSTEM';
+        let severity = 'INFO';
+        if (item.type === 'warning') {
+            type = 'SECURITY';
+            severity = 'WARNING';
+        } else if (item.type === 'maintenance') {
+            type = 'SYSTEM';
+            severity = 'DANGER';
+        } else if (item.type === 'policy') {
+            type = 'SYSTEM';
+            severity = 'INFO';
+        }
+
+        const isUnread = !readTimestamps.includes(item.timestamp);
+        return {
+            id: `SYS-${item.timestamp}`,
+            type: type,
+            title: item.title,
+            message: item.content,
+            status: isUnread ? 'UNREAD' : 'READ',
+            severity: severity,
+            createdAt: formatDateTime(new Date(item.timestamp)),
+            targetUrl: '/notifications',
+            isBroadcast: true,
+            originalTimestamp: item.timestamp
+        };
+    });
+
+    const combined = [...personal, ...mappedBroadcasts];
+    combined.sort((a, b) => {
+        const da = parseVietnameseDateTime(a.createdAt) || new Date(0);
+        const db = parseVietnameseDateTime(b.createdAt) || new Date(0);
+        return db - da;
+    });
+
+    return combined;
 }
 
 function createSeedNotifications() {
@@ -88,7 +138,8 @@ function createNotification(id, type, title, message, status, severity, createdD
 }
 
 function saveNotifications(nextNotifications) {
-    sessionStorage.setItem(ACCOUNT_NOTIFICATIONS_MOCK_KEY, JSON.stringify(nextNotifications));
+    const personalOnly = nextNotifications.filter(n => !n.isBroadcast);
+    sessionStorage.setItem(ACCOUNT_NOTIFICATIONS_MOCK_KEY, JSON.stringify(personalOnly));
 }
 
 function renderSummary() {
@@ -161,6 +212,18 @@ function openNotification(notificationId) {
     if (!notification) return;
 
     notification.status = 'READ';
+    
+    if (notification.isBroadcast) {
+        const readTimestamps = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
+        if (!readTimestamps.includes(notification.originalTimestamp)) {
+            readTimestamps.push(notification.originalTimestamp);
+            localStorage.setItem('mmoReadNotifs', JSON.stringify(readTimestamps));
+        }
+        if (typeof window.refreshHeaderNotifBadge === 'function') {
+            window.refreshHeaderNotifBadge();
+        }
+    }
+    
     saveNotifications(notifications);
     renderSummary();
 
@@ -174,8 +237,22 @@ function openNotification(notificationId) {
 }
 
 function markAllAsRead() {
-    notifications = notifications.map(item => ({ ...item, status: 'READ' }));
+    const readTimestamps = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
+    notifications = notifications.map(item => {
+        if (item.isBroadcast) {
+            if (!readTimestamps.includes(item.originalTimestamp)) {
+                readTimestamps.push(item.originalTimestamp);
+            }
+        }
+        return { ...item, status: 'READ' };
+    });
+    localStorage.setItem('mmoReadNotifs', JSON.stringify(readTimestamps));
+
     saveNotifications(notifications);
+    if (typeof window.refreshHeaderNotifBadge === 'function') {
+        window.refreshHeaderNotifBadge();
+    }
+
     renderSummary();
     renderNotifications();
     showNotificationsMessage('Đã đánh dấu tất cả thông báo là đã đọc.', 'success');
@@ -351,7 +428,8 @@ function addDays(date, days) {
 }
 
 function formatDateTime(date) {
-    return date.toLocaleString('vi-VN');
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())} ${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
 }
 
 function showNotificationsMessage(message, type) {

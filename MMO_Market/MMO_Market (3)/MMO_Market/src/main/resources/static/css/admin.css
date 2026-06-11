@@ -1,4 +1,4 @@
-/* Admin console — extends MMO Market design system (see docs/design-system/docs/UX_UI_SYNC_GUIDELINE.md) */
+/* Admin console â€” extends MMO Market design system (see docs/design-system/docs/UX_UI_SYNC_GUIDELINE.md) */
 
 body {
     background: var(--ds-bg);
@@ -102,6 +102,7 @@ body {
 
 .admin-view.active {
     display: block;
+    min-width: 0;
     animation: admin-fade-in 0.25s ease;
 }
 
@@ -301,25 +302,6 @@ body {
     margin-bottom: 16px;
 }
 
-.control-input {
-    box-sizing: border-box;
-    height: 40px;
-    padding: 0 14px;
-    border: 1px solid var(--ds-border-strong);
-    border-radius: var(--ds-radius-sm);
-    background: #ffffff;
-    color: var(--ds-text);
-    font-family: var(--ds-font-family);
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.control-input:focus {
-    border-color: var(--ds-primary);
-    box-shadow: 0 0 0 1px var(--ds-primary);
-}
-
 /* Chart */
 .chart-summary {
     flex-wrap: wrap;
@@ -438,31 +420,6 @@ body {
     gap: 12px;
 }
 
-.perm-label-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px;
-    border-radius: var(--ds-radius-sm);
-    font-size: 13px;
-    cursor: pointer;
-}
-
-.perm-label-checkbox:hover {
-    background: var(--ds-surface-muted);
-}
-
-/* Forms */
-.config-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 20px;
-}
-
-.config-full-row {
-    grid-column: 1 / -1;
-}
-
 .form-group label {
     display: block;
     margin-bottom: 6px;
@@ -541,35 +498,6 @@ body {
     color: #991b1b;
 }
 
-/* Modals (legacy .modal.active — maps to ds-modal shell) */
-.modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 1100;
-    place-items: center;
-    padding: 20px;
-    background: rgba(15, 23, 42, 0.45);
-}
-
-.modal.active {
-    display: grid;
-}
-
-.modal-card {
-    width: min(520px, 100%);
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: 20px;
-    border-radius: var(--ds-radius-xl);
-    background: var(--ds-surface);
-    box-shadow: var(--ds-shadow-lg);
-}
-
-.modal-card.modal-card-lg {
-    width: min(680px, 100%);
-}
-
 .perm-group {
     margin-bottom: 20px;
 }
@@ -583,7 +511,7 @@ body {
     text-transform: uppercase;
 }
 
-/* Danh sách: filter panel + bảng + phân trang (theo DS examples) */
+/* Danh sÃ¡ch: filter panel + báº£ng + phÃ¢n trang (theo DS examples) */
 .admin-list-card {
     overflow: hidden;
     padding: 0;
@@ -604,289 +532,6 @@ body {
     margin: 0;
 }
 
-/* ---------- Form thêm / chi tiết tài khoản ---------- */
-.account-form-page {
-    max-width: 1100px;
-}
-
-.account-form-topbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 16px 20px;
-    margin-bottom: 24px;
-}
-
-.account-form-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 14px;
-    border: 1px solid var(--ds-border);
-    border-radius: var(--ds-radius-sm);
-    background: #fff;
-    color: var(--ds-text-muted);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
-}
-
-.account-form-back:hover {
-    border-color: var(--ds-primary);
-    color: var(--ds-primary);
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
-}
-
-.account-form-topbar-text {
-    flex: 1;
-    min-width: 200px;
-}
-
-.account-form-kicker {
-    display: block;
-    margin-bottom: 4px;
-    color: var(--ds-primary);
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-.account-form-title {
-    margin: 0 0 6px;
-}
-
-.account-form-topbar-text .ds-caption {
-    margin: 0;
-    max-width: 520px;
-}
-
-.account-form-mode-badge {
-    align-self: center;
-    margin-left: auto;
-    padding: 6px 14px;
-    font-size: 12px;
-}
-
-.account-form-layout {
-    display: grid;
-    grid-template-columns: minmax(260px, 300px) 1fr;
-    gap: 24px;
-    align-items: start;
-}
-
-.account-form-aside {
-    position: sticky;
-    top: 88px;
-}
-
-.account-profile-card {
-    padding: 0;
-    overflow: hidden;
-}
-
-.account-profile-hero {
-    padding: 28px 20px 20px;
-    text-align: center;
-    background: linear-gradient(160deg, #eff6ff 0%, #f8fafc 55%, #ffffff 100%);
-    border-bottom: 1px solid var(--ds-border);
-}
-
-.account-profile-avatar {
-    width: 88px;
-    height: 88px;
-    margin: 0 auto 14px;
-    font-size: 32px;
-    font-weight: 800;
-    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.2);
-}
-
-.account-profile-name {
-    margin: 0 0 6px;
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--ds-text);
-    word-break: break-word;
-}
-
-.account-profile-email {
-    margin: 0 0 12px;
-    font-size: 13px;
-    color: var(--ds-text-muted);
-    word-break: break-all;
-}
-
-.account-aside-hint {
-    padding: 16px 18px;
-    font-size: 13px;
-    line-height: 1.55;
-    color: var(--ds-text-muted);
-}
-
-.account-aside-hint p {
-    margin: 0;
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-}
-
-.account-aside-hint .fa {
-    color: var(--ds-primary);
-    margin-top: 2px;
-}
-
-.account-stats-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1px;
-    background: var(--ds-border);
-    border-top: 1px solid var(--ds-border);
-}
-
-.account-stat-item {
-    padding: 14px 16px;
-    background: #fff;
-}
-
-.account-stat-item--wide {
-    grid-column: 1 / -1;
-}
-
-.account-stat-label {
-    display: block;
-    margin-bottom: 6px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--ds-text-muted);
-}
-
-.account-stat-item strong,
-.account-stat-item .ds-money {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--ds-text);
-}
-
-.account-form-main {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    min-width: 0;
-}
-
-.account-form-section {
-    padding: 0;
-    overflow: hidden;
-}
-
-.account-form-section-head {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-    padding: 18px 22px;
-    border-bottom: 1px solid var(--ds-border);
-    background: var(--ds-surface-muted);
-}
-
-.account-form-section-icon {
-    display: flex;
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    background: #dbeafe;
-    color: #2563eb;
-    font-size: 16px;
-}
-
-.account-form-section-icon--green {
-    background: #dcfce7;
-    color: #16a34a;
-}
-
-.account-form-section-icon--amber {
-    background: #fef3c7;
-    color: #d97706;
-}
-
-.account-form-section-title {
-    margin: 0 0 4px;
-    font-size: 15px;
-    font-weight: 700;
-}
-
-.account-form-section-head .ds-caption {
-    margin: 0;
-}
-
-.account-form-grid {
-    padding: 20px 22px 22px;
-    gap: 16px 18px;
-}
-
-.account-field-span-2 {
-    grid-column: span 2;
-}
-
-.account-gender-row {
-    min-height: 40px;
-    align-items: center;
-}
-
-.account-status-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 16px 24px;
-    padding: 20px 22px;
-}
-
-.account-status-hint {
-    margin: 0;
-    flex: 1;
-    min-width: 180px;
-}
-
-.account-form-actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 12px;
-    padding: 16px 20px;
-    position: sticky;
-    bottom: 16px;
-    z-index: 5;
-    box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.06);
-}
-
-.account-form-submit-btn {
-    min-width: 160px;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
-}
-
-@media (max-width: 900px) {
-    .account-form-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .account-form-aside {
-        position: static;
-    }
-
-    .account-field-span-2 {
-        grid-column: span 1;
-    }
-
-    .account-form-mode-badge {
-        margin-left: 0;
-    }
-}
 
 .ds-table .ds-toggle {
     display: inline-flex;
@@ -902,72 +547,6 @@ body {
 
 .ds-required {
     color: var(--ds-danger, #dc2626);
-}
-
-.modal-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--ds-border);
-}
-
-.modal-head h3 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 700;
-}
-
-.modal-close {
-    display: inline-flex;
-    width: 36px;
-    height: 36px;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--ds-border);
-    border-radius: var(--ds-radius-sm);
-    background: #ffffff;
-    color: var(--ds-text-muted);
-    cursor: pointer;
-}
-
-.modal-close:hover {
-    border-color: var(--ds-primary);
-    color: var(--ds-primary);
-}
-
-.modal-actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 10px;
-}
-
-/* Toast notification */
-#toast.admin-toast {
-    display: none;
-    position: fixed;
-    top: 24px;
-    right: 24px;
-    z-index: 1200;
-    max-width: min(380px, calc(100vw - 32px));
-    padding: 14px 18px;
-    border-left: 4px solid var(--ds-success);
-    border-radius: var(--ds-radius-md);
-    background: var(--ds-success-soft);
-    color: #166534;
-    font-family: var(--ds-font-family);
-    font-size: 14px;
-    font-weight: 600;
-    box-shadow: var(--ds-shadow-lg);
-}
-
-#toast.admin-toast.error {
-    border-left-color: var(--ds-danger);
-    background: var(--ds-danger-soft);
-    color: #991b1b;
 }
 
 /* Responsive */
@@ -992,8 +571,7 @@ body {
 }
 
 @media (max-width: 640px) {
-    .perm-checkboxes,
-    .config-grid {
+    .perm-checkboxes {
         grid-template-columns: 1fr;
     }
 }
@@ -1268,50 +846,6 @@ body {
     font-weight: 700;
 }
 
-.modal-card .control {
-    width: 100%;
-    height: 40px;
-    box-sizing: border-box;
-    padding: 0 14px;
-    border: 1px solid var(--ds-border-strong);
-    border-radius: var(--ds-radius-sm);
-    background: #fff;
-    color: var(--ds-text);
-    font-family: var(--ds-font-family);
-    font-size: 14px;
-}
-
-.modal-card .control:focus {
-    border-color: var(--ds-primary);
-    box-shadow: 0 0 0 1px var(--ds-primary);
-    outline: none;
-}
-
-#toast.toast,
-#toast.admin-toast {
-    display: none;
-    position: fixed;
-    top: 24px;
-    right: 24px;
-    z-index: 1200;
-    max-width: min(380px, calc(100vw - 32px));
-    padding: 14px 18px;
-    border-left: 4px solid var(--ds-success);
-    border-radius: var(--ds-radius-md);
-    background: var(--ds-success-soft);
-    color: #166534;
-    font-family: var(--ds-font-family);
-    font-size: 14px;
-    font-weight: 600;
-    box-shadow: var(--ds-shadow-lg);
-}
-
-#toast.toast.error,
-#toast.admin-toast.error {
-    border-left-color: var(--ds-danger);
-    background: var(--ds-danger-soft);
-    color: #991b1b;
-}
 
 @media (max-width: 960px) {
     .panel-toolbar {
@@ -1325,3 +859,5 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+

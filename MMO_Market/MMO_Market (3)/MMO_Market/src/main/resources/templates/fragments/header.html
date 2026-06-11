@@ -135,6 +135,10 @@
 
                     authArea.innerHTML = `
                         <div class="header__account-actions">
+                            <button class="header-cart-button" type="button" id="headerNotifButton" title="Thông báo" aria-label="Thông báo" onclick="checkAuthAndRedirect('/notifications')">
+                                <i class="fa fa-bell"></i>
+                                <span class="header-cart-button__badge" id="headerNotifCount" style="display: none; background: var(--ds-danger);">0</span>
+                            </button>
                             <button class="header-cart-button" type="button" id="headerCartButton" title="Giỏ hàng của tôi" aria-label="Giỏ hàng của tôi" onclick="checkAuthAndRedirect('/cart')">
                                 <i class="fa fa-shopping-cart"></i>
                                 <span class="header-cart-button__badge" id="headerCartCount">0</span>
@@ -157,6 +161,7 @@
                         });
                     }
                     refreshHeaderCartBadge();
+                    refreshHeaderNotifBadge();
                 } catch (error) {
                     console.error("Lỗi khi parse thông tin user:", error);
                     sessionStorage.clear();
@@ -243,9 +248,32 @@
             }
         }
 
+        function refreshHeaderNotifBadge() {
+            const badge = document.getElementById('headerNotifCount');
+            if (!badge) return;
+            try {
+                const mockData = JSON.parse(sessionStorage.getItem('mmo_admin_mock') || '{}');
+                const history = mockData.notifications || [];
+                const readIds = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
+                const unreadCount = history.filter(n => !readIds.includes(n.timestamp)).length;
+                badge.innerText = unreadCount > 99 ? '99+' : String(unreadCount);
+                badge.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
+            } catch (error) {
+                badge.innerText = '0';
+                badge.style.display = 'none';
+            }
+        }
+
         window.refreshHeaderCartBadge = refreshHeaderCartBadge;
-        window.addEventListener('storage', refreshHeaderCartBadge);
-        document.addEventListener('DOMContentLoaded', refreshHeaderCartBadge);
+        window.refreshHeaderNotifBadge = refreshHeaderNotifBadge;
+        window.addEventListener('storage', () => {
+            refreshHeaderCartBadge();
+            refreshHeaderNotifBadge();
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+            refreshHeaderCartBadge();
+            refreshHeaderNotifBadge();
+        });
 
         const HEADER_SEARCH_SUGGESTIONS = [
             'Netflix',

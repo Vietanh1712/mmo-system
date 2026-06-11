@@ -47,6 +47,11 @@ public class HomeController {
         return "cart";
     }
 
+    @GetMapping("/notifications")
+    public String showNotificationsPage() {
+        return "notifications";
+    }
+
     @GetMapping("/products/{productId}")
     public String showProductDetailPage(@PathVariable("productId") Long productId, Model model) {
         model.addAttribute("productId", productId);

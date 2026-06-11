@@ -7,7 +7,7 @@
 
     const VIEWS = [
         'dashboard', 'audit-logs', 'revenue', 'add-staff', 'account-detail', 'system-config',
-        'commissions', 'maintenance', 'accounts', 'permissions'
+        'commissions', 'accounts', 'permissions', 'notifications'
     ];
 
     const ALL_PERMISSIONS = [
@@ -18,16 +18,17 @@
         { id: 'MANAGE_ESCROW', label: 'Quản lý giam tiền Escrow', group: 'Tài chính' },
         { id: 'VIEW_REVENUE_REPORTS', label: 'Xem báo cáo doanh thu', group: 'Tài chính' },
         { id: 'HANDLE_DISPUTES', label: 'Xử lý tranh chấp', group: 'Vận hành' },
-        { id: 'MANAGE_REQUESTS', label: 'Quản lý yêu cầu hỗ trợ', group: 'Vận hành' }
+        { id: 'MANAGE_REQUESTS', label: 'Quản lý yêu cầu hỗ trợ', group: 'Vận hành' },
+        { id: 'RECEIVE_SYSTEM_ALERTS', label: 'Nhận & xử lý email cảnh báo hệ thống', group: 'Vận hành' }
     ];
 
     const MOCK_DEFAULT = {
         auditLogs: [
-            { id: 101, timestamp: '2026-06-04T10:15:00Z', operator: 'tran.van.b@mmomarket.com', action: 'KYC_Approve', ipAddress: '192.168.1.50', desc: 'Duyệt KYC cho pham.duc.d@gmail.com', diff: '{ "kycStatus": "pending -> verified" }' },
-            { id: 102, timestamp: '2026-06-04T09:40:00Z', operator: 'le.thi.c@mmomarket.com', action: 'Fund_Withdraw', ipAddress: '192.168.1.62', desc: 'Duyệt rút 5.000.000 VNĐ', diff: '{ "status": "pending -> completed" }' },
-            { id: 103, timestamp: '2026-06-03T16:20:00Z', operator: 'admin@mmomarket.com', action: 'Config_Update', ipAddress: '113.161.40.85', desc: 'Cập nhật hạn mức rút tối thiểu', diff: '{ "minWithdrawal": 50000 -> 100000 }' },
-            { id: 104, timestamp: '2026-06-03T11:00:00Z', operator: 'tran.van.b@mmomarket.com', action: 'Lock_User', ipAddress: '192.168.1.50', desc: 'Khóa hoang.thi.h@gmail.com', diff: '{ "isLocked": false -> true }' },
-            { id: 105, timestamp: '2026-06-02T14:30:00Z', operator: 'admin@mmomarket.com', action: 'Maintenance_Toggle', ipAddress: '113.161.40.85', desc: 'Lên lịch bảo trì hệ thống', diff: '{ "scheduled": true }' }
+            { id: 101, timestamp: '2026-06-04T10:15:00Z', operator: 'tran.van.b@mmomarket.com', action: 'KYC_Approve', ipAddress: '192.168.1.50', desc: 'Duyệt KYC cho pham.duc.d@gmail.com', diff: '{"kycStatus": "pending -> verified"}' },
+            { id: 102, timestamp: '2026-06-04T09:40:00Z', operator: 'le.thi.c@mmomarket.com', action: 'Fund_Withdraw', ipAddress: '192.168.1.62', desc: 'Duyệt rút 5.000.000 VNĐ', diff: '{"status": "pending -> completed"}' },
+            { id: 103, timestamp: '2026-06-03T16:20:00Z', operator: 'admin@mmomarket.com', action: 'Config_Update', ipAddress: '113.161.40.85', desc: 'Cập nhật hạn mức rút tối thiểu', diff: '{"minWithdrawal": "50000 -> 100000"}' },
+            { id: 104, timestamp: '2026-06-03T11:00:00Z', operator: 'tran.van.b@mmomarket.com', action: 'Lock_User', ipAddress: '192.168.1.50', desc: 'Khóa hoang.thi.h@gmail.com', diff: '{"isLocked": "false -> true"}' },
+            { id: 105, timestamp: '2026-06-02T14:30:00Z', operator: 'admin@mmomarket.com', action: 'Maintenance_Toggle', ipAddress: '113.161.40.85', desc: 'Lên lịch bảo trì hệ thống', diff: '{"scheduled": "false -> true"}' }
         ],
         cashFlow: [
             { id: 'TX1001', timestamp: '2026-06-04T10:00:00Z', email: 'pham.duc.d@gmail.com', type: 'Deposit', amount: 20000000, fee: 0, status: 'Completed' },
@@ -42,11 +43,10 @@
         },
         systemConfig: {
             appName: 'MMO Market System',
-            adminEmail: 'alerts@mmomarket.com',
             sessionTimeout: 15,
             otpTimeout: 5,
             maxLoginRetries: 5,
-            minWithdrawal: 50000,
+            escrowHoldHours: 72,
             allowGoogleLogin: true,
             allowRegister: true,
             requireWithdraw2FA: true
@@ -55,7 +55,11 @@
             basePercent: 5.0,
             flatBuyerFee: 1000,
             withdrawalPercent: 1.5,
-            minWithdrawFee: 10000
+            minWithdrawFee: 10000,
+            minWithdrawLimit: 50000,
+            maxWithdrawLimit: 50000000,
+            autoWithdrawLimit: 5000000,
+            minDepositLimit: 10000
         },
         maintenance: {
             active: false,
@@ -63,7 +67,30 @@
             whitelist: '127.0.0.1',
             startTime: '2026-06-05T01:00',
             endTime: '2026-06-05T04:00'
-        }
+        },
+        notifications: [
+            {
+                timestamp: new Date(Date.now() - 3600000).toISOString(),
+                title: 'Bảo trì hệ thống định kỳ tháng 6/2026',
+                type: 'maintenance',
+                content: 'Chúng tôi sẽ tiến hành bảo trì nâng cấp hệ thống định kỳ từ 01:00 đến 04:00 ngày 15/06/2026. Trong thời gian này, một số tính năng nạp tiền và giao dịch có thể bị chậm trễ hoặc tạm ngưng để đảm bảo an toàn dữ liệu. Xin chân thành cảm ơn sự thông cảm của quý khách.',
+                author: 'Hệ thống'
+            },
+            {
+                timestamp: new Date(Date.now() - 86400000).toISOString(),
+                title: 'Cập nhật chính sách phí giao dịch MMO Market',
+                type: 'policy',
+                content: 'Kể từ ngày 12/06/2026, MMO Market sẽ cập nhật biểu phí dịch vụ bảo trợ C2C đối với người mua ở mức 2% (đã bao gồm phí thanh toán tự động). Mức phí này giúp chúng tôi duy trì hệ thống bảo chứng Escrow Hold 3 ngày (72 giờ) tối ưu nhất và mở rộng bộ phận CSKH hỗ trợ 24/7.',
+                author: 'Ban Quản Trị'
+            },
+            {
+                timestamp: new Date(Date.now() - 2 * 86400000).toISOString(),
+                title: 'Cảnh báo bảo mật: Các hình thức lừa đảo giả mạo Staff',
+                type: 'warning',
+                content: 'Khách hàng đặc biệt chú ý: Gần đây có một số đối tượng giả mạo Staff hoặc Moderator của MMO Market để nhắn tin riêng yêu cầu hỗ trợ giao dịch, yêu cầu cung cấp OTP hoặc chuyển tiền trực tiếp ngoài hệ thống.\n\nStaff của hệ thống KHÔNG BAO GIỜ chủ động nhắn tin riêng yêu cầu bạn chuyển khoản ngoài hoặc cung cấp thông tin đăng nhập/OTP. Mọi hoạt động trung gian đều phải được thực hiện thông qua hệ thống website MMO Market.',
+                author: 'Phòng Bảo Mật'
+            }
+        ]
     };
 
     let mock = {};
@@ -79,6 +106,8 @@
     let revPage = 0;
     let revPageSize = 10;
     let revFiltered = [];
+    let notifPage = 0;
+    let notifPageSize = 10;
     let accountFormMode = 'create';
     let accountFormUserId = null;
     let accountFormReturnView = 'accounts';
@@ -174,6 +203,9 @@
                 loadUsers();
             }
         });
+        document.getElementById('revKeywordFilter')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); revPage = 0; renderRevenueView(); }
+        });
 
         document.getElementById('auditSearchBtn')?.addEventListener('click', () => {
             auditPage = 0;
@@ -197,7 +229,11 @@
         });
         document.getElementById('revenueResetFilter')?.addEventListener('click', () => {
             const f = document.getElementById('revTimeFilter');
+            const k = document.getElementById('revKeywordFilter');
+            const t = document.getElementById('revTypeFilter');
             if (f) f.value = '7days';
+            if (k) k.value = '';
+            if (t) t.value = '';
             revPage = 0;
             renderRevenueView();
         });
@@ -206,9 +242,32 @@
             if (accountFormMode === 'detail-readonly') return;
             setAccountFormActive(!accountFormActive);
         });
+        document.querySelectorAll('.ds-toggle-system, #maintActive').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const isActive = btn.getAttribute('aria-pressed') === 'true';
+                btn.setAttribute('aria-pressed', String(!isActive));
+                btn.classList.toggle('ds-toggle-inactive', isActive);
+            });
+        });
         document.getElementById('accountFormSubmitBtn')?.addEventListener('click', () => submitAccountForm());
         document.getElementById('accountFormEmail')?.addEventListener('input', syncAccountFormProfile);
         document.getElementById('accountFormFullName')?.addEventListener('input', syncAccountFormProfile);
+
+        document.getElementById('notifType')?.addEventListener('change', (e) => {
+            const wrap = document.getElementById('notifMaintToggleWrap');
+            if (wrap) {
+                if (e.target.value === 'maintenance') {
+                    wrap.classList.remove('ds-hidden');
+                } else {
+                    wrap.classList.add('ds-hidden');
+                    const toggle = document.getElementById('notifMaintToggle');
+                    if (toggle) {
+                        toggle.setAttribute('aria-pressed', 'false');
+                        toggle.classList.add('ds-toggle-inactive');
+                    }
+                }
+            }
+        });
     }
 
     function syncAccountFormProfile() {
@@ -226,18 +285,9 @@
 
     function setAccountFormLayoutMode(mode) {
         const isDetail = mode === 'detail';
-        const createAside = document.getElementById('accountFormAsideCreate');
-        const statsAside = document.getElementById('accountFormAsideStats');
-        const profileRole = document.getElementById('accountFormProfileRole');
-        const modeBadge = document.getElementById('accountFormModeBadge');
-        if (createAside) createAside.style.display = isDetail ? 'none' : 'block';
-        if (statsAside) statsAside.style.display = isDetail ? 'grid' : 'none';
-        if (profileRole) profileRole.style.display = isDetail ? 'inline-flex' : 'none';
-        if (modeBadge) {
-            modeBadge.textContent = isDetail ? 'Chi tiết' : 'Tạo mới';
-            modeBadge.className = `ds-badge account-form-mode-badge ${isDetail ? 'ds-badge-muted' : 'ds-badge-info'}`;
-        }
-        setText('accountFormKicker', isDetail ? 'Hồ sơ thành viên' : 'Quản lý tài khoản');
+        const stats = document.getElementById('accountFormStats');
+        if (stats) stats.style.display = isDetail ? 'grid' : 'none';
+        // Note: Title and kicker changes are handled in prepareAccountFormCreate/fillAccountForm
     }
 
     function sttNumber(page, pageSize, index) {
@@ -374,7 +424,7 @@
             case 'account-detail': loadAccountFormDetail(); break;
             case 'system-config': loadSystemConfigForm(); break;
             case 'commissions': loadCommissionsForm(); break;
-            case 'maintenance': loadMaintenanceForm(); break;
+            case 'notifications': loadNotificationsView(); break;
             case 'accounts': loadUsers(); break;
             case 'permissions': loadPermissionsView(); break;
         }
@@ -550,8 +600,16 @@
             page: String(currentPage),
             size: String(currentPageSize)
         });
-        const keyword = document.getElementById('searchInput').value.trim();
-        if (keyword) params.set('name', keyword);
+        const keyword = document.getElementById('searchInput')?.value.trim() || '';
+        if (keyword) {
+            if (keyword.includes('@')) {
+                params.set('email', keyword);
+            } else if (/^\d+$/.test(keyword)) {
+                params.set('phone', keyword);
+            } else {
+                params.set('name', keyword);
+            }
+        }
         const roleVal = document.getElementById('roleFilter').value;
         if (roleVal) params.set('role', roleVal);
         try {
@@ -717,10 +775,14 @@
         resetAccountFormFields();
         setAccountFormEditable(true);
         setAccountFormActive(true);
-        document.getElementById('accountFormEmail').disabled = false;
-        document.getElementById('accountFormPasswordWrap').style.display = '';
-        document.getElementById('accountFormPassword').required = true;
-        document.getElementById('accountFormPasswordRequired').style.display = '';
+        const emailEl = document.getElementById('accountFormEmail');
+        if (emailEl) emailEl.disabled = false;
+        const pwdWrap = document.getElementById('accountFormPasswordWrap');
+        if (pwdWrap) pwdWrap.style.display = '';
+        const pwdInput = document.getElementById('accountFormPassword');
+        if (pwdInput) pwdInput.required = true;
+        const pwdReq = document.getElementById('accountFormPasswordRequired');
+        if (pwdReq) pwdReq.style.display = '';
         syncAccountFormProfile();
     }
 
@@ -750,13 +812,14 @@
         setText('accountFormCaption', `Mã #${user.id} · ${user.email || ''}`);
         setText('accountFormSubmitLabel', 'Lưu thay đổi');
 
-        document.getElementById('accountFormId').value = user.id || '';
-        document.getElementById('accountFormEmail').value = user.email || '';
-        document.getElementById('accountFormFullName').value = user.fullName || '';
-        document.getElementById('accountFormPhone').value = user.phone || '';
-        document.getElementById('accountFormAddress').value = user.address || '';
-        document.getElementById('accountFormNationalId').value = user.nationalId || '';
-        document.getElementById('accountFormBirthDate').value = user.dateOfBirth || '';
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+        setVal('accountFormId', user.id || '');
+        setVal('accountFormEmail', user.email || '');
+        setVal('accountFormFullName', user.fullName || '');
+        setVal('accountFormPhone', user.phone || '');
+        setVal('accountFormAddress', user.address || '');
+        setVal('accountFormNationalId', user.nationalId || '');
+        setVal('accountFormBirthDate', user.dateOfBirth || '');
         const gender = (user.gender || 'Nam').toLowerCase();
         document.querySelectorAll('input[name="accountFormGender"]').forEach(r => {
             r.checked = (gender.startsWith('n') && r.value === 'Nữ') || (!gender.startsWith('n') && r.value === 'Nam');
@@ -764,22 +827,28 @@
         setAccountFormActive(!user.isLocked);
         syncAccountFormProfile();
 
-        setText('accountFormIdDisplay', user.id ? `#${user.id}` : '—');
+        setText('accountFormIdDisplay', user.id ? `#${user.id}` : '-');
         const roleEl = document.getElementById('accountFormRoleBadge');
-        roleEl.textContent = roleLabel(role);
-        roleEl.className = `ds-badge ${roleBadgeClass(role)}`;
+        if (roleEl) {
+            roleEl.textContent = roleLabel(role);
+            roleEl.className = `ds-badge ${roleBadgeClass(role)}`;
+        }
         const profileRole = document.getElementById('accountFormProfileRole');
         if (profileRole) {
             profileRole.textContent = roleLabel(role);
             profileRole.className = `ds-badge ${roleBadgeClass(role)}`;
             profileRole.style.display = 'inline-flex';
         }
-        document.getElementById('accountFormVerifyBadge').innerHTML = user.isVerified
-            ? '<span class="ds-badge ds-badge-success">Đã xác thực</span>'
-            : '<span class="ds-badge ds-badge-warning">Chưa xác thực</span>';
-        document.getElementById('accountFormBalance').textContent = formatVnd(user.balanceVnd || 0);
-        document.getElementById('accountFormCreatedAt').textContent = user.createdAt
-            ? new Date(user.createdAt).toLocaleString('vi-VN') : '—';
+        const verifyBadge = document.getElementById('accountFormVerifyBadge');
+        if (verifyBadge) {
+            verifyBadge.innerHTML = user.isVerified
+                ? '<span class="ds-badge ds-badge-success">Đã xác thực</span>'
+                : '<span class="ds-badge ds-badge-warning">Chưa xác thực</span>';
+        }
+        const balanceEl = document.getElementById('accountFormBalance');
+        if (balanceEl) balanceEl.textContent = formatVnd(user.balanceVnd || 0);
+        const createdAtEl = document.getElementById('accountFormCreatedAt');
+        if (createdAtEl) createdAtEl.textContent = user.createdAt ? new Date(user.createdAt).toLocaleString('vi-VN') : '-';
 
         const submitBtn = document.getElementById('accountFormSubmitBtn');
         const actionsBar = document.querySelector('.account-form-actions');
@@ -802,9 +871,12 @@
     }
 
     function resetAccountFormFields() {
-        document.getElementById('accountForm').reset();
-        document.getElementById('accountFormId').value = '';
-        document.querySelector('input[name="accountFormGender"][value="Nam"]').checked = true;
+        const form = document.getElementById('accountForm');
+        if (form) form.reset();
+        const idField = document.getElementById('accountFormId');
+        if (idField) idField.value = '';
+        const defaultGender = document.querySelector('input[name="accountFormGender"][value="Nam"]');
+        if (defaultGender) defaultGender.checked = true;
     }
 
     function setAccountFormEditable(editable) {
@@ -916,7 +988,6 @@
                 <td>${escapeHtml(l.operator)}</td>
                 <td class="ds-table-center"><span class="ds-badge ${auditBadgeClass(l.action)}">${escapeHtml(actionLabel(l.action))}</span></td>
                 <td class="muted">${escapeHtml(l.desc)}</td>
-                <td>${escapeHtml(l.ipAddress)}</td>
                 <td class="ds-table-center"><span class="ds-badge ds-badge-success">Thành công</span></td>
                 <td>
                     <div class="ds-table-actions">
@@ -924,7 +995,7 @@
                     </div>
                 </td>
             </tr>
-        `).join('') : '<tr><td colspan="9" class="ds-empty-state">Không có nhật ký phù hợp.</td></tr>';
+        `).join('') : '<tr><td colspan="8" class="ds-empty-state">Không có nhật ký phù hợp.</td></tr>';
 
         mountPagination('auditPagination', {
             page: auditPage,
@@ -945,22 +1016,106 @@
         const actEl = document.getElementById('logDetAction');
         actEl.textContent = actionLabel(log.action);
         actEl.className = `ds-badge ${auditBadgeClass(log.action)}`;
-        document.getElementById('logDetIp').textContent = log.ipAddress;
         document.getElementById('logDetDesc').textContent = log.desc;
-        document.getElementById('logDetDiff').textContent = log.diff || '—';
-        document.getElementById('logDetailModal').classList.add('active');
+        
+        const diffWrap = document.getElementById('logDetDiffWrap');
+        if (diffWrap) {
+            diffWrap.innerHTML = renderLogDiff(log.diff);
+        }
+        
+        document.getElementById('logDetailModal').classList.remove('ds-hidden');
     };
 
     window.AdminConsole.closeLogDetail = function () {
-        document.getElementById('logDetailModal').classList.remove('active');
+        document.getElementById('logDetailModal').classList.add('ds-hidden');
     };
+
+    function renderLogDiff(diffJson) {
+        if (!diffJson) return '<span class="ds-caption">Không có chi tiết thay đổi.</span>';
+        
+        let data = {};
+        let parsed = false;
+
+        // Try standard JSON.parse first
+        try {
+            data = typeof diffJson === 'object' ? diffJson : JSON.parse(diffJson);
+            parsed = true;
+        } catch (e) {
+            // Regex fallback to parse malformed JSON strings in mock data (e.g. unquoted arrows)
+            try {
+                const cleaned = String(diffJson).trim();
+                if (cleaned.startsWith('{') && cleaned.endsWith('}')) {
+                    const content = cleaned.substring(1, cleaned.length - 1);
+                    const regex = /"([^"]+)"\s*:\s*(.+?)(?=\s*,\s*"|\s*$)/g;
+                    let match;
+                    while ((match = regex.exec(content)) !== null) {
+                        const key = match[1].trim();
+                        let val = match[2].trim();
+                        if (val.startsWith('"') && val.endsWith('"')) {
+                            val = val.substring(1, val.length - 1);
+                        } else if (val.startsWith("'") && val.endsWith("'")) {
+                            val = val.substring(1, val.length - 1);
+                        }
+                        data[key] = val;
+                    }
+                    parsed = Object.keys(data).length > 0;
+                }
+            } catch (err) {
+                parsed = false;
+            }
+        }
+
+        if (!parsed) {
+            return `<pre style="background:var(--ds-surface-muted);padding:12px;border-radius:var(--ds-radius-sm);font-size:12px;overflow:auto;margin:0;white-space:pre-wrap;word-break:break-all;">${escapeHtml(diffJson || '—')}</pre>`;
+        }
+
+        let html = `
+            <table class="ds-table" style="margin-top: 10px; font-size: 13px;">
+                <thead>
+                    <tr>
+                        <th>Trường dữ liệu</th>
+                        <th style="color: var(--ds-danger);">Giá trị cũ</th>
+                        <th style="width: 24px; text-align: center;"></th>
+                        <th style="color: var(--ds-success);">Giá trị mới</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        let count = 0;
+        for (const [key, val] of Object.entries(data)) {
+            count++;
+            const parts = String(val).split(' -> ');
+            const oldVal = parts[0] !== undefined ? parts[0] : '—';
+            const newVal = parts[1] !== undefined ? parts[1] : '—';
+            html += `
+                <tr>
+                    <td><strong>${escapeHtml(key)}</strong></td>
+                    <td style="color: var(--ds-danger); text-decoration: line-through; word-break: break-all;">${escapeHtml(oldVal)}</td>
+                    <td style="text-align: center; color: var(--ds-muted);"><i class="fa fa-arrow-right"></i></td>
+                    <td style="color: var(--ds-success); font-weight: bold; word-break: break-all;">${escapeHtml(newVal)}</td>
+                </tr>
+            `;
+        }
+        html += '</tbody></table>';
+        return count > 0 ? html : '<span class="ds-caption">Không có chi tiết thay đổi.</span>';
+    }
 
     /* ---------- Mock: Revenue ---------- */
     function renderRevenueView() {
         const filter = document.getElementById('revTimeFilter')?.value || '7days';
+        const typeFilter = document.getElementById('revTypeFilter')?.value || '';
+        const keyword = (document.getElementById('revKeywordFilter')?.value || '').toLowerCase().trim();
+
         let txs = [...mock.cashFlow];
         if (filter === 'today') txs = txs.slice(0, 2);
         else if (filter === '30days') { /* giữ nguyên demo */ }
+
+        if (typeFilter) {
+            txs = txs.filter(t => t.type === typeFilter);
+        }
+        if (keyword) {
+            txs = txs.filter(t => t.id.toLowerCase().includes(keyword) || t.email.toLowerCase().includes(keyword));
+        }
 
         revFiltered = txs;
         const commissions = txs.filter(t => t.type === 'C2C_Purchase').reduce((s, t) => s + t.fee * 0.8, 0);
@@ -1013,34 +1168,155 @@
         setTimeout(() => showToast(`Đã tải báo cáo ${label} (demo).`), 1200);
     };
 
-    /* ---------- Mock: System config ---------- */
     function loadSystemConfigForm() {
         const c = mock.systemConfig;
-        document.getElementById('cfgAppName').value = c.appName;
-        document.getElementById('cfgAdminEmail').value = c.adminEmail;
         document.getElementById('cfgSessionTimeout').value = c.sessionTimeout;
         document.getElementById('cfgOtpTimeout').value = c.otpTimeout;
         document.getElementById('cfgMaxLoginRetries').value = c.maxLoginRetries;
-        document.getElementById('cfgMinWithdrawal').value = c.minWithdrawal;
-        document.getElementById('cfgAllowGoogle').checked = c.allowGoogleLogin;
-        document.getElementById('cfgAllowRegister').checked = c.allowRegister;
-        document.getElementById('cfgWithdraw2FA').checked = c.requireWithdraw2FA;
+        document.getElementById('cfgEscrowHoldHours').value = c.escrowHoldHours || 72;
+        
+        const toggleBtn = (id, active) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.setAttribute('aria-pressed', String(active));
+                el.classList.toggle('ds-toggle-inactive', !active);
+            }
+        };
+        toggleBtn('cfgAllowGoogle', c.allowGoogleLogin);
+        toggleBtn('cfgAllowRegister', c.allowRegister);
+        toggleBtn('cfgWithdraw2FA', c.requireWithdraw2FA);
     }
 
     window.AdminConsole.saveSystemConfig = function () {
         mock.systemConfig = {
-            appName: document.getElementById('cfgAppName').value.trim(),
-            adminEmail: document.getElementById('cfgAdminEmail').value.trim(),
+            appName: mock.systemConfig.appName || 'MMO Market System',
             sessionTimeout: Number(document.getElementById('cfgSessionTimeout').value),
             otpTimeout: Number(document.getElementById('cfgOtpTimeout').value),
             maxLoginRetries: Number(document.getElementById('cfgMaxLoginRetries').value),
-            minWithdrawal: Number(document.getElementById('cfgMinWithdrawal').value),
-            allowGoogleLogin: document.getElementById('cfgAllowGoogle').checked,
-            allowRegister: document.getElementById('cfgAllowRegister').checked,
-            requireWithdraw2FA: document.getElementById('cfgWithdraw2FA').checked
+            escrowHoldHours: Number(document.getElementById('cfgEscrowHoldHours').value),
+            allowGoogleLogin: document.getElementById('cfgAllowGoogle')?.getAttribute('aria-pressed') === 'true',
+            allowRegister: document.getElementById('cfgAllowRegister')?.getAttribute('aria-pressed') === 'true',
+            requireWithdraw2FA: document.getElementById('cfgWithdraw2FA')?.getAttribute('aria-pressed') === 'true'
         };
         saveMock();
         showToast('Đã lưu cấu hình hệ thống (demo frontend).');
+    };
+
+    /* ---------- Mock: Notifications ---------- */
+    function loadNotificationsView() {
+        // Toggle Active Maintenance Banner
+        const maintBanner = document.getElementById('maintActiveBanner');
+        const maintMsg = document.getElementById('maintActiveMessage');
+        const isMaintActive = mock.maintenance && mock.maintenance.active;
+        if (maintBanner) {
+            if (isMaintActive) {
+                maintBanner.classList.remove('ds-hidden');
+                if (maintMsg) maintMsg.textContent = mock.maintenance.message || 'Hệ thống đang bảo trì nâng cấp.';
+            } else {
+                maintBanner.classList.add('ds-hidden');
+            }
+        }
+
+        // Hide maintenance toggle wrap on load by default
+        const maintToggleWrap = document.getElementById('notifMaintToggleWrap');
+        if (maintToggleWrap) maintToggleWrap.classList.add('ds-hidden');
+        const maintToggle = document.getElementById('notifMaintToggle');
+        if (maintToggle) {
+            maintToggle.setAttribute('aria-pressed', 'false');
+            maintToggle.classList.add('ds-toggle-inactive');
+        }
+
+        const body = document.getElementById('notifHistoryBody');
+        const history = mock.notifications || [];
+        if (history.length === 0) {
+            body.innerHTML = '<tr><td colspan="5" class="ds-empty-state">Chưa có thông báo nào.</td></tr>';
+            const pag = document.getElementById('notifPagination');
+            if (pag) pag.innerHTML = '';
+            return;
+        }
+
+        const total = history.length;
+        const totalPg = Math.max(Math.ceil(total / notifPageSize), 1);
+        if (notifPage >= totalPg) notifPage = totalPg - 1;
+        const slice = history.slice(notifPage * notifPageSize, notifPage * notifPageSize + notifPageSize);
+
+        body.innerHTML = slice.map((n, idx) => {
+            let typeLabel = 'Thông tin';
+            let typeBadge = 'ds-badge-info';
+            if (n.type === 'warning') {
+                typeLabel = 'Cảnh báo';
+                typeBadge = 'ds-badge-warning';
+            } else if (n.type === 'maintenance') {
+                typeLabel = 'Bảo trì';
+                typeBadge = 'ds-badge-danger';
+            } else if (n.type === 'policy') {
+                typeLabel = 'Chính sách';
+                typeBadge = 'ds-badge-muted';
+            }
+            return `
+                <tr>
+                    <td class="ds-table-center">${sttNumber(notifPage, notifPageSize, idx)}</td>
+                    <td class="ds-table-center">${formatDateTime(n.timestamp)}</td>
+                    <td><strong>${escapeHtml(n.title)}</strong><br><small class="muted">${escapeHtml(n.content)}</small></td>
+                    <td class="ds-table-center"><span class="ds-badge ${typeBadge}">${typeLabel}</span></td>
+                    <td>${escapeHtml(n.author)}</td>
+                </tr>
+            `;
+        }).join('');
+
+        mountPagination('notifPagination', {
+            page: notifPage,
+            totalPages: totalPg,
+            totalElements: total,
+            pageSize: notifPageSize
+        }, {
+            onPage: (p) => { notifPage = p; loadNotificationsView(); },
+            onSize: (s) => { notifPageSize = s; notifPage = 0; loadNotificationsView(); }
+        });
+    }
+
+    window.AdminConsole.pushNotification = function () {
+        const title = document.getElementById('notifTitle').value.trim();
+        const type = document.getElementById('notifType').value;
+        const content = document.getElementById('notifContent').value.trim();
+        if (!title || !content) {
+            showToast('Vui lòng nhập tiêu đề và nội dung thông báo.', true);
+            return;
+        }
+        
+        const isMaint = (type === 'maintenance');
+        const maintToggle = document.getElementById('notifMaintToggle');
+        const shouldMaint = isMaint && maintToggle && (maintToggle.getAttribute('aria-pressed') === 'true');
+
+        if (shouldMaint) {
+            mock.maintenance = mock.maintenance || {};
+            mock.maintenance.active = true;
+            mock.maintenance.message = content;
+        }
+
+        mock.notifications = mock.notifications || [];
+        mock.notifications.unshift({
+            timestamp: new Date().toISOString(),
+            title: title,
+            type: type,
+            content: content,
+            author: readCurrentUser()?.fullName || 'Admin'
+        });
+        saveMock();
+        
+        document.getElementById('notifTitle').value = '';
+        document.getElementById('notifContent').value = '';
+        
+        showToast(shouldMaint ? 'Đã phát thông báo & kích hoạt bảo trì hệ thống.' : 'Đã phát thông báo thành công tới toàn bộ người dùng.');
+        loadNotificationsView();
+    };
+
+    window.AdminConsole.disableMaintenance = function () {
+        mock.maintenance = mock.maintenance || {};
+        mock.maintenance.active = false;
+        saveMock();
+        showToast('Đã tắt chế độ bảo trì hệ thống.');
+        loadNotificationsView();
     };
 
     /* ---------- Mock: Commissions ---------- */
@@ -1050,6 +1326,10 @@
         document.getElementById('commFlatBuyer').value = c.flatBuyerFee;
         document.getElementById('commWithdrawPercent').value = c.withdrawalPercent;
         document.getElementById('commMinWithdrawFee').value = c.minWithdrawFee;
+        document.getElementById('commMinWithdrawLimit').value = c.minWithdrawLimit || 50000;
+        document.getElementById('commMaxWithdrawLimit').value = c.maxWithdrawLimit || 50000000;
+        document.getElementById('commAutoWithdrawLimit').value = c.autoWithdrawLimit || 5000000;
+        document.getElementById('commMinDepositLimit').value = c.minDepositLimit || 10000;
     }
 
     window.AdminConsole.saveCommissions = function () {
@@ -1057,44 +1337,15 @@
             basePercent: Number(document.getElementById('commBasePercent').value),
             flatBuyerFee: Number(document.getElementById('commFlatBuyer').value),
             withdrawalPercent: Number(document.getElementById('commWithdrawPercent').value),
-            minWithdrawFee: Number(document.getElementById('commMinWithdrawFee').value)
+            minWithdrawFee: Number(document.getElementById('commMinWithdrawFee').value),
+            minWithdrawLimit: Number(document.getElementById('commMinWithdrawLimit').value),
+            maxWithdrawLimit: Number(document.getElementById('commMaxWithdrawLimit').value),
+            autoWithdrawLimit: Number(document.getElementById('commAutoWithdrawLimit').value),
+            minDepositLimit: Number(document.getElementById('commMinDepositLimit').value)
         };
         saveMock();
-        showToast('Đã cập nhật biểu phí (demo frontend).');
+        showToast('Đã lưu biểu phí và hạn mức hệ thống.');
     };
-
-    /* ---------- Mock: Maintenance ---------- */
-    function loadMaintenanceForm() {
-        const m = mock.maintenance;
-        document.getElementById('maintActive').checked = m.active;
-        document.getElementById('maintMessage').value = m.message;
-        document.getElementById('maintWhitelist').value = m.whitelist;
-        document.getElementById('maintStart').value = m.startTime;
-        document.getElementById('maintEnd').value = m.endTime;
-        updateMaintenancePreview();
-    }
-
-    window.AdminConsole.saveMaintenance = function () {
-        mock.maintenance = {
-            active: document.getElementById('maintActive').checked,
-            message: document.getElementById('maintMessage').value.trim(),
-            whitelist: document.getElementById('maintWhitelist').value.trim(),
-            startTime: document.getElementById('maintStart').value,
-            endTime: document.getElementById('maintEnd').value
-        };
-        saveMock();
-        updateMaintenancePreview();
-        showToast('Đã lưu cấu hình bảo trì (demo frontend).');
-    };
-
-    function updateMaintenancePreview() {
-        const banner = document.getElementById('maintPreview');
-        if (!banner) return;
-        banner.classList.toggle('active', mock.maintenance.active);
-        banner.innerHTML = mock.maintenance.active
-            ? `<i class="fa fa-exclamation-triangle"></i><div><strong>Bảo trì đang BẬT</strong><p class="ds-caption" style="margin:4px 0 0">${escapeHtml(mock.maintenance.message)}</p></div>`
-            : `<i class="fa fa-check-circle"></i><div><strong>Hệ thống đang vận hành bình thường</strong></div>`;
-    }
 
     /* ---------- Mock: Permissions ---------- */
     async function loadPermissionsView() {
@@ -1104,26 +1355,25 @@
             const data = await response.json();
             if (response.ok && data.content?.length) staffList = data.content;
         } catch (_) { /* giữ cache */ }
-        const box = document.getElementById('staffPermList');
+        const selectBox = document.getElementById('staffPermSelect');
         if (!staffList.length) {
-            box.innerHTML = '<p class="ds-empty-state">Chưa có nhân viên. Hãy tạo tài khoản nhân viên trước.</p>';
-            document.getElementById('permPanel').innerHTML = '<p class="ds-caption">Chọn nhân viên ở cột trái.</p>';
+            selectBox.innerHTML = '<option value="">-- Không có nhân viên nào --</option>';
+            document.getElementById('permPanel').innerHTML = '<p class="ds-caption">Vui lòng tạo tài khoản nhân viên trước.</p>';
             return;
         }
         if (!selectedStaffId || !staffList.find(s => s.id === selectedStaffId)) {
             selectedStaffId = staffList[0].id;
         }
-        box.innerHTML = staffList.map(s => `
-            <div class="staff-item-option ${s.id === selectedStaffId ? 'selected' : ''}" onclick="AdminConsole.selectStaffPerm(${s.id})">
-                <strong>${escapeHtml(s.fullName)}</strong>
-                <div class="muted">${escapeHtml(s.email)}</div>
-            </div>
+        selectBox.innerHTML = staffList.map(s => `
+            <option value="${s.id}" ${s.id === selectedStaffId ? 'selected' : ''}>
+                ${escapeHtml(s.fullName)} (${escapeHtml(s.email)})
+            </option>
         `).join('');
         renderPermissionCheckboxes(staffList);
     }
 
     window.AdminConsole.selectStaffPerm = function (id) {
-        selectedStaffId = id;
+        selectedStaffId = Number(id);
         loadPermissionsView();
     };
 
@@ -1205,12 +1455,21 @@
     }
 
     function showToast(message, isError = false) {
-        const toast = document.getElementById('toast');
-        toast.textContent = message;
-        toast.className = `admin-toast${isError ? ' error' : ''}`;
-        toast.style.display = 'block';
-        clearTimeout(window.__adminToastTimer);
-        window.__adminToastTimer = setTimeout(() => { toast.style.display = 'none'; }, 2800);
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = `ds-toast ds-toast-${isError ? 'error' : 'success'}`;
+        toast.innerHTML = `
+            <div>
+                <p class="ds-toast-title">${isError ? 'Thất bại' : 'Thành công'}</p>
+                <p class="ds-toast-message">${escapeHtml(message)}</p>
+            </div>
+            <button class="ds-toast-close" onclick="this.parentElement.remove()">×</button>
+        `;
+        container.appendChild(toast);
+        setTimeout(() => {
+            if (toast.parentElement) toast.remove();
+        }, 3000);
     }
 
     function readCurrentUser() {

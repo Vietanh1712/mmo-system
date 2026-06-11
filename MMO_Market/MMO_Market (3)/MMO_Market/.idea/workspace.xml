@@ -5,28 +5,49 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/design-system/docs/EXPORT_REPORT.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/design-system/docs/EXPORT_REPORT.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/design-system/docs/UI_GUIDELINE.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/design-system/docs/UI_GUIDELINE.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/design-system/examples/filter-search-sort-example.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/design-system/examples/filter-search-sort-example.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/design-system/examples/forms-example.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/design-system/examples/forms-example.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controller/mvc/ProfilePageController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/mvc/ProfilePageController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/design-system/docs/EXPORT_REPORT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/design-system/docs/ICON_GUIDELINE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/design-system/docs/UI_GUIDELINE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/design-system/docs/UX_UI_SYNC_GUIDELINE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/design-system/examples/buttons-example.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/design-system/examples/buttons-icons-catalog.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/design-system/examples/filter-search-sort-example.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/design-system/examples/forms-example.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/design-system/examples/icons-example.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/design-system/examples/pagination-example.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/design-system/examples/table-example.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/design-system/examples/toast-example.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/design-system/examples/toggle-example.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/design-system/examples/ux-ui-sync-proposal-example.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/lines-and-columns/build/index.d.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/lines-and-columns/build/index.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/tailwindcss/lib/cli/build/deps.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/tailwindcss/lib/cli/build/index.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/tailwindcss/lib/cli/build/plugin.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/tailwindcss/lib/cli/build/utils.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/tailwindcss/lib/cli/build/watching.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/tailwindcss/src/cli/build/deps.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/tailwindcss/src/cli/build/index.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/tailwindcss/src/cli/build/plugin.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/tailwindcss/src/cli/build/utils.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/tailwindcss/src/cli/build/watching.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controller/mvc/HomeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/mvc/HomeController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/security/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/authen/authen.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/authen/authen.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/admin.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/admin.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/filters.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/filters.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/forms.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/forms.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/home.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/home.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/profile.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/profile.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/auth.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/auth.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/profile.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/profile.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/auth/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/auth/login.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/auth/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/auth/register.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/auth/reset-password.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/auth/reset-password.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/auth/verify-otp.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/auth/verify-otp.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/account-sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/account-sidebar.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/design-system-styles.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/design-system-styles.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/account-notifications.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/account-notifications.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/admin-console.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/admin-console.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/admin/users.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/admin/users.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/header.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/header.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/profile/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/profile/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/static/components/AdvancedSearchBar.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/components/AdvancedSearchBar.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/static/css/home.css" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/css/home.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/static/js/auth.js" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/js/auth.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/admin/users.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/admin/users.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/fragments/header.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/fragments/header.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/home.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/home.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -390,10 +411,10 @@
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;Spring Boot.MMOMarketApplication (1).executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.MMOMarketApplication.executor&quot;: &quot;Debug&quot;,
+    &quot;Spring Boot.MMOMarketApplication.executor&quot;: &quot;Run&quot;,
     &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;AnhTV&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/SU26/SWP/mmo-system/MMO_Market/MMO_Market (3)/MMO_Market&quot;,
@@ -469,6 +490,15 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration default="true" type="JetRunConfigurationType">
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <option name="filePath" />
+      <method v="2" />
+    </configuration>
     <configuration name="MMOMarketApplication (1)" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
       <module name="MMO_Market" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.mmo.MMOMarketApplication" />
@@ -510,8 +540,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-fbdcb00ec9e3-intellij.indexing.shared.core-IU-251.26094.121" />
-        <option value="bundled-js-predefined-d6986cc7102b-b26f3e71634d-JavaScript-IU-251.26094.121" />
+        <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.24374.151" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-IU-261.24374.151" />
       </set>
     </attachedChunks>
   </component>
@@ -554,6 +584,10 @@
       <workItem from="1780555178005" duration="7933000" />
       <workItem from="1780568312769" duration="463000" />
       <workItem from="1780572336460" duration="8273000" />
+      <workItem from="1781023484044" duration="681000" />
+      <workItem from="1781081769871" duration="4857000" />
+      <workItem from="1781104806136" duration="2245000" />
+      <workItem from="1781149921845" duration="4625000" />
     </task>
     <servers />
   </component>

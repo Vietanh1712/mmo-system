@@ -1,115 +1,92 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../css/AdvancedSearchBar.css';
 
-// Dữ liệu danh mục mới
-const CATEGORIES = [
-    'Tất cả',
-    'Tên người bán',
-    'Email',
-    'Tài khoản',
-    'Phần mềm',
-    'Tăng tương tác',
-    'Dịch vụ phần mềm',
-    'Blockchain',
-    'Khác',
-    'Dịch vụ khác'
-];
-
-const QUICK_LINKS = ['Netflix', 'Tài khoản ChatGPT', 'Clone FB', 'Youtube Premium'];
+// Giữ nguyên Quick Links của bạn
+const QUICK_LINKS = ['Netflix', 'Tài khoản ChatGPT', 'Facebook', 'Youtube Premium'];
 
 const AdvancedSearchBar = () => {
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [selectedCategory, setSelectedCategory] = useState('Tất cả');
-    const [categorySearchTerm, setCategorySearchTerm] = useState('');
+    // State quản lý danh mục từ Database
+    const [mainCategories, setMainCategories] = useState([]);
+    const [subCategories, setSubCategories] = useState([]);
+
+    // State lưu trữ lựa chọn của người dùng
+    const [selectedMainCat, setSelectedMainCat] = useState('');
+    const [selectedSubCat, setSelectedSubCat] = useState('');
     const [mainSearchTerm, setMainSearchTerm] = useState('');
 
-    const dropdownRef = useRef(null);
-
-    // Xử lý click ra ngoài để đóng dropdown
+    // Fetch danh mục chính (parent_id IS NULL) khi component vừa load
     useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setIsDropdownOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
+        fetch('/api/categories/main')
+            .then(res => res.json())
+            .then(data => setMainCategories(data))
+            .catch(err => console.error("Lỗi tải danh mục chính:", err));
     }, []);
 
-    // Filter danh mục dựa trên từ khóa tìm kiếm nhỏ
-    const filteredCategories = CATEGORIES.filter(cat => 
-        cat.toLowerCase().includes(categorySearchTerm.toLowerCase())
-    );
+    // Fetch danh mục con khi người dùng chọn danh mục chính
+    useEffect(() => {
+        if (selectedMainCat) {
+            fetch(`/api/categories/${selectedMainCat}/sub`)
+                .then(res => res.json())
+                .then(data => {
+                    setSubCategories(data);
+                    setSelectedSubCat(''); // Reset danh mục con khi đổi cha
+                })
+                .catch(err => console.error("Lỗi tải danh mục con:", err));
+        } else {
+            setSubCategories([]);
+            setSelectedSubCat('');
+        }
+    }, [selectedMainCat]);
 
-    const handleCategorySelect = (category) => {
-        setSelectedCategory(category);
-        setIsDropdownOpen(false);
-        setCategorySearchTerm(''); // Reset search term sau khi chọn
-    };
-
+    // Xử lý khi bấm nút TÌM
     const handleSearchSubmit = (e) => {
         e.preventDefault();
-        console.log(`Tìm kiếm: "${mainSearchTerm}" trong danh mục "${selectedCategory}"`);
-        // TODO: Chuyển hướng sang trang kết quả tìm kiếm (ví dụ: window.location.href = `/search?q=${mainSearchTerm}&category=${selectedCategory}`)
+        // Lấy id của danh mục chi tiết nhất (ưu tiên danh mục con, nếu không có thì lấy danh mục cha)
+        const finalCategoryId = selectedSubCat || selectedMainCat || '';
+        // Chuyển hướng sang Spring Boot Controller
+        window.location.href = `/search?keyword=${encodeURIComponent(mainSearchTerm)}&categoryId=${finalCategoryId}`;
     };
 
     return (
         <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}>
             <form className="search-container" onSubmit={handleSearchSubmit}>
-                
-                {/* Phần bên trái: Dropdown chọn danh mục */}
-                <div className="search-category" ref={dropdownRef}>
-                    <div 
-                        className="search-category__trigger"
-                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    >
-                        <span>{selectedCategory}</span>
-                        <svg 
-                            className={`search-category__icon ${isDropdownOpen ? 'search-category__icon--open' : ''}`}
-                            width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                        >
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </div>
 
-                    {isDropdownOpen && (
-                        <div className="dropdown-panel">
-                            <input 
-                                type="text" 
-                                className="dropdown-panel__search"
-                                placeholder="Tìm danh mục..."
-                                value={categorySearchTerm}
-                                onChange={(e) => setCategorySearchTerm(e.target.value)}
-                                onClick={(e) => e.stopPropagation()} // Ngăn việc click vào input làm đóng dropdown
-                            />
-                            <ul className="dropdown-panel__list">
-                                {filteredCategories.length > 0 ? (
-                                    filteredCategories.map((cat, index) => (
-                                        <li 
-                                            key={index} 
-                                            className="dropdown-panel__item"
-                                            onClick={() => handleCategorySelect(cat)}
-                                        >
-                                            {cat}
-                                        </li>
-                                    ))
-                                ) : (
-                                    <li className="dropdown-panel__item" style={{ color: '#94a3b8', cursor: 'default' }}>
-                                        Không tìm thấy danh mục
-                                    </li>
-                                )}
-                            </ul>
-                        </div>
-                    )}
+                {/* Phần bên trái: 2 Dropdown liên kết */}
+                {/* Dropdown 1: Danh mục chính */}
+                <div className="search-category">
+                    <select
+                        value={selectedMainCat}
+                        onChange={(e) => setSelectedMainCat(e.target.value)}
+                        className="search-category__trigger"
+                        style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', cursor: 'pointer', appearance: 'auto', padding: '0 10px' }}
+                    >
+                        <option value="">Chọn danh mục chính...</option>
+                        {mainCategories.map(cat => (
+                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        ))}
+                    </select>
                 </div>
 
-                {/* Phần trung tâm: Ô nhập từ khóa */}
+                {/* Dropdown 2: Lọc chi tiết */}
+                <div className="search-category">
+                    <select
+                        value={selectedSubCat}
+                        onChange={(e) => setSelectedSubCat(e.target.value)}
+                        className="search-category__trigger"
+                        disabled={!selectedMainCat || subCategories.length === 0}
+                        style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', cursor: 'pointer', appearance: 'auto', padding: '0 10px' }}
+                    >
+                        <option value="">Lọc chi tiết...</option>
+                        {subCategories.map(sub => (
+                            <option key={sub.id} value={sub.id}>{sub.name}</option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Phần trung tâm: Ô nhập từ khóa (Giữ nguyên) */}
                 <div className="search-input-wrapper">
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
                         className="search-input"
                         placeholder="Từ khóa, Tài khoản, Mã nguồn,..."
                         value={mainSearchTerm}
@@ -117,7 +94,7 @@ const AdvancedSearchBar = () => {
                     />
                 </div>
 
-                {/* Phần bên phải: Nút tìm kiếm */}
+                {/* Phần bên phải: Nút tìm kiếm (Giữ nguyên) */}
                 <button type="submit" className="search-button" aria-label="Tìm kiếm">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="11" cy="11" r="8"></circle>
@@ -126,12 +103,12 @@ const AdvancedSearchBar = () => {
                 </button>
             </form>
 
-            {/* Phần bên dưới: Từ khóa gợi ý */}
+            {/* Phần bên dưới: Từ khóa gợi ý (Giữ nguyên thiết kế, update link) */}
             <div className="search-quick-links">
                 {QUICK_LINKS.map((link, index) => (
-                    <a 
-                        key={index} 
-                        href={`/search?q=${encodeURIComponent(link)}`} 
+                    <a
+                        key={index}
+                        href={`/search?keyword=${encodeURIComponent(link)}`}
                         className="quick-link-item"
                     >
                         {link}

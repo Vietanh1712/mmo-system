@@ -13,7 +13,7 @@
 <body>
 <header th:replace="fragments/header :: header"></header>
 
-<main class="ds-container admin-shell">
+<main class="ds-container-fluid admin-shell" style="max-width: 1500px; margin: 0 auto;">
     <div class="admin-layout ds-two-column">
         <aside class="admin-sidebar" aria-label="Menu quản trị">
             <p class="admin-page-kicker">Quản trị cấp cao</p>
@@ -46,13 +46,13 @@
                 <button type="button" class="sidebar-item" data-target="commissions" onclick="switchAdminView('commissions')">
                     <i class="fa fa-sliders"></i> Phí &amp; Hoa hồng
                 </button>
-                <button type="button" class="sidebar-item" data-target="maintenance" onclick="switchAdminView('maintenance')">
-                    <i class="fa fa-exclamation-triangle"></i> Chế độ bảo trì
+                <button type="button" class="sidebar-item" data-target="notifications" onclick="switchAdminView('notifications')">
+                    <i class="fa fa-bullhorn"></i> Quản lý thông báo
                 </button>
             </nav>
         </aside>
 
-        <section class="admin-workspace ds-page-shell">
+        <section class="admin-workspace ds-page-shell" style="padding-right: 120px;">
 
             <!-- 1. Dashboard -->
             <div id="dashboardView" class="admin-view active">
@@ -161,7 +161,6 @@
                                 <th>Nhân viên</th>
                                 <th class="ds-table-center">Hành động</th>
                                 <th>Chi tiết</th>
-                                <th>Địa chỉ IP</th>
                                 <th class="ds-table-center">Trạng thái</th>
                                 <th class="ds-table-center">Thao tác</th>
                             </tr>
@@ -191,6 +190,13 @@
                     <div class="ds-filter-panel">
                         <h2 class="ds-card-title">Bộ lọc giao dịch</h2>
                         <div class="ds-filter-grid">
+                            <input id="revKeywordFilter" class="ds-input" type="text" placeholder="Tìm mã GD, Email...">
+                            <select id="revTypeFilter" class="ds-input" aria-label="Loại giao dịch">
+                                <option value="">Tất cả loại giao dịch</option>
+                                <option value="Deposit">Nạp tiền</option>
+                                <option value="Withdrawal">Rút tiền</option>
+                                <option value="C2C_Purchase">Mua hàng</option>
+                            </select>
                             <select id="revTimeFilter" class="ds-input" aria-label="Khoảng thời gian">
                                 <option value="today">Hôm nay</option>
                                 <option value="7days" selected>7 ngày qua</option>
@@ -200,7 +206,7 @@
                         <div class="ds-filter-actions">
                             <button type="button" class="ds-btn ds-btn-secondary" id="revenueResetFilter">Làm mới bộ lọc</button>
                             <button type="button" class="ds-btn ds-btn-primary" id="revenueSearchBtn">Tìm kiếm</button>
-                            <button type="button" class="ds-btn ds-btn-outline" onclick="AdminConsole.mockExport('revenue')"><i class="fa fa-file-pdf-o"></i> Xuất PDF</button>
+                            <button type="button" class="ds-btn ds-btn-outline" onclick="AdminConsole.mockExport('revenue')"><i class="fa fa-file-excel-o"></i> Xuất Excel</button>
                         </div>
                     </div>
                     <div class="ds-table-wrap">
@@ -225,148 +231,96 @@
             </div>
 
             <!-- 4. Thêm nhân viên / Chi tiết tài khoản -->
-            <div id="accountFormView" class="admin-view account-form-page">
-                <header class="account-form-topbar">
-                    <button type="button" class="account-form-back" onclick="AdminConsole.backFromAccountForm()" aria-label="Quay lại danh sách">
-                        <i class="fa fa-arrow-left"></i>
-                        <span>Quay lại danh sách</span>
-                    </button>
-                    <div class="account-form-topbar-text">
-                        <span class="account-form-kicker" id="accountFormKicker">Quản lý tài khoản</span>
-                        <h2 class="ds-heading-lg account-form-title" id="accountFormTitle">Thêm tài khoản nhân viên</h2>
+            <div id="accountFormView" class="admin-view">
+                <div class="view-header" style="margin-bottom:20px; display:flex; align-items:center; gap:16px;">
+                    <div>
+                        <h2 class="ds-heading-lg" id="accountFormTitle">Thêm tài khoản nhân viên</h2>
                         <p class="ds-caption" id="accountFormCaption">Điền thông tin để tạo tài khoản nhân viên mới.</p>
                     </div>
-                    <span class="ds-badge ds-badge-info account-form-mode-badge" id="accountFormModeBadge">Tạo mới</span>
-                </header>
+                </div>
 
-                <div class="account-form-layout">
-                    <aside class="account-form-aside">
-                        <div class="account-profile-card admin-card">
-                            <div class="account-profile-hero">
-                                <span id="accountFormAvatar" class="ds-avatar ds-avatar-lg ds-avatar-primary account-profile-avatar">?</span>
-                                <h3 class="account-profile-name" id="accountFormProfileName">Nhân viên mới</h3>
-                                <p class="account-profile-email" id="accountFormProfileEmail">email@example.com</p>
-                                <span id="accountFormProfileRole" class="ds-badge ds-badge-warning" style="display:none">Nhân viên</span>
+                <div class="ds-card" style="padding:24px; max-width:900px; margin-bottom:20px;">
+                    <form id="accountForm" novalidate>
+                        <input type="hidden" id="accountFormId" value="">
+                        
+                        <div id="accountFormStats" class="ds-form-grid" style="display:none; margin-bottom:24px; padding-bottom:24px; border-bottom:1px solid var(--ds-border);">
+                            <div class="ds-form-field">
+                                <label class="ds-label">Mã tài khoản</label>
+                                <strong id="accountFormIdDisplay">—</strong>
                             </div>
-
-                            <div id="accountFormAsideCreate" class="account-aside-hint">
-                                <p><i class="fa fa-info-circle"></i> Email dùng để đăng nhập. Mật khẩu tối thiểu 6 ký tự.</p>
+                            <div class="ds-form-field">
+                                <label class="ds-label">Số dư ví</label>
+                                <strong id="accountFormBalance" class="ds-money">—</strong>
                             </div>
+                            <div class="ds-form-field">
+                                <label class="ds-label">Ngày tạo</label>
+                                <strong id="accountFormCreatedAt">—</strong>
+                            </div>
+                            <div class="ds-form-field">
+                                <label class="ds-label">Vai trò</label>
+                                <span id="accountFormRoleBadge" class="ds-badge ds-badge-info">—</span>
+                            </div>
+                        </div>
 
-                            <div id="accountFormAsideStats" class="account-stats-grid" style="display:none">
-                                <div class="account-stat-item">
-                                    <span class="account-stat-label">Mã tài khoản</span>
-                                    <strong id="accountFormIdDisplay">—</strong>
+                        <h3 class="ds-heading-md" style="margin-bottom:16px;">Thông tin đăng nhập</h3>
+                        <div class="ds-form-grid" style="margin-bottom:24px;">
+                            <div class="ds-form-field">
+                                <label class="ds-label" for="accountFormEmail">Email <span class="ds-required">*</span></label>
+                                <input id="accountFormEmail" class="ds-input" type="email" required autocomplete="off" placeholder="name@mmomarket.com">
+                            </div>
+                            <div class="ds-form-field" id="accountFormPasswordWrap">
+                                <label class="ds-label" for="accountFormPassword">Mật khẩu <span class="ds-required" id="accountFormPasswordRequired">*</span></label>
+                                <input id="accountFormPassword" class="ds-input" type="password" minlength="6" autocomplete="new-password" placeholder="Tối thiểu 6 ký tự">
+                            </div>
+                        </div>
+
+                        <h3 class="ds-heading-md" style="margin-bottom:16px;">Thông tin cá nhân</h3>
+                        <div class="ds-form-grid" style="margin-bottom:24px;">
+                            <div class="ds-form-field">
+                                <label class="ds-label" for="accountFormFullName">Họ và tên <span class="ds-required">*</span></label>
+                                <input id="accountFormFullName" class="ds-input" type="text" minlength="3" required placeholder="Nguyễn Văn A">
+                            </div>
+                            <div class="ds-form-field">
+                                <label class="ds-label" for="accountFormPhone">Số điện thoại</label>
+                                <input id="accountFormPhone" class="ds-input" type="tel" placeholder="09xx xxx xxx">
+                            </div>
+                            <div class="ds-form-field">
+                                <label class="ds-label" for="accountFormNationalId">Số CCCD</label>
+                                <input id="accountFormNationalId" class="ds-input" type="text" inputmode="numeric" maxlength="12" placeholder="001234567890">
+                            </div>
+                            <div class="ds-form-field">
+                                <label class="ds-label">Giới tính</label>
+                                <div class="ds-radio-row">
+                                    <label class="ds-radio"><input type="radio" name="accountFormGender" value="Nam" checked> Nam</label>
+                                    <label class="ds-radio"><input type="radio" name="accountFormGender" value="Nữ"> Nữ</label>
                                 </div>
-                                <div class="account-stat-item">
-                                    <span class="account-stat-label">Vai trò</span>
-                                    <span id="accountFormRoleBadge" class="ds-badge">—</span>
-                                </div>
-                                <div class="account-stat-item">
-                                    <span class="account-stat-label">Xác thực</span>
-                                    <span id="accountFormVerifyBadge">—</span>
-                                </div>
-                                <div class="account-stat-item account-stat-item--wide">
-                                    <span class="account-stat-label">Số dư ví</span>
-                                    <span id="accountFormBalance" class="ds-money">—</span>
-                                </div>
-                                <div class="account-stat-item account-stat-item--wide">
-                                    <span class="account-stat-label">Ngày tạo</span>
-                                    <strong id="accountFormCreatedAt">—</strong>
+                            </div>
+                            <div class="ds-form-field" style="grid-column: 1 / -1;">
+                                <label class="ds-label" for="accountFormAddress">Địa chỉ</label>
+                                <input id="accountFormAddress" class="ds-input" type="text" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành">
+                            </div>
+                        </div>
+
+                        <h3 class="ds-heading-md" style="margin-bottom:16px;">Trạng thái vận hành</h3>
+                        <div class="ds-form-grid" style="margin-bottom:24px;">
+                            <div class="ds-form-field">
+                                <label class="ds-label">Đang hoạt động</label>
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <button type="button" id="accountFormStatusToggle" class="ds-toggle" aria-pressed="true">
+                                        <span class="ds-toggle-track"><span class="ds-toggle-knob"></span></span>
+                                    </button>
+                                    <span id="accountFormStatusLabel">Bật để cho phép đăng nhập</span>
                                 </div>
                             </div>
                         </div>
-                    </aside>
 
-                    <div class="account-form-main">
-                        <form id="accountForm" novalidate>
-                            <input type="hidden" id="accountFormId" value="">
-
-                            <section class="account-form-section admin-card">
-                                <div class="account-form-section-head">
-                                    <span class="account-form-section-icon"><i class="fa fa-lock"></i></span>
-                                    <div>
-                                        <h3 class="account-form-section-title">Thông tin đăng nhập</h3>
-                                        <p class="ds-caption">Email và mật khẩu truy cập hệ thống</p>
-                                    </div>
-                                </div>
-                                <div class="ds-form-grid account-form-grid">
-                                    <div class="ds-form-field account-field-span-2">
-                                        <label class="ds-label" for="accountFormEmail">Email <span class="ds-required">*</span></label>
-                                        <input id="accountFormEmail" class="ds-input" type="email" required autocomplete="off" placeholder="name@mmomarket.com">
-                                    </div>
-                                    <div class="ds-form-field account-field-span-2" id="accountFormPasswordWrap">
-                                        <label class="ds-label" for="accountFormPassword">Mật khẩu <span class="ds-required" id="accountFormPasswordRequired">*</span></label>
-                                        <input id="accountFormPassword" class="ds-input" type="password" minlength="6" autocomplete="new-password" placeholder="Tối thiểu 6 ký tự">
-                                    </div>
-                                </div>
-                            </section>
-
-                            <section class="account-form-section admin-card">
-                                <div class="account-form-section-head">
-                                    <span class="account-form-section-icon account-form-section-icon--green"><i class="fa fa-user"></i></span>
-                                    <div>
-                                        <h3 class="account-form-section-title">Thông tin cá nhân</h3>
-                                        <p class="ds-caption">Họ tên, liên hệ và giấy tờ tùy thân</p>
-                                    </div>
-                                </div>
-                                <div class="ds-form-grid account-form-grid">
-                                    <div class="ds-form-field account-field-span-2">
-                                        <label class="ds-label" for="accountFormFullName">Họ và tên <span class="ds-required">*</span></label>
-                                        <input id="accountFormFullName" class="ds-input" type="text" minlength="3" required placeholder="Nguyễn Văn A">
-                                    </div>
-                                    <div class="ds-form-field">
-                                        <label class="ds-label" for="accountFormPhone">Số điện thoại</label>
-                                        <input id="accountFormPhone" class="ds-input" type="tel" placeholder="09xx xxx xxx">
-                                    </div>
-                                    <div class="ds-form-field">
-                                        <label class="ds-label" for="accountFormBirthDate">Ngày sinh</label>
-                                        <input id="accountFormBirthDate" class="ds-input" type="date">
-                                    </div>
-                                    <div class="ds-form-field">
-                                        <label class="ds-label" for="accountFormNationalId">Số CCCD</label>
-                                        <input id="accountFormNationalId" class="ds-input" type="text" inputmode="numeric" maxlength="12" placeholder="001234567890">
-                                    </div>
-                                    <div class="ds-form-field">
-                                        <label class="ds-label">Giới tính</label>
-                                        <div class="ds-radio-row account-gender-row">
-                                            <label class="ds-radio"><input type="radio" name="accountFormGender" value="Nam" checked> Nam</label>
-                                            <label class="ds-radio"><input type="radio" name="accountFormGender" value="Nữ"> Nữ</label>
-                                        </div>
-                                    </div>
-                                    <div class="ds-form-field account-field-span-2">
-                                        <label class="ds-label" for="accountFormAddress">Địa chỉ</label>
-                                        <input id="accountFormAddress" class="ds-input" type="text" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành">
-                                    </div>
-                                </div>
-                            </section>
-
-                            <section class="account-form-section admin-card">
-                                <div class="account-form-section-head">
-                                    <span class="account-form-section-icon account-form-section-icon--amber"><i class="fa fa-sliders"></i></span>
-                                    <div>
-                                        <h3 class="account-form-section-title">Trạng thái vận hành</h3>
-                                        <p class="ds-caption">Bật để cho phép đăng nhập và sử dụng hệ thống</p>
-                                    </div>
-                                </div>
-                                <div class="account-status-row">
-                                    <button type="button" id="accountFormStatusToggle" class="ds-toggle" aria-pressed="true">
-                                        <span class="ds-toggle-track"><span class="ds-toggle-knob"></span></span>
-                                        <span id="accountFormStatusLabel">Đang hoạt động</span>
-                                    </button>
-                                    <p class="ds-caption account-status-hint">Tắt toggle sẽ khóa tài khoản (tạm dừng).</p>
-                                </div>
-                            </section>
-                        </form>
-
-                        <footer class="account-form-actions admin-card">
+                        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px; padding-top:20px; border-top:1px solid var(--ds-border);">
                             <button type="button" class="ds-btn ds-btn-outline" onclick="AdminConsole.backFromAccountForm()">Hủy</button>
-                            <button type="button" class="ds-btn ds-btn-primary account-form-submit-btn" id="accountFormSubmitBtn">
-                                <i class="fa fa-check"></i>
-                                <span id="accountFormSubmitLabel">Tạo nhân viên</span>
+                            <button type="button" class="ds-btn ds-btn-primary" id="accountFormSubmitBtn">
+                                <i class="fa fa-check"></i> <span id="accountFormSubmitLabel">Tạo nhân viên</span>
                             </button>
-                        </footer>
-                    </div>
+                        </div>
+                    </form>
                 </div>
             </div>
 
@@ -379,20 +333,36 @@
                     </div>
                     <button type="button" class="ds-btn ds-btn-primary" onclick="AdminConsole.saveSystemConfig()"><i class="fa fa-save"></i> Lưu</button>
                 </div>
-                <div class="admin-card">
-                    <div class="config-grid ds-form-grid">
-                        <div class="ds-form-field"><label class="ds-label" for="cfgAppName">Tên ứng dụng</label><input id="cfgAppName" class="ds-input control-input" type="text"></div>
-                        <div class="ds-form-field"><label class="ds-label" for="cfgAdminEmail">Email cảnh báo</label><input id="cfgAdminEmail" class="ds-input control-input" type="email"></div>
-                        <div class="ds-form-field"><label class="ds-label" for="cfgSessionTimeout">Phiên (phút)</label><input id="cfgSessionTimeout" class="ds-input control-input" type="number" min="5"></div>
-                        <div class="ds-form-field"><label class="ds-label" for="cfgOtpTimeout">OTP (phút)</label><input id="cfgOtpTimeout" class="ds-input control-input" type="number" min="1"></div>
-                        <div class="ds-form-field"><label class="ds-label" for="cfgMaxLoginRetries">Số lần đăng nhập sai</label><input id="cfgMaxLoginRetries" class="ds-input control-input" type="number"></div>
-                        <div class="ds-form-field"><label class="ds-label" for="cfgMinWithdrawal">Rút tối thiểu (VNĐ)</label><input id="cfgMinWithdrawal" class="ds-input control-input" type="number" min="0"></div>
-                        <div class="config-full-row ds-stack-sm">
-                            <label class="perm-label-checkbox"><input id="cfgAllowGoogle" type="checkbox"> Cho phép đăng nhập Google</label>
-                            <label class="perm-label-checkbox"><input id="cfgAllowRegister" type="checkbox"> Cho phép đăng ký mới</label>
-                            <label class="perm-label-checkbox"><input id="cfgWithdraw2FA" type="checkbox"> Bắt buộc 2FA khi rút tiền</label>
+                <div class="ds-card" style="padding: 24px; max-width: 900px;">
+                    <div class="ds-form-grid">
+                        <div class="ds-form-field"><label class="ds-label" for="cfgSessionTimeout">Thời gian phiên (phút)</label><input id="cfgSessionTimeout" class="ds-input" type="number" min="5"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="cfgOtpTimeout">Thời gian OTP (phút)</label><input id="cfgOtpTimeout" class="ds-input" type="number" min="1"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="cfgMaxLoginRetries">Số lần đăng nhập sai tối đa</label><input id="cfgMaxLoginRetries" class="ds-input" type="number"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="cfgEscrowHoldHours">Thời gian giam tiền Escrow (giờ)</label><input id="cfgEscrowHoldHours" class="ds-input" type="number" min="1"></div>
+                    </div>
+                    
+                    <h3 class="ds-heading-md" style="margin-top:24px; margin-bottom:16px;">Tính năng hệ thống</h3>
+                    <div class="ds-stack-sm">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <button type="button" id="cfgAllowGoogle" class="ds-toggle ds-toggle-system" aria-pressed="false">
+                                <span class="ds-toggle-track"><span class="ds-toggle-knob"></span></span>
+                            </button>
+                            <span class="ds-label" style="margin:0;">Cho phép đăng nhập bằng Google</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <button type="button" id="cfgAllowRegister" class="ds-toggle ds-toggle-system" aria-pressed="false">
+                                <span class="ds-toggle-track"><span class="ds-toggle-knob"></span></span>
+                            </button>
+                            <span class="ds-label" style="margin:0;">Cho phép người dùng đăng ký mới</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <button type="button" id="cfgWithdraw2FA" class="ds-toggle ds-toggle-system" aria-pressed="false">
+                                <span class="ds-toggle-track"><span class="ds-toggle-knob"></span></span>
+                            </button>
+                            <span class="ds-label" style="margin:0;">Bắt buộc dùng xác thực 2 bước (2FA) khi rút tiền</span>
                         </div>
                     </div>
+                    
                 </div>
             </div>
 
@@ -400,42 +370,104 @@
             <div id="commissionsView" class="admin-view">
                 <div class="view-header">
                     <div>
-                        <h2 class="ds-heading-lg">Phí giao dịch &amp; Hoa hồng</h2>
-                        <p class="ds-caption">Biểu phí và hoa hồng sàn (lưu demo trên trình duyệt).</p>
+                        <h2 class="ds-heading-lg">Phí &amp; Hoa hồng</h2>
+                        <p class="ds-caption">Cấu hình biểu phí giao dịch, hoa hồng và hạn mức giao dịch (lưu demo trên trình duyệt).</p>
                     </div>
-                    <button type="button" class="ds-btn ds-btn-primary" onclick="AdminConsole.saveCommissions()"><i class="fa fa-save"></i> Cập nhật</button>
+                    <button type="button" class="ds-btn ds-btn-primary" onclick="AdminConsole.saveCommissions()"><i class="fa fa-save"></i> Lưu cấu hình</button>
                 </div>
-                <div class="admin-card" style="max-width:560px">
-                    <div class="config-grid">
-                        <div class="ds-form-field"><label class="ds-label" for="commBasePercent">Hoa hồng C2C (%)</label><input id="commBasePercent" class="ds-input control-input" type="number" step="0.1"></div>
-                        <div class="ds-form-field"><label class="ds-label" for="commFlatBuyer">Phí cố định người mua (VNĐ)</label><input id="commFlatBuyer" class="ds-input control-input" type="number"></div>
-                        <div class="ds-form-field"><label class="ds-label" for="commWithdrawPercent">Phí rút (%)</label><input id="commWithdrawPercent" class="ds-input control-input" type="number" step="0.1"></div>
-                        <div class="ds-form-field"><label class="ds-label" for="commMinWithdrawFee">Phí rút tối thiểu (VNĐ)</label><input id="commMinWithdrawFee" class="ds-input control-input" type="number"></div>
+                <div class="ds-card" style="padding: 24px; max-width: 900px;">
+                    <div class="ds-form-grid">
+                        <div class="ds-form-field"><label class="ds-label" for="commBasePercent">Hoa hồng C2C (%)</label><input id="commBasePercent" class="ds-input" type="number" step="0.1"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="commFlatBuyer">Phí cố định người mua (VNĐ)</label><input id="commFlatBuyer" class="ds-input" type="number"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="commWithdrawPercent">Phí rút tiền (%)</label><input id="commWithdrawPercent" class="ds-input" type="number" step="0.1"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="commMinWithdrawFee">Phí rút tối thiểu (VNĐ)</label><input id="commMinWithdrawFee" class="ds-input" type="number"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="commMinWithdrawLimit">Hạn mức rút tối thiểu (VNĐ)</label><input id="commMinWithdrawLimit" class="ds-input" type="number"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="commMaxWithdrawLimit">Hạn mức rút tối đa (VNĐ)</label><input id="commMaxWithdrawLimit" class="ds-input" type="number"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="commMinDepositLimit">Hạn mức nạp tối thiểu (VNĐ)</label><input id="commMinDepositLimit" class="ds-input" type="number"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="commAutoWithdrawLimit">Hạn mức tự động rút (VNĐ)</label><input id="commAutoWithdrawLimit" class="ds-input" type="number"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- 7. Maintenance -->
-            <div id="maintenanceView" class="admin-view">
+            <!-- 7. Notifications -->
+            <div id="notificationsView" class="admin-view">
                 <div class="view-header">
                     <div>
-                        <h2 class="ds-heading-lg">Chế độ bảo trì</h2>
-                        <p class="ds-caption">Bật/tắt bảo trì và thông báo người dùng (lưu demo).</p>
+                        <h2 class="ds-heading-lg">Quản lý Thông báo &amp; Bảo trì</h2>
+                        <p class="ds-caption">Soạn thảo, phát thông báo và quản lý trạng thái bảo trì hệ thống.</p>
                     </div>
-                    <button type="button" class="ds-btn ds-btn-primary" onclick="AdminConsole.saveMaintenance()"><i class="fa fa-save"></i> Áp dụng</button>
                 </div>
-                <div class="admin-card" style="max-width:640px">
-                    <label class="perm-label-checkbox" style="margin-bottom:16px">
-                        <input id="maintActive" type="checkbox"> Bật chế độ bảo trì
-                    </label>
-                    <div class="ds-form-field config-full-row">
-                        <label class="ds-label" for="maintMessage">Thông báo hiển thị</label>
-                        <textarea id="maintMessage" class="ds-input control-input" rows="3" style="height:auto;padding:10px 14px"></textarea>
+
+                <!-- Active Maintenance Alert Banner -->
+                <div id="maintActiveBanner" class="ds-hidden" style="margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-radius: var(--ds-radius-md); background: rgba(239, 68, 68, 0.08); border: 1px solid var(--ds-danger); color: var(--ds-danger); gap: 16px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <i class="fa fa-exclamation-triangle" style="font-size: 20px;"></i>
+                        <div>
+                            <strong style="font-size: 15px;">Hệ thống đang trong CHẾ ĐỘ BẢO TRÌ!</strong>
+                            <p class="ds-caption" id="maintActiveMessage" style="margin: 4px 0 0; color: var(--ds-danger); font-size: 13px;"></p>
+                        </div>
                     </div>
-                    <div class="ds-form-field"><label class="ds-label" for="maintWhitelist">IP whitelist</label><input id="maintWhitelist" class="ds-input control-input" type="text"></div>
-                    <div class="ds-form-field"><label class="ds-label" for="maintStart">Bắt đầu</label><input id="maintStart" class="ds-input control-input" type="datetime-local"></div>
-                    <div class="ds-form-field"><label class="ds-label" for="maintEnd">Kết thúc</label><input id="maintEnd" class="ds-input control-input" type="datetime-local"></div>
-                    <div id="maintPreview" class="maintenance-preview-banner"></div>
+                    <button type="button" class="ds-btn ds-btn-sm" style="background: var(--ds-danger); color: white; border: none; padding: 6px 12px;" onclick="AdminConsole.disableMaintenance()">Tắt bảo trì ngay</button>
+                </div>
+                
+                <div class="ds-two-column">
+                    <div class="ds-card" style="padding: 24px;">
+                        <h3 class="ds-heading-md" style="margin-bottom: 20px;">Soạn thông báo mới</h3>
+                        <div class="ds-stack-sm">
+                            <div class="ds-form-field">
+                                <label class="ds-label" for="notifTitle">Tiêu đề thông báo</label>
+                                <input id="notifTitle" class="ds-input" type="text" placeholder="Ví dụ: Hệ thống bảo trì, Cập nhật chính sách...">
+                            </div>
+                            <div class="ds-form-field">
+                                <label class="ds-label" for="notifType">Loại thông báo</label>
+                                <select id="notifType" class="ds-input">
+                                    <option value="info">Thông tin chung (Info)</option>
+                                    <option value="warning">Cảnh báo (Warning)</option>
+                                    <option value="maintenance">Bảo trì hệ thống (Maintenance)</option>
+                                    <option value="policy">Chính sách (Policy)</option>
+                                </select>
+                            </div>
+                            <div class="ds-form-field">
+                                <label class="ds-label" for="notifContent">Nội dung</label>
+                                <textarea id="notifContent" class="ds-input" rows="5" style="height:auto;" placeholder="Nhập nội dung thông báo..."></textarea>
+                            </div>
+                            <!-- Conditional Maintenance Mode Toggle -->
+                            <div class="ds-form-field ds-hidden" id="notifMaintToggleWrap" style="margin-top: 12px;">
+                                <div style="display:flex; align-items:center; gap:12px; padding: 12px; background: rgba(239, 68, 68, 0.05); border: 1px dashed var(--ds-danger); border-radius: var(--ds-radius-sm);">
+                                    <button type="button" id="notifMaintToggle" class="ds-toggle ds-toggle-system ds-toggle-inactive" aria-pressed="false">
+                                        <span class="ds-toggle-track"><span class="ds-toggle-knob"></span></span>
+                                    </button>
+                                    <span class="ds-label" style="margin:0; font-weight: bold; color: var(--ds-danger);">Đồng thời kích hoạt chế độ bảo trì hệ thống</span>
+                                </div>
+                            </div>
+                            <div class="ds-form-actions" style="justify-content: flex-end; margin-top: 16px;">
+                                <button type="button" class="ds-btn ds-btn-primary" onclick="AdminConsole.pushNotification()"><i class="fa fa-paper-plane"></i> Phát thông báo ngay</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-card admin-list-card">
+                        <div class="ds-filter-panel">
+                            <h2 class="ds-card-title">Lịch sử phát thông báo</h2>
+                        </div>
+                        <div class="ds-table-wrap">
+                            <table class="ds-table">
+                                <thead>
+                                <tr>
+                                    <th class="ds-table-center">STT</th>
+                                    <th class="ds-table-center">Thời gian</th>
+                                    <th>Tiêu đề &amp; Nội dung</th>
+                                    <th class="ds-table-center">Loại</th>
+                                    <th>Người phát</th>
+                                </tr>
+                                </thead>
+                                <tbody id="notifHistoryBody">
+                                    <tr><td colspan="5" class="ds-empty-state">Chưa có thông báo nào.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="notifPagination"></div>
+                    </div>
                 </div>
             </div>
 
@@ -498,10 +530,15 @@
                         <p class="ds-caption">Gán quyền cho từng nhân viên (lưu demo).</p>
                     </div>
                 </div>
-                <div class="perm-grid">
-                    <div class="staff-list-box" id="staffPermList"></div>
+                <div class="ds-card" style="padding: 24px; max-width: 900px;">
+                    <div class="ds-form-field" style="margin-bottom: 24px;">
+                        <label class="ds-label" for="staffPermSelect">Chọn nhân viên</label>
+                        <select id="staffPermSelect" class="ds-input" onchange="AdminConsole.selectStaffPerm(this.value)">
+                            <option value="">-- Đang tải --</option>
+                        </select>
+                    </div>
                     <div class="permissions-panel" id="permPanel">
-                        <p class="ds-caption">Chọn nhân viên ở cột trái.</p>
+                        <p class="ds-caption">Vui lòng chọn nhân viên ở trên.</p>
                     </div>
                 </div>
             </div>
@@ -511,27 +548,28 @@
 </main>
 
 <!-- Log detail modal -->
-<div id="logDetailModal" class="modal" role="dialog" aria-modal="true">
-    <div class="modal-card">
-        <div class="modal-head">
-            <h3 class="ds-heading-md">Chi tiết nhật ký</h3>
-            <button type="button" class="modal-close" onclick="AdminConsole.closeLogDetail()" aria-label="Đóng"><i class="fa fa-times"></i></button>
+<div id="logDetailModal" class="ds-modal-backdrop ds-hidden" role="dialog" aria-modal="true">
+    <div class="ds-modal" style="max-width: 600px;">
+        <div class="ds-modal-header">
+            <h3 class="ds-heading-md">Chi tiết nhật ký hoạt động</h3>
         </div>
-        <div class="ds-stack-sm">
+        <div class="ds-modal-body ds-stack-sm">
             <div><strong>Thời gian:</strong> <span id="logDetTime"></span></div>
-            <div><strong>Nhân viên:</strong> <span id="logDetOperator"></span></div>
+            <div><strong>Nhân viên thực hiện:</strong> <span id="logDetOperator" style="font-weight: 600;"></span></div>
             <div><strong>Hành động:</strong> <span id="logDetAction" class="ds-badge"></span></div>
-            <div><strong>IP:</strong> <span id="logDetIp"></span></div>
-            <div><strong>Mô tả:</strong> <span id="logDetDesc"></span></div>
-            <pre id="logDetDiff" style="background:var(--ds-surface-muted);padding:12px;border-radius:var(--ds-radius-sm);font-size:12px;overflow:auto"></pre>
+            <div style="margin-bottom: 12px;"><strong>Mô tả:</strong> <span id="logDetDesc" class="muted"></span></div>
+            <div style="border-top: 1px solid var(--ds-border); padding-top: 16px; margin-top: 12px;">
+                <strong style="display: block; margin-bottom: 8px;">Chi tiết thay đổi dữ liệu:</strong>
+                <div id="logDetDiffWrap"></div>
+            </div>
         </div>
-        <div class="modal-actions">
+        <div class="ds-modal-footer">
             <button type="button" class="ds-btn ds-btn-outline" onclick="AdminConsole.closeLogDetail()">Đóng</button>
         </div>
     </div>
 </div>
 
-<div id="toast" class="admin-toast" role="status" aria-live="polite"></div>
+<div id="toastContainer" class="ds-toast-container" role="status" aria-live="polite"></div>
 
 <footer th:replace="fragments/footer :: footer"></footer>
 <script th:src="@{/js/auth.js}"></script>

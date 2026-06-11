@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bản tin thông báo - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/notifications.css}">
+    <style>
+        .notifications-public-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 28px 40px 56px;
+        }
+
+        .notifications-public-breadcrumb {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 18px;
+        }
+
+        .notifications-public-breadcrumb a {
+            color: var(--brand-dark);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .notifications-public-breadcrumb a:hover {
+            color: var(--brand-accent);
+            text-decoration: underline;
+        }
+
+        .public-notif-hero {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-left: 6px solid var(--ds-primary);
+            margin-bottom: 24px;
+        }
+
+        .public-notif-hero__title {
+            color: var(--brand-dark);
+            font-weight: 800;
+        }
+
+        .notif-filter-row {
+            display: grid;
+            grid-template-columns: minmax(260px, 2fr) minmax(180px, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .public-notif-item {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .public-notif-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--ds-shadow-md);
+            border-color: var(--ds-primary-soft);
+        }
+
+        .modal-detail-title {
+            font-weight: 900;
+            color: var(--brand-dark);
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .modal-detail-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--ds-text-muted);
+        }
+
+        .modal-detail-body {
+            line-height: 1.6;
+            color: var(--ds-text);
+            font-size: 14px;
+            white-space: pre-wrap;
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="notifications-public-container">
+        <div class="notifications-public-breadcrumb">
+            <a href="/"><i class="fa fa-home"></i> Trang chủ</a> &gt; <span>Thông báo chung</span>
+        </div>
+
+        <section class="public-notif-hero ds-card ds-card-lg">
+            <h1 class="public-notif-hero__title ds-heading-lg"><i class="fa fa-bullhorn" aria-hidden="true" style="margin-right: 8px; color: var(--ds-primary);"></i> Bản tin thông báo MMO Market</h1>
+            <p class="ds-body notifications-hero__subtitle">
+                Cập nhật các thông báo quan trọng, chính sách mới và lịch trình bảo trì hệ thống trực tiếp từ Ban quản trị.
+            </p>
+        </section>
+
+        <section class="ds-card ds-card-lg" style="margin-top: 20px; padding: 0; overflow: hidden;">
+            <form class="ds-filter-panel" id="publicNotifFilterForm" onsubmit="event.preventDefault(); applyFilters();">
+                <div>
+                    <h2 class="ds-card-title">Bộ lọc thông báo</h2>
+                    <p class="ds-caption">Tìm kiếm thông báo theo tiêu đề, nội dung và lọc phân loại.</p>
+                </div>
+                <div class="ds-filter-grid">
+                    <div class="ds-form-field">
+                        <label class="ds-label" for="publicNotifSearchInput">Tìm kiếm</label>
+                        <input class="ds-input" id="publicNotifSearchInput" type="text" placeholder="Tìm theo tiêu đề hoặc nội dung...">
+                    </div>
+                    <div class="ds-form-field">
+                        <label class="ds-label" for="publicNotifTypeFilter">Phân loại</label>
+                        <select class="ds-select" id="publicNotifTypeFilter">
+                            <option value="">Tất cả thông báo</option>
+                            <option value="info">Thông tin chung</option>
+                            <option value="warning">Cảnh báo bảo mật</option>
+                            <option value="maintenance">Lịch bảo trì</option>
+                            <option value="policy">Chính sách & Điều khoản</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="ds-filter-actions">
+                    <button class="ds-btn ds-btn-secondary" type="button" onclick="resetFilters()">
+                        <i class="fa fa-refresh" aria-hidden="true"></i> Làm mới
+                    </button>
+                    <button class="ds-btn ds-btn-primary" type="submit">
+                        <i class="fa fa-search" aria-hidden="true"></i> Tìm kiếm
+                    </button>
+                </div>
+            </form>
+
+            <div style="padding: 24px;">
+                <div class="ds-cluster-between" style="margin-bottom: 16px;">
+                    <div>
+                        <h2 class="ds-heading-md">Danh sách thông báo</h2>
+                        <p class="ds-caption" id="publicNotifResultSummary">Hiển thị 0 thông báo.</p>
+                    </div>
+                </div>
+
+                <div class="ds-empty-state" id="publicNotifEmptyState" style="display: none; padding: 40px; text-align: center;">
+                    <i class="fa fa-bell-slash-o" aria-hidden="true" style="font-size: 40px; color: var(--ds-text-subtle); margin-bottom: 12px;"></i>
+                    <p>Không tìm thấy thông báo nào phù hợp.</p>
+                </div>
+
+                <div class="notifications-list" id="publicNotifList"></div>
+
+                <div class="ds-pagination" id="publicNotifPagination" style="display: none; margin-top: 24px;">
+                    <div class="ds-pagination-pages" id="publicNotifPaginationPages"></div>
+                    <div class="ds-pagination-meta">
+                        <span id="publicNotifPaginationInfo">Tổng số: 0 thông báo</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Xem Chi Tiết Thông Báo -->
+    <div class="ds-modal-backdrop" id="notifDetailModal" style="display: none;">
+        <div class="ds-modal">
+            <div class="ds-modal-header ds-cluster-between">
+                <div>
+                    <h3 class="modal-detail-title" id="modalNotifTitle">Chi tiết thông báo</h3>
+                    <div class="modal-detail-meta">
+                        <span class="ds-badge" id="modalNotifBadge">Thông báo</span>
+                        <span id="modalNotifDate">--/--/----</span>
+                        <span>•</span>
+                        <span id="modalNotifAuthor">Admin</span>
+                    </div>
+                </div>
+                <button type="button" class="ds-btn ds-btn-text" style="font-size: 20px; padding: 4px;" onclick="closeNotifModal()">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="ds-modal-body">
+                <div class="modal-detail-body" id="modalNotifContent">
+                    Nội dung chi tiết thông báo sẽ xuất hiện ở đây.
+                </div>
+            </div>
+            <div class="ds-modal-footer">
+                <button class="ds-btn ds-btn-secondary" type="button" onclick="closeNotifModal()">Đóng lại</button>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="fragments/footer :: footer"></footer>
+
+    <script th:src="@{/js/auth.js}"></script>
+    <script>
+        const MOCK_KEY = 'mmo_admin_mock';
+        let allAnnouncements = [];
+        let filteredAnnouncements = [];
+        let currentPage = 1;
+        const pageSize = 5;
+
+        // Dữ liệu fallback nếu chưa có dữ liệu trong sessionStorage
+        const DEFAULT_PUBLIC_NOTIFS = [
+            {
+                timestamp: new Date(Date.now() - 3600000).toISOString(),
+                title: 'Bảo trì hệ thống định kỳ tháng 6/2026',
+                type: 'maintenance',
+                content: 'Chúng tôi sẽ tiến hành bảo trì nâng cấp hệ thống định kỳ từ 01:00 đến 04:00 ngày 15/06/2026. Trong thời gian này, một số tính năng nạp tiền và giao dịch có thể bị chậm trễ hoặc tạm ngưng để đảm bảo an toàn dữ liệu. Xin chân thành cảm ơn sự thông cảm của quý khách.',
+                author: 'Hệ thống'
+            },
+            {
+                timestamp: new Date(Date.now() - 86400000).toISOString(),
+                title: 'Cập nhật chính sách phí giao dịch MMO Market',
+                type: 'policy',
+                content: 'Kể từ ngày 12/06/2026, MMO Market sẽ cập nhật biểu phí dịch vụ bảo trợ C2C đối với người mua ở mức 2% (đã bao gồm phí thanh toán tự động). Mức phí này giúp chúng tôi duy trì hệ thống bảo chứng Escrow Hold 3 ngày (72 giờ) tối ưu nhất và mở rộng bộ phận CSKH hỗ trợ 24/7.',
+                author: 'Ban Quản Trị'
+            },
+            {
+                timestamp: new Date(Date.now() - 2 * 86400000).toISOString(),
+                title: 'Cảnh báo bảo mật: Các hình thức lừa đảo giả mạo Staff',
+                type: 'warning',
+                content: 'Khách hàng đặc biệt chú ý: Gần đây có một số đối tượng giả mạo Staff hoặc Moderator của MMO Market để nhắn tin riêng yêu cầu hỗ trợ giao dịch, yêu cầu cung cấp OTP hoặc chuyển tiền trực tiếp ngoài hệ thống.\n\nStaff của hệ thống KHÔNG BAO GIỜ chủ động nhắn tin riêng yêu cầu bạn chuyển khoản ngoài hoặc cung cấp thông tin đăng nhập/OTP. Mọi hoạt động trung gian đều phải được thực hiện thông qua hệ thống website MMO Market.',
+                author: 'Phòng Bảo Mật'
+            }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAnnouncements();
+            setupFilters();
+            markAllAsReadAutomatically();
+        });
+
+        function loadAnnouncements() {
+            try {
+                const stored = sessionStorage.getItem(MOCK_KEY);
+                let mockData = stored ? JSON.parse(stored) : {};
+                if (!mockData.notifications || mockData.notifications.length === 0) {
+                    mockData.notifications = DEFAULT_PUBLIC_NOTIFS;
+                    sessionStorage.setItem(MOCK_KEY, JSON.stringify(mockData));
+                }
+                allAnnouncements = mockData.notifications || [];
+            } catch (e) {
+                allAnnouncements = DEFAULT_PUBLIC_NOTIFS;
+            }
+            applyFilters();
+        }
+
+        function setupFilters() {
+            document.getElementById('publicNotifSearchInput').addEventListener('input', () => {
+                currentPage = 1;
+                applyFilters();
+            });
+            document.getElementById('publicNotifTypeFilter').addEventListener('change', () => {
+                currentPage = 1;
+                applyFilters();
+            });
+        }
+
+        function resetFilters() {
+            document.getElementById('publicNotifSearchInput').value = '';
+            document.getElementById('publicNotifTypeFilter').value = '';
+            currentPage = 1;
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const keyword = document.getElementById('publicNotifSearchInput').value.trim().toLowerCase();
+            const type = document.getElementById('publicNotifTypeFilter').value;
+
+            filteredAnnouncements = allAnnouncements.filter(item => {
+                const matchesKeyword = !keyword || 
+                    (item.title || '').toLowerCase().includes(keyword) || 
+                    (item.content || '').toLowerCase().includes(keyword);
+                const matchesType = !type || item.type === type;
+                return matchesKeyword && matchesType;
+            });
+
+            renderAnnouncements();
+        }
+
+        function renderAnnouncements() {
+            const list = document.getElementById('publicNotifList');
+            const emptyState = document.getElementById('publicNotifEmptyState');
+            const pagination = document.getElementById('publicNotifPagination');
+            const summary = document.getElementById('publicNotifResultSummary');
+            
+            if (filteredAnnouncements.length === 0) {
+                list.innerHTML = '';
+                emptyState.style.display = 'block';
+                pagination.style.display = 'none';
+                if (summary) summary.textContent = `Hiển thị 0/${allAnnouncements.length} thông báo.`;
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            
+            const totalPages = Math.max(Math.ceil(filteredAnnouncements.length / pageSize), 1);
+            if (currentPage > totalPages) currentPage = totalPages;
+            
+            const startIndex = (currentPage - 1) * pageSize;
+            const pagedItems = filteredAnnouncements.slice(startIndex, startIndex + pageSize);
+            
+            if (summary) {
+                summary.textContent = `Hiển thị ${startIndex + 1}-${startIndex + pagedItems.length}/${filteredAnnouncements.length} thông báo (Tổng số: ${allAnnouncements.length}).`;
+            }
+
+            list.innerHTML = pagedItems.map(item => {
+                let badgeClass = 'ds-badge-info';
+                let typeLabel = 'Hệ thống';
+                let typeIcon = 'fa-info-circle';
+
+                if (item.type === 'warning') {
+                    badgeClass = 'ds-badge-warning';
+                    typeLabel = 'Cảnh báo';
+                    typeIcon = 'fa-exclamation-triangle';
+                } else if (item.type === 'maintenance') {
+                    badgeClass = 'ds-badge-danger';
+                    typeLabel = 'Bảo trì';
+                    typeIcon = 'fa-wrench';
+                } else if (item.type === 'policy') {
+                    badgeClass = 'ds-badge-muted';
+                    typeLabel = 'Chính sách';
+                    typeIcon = 'fa-file-text-o';
+                }
+
+                // Check if this item is unread (not present in mmoReadNotifs localStorage)
+                const readTimestamps = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
+                const isUnread = !readTimestamps.includes(item.timestamp);
+                const unreadClass = isUnread ? 'notification-item--unread' : '';
+                const unreadBadge = isUnread ? `<span class="ds-badge ds-badge-info" style="margin-left: auto;">Chưa đọc</span>` : '';
+
+                return `
+                    <article class="notification-item public-notif-item ${unreadClass}" onclick="showNotifDetail('${item.timestamp.replace(/'/g, "\\'")}')">
+                        <span class="notification-item__icon"><i class="fa ${typeIcon}" aria-hidden="true"></i></span>
+                        <div class="notification-item__content">
+                            <div class="notification-item__header">
+                                <strong class="notification-item__title">${escapeHtml(item.title)}</strong>
+                                <span class="ds-badge ${badgeClass}" style="margin-left: 8px;">${typeLabel}</span>
+                                ${unreadBadge}
+                            </div>
+                            <p class="notification-item__message" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                ${escapeHtml(item.content)}
+                            </p>
+                            <span class="notification-item__time">
+                                <i class="fa fa-clock-o" aria-hidden="true"></i> ${formatDateTimeString(item.timestamp)}
+                            </span>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+
+            renderPagination(totalPages);
+        }
+
+        function renderPagination(totalPages) {
+            const pagination = document.getElementById('publicNotifPagination');
+            const pagesContainer = document.getElementById('publicNotifPaginationPages');
+            const info = document.getElementById('publicNotifPaginationInfo');
+
+            if (totalPages <= 1) {
+                pagination.style.display = 'none';
+                return;
+            }
+
+            pagination.style.display = 'flex';
+            info.textContent = `Tổng số: ${filteredAnnouncements.length} thông báo`;
+
+            let pagesHtml = '';
+            // Previous
+            pagesHtml += `<button class="ds-page-link ${currentPage === 1 ? 'ds-page-link-disabled' : ''}" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹</button>`;
+            
+            for (let i = 1; i <= totalPages; i++) {
+                pagesHtml += `<button class="ds-page-link ${i === currentPage ? 'ds-page-link-active' : ''}" onclick="changePage(${i})">${i}</button>`;
+            }
+
+            // Next
+            pagesHtml += `<button class="ds-page-link ${currentPage === totalPages ? 'ds-page-link-disabled' : ''}" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>›</button>`;
+
+            pagesContainer.innerHTML = pagesHtml;
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            renderAnnouncements();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showNotifDetail(timestamp) {
+            const item = allAnnouncements.find(a => a.timestamp === timestamp);
+            if (!item) return;
+
+            // Mark as read
+            markAsRead(timestamp);
+
+            document.getElementById('modalNotifTitle').textContent = item.title;
+            document.getElementById('modalNotifContent').textContent = item.content;
+            document.getElementById('modalNotifDate').textContent = formatDateTimeString(item.timestamp);
+            document.getElementById('modalNotifAuthor').textContent = item.author || 'Admin';
+
+            const badge = document.getElementById('modalNotifBadge');
+            badge.className = 'ds-badge';
+            if (item.type === 'warning') {
+                badge.classList.add('ds-badge-warning');
+                badge.textContent = 'Cảnh báo';
+            } else if (item.type === 'maintenance') {
+                badge.classList.add('ds-badge-danger');
+                badge.textContent = 'Bảo trì';
+            } else if (item.type === 'policy') {
+                badge.classList.add('ds-badge-muted');
+                badge.textContent = 'Chính sách';
+            } else {
+                badge.classList.add('ds-badge-info');
+                badge.textContent = 'Hệ thống';
+            }
+
+            document.getElementById('notifDetailModal').style.display = 'grid';
+            renderAnnouncements(); // Refresh layout to update unread style
+        }
+
+        function closeNotifModal() {
+            document.getElementById('notifDetailModal').style.display = 'none';
+        }
+
+        function markAsRead(timestamp) {
+            const readTimestamps = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
+            if (!readTimestamps.includes(timestamp)) {
+                readTimestamps.push(timestamp);
+                localStorage.setItem('mmoReadNotifs', JSON.stringify(readTimestamps));
+                if (typeof window.refreshHeaderNotifBadge === 'function') {
+                    window.refreshHeaderNotifBadge();
+                }
+            }
+        }
+
+        function markAllAsReadAutomatically() {
+            // Tự động đánh dấu tất cả thông báo hiện có trên màn hình hiển thị này là đã đọc sau khi người dùng truy cập trang này
+            setTimeout(() => {
+                const readTimestamps = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
+                let updated = false;
+                allAnnouncements.forEach(item => {
+                    if (!readTimestamps.includes(item.timestamp)) {
+                        readTimestamps.push(item.timestamp);
+                        updated = true;
+                    }
+                });
+                if (updated) {
+                    localStorage.setItem('mmoReadNotifs', JSON.stringify(readTimestamps));
+                    if (typeof window.refreshHeaderNotifBadge === 'function') {
+                        window.refreshHeaderNotifBadge();
+                    }
+                    renderAnnouncements();
+                }
+            }, 1200); // Đợi 1.2s rồi tự động đánh dấu đã đọc nhằm mang lại trải nghiệm xem mượt mà
+        }
+
+        function formatDateTimeString(isoString) {
+            try {
+                const d = new Date(isoString);
+                if (isNaN(d.getTime())) return isoString;
+                return d.toLocaleString('vi-VN');
+            } catch (e) {
+                return isoString;
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+    </script>
+</body>
+</html>
