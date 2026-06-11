@@ -28,7 +28,7 @@
         <a class="seller-sidebar__menu-link"
            th:classappend="${activeMenu == 'shop-info'} ? ' seller-sidebar__menu-link--active' : ''"
            th:href="@{/seller/shop-info}">
-            <i class="fa fa-store" aria-hidden="true"></i>
+            <i class="fa fa-briefcase" aria-hidden="true"></i>
             <span>Thông tin cửa hàng</span>
         </a>
         <a class="seller-sidebar__menu-link"
@@ -48,6 +48,24 @@
            th:href="@{/seller/transactions}">
             <i class="fa fa-exchange" aria-hidden="true"></i>
             <span>Lịch sử bán hàng</span>
+        </a>
+        <a class="seller-sidebar__menu-link"
+           th:classappend="${activeMenu == 'complaints'} ? ' seller-sidebar__menu-link--active' : ''"
+           th:href="@{/seller/complaints}">
+            <i class="fa fa-warning" aria-hidden="true"></i>
+            <span>Quản lý khiếu nại</span>
+        </a>
+        <a class="seller-sidebar__menu-link"
+           th:classappend="${activeMenu == 'reviews'} ? ' seller-sidebar__menu-link--active' : ''"
+           th:href="@{/seller/reviews}">
+            <i class="fa fa-star" aria-hidden="true"></i>
+            <span>Quản lý đánh giá</span>
+        </a>
+        <a class="seller-sidebar__menu-link"
+           th:classappend="${activeMenu == 'shop-flags'} ? ' seller-sidebar__menu-link--active' : ''"
+           th:href="@{/seller/shop-flags}">
+            <i class="fa fa-flag" aria-hidden="true"></i>
+            <span>Cờ cảnh báo Shop</span>
         </a>
         <a class="seller-sidebar__menu-link"
            th:classappend="${activeMenu == 'withdrawals'} ? ' seller-sidebar__menu-link--active' : ''"

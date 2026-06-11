@@ -4,11 +4,258 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý kho - MMO Market</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/home.css}">
     <link rel="stylesheet" th:href="@{/css/profile.css}">
     <link rel="stylesheet" th:href="@{/css/seller.css}">
+    <style>
+        .product-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 6px;
+            object-fit: cover;
+            background: #f1f5f9;
+        }
+
+        .product-image.placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 20px;
+        }
+
+        .asset-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: var(--ds-warning-soft, #fef08a);
+            color: #92400e;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--seller-border);
+            padding-bottom: 12px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--seller-ink);
+            font-family: "Inter", sans-serif;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--seller-muted);
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--seller-ink);
+            background: #f1f5f9;
+            border-radius: 6px;
+        }
+
+        .asset-detail-row {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--seller-border);
+        }
+
+        .asset-detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .asset-detail-label {
+            font-weight: 600;
+            color: var(--seller-ink);
+            width: 100px;
+            flex-shrink: 0;
+            font-size: 13px;
+        }
+
+        .asset-detail-value {
+            flex: 1;
+            word-break: break-all;
+            color: var(--seller-muted);
+            font-family: "Courier New", monospace;
+            background: var(--ds-surface-muted);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .asset-status {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #dcfce7;
+            color: #166534;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .asset-status.sold {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .view-assets-btn {
+            padding: 6px 10px;
+            background: var(--seller-primary-strong);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: "Inter", sans-serif;
+            transition: all 0.2s;
+        }
+
+        .view-assets-btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+        }
+
+        .inventory-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--seller-border);
+        }
+
+        .inventory-tab {
+            padding: 10px 16px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--seller-muted);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            font-family: "Inter", sans-serif;
+            font-size: 13px;
+        }
+
+        .inventory-tab.active {
+            color: var(--seller-primary-strong);
+            border-bottom-color: var(--seller-primary-strong);
+        }
+
+        .inventory-tab:hover {
+            color: var(--seller-ink);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--seller-muted);
+        }
+
+        .empty-state i {
+            font-size: 40px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .profile-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font: inherit;
+            font-weight: 600;
+            font-family: "Inter", sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            min-height: 40px;
+            font-size: 13px;
+        }
+
+        .profile-button--primary {
+            background: var(--seller-primary-strong);
+            color: white;
+        }
+
+        .profile-button--primary:hover:not(:disabled) {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
+        }
+
+        .profile-button--primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .profile-button--secondary {
+            background: #f1f5f9;
+            color: var(--seller-ink);
+            border: 1px solid var(--seller-border);
+        }
+
+        .profile-button--secondary:hover:not(:disabled) {
+            background: #e2e8f0;
+        }
+
+        .profile-button--secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 <body>
     <header th:replace="fragments/header :: header"></header>
@@ -23,84 +270,327 @@
                         <div class="seller-card__icon"><i class="fa fa-cubes"></i></div>
                         <div>
                             <h1 class="seller-card__title">Quản lý kho &amp; sản phẩm</h1>
-                            <p class="seller-card__subtitle">Danh sách sản phẩm và tồn kho biến thể</p>
+                            <p class="seller-card__subtitle">Quản lý sản phẩm, biến thể, hình ảnh và tài sản số</p>
                         </div>
                     </div>
                     <a class="profile-button profile-button--primary" th:href="@{/seller/products/new}">+ Đăng bán mới</a>
                 </div>
 
+                <!-- Tabs -->
+                <div class="inventory-tabs">
+                    <button class="inventory-tab active" data-tab="all">Tất cả sản phẩm</button>
+                    <button class="inventory-tab" data-tab="low-stock">Tồn kho thấp</button>
+                    <button class="inventory-tab" data-tab="inactive">Tạm khóa</button>
+                </div>
+
+                <!-- Products Table -->
                 <div class="seller-table-wrap">
                     <table class="seller-table">
                         <thead>
                             <tr>
+                                <th style="width: 60px;"></th>
                                 <th>Sản phẩm</th>
                                 <th>Danh mục</th>
-                                <th>Biến thể</th>
+                                <th>Loại</th>
+                                <th class="text-right">Biến thể</th>
                                 <th class="text-right">Tồn kho</th>
                                 <th>Trạng thái</th>
                                 <th class="text-right">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- Row 1: ACCOUNT Product -->
                             <tr>
                                 <td>
+                                    <img src="https://via.placeholder.com/50x50/ef4444/ffffff?text=Netflix" class="product-image" alt="Netflix">
+                                </td>
+                                <td>
                                     <div class="product-cell">
-                                        <div class="product-thumb"><i class="fa fa-film"></i></div>
                                         <div>
                                             <strong>Netflix Premium</strong>
                                             <div class="muted">ID #101</div>
+                                            <span class="asset-badge"><i class="fa fa-database"></i> 47 tài sản</span>
                                         </div>
                                     </div>
                                 </td>
                                 <td>Streaming</td>
-                                <td>3</td>
+                                <td>
+                                    <span style="background: #f0f7ff; color: #1e40af; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">
+                                        <i class="fa fa-user-circle"></i> Tài khoản
+                                    </span>
+                                </td>
+                                <td class="text-right">3</td>
                                 <td class="text-right">47</td>
                                 <td><span class="badge ok">Active</span></td>
                                 <td class="text-right">
-                                    <div th:replace="~{fragments/seller-actions :: productRowActions(@{/seller/products/edit})}"></div>
+                                    <button class="view-assets-btn" onclick="viewAssets(1)"><i class="fa fa-eye"></i> Xem</button>
                                 </td>
                             </tr>
+
+                            <!-- Row 2: ACCOUNT Product with low stock -->
                             <tr>
                                 <td>
+                                    <img src="https://via.placeholder.com/50x50/1db954/ffffff?text=Spotify" class="product-image" alt="Spotify">
+                                </td>
+                                <td>
                                     <div class="product-cell">
-                                        <div class="product-thumb"><i class="fa fa-music"></i></div>
                                         <div>
                                             <strong>Spotify Family</strong>
                                             <div class="muted">ID #102</div>
+                                            <span class="asset-badge"><i class="fa fa-database"></i> 12 tài sản</span>
                                         </div>
                                     </div>
                                 </td>
                                 <td>Streaming</td>
-                                <td>2</td>
-                                <td class="text-right">12</td>
+                                <td>
+                                    <span style="background: #f0f7ff; color: #1e40af; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">
+                                        <i class="fa fa-user-circle"></i> Tài khoản
+                                    </span>
+                                </td>
+                                <td class="text-right">2</td>
+                                <td class="text-right">
+                                    <span style="color: #f59e0b; font-weight: 600;">12</span>
+                                </td>
                                 <td><span class="badge ok">Active</span></td>
                                 <td class="text-right">
-                                    <div th:replace="~{fragments/seller-actions :: productRowActions(@{/seller/products/edit})}"></div>
+                                    <button class="view-assets-btn" onclick="viewAssets(2)"><i class="fa fa-eye"></i> Xem</button>
                                 </td>
                             </tr>
+
+                            <!-- Row 3: KEY Product -->
                             <tr>
                                 <td>
+                                    <img src="https://via.placeholder.com/50x50/8b5cf6/ffffff?text=Tool" class="product-image" alt="Tool">
+                                </td>
+                                <td>
                                     <div class="product-cell">
-                                        <div class="product-thumb"><i class="fa fa-paint-brush"></i></div>
+                                        <div>
+                                            <strong>Tool Auto Nuôi Clone Facebook Pro</strong>
+                                            <div class="muted">ID #103</div>
+                                            <span class="asset-badge"><i class="fa fa-database"></i> 28 key</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>Công cụ</td>
+                                <td>
+                                    <span style="background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">
+                                        <i class="fa fa-key"></i> Mã Key
+                                    </span>
+                                </td>
+                                <td class="text-right">1</td>
+                                <td class="text-right">28</td>
+                                <td><span class="badge ok">Active</span></td>
+                                <td class="text-right">
+                                    <button class="view-assets-btn" onclick="viewAssets(3)"><i class="fa fa-eye"></i> Xem</button>
+                                </td>
+                            </tr>
+
+                            <!-- Row 4: GAME_CARD Product (Out of stock) -->
+                            <tr>
+                                <td>
+                                    <img src="https://via.placeholder.com/50x50/3b82f6/ffffff?text=Garena" class="product-image" alt="Garena">
+                                </td>
+                                <td>
+                                    <div class="product-cell">
+                                        <div>
+                                            <strong>Garena VCoin Card 100K</strong>
+                                            <div class="muted">ID #104</div>
+                                            <span class="asset-badge"><i class="fa fa-database"></i> 0 thẻ</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>Game</td>
+                                <td>
+                                    <span style="background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">
+                                        <i class="fa fa-credit-card"></i> Thẻ Game
+                                    </span>
+                                </td>
+                                <td class="text-right">2</td>
+                                <td class="text-right">0</td>
+                                <td><span class="badge locked"><i class="fa fa-lock"></i> Hết hàng</span></td>
+                                <td class="text-right">
+                                    <button class="view-assets-btn" onclick="viewAssets(4)" disabled><i class="fa fa-eye"></i> Xem</button>
+                                </td>
+                            </tr>
+
+                            <!-- Row 5: Canva (Inactive) -->
+                            <tr>
+                                <td>
+                                    <img src="https://via.placeholder.com/50x50/5b21b6/ffffff?text=Canva" class="product-image" alt="Canva">
+                                </td>
+                                <td>
+                                    <div class="product-cell">
                                         <div>
                                             <strong>Canva Pro</strong>
-                                            <div class="muted">ID #103</div>
+                                            <div class="muted">ID #105</div>
+                                            <span class="asset-badge"><i class="fa fa-database"></i> 5 tài sản</span>
                                         </div>
                                     </div>
                                 </td>
                                 <td>Phần mềm</td>
-                                <td>1</td>
-                                <td class="text-right">0</td>
-                                <td><span class="badge locked"><i class="fa fa-lock"></i> Hết hàng</span></td>
+                                <td>
+                                    <span style="background: #f0f7ff; color: #1e40af; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">
+                                        <i class="fa fa-user-circle"></i> Tài khoản
+                                    </span>
+                                </td>
+                                <td class="text-right">1</td>
+                                <td class="text-right">5</td>
+                                <td><span class="badge locked"><i class="fa fa-pause"></i> Inactive</span></td>
                                 <td class="text-right">
-                                    <div th:replace="~{fragments/seller-actions :: productRowActions(@{/seller/products/edit})}"></div>
+                                    <button class="view-assets-btn" onclick="viewAssets(5)"><i class="fa fa-eye"></i> Xem</button>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
+
+                    <!-- Empty state (hidden by default) -->
+                    <div id="emptyState" class="empty-state" style="display: none;">
+                        <i class="fa fa-inbox"></i>
+                        <p>Bạn chưa có sản phẩm nào. Hãy tạo sản phẩm mới để bắt đầu.</p>
+                    </div>
                 </div>
             </section>
         </div>
     </main>
+
+    <!-- Asset Viewer Modal -->
+    <div id="assetModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Chi tiết tài sản kho</h2>
+                <button class="modal-close" onclick="closeAssetModal()"><i class="fa fa-times"></i></button>
+            </div>
+            <div id="assetModalBody">
+                <!-- Asset details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/seller-console.js}"></script>
+    <script>
+        // Sample asset data structure
+        const assetDatabase = {
+            1: {
+                productName: 'Netflix Premium',
+                productType: 'ACCOUNT',
+                assets: [
+                    { id: 1, username: 'netflix_user_01@gmail.com', password: 'NetflixSecure@2026', notes: 'Tài khoản mới 100%', status: 'available' },
+                    { id: 2, username: 'netflix_user_02@gmail.com', password: 'NetflixPass2026!', notes: 'Gói Premium 4K', status: 'available' },
+                    { id: 3, username: 'netflix_user_03@gmail.com', password: 'Nf2026@Premium', notes: 'Màn hình riêng', status: 'sold' },
+                ]
+            },
+            2: {
+                productName: 'Spotify Family',
+                productType: 'ACCOUNT',
+                assets: [
+                    { id: 1, username: 'spotify_family01@gmail.com', password: 'Sp0tify@2026', notes: 'Gói gia đình 6 slot', status: 'available' },
+                    { id: 2, username: 'spotify_family02@gmail.com', password: 'Sp0tify!2026', notes: 'Còn 5 slot trống', status: 'available' },
+                ]
+            },
+            3: {
+                productName: 'Tool Auto Nuôi Clone Facebook Pro',
+                productType: 'KEY',
+                assets: [
+                    { id: 1, keyCode: 'TOOL-A1B2-C3D4-E5F6', notes: 'Key 1 tháng — chưa kích hoạt', status: 'available' },
+                    { id: 2, keyCode: 'TOOL-G7H8-I9J0-K1L2', notes: 'Key 1 tháng — chưa kích hoạt', status: 'available' },
+                    { id: 3, keyCode: 'TOOL-M3N4-O5P6-Q7R8', notes: 'Key 1 tháng — còn mới', status: 'sold' },
+                ]
+            },
+            4: {
+                productName: 'Garena VCoin Card 100K',
+                productType: 'GAME_CARD',
+                assets: []
+            },
+            5: {
+                productName: 'Canva Pro',
+                productType: 'ACCOUNT',
+                assets: [
+                    { id: 1, username: 'canva_pro_01@gmail.com', password: 'Canva@2026', notes: 'Tài khoản mới', status: 'available' },
+                ]
+            }
+        };
+
+        function viewAssets(productId) {
+            const data = assetDatabase[productId];
+            if (!data) return;
+
+            const modal = document.getElementById('assetModal');
+            const body = document.getElementById('assetModalBody');
+
+            let html = '';
+
+            if (data.assets.length === 0) {
+                html = '<div class="empty-state"><i class="fa fa-inbox"></i><p>Không có tài sản nào trong kho.</p></div>';
+            } else {
+                html = '<table class="asset-list-table"><thead><tr>';
+
+                if (data.productType === 'ACCOUNT') {
+                    html += '<th style="width: 20px;">STT</th><th>Tài khoản</th><th>Mật khẩu</th><th>Ghi chú</th><th>Trạng thái</th></tr></thead><tbody>';
+                    data.assets.forEach((asset, index) => {
+                        html += `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td><code>${asset.username}</code></td>
+                                <td><code>••••••</code> <small>(ẩn)</small></td>
+                                <td>${asset.notes}</td>
+                                <td><span class="asset-status ${asset.status === 'sold' ? 'sold' : ''}">${asset.status === 'sold' ? 'Đã bán' : 'Còn hàng'}</span></td>
+                            </tr>
+                        `;
+                    });
+                } else if (data.productType === 'KEY') {
+                    html += '<th style="width: 20px;">STT</th><th>Mã Key</th><th>Ghi chú</th><th>Trạng thái</th></tr></thead><tbody>';
+                    data.assets.forEach((asset, index) => {
+                        html += `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td><code>${asset.keyCode}</code></td>
+                                <td>${asset.notes}</td>
+                                <td><span class="asset-status ${asset.status === 'sold' ? 'sold' : ''}">${asset.status === 'sold' ? 'Đã bán' : 'Còn hàng'}</span></td>
+                            </tr>
+                        `;
+                    });
+                } else if (data.productType === 'GAME_CARD') {
+                    html += '<th style="width: 20px;">STT</th><th>Mã Thẻ</th><th>PIN</th><th>Ghi chú</th><th>Trạng thái</th></tr></thead><tbody>';
+                    data.assets.forEach((asset, index) => {
+                        html += `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td><code>${asset.cardCode || 'N/A'}</code></td>
+                                <td><code>••••</code></td>
+                                <td>${asset.notes}</td>
+                                <td><span class="asset-status ${asset.status === 'sold' ? 'sold' : ''}">${asset.status === 'sold' ? 'Đã bán' : 'Còn hàng'}</span></td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                html += '</tbody></table>';
+            }
+
+            body.innerHTML = html;
+            modal.classList.add('active');
+        }
+
+        function closeAssetModal() {
+            document.getElementById('assetModal').classList.remove('active');
+        }
+
+        // Tab filtering
+        document.querySelectorAll('.inventory-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.inventory-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                // In a real app, filter the table here
+            });
+        });
+
+        // Close modal on outside click
+        document.getElementById('assetModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAssetModal();
+            }
+        });
+    </script>
 </body>
 </html>

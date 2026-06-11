@@ -2,6 +2,7 @@ package dal;
 
 import model.Category;
 import model.Product;
+import model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
@@ -12,6 +13,7 @@ import java.util.Optional;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
     Optional<Product> findByIdAndIsDeleteFalse(Long id);
+    List<Product> findBySellerAndIsDeleteFalseOrderByCreatedAtDesc(User seller);
     List<Product> findByCategoryAndIsDeleteFalse(model.Category category);
     List<Product> findByNameContainingIgnoreCaseAndIsDeleteFalse(String name);
     List<Product> findByDescriptionContainingIgnoreCaseAndIsDeleteFalse(String description);

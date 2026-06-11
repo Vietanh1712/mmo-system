@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thông tin cửa hàng - MMO Market</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/home.css}">
     <link rel="stylesheet" th:href="@{/css/profile.css}">
@@ -20,7 +20,7 @@
             <section class="seller-card">
                 <div class="seller-card__header">
                     <div class="seller-card__header-main">
-                        <div class="seller-card__icon"><i class="fa fa-store"></i></div>
+                        <div class="seller-card__icon"><i class="fa fa-briefcase"></i></div>
                         <div>
                             <h1 class="seller-card__title">Cài đặt thông tin Shop</h1>
                             <p class="seller-card__subtitle">Thông tin hiển thị công khai và tài khoản nhận tiền</p>
@@ -65,5 +65,7 @@
             </section>
         </div>
     </main>
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/seller-console.js}"></script>
 </body>
 </html>

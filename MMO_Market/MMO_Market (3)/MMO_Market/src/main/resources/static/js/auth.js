@@ -203,7 +203,7 @@ function resolvePostLoginRedirect(roleValue, redirectPathFromApi) {
     } else if (role === 'Staff') {
         roleTarget = '/staff/dashboard';
     } else if (isSellerRole(role)) {
-        roleTarget = '/seller/dashboard';
+        roleTarget = '/';
     }
 
     if (redirectPathFromApi && typeof redirectPathFromApi === 'string') {

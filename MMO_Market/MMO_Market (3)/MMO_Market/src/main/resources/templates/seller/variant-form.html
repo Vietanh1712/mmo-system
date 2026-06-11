@@ -3,12 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${variantMode == 'edit'} ? 'Sửa biến thể' : 'Thêm biến thể'">Biến thể sản phẩm - MMO Market</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Thêm biến thể & tài sản số - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/home.css}">
     <link rel="stylesheet" th:href="@{/css/profile.css}">
     <link rel="stylesheet" th:href="@{/css/seller.css}">
+    <style>
+        .asset-list-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        .asset-list-table thead {
+            background-color: var(--ds-surface-muted);
+        }
+
+        .asset-list-table th, .asset-list-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--seller-border);
+        }
+
+        .asset-list-table th {
+            font-weight: 600;
+            color: #475569;
+            font-size: 12px;
+        }
+
+        .asset-list-table td {
+            color: var(--seller-muted);
+            font-size: 13px;
+        }
+
+        .asset-list-table tbody tr:hover {
+            background-color: var(--ds-surface-muted);
+        }
+
+        .asset-row-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .asset-row-actions button {
+            padding: 4px 8px;
+            font-size: 12px;
+            border: 1px solid var(--seller-border);
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: "Inter", sans-serif;
+        }
+
+        .asset-row-actions button:hover {
+            background-color: #f1f5f9;
+        }
+
+        .asset-row-actions .delete-btn:hover {
+            border-color: var(--seller-danger);
+            color: var(--seller-danger);
+        }
+
+        .form-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--seller-ink);
+            margin-top: 24px;
+            margin-bottom: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--seller-border);
+        }
+
+        .asset-input-group {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        .asset-input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .asset-input-grid.full {
+            grid-template-columns: 1fr;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.available {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .status-badge.sold {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .info-box {
+            background-color: #f0f7ff;
+            border-left: 3px solid var(--seller-primary-strong);
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #1e40af;
+            margin-top: 8px;
+        }
+
+        .danger-box {
+            background-color: #fef2f2;
+            border-left: 3px solid var(--seller-danger);
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #991b1b;
+            margin-top: 8px;
+        }
+
+        .profile-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font: inherit;
+            font-weight: 600;
+            font-family: "Inter", sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            min-height: 40px;
+            font-size: 13px;
+        }
+
+        .profile-button--primary {
+            background: var(--seller-primary-strong);
+            color: white;
+        }
+
+        .profile-button--primary:hover:not(:disabled) {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
+        }
+
+        .profile-button--primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .profile-button--secondary {
+            background: #f1f5f9;
+            color: var(--seller-ink);
+            border: 1px solid var(--seller-border);
+        }
+
+        .profile-button--secondary:hover:not(:disabled) {
+            background: #e2e8f0;
+        }
+
+        .profile-button--secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 <body>
     <header th:replace="fragments/header :: header"></header>
@@ -22,52 +193,350 @@
                     <div class="seller-card__header-main">
                         <div class="seller-card__icon"><i class="fa fa-tags"></i></div>
                         <div>
-                            <h1 class="seller-card__title" th:text="${variantMode == 'edit'} ? 'Cập nhật biến thể' : 'Tạo biến thể mới'">Tạo biến thể mới</h1>
-                            <p class="seller-card__subtitle">Sản phẩm: Tài khoản Netflix Premium</p>
+                            <h1 class="seller-card__title">Tạo biến thể & nhập kho tài sản số</h1>
+                            <p class="seller-card__subtitle" id="productTypeDisplay">Sản phẩm: Tải khoản Netflix Premium</p>
                         </div>
                     </div>
-                    <a class="profile-button profile-button--secondary" th:href="@{/seller/products/edit}">← Quay lại sản phẩm</a>
+                    <a class="profile-button profile-button--secondary" th:href="@{/seller/products/edit}">← Quay lại</a>
                 </div>
 
-                <form class="profile-edit-form seller-form-panel" novalidate>
+                <form class="profile-edit-form seller-form-panel" id="variantForm" novalidate>
+                    <!-- Section 1: Variant Info -->
+                    <div class="form-section-title">Thông tin biến thể</div>
+
                     <div class="profile-edit-form__group">
-                        <label for="variantName">Tên biến thể</label>
-                        <input id="variantName" type="text"
-                               th:value="${variantMode == 'edit'} ? '1 tháng — 1 màn hình' : ''"
-                               placeholder="VD: 1 tháng — 1 màn hình">
-                    </div>
-                    <div class="profile-edit-form__group">
-                        <label for="priceVnd">Giá bán (VNĐ)</label>
-                        <input id="priceVnd" type="number"
-                               th:value="${variantMode == 'edit'} ? '89000' : ''"
-                               placeholder="89000">
-                    </div>
-                    <div class="profile-edit-form__group">
-                        <label for="stock">Số lượng tồn kho</label>
-                        <input id="stock" type="number"
-                               th:value="${variantMode == 'edit'} ? '25' : ''"
-                               placeholder="0">
-                    </div>
-                    <div class="profile-edit-form__group">
-                        <label for="status">Trạng thái</label>
-                        <select id="status" style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;">
-                            <option selected>Active</option>
-                            <option>Inactive</option>
-                        </select>
-                    </div>
-                    <div class="profile-edit-form__group" th:if="${variantMode == 'edit'}">
-                        <label>Kho tài sản số (DigitalAssets)</label>
-                        <p class="profile-edit-form__hint">Biến thể này có 25 tài khoản/key trong kho. Quản lý chi tiết sẽ có ở phiên bản sau.</p>
+                        <label for="variantName">Tên biến thể <span style="color: #ef4444;">*</span></label>
+                        <input id="variantName" type="text" placeholder="VD: 1 tháng - 1 màn hình"
+                               required autocomplete="off">
+                        <small class="profile-edit-form__hint">Phân biệt các phiên bản khác nhau của sản phẩm</small>
                     </div>
 
-                    <div class="profile-actions">
-                        <button class="profile-button profile-button--primary" type="button" disabled
-                                th:text="${variantMode == 'edit'} ? 'Cập nhật biến thể' : 'Tạo biến thể'">Tạo biến thể</button>
-                        <a class="profile-button profile-button--secondary" th:href="@{/seller/products/edit}">Hủy</a>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="profile-edit-form__group">
+                            <label for="priceVnd">Giá bán (VNĐ) <span style="color: #ef4444;">*</span></label>
+                            <input id="priceVnd" type="number" min="0" placeholder="89000"
+                                   required autocomplete="off">
+                        </div>
+
+                        <div class="profile-edit-form__group">
+                            <label for="status">Trạng thái <span style="color: #ef4444;">*</span></label>
+                            <select id="status" required style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;">
+                                <option value="Active" selected>Kích hoạt (Active)</option>
+                                <option value="Inactive">Tạm khóa (Inactive)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Digital Asset Input -->
+                    <div class="form-section-title">Nhập kho tài sản số</div>
+                    <p class="profile-edit-form__hint">
+                        Nhập chi tiết từng tài sản. Hệ thống sẽ lưu trữ an toàn và chỉ hiển thị cho người mua khi mua hàng.
+                    </p>
+
+                    <!-- Asset Input Form -->
+                    <div class="asset-input-group">
+                        <div id="assetFieldsContainer">
+                            <!-- Dynamic fields based on product type -->
+                        </div>
+
+                        <div style="margin-top: 16px;">
+                            <button type="button" id="addAssetBtn" class="profile-button profile-button--primary" 
+                                    style="width: 100%;">
+                                <i class="fa fa-plus"></i> Thêm tài sản
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Asset List -->
+                    <div id="assetListContainer" style="display: none;">
+                        <div class="form-section-title">Danh sách tài sản đã nhập (<span id="assetCount">0</span> tài sản)</div>
+                        <table class="asset-list-table">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th id="assetCol1">Tài khoản / Mã</th>
+                                    <th id="assetCol2">Thông tin</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="assetListBody">
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Warning if no assets -->
+                    <div id="noAssetsWarning" class="danger-box" style="display: none;">
+                        <i class="fa fa-exclamation-triangle"></i> 
+                        Bạn chưa nhập bất kỳ tài sản nào. Phải nhập ít nhất 1 tài sản trước khi lưu biến thể.
+                    </div>
+
+                    <div class="profile-actions" style="margin-top: 32px;">
+                        <button class="profile-button profile-button--primary" type="submit">
+                            <i class="fa fa-save"></i> Lưu biến thể & tài sản
+                        </button>
+                        <a class="profile-button profile-button--secondary" th:href="@{/seller/inventory}">Hủy</a>
                     </div>
                 </form>
             </section>
         </div>
     </main>
+
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/seller-console.js}"></script>
+    <script>
+        // Get product data from session
+        const productData = JSON.parse(sessionStorage.getItem('productData') || '{}');
+        const productType = productData.productType || 'ACCOUNT';
+        let assets = [];
+
+        // Initialize form
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProductDisplay();
+            renderAssetFields();
+            setupEventListeners();
+        });
+
+        function updateProductDisplay() {
+            const typeLabel = {
+                'ACCOUNT': 'Tài khoản (username & password)',
+                'KEY': 'Mã Key (mã kích hoạt)',
+                'GAME_CARD': 'Thẻ Game (code & PIN)'
+            };
+            document.getElementById('productTypeDisplay').textContent = 
+                'Sản phẩm: ' + (productData.name || 'Sản phẩm mới') + ' (' + typeLabel[productType] + ')';
+        }
+
+        function renderAssetFields() {
+            const container = document.getElementById('assetFieldsContainer');
+            container.innerHTML = '';
+
+            const fieldsets = {
+                'ACCOUNT': `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div>
+                            <label for="assetUsername" style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 500;">Tài khoản (username/email)</label>
+                            <input type="text" id="assetUsername" placeholder="user@example.com" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;">
+                        </div>
+                        <div>
+                            <label for="assetPassword" style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 500;">Mật khẩu</label>
+                            <input type="password" id="assetPassword" placeholder="••••••••" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="assetNotes" style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 500;">Ghi chú</label>
+                        <input type="text" id="assetNotes" placeholder="VD: Tài khoản mới 100%, hỗ trợ đổi mk" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;">
+                    </div>
+                `,
+                'KEY': `
+                    <div style="margin-bottom: 12px;">
+                        <label for="assetKeyCode" style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 500;">Mã Key <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="assetKeyCode" placeholder="XXXX-XXXX-XXXX-XXXX" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;" required>
+                        <small style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">Mỗi key phải là duy nhất</small>
+                    </div>
+                    <div>
+                        <label for="assetNotes2" style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 500;">Ghi chú</label>
+                        <input type="text" id="assetNotes2" placeholder="VD: Key 1 tháng, chưa kích hoạt" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;">
+                    </div>
+                `,
+                'GAME_CARD': `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div>
+                            <label for="assetCardCode" style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 500;">Mã thẻ <span style="color: #ef4444;">*</span></label>
+                            <input type="text" id="assetCardCode" placeholder="123456789" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;" required>
+                        </div>
+                        <div>
+                            <label for="assetCardPin" style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 500;">PIN <span style="color: #ef4444;">*</span></label>
+                            <input type="password" id="assetCardPin" placeholder="••••••" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="assetNotes3" style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 500;">Ghi chú</label>
+                        <input type="text" id="assetNotes3" placeholder="VD: Thẻ Garena 100k, chưa sử dụng" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;">
+                    </div>
+                `
+            };
+
+            container.innerHTML = fieldsets[productType] || '';
+        }
+
+        function setupEventListeners() {
+            document.getElementById('addAssetBtn').addEventListener('click', addAsset);
+            document.getElementById('variantForm').addEventListener('submit', submitForm);
+        }
+
+        function addAsset() {
+            let asset = {};
+
+            if (productType === 'ACCOUNT') {
+                const username = document.getElementById('assetUsername').value.trim();
+                const password = document.getElementById('assetPassword').value.trim();
+                const notes = document.getElementById('assetNotes').value.trim();
+
+                if (!username || !password) {
+                    alert('Vui lòng nhập tài khoản và mật khẩu');
+                    return;
+                }
+
+                asset = { type: 'ACCOUNT', username, password, notes };
+            } else if (productType === 'KEY') {
+                const keyCode = document.getElementById('assetKeyCode').value.trim();
+                const notes = document.getElementById('assetNotes2').value.trim();
+
+                if (!keyCode) {
+                    alert('Vui lòng nhập mã key');
+                    return;
+                }
+
+                // Check for duplicate key
+                if (assets.some(a => a.keyCode === keyCode)) {
+                    alert('Mã key này đã được nhập. Mỗi key phải là duy nhất!');
+                    return;
+                }
+
+                asset = { type: 'KEY', keyCode, notes };
+            } else if (productType === 'GAME_CARD') {
+                const cardCode = document.getElementById('assetCardCode').value.trim();
+                const cardPin = document.getElementById('assetCardPin').value.trim();
+                const notes = document.getElementById('assetNotes3').value.trim();
+
+                if (!cardCode || !cardPin) {
+                    alert('Vui lòng nhập mã thẻ và PIN');
+                    return;
+                }
+
+                // Check for duplicate card
+                if (assets.some(a => a.cardCode === cardCode)) {
+                    alert('Mã thẻ này đã được nhập!');
+                    return;
+                }
+
+                asset = { type: 'GAME_CARD', cardCode, cardPin, notes };
+            }
+
+            assets.push(asset);
+            clearAssetFields();
+            updateAssetList();
+        }
+
+        function clearAssetFields() {
+            if (productType === 'ACCOUNT') {
+                document.getElementById('assetUsername').value = '';
+                document.getElementById('assetPassword').value = '';
+                document.getElementById('assetNotes').value = '';
+            } else if (productType === 'KEY') {
+                document.getElementById('assetKeyCode').value = '';
+                document.getElementById('assetNotes2').value = '';
+            } else if (productType === 'GAME_CARD') {
+                document.getElementById('assetCardCode').value = '';
+                document.getElementById('assetCardPin').value = '';
+                document.getElementById('assetNotes3').value = '';
+            }
+        }
+
+        function updateAssetList() {
+            const container = document.getElementById('assetListContainer');
+            const tbody = document.getElementById('assetListBody');
+            const count = document.getElementById('assetCount');
+            const warning = document.getElementById('noAssetsWarning');
+
+            count.textContent = assets.length;
+
+            if (assets.length === 0) {
+                container.style.display = 'none';
+                warning.style.display = 'block';
+                return;
+            }
+
+            container.style.display = 'block';
+            warning.style.display = 'none';
+
+            tbody.innerHTML = assets.map((asset, index) => {
+                let col1Label = '';
+                let col2Label = '';
+
+                if (productType === 'ACCOUNT') {
+                    col1Label = `<code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 12px;">${asset.username}</code>`;
+                    col2Label = `Mật khẩu: <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 12px;">••••••</code>`;
+                    if (asset.notes) col2Label += `<br><small>${asset.notes}</small>`;
+                } else if (productType === 'KEY') {
+                    col1Label = `<code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 12px;">${asset.keyCode}</code>`;
+                    col2Label = asset.notes ? `<small>${asset.notes}</small>` : '';
+                } else if (productType === 'GAME_CARD') {
+                    col1Label = `<code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 12px;">${asset.cardCode}</code>`;
+                    col2Label = `PIN: <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 12px;">••••</code>`;
+                    if (asset.notes) col2Label += `<br><small>${asset.notes}</small>`;
+                }
+
+                return `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${col1Label}</td>
+                        <td>${col2Label}</td>
+                        <td><span class="status-badge available">Còn hàng</span></td>
+                        <td>
+                            <div class="asset-row-actions">
+                                <button type="button" class="delete-btn" onclick="deleteAsset(${index})" title="Xóa">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Update column headers
+            if (productType === 'ACCOUNT') {
+                document.getElementById('assetCol1').textContent = 'Tài khoản';
+                document.getElementById('assetCol2').textContent = 'Mật khẩu';
+            } else if (productType === 'KEY') {
+                document.getElementById('assetCol1').textContent = 'Mã Key';
+                document.getElementById('assetCol2').textContent = 'Ghi chú';
+            } else if (productType === 'GAME_CARD') {
+                document.getElementById('assetCol1').textContent = 'Mã Thẻ';
+                document.getElementById('assetCol2').textContent = 'PIN';
+            }
+        }
+
+        function deleteAsset(index) {
+            if (confirm('Bạn chắc chắn muốn xóa tài sản này?')) {
+                assets.splice(index, 1);
+                updateAssetList();
+            }
+        }
+
+        function submitForm(e) {
+            e.preventDefault();
+
+            const variantName = document.getElementById('variantName').value.trim();
+            const priceVnd = document.getElementById('priceVnd').value.trim();
+            const status = document.getElementById('status').value;
+
+            if (!variantName || !priceVnd) {
+                alert('Vui lòng nhập tên biến thể và giá bán');
+                return;
+            }
+
+            if (assets.length === 0) {
+                alert('Bạn phải nhập ít nhất 1 tài sản trước khi lưu');
+                return;
+            }
+
+            // Store data in session
+            const variantData = {
+                productData,
+                variantName,
+                priceVnd: parseInt(priceVnd),
+                status,
+                assets
+            };
+
+            sessionStorage.setItem('variantData', JSON.stringify(variantData));
+
+            // In a real app, you would send this to the backend
+            alert('Đã tạo biến thể với ' + assets.length + ' tài sản. Hệ thống sẽ lưu thông tin này.');
+            window.location.href = '/seller/inventory';
+        }
+    </script>
 </body>
 </html>

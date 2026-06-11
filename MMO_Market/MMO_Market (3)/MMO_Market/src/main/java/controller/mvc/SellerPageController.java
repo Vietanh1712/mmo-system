@@ -66,6 +66,21 @@ public class SellerPageController {
         return "seller/statistics";
     }
 
+    @GetMapping("/shop-flags")
+    public String shopFlags() {
+        return "seller/shop-flags";
+    }
+
+    @GetMapping("/reviews")
+    public String reviews() {
+        return "seller/reviews";
+    }
+
+    @GetMapping("/complaints")
+    public String complaints() {
+        return "seller/complaints";
+    }
+
     @GetMapping("/complaints/detail")
     public String complaintDetail() {
         return "seller/complaint-detail";
