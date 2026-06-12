@@ -23,4 +23,8 @@ public class ProductSearchResultDTO {
     private Float averageRating = 0.0f;
     private boolean isInstant = false;
     private boolean isBestseller = false;
+
+    // Actual statistics from DB
+    private Long salesCount = 0L;
+    private Long reviewsCount = 0L;
 }

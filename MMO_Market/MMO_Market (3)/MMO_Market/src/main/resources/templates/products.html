@@ -17,6 +17,7 @@
     <!-- CSS (đồng bộ với search-results) -->
     <link rel="stylesheet" th:href="@{/css/home.css}">
     <link rel="stylesheet" th:href="@{/css/search-results.css}">
+    <link rel="stylesheet" th:href="@{/css/toast.css}">
 </head>
 
 <body>
@@ -649,7 +650,7 @@
             }
 
             items.forEach(product => {
-                const starsCount = Math.floor(product.averageRating || 5);
+                const starsCount = Math.floor(product.averageRating || 0);
                 let starHtml = '';
                 for (let i = 0; i < 5; i++) {
                     if (i < starsCount) {
@@ -800,8 +801,37 @@
                 cart.push(cartItem);
             }
             localStorage.setItem('mmoCart', JSON.stringify(cart));
-            alert('Đã thêm sản phẩm vào giỏ hàng thành công!');
+            showSuccessToast('Đã thêm sản phẩm vào giỏ hàng thành công!');
             if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
+        }
+
+        function showSuccessToast(message) {
+            let container = document.querySelector('.ds-toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'ds-toast-container';
+                document.body.appendChild(container);
+            }
+            const toast = document.createElement('div');
+            toast.className = 'ds-toast ds-toast-success';
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fa fa-check-circle" style="font-size: 18px; color: #22c55e;"></i>
+                    <div>
+                        <h4 class="ds-toast-title">Thành công</h4>
+                        <p class="ds-toast-message">${message}</p>
+                    </div>
+                </div>
+                <button class="ds-toast-close" onclick="this.parentElement.remove()">&times;</button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => {
+                    toast.remove();
+                }, 500);
+            }, 3000);
         }
 
         document.addEventListener('DOMContentLoaded', () => {

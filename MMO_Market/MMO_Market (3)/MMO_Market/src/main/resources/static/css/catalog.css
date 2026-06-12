@@ -2,7 +2,7 @@
    CATALOG.CSS - TRANG DANH MỤC SẢN PHẨM - MMO MARKET
    Design System: Nexus Market (Đồng bộ với home.css / search-results.css)
    ======================================================= */
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
     --primary-blue: #0f172a;       /* Brand dark slate */
@@ -27,6 +27,7 @@
     --brand-primary: #fbceb5;
     --brand-dark: #0f172a;
     --brand-accent: #ea580c;       /* Warm orange accent */
+    --action-orange: #fd761a;      /* Unified orange color */
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 12px;
@@ -383,30 +384,29 @@ main, main *, .catalog-breadcrumb, .catalog-breadcrumb *, .catalog-page-header, 
     margin-left: 4px;
 }
 
-/* Apply Filters Button */
 .btn-apply-filters {
     display: block;
     width: calc(100% - 44px);
     margin: 8px auto 22px;
     padding: 12px;
-    background: var(--brand-dark);
+    background: var(--ds-primary, #2563eb);
     color: #ffffff;
     border: none;
     border-radius: var(--radius-sm);
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 3px 10px rgba(15,23,42,0.15);
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s;
+    box-shadow: none;
     font-family: inherit;
     letter-spacing: 0.2px;
 }
 .btn-apply-filters:hover {
-    background: var(--primary-blue-hover);
-    box-shadow: 0 5px 16px rgba(15,23,42,0.25);
-    transform: translateY(-1px);
+    background: var(--ds-primary-hover, #1d4ed8);
+    box-shadow: none;
+    transform: none;
 }
-.btn-apply-filters:active { transform: translateY(0); }
+.btn-apply-filters:active { transform: none; }
 .btn-apply-filters i { margin-right: 6px; }
 
 /* ============ PRODUCT CONTENT (75%) ============ */
@@ -617,32 +617,39 @@ main, main *, .catalog-breadcrumb, .catalog-breadcrumb *, .catalog-page-header, 
 .catalog-card__price {
     font-size: 17px;
     font-weight: 800;
-    color: var(--danger);
+    color: var(--action-orange);
     line-height: 1.1;
 }
 
 .catalog-card__btn-buy {
-    background: var(--cta-orange);
-    color: #000000;
+    background: var(--action-orange, #fd761a);
+    color: #ffffff;
     border: none;
     padding: 8px 16px;
     border-radius: var(--radius-sm);
     font-size: 12.5px;
     font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s;
     white-space: nowrap;
     font-family: inherit;
-    box-shadow: 0 2px 8px rgba(251,206,181,0.25);
+    box-shadow: none;
 }
 .catalog-card__btn-buy:hover {
-    background: var(--cta-orange-hover);
-    box-shadow: 0 4px 14px rgba(251,206,181,0.4);
-    transform: translateY(-1px);
-    color: #000000;
+    background: #e0600f;
+    box-shadow: none;
+    transform: none;
+    color: #ffffff;
 }
-.catalog-card__btn-buy:active { transform: translateY(0); }
+.catalog-card__btn-buy:active { transform: none; }
 .catalog-card__btn-buy i { margin-right: 4px; }
+
+.catalog-card__btn-buy--preorder {
+    background: var(--danger, #dc2626) !important;
+}
+.catalog-card__btn-buy--preorder:hover {
+    background: #b91c1c !important;
+}
 
 /* ==================== PAGINATION ==================== */
 .catalog-pagination {

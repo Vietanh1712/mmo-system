@@ -168,6 +168,28 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/api/auth/google")
+    @ResponseBody
+    public ResponseEntity<?> googleLogin(@Valid @RequestBody GoogleLoginRequest request) {
+        try {
+            log.info("Nhận yêu cầu đăng nhập bằng Google OAuth2");
+            LoginResponse response = authenticationService.loginWithGoogle(request.getCode());
+
+            if (response.getAccessToken() != null) {
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+        } catch (Exception e) {
+            log.error("Lỗi khi đăng nhập bằng Google: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new Object() {
+                        public final String message = e.getMessage();
+                        public final boolean success = false;
+                    });
+        }
+    }
+
     @PostMapping("/api/auth/logout")
     @ResponseBody
     public ResponseEntity<?> logout(@Valid @RequestBody LogoutRequest request) {

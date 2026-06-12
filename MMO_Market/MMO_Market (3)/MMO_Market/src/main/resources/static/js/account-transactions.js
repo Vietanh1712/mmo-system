@@ -44,18 +44,50 @@ async function loadTransactionsPage() {
     }
 }
 
-function readWalletTransactions() {
+function getUserSpecificKey(baseKey) {
     try {
-        const saved = JSON.parse(sessionStorage.getItem(WALLET_MOCK_TRANSACTIONS_KEY));
-        if (Array.isArray(saved) && saved.length) {
-            return saved;
+        const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            if (user && user.email) {
+                return `${baseKey}_${user.email}`;
+            }
+        }
+    } catch (e) {
+        console.error('Lỗi khi lấy user-specific key:', e);
+    }
+    return baseKey;
+}
+
+function readWalletTransactions() {
+    const key = getUserSpecificKey(WALLET_MOCK_TRANSACTIONS_KEY);
+    try {
+        const saved = sessionStorage.getItem(key);
+        if (saved !== null) {
+            return JSON.parse(saved);
         }
     } catch {
         // fallback to seeded data below
     }
 
-    const seeded = createSeedTransactions();
-    sessionStorage.setItem(WALLET_MOCK_TRANSACTIONS_KEY, JSON.stringify(seeded));
+    let isDemo = false;
+    try {
+        const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            if (user && user.email) {
+                const demoEmails = ['customer01@gmail.com', 'customer02@gmail.com', 'customer03@gmail.com', 'customer04@gmail.com', 'customer05@gmail.com'];
+                if (demoEmails.includes(user.email.toLowerCase())) {
+                    isDemo = true;
+                }
+            }
+        }
+    } catch (e) {
+        // ignore
+    }
+
+    const seeded = isDemo ? createSeedTransactions() : [];
+    sessionStorage.setItem(key, JSON.stringify(seeded));
     return seeded;
 }
 

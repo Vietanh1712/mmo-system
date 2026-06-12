@@ -46,6 +46,11 @@ public class ProfilePageController {
         return "account/order-detail";
     }
 
+    @GetMapping("/account/orders/{orderCode}/feedback")
+    public String showLeaveFeedbackPage() {
+        return "account/leave-feedback";
+    }
+
     @GetMapping("/account/notifications")
     public String showNotificationsPage() {
         return "account/notifications";

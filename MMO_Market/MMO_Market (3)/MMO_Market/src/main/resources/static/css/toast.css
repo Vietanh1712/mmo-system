@@ -1,9 +1,9 @@
 /* Source: Pages/Shared/_AdminLayout.cshtml - stacked admin toast container */
 .ds-toast-container {
     position: fixed;
-    top: 24px;
+    top: 90px;
     right: 24px;
-    z-index: 50;
+    z-index: 10000;
     display: flex;
     width: 380px;
     max-width: calc(100vw - 32px);

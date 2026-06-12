@@ -57,18 +57,50 @@ function getOrderCodeFromPath() {
     return decodeURIComponent(parts[parts.length - 1] || '');
 }
 
-function readOrders() {
+function getUserSpecificKey(baseKey) {
     try {
-        const saved = JSON.parse(sessionStorage.getItem(ACCOUNT_ORDERS_MOCK_KEY));
-        if (Array.isArray(saved) && saved.length) {
-            return saved;
+        const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            if (user && user.email) {
+                return `${baseKey}_${user.email}`;
+            }
+        }
+    } catch (e) {
+        console.error('Lỗi khi lấy user-specific key:', e);
+    }
+    return baseKey;
+}
+
+function readOrders() {
+    const key = getUserSpecificKey(ACCOUNT_ORDERS_MOCK_KEY);
+    try {
+        const saved = sessionStorage.getItem(key);
+        if (saved !== null) {
+            return JSON.parse(saved);
         }
     } catch {
         // fallback below
     }
 
-    const seeded = createSeedOrders();
-    sessionStorage.setItem(ACCOUNT_ORDERS_MOCK_KEY, JSON.stringify(seeded));
+    let isDemo = false;
+    try {
+        const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            if (user && user.email) {
+                const demoEmails = ['customer01@gmail.com', 'customer02@gmail.com', 'customer03@gmail.com', 'customer04@gmail.com', 'customer05@gmail.com'];
+                if (demoEmails.includes(user.email.toLowerCase())) {
+                    isDemo = true;
+                }
+            }
+        }
+    } catch (e) {
+        // ignore
+    }
+
+    const seeded = isDemo ? createSeedOrders() : [];
+    sessionStorage.setItem(key, JSON.stringify(seeded));
     return seeded;
 }
 
@@ -122,6 +154,16 @@ function renderOrderDetail(order) {
     document.getElementById('orderPaymentText').textContent = formatPaymentStatus(order.paymentStatus);
     document.getElementById('orderPaymentAmount').textContent = formatMoney(order.amount);
     document.getElementById('orderActionHint').textContent = getActionHint(order);
+
+    const feedbackBtn = document.getElementById('orderFeedbackButton');
+    if (feedbackBtn) {
+        if (order.status === 'COMPLETED') {
+            feedbackBtn.style.display = 'inline-flex';
+            feedbackBtn.href = `/account/orders/${order.orderCode}/feedback`;
+        } else {
+            feedbackBtn.style.display = 'none';
+        }
+    }
 
     renderTimeline(order);
 }

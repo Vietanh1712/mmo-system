@@ -362,13 +362,14 @@
         }
 
         .btn-confirm-payment.topup-style {
-            background-color: var(--action-blue);
-            box-shadow: 0 4px 14px rgba(0, 88, 190, 0.2);
+            background-color: var(--ds-primary, #2563eb);
+            box-shadow: none;
         }
 
         .btn-confirm-payment.topup-style:hover {
-            background-color: #00479d;
-            box-shadow: 0 6px 18px rgba(0, 88, 190, 0.3);
+            background-color: var(--ds-primary-hover, #1d4ed8);
+            box-shadow: none;
+            transform: none;
         }
 
         /* Success modal design */
@@ -505,6 +506,7 @@
     <div class="breadcrumb-container">
         <a href="/"><i class="fa fa-home"></i> Trang chủ</a> &gt; 
         <a href="/search">Sản phẩm</a> &gt; 
+        <a id="breadcrumbProductLink" href="/products/1">Thông tin sản phẩm</a> &gt; 
         <span>Thanh toán đơn hàng</span>
     </div>
 
@@ -675,6 +677,18 @@
         document.addEventListener('DOMContentLoaded', () => {
             // Search bar is templated in header.html
 
+            // Update breadcrumb links dynamically
+            const breadcrumbProductLink = document.getElementById('breadcrumbProductLink');
+            if (breadcrumbProductLink) {
+                if (checkoutMode === 'cart') {
+                    breadcrumbProductLink.href = '/cart';
+                    breadcrumbProductLink.innerText = 'Giỏ hàng';
+                } else {
+                    breadcrumbProductLink.href = `/products/${productId}`;
+                    breadcrumbProductLink.innerText = 'Thông tin sản phẩm';
+                }
+            }
+
             // Read URL params that may have been passed from product-detail page
             if (checkoutMode === 'cart') {
                 checkoutItems = loadCartCheckoutItems();
@@ -810,7 +824,9 @@
         function handlePaymentSubmit() {
             if (!hasEnoughBalance) {
                 // If insufficient balance, redirect to Top Up (Nạp tiền)
-                window.location.href = "/topup";
+                const missingAmount = checkoutTotal - (currentUser.balanceVnd || 0);
+                const redirectUrl = encodeURIComponent(window.location.pathname + window.location.search);
+                window.location.href = `/wallet/topup?amount=${missingAmount}&redirect=${redirectUrl}`;
                 return;
             }
 
@@ -832,6 +848,60 @@
                 ? `${checkoutItems.reduce((sum, item) => sum + item.quantity, 0)} sản phẩm`
                 : selectedProduct.name;
             document.getElementById('invAmount').innerText = formatVND(checkoutTotal);
+
+            // Save order and transaction in sessionStorage under user-specific keys
+            const userEmail = currentUser.email || '';
+            const ordersKey = userEmail ? `mmoMarketMyOrdersMock_${userEmail}` : `mmoMarketMyOrdersMock`;
+            const transactionsKey = userEmail ? `mmoMarketWalletTransactionsMock_${userEmail}` : `mmoMarketWalletTransactionsMock`;
+
+            let orders = [];
+            try {
+                const savedOrders = sessionStorage.getItem(ordersKey);
+                if (savedOrders !== null) {
+                    orders = JSON.parse(savedOrders);
+                }
+            } catch (e) {
+                console.error("Lỗi đọc orders:", e);
+            }
+
+            const now = new Date();
+            const orderCode = 'MMO-ORD-' + Math.floor(1000 + Math.random() * 9000);
+            
+            const newOrder = {
+                orderCode: orderCode,
+                productName: checkoutMode === 'cart'
+                    ? `${checkoutItems.reduce((sum, item) => sum + item.quantity, 0)} sản phẩm`
+                    : selectedProduct.name,
+                sellerName: selectedProduct.seller || 'Digital Store VN',
+                amount: checkoutTotal,
+                status: 'PAID',
+                paymentStatus: 'PAID',
+                createdAt: now.toLocaleString('vi-VN'),
+                escrowReleaseDate: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN')
+            };
+            orders.unshift(newOrder);
+            sessionStorage.setItem(ordersKey, JSON.stringify(orders));
+
+            let txns = [];
+            try {
+                const savedTxns = sessionStorage.getItem(transactionsKey);
+                if (savedTxns !== null) {
+                    txns = JSON.parse(savedTxns);
+                }
+            } catch (e) {
+                console.error("Lỗi đọc transactions:", e);
+            }
+
+            const newTxn = {
+                code: txnCode,
+                type: 'PAYMENT',
+                amount: -checkoutTotal,
+                status: 'SUCCESS',
+                description: `Thanh toán đơn hàng ${orderCode}`,
+                createdAt: now.toLocaleString('vi-VN')
+            };
+            txns.unshift(newTxn);
+            sessionStorage.setItem(transactionsKey, JSON.stringify(txns));
 
             if (checkoutMode === 'cart') {
                 clearPurchasedCartItems();
