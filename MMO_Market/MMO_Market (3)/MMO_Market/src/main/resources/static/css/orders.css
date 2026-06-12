@@ -1,0 +1,243 @@
+.orders-page {
+    min-width: 0;
+}
+
+.orders-layout-container {
+    max-width: 1680px;
+}
+
+.orders-layout {
+    grid-template-columns: 260px minmax(1280px, 1fr);
+}
+
+.orders-hero,
+.orders-table-content {
+    padding: 24px;
+}
+
+.orders-hero {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.orders-hero__subtitle {
+    max-width: 720px;
+    margin-top: 6px;
+    color: var(--ds-text-muted);
+}
+
+.orders-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.orders-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px;
+}
+
+.orders-stat-icon {
+    display: inline-flex;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+}
+
+.orders-stat-icon--primary {
+    background: var(--ds-primary-soft);
+    color: var(--ds-primary);
+}
+
+.orders-stat-icon--success {
+    background: var(--ds-success-soft);
+    color: #15803d;
+}
+
+.orders-stat-icon--info {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.orders-stat-icon--warning {
+    background: #ffedd5;
+    color: #c2410c;
+}
+
+.orders-stat-card p {
+    margin: 0;
+    color: var(--ds-text-muted);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.orders-stat-card strong {
+    display: block;
+    margin-top: 5px;
+    color: var(--ds-text);
+    font-size: 17px;
+    font-weight: 900;
+}
+
+.orders-filter {
+    position: relative;
+    z-index: 20;
+    overflow: visible;
+    border-bottom-color: var(--ds-border);
+}
+
+.orders-filter-grid {
+    display: grid;
+    grid-template-columns: minmax(260px, 1.4fr) repeat(2, minmax(180px, 1fr));
+    gap: 14px;
+}
+
+.orders-filter-bottom {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(180px, 1fr)) auto;
+    align-items: end;
+    gap: 14px;
+}
+
+.orders-filter .ds-datepicker-panel {
+    z-index: 300;
+}
+
+.orders-table-card {
+    position: relative;
+    z-index: 1;
+}
+
+.orders-table-card .ds-table {
+    min-width: 1280px;
+}
+
+.orders-filter-grid .ds-form-field,
+.orders-filter-bottom .ds-form-field {
+    min-width: 0;
+}
+
+.orders-filter-bottom .ds-datepicker {
+    z-index: 30;
+}
+
+.orders-filter-actions {
+    align-self: end;
+    white-space: nowrap;
+}
+
+.orders-empty-state {
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.orders-empty-state[hidden] {
+    display: none;
+}
+
+.orders-table-card .ds-table th:first-child,
+.orders-table-card .ds-table td:first-child {
+    width: 64px;
+}
+
+.orders-code {
+    color: var(--ds-text);
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.orders-product {
+    min-width: 200px;
+}
+
+.orders-product-title {
+    color: var(--ds-text);
+    font-weight: 900;
+}
+
+.orders-product-subtitle {
+    margin-top: 3px;
+    color: var(--ds-text-muted);
+    font-size: 12px;
+}
+
+.orders-amount {
+    color: var(--ds-text);
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.orders-pagination {
+    margin-top: 12px;
+}
+
+.orders-pagination .ds-page-link {
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.orders-pagination .ds-page-link-active {
+    background: #dbeafe;
+}
+
+.orders-pagination .ds-page-link-disabled {
+    cursor: not-allowed;
+}
+
+@media (max-width: 1200px) {
+    .orders-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .orders-filter-grid,
+    .orders-filter-bottom {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .orders-filter-actions {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 1000px) {
+    .orders-stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .orders-hero {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .orders-hero .ds-btn,
+    .orders-filter .ds-btn {
+        width: 100%;
+    }
+
+    .orders-stat-grid,
+    .orders-filter-grid,
+    .orders-filter-bottom {
+        grid-template-columns: 1fr;
+    }
+
+    .orders-filter-actions {
+        grid-column: auto;
+    }
+
+    .orders-hero,
+    .orders-table-content {
+        padding: 20px;
+    }
+}

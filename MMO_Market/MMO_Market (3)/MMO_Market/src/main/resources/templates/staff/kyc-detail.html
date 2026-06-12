@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Phê duyệt hồ sơ KYC')}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('kyc')}"></aside>
+
+            <section class="ds-section">
+                <nav class="staff-breadcrumb">
+                    <a href="/staff/kyc">Định danh KYC</a>
+                    <span>/</span>
+                    <span>#KYC-1198</span>
+                </nav>
+
+                <div class="staff-page-header">
+                    <div>
+                        <h1 class="ds-page-title">Phê duyệt / từ chối hồ sơ định danh</h1>
+                        <p class="ds-page-subtitle">Hồ sơ #KYC-1198 — Phạm Hoa</p>
+                    </div>
+                    <span class="ds-badge ds-badge-warning">Chờ duyệt</span>
+                </div>
+
+                <div class="staff-detail-grid">
+                    <div class="ds-stack-md">
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Thông tin người nộp</h2>
+                            </div>
+                            <dl class="staff-info-list">
+                                <div class="staff-info-row">
+                                    <dt>Họ tên</dt>
+                                    <dd>Phạm Thị Hoa</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Email</dt>
+                                    <dd>hoa.pham@mmo.com</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Số điện thoại</dt>
+                                    <dd>0912345678</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Loại giấy tờ</dt>
+                                    <dd>CCCD</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Số giấy tờ</dt>
+                                    <dd>079098******</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Ngày gửi</dt>
+                                    <dd>05/06/2026 07:45</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Ảnh giấy tờ</h2>
+                            </div>
+                            <div class="ds-cluster">
+                                <div class="staff-doc-preview" style="flex:1">
+                                    <div>
+                                        <i class="fa fa-id-card" style="font-size:32px;margin-bottom:8px"></i>
+                                        <p>Mặt trước CCCD</p>
+                                        <span class="ds-caption">Demo preview — chưa có file thật</span>
+                                    </div>
+                                </div>
+                                <div class="staff-doc-preview" style="flex:1">
+                                    <div>
+                                        <i class="fa fa-id-card" style="font-size:32px;margin-bottom:8px"></i>
+                                        <p>Mặt sau CCCD</p>
+                                        <span class="ds-caption">Demo preview — chưa có file thật</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Ảnh chân dung</h2>
+                            </div>
+                            <div class="staff-doc-preview">
+                                <div>
+                                    <i class="fa fa-user" style="font-size:32px;margin-bottom:8px"></i>
+                                    <p>Selfie xác minh</p>
+                                    <span class="ds-caption">Demo preview — chưa có file thật</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ds-card staff-action-card">
+                        <div class="ds-card-header">
+                            <h2 class="ds-card-title">Quyết định duyệt</h2>
+                        </div>
+                        <div class="ds-alert ds-alert-warning">Kiểm tra ảnh rõ nét, thông tin khớp trước khi phê duyệt.</div>
+                        <div class="ds-form-field">
+                            <label class="ds-label" for="kycNote">Ghi chú (bắt buộc khi từ chối)</label>
+                            <textarea class="ds-textarea" id="kycNote" placeholder="Lý do từ chối hoặc ghi chú nội bộ..."></textarea>
+                        </div>
+                        <div class="ds-cluster">
+                            <button class="ds-btn ds-btn-success" type="button" data-staff-action="approve" data-staff-label="Đã phê duyệt hồ sơ KYC">Phê duyệt</button>
+                            <button class="ds-btn ds-btn-danger" type="button" data-staff-action="reject" data-staff-label="Đã từ chối hồ sơ KYC">Từ chối</button>
+                        </div>
+                        <a class="ds-btn ds-btn-outline" href="/staff/kyc">Quay lại danh sách</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/auth.js}"></script>
+<script th:src="@{/js/staff-ui.js}"></script>
+</body>
+</html>

@@ -32,14 +32,32 @@ public class AdminUserManagementController {
         return adminUserManagementService.getDashboardSummary(operatorId);
     }
 
+    @GetMapping("/users/{userId}")
+    public AdminUserResponse getUser(
+            @AuthenticationPrincipal Long operatorId,
+            @PathVariable Long userId) {
+        return adminUserManagementService.getUser(operatorId, userId);
+    }
+
     @GetMapping("/users")
     public Map<String, Object> getUsers(
             @AuthenticationPrincipal Long operatorId,
-            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String gender,
             @RequestParam(required = false) String role,
+            @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return adminUserManagementService.getUsers(operatorId, search, role, page, size);
+        return adminUserManagementService.getUsers(operatorId, email, phone, name, gender, role, status, page, size);
+    }
+
+    @DeleteMapping("/users/{userId}")
+    public AdminActionResponse softDeleteUser(
+            @AuthenticationPrincipal Long operatorId,
+            @PathVariable Long userId) {
+        return adminUserManagementService.softDeleteUser(operatorId, userId);
     }
 
     @PostMapping("/users/{userId}/toggle-lock")

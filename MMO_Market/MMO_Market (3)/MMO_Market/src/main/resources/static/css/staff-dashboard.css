@@ -1,0 +1,125 @@
+*{
+    box-sizing:border-box;
+    font-family: "Roboto", Arial, sans-serif;
+}
+body{
+    margin:0;
+    background:#f5f7fb;
+    color:#111827;
+}
+/* BANNER */
+.banner{
+    background:#111827;
+    color:white;
+    text-align:center;
+    padding:65px;
+}
+.banner h1{
+    font-size:38px;
+}
+
+.banner p{
+    color:#aab4c8;
+    font-size:18px;
+}
+
+.search-panel{
+    margin:40px auto 0;
+    width:700px;
+    background:#2c374b;
+    padding:20px;
+    border-radius:18px;
+    display:flex;
+    gap:20px;
+}
+
+.search-panel div{
+    flex:1;
+    background:white;
+    color:#555;
+    padding:18px;
+    border-radius:12px;
+}
+
+main{
+    padding:40px 170px;
+    margin-top:-50px;
+}
+
+.cards{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:25px;
+}
+
+.card{
+    background:white;
+    padding:25px;
+    border-radius:20px;
+    display:flex;
+    gap:20px;
+    align-items:center;
+    box-shadow:0 15px 35px #0002;
+}
+
+.card-icon{
+    width:60px;
+    height:60px;
+    border-radius:18px;
+    background:#fff0e8;
+    color:#ffc8ad;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:25px;
+}
+
+.card h1{
+    font-size:38px;
+    margin:5px 0;
+}
+
+.tasks{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:25px;
+}
+
+.task{
+    background:white;
+    padding:30px;
+    border-radius:20px;
+}
+
+.task h1{
+    font-size:45px;
+}
+
+.red{
+    border-left:6px solid #ff6b6b;
+}
+
+.orange{
+    border-left:6px solid #ffc8ad;
+}
+
+.green{
+    border-left:6px solid #65d695;
+}
+
+.activity{
+    margin-top:35px;
+    background:white;
+    padding:30px;
+    border-radius:20px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th,td{
+    padding:15px;
+    border-bottom:1px solid #eee;
+}

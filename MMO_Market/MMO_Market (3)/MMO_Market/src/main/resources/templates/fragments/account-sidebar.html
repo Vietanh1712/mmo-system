@@ -4,7 +4,7 @@
 
 <aside class="account-sidebar" th:fragment="accountSidebar(activeMenu)">
     <div class="account-sidebar__user">
-        <div class="account-sidebar__avatar" data-account-sidebar="avatar">?</div>
+        <div class="account-sidebar__avatar ds-avatar ds-avatar-md" data-account-sidebar="avatar">?</div>
         <div class="account-sidebar__identity">
             <strong class="account-sidebar__name" data-account-sidebar="name">Người dùng</strong>
             <span class="account-sidebar__email" data-account-sidebar="email">-</span>
@@ -16,29 +16,63 @@
             <span class="account-sidebar__wallet-label">Số dư</span>
             <strong class="account-sidebar__balance" data-account-sidebar="balance">0 VNĐ</strong>
         </div>
-        <a class="account-sidebar__topup" th:href="@{/topup}">Nạp</a>
+        <a class="account-sidebar__topup"
+           th:href="@{/wallet/topup}">Nạp</a>
     </div>
 
     <nav class="account-sidebar__menu" aria-label="Menu tài khoản">
+        <p class="account-sidebar__group-title">Tài khoản</p>
         <a class="account-sidebar__menu-link"
            th:classappend="${activeMenu == 'profile'} ? ' account-sidebar__menu-link--active' : ''"
            th:href="@{/profile}">
             <i class="fa fa-user-o" aria-hidden="true"></i>
             <span>Thông tin cá nhân</span>
         </a>
-        <a class="account-sidebar__menu-link account-sidebar__menu-link--disabled"
-           href="#"
-           aria-disabled="true"
-           onclick="return false;">
-            <i class="fa fa-shopping-bag" aria-hidden="true"></i>
-            <span>Lịch sử đơn hàng</span>
+        <a class="account-sidebar__menu-link"
+           th:classappend="${activeMenu == 'kyc'} ? ' account-sidebar__menu-link--active' : ''"
+           th:href="@{/account/kyc}">
+            <i class="fa fa-id-card-o" aria-hidden="true"></i>
+            <span>Định danh KYC</span>
         </a>
-        <a class="account-sidebar__menu-link account-sidebar__menu-link--disabled"
-           href="#"
-           aria-disabled="true"
-           onclick="return false;">
-            <i class="fa fa-heart-o" aria-hidden="true"></i>
-            <span>Sản phẩm yêu thích</span>
+        <a class="account-sidebar__menu-link"
+           th:classappend="${activeMenu == 'security'} ? ' account-sidebar__menu-link--active' : ''"
+           th:href="@{/account/security}">
+            <i class="fa fa-shield" aria-hidden="true"></i>
+            <span>Bảo mật & đổi mật khẩu</span>
+        </a>
+
+        <p class="account-sidebar__group-title">Ví & giao dịch</p>
+        <a class="account-sidebar__menu-link"
+           th:classappend="${activeMenu == 'wallet'} ? ' account-sidebar__menu-link--active' : ''"
+           th:href="@{/wallet}">
+            <i class="fa fa-credit-card" aria-hidden="true"></i>
+            <span>Ví của tôi</span>
+        </a>
+        <a class="account-sidebar__menu-link"
+           th:classappend="${activeMenu == 'topup'} ? ' account-sidebar__menu-link--active' : ''"
+           th:href="@{/wallet/topup}">
+            <i class="fa fa-plus-circle" aria-hidden="true"></i>
+            <span>Nạp tiền</span>
+        </a>
+        <a class="account-sidebar__menu-link"
+           th:classappend="${activeMenu == 'transactions'} ? ' account-sidebar__menu-link--active' : ''"
+           th:href="@{/wallet/transactions}">
+            <i class="fa fa-history" aria-hidden="true"></i>
+            <span>Lịch sử giao dịch</span>
+        </a>
+
+        <p class="account-sidebar__group-title">Mua hàng</p>
+        <a class="account-sidebar__menu-link"
+           th:classappend="${activeMenu == 'orders'} ? ' account-sidebar__menu-link--active' : ''"
+           th:href="@{/account/orders}">
+            <i class="fa fa-shopping-bag" aria-hidden="true"></i>
+            <span>Đơn hàng của tôi</span>
+        </a>
+        <a class="account-sidebar__menu-link"
+           th:classappend="${activeMenu == 'notifications'} ? ' account-sidebar__menu-link--active' : ''"
+           th:href="@{/account/notifications}">
+            <i class="fa fa-bell-o" aria-hidden="true"></i>
+            <span>Thông báo</span>
         </a>
     </nav>
 </aside>

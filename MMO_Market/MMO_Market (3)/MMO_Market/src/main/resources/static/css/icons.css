@@ -1,0 +1,93 @@
+/* Source: Pages/Admin*.cshtml action icon buttons using inline SVG */
+.ds-icon {
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+    flex: 0 0 auto;
+    vertical-align: -0.125em;
+}
+
+.ds-icon-sort,
+.ds-icon-cloud-upload,
+.ds-icon-flag,
+.ds-icon-bell {
+    background-color: currentColor;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+}
+
+.ds-icon-sort {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M8 4L4 8M4 8L8 12M4 8H20' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M16 20L20 16M20 16L16 12M20 16H4' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M8 4L4 8M4 8L8 12M4 8H20' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M16 20L20 16M20 16L16 12M20 16H4' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.ds-icon-cloud-upload {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M16 16L12 12M12 12L8 16M12 12V21' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M20 17.5C21.24 16.68 22 15.28 22 13.75C22 11.26 19.99 9.25 17.5 9.25H16.9C16.18 5.68 13.03 3 9.25 3C4.94 3 1.5 6.44 1.5 10.75C1.5 13.54 2.99 15.99 5.22 17.35' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M16 16L12 12M12 12L8 16M12 12V21' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M20 17.5C21.24 16.68 22 15.28 22 13.75C22 11.26 19.99 9.25 17.5 9.25H16.9C16.18 5.68 13.03 3 9.25 3C4.94 3 1.5 6.44 1.5 10.75C1.5 13.54 2.99 15.99 5.22 17.35' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.ds-icon-flag {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5 21V4.75C5 4.34 5.34 4 5.75 4H12.2C12.67 4 13.11 4.18 13.45 4.5L14.05 5.06C14.39 5.38 14.83 5.56 15.3 5.56H19.25C19.66 5.56 20 5.9 20 6.31V15.25C20 15.66 19.66 16 19.25 16H14.9C14.43 16 13.99 15.82 13.65 15.5L13.05 14.94C12.71 14.62 12.27 14.44 11.8 14.44H5' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5 21V4.75C5 4.34 5.34 4 5.75 4H12.2C12.67 4 13.11 4.18 13.45 4.5L14.05 5.06C14.39 5.38 14.83 5.56 15.3 5.56H19.25C19.66 5.56 20 5.9 20 6.31V15.25C20 15.66 19.66 16 19.25 16H14.9C14.43 16 13.99 15.82 13.65 15.5L13.05 14.94C12.71 14.62 12.27 14.44 11.8 14.44H5' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.ds-icon-bell {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M18 9.75C18 6.44 15.31 3.75 12 3.75C8.69 3.75 6 6.44 6 9.75V12.84C6 13.54 5.72 14.22 5.22 14.72L4.53 15.41C4.19 15.75 4 16.2 4 16.68C4 17.67 4.81 18.48 5.8 18.48H18.2C19.19 18.48 20 17.67 20 16.68C20 16.2 19.81 15.75 19.47 15.41L18.78 14.72C18.28 14.22 18 13.54 18 12.84V9.75Z' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M9.75 20.25C10.25 20.85 11.03 21.25 12 21.25C12.97 21.25 13.75 20.85 14.25 20.25' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M18 9.75C18 6.44 15.31 3.75 12 3.75C8.69 3.75 6 6.44 6 9.75V12.84C6 13.54 5.72 14.22 5.22 14.72L4.53 15.41C4.19 15.75 4 16.2 4 16.68C4 17.67 4.81 18.48 5.8 18.48H18.2C19.19 18.48 20 17.67 20 16.68C20 16.2 19.81 15.75 19.47 15.41L18.78 14.72C18.28 14.22 18 13.54 18 12.84V9.75Z' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M9.75 20.25C10.25 20.85 11.03 21.25 12 21.25C12.97 21.25 13.75 20.85 14.25 20.25' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.ds-icon-btn {
+    display: inline-flex;
+    width: 38px;
+    height: 38px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s;
+}
+
+/* Source: Pages/AdminTeachers.cshtml - view/edit action */
+.ds-icon-btn-view {
+    border: 1px solid #3b82f6;
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.ds-icon-btn-view:hover {
+    background: #dbeafe;
+}
+
+/* Source: Pages/AdminTeachers.cshtml - delete action */
+.ds-icon-btn-delete {
+    border: 1px solid var(--ds-danger);
+    background: var(--ds-danger-soft);
+    color: var(--ds-danger);
+}
+
+.ds-icon-btn-delete:hover {
+    background: #fee2e2;
+}
+
+/* Source: Pages/AdminTeachers.cshtml - reset password action */
+.ds-icon-btn-reset {
+    border: 1px solid #3b82f6;
+    color: #2563eb;
+}
+
+.ds-icon-btn-reset:hover {
+    background: #eff6ff;
+}
+
+.ds-icon-btn:disabled,
+.ds-icon-btn.ds-disabled {
+    border-color: var(--ds-border-strong);
+    background: #f3f4f6;
+    color: var(--ds-text-subtle);
+    cursor: not-allowed;
+}

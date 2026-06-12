@@ -1,0 +1,33 @@
+/* MMO Market inline alert messages. */
+
+.ds-alert {
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius-lg);
+    padding: 14px 16px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.ds-alert-info {
+    border-color: #bfdbfe;
+    background: var(--ds-primary-soft);
+    color: #1e40af;
+}
+
+.ds-alert-warning {
+    border-color: #fed7aa;
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.ds-alert-danger {
+    border-color: #fecaca;
+    background: var(--ds-danger-soft);
+    color: var(--ds-danger);
+}
+
+.ds-alert-success {
+    border-color: #bbf7d0;
+    background: var(--ds-success-soft);
+    color: #15803d;
+}

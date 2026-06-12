@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Tổng quan nhân viên')}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('dashboard')}"></aside>
+
+            <section class="ds-section">
+                <div class="staff-page-header">
+                    <div>
+                        <h1 class="ds-page-title">Tổng quan nhân viên</h1>
+                        <p class="ds-page-subtitle">Theo dõi công việc cần xử lý và hoạt động gần đây trên hệ thống.</p>
+                    </div>
+                    <span class="ds-badge ds-badge-info">Staff Dashboard</span>
+                </div>
+
+                <div class="staff-stat-grid">
+                    <div class="ds-card staff-stat-card">
+                        <p class="staff-stat-card__label">Khiếu nại đang mở</p>
+                        <p class="staff-stat-card__value">32</p>
+                        <p class="staff-stat-card__hint">12 ưu tiên cao</p>
+                    </div>
+                    <div class="ds-card staff-stat-card">
+                        <p class="staff-stat-card__label">Hồ sơ KYC chờ duyệt</p>
+                        <p class="staff-stat-card__value">18</p>
+                        <p class="staff-stat-card__hint">5 hồ sơ quá 24h</p>
+                    </div>
+                    <div class="ds-card staff-stat-card">
+                        <p class="staff-stat-card__label">Yêu cầu rút tiền</p>
+                        <p class="staff-stat-card__value">15</p>
+                        <p class="staff-stat-card__hint">Tổng 245.800.000 đ</p>
+                    </div>
+                    <div class="ds-card staff-stat-card">
+                        <p class="staff-stat-card__label">Cờ cảnh báo shop</p>
+                        <p class="staff-stat-card__value">7</p>
+                        <p class="staff-stat-card__hint">2 mức nghiêm trọng</p>
+                    </div>
+                </div>
+
+                <div class="ds-card">
+                    <div class="ds-card-header">
+                        <h2 class="ds-card-title">Truy cập nhanh</h2>
+                    </div>
+                    <div class="staff-quick-grid">
+                        <a class="ds-card staff-quick-card" href="/staff/complaints">
+                            <div class="staff-quick-card__icon staff-quick-card__icon--danger"><i class="fa fa-exclamation-circle"></i></div>
+                            <h3>Quản lý khiếu nại</h3>
+                            <p>Xem danh sách và xử lý khiếu nại từ người mua/bán.</p>
+                        </a>
+                        <a class="ds-card staff-quick-card" href="/staff/kyc">
+                            <div class="staff-quick-card__icon staff-quick-card__icon--warning"><i class="fa fa-id-card"></i></div>
+                            <h3>Quản lý KYC</h3>
+                            <p>Duyệt hoặc từ chối hồ sơ định danh người dùng.</p>
+                        </a>
+                        <a class="ds-card staff-quick-card" href="/staff/withdrawals">
+                            <div class="staff-quick-card__icon staff-quick-card__icon--info"><i class="fa fa-money"></i></div>
+                            <h3>Quản lý rút tiền</h3>
+                            <p>Phê duyệt yêu cầu rút tiền của seller.</p>
+                        </a>
+                        <a class="ds-card staff-quick-card" href="/staff/flags">
+                            <div class="staff-quick-card__icon staff-quick-card__icon--muted"><i class="fa fa-flag"></i></div>
+                            <h3>Quản lý cờ cảnh báo</h3>
+                            <p>Theo dõi và thao tác cờ trên shop vi phạm.</p>
+                        </a>
+                        <a class="ds-card staff-quick-card" href="/staff/chat">
+                            <div class="staff-quick-card__icon staff-quick-card__icon--success"><i class="fa fa-comments"></i></div>
+                            <h3>Chat người dùng</h3>
+                            <p>Hỗ trợ trực tiếp qua hội thoại với khách hàng.</p>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="ds-card">
+                    <div class="ds-card-header ds-cluster-between">
+                        <h2 class="ds-card-title">Hoạt động gần đây</h2>
+                        <span class="ds-caption">Demo dữ liệu tĩnh</span>
+                    </div>
+                    <div class="ds-table-wrap">
+                        <table class="ds-table">
+                            <thead>
+                            <tr>
+                                <th>Mã</th>
+                                <th>Nội dung</th>
+                                <th>Nhân viên</th>
+                                <th>Thời gian</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>#LOG-1042</td>
+                                <td>Phê duyệt rút tiền #WD-8821</td>
+                                <td>Nguyễn Văn Staff</td>
+                                <td>05/06/2026 09:42</td>
+                            </tr>
+                            <tr>
+                                <td>#LOG-1041</td>
+                                <td>Giải quyết khiếu nại #CMP-3310</td>
+                                <td>Trần Thị Support</td>
+                                <td>05/06/2026 09:15</td>
+                            </tr>
+                            <tr>
+                                <td>#LOG-1040</td>
+                                <td>Từ chối hồ sơ KYC #KYC-1198</td>
+                                <td>Nguyễn Văn Staff</td>
+                                <td>05/06/2026 08:58</td>
+                            </tr>
+                            <tr>
+                                <td>#LOG-1039</td>
+                                <td>Cắm cờ cảnh báo shop GameHub Pro</td>
+                                <td>Lê Minh Ops</td>
+                                <td>04/06/2026 17:20</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/auth.js}"></script>
+<script th:src="@{/js/staff-ui.js}"></script>
+</body>
+</html>

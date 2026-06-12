@@ -15,6 +15,7 @@
     <!-- CSS -->
     <link rel="stylesheet" th:href="@{/css/home.css}">
     <link rel="stylesheet" th:href="@{/css/product-detail.css}">
+    <link rel="stylesheet" th:href="@{/css/toast.css}">
 </head>
 
 <body>
@@ -26,7 +27,7 @@
     <div class="breadcrumb-container">
         <a href="/"><i class="fa fa-home"></i> Trang chủ</a> &gt;
         <a href="/search">Sản phẩm</a> &gt;
-        <span>Tài khoản Netflix Premium</span>
+        <span>Thông tin sản phẩm</span>
     </div>
 
     <!-- MAIN CONTENT (2 COLUMNS: 70% Left / 30% Right) -->
@@ -281,7 +282,7 @@
                 <h3 class="sidebar-title"><i class="fa fa-university"
                         style="color: var(--brand-accent); margin-right: 8px;"></i>Thông tin cửa hàng</h3>
 
-                <div class="shop-profile">
+                <div class="shop-profile" onclick="goToStorefront()">
                     <div class="shop-avatar">N</div>
                     <div class="shop-identity">
                         <span class="shop-name">NetflixVN Store</span>
@@ -292,24 +293,24 @@
                 <div class="shop-stats">
                     <div class="stat-row">
                         <span class="stat-label">Đánh giá shop:</span>
-                        <span class="stat-value" style="color: #fbbf24;"><i class="fa fa-star"></i> 4.9/5.0</span>
+                        <span class="stat-value" style="color: #fbbf24;" id="sidebar-shop-rating"><i class="fa fa-star"></i> 4.9/5.0</span>
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">Tỷ lệ phản hồi:</span>
-                        <span class="stat-value">99%</span>
+                        <span class="stat-value" id="sidebar-shop-response-rate">99%</span>
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">Thời gian phản hồi:</span>
-                        <span class="stat-value">~5 phút</span>
+                        <span class="stat-value" id="sidebar-shop-response-time">~5 phút</span>
                     </div>
                     <div class="stat-row">
-                        <span class="stat-label">Tổng sản phẩm đã bán:</span>
-                        <span class="stat-value">2.4k+ đơn hàng</span>
+                        <span class="stat-label">Tổng sản phẩm:</span>
+                        <span class="stat-value" id="sidebar-shop-products">0 sản phẩm</span>
                     </div>
                 </div>
 
                 <div class="shop-actions">
-                    <button class="btn-shop-follow" onclick="followShop()"><i class="fa fa-plus"></i> Theo dõi</button>
+                    <button class="btn-shop-visit" onclick="goToStorefront()"><i class="fa fa-shopping-bag"></i> Xem cửa hàng</button>
                     <button class="btn-shop-chat" onclick="chatShop()"><i class="fa fa-comments"></i> Chat ngay</button>
                 </div>
             </div>
@@ -716,7 +717,7 @@
                 sales: "50",
                 rating: "4.6",
                 reviewsCount: 18,
-                stock: 50,
+stock: 50,
                 variants: [
                     { duration: 1, price: 299000, oldPrice: 500000, label: "1 Gói thiết kế" }
                 ],
@@ -758,20 +759,87 @@
             }
         };
 
-        // Get selected product state with fallback
-        let selectedProduct = PRODUCTS_DB[productId] || PRODUCTS_DB[1];
-        selectedProduct = {
-            ...selectedProduct,
-            stock: Number.isFinite(Number(selectedProduct.stock)) ? Number(selectedProduct.stock) : 5
+        // Map mock seller names to mock sellerIds
+        const sellerIdMap = {
+            "NetflixVN Store": 1,
+            "Netflix_Vip_Store": 2,
+            "AI_Helper Store": 3,
+            "MusicLovers Store": 4,
+            "Microsoft_Reseller Store": 5,
+            "RedPremium Store": 6,
+            "CanvaPro Store": 7,
+            "GmailPro Store": 8,
+            "MMO_Coder Store": 9,
+            "SecureNet Store": 10,
+            "SocialMediaUp Store": 11,
+            "BannerDesign Store": 12
         };
-        let currentDuration = selectedProduct.variants[0].duration;
-        let currentVariantPrice = selectedProduct.variants[0].price;
-        let productHasStock = Number(selectedProduct.stock) > 0;
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // Search bar is templated in header.html
+        // Populate sellerId dynamically for all database entries
+        Object.keys(PRODUCTS_DB).forEach(id => {
+            const prod = PRODUCTS_DB[id];
+            prod.sellerId = sellerIdMap[prod.seller] || 2; // Default fallback to Netflix_Vip_Store (2)
+        });
 
-            // Load selected product info dynamically into the DOM
+        // Declare dynamic product state variables
+        let selectedProduct = null;
+        let currentDuration = 1;
+        let currentVariantPrice = 0;
+        let productHasStock = false;
+
+        // Initialize product details from API or mock database fallback
+        async function initProductDetails() {
+            try {
+                // Fetch dynamic product detail from API
+                const response = await fetch(`/api/search/products/${productId}`);
+                if (!response.ok) throw new Error("Failed to fetch product from API");
+                const apiData = await response.json();
+                
+                // Map API response to our expected selectedProduct structure
+                selectedProduct = {
+                    id: apiData.id,
+                    name: apiData.name,
+                    icon: getProductIconAndColor(apiData.name).icon,
+                    color: getProductIconAndColor(apiData.name).color,
+                    seller: apiData.sellerName,
+                    sellerId: apiData.sellerId,
+                    sales: apiData.salesCount,
+                    rating: apiData.averageRating.toFixed(1),
+                    reviewsCount: apiData.reviewsCount,
+                    stock: apiData.stock,
+                    description: apiData.description,
+                    variants: apiData.variants && apiData.variants.length > 0 ? apiData.variants.map(v => ({
+                        duration: v.duration,
+                        price: v.price,
+                        oldPrice: v.oldPrice,
+                        label: v.label
+                    })) : null
+                };
+            } catch (err) {
+                console.warn("API error or product not found, falling back to mock database", err);
+                selectedProduct = PRODUCTS_DB[productId] || PRODUCTS_DB[1];
+            }
+
+            // Normalise mock fallback data if necessary
+            if (!selectedProduct.variants || selectedProduct.variants.length === 0) {
+                const fallback = PRODUCTS_DB[productId] || PRODUCTS_DB[1];
+                selectedProduct.variants = fallback.variants;
+            }
+            if (!selectedProduct.description) {
+                const fallback = PRODUCTS_DB[productId] || PRODUCTS_DB[1];
+                selectedProduct.description = fallback.description;
+            }
+            if (!selectedProduct.guide) {
+                const fallback = PRODUCTS_DB[productId] || PRODUCTS_DB[1];
+                selectedProduct.guide = fallback.guide;
+            }
+
+            selectedProduct.stock = Number.isFinite(Number(selectedProduct.stock)) ? Number(selectedProduct.stock) : 5;
+            currentDuration = selectedProduct.variants[0].duration;
+            currentVariantPrice = selectedProduct.variants[0].price;
+            productHasStock = Number(selectedProduct.stock) > 0;
+
+            // Load values dynamically into DOM
             document.title = `${selectedProduct.name} - MMO Market`;
 
             const titleEl = document.querySelector('.product-detail__title');
@@ -784,7 +852,7 @@
             }
 
             document.getElementById('currentPrice').innerText = formatVND(selectedProduct.variants[0].price);
-            document.getElementById('oldPrice').innerText = formatVND(selectedProduct.variants[0].oldPrice);
+            document.getElementById('oldPrice').innerText = formatVND(selectedProduct.variants[0].oldPrice || (selectedProduct.variants[0].price * 1.5));
 
             const buyButton = document.getElementById('buyActionButton');
             const cartButton = document.getElementById('cartActionButton');
@@ -833,7 +901,7 @@
                     const btn = document.createElement('button');
                     btn.className = `variant-btn ${index === 0 ? 'active' : ''}`;
                     btn.setAttribute('data-price', v.price);
-                    btn.setAttribute('data-old', v.oldPrice);
+                    btn.setAttribute('data-old', v.oldPrice || (v.price * 1.5));
                     btn.setAttribute('data-duration', v.duration);
                     btn.innerText = v.label;
 
@@ -843,7 +911,7 @@
                         currentDuration = v.duration;
                         currentVariantPrice = v.price;
                         document.getElementById('currentPrice').innerText = formatVND(v.price);
-                        document.getElementById('oldPrice').innerText = formatVND(v.oldPrice);
+                        document.getElementById('oldPrice').innerText = formatVND(v.oldPrice || (v.price * 1.5));
                     });
 
                     variantsContainer.appendChild(btn);
@@ -853,17 +921,30 @@
             // Meta specs
             const ratingStarsEl = document.querySelector('.product-detail__meta .meta-rating');
             if (ratingStarsEl) {
-                const starsCount = Math.floor(parseFloat(selectedProduct.rating));
-                let starsHtml = '';
-                for (let i = 0; i < 5; i++) {
-                    if (i < starsCount) {
-                        starsHtml += '<i class="fa fa-star"></i>';
-                    } else {
-                        starsHtml += '<i class="fa fa-star-o"></i>';
+                const reviewsCount = Number(selectedProduct.reviewsCount) || 0;
+                if (reviewsCount === 0) {
+                    ratingStarsEl.innerHTML = `
+                        <i class="fa fa-star-o"></i>
+                        <i class="fa fa-star-o"></i>
+                        <i class="fa fa-star-o"></i>
+                        <i class="fa fa-star-o"></i>
+                        <i class="fa fa-star-o"></i>
+                        <span>Chưa có đánh giá</span>
+                    `;
+                } else {
+                    const ratingVal = parseFloat(selectedProduct.rating) || 0;
+                    const starsCount = Math.floor(ratingVal);
+                    let starsHtml = '';
+                    for (let i = 0; i < 5; i++) {
+                        if (i < starsCount) {
+                            starsHtml += '<i class="fa fa-star"></i>';
+                        } else {
+                            starsHtml += '<i class="fa fa-star-o"></i>';
+                        }
                     }
+                    starsHtml += ` <span>${ratingVal.toFixed(1)}</span>`;
+                    ratingStarsEl.innerHTML = starsHtml;
                 }
-                starsHtml += ` <span>${selectedProduct.rating}</span>`;
-                ratingStarsEl.innerHTML = starsHtml;
             }
 
             const metaSpans = document.querySelectorAll('.product-detail__meta > span');
@@ -897,6 +978,138 @@
             if (reviewsTabBtn) {
                 reviewsTabBtn.innerText = `Đánh giá (${selectedProduct.reviewsCount})`;
             }
+
+            // Load seller profile details dynamically
+            if (selectedProduct.sellerId) {
+                fetch(`/api/search/seller/${selectedProduct.sellerId}`)
+                    .then(res => {
+                        if (res.ok) return res.json();
+                        throw new Error();
+                    })
+                    .then(data => {
+                        const sidebarRating = document.getElementById('sidebar-shop-rating');
+                        if (sidebarRating) {
+                            sidebarRating.innerHTML = `<i class="fa fa-star"></i> ${data.rating > 0 ? data.rating.toFixed(1) + '/5.0' : 'Chưa có đánh giá'}`;
+                        }
+                        const sidebarResponseRate = document.getElementById('sidebar-shop-response-rate');
+                        if (sidebarResponseRate) {
+                            sidebarResponseRate.innerText = data.responseRate || '98%';
+                        }
+                        const sidebarResponseTime = document.getElementById('sidebar-shop-response-time');
+                        if (sidebarResponseTime) {
+                            sidebarResponseTime.innerText = data.responseTime || 'Trong vài giờ';
+                        }
+                        const sidebarProductsCount = document.getElementById('sidebar-shop-products');
+                        if (sidebarProductsCount) {
+                            sidebarProductsCount.innerText = `${data.totalProducts} sản phẩm`;
+                        }
+                        const shopVerifiedEl = document.querySelector('.shop-verified');
+                        if (shopVerifiedEl) {
+                            shopVerifiedEl.style.display = data.isVerified ? 'inline-flex' : 'none';
+                        }
+                    })
+                    .catch(err => console.warn("Failed to load seller stats dynamically"));
+            }
+
+            // Load reviews dynamically
+            loadProductReviews();
+        }
+
+        // Helper to map products to homepage-styled icons and colors (fallback helper)
+        function getProductIconAndColor(productName) {
+            const nameLower = productName.toLowerCase();
+            if (nameLower.includes('netflix')) {
+                return { icon: 'fa-play-circle', color: '#E50914' };
+            } else if (nameLower.includes('chatgpt') || nameLower.includes('gpt')) {
+                return { icon: 'fa-comments', color: '#10a37f' };
+            } else if (nameLower.includes('spotify')) {
+                return { icon: 'fa-music', color: '#1DB954' };
+            } else if (nameLower.includes('windows') || nameLower.includes('win')) {
+                return { icon: 'fa-windows', color: '#0078d4' };
+            } else if (nameLower.includes('youtube')) {
+                return { icon: 'fa-youtube-play', color: '#FF0000' };
+            } else if (nameLower.includes('canva')) {
+                return { icon: 'fa-paint-brush', color: '#00c4cc' };
+            } else if (nameLower.includes('gmail')) {
+                return { icon: 'fa-envelope', color: '#ea4335' };
+            } else if (nameLower.includes('facebook') || nameLower.includes('fb')) {
+                return { icon: 'fa-facebook-square', color: '#1877F2' };
+            } else if (nameLower.includes('vpn') || nameLower.includes('nordvpn')) {
+                return { icon: 'fa-shield', color: '#4682b4' };
+            } else if (nameLower.includes('tiktok')) {
+                return { icon: 'fa-video-camera', color: '#010101' };
+            } else if (nameLower.includes('wallet') || nameLower.includes('crypto') || nameLower.includes('trust')) {
+                return { icon: 'fa-btc', color: '#f7931a' };
+            } else if (nameLower.includes('logo') || nameLower.includes('thiết kế') || nameLower.includes('design') || nameLower.includes('banner')) {
+                return { icon: 'fa-paint-brush', color: '#7c3aed' };
+            } else {
+                return { icon: 'fa-cube', color: '#94a3b8' };
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        // Fetch and load reviews dynamically from the backend
+        async function loadProductReviews() {
+            const container = document.querySelector('#tab-reviews .description-content > div');
+            if (!container) return;
+
+            // Always clear hardcoded / previous content first
+            container.innerHTML = '';
+
+            try {
+                const res = await fetch(`/api/search/products/${productId}/reviews`);
+                if (!res.ok) throw new Error("API error fetching reviews");
+                const reviews = await res.json();
+
+                if (reviews && reviews.length > 0) {
+                    reviews.forEach(review => {
+                        let starHtml = '';
+                        for (let i = 0; i < 5; i++) {
+                            if (i < review.rating) {
+                                starHtml += '<i class="fa fa-star"></i>';
+                            } else {
+                                starHtml += '<i class="fa fa-star-o"></i>';
+                            }
+                        }
+
+                        const reviewDate = review.createdAt ? new Date(review.createdAt).toLocaleDateString('vi-VN') : '12/06/2026';
+
+                        const reviewHtml = `
+                            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                    <strong>${escapeHtml(review.userName)} <span
+                                            style="font-size: 11px; color: var(--status-green); background-color: rgba(22, 163, 74, 0.1); padding: 2px 6px; border-radius: 4px; margin-left: 8px;"><i
+                                                class="fa fa-check-circle"></i> Đã mua hàng</span></strong>
+                                    <span style="color: var(--text-muted); font-size: 12px;">${reviewDate}</span>
+                                </div>
+                                <div class="rating-stars" style="margin-bottom: 8px;">
+                                    ${starHtml}
+                                </div>
+                                <p style="font-size: 13.5px; line-height: 1.5; margin-bottom: 0;">${escapeHtml(review.comment || 'Không có bình luận.')}</p>
+                            </div>
+                        `;
+                        container.innerHTML += reviewHtml;
+                    });
+                } else {
+                    container.innerHTML = '<p style="color: var(--text-muted); font-style: italic; text-align: center; padding: 20px 0;">Chưa có đánh giá nào cho sản phẩm này.</p>';
+                }
+            } catch (err) {
+                console.warn("Failed to load reviews from API, showing default empty state", err);
+                container.innerHTML = '<p style="color: var(--text-muted); font-style: italic; text-align: center; padding: 20px 0;">Chưa có đánh giá nào cho sản phẩm này.</p>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initProductDetails();
+            // Search bar is templated in header.html
 
             // 1. Pre-populate filters from URL parameters
             const urlParams = new URLSearchParams(window.location.search);
@@ -1085,25 +1298,55 @@
                 cart.push(cartItem);
             }
             localStorage.setItem('mmoCart', JSON.stringify(cart));
-            alert('Đã thêm sản phẩm vào giỏ hàng thành công!');
+            showSuccessToast('Đã thêm sản phẩm vào giỏ hàng thành công!');
             if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
         }
 
-        // Follow Shop Handler
-        function followShop() {
-            const followBtn = document.querySelector('.btn-shop-follow');
-            if (followBtn.innerHTML.includes('Theo dõi')) {
-                followBtn.innerHTML = '<i class="fa fa-check"></i> Đang theo dõi';
-                followBtn.style.backgroundColor = '#64748b';
+        function showSuccessToast(message) {
+            let container = document.querySelector('.ds-toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'ds-toast-container';
+                document.body.appendChild(container);
+            }
+            const toast = document.createElement('div');
+            toast.className = 'ds-toast ds-toast-success';
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fa fa-check-circle" style="font-size: 18px; color: #22c55e;"></i>
+                    <div>
+                        <h4 class="ds-toast-title">Thành công</h4>
+                        <p class="ds-toast-message">${message}</p>
+                    </div>
+                </div>
+                <button class="ds-toast-close" onclick="this.parentElement.remove()">&times;</button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => {
+                    toast.remove();
+                }, 500);
+            }, 3000);
+        }
+
+        // Go to Shop Storefront Handler
+        function goToStorefront() {
+            if (selectedProduct && selectedProduct.sellerId) {
+                window.location.href = `/shop/${selectedProduct.sellerId}`;
             } else {
-                followBtn.innerHTML = '<i class="fa fa-plus"></i> Theo dõi';
-                followBtn.style.backgroundColor = 'var(--action-blue)';
+                window.location.href = `/shop/35`; // default fallback
             }
         }
 
         // Chat Shop Handler
         function chatShop() {
-            alert('Tính năng nhắn tin với người bán sẽ được cập nhật ở Sprint tiếp theo!');
+            if (selectedProduct && selectedProduct.sellerId) {
+                window.location.href = `/messages?sellerId=${selectedProduct.sellerId}`;
+            } else {
+                window.location.href = `/messages?sellerId=35`;
+            }
         }
     </script>
 </body>

@@ -256,7 +256,7 @@ main, main *, .breadcrumb-container, .breadcrumb-container *, .pdp-layout, .pdp-
 
 .btn-pdp-buy {
     flex: 1;
-    background-color: var(--action-orange);
+    background-color: var(--action-orange, #fd761a);
     color: #ffffff;
     border: none;
     padding: 14px;
@@ -266,28 +266,26 @@ main, main *, .breadcrumb-container, .breadcrumb-container *, .pdp-layout, .pdp-
     cursor: pointer;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    box-shadow: 0 4px 14px rgba(253, 118, 26, 0.2);
-    transition: all 0.2s;
+    box-shadow: none;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
 }
 
+.btn-pdp-buy:hover {
+    background-color: #e0600f;
+    box-shadow: none;
+    transform: none;
+}
+
 .btn-pdp-buy.is-preorder {
-    background-color: var(--danger);
-    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.18);
+    background-color: var(--danger, #dc2626);
 }
 
 .btn-pdp-buy.is-preorder:hover {
     background-color: #b91c1c;
-    box-shadow: 0 6px 18px rgba(220, 38, 38, 0.26);
-}
-
-.btn-pdp-buy:hover {
-    background-color: #e0600f;
-    box-shadow: 0 6px 18px rgba(253, 118, 26, 0.3);
-    transform: translateY(-1px);
 }
 
 .btn-pdp-cart.is-hidden {
@@ -467,7 +465,7 @@ main, main *, .breadcrumb-container, .breadcrumb-container *, .pdp-layout, .pdp-
 .similar-card__price {
     font-size: 14.5px;
     font-weight: 700;
-    color: var(--action-blue); /* Requested blue color for similar price */
+    color: var(--action-orange); /* Match main orange price */
 }
 
 /* Right Column - Sidebar */
@@ -498,6 +496,13 @@ main, main *, .breadcrumb-container, .breadcrumb-container *, .pdp-layout, .pdp-
     align-items: center;
     gap: 15px;
     margin-bottom: 20px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.shop-profile:hover {
+    opacity: 0.85;
+    transform: translateX(2px);
 }
 
 .shop-avatar {
@@ -566,9 +571,9 @@ main, main *, .breadcrumb-container, .breadcrumb-container *, .pdp-layout, .pdp-
     gap: 10px;
 }
 
-.btn-shop-follow {
+.btn-shop-visit {
     flex: 1;
-    background-color: var(--action-blue);
+    background-color: var(--brand-dark);
     color: #ffffff;
     border: none;
     padding: 10px;
@@ -576,16 +581,16 @@ main, main *, .breadcrumb-container, .breadcrumb-container *, .pdp-layout, .pdp-
     font-weight: 600;
     font-size: 13.5px;
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0, 88, 190, 0.15);
-    transition: all 0.2s;
+    box-shadow: none;
+    transition: background-color 0.2s, transform 0.15s;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
 }
 
-.btn-shop-follow:hover {
-    background-color: #00479d;
+.btn-shop-visit:hover {
+    background-color: #1e293b;
     transform: translateY(-1px);
 }
 
@@ -721,7 +726,7 @@ main, main *, .breadcrumb-container, .breadcrumb-container *, .pdp-layout, .pdp-
 /* Apply Filters button */
 .btn-apply {
     width: 100%;
-    background: linear-gradient(135deg, #0058be 0%, #004294 100%);
+    background: var(--ds-primary, #2563eb);
     color: #ffffff;
     border: none;
     padding: 12px 16px;
@@ -729,19 +734,19 @@ main, main *, .breadcrumb-container, .breadcrumb-container *, .pdp-layout, .pdp-
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s;
     margin-top: 10px;
-    box-shadow: 0 4px 12px rgba(0, 88, 190, 0.3);
+    box-shadow: none;
 }
 
 .btn-apply:hover {
-    background: linear-gradient(135deg, #004294 0%, #003070 100%);
-    box-shadow: 0 6px 16px rgba(0, 88, 190, 0.4);
-    transform: translateY(-2px);
+    background: var(--ds-primary-hover, #1d4ed8);
+    box-shadow: none;
+    transform: none;
 }
 
 .btn-apply:active {
-    transform: translateY(0);
+    transform: none;
 }
 
 /* ==================== RESPONSIVE DESIGN ==================== */

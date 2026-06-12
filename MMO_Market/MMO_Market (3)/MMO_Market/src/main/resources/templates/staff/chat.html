@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Chat người dùng')}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('chat')}"></aside>
+
+            <section class="ds-section">
+                <div class="staff-page-header">
+                    <div>
+                        <h1 class="ds-page-title">Chat với người dùng</h1>
+                        <p class="ds-page-subtitle">Hỗ trợ trực tiếp khách hàng và seller qua hội thoại.</p>
+                    </div>
+                    <span class="ds-badge ds-badge-info">3 hội thoại chưa đọc</span>
+                </div>
+
+                <div class="staff-chat-layout">
+                    <div class="ds-card staff-chat-list">
+                        <div class="staff-chat-list__header">
+                            <input class="ds-input" type="search" placeholder="Tìm người dùng...">
+                        </div>
+                        <div class="staff-chat-list__items">
+                            <a class="staff-chat-item is-active" href="#">
+                                <span class="ds-avatar ds-avatar-sm ds-avatar-primary">NA</span>
+                                <div>
+                                    <div class="ds-entity-title">Nguyễn An</div>
+                                    <div class="ds-entity-subtitle">Em chưa nhận được hoàn tiền ạ...</div>
+                                </div>
+                                <div class="staff-chat-item__meta">
+                                    <div>09:40</div>
+                                    <span class="ds-badge ds-badge-danger">2</span>
+                                </div>
+                            </a>
+                            <a class="staff-chat-item" href="#">
+                                <span class="ds-avatar ds-avatar-sm">GH</span>
+                                <div>
+                                    <div class="ds-entity-title">GameHub Pro</div>
+                                    <div class="ds-entity-subtitle">Shop cần hỗ trợ mở khóa...</div>
+                                </div>
+                                <div class="staff-chat-item__meta">
+                                    <div>Hôm qua</div>
+                                </div>
+                            </a>
+                            <a class="staff-chat-item" href="#">
+                                <span class="ds-avatar ds-avatar-sm ds-avatar-success">LM</span>
+                                <div>
+                                    <div class="ds-entity-title">Lê Mai</div>
+                                    <div class="ds-entity-subtitle">Cảm ơn team đã hỗ trợ!</div>
+                                </div>
+                                <div class="staff-chat-item__meta">
+                                    <div>03/06</div>
+                                </div>
+                            </a>
+                            <a class="staff-chat-item" href="#">
+                                <span class="ds-avatar ds-avatar-sm">TH</span>
+                                <div>
+                                    <div class="ds-entity-title">Trần Hùng</div>
+                                    <div class="ds-entity-subtitle">KYC của tôi bao lâu duyệt?</div>
+                                </div>
+                                <div class="staff-chat-item__meta">
+                                    <div>02/06</div>
+                                    <span class="ds-badge ds-badge-danger">1</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="ds-card staff-chat-panel">
+                        <div class="staff-chat-panel__header ds-cluster-between">
+                            <div class="ds-entity">
+                                <span class="ds-avatar ds-avatar-sm ds-avatar-primary">NA</span>
+                                <div>
+                                    <div class="ds-entity-title">Nguyễn An</div>
+                                    <div class="ds-entity-subtitle">buyer@mmo.com · Khiếu nại #CMP-3310</div>
+                                </div>
+                            </div>
+                            <a class="ds-btn ds-btn-outline" href="/staff/complaints/detail">Mở khiếu nại</a>
+                        </div>
+
+                        <div class="staff-chat-messages" id="staffChatMessages">
+                            <div class="staff-chat-bubble staff-chat-bubble--user">
+                                Chào staff, em gửi khiếu nại #CMP-3310 nhưng chưa thấy cập nhật trạng thái.
+                            </div>
+                            <div class="staff-chat-bubble staff-chat-bubble--staff">
+                                Chào bạn, mình đã tiếp nhận hồ sơ và đang phối hợp với shop để xử lý trong hôm nay.
+                            </div>
+                            <div class="staff-chat-bubble staff-chat-bubble--user">
+                                Vậy em có được hoàn tiền nếu shop không phản hồi không ạ?
+                            </div>
+                        </div>
+
+                        <form class="staff-chat-compose" id="staffChatForm">
+                            <input class="ds-input" id="staffChatInput" type="text" placeholder="Nhập tin nhắn..." autocomplete="off">
+                            <button class="ds-btn ds-btn-primary" type="submit">Gửi</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/auth.js}"></script>
+<script th:src="@{/js/staff-ui.js}"></script>
+</body>
+</html>

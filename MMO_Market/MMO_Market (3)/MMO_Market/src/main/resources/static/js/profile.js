@@ -1,5 +1,6 @@
 let currentProfile = null;
 let accountSidebar = null;
+let profileMessageTimer = null;
 
 document.addEventListener('DOMContentLoaded', initializeProfilePage);
 
@@ -33,15 +34,24 @@ async function loadProfile() {
         updateCachedProfile(profile);
 
         message.hidden = true;
-        details.hidden = false;
-        document.getElementById('profileActions').hidden = false;
+        if (isEditModeFromUrl()) {
+            openEditMode();
+        } else {
+            details.hidden = false;
+            document.getElementById('profileActions').hidden = false;
+        }
     } catch (error) {
         message.textContent = error.message;
-        message.classList.add('profile-message--error');
+        setAlertState(message, 'danger');
+        message.hidden = false;
     }
 }
 
-function openEditMode() {
+function openEditMode(event) {
+    if (event) {
+        event.preventDefault();
+    }
+
     if (!currentProfile) {
         return;
     }
@@ -53,6 +63,7 @@ function openEditMode() {
     document.getElementById('profileDetails').hidden = true;
     document.getElementById('profileActions').hidden = true;
     document.getElementById('profileEditForm').hidden = false;
+    setProfileModeInUrl('edit');
 }
 
 function closeEditMode() {
@@ -60,6 +71,7 @@ function closeEditMode() {
     document.getElementById('profileDetails').hidden = false;
     document.getElementById('profileActions').hidden = false;
     clearFormErrors();
+    setProfileModeInUrl('view');
 }
 
 async function saveProfile(event) {
@@ -143,16 +155,59 @@ function getApiErrorMessage(responseBody) {
 function showFormMessage(message) {
     const formMessage = document.getElementById('profileFormMessage');
     formMessage.textContent = message;
-    formMessage.classList.add('profile-message--error');
+    setAlertState(formMessage, 'danger');
     formMessage.hidden = false;
 }
 
 function showProfileMessage(message, type) {
     const profileMessage = document.getElementById('profileMessage');
     profileMessage.textContent = message;
-    profileMessage.classList.remove('profile-message--error', 'profile-message--success');
-    profileMessage.classList.add(`profile-message--${type}`);
+    setAlertState(profileMessage, type);
     profileMessage.hidden = false;
+
+    if (profileMessageTimer) {
+        clearTimeout(profileMessageTimer);
+        profileMessageTimer = null;
+    }
+
+    if (type === 'success') {
+        profileMessageTimer = setTimeout(() => {
+            profileMessage.hidden = true;
+            profileMessageTimer = null;
+        }, 3000);
+    }
+}
+
+function isEditModeFromUrl() {
+    return new URLSearchParams(window.location.search).get('mode') === 'edit';
+}
+
+function setProfileModeInUrl(mode) {
+    const nextUrl = mode === 'edit' ? '/profile?mode=edit' : '/profile';
+    window.history.pushState({ profileMode: mode }, '', nextUrl);
+}
+
+function setAlertState(element, type) {
+    element.classList.remove(
+        'profile-message--error',
+        'profile-message--success',
+        'ds-alert-info',
+        'ds-alert-danger',
+        'ds-alert-success',
+        'ds-alert-warning'
+    );
+
+    if (type === 'success') {
+        element.classList.add('profile-message--success', 'ds-alert-success');
+        return;
+    }
+
+    if (type === 'warning') {
+        element.classList.add('ds-alert-warning');
+        return;
+    }
+
+    element.classList.add('profile-message--error', 'ds-alert-danger');
 }
 
 function renderProfile(profile) {

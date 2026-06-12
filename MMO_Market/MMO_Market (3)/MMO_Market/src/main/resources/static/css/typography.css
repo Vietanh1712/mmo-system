@@ -1,0 +1,57 @@
+/* MMO Market reusable typography utilities. */
+
+.ds-heading-xl {
+    margin: 0;
+    color: var(--ds-text);
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.ds-heading-lg {
+    margin: 0;
+    color: var(--ds-text);
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.ds-heading-md {
+    margin: 0;
+    color: var(--ds-text);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.ds-body {
+    margin: 0;
+    color: var(--ds-text);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.ds-caption {
+    margin: 0;
+    color: var(--ds-text-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.ds-money {
+    color: var(--ds-danger);
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.ds-link {
+    color: var(--ds-primary);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.ds-link:hover {
+    color: var(--ds-primary-hover);
+    text-decoration: underline;
+}

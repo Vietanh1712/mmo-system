@@ -1,0 +1,166 @@
+.security-page {
+    min-width: 0;
+}
+
+.security-hero,
+.security-overview,
+.security-card {
+    padding: 24px;
+}
+
+.security-hero {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.security-hero__subtitle {
+    max-width: 680px;
+    margin-top: 6px;
+    color: var(--ds-text-muted);
+}
+
+.security-section-header {
+    margin-bottom: 18px;
+}
+
+.security-section-header .ds-caption {
+    margin-top: 4px;
+}
+
+.security-status-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.security-status-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius-lg);
+    background: var(--ds-surface-muted);
+    padding: 14px;
+}
+
+.security-status-icon {
+    display: inline-flex;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--ds-primary-soft);
+    color: var(--ds-primary);
+}
+
+.security-status-item strong {
+    display: block;
+    color: var(--ds-text);
+}
+
+.security-status-item p {
+    margin: 3px 0 0;
+    color: var(--ds-text-muted);
+    font-size: 13px;
+}
+
+.security-small-action {
+    min-height: 32px;
+    padding-inline: 12px;
+}
+
+.security-card-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+    gap: 20px;
+}
+
+.security-password-field {
+    position: relative;
+}
+
+.security-password-field .ds-input {
+    padding-right: 46px;
+}
+
+.security-password-toggle {
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    display: inline-flex;
+    width: 40px;
+    height: 38px;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: transparent;
+    color: var(--ds-text-muted);
+    cursor: pointer;
+}
+
+.security-password-toggle:hover {
+    color: var(--ds-primary);
+}
+
+.security-2fa-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius-lg);
+    background: var(--ds-surface-muted);
+    padding: 16px;
+}
+
+.security-session-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 18px;
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius-lg);
+    padding: 16px;
+}
+
+.security-session-card .ds-heading-md {
+    font-size: 16px;
+}
+
+.security-otp-input {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0.35em;
+}
+
+#twoFactorModal[hidden] {
+    display: none;
+}
+
+@media (max-width: 900px) {
+    .security-hero,
+    .security-session-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .security-status-grid,
+    .security-card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .security-status-item {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .security-status-item .ds-badge,
+    .security-status-item .security-small-action {
+        grid-column: 2;
+        justify-self: start;
+    }
+}

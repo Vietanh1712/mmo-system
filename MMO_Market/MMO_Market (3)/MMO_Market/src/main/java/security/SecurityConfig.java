@@ -42,13 +42,14 @@ public class SecurityConfig {
                         .requestMatchers(
                                 new AntPathRequestMatcher("/api/auth/register"),
                                 new AntPathRequestMatcher("/api/auth/login"),
+                                new AntPathRequestMatcher("/api/auth/google"),
                                 new AntPathRequestMatcher("/api/auth/health"),
                                 new AntPathRequestMatcher("/api/auth/refresh"),
                                 new AntPathRequestMatcher("/api/auth/verify-otp"),
                                 new AntPathRequestMatcher("/api/auth/resend-otp"),
                                 new AntPathRequestMatcher("/api/auth/forgot-password"),
                                 new AntPathRequestMatcher("/api/auth/reset-password"),
-                                new AntPathRequestMatcher("/api/auth/check-reset-otp")  // <-- Đã thêm dòng này!
+                                new AntPathRequestMatcher("/api/auth/check-reset-otp")
                         ).permitAll()
 
                         // Public MVC endpoints (Cho phép trình duyệt tải giao diện HTML)
@@ -60,6 +61,14 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/reset-password"),
                                 new AntPathRequestMatcher("/verify-otp"),
                                 new AntPathRequestMatcher("/profile"),
+                                new AntPathRequestMatcher("/account/kyc"),
+                                new AntPathRequestMatcher("/account/security"),
+                                new AntPathRequestMatcher("/wallet"),
+                                new AntPathRequestMatcher("/wallet/topup"),
+                                new AntPathRequestMatcher("/wallet/transactions"),
+                                new AntPathRequestMatcher("/account/orders"),
+                                new AntPathRequestMatcher("/account/orders/**"),
+                                new AntPathRequestMatcher("/account/notifications"),
                                 new AntPathRequestMatcher("/admin/users"),
                                 // Trang Kết quả Tìm kiếm - công khai theo spec (không cần đăng nhập)
                                 new AntPathRequestMatcher("/search"),
@@ -70,7 +79,12 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/cart"),
                                 new AntPathRequestMatcher("/checkout"),
                                 new AntPathRequestMatcher("/pre-orders"),
-                                new AntPathRequestMatcher("/pre-orders/new")
+                                new AntPathRequestMatcher("/pre-orders/new"),
+                                new AntPathRequestMatcher("/pre-orders/**"),
+                                new AntPathRequestMatcher("/seller/**"),
+                                new AntPathRequestMatcher("/staff/**"),
+                                new AntPathRequestMatcher("/shop/**"),
+                                new AntPathRequestMatcher("/error")
                         ).permitAll()
 
                         // Public Search API (không cần đăng nhập để xem sản phẩm)

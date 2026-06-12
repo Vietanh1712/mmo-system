@@ -1,0 +1,41 @@
+/* MMO Market shared avatar styles. */
+
+.ds-avatar {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #0f172a;
+    color: #ffffff;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.ds-avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+}
+
+.ds-avatar-md {
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+}
+
+.ds-avatar-lg {
+    width: 72px;
+    height: 72px;
+    font-size: 26px;
+}
+
+.ds-avatar-success {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.ds-avatar-primary {
+    background: var(--ds-primary-soft);
+    color: var(--ds-primary);
+}

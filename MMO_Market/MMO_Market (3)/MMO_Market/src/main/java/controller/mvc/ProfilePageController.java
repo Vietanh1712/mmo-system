@@ -10,4 +10,49 @@ public class ProfilePageController {
     public String showProfilePage() {
         return "profile/index";
     }
+
+    @GetMapping("/account/kyc")
+    public String showKycPage() {
+        return "account/kyc";
+    }
+
+    @GetMapping("/account/security")
+    public String showSecurityPage() {
+        return "account/security";
+    }
+
+    @GetMapping("/wallet")
+    public String showWalletPage() {
+        return "account/wallet";
+    }
+
+    @GetMapping("/wallet/topup")
+    public String showWalletTopupPage() {
+        return "account/topup";
+    }
+
+    @GetMapping("/wallet/transactions")
+    public String showWalletTransactionsPage() {
+        return "account/transactions";
+    }
+
+    @GetMapping("/account/orders")
+    public String showMyOrdersPage() {
+        return "account/orders";
+    }
+
+    @GetMapping("/account/orders/{orderCode}")
+    public String showOrderDetailPage() {
+        return "account/order-detail";
+    }
+
+    @GetMapping("/account/orders/{orderCode}/feedback")
+    public String showLeaveFeedbackPage() {
+        return "account/leave-feedback";
+    }
+
+    @GetMapping("/account/notifications")
+    public String showNotificationsPage() {
+        return "account/notifications";
+    }
 }

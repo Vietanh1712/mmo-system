@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Quản lý định danh KYC')}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('kyc')}"></aside>
+
+            <section class="ds-section">
+                <div class="staff-page-header">
+                    <div>
+                        <h1 class="ds-page-title">Quản lý yêu cầu định danh</h1>
+                        <p class="ds-page-subtitle">Danh sách hồ sơ KYC chờ phê duyệt hoặc đã xử lý.</p>
+                    </div>
+                </div>
+
+                <div class="staff-stat-grid">
+                    <div class="ds-card staff-stat-card">
+                        <p class="staff-stat-card__label">Tổng hồ sơ</p>
+                        <p class="staff-stat-card__value">452</p>
+                    </div>
+                    <div class="ds-card staff-stat-card">
+                        <p class="staff-stat-card__label">Chờ duyệt</p>
+                        <p class="staff-stat-card__value">18</p>
+                    </div>
+                    <div class="ds-card staff-stat-card">
+                        <p class="staff-stat-card__label">Đã duyệt</p>
+                        <p class="staff-stat-card__value">410</p>
+                    </div>
+                    <div class="ds-card staff-stat-card">
+                        <p class="staff-stat-card__label">Từ chối</p>
+                        <p class="staff-stat-card__value">24</p>
+                    </div>
+                </div>
+
+                <div class="ds-card">
+                    <div class="ds-filter-panel">
+                        <h2 class="ds-card-title">Bộ lọc KYC</h2>
+                        <div class="ds-filter-grid">
+                            <input class="ds-input" type="search" placeholder="Tìm tên, email, mã hồ sơ...">
+                            <select class="ds-input">
+                                <option value="">Trạng thái</option>
+                                <option>Chờ duyệt</option>
+                                <option>Đã duyệt</option>
+                                <option>Từ chối</option>
+                            </select>
+                            <select class="ds-input">
+                                <option value="">Loại giấy tờ</option>
+                                <option>CCCD</option>
+                                <option>Hộ chiếu</option>
+                            </select>
+                        </div>
+                        <div class="ds-filter-actions">
+                            <button class="ds-btn ds-btn-secondary" type="button">Làm mới</button>
+                            <button class="ds-btn ds-btn-primary" type="button">Tìm kiếm</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ds-card">
+                    <div class="ds-table-wrap">
+                        <table class="ds-table">
+                            <thead>
+                            <tr>
+                                <th>Mã hồ sơ</th>
+                                <th>Người dùng</th>
+                                <th>Loại giấy tờ</th>
+                                <th class="ds-table-center">Trạng thái</th>
+                                <th>Ngày gửi</th>
+                                <th class="ds-table-center">Thao tác</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>#KYC-1198</td>
+                                <td>
+                                    <div class="ds-entity">
+                                        <span class="ds-avatar ds-avatar-sm ds-avatar-primary">PH</span>
+                                        <div>
+                                            <div class="ds-entity-title">Phạm Hoa</div>
+                                            <div class="ds-entity-subtitle">hoa.pham@mmo.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>CCCD</td>
+                                <td class="ds-table-center"><span class="ds-badge ds-badge-warning">Chờ duyệt</span></td>
+                                <td>05/06/2026</td>
+                                <td class="ds-table-center">
+                                    <a class="ds-btn ds-btn-outline" href="/staff/kyc/detail">Xem hồ sơ</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#KYC-1195</td>
+                                <td>
+                                    <div class="ds-entity">
+                                        <span class="ds-avatar ds-avatar-sm">DK</span>
+                                        <div>
+                                            <div class="ds-entity-title">Đỗ Khánh</div>
+                                            <div class="ds-entity-subtitle">khanh.do@mmo.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>Hộ chiếu</td>
+                                <td class="ds-table-center"><span class="ds-badge ds-badge-warning">Chờ duyệt</span></td>
+                                <td>04/06/2026</td>
+                                <td class="ds-table-center">
+                                    <a class="ds-btn ds-btn-outline" href="/staff/kyc/detail">Xem hồ sơ</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#KYC-1180</td>
+                                <td>
+                                    <div class="ds-entity">
+                                        <span class="ds-avatar ds-avatar-sm ds-avatar-success">VT</span>
+                                        <div>
+                                            <div class="ds-entity-title">Vũ Thảo</div>
+                                            <div class="ds-entity-subtitle">thao.vu@mmo.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>CCCD</td>
+                                <td class="ds-table-center"><span class="ds-badge ds-badge-success">Đã duyệt</span></td>
+                                <td>02/06/2026</td>
+                                <td class="ds-table-center">
+                                    <a class="ds-btn ds-btn-outline" href="/staff/kyc/detail">Xem hồ sơ</a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="ds-pagination">
+                        <div class="ds-pagination-pages">
+                            <span class="ds-page-link ds-page-link-active">1</span>
+                            <span class="ds-page-link">2</span>
+                            <span class="ds-page-link">›</span>
+                        </div>
+                        <div class="ds-pagination-meta">
+                            <span>Tổng số: 452 bản ghi</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/auth.js}"></script>
+<script th:src="@{/js/staff-ui.js}"></script>
+</body>
+</html>

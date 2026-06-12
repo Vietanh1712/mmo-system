@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn hàng của tôi - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/orders.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="profile-page ds-page">
+        <div class="ds-container orders-layout-container">
+            <div class="profile-layout ds-two-column orders-layout">
+                <aside th:replace="~{fragments/account-sidebar :: accountSidebar('orders')}"></aside>
+
+                <section class="orders-page ds-page-shell">
+                    <section class="orders-hero ds-card">
+                        <div>
+                            <p class="ds-caption">Mua hàng</p>
+                            <h1 class="ds-heading-lg">Đơn hàng của tôi</h1>
+                            <p class="ds-body orders-hero__subtitle">
+                                Theo dõi các sản phẩm số bạn đã mua, trạng thái thanh toán và tiến trình xử lý đơn hàng.
+                            </p>
+                        </div>
+                        <a class="ds-btn ds-btn-primary" th:href="@{/}">
+                            <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+                            Tiếp tục mua hàng
+                        </a>
+                    </section>
+
+                    <div class="ds-alert ds-alert-info" id="ordersMessage">
+                        Đang tải danh sách đơn hàng...
+                    </div>
+
+                    <section class="orders-stat-grid" aria-label="Tổng quan đơn hàng">
+                        <article class="orders-stat-card ds-card">
+                            <span class="orders-stat-icon orders-stat-icon--primary"><i class="fa fa-shopping-bag" aria-hidden="true"></i></span>
+                            <div>
+                                <p>Tổng đơn</p>
+                                <strong id="ordersTotalCount">0 đơn</strong>
+                            </div>
+                        </article>
+                        <article class="orders-stat-card ds-card">
+                            <span class="orders-stat-icon orders-stat-icon--success"><i class="fa fa-check" aria-hidden="true"></i></span>
+                            <div>
+                                <p>Hoàn tất</p>
+                                <strong id="ordersCompletedCount">0 đơn</strong>
+                            </div>
+                        </article>
+                        <article class="orders-stat-card ds-card">
+                            <span class="orders-stat-icon orders-stat-icon--info"><i class="fa fa-clock-o" aria-hidden="true"></i></span>
+                            <div>
+                                <p>Đang xử lý</p>
+                                <strong id="ordersProcessingCount">0 đơn</strong>
+                            </div>
+                        </article>
+                        <article class="orders-stat-card ds-card">
+                            <span class="orders-stat-icon orders-stat-icon--warning"><i class="fa fa-flag" aria-hidden="true"></i></span>
+                            <div>
+                                <p>Tranh chấp</p>
+                                <strong id="ordersDisputedCount">0 đơn</strong>
+                            </div>
+                        </article>
+                    </section>
+
+                    <section class="orders-table-card ds-card">
+                        <form class="ds-filter-panel orders-filter" id="ordersFilterForm">
+                            <div>
+                                <h2 class="ds-card-title">Bộ lọc đơn hàng</h2>
+                                <p class="ds-caption">Tìm theo mã đơn, sản phẩm, người bán và lọc theo trạng thái.</p>
+                            </div>
+
+                            <div class="orders-filter-grid">
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="ordersSearchInput">Tìm kiếm</label>
+                                    <input class="ds-input" id="ordersSearchInput" type="search" placeholder="Mã đơn, sản phẩm hoặc người bán">
+                                </div>
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="ordersStatusFilter">Trạng thái đơn</label>
+                                    <select class="ds-select" id="ordersStatusFilter">
+                                        <option value="">Tất cả trạng thái</option>
+                                        <option value="PENDING">Chờ xử lý</option>
+                                        <option value="PAID">Đã thanh toán</option>
+                                        <option value="DELIVERED">Đã giao</option>
+                                        <option value="COMPLETED">Hoàn tất</option>
+                                        <option value="CANCELLED">Đã hủy</option>
+                                        <option value="DISPUTED">Tranh chấp</option>
+                                        <option value="REFUNDED">Đã hoàn tiền</option>
+                                    </select>
+                                </div>
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="ordersPaymentFilter">Thanh toán</label>
+                                    <select class="ds-select" id="ordersPaymentFilter">
+                                        <option value="">Tất cả thanh toán</option>
+                                        <option value="PAID">Đã thanh toán</option>
+                                        <option value="PENDING">Chờ thanh toán</option>
+                                        <option value="FAILED">Thất bại</option>
+                                        <option value="REFUNDED">Đã hoàn tiền</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="orders-filter-bottom">
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="ordersFromDateDisplay">Từ ngày</label>
+                                    <div class="ds-datepicker" data-ds-datepicker>
+                                        <input id="ordersFromDate" type="hidden" data-ds-date-value>
+                                        <div class="ds-datepicker-field">
+                                            <input class="ds-datepicker-input" id="ordersFromDateDisplay" type="text" placeholder="dd/mm/yyyy" data-ds-date-display>
+                                            <button class="ds-datepicker-button" type="button" data-ds-date-toggle aria-label="Chọn từ ngày">
+                                                <i class="fa fa-calendar" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="ordersToDateDisplay">Đến ngày</label>
+                                    <div class="ds-datepicker" data-ds-datepicker>
+                                        <input id="ordersToDate" type="hidden" data-ds-date-value>
+                                        <div class="ds-datepicker-field">
+                                            <input class="ds-datepicker-input" id="ordersToDateDisplay" type="text" placeholder="dd/mm/yyyy" data-ds-date-display>
+                                            <button class="ds-datepicker-button" type="button" data-ds-date-toggle aria-label="Chọn đến ngày">
+                                                <i class="fa fa-calendar" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ds-filter-actions orders-filter-actions">
+                                    <button class="ds-btn ds-btn-secondary" id="ordersResetButton" type="button">
+                                        <i class="fa fa-refresh" aria-hidden="true"></i>
+                                        Làm mới bộ lọc
+                                    </button>
+                                    <button class="ds-btn ds-btn-primary" id="ordersSearchButton" type="submit">
+                                        <i class="fa fa-search" aria-hidden="true"></i>
+                                        Tìm kiếm
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="orders-table-content">
+                            <div class="ds-cluster-between">
+                                <div>
+                                    <h2 class="ds-heading-md">Danh sách đơn hàng</h2>
+                                    <p class="ds-caption" id="ordersResultSummary">Hiển thị 0 đơn hàng.</p>
+                                </div>
+                            </div>
+
+                            <div class="ds-empty-state orders-empty-state" id="ordersEmptyState">
+                                <p>Bạn chưa có đơn hàng phù hợp.</p>
+                                <a class="ds-btn ds-btn-primary" th:href="@{/}">Tiếp tục mua hàng</a>
+                            </div>
+
+                            <div class="ds-table-wrap" id="ordersTableWrap" hidden>
+                                <table class="ds-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="ds-table-center">STT</th>
+                                            <th>Mã đơn</th>
+                                            <th>Sản phẩm</th>
+                                            <th>Người bán</th>
+                                            <th>Số tiền</th>
+                                            <th class="ds-table-center">Trạng thái</th>
+                                            <th class="ds-table-center">Thanh toán</th>
+                                            <th>Ngày mua</th>
+                                            <th class="ds-table-center">Đánh giá</th>
+                                            <th class="ds-table-center">Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ordersTableBody"></tbody>
+                                </table>
+                            </div>
+
+                            <div class="ds-pagination orders-pagination" id="ordersPagination" hidden>
+                                <div class="ds-pagination-pages" id="ordersPaginationPages"></div>
+                                <div class="ds-pagination-meta">
+                                    <span id="ordersPaginationInfo">Tổng số: 0 đơn</span>
+                                    <select class="ds-page-size" id="ordersPageSize" aria-label="Số dòng mỗi trang">
+                                        <option value="5" selected>5</option>
+                                        <option value="10">10</option>
+                                        <option value="20">20</option>
+                                        <option value="50">50</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="fragments/footer :: footer"></footer>
+
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/account-sidebar.js}"></script>
+    <script th:src="@{/js/datepicker.js}"></script>
+    <script th:src="@{/js/account-orders.js}"></script>
+</body>
+</html>

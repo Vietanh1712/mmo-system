@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thống kê Shop - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/seller.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="seller-page">
+        <div class="seller-layout">
+            <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('statistics')}"></aside>
+
+            <section class="seller-card">
+                <div class="seller-card__header">
+                    <div class="seller-card__header-main">
+                        <div class="seller-card__icon"><i class="fa fa-bar-chart"></i></div>
+                        <div>
+                            <h1 class="seller-card__title">Thống kê &amp; Phân tích Shop</h1>
+                            <p class="seller-card__subtitle">Hiệu suất bán hàng 6 tháng gần nhất</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <p class="stat-card__label">Tổng doanh thu</p>
+                        <p class="stat-card__value">156.2M ₫</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-card__label">Đơn hàng</p>
+                        <p class="stat-card__value">892</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-card__label">Tỷ lệ hoàn tất</p>
+                        <p class="stat-card__value">94.2%</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-card__label">Đánh giá TB</p>
+                        <p class="stat-card__value">4.8 ★</p>
+                    </div>
+                </div>
+
+                <div class="seller-section">
+                    <h2 class="seller-section__title">Doanh thu theo tháng</h2>
+                    <div class="chart-bars">
+                        <div class="chart-bar">
+                            <div class="chart-bar__fill" style="height: 45%;"></div>
+                            <span class="chart-bar__label">T1</span>
+                        </div>
+                        <div class="chart-bar">
+                            <div class="chart-bar__fill" style="height: 62%;"></div>
+                            <span class="chart-bar__label">T2</span>
+                        </div>
+                        <div class="chart-bar">
+                            <div class="chart-bar__fill" style="height: 55%;"></div>
+                            <span class="chart-bar__label">T3</span>
+                        </div>
+                        <div class="chart-bar">
+                            <div class="chart-bar__fill" style="height: 78%;"></div>
+                            <span class="chart-bar__label">T4</span>
+                        </div>
+                        <div class="chart-bar">
+                            <div class="chart-bar__fill" style="height: 70%;"></div>
+                            <span class="chart-bar__label">T5</span>
+                        </div>
+                        <div class="chart-bar">
+                            <div class="chart-bar__fill" style="height: 92%;"></div>
+                            <span class="chart-bar__label">T6</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="seller-section">
+                    <h2 class="seller-section__title">Top sản phẩm bán chạy</h2>
+                    <div class="seller-table-wrap">
+                        <table class="seller-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Sản phẩm</th>
+                                    <th class="text-right">Đã bán</th>
+                                    <th class="text-right">Doanh thu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>Netflix Premium</td>
+                                    <td class="text-right">412</td>
+                                    <td class="text-right">36.7M ₫</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>Spotify Family</td>
+                                    <td class="text-right">285</td>
+                                    <td class="text-right">34.2M ₫</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>Canva Pro</td>
+                                    <td class="text-right">95</td>
+                                    <td class="text-right">33.3M ₫</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

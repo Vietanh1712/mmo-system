@@ -1,0 +1,46 @@
+/* MMO Market reusable modal shell. */
+
+.ds-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    background: rgba(15, 23, 42, 0.45);
+    padding: 20px;
+}
+
+.ds-modal {
+    width: min(520px, 100%);
+    overflow: hidden;
+    border-radius: var(--ds-radius-xl);
+    background: #ffffff;
+    box-shadow: var(--ds-shadow-lg);
+}
+
+.ds-modal-header,
+.ds-modal-body,
+.ds-modal-footer {
+    padding: 18px 20px;
+}
+
+.ds-modal-header {
+    border-bottom: 1px solid var(--ds-border);
+}
+
+.ds-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid var(--ds-border);
+}
+
+@media (max-width: 480px) {
+    .ds-modal-footer {
+        flex-direction: column-reverse;
+    }
+
+    .ds-modal-footer .ds-btn {
+        width: 100%;
+    }
+}

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch sử giao dịch ví - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/wallet.css}">
+    <link rel="stylesheet" th:href="@{/css/wallet-transactions.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="profile-page ds-page">
+        <div class="ds-container">
+            <div class="profile-layout ds-two-column">
+                <aside th:replace="~{fragments/account-sidebar :: accountSidebar('transactions')}"></aside>
+
+                <section class="transactions-page ds-page-shell">
+                    <section class="transactions-hero ds-card">
+                        <div>
+                            <p class="ds-caption">Ví & giao dịch</p>
+                            <h1 class="ds-heading-lg">Lịch sử giao dịch ví</h1>
+                            <p class="ds-body transactions-hero__subtitle">
+                                Theo dõi toàn bộ biến động số dư, yêu cầu nạp tiền và các giao dịch đang xử lý.
+                            </p>
+                        </div>
+                        <div class="transactions-hero__actions">
+                            <a class="ds-btn ds-btn-outline" th:href="@{/wallet}">
+                                <i class="fa fa-credit-card" aria-hidden="true"></i>
+                                Về ví
+                            </a>
+                            <a class="ds-btn ds-btn-primary" th:href="@{/wallet/topup}">
+                                <i class="fa fa-plus-circle" aria-hidden="true"></i>
+                                Nạp tiền
+                            </a>
+                        </div>
+                    </section>
+
+                    <div class="ds-alert ds-alert-info" id="transactionsMessage">
+                        Đang tải lịch sử giao dịch...
+                    </div>
+
+                    <section class="transactions-stat-grid" aria-label="Tổng quan giao dịch ví">
+                        <article class="wallet-stat-card ds-card">
+                            <span class="wallet-stat-icon wallet-stat-icon--primary"><i class="fa fa-arrow-down" aria-hidden="true"></i></span>
+                            <div>
+                                <p>Tổng nạp</p>
+                                <strong id="transactionsTopupTotal">0 đ</strong>
+                            </div>
+                        </article>
+                        <article class="wallet-stat-card ds-card">
+                            <span class="wallet-stat-icon wallet-stat-icon--warning"><i class="fa fa-arrow-up" aria-hidden="true"></i></span>
+                            <div>
+                                <p>Tổng chi</p>
+                                <strong id="transactionsSpentTotal">0 đ</strong>
+                            </div>
+                        </article>
+                        <article class="wallet-stat-card ds-card">
+                            <span class="wallet-stat-icon wallet-stat-icon--info"><i class="fa fa-clock-o" aria-hidden="true"></i></span>
+                            <div>
+                                <p>Đang xử lý</p>
+                                <strong id="transactionsPendingCount">0 giao dịch</strong>
+                            </div>
+                        </article>
+                        <article class="wallet-stat-card ds-card">
+                            <span class="wallet-stat-icon wallet-stat-icon--success"><i class="fa fa-list" aria-hidden="true"></i></span>
+                            <div>
+                                <p>Tổng giao dịch</p>
+                                <strong id="transactionsTotalCount">0 giao dịch</strong>
+                            </div>
+                        </article>
+                    </section>
+
+                    <section class="transactions-table-card ds-card">
+                        <form class="ds-filter-panel transactions-filter" id="transactionsFilterForm">
+                            <div>
+                                <h2 class="ds-card-title">Bộ lọc giao dịch</h2>
+                                <p class="ds-caption">Lọc theo mã, loại giao dịch, trạng thái và khoảng ngày.</p>
+                            </div>
+
+                            <div class="transactions-filter-grid">
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="transactionsSearchInput">Tìm kiếm</label>
+                                    <input class="ds-input" id="transactionsSearchInput" type="search" placeholder="Mã giao dịch hoặc mô tả">
+                                </div>
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="transactionsTypeFilter">Loại giao dịch</label>
+                                    <select class="ds-select" id="transactionsTypeFilter">
+                                        <option value="">Tất cả loại</option>
+                                        <option value="TOPUP">Nạp tiền</option>
+                                        <option value="PAYMENT">Thanh toán</option>
+                                        <option value="REFUND">Hoàn tiền</option>
+                                        <option value="ESCROW">Escrow</option>
+                                        <option value="WITHDRAWAL">Rút tiền</option>
+                                    </select>
+                                </div>
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="transactionsStatusFilter">Trạng thái</label>
+                                    <select class="ds-select" id="transactionsStatusFilter">
+                                        <option value="">Tất cả trạng thái</option>
+                                        <option value="SUCCESS">Thành công</option>
+                                        <option value="PENDING">Đang xử lý</option>
+                                        <option value="FAILED">Thất bại</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="transactions-filter-bottom">
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="transactionsFromDateDisplay">Từ ngày</label>
+                                    <div class="ds-datepicker" data-ds-datepicker>
+                                        <input id="transactionsFromDate" type="hidden" data-ds-date-value>
+                                        <div class="ds-datepicker-field">
+                                            <input class="ds-datepicker-input" id="transactionsFromDateDisplay" type="text" placeholder="dd/mm/yyyy" data-ds-date-display>
+                                            <button class="ds-datepicker-button" type="button" data-ds-date-toggle aria-label="Chọn từ ngày">
+                                                <i class="fa fa-calendar" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="transactionsToDateDisplay">Đến ngày</label>
+                                    <div class="ds-datepicker" data-ds-datepicker>
+                                        <input id="transactionsToDate" type="hidden" data-ds-date-value>
+                                        <div class="ds-datepicker-field">
+                                            <input class="ds-datepicker-input" id="transactionsToDateDisplay" type="text" placeholder="dd/mm/yyyy" data-ds-date-display>
+                                            <button class="ds-datepicker-button" type="button" data-ds-date-toggle aria-label="Chọn đến ngày">
+                                                <i class="fa fa-calendar" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ds-filter-actions transactions-filter-actions">
+                                    <button class="ds-btn ds-btn-secondary" id="transactionsResetButton" type="button">
+                                        <i class="fa fa-refresh" aria-hidden="true"></i>
+                                        Làm mới bộ lọc
+                                    </button>
+                                    <button class="ds-btn ds-btn-primary" id="transactionsSearchButton" type="submit">
+                                        <i class="fa fa-search" aria-hidden="true"></i>
+                                        Tìm kiếm
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="transactions-table-content">
+                            <div class="ds-cluster-between">
+                                <div>
+                                    <h2 class="ds-heading-md">Danh sách giao dịch</h2>
+                                    <p class="ds-caption" id="transactionsResultSummary">Hiển thị 0 giao dịch.</p>
+                                </div>
+                            </div>
+
+                            <div class="ds-empty-state transactions-empty-state" id="transactionsEmptyState">
+                                <p>Chưa có giao dịch ví phù hợp.</p>
+                                <a class="ds-btn ds-btn-primary" th:href="@{/wallet/topup}">Nạp tiền ngay</a>
+                            </div>
+
+                            <div class="ds-table-wrap" id="transactionsTableWrap" hidden>
+                                <table class="ds-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="ds-table-center">STT</th>
+                                            <th>Mã giao dịch</th>
+                                            <th>Loại</th>
+                                            <th>Mô tả</th>
+                                            <th>Số tiền</th>
+                                            <th class="ds-table-center">Trạng thái</th>
+                                            <th>Thời gian</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="transactionsTableBody"></tbody>
+                                </table>
+                            </div>
+
+                            <div class="ds-pagination transactions-pagination" id="transactionsPagination" hidden>
+                                <div class="ds-pagination-pages" id="transactionsPaginationPages"></div>
+                                <div class="ds-pagination-meta">
+                                    <span id="transactionsPaginationInfo">Tổng số: 0 giao dịch</span>
+                                    <select class="ds-page-size" id="transactionsPageSize" aria-label="Số dòng mỗi trang">
+                                        <option value="5" selected>5</option>
+                                        <option value="10">10</option>
+                                        <option value="20">20</option>
+                                        <option value="50">50</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="fragments/footer :: footer"></footer>
+
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/account-sidebar.js}"></script>
+    <script th:src="@{/js/datepicker.js}"></script>
+    <script th:src="@{/js/account-transactions.js}"></script>
+</body>
+</html>

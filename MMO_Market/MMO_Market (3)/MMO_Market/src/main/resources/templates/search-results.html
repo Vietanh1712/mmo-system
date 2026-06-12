@@ -689,7 +689,7 @@
             }
 
             items.forEach(product => {
-                const starsCount = Math.floor(product.averageRating || 5);
+                const starsCount = Math.floor(product.averageRating || 0);
                 let starHtml = '';
                 for (let i = 0; i < 5; i++) {
                     if (i < starsCount) {
