@@ -6,8 +6,8 @@ let topupProfile = null;
 let accountSidebar = null;
 let currentTransferContent = '';
 let sepayConfig = {
-    bankId: 'MB',
-    accountNumber: '0987654321',
+    bankId: 'TPB',
+    accountNumber: '00000806194',
     accountName: 'NGUYEN THI NGOC LINH'
 };
 let pollingInterval = null;
@@ -54,8 +54,8 @@ async function loadTopupPage() {
             const configResponse = await fetch('/api/sepay/config');
             if (configResponse.ok) {
                 const configData = await configResponse.json();
-                sepayConfig.bankId = configData.bankId || 'MB';
-                sepayConfig.accountNumber = configData.accountNumber || '0987654321';
+                sepayConfig.bankId = configData.bankId || 'TPB';
+                sepayConfig.accountNumber = configData.accountNumber || '00000806194';
                 sepayConfig.accountName = configData.accountName || 'NGUYEN THI NGOC LINH';
             }
         } catch (err) {
@@ -223,7 +223,7 @@ function renderTransferInstruction(amount) {
 
 function createTransferContent() {
     const userPart = topupProfile?.id || topupProfile?.userId || 'USER';
-    return `MMO TOPUP ${userPart}`;
+    return `MMO-TOPUP-${userPart}`;
 }
 
 function getUserSpecificKey(baseKey) {

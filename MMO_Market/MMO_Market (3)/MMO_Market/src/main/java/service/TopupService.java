@@ -23,7 +23,7 @@ public class TopupService {
     @Autowired
     private TopupTransactionRepository topupTransactionRepository;
 
-    private static final Pattern TRANSFER_CONTENT_PATTERN = Pattern.compile("MMO\\s+TOPUP\\s+(\\d+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern TRANSFER_CONTENT_PATTERN = Pattern.compile("MMO[\\s-]*TOPUP[\\s-]*(\\d+)", Pattern.CASE_INSENSITIVE);
 
     @Transactional
     public boolean processSepayWebhook(SePayWebhookRequest request) {
@@ -52,7 +52,7 @@ public class TopupService {
 
         Matcher matcher = TRANSFER_CONTENT_PATTERN.matcher(content);
         if (!matcher.find()) {
-            log.warn("Transaction content '{}' does not match pattern 'MMO TOPUP <userId>'.", content);
+            log.warn("Transaction content '{}' does not match pattern 'MMO-TOPUP-<userId>'.", content);
             return false;
         }
 

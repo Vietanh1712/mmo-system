@@ -631,9 +631,26 @@
                     <span class="invoice-label">Thời gian giữ tiền (Escrow):</span>
                     <span class="invoice-value" style="color: #d97706;"><i class="fa fa-clock-o"></i> 72 giờ</span>
                 </div>
+                <div id="modalCredentialsRow" style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-color);" hidden>
+                    <div class="invoice-row" style="margin-bottom: 8px;">
+                        <span class="invoice-label" id="modalCredLabel">Tài khoản:</span>
+                        <span class="invoice-value" id="modalCredUsername" style="font-family: monospace; font-size: 13.5px; color: var(--brand-dark); font-weight: 700;">-</span>
+                    </div>
+                    <div class="invoice-row" id="modalCredPasswordRow">
+                        <span class="invoice-label">Mật khẩu:</span>
+                        <span class="invoice-value" id="modalCredPassword" style="font-family: monospace; font-size: 13.5px; color: var(--brand-dark); font-weight: 700;">-</span>
+                    </div>
+                </div>
             </div>
 
-            <button class="btn-modal-close" onclick="closeSuccessModal()">Đóng & Về trang chủ</button>
+            <div style="display: flex; gap: 12px; justify-content: center; margin-top: 20px; flex-wrap: wrap;">
+                <button class="btn-modal-close" id="btnViewOrder" onclick="goToOrderDetail()" style="min-width: 180px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="fa fa-info-circle"></i> Xem chi tiết đơn hàng
+                </button>
+                <button class="btn-modal-close" onclick="closeSuccessModal()" style="min-width: 180px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                    Đóng & Về trang chủ
+                </button>
+            </div>
         </div>
     </div>
 
@@ -867,17 +884,47 @@
             const now = new Date();
             const orderCode = 'MMO-ORD-' + Math.floor(1000 + Math.random() * 9000);
             
+            // Check if product is account to generate credentials
+            let credentials = null;
+            const prodName = checkoutMode === 'cart'
+                ? `${checkoutItems.reduce((sum, item) => sum + item.quantity, 0)} sản phẩm`
+                : selectedProduct.name;
+            const lowerName = prodName.toLowerCase();
+            const isAccount = lowerName.includes('tài khoản') || 
+                              lowerName.includes('premium') || 
+                              lowerName.includes('spotify') || 
+                              lowerName.includes('netflix') || 
+                              lowerName.includes('canva') || 
+                              lowerName.includes('chatgpt') || 
+                              lowerName.includes('gmail') || 
+                              lowerName.includes('vpn') || 
+                              lowerName.includes('key');
+            if (isAccount) {
+                const randomNum = Math.floor(1000 + Math.random() * 9000);
+                const cleanName = prodName.replace(/[^a-zA-Z0-9]/g, '').substring(0, 8).toLowerCase();
+                if (lowerName.includes('key')) {
+                    credentials = {
+                        username: `KEY-${randomNum}-ABCD-EFGH-IJKL`,
+                        password: '(Product Key)'
+                    };
+                } else {
+                    credentials = {
+                        username: `${cleanName}_${randomNum}@gmail.com`,
+                        password: `Pass_${randomNum}_Secure`
+                    };
+                }
+            }
+            
             const newOrder = {
                 orderCode: orderCode,
-                productName: checkoutMode === 'cart'
-                    ? `${checkoutItems.reduce((sum, item) => sum + item.quantity, 0)} sản phẩm`
-                    : selectedProduct.name,
+                productName: prodName,
                 sellerName: selectedProduct.seller || 'Digital Store VN',
                 amount: checkoutTotal,
                 status: 'PAID',
                 paymentStatus: 'PAID',
                 createdAt: now.toLocaleString('vi-VN'),
-                escrowReleaseDate: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN')
+                escrowReleaseDate: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
+                credentials: credentials
             };
             orders.unshift(newOrder);
             sessionStorage.setItem(ordersKey, JSON.stringify(orders));
@@ -907,9 +954,41 @@
                 clearPurchasedCartItems();
             }
 
+            // Inject credentials into modal if available
+            const credRow = document.getElementById('modalCredentialsRow');
+            if (newOrder.credentials) {
+                const isKey = newOrder.credentials.password === '(Product Key)';
+                document.getElementById('modalCredLabel').innerText = isKey ? 'Mã kích hoạt (Key):' : 'Tài khoản (Email/Username):';
+                document.getElementById('modalCredUsername').innerText = newOrder.credentials.username;
+                
+                const passRow = document.getElementById('modalCredPasswordRow');
+                if (isKey) {
+                    passRow.style.display = 'none';
+                } else {
+                    passRow.style.display = 'flex';
+                    document.getElementById('modalCredPassword').innerText = newOrder.credentials.password;
+                }
+                credRow.hidden = false;
+            } else {
+                credRow.hidden = true;
+            }
+
+            // Set global order code for redirection
+            currentCreatedOrderCode = orderCode;
+
             // Show success modal
             const modal = document.getElementById('successModal');
             modal.classList.add('active');
+        }
+
+        let currentCreatedOrderCode = '';
+
+        function goToOrderDetail() {
+            if (currentCreatedOrderCode) {
+                window.location.href = `/account/orders/${currentCreatedOrderCode}`;
+            } else {
+                window.location.href = '/account/orders';
+            }
         }
 
         // Close Success Modal

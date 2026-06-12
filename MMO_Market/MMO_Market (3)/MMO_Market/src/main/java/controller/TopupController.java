@@ -21,10 +21,10 @@ public class TopupController {
     @Value("${sepay.webhook.token:my_secret_sepay_token}")
     private String sepayWebhookToken;
 
-    @Value("${sepay.bank.id:MB}")
+    @Value("${sepay.bank.id:TPB}")
     private String bankId;
 
-    @Value("${sepay.bank.account-number:0987654321}")
+    @Value("${sepay.bank.account-number:00000806194}")
     private String bankAccountNumber;
 
     @Value("${sepay.bank.account-name:NGUYEN THI NGOC LINH}")
