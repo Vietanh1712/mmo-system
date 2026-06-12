@@ -5,6 +5,13 @@ const WALLET_MOCK_TRANSACTIONS_KEY = 'mmoMarketWalletTransactionsMock';
 let topupProfile = null;
 let accountSidebar = null;
 let currentTransferContent = '';
+let sepayConfig = {
+    bankId: 'MB',
+    accountNumber: '0987654321',
+    accountName: 'NGUYEN THI NGOC LINH'
+};
+let pollingInterval = null;
+let initialBalance = 0;
 
 document.addEventListener('DOMContentLoaded', initializeTopupPage);
 
@@ -39,8 +46,21 @@ async function loadTopupPage() {
         }
 
         topupProfile = await response.json();
+        initialBalance = topupProfile.balanceVnd || 0;
         accountSidebar.render(topupProfile);
-        document.getElementById('topupBalance').textContent = formatMoney(topupProfile.balanceVnd || 0);
+        document.getElementById('topupBalance').textContent = formatMoney(initialBalance);
+
+        try {
+            const configResponse = await fetch('/api/sepay/config');
+            if (configResponse.ok) {
+                const configData = await configResponse.json();
+                sepayConfig.bankId = configData.bankId || 'MB';
+                sepayConfig.accountNumber = configData.accountNumber || '0987654321';
+                sepayConfig.accountName = configData.accountName || 'NGUYEN THI NGOC LINH';
+            }
+        } catch (err) {
+            console.warn('Failed to load SePay config from backend, using defaults', err);
+        }
 
         // Parse query params
         const urlParams = new URLSearchParams(window.location.search);
@@ -96,30 +116,66 @@ function handleTopupSubmit(event) {
         return;
     }
 
-    // Instantly simulate successful top-up on the frontend for demo purposes
-    if (topupProfile) {
-        topupProfile.balanceVnd = (topupProfile.balanceVnd || 0) + amount;
-        document.getElementById('topupBalance').textContent = formatMoney(topupProfile.balanceVnd);
-
-        // Sync with local session/local storage
-        const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
-        if (userStr) {
-            try {
-                const user = JSON.parse(userStr);
-                user.balanceVnd = topupProfile.balanceVnd;
-                sessionStorage.setItem('userInfo', JSON.stringify(user));
-                sessionStorage.setItem('user', JSON.stringify(user));
-                localStorage.setItem('userInfo', JSON.stringify(user));
-                localStorage.setItem('user', JSON.stringify(user));
-            } catch (e) {
-                console.error('Lỗi lưu balance:', e);
-            }
-        }
-    }
+    initialBalance = topupProfile ? (topupProfile.balanceVnd || 0) : 0;
 
     renderTransferInstruction(amount);
-    appendMockTopupTransaction(amount);
-    showTopupMessage('Nạp tiền thành công! Số dư ví của bạn đã được cập nhật.', 'success');
+    showTopupMessage('Hướng dẫn chuyển khoản đã được tạo. Vui lòng quét mã QR hoặc chuyển khoản để hoàn tất giao dịch.', 'warning');
+
+    startBalancePolling(amount);
+}
+
+function startBalancePolling(topupAmount) {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+    }
+
+    console.log('[Topup Polling] Bắt đầu kiểm tra số dư tự động...');
+
+    pollingInterval = setInterval(async () => {
+        try {
+            const response = await authFetch('/v1/profile');
+            if (response.ok) {
+                const profile = await response.json();
+                const currentBalance = profile.balanceVnd || 0;
+
+                if (currentBalance > initialBalance) {
+                    clearInterval(pollingInterval);
+                    pollingInterval = null;
+
+                    const addedAmount = currentBalance - initialBalance;
+                    
+                    topupProfile.balanceVnd = currentBalance;
+                    document.getElementById('topupBalance').textContent = formatMoney(currentBalance);
+
+                    const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
+                    if (userStr) {
+                        try {
+                            const user = JSON.parse(userStr);
+                            user.balanceVnd = currentBalance;
+                            sessionStorage.setItem('userInfo', JSON.stringify(user));
+                            sessionStorage.setItem('user', JSON.stringify(user));
+                            localStorage.setItem('userInfo', JSON.stringify(user));
+                            localStorage.setItem('user', JSON.stringify(user));
+                        } catch (e) {
+                            console.error('Error saving balance:', e);
+                        }
+                    }
+
+                    const badge = document.querySelector('.topup-instruction .ds-badge');
+                    if (badge) {
+                        badge.textContent = 'Thành công';
+                        badge.className = 'ds-badge ds-badge-success';
+                    }
+
+                    appendMockTopupTransaction(addedAmount);
+
+                    showTopupMessage(`Nạp tiền thành công! Bạn đã được cộng +${formatMoney(addedAmount)} vào tài khoản.`, 'success');
+                }
+            }
+        } catch (err) {
+            console.error('Error polling balance:', err);
+        }
+    }, 5000);
 }
 
 function validateAmount(amount) {
@@ -144,15 +200,30 @@ function validateAmount(amount) {
 
 function renderTransferInstruction(amount) {
     currentTransferContent = createTransferContent();
+    
+    document.getElementById('topupBankName').textContent = sepayConfig.bankId;
+    document.getElementById('topupBankAccountName').textContent = sepayConfig.accountName;
+    document.getElementById('topupBankAccount').textContent = sepayConfig.accountNumber;
+    
     document.getElementById('topupTransferAmount').textContent = formatMoney(amount);
     document.getElementById('topupTransferContent').textContent = currentTransferContent;
+    
+    const qrUrl = `https://img.vietqr.io/image/${sepayConfig.bankId}-${sepayConfig.accountNumber}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(currentTransferContent)}&accountName=${encodeURIComponent(sepayConfig.accountName)}`;
+    document.getElementById('topupQrCode').src = qrUrl;
+    
+    const badge = document.querySelector('.topup-instruction .ds-badge');
+    if (badge) {
+        badge.textContent = 'Đang chờ thanh toán';
+        badge.className = 'ds-badge ds-badge-warning';
+    }
+
     document.getElementById('topupInstruction').hidden = false;
     document.getElementById('topupInstruction').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function createTransferContent() {
     const userPart = topupProfile?.id || topupProfile?.userId || 'USER';
-    return `MMO TOPUP ${userPart} ${Date.now().toString().slice(-6)}`;
+    return `MMO TOPUP ${userPart}`;
 }
 
 function getUserSpecificKey(baseKey) {

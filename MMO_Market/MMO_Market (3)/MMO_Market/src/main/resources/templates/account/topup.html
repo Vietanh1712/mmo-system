@@ -104,29 +104,39 @@
                             </div>
                             <span class="ds-badge ds-badge-warning">Đang chờ thanh toán</span>
                         </div>
-
-                        <div class="topup-bank-grid">
-                            <div class="topup-bank-row">
-                                <span>Ngân hàng</span>
-                                <strong>MB Bank</strong>
-                            </div>
-                            <div class="topup-bank-row">
-                                <span>Số tài khoản</span>
-                                <strong id="topupBankAccount">0123456789</strong>
-                            </div>
-                            <div class="topup-bank-row">
-                                <span>Số tiền</span>
-                                <strong id="topupTransferAmount">0 đ</strong>
-                            </div>
-                            <div class="topup-bank-row topup-bank-row--content">
-                                <span>Nội dung chuyển khoản</span>
-                                <div>
-                                    <strong id="topupTransferContent">MMO TOPUP</strong>
-                                    <button class="ds-btn ds-btn-outline ds-btn-sm" id="copyTransferContentButton" type="button">
-                                        <i class="fa fa-copy" aria-hidden="true"></i>
-                                        Copy
-                                    </button>
+                        <div class="topup-instruction-details">
+                            <div class="topup-bank-grid">
+                                <div class="topup-bank-row">
+                                    <span>Ngân hàng</span>
+                                    <strong id="topupBankName">MB Bank</strong>
                                 </div>
+                                <div class="topup-bank-row">
+                                    <span>Tên chủ tài khoản</span>
+                                    <strong id="topupBankAccountName">NGUYEN THI NGOC LINH</strong>
+                                </div>
+                                <div class="topup-bank-row">
+                                    <span>Số tài khoản</span>
+                                    <strong id="topupBankAccount">0123456789</strong>
+                                </div>
+                                <div class="topup-bank-row">
+                                    <span>Số tiền</span>
+                                    <strong id="topupTransferAmount">0 đ</strong>
+                                </div>
+                                <div class="topup-bank-row topup-bank-row--content">
+                                    <span>Nội dung chuyển khoản</span>
+                                    <div>
+                                        <strong id="topupTransferContent">MMO TOPUP</strong>
+                                        <button class="ds-btn ds-btn-outline ds-btn-sm" id="copyTransferContentButton" type="button">
+                                            <i class="fa fa-copy" aria-hidden="true"></i>
+                                            Copy
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="topup-qr-container">
+                                <img id="topupQrCode" src="" alt="VietQR Code" style="max-width: 220px; border: 1px solid var(--ds-border); border-radius: var(--ds-radius-lg); padding: 12px; background: #ffffff; width: 100%; height: auto;" />
+                                <p class="ds-caption" style="text-align: center; margin-top: 8px; font-weight: 500;">Mở App ngân hàng quét mã QR để chuyển khoản tự động</p>
                             </div>
                         </div>
 
