@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đóng cửa hàng - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/seller.css}">
+    <link rel="stylesheet" th:href="@{/css/shop-settings.css}">
+</head>
+<body>
+<header th:replace="fragments/header :: header"></header>
+
+<main class="seller-page shop-settings-page ds-page">
+    <div class="seller-layout">
+        <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('close-shop')}"></aside>
+
+        <section class="shop-settings ds-page-shell">
+            <div class="shop-settings__hero shop-settings__hero--danger ds-card">
+                <div class="shop-settings__hero-main">
+                    <div class="shop-settings__hero-icon shop-settings__hero-icon--danger">
+                        <i class="fa fa-power-off" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <p class="ds-caption">Quản lý trạng thái Shop</p>
+                        <h1 class="ds-heading-lg">Đóng cửa hàng</h1>
+                        <p class="ds-body shop-settings__subtitle">Gửi yêu cầu đóng Shop khi bạn không còn nhu cầu kinh doanh.</p>
+                    </div>
+                </div>
+                <span class="ds-badge ds-badge-danger">Hành động quan trọng</span>
+            </div>
+
+            <section class="shop-settings__card ds-card">
+                <h2 class="ds-heading-md">Trước khi đóng Shop</h2>
+                <div class="shop-close-checklist">
+                    <div><i class="fa fa-check-circle" aria-hidden="true"></i><span>Hoàn tất toàn bộ đơn hàng đang xử lý.</span></div>
+                    <div><i class="fa fa-check-circle" aria-hidden="true"></i><span>Giải quyết các khiếu nại và yêu cầu hỗ trợ còn mở.</span></div>
+                    <div><i class="fa fa-check-circle" aria-hidden="true"></i><span>Rút số dư khả dụng trước khi gửi yêu cầu.</span></div>
+                </div>
+            </section>
+
+            <form class="shop-settings__card ds-card" id="closeShopForm" novalidate>
+                <div class="shop-settings__section-header">
+                    <div>
+                        <h2 class="ds-heading-md">Xác nhận yêu cầu đóng Shop</h2>
+                        <p class="ds-caption">Sau khi xác nhận, Shop sẽ ngừng nhận đơn và cần Staff hỗ trợ nếu muốn mở lại.</p>
+                    </div>
+                    <i class="fa fa-lock" aria-hidden="true"></i>
+                </div>
+
+                <div class="ds-alert ds-alert-danger">Toàn bộ sản phẩm sẽ bị ẩn và khách hàng không thể tạo đơn mới.</div>
+
+                <div class="ds-form-field shop-settings__form-offset">
+                    <label class="ds-label" for="closeShopReason">Lý do đóng Shop</label>
+                    <select class="ds-select" id="closeShopReason">
+                        <option value="">Chọn lý do</option>
+                        <option value="NO_DEMAND">Không còn nhu cầu kinh doanh</option>
+                        <option value="BUSINESS_CHANGE">Thay đổi mô hình kinh doanh</option>
+                        <option value="OPERATION_ISSUE">Gặp vấn đề khi vận hành</option>
+                        <option value="OTHER">Lý do khác</option>
+                    </select>
+                    <small class="ds-error-text" id="closeShopReasonError"></small>
+                </div>
+
+                <div class="ds-form-field shop-settings__form-offset" id="otherReasonField" hidden>
+                    <label class="ds-label" for="closeShopOtherReason">Nhập lý do khác</label>
+                    <textarea class="ds-textarea" id="closeShopOtherReason" maxlength="500" rows="4" placeholder="Mô tả lý do bạn muốn đóng Shop"></textarea>
+                    <small class="ds-error-text" id="closeShopOtherReasonError"></small>
+                </div>
+
+                <div class="ds-form-field shop-settings__form-offset">
+                    <label class="ds-label" for="closeShopPassword">Nhập mật khẩu để xác nhận</label>
+                    <div class="shop-password-field">
+                        <input class="ds-input" id="closeShopPassword" type="password" autocomplete="current-password" placeholder="Mật khẩu tài khoản">
+                        <button type="button" id="toggleCloseShopPassword" aria-label="Hiện mật khẩu">
+                            <i class="fa fa-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <small class="ds-error-text" id="closeShopPasswordError"></small>
+                </div>
+
+                <div class="shop-settings__actions shop-settings__actions--between">
+                    <a class="ds-btn ds-btn-outline" th:href="@{/seller/shop-info}">Quay lại thông tin Shop</a>
+                    <button class="ds-btn ds-btn-danger" type="submit">
+                        <i class="fa fa-power-off" aria-hidden="true"></i> Xác nhận đóng Shop
+                    </button>
+                </div>
+            </form>
+        </section>
+    </div>
+</main>
+
+<div class="ds-toast-container" id="shopToastContainer" aria-live="polite"></div>
+<footer th:replace="fragments/footer :: footer"></footer>
+<script th:src="@{/js/seller-close-shop.js}"></script>
+</body>
+</html>

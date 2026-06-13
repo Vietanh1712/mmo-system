@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký mở Shop - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/shop-registration.css}">
+</head>
+<body>
+<header th:replace="fragments/header :: header"></header>
+
+<main class="profile-page ds-page">
+    <div class="ds-container">
+        <div class="profile-layout ds-two-column">
+            <aside th:replace="~{fragments/account-sidebar :: accountSidebar('register-shop')}"></aside>
+
+            <section class="shop-registration ds-page-shell">
+                <div class="shop-registration__hero ds-card">
+                    <div>
+                        <p class="ds-caption">Nâng cấp tài khoản</p>
+                        <h1 class="ds-heading-lg">Đăng ký mở Shop</h1>
+                        <p class="ds-body shop-registration__subtitle">
+                            Gửi yêu cầu trở thành Seller để đăng bán sản phẩm số trên MMO Market.
+                        </p>
+                    </div>
+                    <span class="ds-badge ds-badge-muted" id="shopRegistrationStatus">Chưa đăng ký</span>
+                </div>
+
+                <div class="ds-alert ds-alert-info" id="shopRegistrationMessage">
+                    Hồ sơ cần được định danh KYC trước khi gửi yêu cầu mở Shop.
+                </div>
+
+                <section class="shop-registration__requirements ds-card">
+                    <div class="ds-cluster-between">
+                        <div>
+                            <h2 class="ds-heading-md">Điều kiện mở Shop</h2>
+                            <p class="ds-caption">Hoàn tất các điều kiện bắt buộc trước khi gửi yêu cầu.</p>
+                        </div>
+                        <span class="shop-registration__progress" id="shopRequirementProgress">2/3 hoàn tất</span>
+                    </div>
+                    <div class="shop-requirement-list">
+                        <div class="shop-requirement shop-requirement--done">
+                            <i class="fa fa-check-circle" aria-hidden="true"></i>
+                            <div><strong>Xác thực email</strong><span>Email tài khoản đã được xác thực.</span></div>
+                        </div>
+                        <div class="shop-requirement shop-requirement--done">
+                            <i class="fa fa-check-circle" aria-hidden="true"></i>
+                            <div><strong>Thông tin cá nhân</strong><span>Hồ sơ cá nhân đã có đủ thông tin cơ bản.</span></div>
+                        </div>
+                        <div class="shop-requirement" id="kycRequirement">
+                            <i class="fa fa-clock-o" aria-hidden="true"></i>
+                            <div><strong>Định danh KYC</strong><span id="kycRequirementText">Chưa xác minh danh tính.</span></div>
+                            <a class="ds-btn ds-btn-outline" th:href="@{/account/kyc}">Kiểm tra KYC</a>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="shop-registration__summary ds-card" id="shopRequestSummary" hidden>
+                    <div class="ds-cluster-between">
+                        <div>
+                            <h2 class="ds-heading-md" id="shopSummaryTitle">Yêu cầu đang chờ xét duyệt</h2>
+                            <p class="ds-caption" id="shopSummaryDescription">Staff sẽ phản hồi yêu cầu trong vòng 1-3 ngày làm việc.</p>
+                        </div>
+                        <div class="shop-registration__summary-actions">
+                            <button class="ds-btn ds-btn-outline" id="shopEditRequestButton" type="button">Chỉnh sửa yêu cầu</button>
+                            <a class="ds-btn ds-btn-primary" id="openSellerPortalButton" th:href="@{/seller/dashboard}" hidden>
+                                Vào Seller Portal
+                            </a>
+                        </div>
+                    </div>
+                    <dl class="shop-registration__meta">
+                        <div><dt>Mã yêu cầu</dt><dd id="shopRequestCode">-</dd></div>
+                        <div><dt>Ngày gửi</dt><dd id="shopRequestDate">-</dd></div>
+                        <div><dt>Tên Shop</dt><dd id="shopRequestName">-</dd></div>
+                        <div><dt>Danh mục chính</dt><dd id="shopRequestCategory">-</dd></div>
+                    </dl>
+                </section>
+
+                <form class="shop-registration__form ds-card" id="shopRegistrationForm" novalidate>
+                    <div class="shop-registration__form-header">
+                        <h2 class="ds-heading-md">Thông tin đăng ký</h2>
+                        <p class="ds-caption">Thông tin sẽ được dùng để xét duyệt và tạo hồ sơ Shop sau khi được chấp thuận.</p>
+                    </div>
+
+                    <div class="ds-form-grid">
+                        <div class="ds-form-field">
+                            <label class="ds-label" for="shopName">Tên Shop</label>
+                            <input class="ds-input" id="shopName" maxlength="80" placeholder="Ví dụ: MMO Premium Store">
+                            <small class="ds-error-text" id="shopNameError"></small>
+                        </div>
+                        <div class="ds-form-field">
+                            <label class="ds-label" for="shopCategory">Danh mục kinh doanh chính</label>
+                            <select class="ds-select" id="shopCategory">
+                                <option value="">Chọn danh mục</option>
+                                <option>Tài khoản Premium</option>
+                                <option>Phần mềm & bản quyền</option>
+                                <option>Mạng xã hội</option>
+                                <option>Game & giải trí</option>
+                                <option>Dịch vụ số khác</option>
+                            </select>
+                            <small class="ds-error-text" id="shopCategoryError"></small>
+                        </div>
+                    </div>
+
+                    <div class="ds-form-field shop-registration__full">
+                        <label class="ds-label" for="shopDescription">Mô tả Shop</label>
+                        <textarea class="ds-textarea" id="shopDescription" maxlength="500" rows="4" placeholder="Mô tả sản phẩm, kinh nghiệm và cam kết dịch vụ của bạn"></textarea>
+                        <small class="ds-error-text" id="shopDescriptionError"></small>
+                    </div>
+
+                    <div class="ds-form-grid shop-registration__full">
+                        <div class="ds-form-field">
+                            <label class="ds-label" for="shopSupportEmail">Email hỗ trợ khách hàng</label>
+                            <input class="ds-input" id="shopSupportEmail" type="email" placeholder="support@example.com">
+                            <small class="ds-error-text" id="shopSupportEmailError"></small>
+                        </div>
+                        <div class="ds-form-field">
+                            <label class="ds-label" for="shopSupportPhone">Số điện thoại hỗ trợ</label>
+                            <input class="ds-input" id="shopSupportPhone" maxlength="15" placeholder="09xxxxxxxx">
+                            <small class="ds-error-text" id="shopSupportPhoneError"></small>
+                        </div>
+                    </div>
+
+                    <label class="shop-registration__confirm">
+                        <input id="shopPolicyConfirm" type="checkbox">
+                        <span>Tôi cam kết tuân thủ chính sách người bán, cung cấp sản phẩm hợp pháp và chịu trách nhiệm với thông tin đăng ký.</span>
+                    </label>
+                    <small class="ds-error-text" id="shopPolicyConfirmError"></small>
+
+                    <div class="ds-alert ds-alert-danger" id="shopFormMessage" hidden></div>
+                    <div class="shop-registration__actions">
+                        <button class="ds-btn ds-btn-primary" id="shopSubmitButton" type="submit">
+                            <i class="fa fa-paper-plane-o" aria-hidden="true"></i> Gửi yêu cầu mở Shop
+                        </button>
+                        <a class="ds-btn ds-btn-outline" th:href="@{/profile}">Quay lại hồ sơ</a>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="fragments/footer :: footer"></footer>
+<script th:src="@{/js/auth.js}"></script>
+<script th:src="@{/js/account-sidebar.js}"></script>
+<script th:src="@{/js/account-register-shop.js}"></script>
+</body>
+</html>

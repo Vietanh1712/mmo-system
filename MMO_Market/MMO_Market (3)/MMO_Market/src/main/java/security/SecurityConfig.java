@@ -62,6 +62,7 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/profile"),
                                 new AntPathRequestMatcher("/account/kyc"),
                                 new AntPathRequestMatcher("/account/security"),
+                                new AntPathRequestMatcher("/account/register-shop"),
                                 new AntPathRequestMatcher("/wallet"),
                                 new AntPathRequestMatcher("/wallet/topup"),
                                 new AntPathRequestMatcher("/wallet/transactions"),

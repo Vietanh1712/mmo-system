@@ -1,0 +1,229 @@
+.shop-settings-page,
+.shop-settings-page button,
+.shop-settings-page input,
+.shop-settings-page select,
+.shop-settings-page textarea,
+.shop-close-modal {
+    font-family: "Roboto", sans-serif;
+}
+
+.shop-settings {
+    display: grid;
+    gap: 20px;
+}
+
+.shop-settings [hidden] {
+    display: none !important;
+}
+
+.shop-settings__hero,
+.shop-settings__card,
+.shop-settings__danger {
+    padding: 24px;
+}
+
+.shop-settings__hero,
+.shop-settings__hero-main,
+.shop-settings__section-header,
+.shop-settings__actions,
+.shop-settings__danger,
+.shop-status-panel {
+    display: flex;
+    align-items: center;
+}
+
+.shop-settings__hero,
+.shop-settings__section-header,
+.shop-settings__danger {
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.shop-settings__hero-main {
+    gap: 16px;
+}
+
+.shop-settings__hero-icon,
+.shop-status-panel__icon {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 12px;
+}
+
+.shop-settings__hero-icon {
+    width: 56px;
+    height: 56px;
+    background: #f1f5f9;
+    color: #0f172a;
+    font-size: 22px;
+}
+
+.shop-settings__hero-icon--danger {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.shop-settings__subtitle,
+.shop-settings__section-header p,
+.shop-settings__danger p {
+    margin: 6px 0 0;
+}
+
+.shop-settings__notice {
+    margin: 0;
+}
+
+.shop-settings__section-header {
+    padding-bottom: 18px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--ds-border);
+}
+
+.shop-settings__section-header > i {
+    color: var(--ds-text-subtle);
+    font-size: 20px;
+}
+
+.shop-settings__full,
+.shop-settings__form-offset {
+    margin-top: 16px;
+}
+
+.shop-settings__actions {
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.shop-settings__actions--between {
+    justify-content: space-between;
+}
+
+.shop-status-panel {
+    gap: 16px;
+    padding: 18px;
+    border: 1px solid #bbf7d0;
+    border-radius: var(--ds-radius-lg);
+    background: #f0fdf4;
+}
+
+.shop-status-panel__icon {
+    width: 44px;
+    height: 44px;
+    background: #dcfce7;
+    color: #15803d;
+    font-size: 20px;
+}
+
+.shop-status-panel__content {
+    display: grid;
+    flex: 1;
+    gap: 5px;
+}
+
+.shop-status-panel__content strong {
+    color: var(--ds-text);
+    font-size: 15px;
+}
+
+.shop-status-panel__content span {
+    color: var(--ds-text-muted);
+    font-size: 13px;
+}
+
+.shop-status-panel.is-paused {
+    border-color: #fde68a;
+    background: #fffbeb;
+}
+
+.shop-status-panel.is-paused .shop-status-panel__icon {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.shop-status-panel.is-closed {
+    border-color: #fecaca;
+    background: #fef2f2;
+}
+
+.shop-status-panel.is-closed .shop-status-panel__icon {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.shop-settings__danger {
+    border-color: #fecaca;
+    background: #fffafa;
+}
+
+.shop-settings__danger p {
+    max-width: 680px;
+    color: var(--ds-text-muted);
+    font-size: 13px;
+}
+
+.shop-close-modal .ds-modal-header h2 {
+    margin: 0;
+}
+
+.shop-close-modal .ds-modal-header p {
+    margin: 5px 0 0;
+}
+
+.shop-close-checklist {
+    display: grid;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.shop-close-checklist div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ds-text-muted);
+    font-size: 13px;
+}
+
+.shop-close-checklist i {
+    color: var(--ds-success);
+    font-size: 17px;
+}
+
+.shop-password-field {
+    position: relative;
+}
+
+.shop-password-field .ds-input {
+    padding-right: 46px;
+}
+
+.shop-password-field button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 42px;
+    height: 40px;
+    border: 0;
+    background: transparent;
+    color: var(--ds-text-muted);
+    cursor: pointer;
+}
+
+@media (max-width: 800px) {
+    .shop-settings__hero,
+    .shop-settings__danger,
+    .shop-status-panel {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .shop-settings__danger .ds-btn,
+    .shop-status-panel .ds-btn {
+        width: 100%;
+    }
+
+    .shop-settings__actions--between {
+        align-items: stretch;
+        flex-direction: column-reverse;
+    }
+}

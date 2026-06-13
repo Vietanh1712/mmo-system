@@ -132,6 +132,17 @@
     color: var(--seller-danger);
 }
 
+.seller-sidebar__menu-link--danger {
+    margin-top: 8px;
+    border-top: 1px solid var(--seller-border);
+    border-radius: 0 0 8px 8px;
+    color: var(--seller-danger);
+}
+
+.seller-sidebar__menu-link--danger i {
+    color: var(--seller-danger);
+}
+
 .seller-card {
     padding: 32px;
     background: #ffffff;

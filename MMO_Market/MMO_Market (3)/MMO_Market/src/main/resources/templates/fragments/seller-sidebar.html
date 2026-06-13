@@ -7,7 +7,7 @@
         <div class="seller-sidebar__avatar">S</div>
         <div class="seller-sidebar__identity">
             <strong class="seller-sidebar__name">Shop MMO Pro</strong>
-            <span class="seller-sidebar__status">Trạng thái: Active</span>
+            <span class="seller-sidebar__status" data-seller-shop-status>Trạng thái: Active</span>
         </div>
     </div>
 
@@ -28,7 +28,7 @@
         <a class="seller-sidebar__menu-link"
            th:classappend="${activeMenu == 'shop-info'} ? ' seller-sidebar__menu-link--active' : ''"
            th:href="@{/seller/shop-info}">
-            <i class="fa fa-store" aria-hidden="true"></i>
+            <i class="fa fa-shopping-basket" aria-hidden="true"></i>
             <span>Thông tin cửa hàng</span>
         </a>
         <a class="seller-sidebar__menu-link"
@@ -60,6 +60,12 @@
            th:href="@{/seller/statistics}">
             <i class="fa fa-bar-chart" aria-hidden="true"></i>
             <span>Thống kê</span>
+        </a>
+        <a class="seller-sidebar__menu-link seller-sidebar__menu-link--danger"
+           th:classappend="${activeMenu == 'close-shop'} ? ' seller-sidebar__menu-link--active' : ''"
+           th:href="@{/seller/close-shop}">
+            <i class="fa fa-power-off" aria-hidden="true"></i>
+            <span>Đóng cửa hàng</span>
         </a>
     </nav>
 </aside>

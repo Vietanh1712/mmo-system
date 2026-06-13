@@ -7,63 +7,118 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/home.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
     <link rel="stylesheet" th:href="@{/css/profile.css}">
     <link rel="stylesheet" th:href="@{/css/seller.css}">
+    <link rel="stylesheet" th:href="@{/css/shop-settings.css}">
 </head>
 <body>
-    <header th:replace="fragments/header :: header"></header>
+<header th:replace="fragments/header :: header"></header>
 
-    <main class="seller-page">
-        <div class="seller-layout">
-            <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('shop-info')}"></aside>
+<main class="seller-page shop-settings-page ds-page">
+    <div class="seller-layout">
+        <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('shop-info')}"></aside>
 
-            <section class="seller-card">
-                <div class="seller-card__header">
-                    <div class="seller-card__header-main">
-                        <div class="seller-card__icon"><i class="fa fa-store"></i></div>
-                        <div>
-                            <h1 class="seller-card__title">Cài đặt thông tin Shop</h1>
-                            <p class="seller-card__subtitle">Thông tin hiển thị công khai và tài khoản nhận tiền</p>
-                        </div>
+        <section class="shop-settings ds-page-shell">
+            <div class="shop-settings__hero ds-card">
+                <div class="shop-settings__hero-main">
+                    <div class="shop-settings__hero-icon"><i class="fa fa-shopping-basket" aria-hidden="true"></i></div>
+                    <div>
+                        <p class="ds-caption">Seller Portal</p>
+                        <h1 class="ds-heading-lg">Thông tin cửa hàng</h1>
+                        <p class="ds-body shop-settings__subtitle">Quản lý thông tin công khai và trạng thái hoạt động của Shop.</p>
                     </div>
-                    <span class="badge ok"><i class="fa fa-check"></i> Active</span>
+                </div>
+                <span class="ds-badge ds-badge-success" id="shopStatusBadge">Đang hoạt động</span>
+            </div>
+
+            <div class="ds-alert ds-alert-success shop-settings__notice" id="shopSettingsNotice" hidden></div>
+
+            <form class="shop-settings__card ds-card" id="shopInfoForm" novalidate>
+                <div class="shop-settings__section-header">
+                    <div>
+                        <h2 class="ds-heading-md">Thông tin hiển thị</h2>
+                        <p class="ds-caption">Khách hàng sẽ nhìn thấy các thông tin này trên trang Shop.</p>
+                    </div>
+                    <i class="fa fa-id-card-o" aria-hidden="true"></i>
                 </div>
 
-                <form class="profile-edit-form seller-form-panel" novalidate>
-                    <div class="profile-edit-form__group">
-                        <label for="shopName">Tên cửa hàng</label>
-                        <input id="shopName" type="text" value="Shop MMO Pro">
+                <div class="ds-form-grid">
+                    <div class="ds-form-field">
+                        <label class="ds-label" for="shopName">Tên cửa hàng</label>
+                        <input class="ds-input" id="shopName" maxlength="80" value="Shop MMO Pro">
+                        <small class="ds-error-text" id="shopNameError"></small>
                     </div>
-                    <div class="profile-edit-form__group">
-                        <label for="shopDesc">Mô tả cửa hàng</label>
-                        <input id="shopDesc" type="text" value="Chuyên tài khoản premium, key bản quyền uy tín.">
+                    <div class="ds-form-field">
+                        <label class="ds-label" for="supportEmail">Email hỗ trợ</label>
+                        <input class="ds-input" id="supportEmail" type="email" value="support@mmopro.vn">
                     </div>
-                    <div class="profile-edit-form__group">
-                        <label for="shopLogo">Logo cửa hàng</label>
-                        <input id="shopLogo" type="file" disabled>
-                        <small class="profile-edit-form__hint">Tính năng upload sẽ được kích hoạt ở phiên bản sau.</small>
-                    </div>
+                </div>
+                <div class="ds-form-field shop-settings__full">
+                    <label class="ds-label" for="shopDesc">Mô tả cửa hàng</label>
+                    <textarea class="ds-textarea" id="shopDesc" maxlength="500" rows="4">Chuyên tài khoản premium, key bản quyền uy tín.</textarea>
+                </div>
+                <div class="shop-settings__actions">
+                    <button class="ds-btn ds-btn-primary" type="submit">
+                        <i class="fa fa-save" aria-hidden="true"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </form>
 
-                    <h2 class="seller-section__title">Thông tin ngân hàng (SellerBankInfo)</h2>
-                    <div class="profile-edit-form__group">
-                        <label for="bankName">Ngân hàng</label>
-                        <input id="bankName" type="text" value="Vietcombank">
+            <section class="shop-settings__card ds-card">
+                <div class="shop-settings__section-header">
+                    <div>
+                        <h2 class="ds-heading-md">Thông tin nhận tiền</h2>
+                        <p class="ds-caption">Tài khoản ngân hàng dùng để nhận yêu cầu rút tiền.</p>
                     </div>
-                    <div class="profile-edit-form__group">
-                        <label for="accountNumber">Số tài khoản</label>
-                        <input id="accountNumber" type="text" value="0123456789">
+                    <i class="fa fa-bank" aria-hidden="true"></i>
+                </div>
+                <div class="ds-alert ds-alert-info">Thay đổi tài khoản ngân hàng có thể cần Staff xác minh lại trước khi rút tiền.</div>
+                <div class="ds-form-grid shop-settings__form-offset">
+                    <div class="ds-form-field">
+                        <label class="ds-label" for="bankName">Ngân hàng</label>
+                        <select class="ds-select" id="bankName">
+                            <option>Vietcombank</option>
+                            <option>MB Bank</option>
+                            <option>Techcombank</option>
+                            <option>VietinBank</option>
+                        </select>
                     </div>
-                    <div class="profile-edit-form__group">
-                        <label for="accountHolder">Chủ tài khoản</label>
-                        <input id="accountHolder" type="text" value="NGUYEN VAN A">
+                    <div class="ds-form-field">
+                        <label class="ds-label" for="accountNumber">Số tài khoản</label>
+                        <input class="ds-input" id="accountNumber" inputmode="numeric" value="0123456789">
                     </div>
-
-                    <div class="profile-actions">
-                        <button class="profile-button profile-button--primary" type="button" disabled>Lưu thay đổi</button>
+                    <div class="ds-form-field">
+                        <label class="ds-label" for="accountHolder">Chủ tài khoản</label>
+                        <input class="ds-input" id="accountHolder" value="NGUYEN VAN A">
                     </div>
-                </form>
+                </div>
             </section>
-        </div>
-    </main>
+
+            <section class="shop-settings__card ds-card">
+                <div class="shop-settings__section-header">
+                    <div>
+                        <h2 class="ds-heading-md">Trạng thái hoạt động</h2>
+                        <p class="ds-caption">Tạm dừng nhận đơn mới khi bạn cần bảo trì hoặc nghỉ bán.</p>
+                    </div>
+                    <i class="fa fa-power-off" aria-hidden="true"></i>
+                </div>
+                <div class="shop-status-panel">
+                    <div class="shop-status-panel__icon" id="shopStatusIcon"><i class="fa fa-check-circle" aria-hidden="true"></i></div>
+                    <div class="shop-status-panel__content">
+                        <strong id="shopStatusTitle">Shop đang hoạt động</strong>
+                        <span id="shopStatusDescription">Sản phẩm đang hiển thị và khách hàng có thể tạo đơn mới.</span>
+                    </div>
+                    <button class="ds-btn ds-btn-outline" id="toggleShopStatusButton" type="button">Tạm đóng cửa hàng</button>
+                </div>
+            </section>
+
+        </section>
+    </div>
+</main>
+
+<div class="ds-toast-container" id="shopToastContainer" aria-live="polite"></div>
+<footer th:replace="fragments/footer :: footer"></footer>
+<script th:src="@{/js/seller-shop-settings.js}"></script>
 </body>
 </html>

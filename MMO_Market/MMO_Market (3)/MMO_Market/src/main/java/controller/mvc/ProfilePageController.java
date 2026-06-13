@@ -21,6 +21,11 @@ public class ProfilePageController {
         return "account/security";
     }
 
+    @GetMapping("/account/register-shop")
+    public String showRegisterShopPage() {
+        return "account/register-shop";
+    }
+
     @GetMapping("/wallet")
     public String showWalletPage() {
         return "account/wallet";

@@ -6,27 +6,26 @@
   <component name="ChangeListManager">
     <list default="true" id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/design-system/docs/EXPORT_REPORT.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/design-system/docs/EXPORT_REPORT.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/design-system/docs/UI_GUIDELINE.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/design-system/docs/UI_GUIDELINE.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/design-system/examples/filter-search-sort-example.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/design-system/examples/filter-search-sort-example.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/design-system/examples/forms-example.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/design-system/examples/forms-example.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/2026-06-04_admin_user_profile_columns.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/INSERT_TestProducts.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/MMO_System_Schema.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/RESTORE_Categories_Fresh.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/Thêm tk admin.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/UPDATE_Categories_Hierarchical.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/add_isLocked_to_users.sql" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/controller/mvc/ProfilePageController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/mvc/ProfilePageController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controller/mvc/SellerPageController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/mvc/SellerPageController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/security/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/authen/authen.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/authen/authen.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/filters.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/filters.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/forms.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/forms.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/home.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/home.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/profile.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/profile.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/auth.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/auth.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/profile.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/profile.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/auth/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/auth/login.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/auth/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/auth/register.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/auth/reset-password.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/auth/reset-password.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/auth/verify-otp.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/auth/verify-otp.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/design-system.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/design-system.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/seller.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/seller.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/account-sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/account-sidebar.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/design-system-styles.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/design-system-styles.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/header.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/header.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/profile/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/profile/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/seller-sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/seller-sidebar.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/seller/shop-info.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/seller/shop-info.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/static/components/AdvancedSearchBar.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/components/AdvancedSearchBar.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/static/css/home.css" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/css/home.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/static/js/auth.js" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/js/auth.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/fragments/header.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/fragments/header.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/home.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/home.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -393,7 +392,7 @@
     &quot;Spring Boot.MMOMarketApplication.executor&quot;: &quot;Debug&quot;,
     &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;AnhTV&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/SU26/SWP/mmo-system/MMO_Market/MMO_Market (3)/MMO_Market&quot;,
@@ -554,6 +553,8 @@
       <workItem from="1780555178005" duration="7933000" />
       <workItem from="1780568312769" duration="463000" />
       <workItem from="1780572336460" duration="8273000" />
+      <workItem from="1781023221732" duration="876000" />
+      <workItem from="1781316260702" duration="1797000" />
     </task>
     <servers />
   </component>
