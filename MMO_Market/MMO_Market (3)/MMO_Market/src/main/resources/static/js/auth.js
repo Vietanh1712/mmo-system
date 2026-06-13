@@ -200,8 +200,6 @@ function resolvePostLoginRedirect(roleValue, redirectPathFromApi) {
     let roleTarget = '/';
     if (role === 'Admin') {
         roleTarget = '/admin/users';
-    } else if (role === 'Staff') {
-        roleTarget = '/staff/dashboard';
     } else if (isSellerRole(role)) {
         roleTarget = '/seller/dashboard';
     }
@@ -209,6 +207,9 @@ function resolvePostLoginRedirect(roleValue, redirectPathFromApi) {
     if (redirectPathFromApi && typeof redirectPathFromApi === 'string') {
         const path = redirectPathFromApi.trim();
         if (path.startsWith('/') && path !== '/' && path !== '/index') {
+            if (role === 'Staff' && path.startsWith('/staff')) {
+                return roleTarget;
+            }
             return path;
         }
     }
