@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Chi tiết giao dịch')}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('transactions')}"></aside>
+
+            <section class="ds-section">
+                <nav class="staff-breadcrumb">
+                    <a href="/staff/transactions">Giao dịch</a>
+                    <span>/</span>
+                    <span>#TXN-99281</span>
+                </nav>
+
+                <div class="staff-page-header">
+                    <div>
+                        <h1 class="ds-page-title">Chi tiết giao dịch</h1>
+                        <p class="ds-page-subtitle">Mã giao dịch #TXN-99281 — Mua hàng</p>
+                    </div>
+                    <span class="ds-badge ds-badge-success">Thành công</span>
+                </div>
+
+                <div class="staff-detail-grid">
+                    <div class="ds-stack-md">
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Thông tin giao dịch</h2>
+                            </div>
+                            <dl class="staff-info-list">
+                                <div class="staff-info-row">
+                                    <dt>Mã giao dịch</dt>
+                                    <dd>#TXN-99281</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Loại giao dịch</dt>
+                                    <dd><span class="ds-badge ds-badge-info">Mua hàng</span></dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Số tiền</dt>
+                                    <dd class="ds-money">350.000 đ</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Phí giao dịch</dt>
+                                    <dd class="ds-money">0 đ</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Phương thức thanh toán</dt>
+                                    <dd>Ví MMO Market</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Thời gian tạo</dt>
+                                    <dd>05/06/2026 09:12:34</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Thời gian hoàn tất</dt>
+                                    <dd>05/06/2026 09:12:41</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Mã tham chiếu</dt>
+                                    <dd>REF-20260605-99281</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Người dùng &amp; đối tượng liên quan</h2>
+                            </div>
+                            <dl class="staff-info-list">
+                                <div class="staff-info-row">
+                                    <dt>Người mua</dt>
+                                    <dd>Nguyễn An — buyer@mmo.com</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Seller / Shop</dt>
+                                    <dd>GameHub Pro — seller.gamehub@mmo.com</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Mã đơn hàng</dt>
+                                    <dd><a href="#">#ORD-9921</a></dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Sản phẩm</dt>
+                                    <dd>Gmail Premium — 1 tài khoản</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Số dư trước GD</dt>
+                                    <dd class="ds-money">1.250.000 đ</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Số dư sau GD</dt>
+                                    <dd class="ds-money">900.000 đ</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Lịch sử trạng thái</h2>
+                            </div>
+                            <div class="staff-timeline">
+                                <div class="staff-timeline__item">
+                                    <span class="staff-timeline__dot"></span>
+                                    <div class="staff-timeline__content">
+                                        <strong>Khởi tạo giao dịch</strong>
+                                        <p class="ds-caption">Hệ thống — 05/06/2026 09:12:34</p>
+                                    </div>
+                                </div>
+                                <div class="staff-timeline__item">
+                                    <span class="staff-timeline__dot"></span>
+                                    <div class="staff-timeline__content">
+                                        <strong>Trừ tiền ví người mua</strong>
+                                        <p class="ds-caption">Ví — 05/06/2026 09:12:36</p>
+                                    </div>
+                                </div>
+                                <div class="staff-timeline__item">
+                                    <span class="staff-timeline__dot"></span>
+                                    <div class="staff-timeline__content">
+                                        <strong>Giao dịch thành công</strong>
+                                        <p class="ds-caption">Hệ thống — 05/06/2026 09:12:41</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ds-stack-md">
+                        <div class="ds-card staff-action-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Tóm tắt</h2>
+                            </div>
+                            <div class="ds-alert ds-alert-success">Giao dịch đã hoàn tất, tiền đã được giữ bảo lãnh theo quy trình C2C.</div>
+                            <dl class="staff-info-list">
+                                <div class="staff-info-row">
+                                    <dt>Trạng thái đơn</dt>
+                                    <dd><span class="ds-badge ds-badge-success">Đã giao</span></dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Giữ tiền bảo lãnh</dt>
+                                    <dd>72 giờ (còn 58 giờ)</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <div class="ds-card staff-action-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Ghi chú nội bộ (Staff)</h2>
+                            </div>
+                            <div class="ds-alert ds-alert-info">Giao diện demo — chưa kết nối backend.</div>
+                            <div class="ds-form-field">
+                                <label class="ds-label" for="txnNote">Ghi chú xử lý</label>
+                                <textarea class="ds-textarea" id="txnNote" placeholder="Ghi chú đối soát, tra soát, liên hệ user..."></textarea>
+                            </div>
+                            <div class="ds-cluster">
+                                <button class="ds-btn ds-btn-primary" type="button" data-staff-action="save" data-staff-label="Đã lưu ghi chú giao dịch">Lưu ghi chú</button>
+                            </div>
+                            <div class="ds-stack-sm ds-mt-md">
+                                <a class="ds-btn ds-btn-outline" href="/staff/complaints/detail">Xem khiếu nại liên quan</a>
+                                <a class="ds-btn ds-btn-outline" href="/staff/transactions">Quay lại danh sách</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/auth.js}"></script>
+<script th:src="@{/js/staff-ui.js}"></script>
+</body>
+</html>
