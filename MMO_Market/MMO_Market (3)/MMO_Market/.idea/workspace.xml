@@ -5,26 +5,88 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../../.vscode/settings.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.ai/mcp/mcp.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sql_scripts/Can_fix_database/20260612.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sql_scripts/Can_fix_database/20261106.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sql_scripts/FIX_Categories_Vietnamese_UTF8.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sql_scripts/MMO_sql/MMO_System_Complete_Database.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sql_scripts/SEED_Products_Fresh.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/controller/TopupController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/controller/dto/FeaturedProductDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/controller/dto/GoogleLoginRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/controller/dto/ProductDetailDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/controller/dto/ReviewResponseDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/controller/dto/SePayWebhookRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/dal/ReviewRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/dal/TopupTransactionRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/dal/TransactionRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/model/Review.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/model/TopupTransaction.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/model/Transaction.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/service/EmailService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/service/TopupService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/css/leave-feedback.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/css/shop.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/templates/account/leave-feedback.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/templates/shop.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sql_scripts/2026-06-04_admin_user_profile_columns.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sql_scripts/INSERT_TestProducts.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sql_scripts/MMO_System_Schema.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sql_scripts/RESTORE_Categories_Fresh.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sql_scripts/Thêm tk admin.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sql_scripts/UPDATE_Categories_Hierarchical.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sql_scripts/add_isLocked_to_users.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/migration/20260604_004_UPDATE_Categories_Hierarchical.sql" beforeDir="false" afterPath="$PROJECT_DIR$/sql_scripts/migration/20260604_004_UPDATE_Categories_Hierarchical.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/mmo/MMOMarketApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/mmo/MMOMarketApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/AuthController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controller/ProductSearchController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/ProductSearchController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controller/dto/ProductSearchResultDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/dto/ProductSearchResultDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controller/mvc/HomeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/mvc/HomeController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/controller/mvc/ProfilePageController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/mvc/ProfilePageController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controller/mvc/SellerPageController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/mvc/SellerPageController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/dal/ProductRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/dal/ProductRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/dal/ProductSpecification.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/dal/ProductSpecification.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/security/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/service/AuthenticationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/AuthenticationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/service/ProductSearchService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/ProductSearchService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/service/ProductService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/ProductService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/authen/authen.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/authen/authen.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/catalog.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/catalog.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/design-system.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/design-system.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/seller.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/seller.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/account-sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/account-sidebar.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/home.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/home.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/messages.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/messages.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/pre-orders.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/pre-orders.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/product-detail.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/product-detail.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/search-results.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/search-results.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/staff-dashboard.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/staff-dashboard.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/staff-management.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/staff-management.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/toast.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/toast.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/topup.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/topup.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/account-order-detail.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/account-order-detail.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/account-orders.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/account-orders.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/account-topup.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/account-topup.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/account-transactions.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/account-transactions.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/account-wallet.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/account-wallet.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/auth.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/auth.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/account/order-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/account/order-detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/account/orders.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/account/orders.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/account/topup.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/account/topup.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/admin/users.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/admin/users.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/auth/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/auth/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/cart.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/cart.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/checkout.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/checkout.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/footer.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/footer.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/seller-sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/seller-sidebar.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/home.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/home.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/messages.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/messages.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/product-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/product-detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/products.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/products.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/search-results.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/search-results.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/templates/seller/shop-info.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/seller/shop-info.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/static/components/AdvancedSearchBar.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/components/AdvancedSearchBar.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/support.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/support.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/static/css/authen/authen.css" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/css/authen/authen.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/static/css/home.css" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/css/home.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/static/js/auth.js" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/js/auth.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/fragments/header.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/fragments/header.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/admin/users.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/admin/users.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/auth/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/auth/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/fragments/footer.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/fragments/footer.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/templates/home.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/home.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -365,55 +427,55 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;JUnit.All in MMO_Market (1).executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.All in MMO_Market (2).executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.All in MMO_Market (3).executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.All in MMO_Market (4).executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.All in MMO_Market (5).executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.All in MMO_Market.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.DBTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.DBTest.testConnection.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.test in MMO_Market.executor&quot;: &quot;Run&quot;,
-    &quot;Maven. [org.apache.maven.plugins:maven-archetype-plugin:RELEASE:generate].executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
-    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
-    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
-    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;Spring Boot.MMOMarketApplication (1).executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.MMOMarketApplication.executor&quot;: &quot;Debug&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/SU26/SWP/mmo-system/MMO_Market/MMO_Market (3)/MMO_Market&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "JUnit.All in MMO_Market (1).executor": "Run",
+    "JUnit.All in MMO_Market (2).executor": "Run",
+    "JUnit.All in MMO_Market (3).executor": "Run",
+    "JUnit.All in MMO_Market (4).executor": "Run",
+    "JUnit.All in MMO_Market (5).executor": "Run",
+    "JUnit.All in MMO_Market.executor": "Run",
+    "JUnit.DBTest.executor": "Run",
+    "JUnit.DBTest.testConnection.executor": "Run",
+    "JUnit.test in MMO_Market.executor": "Run",
+    "Maven. [org.apache.maven.plugins:maven-archetype-plugin:RELEASE:generate].executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "Spring Boot.MMOMarketApplication (1).executor": "Run",
+    "Spring Boot.MMOMarketApplication.executor": "Debug",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "Merging AnhTV",
+    "junie.onboarding.icon.badge.shown": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/SU26/SWP/mmo-system/MMO_Market/MMO_Market (3)/MMO_Market",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;DatabaseDriversLRU&quot;: [
-      &quot;sqlserver&quot;
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "sqlserver"
     ]
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\pc\IdeaProjects\MMO_Market\src\main\webapp" />
@@ -555,6 +617,8 @@
       <workItem from="1780572336460" duration="8273000" />
       <workItem from="1781023221732" duration="876000" />
       <workItem from="1781316260702" duration="1797000" />
+      <workItem from="1781418148501" duration="207000" />
+      <workItem from="1781418449188" duration="311000" />
     </task>
     <servers />
   </component>

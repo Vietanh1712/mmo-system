@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gian hàng - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/search-results.css}">
+    <link rel="stylesheet" th:href="@{/css/shop.css}">
+</head>
+<body class="shop-page-body">
+
+    <header th:replace="fragments/header :: header"></header>
+
+    <!-- 1. BREADCRUMB -->
+    <div class="shop-breadcrumb-container">
+        <nav class="shop-breadcrumb" aria-label="Breadcrumb">
+            <a href="/"><i class="fa fa-home"></i> Trang chủ</a>
+            <i class="fa fa-angle-right shop-breadcrumb__separator"></i>
+            <span>Gian hàng</span>
+            <i class="fa fa-angle-right shop-breadcrumb__separator"></i>
+            <span id="breadcrumb-shop-name" class="shop-breadcrumb__active">Đang tải...</span>
+        </nav>
+    </div>
+
+    <!-- 2. SHOP BANNER & PROFILE PROFILE -->
+    <section class="shop-hero-section">
+        <div class="shop-hero-inner">
+            <div class="shop-profile-card">
+                <div class="shop-profile-card__avatar-wrap">
+                    <div class="shop-profile-card__avatar" id="shop-avatar">S</div>
+                    <span class="shop-profile-card__status-dot"></span>
+                </div>
+                <div class="shop-profile-card__details">
+                    <div class="shop-profile-card__title-row">
+                        <h1 class="shop-profile-card__name" id="shop-name">Đang tải...</h1>
+                        <span id="shop-verified-badge" class="shop-profile-card__verified" style="display: none;">
+                            <i class="fa fa-check-circle"></i> Đã xác minh
+                        </span>
+                    </div>
+                    <p class="shop-profile-card__joined"><i class="fa fa-calendar-o"></i> Tham gia: <span id="shop-joined-date">...</span></p>
+                    <div class="shop-profile-card__actions">
+                        <button type="button" class="shop-profile-card__btn shop-profile-card__btn--chat" onclick="goToShopChat()">
+                            <i class="fa fa-comments"></i> Chat ngay
+                        </button>
+                    </div>
+                </div>
+                <div class="shop-profile-card__divider"></div>
+                <div class="shop-profile-card__stats">
+                    <div class="shop-stat-item">
+                        <span class="shop-stat-item__icon"><i class="fa fa-cubes"></i></span>
+                        <div class="shop-stat-item__content">
+                            <span class="shop-stat-item__value" id="shop-stat-products">0</span>
+                            <span class="shop-stat-item__label">Sản phẩm</span>
+                        </div>
+                    </div>
+                    <div class="shop-stat-item">
+                        <span class="shop-stat-item__icon"><i class="fa fa-star"></i></span>
+                        <div class="shop-stat-item__content">
+                            <span class="shop-stat-item__value" id="shop-stat-rating">4.8</span>
+                            <span class="shop-stat-item__label">Đánh giá</span>
+                        </div>
+                    </div>
+                    <div class="shop-stat-item">
+                        <span class="shop-stat-item__icon"><i class="fa fa-commenting-o"></i></span>
+                        <div class="shop-stat-item__content">
+                            <span class="shop-stat-item__value" id="shop-stat-response">98%</span>
+                            <span class="shop-stat-item__label">Phản hồi</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. MAIN STOREFRONT GRID -->
+    <div class="shop-storefront-container">
+        <div class="shop-storefront-layout">
+            
+            <!-- Left Column: Filter Sidebar (25%) - aligned with products.html -->
+            <aside class="sidebar">
+                <h3 class="filter-title">
+                    <i class="fa fa-filter" style="color: var(--brand-accent); margin-right: 8px;"></i> Bộ lọc sản phẩm
+                </h3>
+
+                <form id="filter-form" onsubmit="applyFilters(event)">
+                    <!-- 1. Categories Filter -->
+                    <div class="filter-group">
+                        <label for="category-filter"><i class="fa fa-tags" style="color: var(--text-muted); margin-right: 6px;"></i> Danh mục</label>
+                        <select id="category-filter" class="filter-select">
+                            <option value="">Tất cả danh mục</option>
+                            <!-- Dynamic Categories will be populated here -->
+                        </select>
+                    </div>
+
+                    <!-- 2. Price Range Filter -->
+                    <div class="filter-group">
+                        <label><i class="fa fa-money" style="color: var(--text-muted); margin-right: 6px;"></i> Khoảng giá</label>
+                        <div class="price-range-wrapper">
+                            <input type="range" id="price-slider" min="0" max="5000000" step="50000" value="5000000"
+                                oninput="updatePriceLabel(this.value)">
+                            <div class="price-labels">
+                                <span>0đ</span>
+                                <span id="price-max-label">5.000.000đ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Stock Status Filter -->
+                    <div class="filter-group">
+                        <label><i class="fa fa-cubes" style="color: var(--text-muted); margin-right: 6px;"></i> Trạng thái kho</label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="stock-instock" checked>
+                            <span>Còn hàng</span>
+                        </label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="stock-outofstock" checked>
+                            <span>Hết hàng</span>
+                        </label>
+                    </div>
+
+                    <!-- 4. Rating Filter -->
+                    <div class="filter-group">
+                        <label><i class="fa fa-star" style="color: var(--text-muted); margin-right: 6px;"></i> Đánh giá</label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" name="rating-filter" value="5">
+                            <span class="rating-stars">
+                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
+                                5 sao
+                            </span>
+                        </label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" name="rating-filter" value="4">
+                            <span class="rating-stars">
+                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star-o"></i>
+                                4+ sao
+                            </span>
+                        </label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" name="rating-filter" value="3">
+                            <span class="rating-stars">
+                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star-o"></i><i class="fa fa-star-o"></i>
+                                3+ sao
+                            </span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-apply"><i class="fa fa-check" style="margin-right: 6px;"></i> Áp dụng bộ lọc</button>
+                </form>
+            </aside>
+
+            <!-- Right Column: Catalog Grid & Toolbar (75%) -->
+            <section class="shop-main-catalog">
+                
+                <!-- Toolbar Header -->
+                <div class="shop-catalog-toolbar">
+                    <div class="shop-catalog-search">
+                        <i class="fa fa-search shop-catalog-search__icon"></i>
+                        <input type="text" id="shop-search-input" class="shop-catalog-search__input" placeholder="Tìm kiếm sản phẩm tại shop này..." onkeypress="handleSearchKeyPress(event)">
+                    </div>
+                    <div class="shop-catalog-sort">
+                        <select id="sort-select" class="sort-select" onchange="handleSortChange(this.value)">
+                            <option value="createdAt,desc">Sắp xếp: Mới nhất</option>
+                            <option value="price,asc">Giá: Thấp đến Cao</option>
+                            <option value="price,desc">Giá: Cao đến Thấp</option>
+                            <option value="averageRating,desc">Đánh giá cao nhất</option>
+                            <option value="productId,desc">Bán chạy nhất</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Active Filter Tags row -->
+                <div class="shop-active-filters-row" id="active-filters-tags" style="display: none;">
+                    <!-- Filter pills -->
+                </div>
+
+                <!-- Product Grid Container -->
+                <div class="product-grid" id="shop-products-container">
+                    <!-- Dynamic rendering -->
+                </div>
+
+                <!-- Pagination Footer -->
+                <div class="shop-pagination-container" id="shop-pagination-container">
+                    <!-- Dynamic pagination -->
+                </div>
+
+            </section>
+
+        </div>
+    </div>
+
+    <footer th:replace="fragments/footer :: footer"></footer>
+
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:inline="javascript">
+        /* Thymeleaf injection of sellerId */
+        const SELLER_ID = /*[[${sellerId}]]*/ 35;
+        
+        let currentKeyword = '';
+        let currentCategoryId = '';
+        let currentMinPrice = '0';
+        let currentMaxPrice = 5000000;
+        let currentStockStatus = '';
+        let currentSort = 'createdAt,desc';
+        let currentPage = 0;
+        let totalPagesCount = 1;
+        let isUsingFallbackMock = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSellerProfile();
+            loadCategories();
+            fetchShopProducts();
+        });
+
+        // Redirect to chat with current seller
+        function goToShopChat() {
+            window.location.href = `/messages?sellerId=${SELLER_ID}`;
+        }
+
+        // Load Seller profile card meta details
+        async function loadSellerProfile() {
+            try {
+                const response = await fetch(`/api/search/seller/${SELLER_ID}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('shop-name').innerText = data.shopName;
+                    document.getElementById('breadcrumb-shop-name').innerText = data.shopName;
+                    document.getElementById('shop-joined-date').innerText = data.joinedDate;
+                    document.getElementById('shop-avatar').innerText = data.shopName.charAt(0).toUpperCase();
+                    
+                    document.getElementById('shop-stat-products').innerText = data.totalProducts;
+                    document.getElementById('shop-stat-rating').innerText = data.rating > 0 ? data.rating.toFixed(1) : 'Chưa có';
+                    document.getElementById('shop-stat-response').innerText = data.responseRate;
+
+                    if (data.isVerified) {
+                        document.getElementById('shop-verified-badge').style.display = 'inline-flex';
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load seller profile details:", err);
+                document.getElementById('shop-name').innerText = "Gian hàng đối tác";
+                document.getElementById('breadcrumb-shop-name').innerText = "Gian hàng đối tác";
+            }
+        }
+
+        // Fetch categories dynamically and populate select dropdown
+        async function loadCategories() {
+            try {
+                const response = await fetch('/api/search/categories');
+                if (response.ok) {
+                    const categories = await response.json();
+                    const select = document.getElementById('category-filter');
+                    if (select) {
+                        select.innerHTML = '<option value="">Tất cả danh mục</option>';
+                        categories.forEach(cat => {
+                            const opt = document.createElement('option');
+                            opt.value = cat.id;
+                            opt.textContent = cat.name;
+                            select.appendChild(opt);
+                        });
+                        select.value = currentCategoryId;
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load categories:", err);
+            }
+        }
+
+        // Update Slider price label
+        function updatePriceLabel(value) {
+            document.getElementById('price-max-label').innerText = formatVND(value);
+        }
+
+        // Format Currency Helper
+        function formatVND(value) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
+                .format(value)
+                .replace('₫', 'VNĐ');
+        }
+
+        // Apply filters (form submit)
+        function applyFilters(e) {
+            if (e) e.preventDefault();
+            currentPage = 0;
+            currentCategoryId = document.getElementById('category-filter').value;
+            currentMaxPrice = parseInt(document.getElementById('price-slider').value);
+
+            const instock = document.getElementById('stock-instock').checked;
+            const outofstock = document.getElementById('stock-outofstock').checked;
+            if (instock && !outofstock) {
+                currentStockStatus = 'In Stock';
+            } else if (!instock && outofstock) {
+                currentStockStatus = 'Out of Stock';
+            } else {
+                currentStockStatus = '';
+            }
+
+            fetchShopProducts();
+        }
+
+        // Trigger internal search query
+        function handleSearchKeyPress(event) {
+            if (event.key === 'Enter') {
+                currentKeyword = document.getElementById('shop-search-input').value.trim();
+                currentPage = 0;
+                fetchShopProducts();
+            }
+        }
+
+        // Handle Sort Dropdown changes
+        function handleSortChange(sortVal) {
+            currentSort = sortVal;
+            currentPage = 0;
+            fetchShopProducts();
+        }
+
+        // Main loader
+        async function fetchShopProducts() {
+            const params = new URLSearchParams();
+            params.append('sellerId', SELLER_ID);
+            params.append('page', currentPage.toString());
+            params.append('size', '12');
+
+            if (currentKeyword) params.append('keyword', currentKeyword);
+            if (currentCategoryId) params.append('categoryId', currentCategoryId);
+            if (currentMaxPrice) {
+                params.append('minPrice', '0');
+                params.append('maxPrice', currentMaxPrice.toString());
+            }
+            if (currentStockStatus) params.append('stockStatus', currentStockStatus);
+            
+            const sortParts = currentSort.split(',');
+            params.append('sort', sortParts[0] + ',' + (sortParts[1] || 'desc'));
+
+            try {
+                const response = await fetch(`/api/search/products?${params.toString()}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.content && data.content.length > 0) {
+                        isUsingFallbackMock = false;
+                        renderShopProducts(data.content);
+                        renderShopPagination(data.totalPages, data.number);
+                        updateActiveFiltersRow();
+                    } else {
+                        loadFallbackShopMock();
+                    }
+                } else {
+                    loadFallbackShopMock();
+                }
+            } catch (err) {
+                console.error("API error, falling back to mock catalog:", err);
+                loadFallbackShopMock();
+            }
+        }
+
+        // Mock product mapping matching root catalog design patterns
+        const MOCK_DATASET = [
+            { id: 1, sellerId: 1, name: "Tài khoản Netflix Premium 4K UHD 1 Tháng (Xem riêng 1 thiết bị, bảo hành 1 đổi 1)", price: 65000, stock: 156, categoryId: 2, categoryName: "Tài khoản Premium", averageRating: 5.0 },
+            { id: 2, sellerId: 2, name: "Tài khoản Netflix Premium 4K UHD Gói 1 Năm (Chính chủ gia hạn ổn định)", price: 650000, stock: 42, categoryId: 2, categoryName: "Tài khoản Premium", averageRating: 4.9 },
+            { id: 3, sellerId: 3, name: "Tài khoản ChatGPT Plus (OpenAI GPT-4o) Chính Chủ Sẵn 20$ Hạn 1 Tháng", price: 150000, stock: 89, categoryId: 2, categoryName: "Tài khoản Premium", averageRating: 4.8 },
+            { id: 4, sellerId: 4, name: "Spotify Premium 1 Năm Giá Siêu Rẻ (Nâng cấp Family email của bạn)", price: 250000, stock: 45, categoryId: 2, categoryName: "Tài khoản Premium", averageRating: 4.7 },
+            { id: 5, sellerId: 5, name: "Key Windows 11 Pro Bản Quyền Vĩnh Viễn (Kèm hướng dẫn active chi tiết)", price: 99000, stock: 999, categoryId: 3, categoryName: "Phần mềm", averageRating: 5.0 },
+            { id: 6, sellerId: 6, name: "Youtube Premium Không Quảng Cáo 6 Tháng (Add Family bao chạy mượt)", price: 120000, stock: 230, categoryId: 2, categoryName: "Tài khoản Premium", averageRating: 4.9 },
+            { id: 7, sellerId: 7, name: "Gói Canva Pro 1 Năm (Nâng cấp trực tiếp tài khoản cá nhân chính chủ)", price: 180000, stock: 350, categoryId: 2, categoryName: "Tài khoản Premium", averageRating: 4.8 },
+            { id: 8, sellerId: 8, name: "Tài khoản Gmail Ngoại Cổ (Đăng ký từ 2015-2018, thích hợp làm Ads/Kênh)", price: 12000, stock: 1200, categoryId: 1, categoryName: "Email", averageRating: 4.6 },
+            { id: 9, sellerId: 9, name: "NordVPN Premium 2 Năm (Bảo mật cao, tốc độ cao, hỗ trợ nhiều thiết bị)", price: 350000, stock: 0, categoryId: 2, categoryName: "Tài khoản Premium", averageRating: 4.8 },
+            { id: 10, sellerId: 10, name: "Tài khoản TikTok phân khúc US sẵn Quỹ Tác Giả (Follower thực > 10K)", price: 1250000, stock: 8, categoryId: 5, categoryName: "Tài khoản MXH", averageRating: 4.9 },
+            { id: 11, sellerId: 2, name: "Trust Wallet / MetaMask tạo sẵn (Có 12 từ khóa khôi phục, an toàn)", price: 50000, stock: 99, categoryId: 7, categoryName: "Khác", averageRating: 4.5 },
+            { id: 12, sellerId: 12, name: "Thiết kế Banner MMO / Cover Facebook chuyên nghiệp trọn gói", price: 300000, stock: 50, categoryId: 6, categoryName: "Dịch vụ", averageRating: 4.6 }
+        ];
+
+        // Fetch mock objects if SQL database is empty (ensures high-fidelity sandbox)
+        function loadFallbackShopMock() {
+            isUsingFallbackMock = true;
+            let filtered = MOCK_DATASET.filter(p => p.sellerId == SELLER_ID);
+
+            // Filter keyword
+            if (currentKeyword) {
+                const kw = currentKeyword.toLowerCase();
+                filtered = filtered.filter(p => p.name.toLowerCase().includes(kw));
+            }
+
+            // Filter category
+            if (currentCategoryId) {
+                filtered = filtered.filter(p => p.categoryId == currentCategoryId);
+            }
+
+            // Filter prices
+            filtered = filtered.filter(p => p.price <= currentMaxPrice);
+
+            // Filter Stock Status
+            if (currentStockStatus === 'In Stock') {
+                filtered = filtered.filter(p => p.stock > 0);
+            } else if (currentStockStatus === 'Out of Stock') {
+                filtered = filtered.filter(p => p.stock === 0);
+            }
+
+            // Filter Rating Stars
+            const ratingChecks = document.querySelectorAll('input[name="rating-filter"]:checked');
+            if (ratingChecks.length > 0) {
+                const minRating = Math.min(...Array.from(ratingChecks).map(c => parseInt(c.value)));
+                filtered = filtered.filter(p => p.averageRating >= minRating);
+            }
+
+            // Sort logic
+            if (currentSort === 'price,asc') {
+                filtered.sort((a, b) => a.price - b.price);
+            } else if (currentSort === 'price,desc') {
+                filtered.sort((a, b) => b.price - a.price);
+            } else if (currentSort === 'averageRating,desc') {
+                filtered.sort((a, b) => b.averageRating - a.averageRating);
+            } else if (currentSort === 'productId,desc') {
+                filtered.sort((a, b) => b.id - a.id);
+            } else {
+                filtered.sort((a, b) => b.id - a.id); // mock newest
+            }
+
+            const totalElements = filtered.length;
+            const size = 12;
+            const totalPages = Math.max(1, Math.ceil(totalElements / size));
+            
+            if (currentPage >= totalPages) currentPage = 0;
+            const sliceStart = currentPage * size;
+            const items = filtered.slice(sliceStart, sliceStart + size);
+
+            renderShopProducts(items.map(p => ({
+                productId: p.id,
+                productName: p.name,
+                price: p.price,
+                stock: p.stock,
+                categoryName: p.categoryName,
+                averageRating: (p.averageRating !== undefined && p.averageRating !== null) ? p.averageRating : 0,
+                sellerIsVerified: true,
+                imageUrl: ''
+            })));
+
+            renderShopPagination(totalPages, currentPage);
+            updateActiveFiltersRow();
+        }
+
+        // Helper to match products to homepage-styled icons exactly like search-results.html
+        function getProductIconAndColor(productName) {
+            const nameLower = productName.toLowerCase();
+            if (nameLower.includes('netflix')) { return { icon: 'fa-play-circle', color: '#E50914' }; }
+            else if (nameLower.includes('chatgpt') || nameLower.includes('gpt')) { return { icon: 'fa-comments', color: '#10a37f' }; }
+            else if (nameLower.includes('spotify')) { return { icon: 'fa-music', color: '#1DB954' }; }
+            else if (nameLower.includes('windows') || nameLower.includes('win')) { return { icon: 'fa-windows', color: '#0078d4' }; }
+            else if (nameLower.includes('youtube')) { return { icon: 'fa-youtube-play', color: '#FF0000' }; }
+            else if (nameLower.includes('canva')) { return { icon: 'fa-paint-brush', color: '#00c4cc' }; }
+            else if (nameLower.includes('gmail')) { return { icon: 'fa-envelope', color: '#ea4335' }; }
+            else if (nameLower.includes('facebook') || nameLower.includes('fb')) { return { icon: 'fa-facebook-square', color: '#1877F2' }; }
+            else if (nameLower.includes('vpn') || nameLower.includes('nordvpn')) { return { icon: 'fa-shield', color: '#4682b4' }; }
+            else if (nameLower.includes('tiktok')) { return { icon: 'fa-video-camera', color: '#010101' }; }
+            else if (nameLower.includes('wallet') || nameLower.includes('crypto') || nameLower.includes('trust')) { return { icon: 'fa-btc', color: '#f7931a' }; }
+            else if (nameLower.includes('logo') || nameLower.includes('thiết kế') || nameLower.includes('design') || nameLower.includes('banner')) { return { icon: 'fa-paint-brush', color: '#7c3aed' }; }
+            else { return { icon: 'fa-cube', color: '#94a3b8' }; }
+        }
+
+        // Render card lists
+        function renderShopProducts(items) {
+            const container = document.getElementById('shop-products-container');
+            container.innerHTML = '';
+            window.currentRenderedProducts = items;
+
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="no-results-container">
+                        <div class="no-results-icon"><i class="fa fa-search"></i></div>
+                        <div class="no-results-title">Không tìm thấy sản phẩm phù hợp</div>
+                        <div class="no-results-desc">Vui lòng thử lại với từ khóa khác hoặc điều chỉnh các bộ lọc bên trái.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            items.forEach(product => {
+                const starsCount = Math.floor(product.averageRating || 0);
+                let starHtml = '';
+                for (let i = 0; i < 5; i++) {
+                    if (i < starsCount) {
+                        starHtml += '<i class="fa fa-star"></i>';
+                    } else {
+                        starHtml += '<i class="fa fa-star-o"></i>';
+                    }
+                }
+
+                const verifiedBadge = product.sellerIsVerified ? '<i class="fa fa-check-circle tick-xanh" title="Đã xác minh"></i>' : '';
+                const iconInfo = getProductIconAndColor(product.productName);
+                const stock = Number(product.stock || 0);
+                const isOutOfStock = stock <= 0;
+                const stockClass = isOutOfStock ? 'stock stock--out' : 'stock';
+                const buyButtonHtml = isOutOfStock
+                    ? `<button class="btn-buy btn-buy--preorder" onclick="event.stopPropagation(); preOrderProduct(${product.productId})"><i class="fa fa-clock-o"></i> Đặt trước</button>`
+                    : `<button class="btn-buy" onclick="event.stopPropagation(); buyProduct(${product.productId})">Mua ngay</button>`;
+                const cartButtonHtml = isOutOfStock
+                    ? `<button class="btn-cart btn-cart--disabled" title="Sản phẩm hết hàng, vui lòng đặt trước" onclick="event.stopPropagation(); preOrderProduct(${product.productId})"><i class="fa fa-shopping-cart"></i></button>`
+                    : `<button class="btn-cart" title="Thêm vào giỏ hàng" onclick="event.stopPropagation(); addToCart(${product.productId})"><i class="fa fa-shopping-cart"></i></button>`;
+
+                const sellerNameVal = product.sellerName || document.getElementById('shop-name').innerText || 'VipStore';
+
+                const cardHtml = `
+                    <div class="product-card" onclick="window.location.href='/products/${product.productId}'">
+                        <div class="product-card__image-container">
+                            <i class="fa ${iconInfo.icon} product-card__img-icon" style="color: ${iconInfo.color};"></i>
+                        </div>
+                        <div class="product-info">
+                            <div class="category-rating">
+                                <span class="category-badge">${product.categoryName || 'Sản phẩm số'}</span>
+                                <span class="rating-stars">${starHtml}</span>
+                            </div>
+                            <h4 class="product-title">${product.productName}</h4>
+                            <div class="seller-badge">
+                                <i class="fa fa-university"></i>
+                                <span>Cửa hàng: <strong>${sellerNameVal}</strong></span>
+                                ${verifiedBadge}
+                            </div>
+                            <div class="price-stock">
+                                <div class="price">${formatVND(product.price)}</div>
+                                <div class="${stockClass}">Kho: <strong>${stock}</strong></div>
+                            </div>
+                            <div class="product-actions">
+                                ${buyButtonHtml}
+                                ${cartButtonHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            });
+        }
+
+        // Render pagination buttons
+        function renderShopPagination(totalPages, activePage) {
+            totalPagesCount = totalPages;
+            const container = document.getElementById('shop-pagination-container');
+            container.innerHTML = '';
+
+            if (totalPages <= 1) return;
+
+            // Prev button
+            const prevDisabled = activePage === 0 ? 'disabled' : '';
+            container.innerHTML += `<button class="shop-pagination-btn" ${prevDisabled} onclick="goToPage(${activePage - 1})"><i class="fa fa-angle-left"></i></button>`;
+
+            // Page numbers
+            for (let i = 0; i < totalPages; i++) {
+                const isActive = i === activePage ? 'is-active' : '';
+                container.innerHTML += `<button class="shop-pagination-btn ${isActive}" onclick="goToPage(${i})">${i + 1}</button>`;
+            }
+
+            // Next button
+            const nextDisabled = activePage === totalPages - 1 ? 'disabled' : '';
+            container.innerHTML += `<button class="shop-pagination-btn" ${nextDisabled} onclick="goToPage(${activePage + 1})"><i class="fa fa-angle-right"></i></button>`;
+        }
+
+        function goToPage(page) {
+            if (page < 0 || page >= totalPagesCount) return;
+            currentPage = page;
+            fetchShopProducts();
+            document.querySelector('.shop-hero-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Show active filter tags
+        function updateActiveFiltersRow() {
+            const container = document.getElementById('active-filters-tags');
+            container.innerHTML = '';
+            let hasActive = false;
+
+            if (currentKeyword) {
+                hasActive = true;
+                container.innerHTML += `<span class="shop-filter-pill">Từ khóa: ${currentKeyword} <i class="fa fa-times" onclick="clearKeywordFilter()"></i></span>`;
+            }
+            if (currentMinPrice !== '0' || currentMaxPrice !== 5000000) {
+                hasActive = true;
+                const label = `${formatVND(currentMinPrice)} - ${formatVND(currentMaxPrice)}`;
+                container.innerHTML += `<span class="shop-filter-pill">Giá: ${label} <i class="fa fa-times" onclick="clearPriceFilter()"></i></span>`;
+            }
+
+            container.style.display = hasActive ? 'flex' : 'none';
+        }
+
+        function clearKeywordFilter() {
+            currentKeyword = '';
+            document.getElementById('shop-search-input').value = '';
+            fetchShopProducts();
+        }
+
+        function clearPriceFilter() {
+            currentMinPrice = '0';
+            currentMaxPrice = 5000000;
+            document.getElementById('price-slider').value = 5000000;
+            document.getElementById('price-max-label').innerText = "5.000.000đ";
+            fetchShopProducts();
+        }
+
+        // Instant purchase flow
+        function buyProduct(productId) {
+            const token = sessionStorage.getItem('accessToken');
+            if (!token) {
+                window.location.href = `/login?redirect=/shop/${SELLER_ID}`;
+                return;
+            }
+            window.location.href = `/checkout?productId=${productId}&duration=1`;
+        }
+
+        // Add to cart method
+        function addToCart(productId) {
+            const product = (window.currentRenderedProducts || []).find(item => item.productId === productId);
+            if (!product) {
+                alert('Không tìm thấy thông tin sản phẩm để thêm vào giỏ hàng.');
+                return;
+            }
+            if (Number(product.stock || 0) <= 0) {
+                alert('Sản phẩm đã hết hàng, vui lòng đặt trước.');
+                preOrderProduct(productId);
+                return;
+            }
+            const cartItem = {
+                productId: product.productId,
+                duration: 1,
+                productName: product.productName,
+                sellerName: product.sellerName || document.getElementById('shop-name').innerText || 'VipStore',
+                price: product.price,
+                icon: getProductIconAndColor(product.productName).icon,
+                iconColor: getProductIconAndColor(product.productName).color,
+                quantity: 1
+            };
+            let cart = JSON.parse(localStorage.getItem('mmoCart') || '[]');
+            const existing = cart.find(item => item.productId === cartItem.productId && item.duration === cartItem.duration);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push(cartItem);
+            }
+            localStorage.setItem('mmoCart', JSON.stringify(cart));
+            
+            if (typeof window.refreshHeaderCartBadge === 'function') {
+                window.refreshHeaderCartBadge();
+            }
+            
+            // Show custom toast notification if available (imported from root system)
+            if (typeof showSuccessToast === 'function') {
+                showSuccessToast('Đã thêm sản phẩm vào giỏ hàng thành công!');
+            } else {
+                alert('Đã thêm sản phẩm vào giỏ hàng thành công!');
+            }
+        }
+
+        // Preorder redirection
+        function preOrderProduct(productId) {
+            const token = sessionStorage.getItem('accessToken');
+            if (!token) {
+                window.location.href = `/login?redirect=/shop/${SELLER_ID}`;
+                return;
+            }
+            window.location.href = `/pre-orders/new?productId=${productId}`;
+        }
+    </script>
+
+    <!-- Include Toast container element for compatibility -->
+    <div id="toast-wrapper" class="ds-toast-container"></div>
+    <script>
+        // Fallback custom toast element rendering
+        function showSuccessToast(message) {
+            const wrapper = document.getElementById('toast-wrapper');
+            if (!wrapper) return;
+            const toast = document.createElement('div');
+            toast.className = 'ds-toast ds-toast--success';
+            toast.innerHTML = `
+                <div class="ds-toast__body">
+                    <i class="fa fa-check-circle ds-toast__icon"></i>
+                    <span class="ds-toast__msg">${message}</span>
+                </div>
+                <button type="button" class="ds-toast__close" onclick="this.parentElement.remove()"><i class="fa fa-times"></i></button>
+            `;
+            wrapper.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('ds-toast--fadeout');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

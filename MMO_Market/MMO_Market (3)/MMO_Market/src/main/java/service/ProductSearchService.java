@@ -2,6 +2,8 @@ package service;
 
 import dal.ProductRepository;
 import dal.ProductSpecification;
+import dal.ReviewRepository;
+import dal.TransactionRepository;
 import controller.dto.ProductSearchResultDTO;
 import model.Product;
 import model.ProductVariant;
@@ -12,6 +14,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -20,12 +23,18 @@ public class ProductSearchService {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private ReviewRepository reviewRepository;
+
+    @Autowired
+    private TransactionRepository transactionRepository;
+
     public Page<ProductSearchResultDTO> searchProducts(
             String keyword, Long categoryId, Long minPrice, Long maxPrice,
-            String stockStatus, Pageable pageable) {
+            String stockStatus, Long sellerId, List<Integer> ratings, Pageable pageable) {
 
         Specification<Product> spec = ProductSpecification.withDynamicQuery(
-                keyword, categoryId, minPrice, maxPrice, stockStatus);
+                keyword, categoryId, minPrice, maxPrice, stockStatus, sellerId, ratings);
 
         Page<Product> productPage = productRepository.findAll(spec, pageable);
 
@@ -43,10 +52,9 @@ public class ProductSearchService {
         }
 
         if (product.getSeller() != null) {
-            // Using fullName as a fallback if shopName is null, since shopName might not exist in User entity right now
             String shopName = product.getSeller().getFullName(); 
             dto.setSellerName(shopName != null ? shopName : "Unknown Seller");
-            dto.setSellerIsVerified(false); // Placeholder
+            dto.setSellerIsVerified(Boolean.TRUE.equals(product.getSeller().getIsVerified()));
         }
 
         // Find the cheapest active variant to display on the card
@@ -68,6 +76,21 @@ public class ProductSearchService {
             dto.setStock(0);
         }
 
+        // Query actual rating from Reviews database table
+        Double avgRating = reviewRepository.findAverageRatingByProductId(product.getId());
+        dto.setAverageRating(avgRating != null ? avgRating.floatValue() : 0.0f); // Default to 0.0 stars if no reviews yet
+
+        Long reviewsCount = reviewRepository.countByProductIdAndIsDeleteFalse(product.getId());
+        dto.setReviewsCount(reviewsCount != null ? reviewsCount : 0L);
+
+        // Query actual sales count from Transactions database table
+        Long salesCount = transactionRepository.countByProductIdAndIsDeleteFalse(product.getId());
+        dto.setSalesCount(salesCount != null ? salesCount : 0L);
+
+        // Classify as bestseller if sales count is high enough (e.g. >= 5 sales)
+        dto.setBestseller(salesCount != null && salesCount >= 5);
+        dto.setInstant(true); // Set instant delivery by default for this category of products
+
         return dto;
     }
-}
+}

@@ -436,8 +436,89 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (googleLoginButton) {
+        let googleClient = null;
+
+        function initGoogleClient() {
+            if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
+                setTimeout(initGoogleClient, 100);
+                return;
+            }
+
+            googleClient = google.accounts.oauth2.initCodeClient({
+                client_id: '175000936199-7dd5vpm7hgbi31e88tafadongu0395du.apps.googleusercontent.com',
+                scope: 'openid email profile',
+                ux_mode: 'popup',
+                callback: (response) => {
+                    if (response.code) {
+                        btnLogin.disabled = true;
+                        googleLoginButton.disabled = true;
+                        googleLoginButton.innerHTML = '<span>Đang kết nối Google...</span>';
+
+                        fetch('/api/auth/google', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ code: response.code })
+                        })
+                        .then(res => res.json().then(data => ({ status: res.status, body: data })))
+                        .then(res => {
+                            if (res.status === 200 && res.body.accessToken) {
+                                showLoginAlert('Đăng nhập Google thành công!', 'success');
+                                
+                                const loginTimestamp = Date.now().toString();
+                                sessionStorage.setItem('accessToken', res.body.accessToken);
+                                localStorage.setItem('accessToken', res.body.accessToken);
+                                if (res.body.refreshToken) {
+                                    sessionStorage.setItem('refreshToken', res.body.refreshToken);
+                                    localStorage.setItem('refreshToken', res.body.refreshToken);
+                                }
+                                sessionStorage.setItem('loginTimestamp', loginTimestamp);
+                                localStorage.setItem('loginTimestamp', loginTimestamp);
+
+                                const userInfo = {
+                                    id: res.body.userId,
+                                    email: res.body.email,
+                                    fullName: res.body.fullName,
+                                    role: res.body.role,
+                                    balanceVnd: res.body.balanceVnd || 0
+                                };
+                                sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
+                                sessionStorage.setItem('user', JSON.stringify(userInfo));
+                                localStorage.setItem('userInfo', JSON.stringify(userInfo));
+                                localStorage.setItem('user', JSON.stringify(userInfo));
+
+                                const redirectUrl = getSafeReturnUrl()
+                                    || resolvePostLoginRedirect(userInfo.role, res.body.redirectPath);
+                                sessionStorage.setItem('redirectPath', redirectUrl);
+                                localStorage.setItem('redirectPath', redirectUrl);
+                                window.location.replace(redirectUrl);
+                            } else {
+                                showLoginAlert(res.body.message || 'Đăng nhập Google thất bại.', 'error');
+                                btnLogin.disabled = false;
+                                googleLoginButton.disabled = false;
+                                googleLoginButton.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="20" height="20"> Đăng nhập với Google`;
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Google login error:', err);
+                            showLoginAlert('Lỗi kết nối máy chủ khi đăng nhập Google.', 'error');
+                            btnLogin.disabled = false;
+                            googleLoginButton.disabled = false;
+                            googleLoginButton.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="20" height="20"> Đăng nhập với Google`;
+                        });
+                    }
+                }
+            });
+        }
+
+        initGoogleClient();
+
         googleLoginButton.addEventListener('click', function() {
-            showLoginAlert('Đăng nhập Google sẽ được triển khai sau khi backend OAuth2 sẵn sàng.', 'info');
+            if (googleClient) {
+                googleClient.requestCode();
+            } else {
+                showLoginAlert('Đang tải thư viện Google, vui lòng thử lại trong giây lát...', 'info');
+                initGoogleClient();
+            }
         });
     }
 

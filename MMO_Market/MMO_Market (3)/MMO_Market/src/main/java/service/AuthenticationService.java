@@ -13,6 +13,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import security.JwtTokenProvider;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.util.MultiValueMap;
+import org.springframework.util.LinkedMultiValueMap;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,6 +45,15 @@ public class AuthenticationService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private EmailService emailService;
+
+    @Value("${google.oauth2.client-id}")
+    private String googleClientId;
+
+    @Value("${google.oauth2.client-secret}")
+    private String googleClientSecret;
 
     /**
      * Đăng ký người dùng mới
@@ -80,7 +97,8 @@ public class AuthenticationService {
                 .build();
         emailVerificationRepository.save(emailVerification);
 
-        log.info("Đã sinh mã OTP [{}] cho user ID [{}]", otp, savedUser.getId());
+        log.info("Đã sinh mã OTP cho user ID [{}]", savedUser.getId());
+        emailService.sendOtpEmail(savedUser.getEmail(), otp);
 
         return RegisterResponse.builder()
                 .success(true)
@@ -189,9 +207,7 @@ public class AuthenticationService {
                 .build();
         emailVerificationRepository.save(emailVerification);
 
-        System.out.println("===============================================");
-        System.out.println("MÃ OTP MỚI CỦA TÀI KHOẢN [" + email + "] LÀ: " + newOtp);
-        System.out.println("===============================================");
+        emailService.sendOtpEmail(email, newOtp);
     }
 
     /**
@@ -215,9 +231,7 @@ public class AuthenticationService {
                 .build();
         emailVerificationRepository.save(emailVerification);
 
-        System.out.println("===============================================");
-        System.out.println("MÃ OTP KHÔI PHỤC MẬT KHẨU CỦA [" + email + "] LÀ: " + newOtp);
-        System.out.println("===============================================");
+        emailService.sendResetPasswordOtpEmail(email, newOtp);
     }
 
     /**
@@ -404,5 +418,107 @@ public class AuthenticationService {
         Random random = new Random();
         int otp = 100000 + random.nextInt(900000);
         return String.valueOf(otp);
+    }
+
+    @Transactional
+    public LoginResponse loginWithGoogle(String authCode) {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+            map.add("code", authCode);
+            map.add("client_id", googleClientId);
+            map.add("client_secret", googleClientSecret);
+            map.add("redirect_uri", "postmessage");
+            map.add("grant_type", "authorization_code");
+
+            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
+            ResponseEntity<java.util.Map> response = restTemplate.postForEntity(
+                    "https://oauth2.googleapis.com/token", request, java.util.Map.class);
+
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                throw new RuntimeException("Failed to exchange authorization code with Google");
+            }
+
+            java.util.Map<String, Object> body = response.getBody();
+            String idTokenStr = (String) body.get("id_token");
+            if (idTokenStr == null) {
+                throw new RuntimeException("Google did not return an ID token");
+            }
+
+            // Decode the id_token payload (second part of JWT)
+            String[] parts = idTokenStr.split("\\.");
+            if (parts.length < 2) {
+                throw new RuntimeException("Invalid ID Token format");
+            }
+            String payloadJson = new String(java.util.Base64.getUrlDecoder().decode(parts[1]), java.nio.charset.StandardCharsets.UTF_8);
+
+            // Parse email and name from payload JSON
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode payload = mapper.readTree(payloadJson);
+
+            String email = payload.has("email") ? payload.get("email").asText() : null;
+            String name = payload.has("name") ? payload.get("name").asText() : "Google User";
+
+            if (email == null || email.trim().isEmpty()) {
+                throw new RuntimeException("Failed to retrieve email from Google ID Token");
+            }
+
+            // Look up or register the user in the database
+            Optional<User> userOptional = userRepository.findByEmailAndIsDeleteFalse(email);
+            User user;
+            if (userOptional.isEmpty()) {
+                // Register a new customer
+                String roleJson = "{\"role\": \"Customer\"}";
+                user = User.builder()
+                        .email(email)
+                        .fullName(name)
+                        .role(roleJson)
+                        .isVerified(true) // Verified by Google OAuth
+                        .balanceVnd(0L)
+                        .isDelete(false)
+                        .shopStatus("Pending")
+                        .build();
+                user = userRepository.save(user);
+                log.info("Registered new Google user: {}", email);
+            } else {
+                user = userOptional.get();
+                log.info("Google user logged in: {}", email);
+            }
+
+            // Standard login token generation
+            revokeAllUserTokens(user.getId());
+
+            String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getEmail());
+            String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId(), user.getEmail());
+            LocalDateTime refreshTokenExpiryDate = jwtTokenProvider.getExpiryDateFromToken(refreshToken);
+
+            Authentication auth = Authentication.builder()
+                    .userId(user.getId())
+                    .provider("Google")
+                    .refreshToken(refreshToken)
+                    .refreshTokenExpiryDate(refreshTokenExpiryDate)
+                    .isRevoked(false)
+                    .isDelete(false)
+                    .build();
+            authenticationRepository.save(auth);
+
+            return LoginResponse.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .userId(user.getId())
+                    .email(user.getEmail())
+                    .fullName(user.getFullName())
+                    .role(user.getRole())
+                    .balanceVnd(user.getBalanceVnd())
+                    .message("Đăng nhập bằng Google thành công")
+                    .build();
+
+        } catch (Exception e) {
+            log.error("Google login failed: {}", e.getMessage(), e);
+            throw new RuntimeException("Đăng nhập bằng Google thất bại: " + e.getMessage());
+        }
     }
 }

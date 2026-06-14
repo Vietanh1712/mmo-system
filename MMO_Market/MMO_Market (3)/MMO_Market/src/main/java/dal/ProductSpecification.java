@@ -15,7 +15,9 @@ public class ProductSpecification {
             Long categoryId,
             Long minPrice,
             Long maxPrice,
-            String stockStatus) {
+            String stockStatus,
+            Long sellerId,
+            List<Integer> ratings) {
 
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -46,7 +48,7 @@ public class ProductSpecification {
             }
 
             // --- Join with ProductVariants for Price and Stock filters ---
-            Join<Product, ProductVariant> variantJoin = root.join("variants", JoinType.INNER);
+            Join<Product, ProductVariant> variantJoin = root.join("variants", JoinType.LEFT);
 
             // --- Price Range Filter ---
             if (minPrice != null) {
@@ -66,9 +68,38 @@ public class ProductSpecification {
                 ));
             }
 
+            // --- Seller Filter ---
+            if (sellerId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("seller").get("id"), sellerId));
+            }
+
+            // --- Rating Filter (based on AVG rating of Reviews table) ---
+            if (ratings != null && !ratings.isEmpty()) {
+                int minRating = ratings.stream().mapToInt(Integer::intValue).min().orElse(0);
+                if (minRating > 0) {
+                    Subquery<Double> avgRatingSubquery = query.subquery(Double.class);
+                    Root<model.Review> reviewRoot = avgRatingSubquery.from(model.Review.class);
+                    avgRatingSubquery.select(criteriaBuilder.avg(reviewRoot.get("rating")));
+                    avgRatingSubquery.where(
+                        criteriaBuilder.equal(reviewRoot.get("product").get("id"), root.get("id")),
+                        criteriaBuilder.equal(reviewRoot.get("isDelete"), false)
+                    );
+                    
+                    Expression<Double> coalesceAvgRating = criteriaBuilder.coalesce(
+                        avgRatingSubquery,
+                        5.0
+                    );
+                    
+                    predicates.add(criteriaBuilder.greaterThanOrEqualTo(coalesceAvgRating, (double) minRating));
+                }
+            }
+
             // --- Ensure we don't get deleted products/variants ---
             predicates.add(criteriaBuilder.equal(root.get("isDelete"), false));
-            predicates.add(criteriaBuilder.equal(variantJoin.get("isDelete"), false));
+            predicates.add(criteriaBuilder.or(
+                criteriaBuilder.isNull(variantJoin.get("id")),
+                criteriaBuilder.equal(variantJoin.get("isDelete"), false)
+            ));
 
             // --- Avoid duplicates when joining with a one-to-many relationship ---
             query.distinct(true);
