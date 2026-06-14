@@ -74,6 +74,10 @@
     margin: 0;
 }
 
+.shop-settings__status-note {
+    margin: 12px 0 0;
+}
+
 .shop-settings__section-header {
     padding-bottom: 18px;
     margin-bottom: 20px;

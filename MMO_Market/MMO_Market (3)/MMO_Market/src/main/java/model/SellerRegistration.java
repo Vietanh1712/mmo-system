@@ -1,48 +1,52 @@
 package model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "Reviews")
+@Table(name = "SellerRegistrations")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Review {
+public class SellerRegistration {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
-    private Integer rating; // 1 to 5
+    @Column(name = "shop_name", nullable = false, columnDefinition = "NVARCHAR(255)")
+    private String shopName;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
-    private String comment;
+    private String description;
+
+    @Column
+    private String contract;
+
+    @Column(name = "signed_contract")
+    private String signedContract;
+
+    @Column(length = 20)
+    private String status = "Pending"; // Pending, Approved, Rejected
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "isDelete", nullable = false)
-    @Builder.Default
+    @Column(name = "isDelete")
     private Boolean isDelete = false;
 
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
+        }
+        if (status == null) {
+            status = "Pending";
         }
         if (isDelete == null) {
             isDelete = false;

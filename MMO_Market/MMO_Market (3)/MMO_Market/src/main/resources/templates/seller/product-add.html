@@ -4,11 +4,219 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng bán sản phẩm - MMO Market</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/home.css}">
     <link rel="stylesheet" th:href="@{/css/profile.css}">
     <link rel="stylesheet" th:href="@{/css/seller.css}">
+    <style>
+        .product-type-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .product-type-option {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .product-type-option input[type="radio"] {
+            display: none;
+        }
+
+        .product-type-option label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            border: 2px solid var(--seller-border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+            gap: 8px;
+        }
+
+        .product-type-option input[type="radio"]:checked + label {
+            border-color: var(--seller-primary-strong);
+            background-color: var(--ds-primary-soft);
+        }
+
+        .product-type-option label:hover {
+            border-color: #94a3b8;
+        }
+
+        .product-type-icon {
+            font-size: 24px;
+            color: var(--seller-muted);
+        }
+
+        .product-type-option input[type="radio"]:checked + label .product-type-icon {
+            color: var(--seller-primary-strong);
+        }
+
+        .product-type-name {
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            color: var(--seller-muted);
+        }
+
+        .product-type-option input[type="radio"]:checked + label .product-type-name {
+            color: var(--seller-primary-strong);
+        }
+
+        .image-preview {
+            width: 100%;
+            max-width: 300px;
+            border-radius: 8px;
+            margin-top: 8px;
+            display: none;
+            object-fit: cover;
+            border: 1px solid var(--seller-border);
+        }
+
+        .image-preview.active {
+            display: block;
+        }
+
+        .form-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--seller-ink);
+            margin-top: 24px;
+            margin-bottom: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--seller-border);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            border: 2px dashed var(--seller-border);
+            border-radius: 8px;
+            background: var(--ds-surface-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .file-input-label:hover {
+            border-color: #94a3b8;
+            background: #f1f5f9;
+        }
+
+        .file-input-label i {
+            margin-right: 8px;
+            color: var(--seller-muted);
+        }
+
+        .profile-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            min-height: 40px;
+        }
+
+        .profile-button--primary {
+            background: var(--seller-primary-strong);
+            color: white;
+        }
+
+        .profile-button--primary:hover {
+            background: #1d4ed8;
+        }
+
+        .profile-button--primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .profile-button--secondary {
+            background: #f1f5f9;
+            color: var(--seller-ink);
+            border: 1px solid var(--seller-border);
+        }
+
+        .profile-button--secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .profile-edit-form__group {
+            margin-bottom: 16px;
+        }
+
+        .profile-edit-form__group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--seller-ink);
+            font-size: 13px;
+        }
+
+        .profile-edit-form__group input[type="text"],
+        .profile-edit-form__group input[type="file"],
+        .profile-edit-form__group textarea,
+        .profile-edit-form__group select {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid var(--seller-border);
+            border-radius: 8px;
+            font: inherit;
+            box-sizing: border-box;
+        }
+
+        .profile-edit-form__group input:focus,
+        .profile-edit-form__group textarea:focus,
+        .profile-edit-form__group select:focus {
+            outline: none;
+            border-color: var(--seller-primary-strong);
+            box-shadow: 0 0 0 3px var(--ds-primary-soft);
+        }
+
+        .profile-edit-form__hint {
+            display: block;
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--seller-muted);
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+
+        .profile-actions .profile-button {
+            flex: 1;
+            justify-content: center;
+        }
+    </style>
 </head>
 <body>
     <header th:replace="fragments/header :: header"></header>
@@ -22,43 +230,166 @@
                     <div class="seller-card__header-main">
                         <div class="seller-card__icon"><i class="fa fa-plus-square-o"></i></div>
                         <div>
-                            <h1 class="seller-card__title">Đăng bán sản phẩm</h1>
-                            <p class="seller-card__subtitle">Tạo sản phẩm mới, sau đó thêm biến thể và tồn kho</p>
+                            <h1 class="seller-card__title">Đăng bán sản phẩm mới</h1>
+                            <p class="seller-card__subtitle">Nhập thông tin cơ bản của sản phẩm, sau đó thêm biến thể và tồn kho</p>
                         </div>
                     </div>
                 </div>
 
-                <form class="profile-edit-form seller-form-panel" novalidate>
+                <form class="profile-edit-form seller-form-panel" id="productForm" novalidate>
+                    <!-- Section 1: Basic Info -->
+                    <div class="form-section-title">Thông tin cơ bản sản phẩm</div>
+
                     <div class="profile-edit-form__group">
-                        <label for="productName">Tên sản phẩm</label>
-                        <input id="productName" type="text" placeholder="VD: Tài khoản Netflix Premium">
-                    </div>
-                    <div class="profile-edit-form__group">
-                        <label for="category">Danh mục</label>
-                        <select id="category" style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;">
-                            <option>Streaming</option>
-                            <option>Phần mềm</option>
-                            <option>Game</option>
-                            <option>Tài khoản MXH</option>
-                        </select>
-                    </div>
-                    <div class="profile-edit-form__group">
-                        <label for="description">Mô tả sản phẩm</label>
-                        <input id="description" type="text" placeholder="Mô tả ngắn cho người mua">
-                    </div>
-                    <div class="profile-edit-form__group">
-                        <label for="productImage">Hình ảnh sản phẩm</label>
-                        <input id="productImage" type="file" disabled>
-                        <small class="profile-edit-form__hint">Ảnh minh họa (mock — chưa upload).</small>
+                        <label for="productName">Tên sản phẩm <span style="color: #ef4444;">*</span></label>
+                        <input id="productName" type="text" placeholder="VD: Tài khoản Netflix Premium"
+                               required autocomplete="off">
+                        <small class="profile-edit-form__hint">Tên sản phẩm hiển thị cho người mua. Tối đa 100 ký tự.</small>
                     </div>
 
-                    <div class="profile-actions">
-                        <a class="profile-button profile-button--primary" th:href="@{/seller/variants/new}">Tiếp tục → Thêm biến thể</a>
+                    <div class="profile-edit-form__group">
+                        <label for="category">Danh mục <span style="color: #ef4444;">*</span></label>
+                        <select id="category" required style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;">
+                            <option value="">-- Chọn danh mục --</option>
+                            <option value="1">Streaming (Netflix, Spotify, ...)</option>
+                            <option value="2">Phần mềm (Adobe, Office, ...)</option>
+                            <option value="3">Tài khoản MXH (Instagram, Facebook, ...)</option>
+                            <option value="4">Game & VCoin (Roblox, Garena, ...)</option>
+                            <option value="5">Công cụ Auto (Tool, Bot, ...)</option>
+                        </select>
+                    </div>
+
+                    <!-- Section 2: Product Type Selection -->
+                    <div class="form-section-title">Loại sản phẩm <span style="color: #ef4444;">*</span></div>
+                    <p class="profile-edit-form__hint">Chọn loại sản phẩm để xác định các thông tin kho cần nhập</p>
+
+                    <div class="product-type-selector">
+                        <div class="product-type-option">
+                            <input type="radio" id="typeAccount" name="productType" value="ACCOUNT" required>
+                            <label for="typeAccount">
+                                <div class="product-type-icon"><i class="fa fa-user-circle"></i></div>
+                                <div class="product-type-name">Tài khoản</div>
+                            </label>
+                        </div>
+
+                        <div class="product-type-option">
+                            <input type="radio" id="typeKey" name="productType" value="KEY">
+                            <label for="typeKey">
+                                <div class="product-type-icon"><i class="fa fa-key"></i></div>
+                                <div class="product-type-name">Mã Key</div>
+                            </label>
+                        </div>
+
+                        <div class="product-type-option">
+                            <input type="radio" id="typeGameCard" name="productType" value="GAME_CARD">
+                            <label for="typeGameCard">
+                                <div class="product-type-icon"><i class="fa fa-credit-card"></i></div>
+                                <div class="product-type-name">Thẻ Game</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Description & Image -->
+                    <div class="form-section-title">Mô tả & Hình ảnh</div>
+
+                    <div class="profile-edit-form__group">
+                        <label for="description">Mô tả sản phẩm</label>
+                        <textarea id="description" placeholder="Mô tả chi tiết sản phẩm (VD: Tài khoản mới 100%, trọn đời, hỗ trợ 24/7, ...)"
+                                  style="min-height: 100px; padding: 11px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
+                        <small class="profile-edit-form__hint">Mô tả giúp người mua hiểu rõ sản phẩm</small>
+                    </div>
+
+                    <div class="profile-edit-form__group">
+                        <label for="productImage">Hình ảnh sản phẩm</label>
+                        <div class="file-input-wrapper">
+                            <input id="productImage" type="file" accept="image/*">
+                            <label for="productImage" class="file-input-label">
+                                <i class="fa fa-cloud-upload"></i>
+                                <span>Kéo thả hoặc chọn ảnh (JPG, PNG, tối đa 2MB)</span>
+                            </label>
+                        </div>
+                        <img id="imagePreview" class="image-preview" alt="Xem trước ảnh">
+                        <small class="profile-edit-form__hint">Ảnh sẽ hiển thị trên trang chi tiết sản phẩm</small>
+                    </div>
+
+                    <div class="profile-actions" style="margin-top: 32px;">
+                        <button class="profile-button profile-button--primary" type="submit">
+                            Tiếp tục → Thêm biến thể
+                        </button>
                         <a class="profile-button profile-button--secondary" th:href="@{/seller/inventory}">Hủy</a>
                     </div>
                 </form>
             </section>
         </div>
     </main>
+
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/seller-console.js}"></script>
+    <script>
+        document.getElementById('productForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const productName = document.getElementById('productName').value.trim();
+            const category = document.getElementById('category').value;
+            const productType = document.querySelector('input[name="productType"]:checked').value;
+            const description = document.getElementById('description').value.trim();
+
+            if (!productName) {
+                alert('Vui lòng nhập tên sản phẩm');
+                return;
+            }
+            if (!category) {
+                alert('Vui lòng chọn danh mục');
+                return;
+            }
+            if (!productType) {
+                alert('Vui lòng chọn loại sản phẩm');
+                return;
+            }
+
+            // Store in sessionStorage for next step
+            sessionStorage.setItem('productData', JSON.stringify({
+                name: productName,
+                categoryId: category,
+                productType: productType,
+                description: description
+            }));
+
+            window.location.href = '/seller/variants/new';
+        });
+
+        // Image preview
+        document.getElementById('productImage').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const preview = document.getElementById('imagePreview');
+                    preview.src = event.target.result;
+                    preview.classList.add('active');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Drag and drop
+        const fileInput = document.getElementById('productImage');
+        const fileLabel = document.querySelector('.file-input-label');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        fileLabel.addEventListener('drop', function(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    </script>
 </body>
 </html>

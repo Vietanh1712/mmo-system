@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý đánh giá - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/seller.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="seller-page">
+        <div class="seller-layout">
+            <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('reviews')}"></aside>
+
+            <section class="seller-card">
+                <div class="seller-card__header">
+                    <div class="seller-card__header-main">
+                        <div class="seller-card__icon"><i class="fa fa-star"></i></div>
+                        <div>
+                            <h1 class="seller-card__title">Quản lý đánh giá</h1>
+                            <p class="seller-card__subtitle">Đọc đánh giá từ khách hàng về sản phẩm của bạn</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats will be populated dynamically -->
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <p class="stat-card__label">Điểm trung bình shop</p>
+                        <p class="stat-card__value" id="avgRating">—</p>
+                        <p class="stat-card__hint">Trung bình đánh giá</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-card__label">Tổng đánh giá</p>
+                        <p class="stat-card__value" id="totalReviews">0</p>
+                        <p class="stat-card__hint">Từ tất cả sản phẩm</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-card__label">5 sao</p>
+                        <p class="stat-card__value" id="fiveStarCount">0</p>
+                        <p class="stat-card__hint">Đánh giá xuất sắc</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-card__label">1–2 sao</p>
+                        <p class="stat-card__value" id="lowStarCount">0</p>
+                        <p class="stat-card__hint">Cần theo dõi</p>
+                    </div>
+                </div>
+
+                <div class="seller-section">
+                    <h2 class="seller-section__title">Danh sách đánh giá</h2>
+
+                    <div class="seller-table-wrap">
+                        <table class="seller-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã</th>
+                                    <th>Sản phẩm</th>
+                                    <th>Khách hàng</th>
+                                    <th>Điểm</th>
+                                    <th>Nội dung</th>
+                                    <th>Ngày</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reviews-tbody">
+                                <tr><td colspan="6" style="text-align:center; padding: 30px;"><i class="fa fa-spinner fa-spin"></i> Đang tải dữ liệu...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/seller-console.js}"></script>
+</body>
+</html>

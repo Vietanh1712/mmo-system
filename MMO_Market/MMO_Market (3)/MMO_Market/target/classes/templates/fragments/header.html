@@ -124,7 +124,7 @@
                         adminWorkbenchItem.style.display = 'flex';
                     }
 
-                    if (headerIsSellerRole(currentRole) && sellerDropdownItem) {
+                    if (headerIsSellerRole(user.role) && sellerDropdownItem) {
                         sellerDropdownItem.style.display = 'flex';
                     }
 
@@ -202,8 +202,16 @@
             }
         }
 
-        function headerIsSellerRole(role) {
-            return role === 'Seller' || role === 'Customer_Seller';
+        function headerIsSellerRole(roleValue) {
+            if (!roleValue) return false;
+            const raw = String(roleValue).toLowerCase();
+            if (raw.includes('seller')) return true;
+            try {
+                const parsed = JSON.parse(roleValue);
+                return String(parsed.role || '').toLowerCase().includes('seller');
+            } catch (error) {
+                return false;
+            }
         }
 
         function highlightMainNav() {

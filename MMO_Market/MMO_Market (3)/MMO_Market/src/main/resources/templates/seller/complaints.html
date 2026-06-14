@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý khiếu nại - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/seller.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="seller-page">
+        <div class="seller-layout">
+            <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('complaints')}"></aside>
+
+            <section class="seller-card">
+                <div class="seller-card__header">
+                    <div class="seller-card__header-main">
+                        <div class="seller-card__icon"><i class="fa fa-warning"></i></div>
+                        <div>
+                            <h1 class="seller-card__title">Quản lý khiếu nại</h1>
+                            <p class="seller-card__subtitle">Theo dõi khiếu nại liên quan đơn hàng của shop — Complaints</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <p class="stat-card__label">Đang mở (Open)</p>
+                        <p class="stat-card__value">2</p>
+                        <p class="stat-card__hint">Cần phản hồi sớm</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-card__label">Đang xử lý</p>
+                        <p class="stat-card__value">1</p>
+                        <p class="stat-card__hint">Staff đang điều phối</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-card__label">Đã giải quyết</p>
+                        <p class="stat-card__value">14</p>
+                        <p class="stat-card__hint">Tháng này</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-card__label">Tiền đang giữ (escrow)</p>
+                        <p class="stat-card__value">439.000 ₫</p>
+                        <p class="stat-card__hint">2 giao dịch tranh chấp</p>
+                    </div>
+                </div>
+
+                <div class="seller-section">
+                    <h2 class="seller-section__title">Danh sách khiếu nại</h2>
+
+                    <div class="seller-filter-bar">
+                        <select aria-label="Lọc trạng thái">
+                            <option value="">Tất cả trạng thái</option>
+                            <option selected>Open</option>
+                            <option>InProgress</option>
+                            <option>Resolved</option>
+                            <option>Closed</option>
+                        </select>
+                        <select aria-label="Lọc sản phẩm">
+                            <option value="">Tất cả sản phẩm</option>
+                            <option>Canva Pro</option>
+                            <option>Netflix Premium</option>
+                        </select>
+                    </div>
+
+                    <div class="seller-table-wrap">
+                        <table class="seller-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã KN</th>
+                                    <th>Mã GD</th>
+                                    <th>Sản phẩm</th>
+                                    <th>Khách hàng</th>
+                                    <th>Lý do</th>
+                                    <th class="text-right">Số tiền</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ngày tạo</th>
+                                    <th class="text-right">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>#CMP-204</td>
+                                    <td>#TX-10458</td>
+                                    <td>
+                                        Canva Pro<br>
+                                        <span class="muted">1 năm</span>
+                                    </td>
+                                    <td>le.van.c@email.com</td>
+                                    <td>Tài khoản không đăng nhập được sau 2 ngày.</td>
+                                    <td class="text-right">350.000 ₫</td>
+                                    <td><span class="badge open"><i class="fa fa-warning"></i> Open</span></td>
+                                    <td>03/06/2026</td>
+                                    <td class="text-right">
+                                        <div th:replace="~{fragments/seller-actions :: complaintRowActions(@{/seller/complaints/detail})}"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>#CMP-198</td>
+                                    <td>#TX-10412</td>
+                                    <td>
+                                        Netflix Premium<br>
+                                        <span class="muted">1 tháng</span>
+                                    </td>
+                                    <td>hoang.e@email.com</td>
+                                    <td>Sai gói, chỉ có 1 màn hình thay vì 4.</td>
+                                    <td class="text-right">89.000 ₫</td>
+                                    <td><span class="badge open"><i class="fa fa-warning"></i> Open</span></td>
+                                    <td>01/06/2026</td>
+                                    <td class="text-right">
+                                        <div th:replace="~{fragments/seller-actions :: complaintRowActions(@{/seller/complaints/detail})}"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>#CMP-190</td>
+                                    <td>#TX-10388</td>
+                                    <td>
+                                        Spotify Family<br>
+                                        <span class="muted">1 tháng</span>
+                                    </td>
+                                    <td>tran.thi.b@email.com</td>
+                                    <td>Khách yêu cầu đổi tài khoản mới.</td>
+                                    <td class="text-right">120.000 ₫</td>
+                                    <td><span class="badge held"><i class="fa fa-clock-o"></i> InProgress</span></td>
+                                    <td>28/05/2026</td>
+                                    <td class="text-right">
+                                        <div th:replace="~{fragments/seller-actions :: complaintRowActions(@{/seller/complaints/detail})}"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>#CMP-175</td>
+                                    <td>#TX-10340</td>
+                                    <td>
+                                        ChatGPT Plus<br>
+                                        <span class="muted">1 tháng</span>
+                                    </td>
+                                    <td>pham.d@email.com</td>
+                                    <td>Đã được shop hỗ trợ đăng nhập thành công.</td>
+                                    <td class="text-right">199.000 ₫</td>
+                                    <td><span class="badge ok"><i class="fa fa-check"></i> Resolved</span></td>
+                                    <td>20/05/2026</td>
+                                    <td class="text-right"><span class="muted">—</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/seller-console.js}"></script>
+</body>
+</html>

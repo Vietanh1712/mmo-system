@@ -1,23 +1,43 @@
 const SHOP_STATUS_STORAGE_KEY = 'mmoMarketShopStatusMock';
-const SHOP_INFO_STORAGE_KEY = 'mmoMarketShopInfoMock';
 
 document.addEventListener('DOMContentLoaded', initializeShopSettings);
 
-function initializeShopSettings() {
-    restoreShopInfo();
-    renderShopStatus(readShopStatus());
+async function initializeShopSettings() {
+    const form = document.getElementById('shopInfoForm');
+    if (!form) return;
 
-    document.getElementById('shopInfoForm').addEventListener('submit', saveShopInfo);
+    form.addEventListener('submit', saveShopInfo);
     document.getElementById('toggleShopStatusButton').addEventListener('click', toggleShopStatus);
+    await loadShopInfo();
 }
 
-function readShopStatus() {
-    return localStorage.getItem(SHOP_STATUS_STORAGE_KEY) || 'ACTIVE';
+async function loadShopInfo() {
+    try {
+        const response = await sellerFetch('/shop-info');
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Không thể tải thông tin cửa hàng.');
+
+        document.getElementById('shopName').value = data.shopName || '';
+        document.getElementById('shopDesc').value = data.description || '';
+        document.getElementById('bankName').value = data.bankName || '';
+        document.getElementById('accountNumber').value = data.accountNumber || '';
+        document.getElementById('accountHolder').value = data.accountHolder || '';
+        document.getElementById('branch').value = data.branch || '';
+
+        renderShopStatus(readEffectiveShopStatus(data.shopStatus));
+    } catch (error) {
+        showShopError(error.message || 'Không thể tải thông tin cửa hàng.');
+    }
 }
 
-function saveShopStatus(status) {
-    localStorage.setItem(SHOP_STATUS_STORAGE_KEY, status);
-    renderShopStatus(status);
+function readEffectiveShopStatus(apiStatus) {
+    const localStatus = localStorage.getItem(SHOP_STATUS_STORAGE_KEY);
+    if (localStatus === 'TEMPORARILY_CLOSED' || localStatus === 'CLOSED') return localStatus;
+
+    const normalized = String(apiStatus || 'Active').toUpperCase();
+    if (normalized === 'BANNED') return 'BANNED';
+    if (normalized === 'PENDING') return 'PENDING';
+    return 'ACTIVE';
 }
 
 function renderShopStatus(status) {
@@ -32,87 +52,89 @@ function renderShopStatus(status) {
     panel.className = 'shop-status-panel';
     toggleButton.hidden = false;
 
-    if (status === 'TEMPORARILY_CLOSED') {
-        badge.className = 'ds-badge ds-badge-warning';
-        badge.textContent = 'Tạm đóng';
-        panel.classList.add('is-paused');
-        icon.innerHTML = '<i class="fa fa-pause-circle" aria-hidden="true"></i>';
-        title.textContent = 'Shop đang tạm đóng';
-        description.textContent = 'Sản phẩm vẫn được lưu nhưng khách hàng không thể tạo đơn mới.';
-        toggleButton.textContent = 'Mở lại cửa hàng';
-        sidebarStatus.textContent = 'Trạng thái: Tạm đóng';
-        return;
-    }
+    const statusConfig = {
+        ACTIVE: ['ds-badge ds-badge-success', 'Đang hoạt động', 'fa-check-circle', 'Shop đang hoạt động', 'Sản phẩm đang hiển thị và khách hàng có thể tạo đơn mới.', 'Tạm đóng cửa hàng', 'Active'],
+        TEMPORARILY_CLOSED: ['ds-badge ds-badge-warning', 'Tạm đóng', 'fa-pause-circle', 'Shop đang tạm đóng', 'Sản phẩm vẫn được lưu nhưng khách hàng không thể tạo đơn mới.', 'Mở lại cửa hàng', 'Tạm đóng'],
+        PENDING: ['ds-badge ds-badge-warning', 'Chờ duyệt', 'fa-clock-o', 'Shop đang chờ duyệt', 'Staff đang xét duyệt trạng thái hoạt động của Shop.', '', 'Pending'],
+        BANNED: ['ds-badge ds-badge-danger', 'Bị hạn chế', 'fa-ban', 'Shop đang bị hạn chế', 'Liên hệ Staff để được hỗ trợ về trạng thái Shop.', '', 'Banned'],
+        CLOSED: ['ds-badge ds-badge-danger', 'Đã đóng', 'fa-lock', 'Shop đã đóng', 'Liên hệ Staff nếu bạn cần hỗ trợ mở lại Shop.', '', 'Đã đóng']
+    };
+    const config = statusConfig[status] || statusConfig.ACTIVE;
 
-    if (status === 'CLOSED') {
-        badge.className = 'ds-badge ds-badge-danger';
-        badge.textContent = 'Đã đóng';
-        panel.classList.add('is-closed');
-        icon.innerHTML = '<i class="fa fa-lock" aria-hidden="true"></i>';
-        title.textContent = 'Shop đã đóng vĩnh viễn';
-        description.textContent = 'Liên hệ Staff nếu bạn cần được hỗ trợ về trạng thái Shop.';
-        toggleButton.hidden = true;
-        sidebarStatus.textContent = 'Trạng thái: Đã đóng';
-        return;
-    }
+    badge.className = config[0];
+    badge.textContent = config[1];
+    icon.innerHTML = `<i class="fa ${config[2]}" aria-hidden="true"></i>`;
+    title.textContent = config[3];
+    description.textContent = config[4];
+    toggleButton.textContent = config[5];
+    toggleButton.hidden = !config[5];
+    if (sidebarStatus) sidebarStatus.textContent = `Trạng thái: ${config[6]}`;
 
-    badge.className = 'ds-badge ds-badge-success';
-    badge.textContent = 'Đang hoạt động';
-    icon.innerHTML = '<i class="fa fa-check-circle" aria-hidden="true"></i>';
-    title.textContent = 'Shop đang hoạt động';
-    description.textContent = 'Sản phẩm đang hiển thị và khách hàng có thể tạo đơn mới.';
-    toggleButton.textContent = 'Tạm đóng cửa hàng';
-    sidebarStatus.textContent = 'Trạng thái: Active';
+    if (status === 'TEMPORARILY_CLOSED' || status === 'PENDING') panel.classList.add('is-paused');
+    if (status === 'BANNED' || status === 'CLOSED') panel.classList.add('is-closed');
 }
 
 function toggleShopStatus() {
-    const nextStatus = readShopStatus() === 'ACTIVE' ? 'TEMPORARILY_CLOSED' : 'ACTIVE';
-    saveShopStatus(nextStatus);
-    showShopToast(nextStatus === 'ACTIVE' ? 'Đã mở lại cửa hàng.' : 'Cửa hàng đã tạm đóng.');
+    const current = localStorage.getItem(SHOP_STATUS_STORAGE_KEY);
+    const nextStatus = current === 'TEMPORARILY_CLOSED' ? 'ACTIVE' : 'TEMPORARILY_CLOSED';
+    if (nextStatus === 'ACTIVE') {
+        localStorage.removeItem(SHOP_STATUS_STORAGE_KEY);
+    } else {
+        localStorage.setItem(SHOP_STATUS_STORAGE_KEY, nextStatus);
+    }
+    renderShopStatus(nextStatus);
+    showShopToast(nextStatus === 'ACTIVE' ? 'Đã mở lại cửa hàng trên giao diện.' : 'Cửa hàng đã tạm đóng trên giao diện.');
 }
 
-function saveShopInfo(event) {
+async function saveShopInfo(event) {
     event.preventDefault();
-    const shopName = document.getElementById('shopName').value.trim();
-    const error = document.getElementById('shopNameError');
-    error.textContent = '';
+    clearShopMessages();
 
+    const shopName = document.getElementById('shopName').value.trim();
     if (!shopName) {
-        error.textContent = 'Tên cửa hàng không được để trống.';
+        document.getElementById('shopNameError').textContent = 'Tên cửa hàng không được để trống.';
         return;
     }
 
-    const data = {
-        shopName,
-        supportEmail: document.getElementById('supportEmail').value.trim(),
-        description: document.getElementById('shopDesc').value.trim(),
-        bankName: document.getElementById('bankName').value,
-        accountNumber: document.getElementById('accountNumber').value.trim(),
-        accountHolder: document.getElementById('accountHolder').value.trim()
-    };
-    localStorage.setItem(SHOP_INFO_STORAGE_KEY, JSON.stringify(data));
-    showShopToast('Đã lưu thông tin cửa hàng.');
-}
-
-function restoreShopInfo() {
+    const button = document.getElementById('saveShopInfoButton');
+    button.disabled = true;
     try {
-        const data = JSON.parse(localStorage.getItem(SHOP_INFO_STORAGE_KEY) || 'null');
-        if (!data) return;
-        document.getElementById('shopName').value = data.shopName || '';
-        document.getElementById('supportEmail').value = data.supportEmail || '';
-        document.getElementById('shopDesc').value = data.description || '';
-        document.getElementById('bankName').value = data.bankName || 'Vietcombank';
-        document.getElementById('accountNumber').value = data.accountNumber || '';
-        document.getElementById('accountHolder').value = data.accountHolder || '';
-    } catch {
-        localStorage.removeItem(SHOP_INFO_STORAGE_KEY);
+        const response = await sellerFetch('/shop-info', {
+            method: 'PUT',
+            body: JSON.stringify({
+                shopName,
+                description: document.getElementById('shopDesc').value.trim(),
+                bankName: document.getElementById('bankName').value.trim(),
+                accountNumber: document.getElementById('accountNumber').value.trim(),
+                branch: document.getElementById('branch').value.trim()
+            })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Không thể lưu thông tin cửa hàng.');
+        showShopToast(data.message || 'Đã lưu thông tin cửa hàng.');
+        await initSellerLayout();
+    } catch (error) {
+        showShopError(error.message || 'Không thể lưu thông tin cửa hàng.');
+    } finally {
+        button.disabled = false;
     }
 }
 
-function showShopToast(message, isError = false) {
+function clearShopMessages() {
+    document.getElementById('shopNameError').textContent = '';
+    document.getElementById('shopSettingsError').hidden = true;
+}
+
+function showShopError(message) {
+    const error = document.getElementById('shopSettingsError');
+    error.textContent = message;
+    error.hidden = false;
+}
+
+function showShopToast(message) {
     const toast = document.createElement('div');
-    toast.className = `ds-toast ${isError ? 'ds-toast-error' : 'ds-toast-success'}`;
-    toast.innerHTML = `<div><p class="ds-toast-title">${isError ? 'Đã đóng cửa hàng' : 'Thành công'}</p><p class="ds-toast-message">${message}</p></div>`;
+    toast.className = 'ds-toast ds-toast-success';
+    toast.innerHTML = `<div><p class="ds-toast-title">Thành công</p><p class="ds-toast-message">${message}</p></div>`;
     document.getElementById('shopToastContainer').appendChild(toast);
     window.setTimeout(() => toast.remove(), 3500);
 }

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tổng quan Shop - MMO Market</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/home.css}">
     <link rel="stylesheet" th:href="@{/css/profile.css}">
@@ -74,6 +74,28 @@
                 </div>
 
                 <div class="seller-section">
+                    <h2 class="seller-section__title">Chăm sóc khách hàng</h2>
+                    <div class="shortcut-grid">
+                        <a class="shortcut-card" th:href="@{/seller/complaints}">
+                            <i class="fa fa-warning"></i>
+                            <strong>Quản lý khiếu nại</strong>
+                        </a>
+                        <a class="shortcut-card" th:href="@{/seller/reviews}">
+                            <i class="fa fa-star"></i>
+                            <strong>Quản lý đánh giá</strong>
+                        </a>
+                        <a class="shortcut-card" th:href="@{/seller/shop-flags}">
+                            <i class="fa fa-flag"></i>
+                            <strong>Cờ cảnh báo Shop</strong>
+                        </a>
+                        <a class="shortcut-card" th:href="@{/seller/transactions}">
+                            <i class="fa fa-exchange"></i>
+                            <strong>Lịch sử bán</strong>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="seller-section">
                     <h2 class="seller-section__title">Đơn hàng gần đây</h2>
                     <div class="seller-table-wrap">
                         <table class="seller-table">
@@ -119,5 +141,6 @@
         </div>
     </main>
     <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/seller-console.js}"></script>
 </body>
 </html>

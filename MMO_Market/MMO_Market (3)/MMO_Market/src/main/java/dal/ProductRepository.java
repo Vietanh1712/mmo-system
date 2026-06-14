@@ -2,6 +2,7 @@ package dal;
 
 import model.Category;
 import model.Product;
+import model.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -14,6 +15,7 @@ import java.util.Optional;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
     Optional<Product> findByIdAndIsDeleteFalse(Long id);
+    List<Product> findBySellerAndIsDeleteFalseOrderByCreatedAtDesc(User seller);
     List<Product> findByCategoryAndIsDeleteFalse(model.Category category);
     List<Product> findByNameContainingIgnoreCaseAndIsDeleteFalse(String name);
     List<Product> findByDescriptionContainingIgnoreCaseAndIsDeleteFalse(String description);
@@ -23,14 +25,16 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     // Lấy top sản phẩm bán chạy nhất dựa trên số lượng giao dịch thành công
     @Query(value = """
-        SELECT p.*, COUNT(t.id) AS sales_count
+        SELECT p.*
         FROM Products p
-        LEFT JOIN Transactions t ON t.product_id = p.id
-            AND t.isDelete = 0
+        LEFT JOIN (
+            SELECT product_id, COUNT(*) AS sales_count
+            FROM Transactions
+            WHERE isDelete = 0
+            GROUP BY product_id
+        ) t ON t.product_id = p.id
         WHERE p.isDelete = 0
-        GROUP BY p.id, p.seller_id, p.category_id, p.name, p.description, p.image,
-                 p.created_at, p.isDelete, p.is_delete
-        ORDER BY sales_count DESC
+        ORDER BY COALESCE(t.sales_count, 0) DESC, p.created_at DESC
         """, nativeQuery = true)
     List<Product> findTopBestSellingProducts(Pageable pageable);
 

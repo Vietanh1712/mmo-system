@@ -29,7 +29,17 @@ public class Product {
     private String description;
 
     @Column(name = "image")
-    private String image; // Matches SQL schema
+    private String image;
+
+    @Column(name = "product_image_url", length = 500)
+    private String productImageUrl;
+
+    /**
+     * Loại sản phẩm: ACCOUNT | KEY | GAME_CARD
+     * Xác định cấu trúc digital asset khi seller nhập kho
+     */
+    @Column(name = "product_type", length = 20)
+    private String productType = "ACCOUNT";
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -51,4 +61,3 @@ public class Product {
         }
     }
 }
-    

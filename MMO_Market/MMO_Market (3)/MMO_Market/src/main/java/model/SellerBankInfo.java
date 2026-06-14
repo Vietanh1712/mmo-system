@@ -1,42 +1,37 @@
 package model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "Reviews")
+@Table(name = "SellerBankInfo")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Review {
+public class SellerBankInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
-    private Integer rating; // 1 to 5
+    @Column(name = "bank_name", nullable = false, columnDefinition = "NVARCHAR(100)")
+    private String bankName;
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
-    private String comment;
+    @Column(name = "account_number", nullable = false, length = 50)
+    private String accountNumber;
+
+    @Column(columnDefinition = "NVARCHAR(100)")
+    private String branch;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "isDelete", nullable = false)
-    @Builder.Default
+    @Column(name = "isDelete")
     private Boolean isDelete = false;
 
     @PrePersist

@@ -2,6 +2,7 @@ package model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,7 +41,8 @@ public class Transaction {
     private Long commissionVnd;
 
     @Column(length = 20)
-    private String status;
+    @Builder.Default
+    private String status = "Pending"; // Pending, Held, Completed, Refunded, Cancelled, Disputed
 
     @Column(name = "escrow_release_date")
     private LocalDateTime escrowReleaseDate;
@@ -48,12 +51,16 @@ public class Transaction {
     private LocalDateTime createdAt;
 
     @Column(name = "isDelete", nullable = false)
+    @Builder.Default
     private Boolean isDelete = false;
 
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
+        }
+        if (status == null) {
+            status = "Pending";
         }
         if (isDelete == null) {
             isDelete = false;

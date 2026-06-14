@@ -18,6 +18,10 @@
     <a class="icon-button" th:href="${detailHref}" title="Xem chi tiết"><i class="fa fa-pencil"></i></a>
 </div>
 
+<div class="row-actions" th:fragment="complaintRowActions(detailHref)">
+    <a class="icon-button" th:href="${detailHref}" title="Xem chi tiết khiếu nại"><i class="fa fa-eye"></i></a>
+</div>
+
 <div class="row-actions" th:fragment="transactionRowActions(complaintHref)">
     <a class="icon-button" th:href="${complaintHref}" title="Xem khiếu nại"><i class="fa fa-pencil"></i></a>
 </div>

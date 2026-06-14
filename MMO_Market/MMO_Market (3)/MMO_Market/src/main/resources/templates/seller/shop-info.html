@@ -32,7 +32,7 @@
                 <span class="ds-badge ds-badge-success" id="shopStatusBadge">Đang hoạt động</span>
             </div>
 
-            <div class="ds-alert ds-alert-success shop-settings__notice" id="shopSettingsNotice" hidden></div>
+            <div class="ds-alert ds-alert-danger shop-settings__notice" id="shopSettingsError" hidden></div>
 
             <form class="shop-settings__card ds-card" id="shopInfoForm" novalidate>
                 <div class="shop-settings__section-header">
@@ -43,30 +43,17 @@
                     <i class="fa fa-id-card-o" aria-hidden="true"></i>
                 </div>
 
-                <div class="ds-form-grid">
-                    <div class="ds-form-field">
-                        <label class="ds-label" for="shopName">Tên cửa hàng</label>
-                        <input class="ds-input" id="shopName" maxlength="80" value="Shop MMO Pro">
-                        <small class="ds-error-text" id="shopNameError"></small>
-                    </div>
-                    <div class="ds-form-field">
-                        <label class="ds-label" for="supportEmail">Email hỗ trợ</label>
-                        <input class="ds-input" id="supportEmail" type="email" value="support@mmopro.vn">
-                    </div>
+                <div class="ds-form-field">
+                    <label class="ds-label" for="shopName">Tên cửa hàng</label>
+                    <input class="ds-input" id="shopName" maxlength="80" placeholder="Tên cửa hàng">
+                    <small class="ds-error-text" id="shopNameError"></small>
                 </div>
                 <div class="ds-form-field shop-settings__full">
                     <label class="ds-label" for="shopDesc">Mô tả cửa hàng</label>
-                    <textarea class="ds-textarea" id="shopDesc" maxlength="500" rows="4">Chuyên tài khoản premium, key bản quyền uy tín.</textarea>
+                    <textarea class="ds-textarea" id="shopDesc" maxlength="500" rows="4" placeholder="Mô tả sản phẩm và dịch vụ của Shop"></textarea>
                 </div>
-                <div class="shop-settings__actions">
-                    <button class="ds-btn ds-btn-primary" type="submit">
-                        <i class="fa fa-save" aria-hidden="true"></i> Lưu thay đổi
-                    </button>
-                </div>
-            </form>
 
-            <section class="shop-settings__card ds-card">
-                <div class="shop-settings__section-header">
+                <div class="shop-settings__section-header shop-settings__form-offset">
                     <div>
                         <h2 class="ds-heading-md">Thông tin nhận tiền</h2>
                         <p class="ds-caption">Tài khoản ngân hàng dùng để nhận yêu cầu rút tiền.</p>
@@ -77,23 +64,28 @@
                 <div class="ds-form-grid shop-settings__form-offset">
                     <div class="ds-form-field">
                         <label class="ds-label" for="bankName">Ngân hàng</label>
-                        <select class="ds-select" id="bankName">
-                            <option>Vietcombank</option>
-                            <option>MB Bank</option>
-                            <option>Techcombank</option>
-                            <option>VietinBank</option>
-                        </select>
+                        <input class="ds-input" id="bankName" maxlength="100" placeholder="Tên ngân hàng">
                     </div>
                     <div class="ds-form-field">
                         <label class="ds-label" for="accountNumber">Số tài khoản</label>
-                        <input class="ds-input" id="accountNumber" inputmode="numeric" value="0123456789">
+                        <input class="ds-input" id="accountNumber" inputmode="numeric" maxlength="30" placeholder="Số tài khoản">
                     </div>
                     <div class="ds-form-field">
                         <label class="ds-label" for="accountHolder">Chủ tài khoản</label>
-                        <input class="ds-input" id="accountHolder" value="NGUYEN VAN A">
+                        <input class="ds-input" id="accountHolder" disabled>
+                    </div>
+                    <div class="ds-form-field">
+                        <label class="ds-label" for="branch">Chi nhánh</label>
+                        <input class="ds-input" id="branch" maxlength="150" placeholder="Chi nhánh ngân hàng">
                     </div>
                 </div>
-            </section>
+
+                <div class="shop-settings__actions">
+                    <button class="ds-btn ds-btn-primary" id="saveShopInfoButton" type="submit">
+                        <i class="fa fa-save" aria-hidden="true"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </form>
 
             <section class="shop-settings__card ds-card">
                 <div class="shop-settings__section-header">
@@ -111,14 +103,16 @@
                     </div>
                     <button class="ds-btn ds-btn-outline" id="toggleShopStatusButton" type="button">Tạm đóng cửa hàng</button>
                 </div>
+                <p class="ds-caption shop-settings__status-note">Trạng thái tạm đóng hiện được lưu trên giao diện. Backend chưa cung cấp API thay đổi trạng thái Shop.</p>
             </section>
-
         </section>
     </div>
 </main>
 
 <div class="ds-toast-container" id="shopToastContainer" aria-live="polite"></div>
 <footer th:replace="fragments/footer :: footer"></footer>
+<script th:src="@{/js/auth.js}"></script>
+<script th:src="@{/js/seller-console.js}"></script>
 <script th:src="@{/js/seller-shop-settings.js}"></script>
 </body>
 </html>
