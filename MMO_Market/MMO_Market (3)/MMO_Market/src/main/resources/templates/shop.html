@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,7 @@
     <link rel="stylesheet" th:href="@{/css/search-results.css}">
     <link rel="stylesheet" th:href="@{/css/shop.css}">
 </head>
+
 <body class="shop-page-body">
 
     <header th:replace="fragments/header :: header"></header>
@@ -40,10 +42,16 @@
                             <i class="fa fa-check-circle"></i> Đã xác minh
                         </span>
                     </div>
-                    <p class="shop-profile-card__joined"><i class="fa fa-calendar-o"></i> Tham gia: <span id="shop-joined-date">...</span></p>
+                    <p class="shop-profile-card__joined"><i class="fa fa-calendar-o"></i> Tham gia: <span
+                            id="shop-joined-date">...</span></p>
                     <div class="shop-profile-card__actions">
-                        <button type="button" class="shop-profile-card__btn shop-profile-card__btn--chat" onclick="goToShopChat()">
+                        <button type="button" class="shop-profile-card__btn shop-profile-card__btn--chat"
+                            onclick="goToShopChat()">
                             <i class="fa fa-comments"></i> Chat ngay
+                        </button>
+                        <button type="button" class="shop-profile-card__btn shop-profile-card__btn--follow" id="btn-follow-shop"
+                            onclick="toggleFollowShop()">
+                            <i class="fa fa-plus"></i> Theo dõi
                         </button>
                     </div>
                 </div>
@@ -57,28 +65,27 @@
                         </div>
                     </div>
                     <div class="shop-stat-item">
+                        <span class="shop-stat-item__icon"><i class="fa fa-users"></i></span>
+                        <div class="shop-stat-item__content">
+                            <span class="shop-stat-item__value" id="shop-stat-followers">0</span>
+                            <span class="shop-stat-item__label">Người theo dõi</span>
+                        </div>
+                    </div>
+                    <div class="shop-stat-item">
                         <span class="shop-stat-item__icon"><i class="fa fa-star"></i></span>
                         <div class="shop-stat-item__content">
                             <span class="shop-stat-item__value" id="shop-stat-rating">4.8</span>
                             <span class="shop-stat-item__label">Đánh giá</span>
                         </div>
                     </div>
-                    <div class="shop-stat-item">
-                        <span class="shop-stat-item__icon"><i class="fa fa-commenting-o"></i></span>
-                        <div class="shop-stat-item__content">
-                            <span class="shop-stat-item__value" id="shop-stat-response">98%</span>
-                            <span class="shop-stat-item__label">Phản hồi</span>
-                        </div>
-                    </div>
                 </div>
             </div>
-        </div>
     </section>
 
     <!-- 3. MAIN STOREFRONT GRID -->
     <div class="shop-storefront-container">
         <div class="shop-storefront-layout">
-            
+
             <!-- Left Column: Filter Sidebar (25%) - aligned with products.html -->
             <aside class="sidebar">
                 <h3 class="filter-title">
@@ -88,7 +95,8 @@
                 <form id="filter-form" onsubmit="applyFilters(event)">
                     <!-- 1. Categories Filter -->
                     <div class="filter-group">
-                        <label for="category-filter"><i class="fa fa-tags" style="color: var(--text-muted); margin-right: 6px;"></i> Danh mục</label>
+                        <label for="category-filter"><i class="fa fa-tags"
+                                style="color: var(--text-muted); margin-right: 6px;"></i> Danh mục</label>
                         <select id="category-filter" class="filter-select">
                             <option value="">Tất cả danh mục</option>
                             <!-- Dynamic Categories will be populated here -->
@@ -97,7 +105,8 @@
 
                     <!-- 2. Price Range Filter -->
                     <div class="filter-group">
-                        <label><i class="fa fa-money" style="color: var(--text-muted); margin-right: 6px;"></i> Khoảng giá</label>
+                        <label><i class="fa fa-money" style="color: var(--text-muted); margin-right: 6px;"></i> Khoảng
+                            giá</label>
                         <div class="price-range-wrapper">
                             <input type="range" id="price-slider" min="0" max="5000000" step="50000" value="5000000"
                                 oninput="updatePriceLabel(this.value)">
@@ -110,7 +119,8 @@
 
                     <!-- 3. Stock Status Filter -->
                     <div class="filter-group">
-                        <label><i class="fa fa-cubes" style="color: var(--text-muted); margin-right: 6px;"></i> Trạng thái kho</label>
+                        <label><i class="fa fa-cubes" style="color: var(--text-muted); margin-right: 6px;"></i> Trạng
+                            thái kho</label>
                         <label class="filter-checkbox">
                             <input type="checkbox" id="stock-instock" checked>
                             <span>Còn hàng</span>
@@ -123,42 +133,48 @@
 
                     <!-- 4. Rating Filter -->
                     <div class="filter-group">
-                        <label><i class="fa fa-star" style="color: var(--text-muted); margin-right: 6px;"></i> Đánh giá</label>
+                        <label><i class="fa fa-star" style="color: var(--text-muted); margin-right: 6px;"></i> Đánh
+                            giá</label>
                         <label class="filter-checkbox">
                             <input type="checkbox" name="rating-filter" value="5">
                             <span class="rating-stars">
-                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
+                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i
+                                    class="fa fa-star"></i><i class="fa fa-star"></i>
                                 5 sao
                             </span>
                         </label>
                         <label class="filter-checkbox">
                             <input type="checkbox" name="rating-filter" value="4">
                             <span class="rating-stars">
-                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star-o"></i>
+                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i
+                                    class="fa fa-star"></i><i class="fa fa-star-o"></i>
                                 4+ sao
                             </span>
                         </label>
                         <label class="filter-checkbox">
                             <input type="checkbox" name="rating-filter" value="3">
                             <span class="rating-stars">
-                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star-o"></i><i class="fa fa-star-o"></i>
+                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i
+                                    class="fa fa-star-o"></i><i class="fa fa-star-o"></i>
                                 3+ sao
                             </span>
                         </label>
                     </div>
 
-                    <button type="submit" class="btn-apply"><i class="fa fa-check" style="margin-right: 6px;"></i> Áp dụng bộ lọc</button>
+                    <button type="submit" class="btn-apply"><i class="fa fa-check" style="margin-right: 6px;"></i> Áp
+                        dụng bộ lọc</button>
                 </form>
             </aside>
 
             <!-- Right Column: Catalog Grid & Toolbar (75%) -->
             <section class="shop-main-catalog">
-                
+
                 <!-- Toolbar Header -->
                 <div class="shop-catalog-toolbar">
                     <div class="shop-catalog-search">
                         <i class="fa fa-search shop-catalog-search__icon"></i>
-                        <input type="text" id="shop-search-input" class="shop-catalog-search__input" placeholder="Tìm kiếm sản phẩm tại shop này..." onkeypress="handleSearchKeyPress(event)">
+                        <input type="text" id="shop-search-input" class="shop-catalog-search__input"
+                            placeholder="Tìm kiếm sản phẩm tại shop này..." onkeypress="handleSearchKeyPress(event)">
                     </div>
                     <div class="shop-catalog-sort">
                         <select id="sort-select" class="sort-select" onchange="handleSortChange(this.value)">
@@ -197,7 +213,7 @@
     <script th:inline="javascript">
         /* Thymeleaf injection of sellerId */
         const SELLER_ID = /*[[${sellerId}]]*/ 35;
-        
+
         let currentKeyword = '';
         let currentCategoryId = '';
         let currentMinPrice = '0';
@@ -219,29 +235,92 @@
             window.location.href = `/messages?sellerId=${SELLER_ID}`;
         }
 
+        let isSellerFollowing = false;
+
         // Load Seller profile card meta details
         async function loadSellerProfile() {
             try {
-                const response = await fetch(`/api/search/seller/${SELLER_ID}`);
+                const token = sessionStorage.getItem('accessToken');
+                const headers = {};
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                const response = await fetch(`/api/search/seller/${SELLER_ID}`, { headers });
                 if (response.ok) {
                     const data = await response.json();
                     document.getElementById('shop-name').innerText = data.shopName;
                     document.getElementById('breadcrumb-shop-name').innerText = data.shopName;
                     document.getElementById('shop-joined-date').innerText = data.joinedDate;
                     document.getElementById('shop-avatar').innerText = data.shopName.charAt(0).toUpperCase();
-                    
+
                     document.getElementById('shop-stat-products').innerText = data.totalProducts;
                     document.getElementById('shop-stat-rating').innerText = data.rating > 0 ? data.rating.toFixed(1) : 'Chưa có';
-                    document.getElementById('shop-stat-response').innerText = data.responseRate;
+                    document.getElementById('shop-stat-followers').innerText = data.followerCount || 0;
 
                     if (data.isVerified) {
                         document.getElementById('shop-verified-badge').style.display = 'inline-flex';
                     }
+
+                    isSellerFollowing = !!data.isFollowing;
+                    updateFollowButtonUI(isSellerFollowing);
                 }
             } catch (err) {
                 console.error("Failed to load seller profile details:", err);
                 document.getElementById('shop-name').innerText = "Gian hàng đối tác";
                 document.getElementById('breadcrumb-shop-name').innerText = "Gian hàng đối tác";
+            }
+        }
+
+        function updateFollowButtonUI(following) {
+            const btn = document.getElementById('btn-follow-shop');
+            if (!btn) return;
+            if (following) {
+                btn.classList.add('is-following');
+                btn.innerHTML = `<i class="fa fa-check"></i> Đang theo dõi`;
+            } else {
+                btn.classList.remove('is-following');
+                btn.innerHTML = `<i class="fa fa-plus"></i> Theo dõi`;
+            }
+        }
+
+        async function toggleFollowShop() {
+            const token = sessionStorage.getItem('accessToken');
+            if (!token) {
+                window.location.href = `/login?redirect=/shop/${SELLER_ID}`;
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/search/seller/${SELLER_ID}/follow`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    window.location.href = `/login?redirect=/shop/${SELLER_ID}`;
+                    return;
+                }
+
+                if (response.ok) {
+                    const data = await response.json();
+                    isSellerFollowing = data.isFollowing;
+                    updateFollowButtonUI(isSellerFollowing);
+                    document.getElementById('shop-stat-followers').innerText = data.followerCount || 0;
+                    
+                    if (typeof showSuccessToast === 'function') {
+                        showSuccessToast(data.message);
+                    } else {
+                        alert(data.message);
+                    }
+                } else {
+                    const errorData = await response.json();
+                    alert(errorData.message || "Không thể thực hiện thao tác theo dõi.");
+                }
+            } catch (err) {
+                console.error("Error toggling follow status:", err);
+                alert("Đã xảy ra lỗi hệ thống, vui lòng thử lại sau.");
             }
         }
 
@@ -330,7 +409,7 @@
                 params.append('maxPrice', currentMaxPrice.toString());
             }
             if (currentStockStatus) params.append('stockStatus', currentStockStatus);
-            
+
             const sortParts = currentSort.split(',');
             params.append('sort', sortParts[0] + ',' + (sortParts[1] || 'desc'));
 
@@ -420,7 +499,7 @@
             const totalElements = filtered.length;
             const size = 12;
             const totalPages = Math.max(1, Math.ceil(totalElements / size));
-            
+
             if (currentPage >= totalPages) currentPage = 0;
             const sliceStart = currentPage * size;
             const items = filtered.slice(sliceStart, sliceStart + size);
@@ -634,11 +713,11 @@
                 cart.push(cartItem);
             }
             localStorage.setItem('mmoCart', JSON.stringify(cart));
-            
+
             if (typeof window.refreshHeaderCartBadge === 'function') {
                 window.refreshHeaderCartBadge();
             }
-            
+
             // Show custom toast notification if available (imported from root system)
             if (typeof showSuccessToast === 'function') {
                 showSuccessToast('Đã thêm sản phẩm vào giỏ hàng thành công!');
@@ -682,4 +761,5 @@
         }
     </script>
 </body>
+
 </html>

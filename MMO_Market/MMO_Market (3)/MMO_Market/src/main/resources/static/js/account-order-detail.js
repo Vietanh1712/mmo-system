@@ -107,28 +107,31 @@ function readOrders() {
 function createSeedOrders() {
     const now = new Date();
     return [
-        createOrder('MMO-ORD-1001', 'Tài khoản Canva Pro 1 năm', 'Digital Store VN', 129000, 'COMPLETED', 'PAID', addDays(now, -1)),
-        createOrder('MMO-ORD-1002', 'Gói proxy dân cư 5GB', 'ProxyHub', 240000, 'DELIVERED', 'PAID', addDays(now, -2)),
-        createOrder('MMO-ORD-1003', 'Template landing page MMO', 'Design Market', 99000, 'PAID', 'PAID', addDays(now, -3)),
-        createOrder('MMO-ORD-1004', 'Tài khoản Netflix Premium', 'Account247', 75000, 'DISPUTED', 'PAID', addDays(now, -4)),
-        createOrder('MMO-ORD-1005', 'Tool automation social', 'ToolBox Seller', 450000, 'PENDING', 'PENDING', addDays(now, -5)),
-        createOrder('MMO-ORD-1006', 'Key Windows 11 Pro', 'Key Mall', 180000, 'REFUNDED', 'REFUNDED', addDays(now, -6)),
-        createOrder('MMO-ORD-1007', 'Khóa học chạy quảng cáo cơ bản', 'Ads Academy', 299000, 'COMPLETED', 'PAID', addDays(now, -7)),
-        createOrder('MMO-ORD-1008', 'Tài khoản Spotify Family', 'Sub Store', 65000, 'CANCELLED', 'FAILED', addDays(now, -8)),
-        createOrder('MMO-ORD-1009', 'Data email marketing B2B', 'DataX', 350000, 'DELIVERED', 'PAID', addDays(now, -9))
+        createOrder('MMO-ORD-1001', 7, 'Tài khoản Canva Pro 1 năm', 'Digital Store VN', 129000, 'COMPLETED', 'PAID', addDays(now, -1), '12 Tháng (1 Năm)'),
+        createOrder('MMO-ORD-1002', 3, 'Gói proxy dân cư 5GB', 'ProxyHub', 240000, 'DELIVERED', 'PAID', addDays(now, -2), '5GB'),
+        createOrder('MMO-ORD-1003', 13, 'Template landing page MMO', 'Design Market', 99000, 'PAID', 'PAID', addDays(now, -3), '1 Thiết kế'),
+        createOrder('MMO-ORD-1004', 1, 'Tài khoản Netflix Premium', 'Account247', 75000, 'DISPUTED', 'PAID', addDays(now, -4), '1 Tháng'),
+        createOrder('MMO-ORD-1005', 9, 'Tool automation social', 'ToolBox Seller', 450000, 'PENDING', 'PENDING', addDays(now, -5), 'Vĩnh viễn'),
+        createOrder('MMO-ORD-1006', 5, 'Key Windows 11 Pro', 'Key Mall', 180000, 'REFUNDED', 'REFUNDED', addDays(now, -6), 'Vĩnh viễn'),
+        createOrder('MMO-ORD-1007', 13, 'Khóa học chạy quảng cáo cơ bản', 'Ads Academy', 299000, 'COMPLETED', 'PAID', addDays(now, -7), 'Trọn đời'),
+        createOrder('MMO-ORD-1008', 4, 'Tài khoản Spotify Family', 'Sub Store', 65000, 'CANCELLED', 'FAILED', addDays(now, -8), '12 Tháng (1 Năm)'),
+        createOrder('MMO-ORD-1009', 8, 'Data email marketing B2B', 'DataX', 350000, 'DELIVERED', 'PAID', addDays(now, -9), '1 Danh sách')
     ];
 }
 
-function createOrder(orderCode, productName, sellerName, amount, status, paymentStatus, createdDate) {
+function createOrder(orderCode, productId, productName, sellerName, amount, status, paymentStatus, createdDate, variantLabel = '') {
     return {
         orderCode,
+        productId,
         productName,
+        variantLabel,
         sellerName,
         amount,
         status,
         paymentStatus,
         createdAt: formatDateTime(createdDate),
-        escrowReleaseDate: formatDate(addDays(createdDate, 3))
+        escrowReleaseDate: formatDate(addDays(createdDate, 3)),
+        isReviewed: false
     };
 }
 
@@ -138,8 +141,9 @@ function renderOrderDetail(order) {
     document.getElementById('orderTimeline').hidden = false;
     document.getElementById('orderDetailEmpty').hidden = true;
 
+    const variantText = order.variantLabel ? ` (${order.variantLabel})` : '';
     document.getElementById('orderDetailCode').textContent = order.orderCode;
-    document.getElementById('orderProductName').textContent = order.productName;
+    document.getElementById('orderProductName').textContent = `${order.productName}${variantText}`;
     document.getElementById('orderSellerName').textContent = `Người bán: ${order.sellerName}`;
     setBadge('orderStatusBadge', formatOrderStatus(order.status), getOrderStatusBadgeClass(order.status));
     setBadge('orderPaymentBadge', formatPaymentStatus(order.paymentStatus), getPaymentBadgeClass(order.paymentStatus));
@@ -148,7 +152,7 @@ function renderOrderDetail(order) {
     document.getElementById('orderCreatedAt').textContent = order.createdAt;
     document.getElementById('orderAmount').textContent = formatMoney(order.amount);
     document.getElementById('orderEscrowRelease').textContent = order.escrowReleaseDate;
-    document.getElementById('orderProductTitle').textContent = order.productName;
+    document.getElementById('orderProductTitle').textContent = `${order.productName}${variantText}`;
     document.getElementById('orderAccessInfo').innerHTML = createAccessInfo(order);
     document.getElementById('orderTransactionCode').textContent = `TX-${order.orderCode.replace('MMO-ORD-', '')}`;
     document.getElementById('orderPaymentText').textContent = formatPaymentStatus(order.paymentStatus);
@@ -157,9 +161,20 @@ function renderOrderDetail(order) {
 
     const feedbackBtn = document.getElementById('orderFeedbackButton');
     if (feedbackBtn) {
-        if (order.status === 'COMPLETED') {
+        if (order.isReviewed) {
             feedbackBtn.style.display = 'inline-flex';
+            feedbackBtn.removeAttribute('href');
+            feedbackBtn.style.pointerEvents = 'none';
+            feedbackBtn.style.opacity = '0.7';
+            feedbackBtn.className = 'ds-btn ds-btn-outline';
+            feedbackBtn.innerHTML = '<i class="fa fa-check-circle" style="color: #16a34a;"></i> Đã đánh giá';
+        } else if (['COMPLETED', 'PAID', 'DELIVERED'].includes(order.status)) {
+            feedbackBtn.style.display = 'inline-flex';
+            feedbackBtn.style.pointerEvents = 'auto';
+            feedbackBtn.style.opacity = '1';
+            feedbackBtn.className = 'ds-btn ds-btn-primary';
             feedbackBtn.href = `/account/orders/${order.orderCode}/feedback`;
+            feedbackBtn.innerHTML = 'Đánh giá sản phẩm';
         } else {
             feedbackBtn.style.display = 'none';
         }

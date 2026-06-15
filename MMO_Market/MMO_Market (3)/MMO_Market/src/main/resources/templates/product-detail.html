@@ -74,7 +74,7 @@
 
                     <!-- Variant Selection -->
                     <div class="product-detail__variants">
-                        <span class="variants-label">Thời hạn sử dụng:</span>
+                        <span class="variants-label" id="variantsLabel">Thời hạn sử dụng:</span>
                         <div class="variants-list">
                             <button class="variant-btn active" data-price="79000" data-old="120000" data-duration="1">1
                                 Tháng</button>
@@ -294,10 +294,6 @@
                     <div class="stat-row">
                         <span class="stat-label">Đánh giá shop:</span>
                         <span class="stat-value" style="color: #fbbf24;" id="sidebar-shop-rating"><i class="fa fa-star"></i> 4.9/5.0</span>
-                    </div>
-                    <div class="stat-row">
-                        <span class="stat-label">Tỷ lệ phản hồi:</span>
-                        <span class="stat-value" id="sidebar-shop-response-rate">99%</span>
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">Thời gian phản hồi:</span>
@@ -784,8 +780,16 @@ stock: 50,
         // Declare dynamic product state variables
         let selectedProduct = null;
         let currentDuration = 1;
+        let currentVariantLabel = "";
         let currentVariantPrice = 0;
         let productHasStock = false;
+
+        function isDurationVariant(label) {
+            if (!label) return false;
+            const l = label.toLowerCase();
+            return l.includes('tháng') || l.includes('năm') || l.includes('ngày') || l.includes('tuần') || l.includes('giờ') ||
+                   l.includes('month') || l.includes('year') || l.includes('day') || l.includes('week') || l.includes('hour');
+        }
 
         // Initialize product details from API or mock database fallback
         async function initProductDetails() {
@@ -795,6 +799,24 @@ stock: 50,
                 if (!response.ok) throw new Error("Failed to fetch product from API");
                 const apiData = await response.json();
                 
+                // Calculate extra sales from mock sessionStorage orders
+                const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
+                let userEmail = '';
+                if (userStr) {
+                    try {
+                        userEmail = JSON.parse(userStr).email || '';
+                    } catch(e) {}
+                }
+                const ordersKey = userEmail ? `mmoMarketMyOrdersMock_${userEmail}` : `mmoMarketMyOrdersMock`;
+                let extraSales = 0;
+                try {
+                    const savedOrders = sessionStorage.getItem(ordersKey);
+                    if (savedOrders) {
+                        const orders = JSON.parse(savedOrders);
+                        extraSales = orders.filter(o => o.productId == apiData.id).length;
+                    }
+                } catch(e) {}
+
                 // Map API response to our expected selectedProduct structure
                 selectedProduct = {
                     id: apiData.id,
@@ -803,7 +825,7 @@ stock: 50,
                     color: getProductIconAndColor(apiData.name).color,
                     seller: apiData.sellerName,
                     sellerId: apiData.sellerId,
-                    sales: apiData.salesCount,
+                    sales: (apiData.salesCount || 0) + extraSales,
                     rating: apiData.averageRating.toFixed(1),
                     reviewsCount: apiData.reviewsCount,
                     stock: apiData.stock,
@@ -836,6 +858,7 @@ stock: 50,
 
             selectedProduct.stock = Number.isFinite(Number(selectedProduct.stock)) ? Number(selectedProduct.stock) : 5;
             currentDuration = selectedProduct.variants[0].duration;
+            currentVariantLabel = selectedProduct.variants[0].label || '';
             currentVariantPrice = selectedProduct.variants[0].price;
             productHasStock = Number(selectedProduct.stock) > 0;
 
@@ -897,6 +920,20 @@ stock: 50,
             const variantsContainer = document.querySelector('.variants-list');
             if (variantsContainer) {
                 variantsContainer.innerHTML = '';
+                
+                // Determine if all/any variants are duration-based
+                let hasDuration = false;
+                selectedProduct.variants.forEach(v => {
+                    if (isDurationVariant(v.label)) {
+                        hasDuration = true;
+                    }
+                });
+
+                const labelEl = document.getElementById('variantsLabel') || document.querySelector('.variants-label');
+                if (labelEl) {
+                    labelEl.innerText = hasDuration ? 'Thời hạn sử dụng:' : 'Lựa chọn phân loại:';
+                }
+
                 selectedProduct.variants.forEach((v, index) => {
                     const btn = document.createElement('button');
                     btn.className = `variant-btn ${index === 0 ? 'active' : ''}`;
@@ -909,6 +946,7 @@ stock: 50,
                         document.querySelectorAll('.variant-btn').forEach(b => b.classList.remove('active'));
                         btn.classList.add('active');
                         currentDuration = v.duration;
+                        currentVariantLabel = v.label;
                         currentVariantPrice = v.price;
                         document.getElementById('currentPrice').innerText = formatVND(v.price);
                         document.getElementById('oldPrice').innerText = formatVND(v.oldPrice || (v.price * 1.5));
@@ -990,10 +1028,6 @@ stock: 50,
                         const sidebarRating = document.getElementById('sidebar-shop-rating');
                         if (sidebarRating) {
                             sidebarRating.innerHTML = `<i class="fa fa-star"></i> ${data.rating > 0 ? data.rating.toFixed(1) + '/5.0' : 'Chưa có đánh giá'}`;
-                        }
-                        const sidebarResponseRate = document.getElementById('sidebar-shop-response-rate');
-                        if (sidebarResponseRate) {
-                            sidebarResponseRate.innerText = data.responseRate || '98%';
                         }
                         const sidebarResponseTime = document.getElementById('sidebar-shop-response-time');
                         if (sidebarResponseTime) {
@@ -1243,6 +1277,7 @@ stock: 50,
                 const params = new URLSearchParams({
                     productId: productId,
                     duration: currentDuration,
+                    variantLabel: currentVariantLabel,
                     productName: selectedProduct.name,
                     sellerName: selectedProduct.seller,
                     price: currentVariantPrice,
@@ -1283,6 +1318,7 @@ stock: 50,
             const cartItem = {
                 productId: productId,
                 duration: currentDuration,
+                variantLabel: currentVariantLabel,
                 productName: selectedProduct.name,
                 sellerName: selectedProduct.seller,
                 price: currentVariantPrice,
@@ -1291,7 +1327,7 @@ stock: 50,
                 quantity: 1
             };
             const cart = JSON.parse(localStorage.getItem('mmoCart') || '[]');
-            const existing = cart.find(item => item.productId === cartItem.productId && item.duration === cartItem.duration);
+            const existing = cart.find(item => item.productId === cartItem.productId && item.duration === cartItem.duration && item.variantLabel === cartItem.variantLabel);
             if (existing) {
                 existing.quantity += 1;
             } else {

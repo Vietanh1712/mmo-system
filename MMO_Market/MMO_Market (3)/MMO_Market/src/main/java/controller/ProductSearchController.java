@@ -10,6 +10,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -54,6 +56,9 @@ public class ProductSearchController {
 
     @Autowired
     private dal.TransactionRepository transactionRepository;
+
+    @Autowired
+    private dal.ShopFollowerRepository shopFollowerRepository;
 
     @GetMapping("/products")
     public ResponseEntity<Page<ProductSearchResultDTO>> searchProducts(
@@ -171,8 +176,60 @@ public class ProductSearchController {
         return ResponseEntity.ok(dtos);
     }
 
+    /**
+     * API lưu đánh giá của người dùng cho một sản phẩm vào DB
+     */
+    @org.springframework.web.bind.annotation.PostMapping("/products/{productId}/reviews")
+    public ResponseEntity<?> submitProductReview(
+            @PathVariable Long productId,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal Long userId,
+            @RequestBody controller.dto.ReviewRequestDTO request) {
+
+        if (userId == null) {
+            return ResponseEntity.status(401).body(java.util.Map.of("message", "Chưa đăng nhập."));
+        }
+
+        if (request.getRating() == null || request.getRating() < 1 || request.getRating() > 5) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", "Số sao đánh giá phải từ 1 đến 5."));
+        }
+
+        java.util.Optional<model.User> userOpt = userRepository.findByIdAndIsDeleteFalse(userId);
+        if (!userOpt.isPresent()) {
+            return ResponseEntity.status(401).body(java.util.Map.of("message", "Người dùng không tồn tại."));
+        }
+
+        java.util.Optional<model.Product> productOpt = productRepository.findByIdAndIsDeleteFalse(productId);
+        if (!productOpt.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        model.User user = userOpt.get();
+        model.Product product = productOpt.get();
+
+        model.Review review = model.Review.builder()
+                .product(product)
+                .user(user)
+                .rating(request.getRating())
+                .comment(request.getComment() != null ? request.getComment() : "")
+                .isDelete(false)
+                .build();
+        model.Review saved = reviewRepository.save(review);
+
+        controller.dto.ReviewResponseDTO responseDTO = controller.dto.ReviewResponseDTO.builder()
+                .id(saved.getId())
+                .userName(user.getFullName() != null ? user.getFullName() : "Người dùng MMO")
+                .rating(saved.getRating())
+                .comment(saved.getComment())
+                .createdAt(saved.getCreatedAt())
+                .build();
+
+        return ResponseEntity.ok(responseDTO);
+    }
+
     @GetMapping("/seller/{sellerId}")
-    public ResponseEntity<?> getSellerProfile(@PathVariable Long sellerId) {
+    public ResponseEntity<?> getSellerProfile(
+            @PathVariable Long sellerId,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal Long activeUserId) {
         return userRepository.findByIdAndIsDeleteFalse(sellerId)
                 .map(user -> {
                     long productCount = productRepository.countBySellerIdAndIsDeleteFalse(sellerId);
@@ -182,6 +239,12 @@ public class ProductSearchController {
                         ? user.getCreatedAt().format(java.time.format.DateTimeFormatter.ofPattern("MM/yyyy"))
                         : "06/2026");
                     
+                    long followerCount = shopFollowerRepository.countBySellerIdAndIsDeleteFalse(sellerId);
+                    boolean isFollowing = false;
+                    if (activeUserId != null) {
+                        isFollowing = shopFollowerRepository.findByFollowerIdAndSellerIdAndIsDeleteFalse(activeUserId, sellerId).isPresent();
+                    }
+
                     java.util.Map<String, Object> profile = new java.util.HashMap<>();
                     profile.put("id", user.getId());
                     profile.put("shopName", user.getFullName() != null ? user.getFullName() : "Gian hàng đối tác");
@@ -190,12 +253,61 @@ public class ProductSearchController {
                     profile.put("totalProducts", productCount);
                     Double avgSellerRating = reviewRepository.findAverageRatingBySellerId(sellerId);
                     profile.put("rating", avgSellerRating != null ? avgSellerRating : 0.0);
-                    profile.put("responseRate", "98%"); // High-fidelity mock response rate
                     profile.put("responseTime", "Trong vài giờ"); // High-fidelity mock response time
                     profile.put("email", user.getEmail());
+                    profile.put("followerCount", followerCount);
+                    profile.put("isFollowing", isFollowing);
                     return ResponseEntity.ok(profile);
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/seller/{sellerId}/follow")
+    public ResponseEntity<?> toggleFollowSeller(
+            @PathVariable Long sellerId,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal Long activeUserId) {
+        
+        if (activeUserId == null) {
+            return ResponseEntity.status(401).body(java.util.Map.of("message", "Chương trình yêu cầu đăng nhập."));
+        }
+
+        if (activeUserId.equals(sellerId)) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", "Bạn không thể tự theo dõi chính mình."));
+        }
+
+        java.util.Optional<model.User> followerOpt = userRepository.findByIdAndIsDeleteFalse(activeUserId);
+        java.util.Optional<model.User> sellerOpt = userRepository.findByIdAndIsDeleteFalse(sellerId);
+
+        if (!followerOpt.isPresent() || !sellerOpt.isPresent()) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", "Người dùng không tồn tại."));
+        }
+
+        java.util.Optional<model.ShopFollower> existingFollowOpt = 
+                shopFollowerRepository.findByFollowerIdAndSellerIdAndIsDeleteFalse(activeUserId, sellerId);
+
+        boolean isFollowingNow;
+        if (existingFollowOpt.isPresent()) {
+            model.ShopFollower existing = existingFollowOpt.get();
+            existing.setIsDelete(true);
+            shopFollowerRepository.save(existing);
+            isFollowingNow = false;
+        } else {
+            model.ShopFollower newFollow = model.ShopFollower.builder()
+                    .follower(followerOpt.get())
+                    .seller(sellerOpt.get())
+                    .isDelete(false)
+                    .build();
+            shopFollowerRepository.save(newFollow);
+            isFollowingNow = true;
+        }
+
+        long followerCount = shopFollowerRepository.countBySellerIdAndIsDeleteFalse(sellerId);
+
+        return ResponseEntity.ok(java.util.Map.of(
+                "isFollowing", isFollowingNow,
+                "followerCount", followerCount,
+                "message", isFollowingNow ? "Theo dõi cửa hàng thành công!" : "Bỏ theo dõi cửa hàng thành công!"
+        ));
     }
 
     @GetMapping("/categories")

@@ -204,6 +204,30 @@
     transform: translateY(-1px);
 }
 
+.shop-profile-card__btn--follow {
+    background-color: #ffffff;
+    color: var(--brand-dark);
+    border: 1.5px solid var(--brand-dark);
+}
+
+.shop-profile-card__btn--follow:hover {
+    background-color: var(--brand-dark);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.shop-profile-card__btn--follow.is-following {
+    background-color: var(--ds-primary, #2563eb);
+    color: #ffffff;
+    border-color: var(--ds-primary, #2563eb);
+}
+
+.shop-profile-card__btn--follow.is-following:hover {
+    background-color: var(--ds-primary-hover, #1d4ed8);
+    border-color: var(--ds-primary-hover, #1d4ed8);
+    color: #ffffff;
+}
+
 .shop-profile-card__divider {
     width: 1px;
     height: 90px;

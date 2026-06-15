@@ -645,6 +645,23 @@
                     return;
                 }
 
+                // Calculate user email and orders key
+                const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
+                let userEmail = '';
+                if (userStr) {
+                    try {
+                        userEmail = JSON.parse(userStr).email || '';
+                    } catch(e) {}
+                }
+                const ordersKey = userEmail ? `mmoMarketMyOrdersMock_${userEmail}` : `mmoMarketMyOrdersMock`;
+                let mockOrders = [];
+                try {
+                    const savedOrders = sessionStorage.getItem(ordersKey);
+                    if (savedOrders) {
+                        mockOrders = JSON.parse(savedOrders);
+                    }
+                } catch(e) {}
+
                 products.forEach(product => {
                     const minP = product.minPrice ? product.minPrice.toLocaleString('vi-VN') + 'đ' : '--';
                     const maxP = product.maxPrice && product.maxPrice !== product.minPrice
@@ -653,7 +670,9 @@
                     const priceText = minP + maxP;
                     const stock = product.totalStock != null ? product.totalStock : 0;
                     const stockText = stock > 999 ? '999+' : stock;
-                    const sales = product.salesCount != null ? Number(product.salesCount) : 0;
+                    
+                    const extraSales = mockOrders.filter(o => o.productId == product.id).length;
+                    const sales = (product.salesCount != null ? Number(product.salesCount) : 0) + extraSales;
                     const salesText = sales > 0 ? sales.toLocaleString('vi-VN') + ' Bán' : 'Mới lên';
 
                     // Lấy icon theo category (giống trang sản phẩm)

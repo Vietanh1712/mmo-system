@@ -129,6 +129,7 @@
                 <version>${spring-boot.version}</version>
                 <configuration>
                     <mainClass>com.mmo.MMOMarketApplication</mainClass>
+                    <jvmArguments>-Dfile.encoding=UTF-8</jvmArguments>
                 </configuration>
                 <executions>
                     <execution>
