@@ -40,6 +40,8 @@ IF OBJECT_ID('SellerRegistrations', 'U') IS NOT NULL DROP TABLE SellerRegistrati
 IF OBJECT_ID('EmailVerifications', 'U') IS NOT NULL DROP TABLE EmailVerifications;
 IF OBJECT_ID('Authentications', 'U') IS NOT NULL DROP TABLE Authentications;
 IF OBJECT_ID('ShopFollowers', 'U') IS NOT NULL DROP TABLE ShopFollowers;
+IF OBJECT_ID('KYCDocuments', 'U') IS NOT NULL DROP TABLE KYCDocuments;
+IF OBJECT_ID('KYCRequests', 'U') IS NOT NULL DROP TABLE KYCRequests;
 IF OBJECT_ID('Users', 'U') IS NOT NULL DROP TABLE Users;
 GO
 
@@ -122,6 +124,37 @@ CREATE TABLE SellerBankInfo (
     created_at DATETIME DEFAULT GETDATE(),
     isDelete BIT DEFAULT 0,
     CONSTRAINT FK_Bank_Users FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION
+);
+GO
+
+CREATE TABLE KYCRequests (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    full_name NVARCHAR(255) NOT NULL,
+    citizen_id VARCHAR(20) NOT NULL,
+    date_of_birth DATE,
+    front_id_image VARCHAR(255) NOT NULL,
+    back_id_image VARCHAR(255) NOT NULL,
+    selfie_image VARCHAR(255) NOT NULL,
+    status VARCHAR(20) DEFAULT 'Pending',
+    rejection_reason NVARCHAR(MAX),
+    reviewed_by BIGINT NULL,
+    reviewed_at DATETIME NULL,
+    created_at DATETIME DEFAULT GETDATE(),
+    updated_at DATETIME DEFAULT GETDATE(),
+    isDelete BIT DEFAULT 0,
+    CONSTRAINT FK_KYC_User FOREIGN KEY(user_id) REFERENCES Users(id),
+    CONSTRAINT FK_KYC_Staff FOREIGN KEY(reviewed_by) REFERENCES Users(id)
+);
+GO
+
+CREATE TABLE KYCDocuments (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    kyc_id BIGINT NOT NULL,
+    document_type VARCHAR(50),
+    file_url VARCHAR(255),
+    created_at DATETIME DEFAULT GETDATE(),
+    CONSTRAINT FK_KYCDoc_KYC FOREIGN KEY (kyc_id) REFERENCES KYCRequests(id)
 );
 GO
 
@@ -687,62 +720,8 @@ WHERE id = 2;
 INSERT INTO SellerBankInfo (user_id, bank_name, account_number, branch, created_at, isDelete)
 VALUES (2, N'Vietcombank', '0123456789', N'Chi nhánh Hà Nội', GETDATE(), 0);
 
--- Seed Transactions (Lịch sử giao dịch mẫu)
-SET IDENTITY_INSERT Transactions ON;
-
-INSERT INTO Transactions (id, customer_id, seller_id, product_id, variant_id, amount_vnd, commission_vnd, status, escrow_release_date, created_at, isDelete)
-VALUES 
-(1, 13, 1, 1, 1, 65000, 3250, 'Completed', DATEADD(DAY, -4, GETDATE()), DATEADD(DAY, -7, GETDATE()), 0),
-(2, 13, 2, 2, 2, 650000, 32500, 'Held', DATEADD(DAY, 1, GETDATE()), DATEADD(DAY, -2, GETDATE()), 0),
-(3, 13, 3, 3, 3, 150000, 7500, 'Pending', DATEADD(DAY, 2, GETDATE()), DATEADD(HOUR, -6, GETDATE()), 0),
-(4, 13, 4, 4, 4, 250000, 12500, 'Completed', DATEADD(DAY, -1, GETDATE()), DATEADD(DAY, -4, GETDATE()), 0),
-(5, 13, 9, 9, 9, 850000, 42500, 'Completed', DATEADD(DAY, -2, GETDATE()), DATEADD(DAY, -5, GETDATE()), 0);
-
-SET IDENTITY_INSERT Transactions OFF;
-
--- Seed Withdrawals (Yêu cầu rút tiền của Seller)
-INSERT INTO Withdrawals (seller_id, bank_info_id, amount_vnd, status, proof_file, created_at, isDelete)
-VALUES 
-(2, 1, 150000, 'Completed', 'proof_bank_1.jpg', DATEADD(DAY, -15, GETDATE()), 0),
-(2, 1, 250000, 'Completed', 'proof_bank_2.jpg', DATEADD(DAY, -10, GETDATE()), 0),
-(2, 1, 500000, 'Completed', 'proof_bank_3.jpg', DATEADD(DAY, -5, GETDATE()), 0),
-(2, 1, 1000000, 'Pending', NULL, DATEADD(DAY, -1, GETDATE()), 0),
-(2, 1, 2000000, 'Pending', NULL, DATEADD(HOUR, -2, GETDATE()), 0);
-
--- Seed Complaints (Khiếu nại đơn hàng)
-SET IDENTITY_INSERT Complaints ON;
-
-INSERT INTO Complaints (id, transaction_id, customer_id, seller_id, description, evidence, status, resolution, created_at, isDelete)
-VALUES 
-(1, 5, 13, 9, N'Key bản quyền Tool Facebook bị lỗi kích hoạt.', N'Ảnh lỗi API hoặc thông báo lỗi', 'Open', NULL, DATEADD(DAY, -2, GETDATE()), 0),
-(2, 2, 13, 2, N'Tài khoản Netflix Premium bị đổi mật khẩu không vào được.', NULL, 'In_Progress', NULL, DATEADD(DAY, -1, GETDATE()), 0),
-(3, 4, 13, 4, N'Spotify Premium không gia hạn đúng email.', NULL, 'Resolved', N'Đã gửi lại link mời nhóm gia đình mới', DATEADD(DAY, -3, GETDATE()), 0);
-
-SET IDENTITY_INSERT Complaints OFF;
-
--- Seed Chats (Tin nhắn trao đổi khiếu nại giữa Khách, Seller và Staff hỗ trợ)
-INSERT INTO Chats (sender_id, receiver_id, complaint_id, chat_type, message, created_at, isDelete)
-VALUES 
-(13, 2, 2, 'Complaint', N'Chào shop, tài khoản mình mua báo sai mật khẩu ạ!', DATEADD(DAY, -2, GETDATE()), 0),
-(2, 13, 2, 'Complaint', N'Chào bạn, để mình kiểm tra lại và gửi profile thay thế nhé.', DATEADD(DAY, -1, GETDATE()), 0),
-(13, 2, 2, 'Complaint', N'Dạ nhanh giùm mình với nha shop.', DATEADD(HOUR, -12, GETDATE()), 0),
-(13, 9, 1, 'Complaint', N'Shop ơi tool này báo key đã hết hạn.', DATEADD(DAY, -1, GETDATE()), 0),
-(14, 9, 1, 'Complaint', N'Nhân viên hỗ trợ: Yêu cầu shop kiểm tra và cung cấp key mới trong 24h.', DATEADD(HOUR, -6, GETDATE()), 0);
-
--- Seed Reviews (Đánh giá chất lượng sản phẩm thực tế)
-INSERT INTO Reviews (product_id, user_id, rating, comment, created_at, isDelete)
-VALUES 
-(1, 13, 5, N'Tài khoản xem mượt, hỗ trợ 4K cực nét. Rất uy tín!', DATEADD(DAY, -6, GETDATE()), 0),
-(2, 13, 4, N'Spotify nghe tốt nhưng lúc đầu hơi khó kích hoạt. Chủ shop nhiệt tình.', DATEADD(DAY, -4, GETDATE()), 0),
-(3, 13, 5, N'Canva nâng cấp rất nhanh chỉ mất 2 phút. Cảm ơn shop.', DATEADD(DAY, -2, GETDATE()), 0),
-(4, 13, 1, N'Spotify bị lỗi gia đình khá nhanh.', DATEADD(DAY, -1, GETDATE()), 0),
-(9, 13, 5, N'Tool Facebook hoạt động cực tốt, nuôi clone rất hiệu quả.', DATEADD(HOUR, -3, GETDATE()), 0);
-
--- Seed ShopFlags (Gắn cờ cảnh cáo shop vi phạm chính sách)
-INSERT INTO ShopFlags (seller_id, staff_id, complaint_id, reason, flag_level, created_at, isDelete)
-VALUES 
-(2, 14, 2, N'Shop phản hồi khiếu nại của khách hàng chậm hơn 24 giờ.', 'Warning', DATEADD(DAY, -10, GETDATE()), 0),
-(2, 14, NULL, N'Đăng mô tả sản phẩm chứa từ khóa spam quảng cáo ngoài sàn.', 'Warning', DATEADD(DAY, -5, GETDATE()), 0);
+-- Dọn dẹp các lịch sử giao dịch, khiếu nại và đánh giá để chuẩn bị cho môi trường chạy thực tế sạch 100%
+-- Không chèn sẵn Transactions, Withdrawals, Complaints, Chats, Reviews, ShopFlags mẫu.
 
 PRINT N'✓ Nạp dữ liệu Mock thành công.';
 GO

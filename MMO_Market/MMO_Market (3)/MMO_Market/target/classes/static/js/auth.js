@@ -201,7 +201,7 @@ function resolvePostLoginRedirect(roleValue, redirectPathFromApi) {
     if (role === 'Admin') {
         roleTarget = '/admin/users';
     } else if (role === 'Staff') {
-        roleTarget = '/staff/dashboard';
+        roleTarget = '/';
     } else if (isSellerRole(role)) {
         roleTarget = '/';
     }

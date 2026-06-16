@@ -208,7 +208,8 @@ function renderTransferInstruction(amount) {
     document.getElementById('topupTransferAmount').textContent = formatMoney(amount);
     document.getElementById('topupTransferContent').textContent = currentTransferContent;
     
-    const qrUrl = `https://img.vietqr.io/image/${sepayConfig.bankId}-${sepayConfig.accountNumber}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(currentTransferContent)}&accountName=${encodeURIComponent(sepayConfig.accountName)}`;
+    const bankIdLower = String(sepayConfig.bankId || 'tpb').toLowerCase();
+    const qrUrl = `https://img.vietqr.io/image/${bankIdLower}-${sepayConfig.accountNumber}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(currentTransferContent)}&accountName=${encodeURIComponent(sepayConfig.accountName)}`;
     document.getElementById('topupQrCode').src = qrUrl;
     
     const badge = document.querySelector('.topup-instruction .ds-badge');
