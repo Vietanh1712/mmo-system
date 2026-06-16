@@ -292,6 +292,11 @@ public class AuthenticationService {
 
         User user = userOptional.get();
 
+        if (Boolean.TRUE.equals(user.getIsLocked())) {
+            log.warn("Tài khoản đã bị khóa cố gắng đăng nhập: {}", request.getEmail());
+            return LoginResponse.builder().message("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.").build();
+        }
+
         if (!user.getIsVerified()) {
             log.warn("User chưa xác thực email: {}", request.getEmail());
             return LoginResponse.builder().message("Vui lòng xác thực email (OTP) trước khi đăng nhập").build();
@@ -371,6 +376,10 @@ public class AuthenticationService {
 
         if (user == null || user.getIsDelete()) {
             return LoginResponse.builder().message("User không tồn tại").build();
+        }
+
+        if (Boolean.TRUE.equals(user.getIsLocked())) {
+            return LoginResponse.builder().message("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.").build();
         }
 
         Authentication oldAuth = authOptional.get();
@@ -485,6 +494,10 @@ public class AuthenticationService {
                 log.info("Registered new Google user: {}", email);
             } else {
                 user = userOptional.get();
+                if (Boolean.TRUE.equals(user.getIsLocked())) {
+                    log.warn("Tài khoản Google đã bị khóa cố gắng đăng nhập: {}", email);
+                    throw new RuntimeException("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.");
+                }
                 log.info("Google user logged in: {}", email);
             }
 
