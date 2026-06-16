@@ -8,13 +8,13 @@
 -- ==============================================================================
 
 -- 1. KHỞI TẠO CƠ SỞ DỮ LIỆU
-IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'MMO_System')
+IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'MMO_System_Schema')
 BEGIN
-    CREATE DATABASE MMO_System;
+    CREATE DATABASE MMO_System_Schema;
 END
 GO
 
-USE MMO_System;
+USE MMO_System_Schema;
 GO
 
 -- XÓA BẢNG CŨ NẾU CÓ ĐỂ TRÁNH XUNG ĐỘT (XÓA THEO THỨ TỰ CON TRƯỚC - CHA SAU)
