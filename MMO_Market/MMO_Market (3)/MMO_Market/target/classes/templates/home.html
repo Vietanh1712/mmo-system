@@ -653,6 +653,7 @@
                     const priceText = minP + maxP;
                     const stock = product.totalStock != null ? product.totalStock : 0;
                     const stockText = stock > 999 ? '999+' : stock;
+                    
                     const sales = product.salesCount != null ? Number(product.salesCount) : 0;
                     const salesText = sales > 0 ? sales.toLocaleString('vi-VN') + ' Bán' : 'Mới lên';
 

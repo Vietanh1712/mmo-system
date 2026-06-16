@@ -177,7 +177,8 @@ public class ProductSearchController {
     }
 
     /**
-     * API lưu đánh giá của người dùng cho một sản phẩm vào DB
+     * API lưu đánh giá của người dùng cho một sản phẩm vào DB.
+     * Luồng hợp lệ: User phải có ít nhất 1 giao dịch HOÀN THÀNH (Completed) với sản phẩm này.
      */
     @org.springframework.web.bind.annotation.PostMapping("/products/{productId}/reviews")
     public ResponseEntity<?> submitProductReview(
@@ -201,6 +202,25 @@ public class ProductSearchController {
         java.util.Optional<model.Product> productOpt = productRepository.findByIdAndIsDeleteFalse(productId);
         if (!productOpt.isPresent()) {
             return ResponseEntity.notFound().build();
+        }
+
+        // ============================================================
+        // BẮT BUỘC: Kiểm tra user đã MUA và ĐƠN HÀNG ĐÃ HOÀN THÀNH
+        // (status = 'Completed') trước khi cho phép đánh giá.
+        // ============================================================
+        boolean hasPurchased = transactionRepository.existsCompletedPurchaseByCustomerAndProduct(userId, productId);
+        if (!hasPurchased) {
+            return ResponseEntity.status(403).body(java.util.Map.of(
+                    "message", "Bạn chưa mua sản phẩm này hoặc đơn hàng chưa hoàn thành. Chỉ người mua hàng thành công mới được đánh giá."
+            ));
+        }
+
+        // Kiểm tra user đã review sản phẩm này rồi hay chưa (chặn review trùng lặp)
+        boolean alreadyReviewed = reviewRepository.existsByProductIdAndUserIdAndIsDeleteFalse(productId, userId);
+        if (alreadyReviewed) {
+            return ResponseEntity.status(409).body(java.util.Map.of(
+                    "message", "Bạn đã đánh giá sản phẩm này rồi. Mỗi đơn hàng chỉ được đánh giá một lần."
+            ));
         }
 
         model.User user = userOpt.get();

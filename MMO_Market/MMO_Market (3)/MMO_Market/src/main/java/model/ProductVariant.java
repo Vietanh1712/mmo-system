@@ -21,7 +21,7 @@ public class ProductVariant {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @Column(name = "variant_name", nullable = false)
+    @Column(name = "variant_name", nullable = false, columnDefinition = "NVARCHAR(255)")
     private String variantName;
 
     @Column(name = "price_vnd", nullable = false)

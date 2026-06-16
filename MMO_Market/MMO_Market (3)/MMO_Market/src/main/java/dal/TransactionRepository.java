@@ -11,7 +11,11 @@ import java.util.List;
 
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
-    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.product.id = :productId AND t.isDelete = false")
+    /**
+     * Đếm số lượt bán THỰC TẾ (chỉ đơn Completed) của một sản phẩm.
+     * Không đếm đơn Pending / Cancelled / Refunded / Disputed.
+     */
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.product.id = :productId AND t.status IN ('Completed', 'Held') AND t.isDelete = false")
     Long countByProductIdAndIsDeleteFalse(@Param("productId") Long productId);
 
     List<Transaction> findBySellerAndIsDeleteFalseOrderByCreatedAtDesc(User seller);
@@ -22,4 +26,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     @Query("SELECT SUM(t.amountVnd - t.commissionVnd) FROM Transaction t WHERE t.seller = :seller AND t.status = 'Completed' AND t.isDelete = false")
     Long sumCompletedEarningsBySeller(@Param("seller") User seller);
+
+    /**
+     * Kiểm tra xem customer đã có giao dịch HOÀN THÀNH (Completed) hoặc GIỮ TIỀN (Held) cho sản phẩm này chưa.
+     * Dùng để validate trước khi cho phép đánh giá.
+     */
+    @Query("SELECT COUNT(t) > 0 FROM Transaction t WHERE t.customer.id = :customerId AND t.product.id = :productId AND t.status IN ('Completed', 'Held') AND t.isDelete = false")
+    boolean existsCompletedPurchaseByCustomerAndProduct(@Param("customerId") Long customerId, @Param("productId") Long productId);
 }

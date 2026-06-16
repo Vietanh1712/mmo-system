@@ -59,7 +59,7 @@
                             <span>5.0</span>
                         </span>
                         <span class="meta-separator">|</span>
-                        <span>Đã bán 1.2k+</span>
+                        <span>Đang tải...</span>
                         <span class="meta-separator">|</span>
                         <span class="status-instock" id="stockStatusText">
                             <i class="fa fa-check-circle"></i> Còn hàng
@@ -223,52 +223,8 @@
             <!-- Block 3: Similar Products Section -->
             <div>
                 <h2 class="similar-products__title">Sản phẩm tương tự nổi bật</h2>
-                <div class="similar-products-grid">
-
-                    <!-- Similar 1: Youtube Premium -->
-                    <a href="/products/2" class="similar-card">
-                        <div class="similar-card__img-container">
-                            <i class="fa fa-youtube-play product-card__img-icon" style="color: #FF0000;"></i>
-                        </div>
-                        <div class="similar-card__body">
-                            <h4 class="similar-card__title">Tài khoản YouTube Premium Không Quảng Cáo (Xem Cá Nhân)</h4>
-                            <div class="similar-card__price">29.000đ</div>
-                        </div>
-                    </a>
-
-                    <!-- Similar 2: Spotify Premium -->
-                    <a href="/products/3" class="similar-card">
-                        <div class="similar-card__img-container">
-                            <i class="fa fa-music product-card__img-icon" style="color: #1DB954;"></i>
-                        </div>
-                        <div class="similar-card__body">
-                            <h4 class="similar-card__title">Tài khoản Spotify Premium Gia Hạn Chính Chủ Giá Rẻ</h4>
-                            <div class="similar-card__price">19.000đ</div>
-                        </div>
-                    </a>
-
-                    <!-- Similar 3: ChatGPT Plus -->
-                    <a href="/products/4" class="similar-card">
-                        <div class="similar-card__img-container">
-                            <i class="fa fa-comments product-card__img-icon" style="color: #10a37f;"></i>
-                        </div>
-                        <div class="similar-card__body">
-                            <h4 class="similar-card__title">Tài khoản ChatGPT Plus (OpenAI) Sử Dụng GPT-4o Siêu Tốc</h4>
-                            <div class="similar-card__price">89.000đ</div>
-                        </div>
-                    </a>
-
-                    <!-- Similar 4: Canva Pro -->
-                    <a href="/products/5" class="similar-card">
-                        <div class="similar-card__img-container">
-                            <i class="fa fa-paint-brush product-card__img-icon" style="color: #00c4cc;"></i>
-                        </div>
-                        <div class="similar-card__body">
-                            <h4 class="similar-card__title">Tài khoản Canva Pro Giáo Dục Mở Khóa Đầy Đủ Tính Năng</h4>
-                            <div class="similar-card__price">15.000đ</div>
-                        </div>
-                    </a>
-
+                <div class="product-grid similar-products-grid">
+                    <!-- Sẽ được chèn động từ database -->
                 </div>
             </div>
 
@@ -799,24 +755,6 @@ stock: 50,
                 if (!response.ok) throw new Error("Failed to fetch product from API");
                 const apiData = await response.json();
                 
-                // Calculate extra sales from mock sessionStorage orders
-                const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
-                let userEmail = '';
-                if (userStr) {
-                    try {
-                        userEmail = JSON.parse(userStr).email || '';
-                    } catch(e) {}
-                }
-                const ordersKey = userEmail ? `mmoMarketMyOrdersMock_${userEmail}` : `mmoMarketMyOrdersMock`;
-                let extraSales = 0;
-                try {
-                    const savedOrders = sessionStorage.getItem(ordersKey);
-                    if (savedOrders) {
-                        const orders = JSON.parse(savedOrders);
-                        extraSales = orders.filter(o => o.productId == apiData.id).length;
-                    }
-                } catch(e) {}
-
                 // Map API response to our expected selectedProduct structure
                 selectedProduct = {
                     id: apiData.id,
@@ -825,11 +763,12 @@ stock: 50,
                     color: getProductIconAndColor(apiData.name).color,
                     seller: apiData.sellerName,
                     sellerId: apiData.sellerId,
-                    sales: (apiData.salesCount || 0) + extraSales,
+                    sales: apiData.salesCount || 0,
                     rating: apiData.averageRating.toFixed(1),
                     reviewsCount: apiData.reviewsCount,
                     stock: apiData.stock,
                     description: apiData.description,
+                    categoryName: apiData.categoryName,
                     variants: apiData.variants && apiData.variants.length > 0 ? apiData.variants.map(v => ({
                         duration: v.duration,
                         price: v.price,
@@ -854,6 +793,22 @@ stock: 50,
             if (!selectedProduct.guide) {
                 const fallback = PRODUCTS_DB[productId] || PRODUCTS_DB[1];
                 selectedProduct.guide = fallback.guide;
+            }
+            if (!selectedProduct.categoryName) {
+                const nameLower = selectedProduct.name.toLowerCase();
+                if (nameLower.includes('gmail') || nameLower.includes('mail')) {
+                    selectedProduct.categoryName = "Email";
+                } else if (nameLower.includes('tool') || nameLower.includes('phần mềm') || nameLower.includes('key')) {
+                    selectedProduct.categoryName = "Phần mềm";
+                } else if (nameLower.includes('follow') || nameLower.includes('tương tác') || nameLower.includes('tiktok')) {
+                    selectedProduct.categoryName = "Tăng tương tác";
+                } else if (nameLower.includes('wallet') || nameLower.includes('trust') || nameLower.includes('crypto')) {
+                    selectedProduct.categoryName = "Blockchain";
+                } else if (nameLower.includes('logo') || nameLower.includes('banner') || nameLower.includes('thiết kế')) {
+                    selectedProduct.categoryName = "Dịch vụ khác";
+                } else {
+                    selectedProduct.categoryName = "Tài khoản Premium";
+                }
             }
 
             selectedProduct.stock = Number.isFinite(Number(selectedProduct.stock)) ? Number(selectedProduct.stock) : 5;
@@ -1047,6 +1002,9 @@ stock: 50,
 
             // Load reviews dynamically
             loadProductReviews();
+
+            // Load similar products dynamically
+            loadSimilarProducts();
         }
 
         // Helper to map products to homepage-styled icons and colors (fallback helper)
@@ -1138,6 +1096,154 @@ stock: 50,
             } catch (err) {
                 console.warn("Failed to load reviews from API, showing default empty state", err);
                 container.innerHTML = '<p style="color: var(--text-muted); font-style: italic; text-align: center; padding: 20px 0;">Chưa có đánh giá nào cho sản phẩm này.</p>';
+            }
+        }
+
+        // Helper to extract searchable keywords from name
+        function getKeywordsFromProductName(name) {
+            if (!name) return [];
+            const nameLower = name.toLowerCase();
+            const cleanName = nameLower.replace(/[.,()\-+/\[\]:]/g, ' ');
+            const words = cleanName.split(/\s+/);
+            const stopWords = new Set([
+                'tài', 'khoản', 'của', 'gói', 'cho', 'giá', 'siêu', 'rẻ', 'bán', 'chính', 'chủ', 
+                'bản', 'quyền', 'dịch', 'vụ', 'mua', 'tháng', 'năm', 'ngày', 'thiết', 'bị', 
+                'xem', 'riêng', 'suốt', 'thời', 'gian', 'sử', 'dụng', 'bảo', 'hành', 'đổi', 
+                'các', 'những', 'để', 'và', 'kèm', 'trực', 'tiếp', 'hỗ', 'trợ', 'qua', 'link', 
+                'family', 'nhanh', 'chóng', 'độc', 'quyền', 'vĩnh', 'viễn', 'combo'
+            ]);
+            return words.filter(w => w.length >= 3 && !stopWords.has(w));
+        }
+
+        // Add similar product to cart handler
+        function addSimilarProductToCart(pId, productName, sellerName, price, icon, iconColor) {
+            const cartItem = {
+                productId: pId,
+                duration: 1,
+                variantLabel: '1 Tháng', // Default duration fallback
+                productName: productName,
+                sellerName: sellerName || 'VipStore',
+                price: price || 0,
+                icon: icon || 'fa-cube',
+                iconColor: iconColor || '#fd761a',
+                quantity: 1
+            };
+            const cart = JSON.parse(localStorage.getItem('mmoCart') || '[]');
+            const existing = cart.find(item => item.productId === cartItem.productId && item.duration === cartItem.duration);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push(cartItem);
+            }
+            localStorage.setItem('mmoCart', JSON.stringify(cart));
+            showSuccessToast('Đã thêm sản phẩm vào giỏ hàng thành công!');
+            if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
+        }
+
+        // Fetch similar products dynamically from the database using keyword and category relevance
+        async function loadSimilarProducts() {
+            const grid = document.querySelector('.similar-products-grid');
+            if (!grid) return;
+
+            grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 20px 0;"><i class="fa fa-spinner fa-spin"></i> Đang tải sản phẩm tương tự...</p>';
+
+            try {
+                // Fetch dynamic products list from search API
+                const res = await fetch('/api/search/products?size=100');
+                if (!res.ok) throw new Error("Failed to fetch search catalog");
+                const data = await res.json();
+                const allCatalogProducts = data.content || [];
+
+                // Filter out current product
+                let candidates = allCatalogProducts.filter(p => Number(p.productId) !== Number(productId));
+
+                // Calculate relevance scores
+                const currentName = selectedProduct.name.toLowerCase();
+                const currentCategoryName = selectedProduct.categoryName;
+
+                const brands = ['netflix', 'chatgpt', 'gpt', 'spotify', 'windows', 'win', 'youtube', 'canva', 'gmail', 'facebook', 'fb', 'vpn', 'nordvpn', 'tiktok', 'wallet', 'crypto', 'trust', 'logo', 'banner'];
+                const matchedBrands = brands.filter(b => currentName.includes(b));
+
+                candidates = candidates.map(p => {
+                    let score = 0;
+                    
+                    // Cùng CategoryName
+                    if (p.categoryName && currentCategoryName && p.categoryName === currentCategoryName) {
+                        score += 30;
+                    }
+                    
+                    // Trùng thương hiệu chính
+                    const candNameLower = (p.productName || '').toLowerCase();
+                    matchedBrands.forEach(b => {
+                        if (candNameLower.includes(b)) {
+                            score += 50;
+                        }
+                    });
+
+                    // Trùng các keyword nhỏ khác
+                    const currentKeywords = getKeywordsFromProductName(selectedProduct.name);
+                    currentKeywords.forEach(kw => {
+                        if (candNameLower.includes(kw)) {
+                            score += 5;
+                        }
+                    });
+
+                    return { product: p, score };
+                });
+
+                // Sort by score descending, then by salesCount descending
+                candidates.sort((a, b) => {
+                    if (b.score !== a.score) return b.score - a.score;
+                    return (b.product.salesCount || 0) - (a.product.salesCount || 0);
+                });
+
+                // Take top 3
+                const similarList = candidates.slice(0, 3).map(c => c.product);
+
+                grid.innerHTML = '';
+
+                if (similarList.length === 0) {
+                    grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 20px 0;">Không có sản phẩm tương tự nào.</p>';
+                    return;
+                }
+
+                similarList.forEach(product => {
+                    const priceText = product.price ? product.price.toLocaleString('vi-VN') + 'đ' : '--';
+                    const stock = product.stock != null ? product.stock : 0;
+                    const stockText = stock > 999 ? '999+' : stock;
+                    const sales = product.salesCount != null ? Number(product.salesCount) : 0;
+                    const salesText = sales > 0 ? sales.toLocaleString('vi-VN') + ' Bán' : 'Mới lên';
+
+                    // Determine icon and color
+                    const iconInfo = getProductIconAndColor(product.productName);
+
+                    // Create product-card styled same as homepage
+                    const card = document.createElement('a');
+                    card.href = `/products/${product.productId}`;
+                    card.className = 'product-card';
+                    card.innerHTML = `
+                        <div class="product-card__image-container">
+                            <i class="fa ${iconInfo.icon} product-card__img-icon" style="color:${iconInfo.color};"></i>
+                            <span class="product-card__badge-ads">Bán chạy</span>
+                        </div>
+                        <div class="product-card__body">
+                            <div class="product-card__stock">Tồn: ${stockText}</div>
+                            <div class="product-card__price">${priceText}</div>
+                            <h4 class="product-card__title">${product.productName}</h4>
+                            <div class="product-card__footer">
+                                <span>${salesText}</span>
+                                <button class="product-card__cart-btn" type="button" title="Thêm vào giỏ hàng"
+                                    onclick="event.preventDefault(); event.stopPropagation(); addSimilarProductToCart(${product.productId}, '${(product.productName||'').replace(/'/g, "\\'")}', '${(product.sellerName||'').replace(/'/g, "\\'")}', ${product.price||0}, '${iconInfo.icon}', '${iconInfo.color}');">
+                                    <i class="fa fa-shopping-cart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (err) {
+                console.error("Failed to load similar products:", err);
+                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--danger); padding: 20px 0;">Không thể tải danh sách sản phẩm tương tự.</p>';
             }
         }
 

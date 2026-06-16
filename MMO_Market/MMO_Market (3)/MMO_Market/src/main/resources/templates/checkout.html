@@ -738,7 +738,22 @@
             const paramIcon = checkoutUrlParams.get('icon');
             const paramIconColor = checkoutUrlParams.get('iconColor');
 
-            // Override selectedProduct with URL params if available (ensures sync wit            // 2. Load product details to UI
+            // Override selectedProduct with URL params if available (ensures sync with product-detail selection)
+            if (checkoutMode !== 'cart' && paramProductName) {
+                selectedProduct = {
+                    name: paramProductName,
+                    seller: paramSellerName || selectedProduct.seller,
+                    icon: paramIcon || selectedProduct.icon,
+                    color: paramIconColor || selectedProduct.color,
+                    prices: {}
+                };
+                if (paramPrice) {
+                    price = Number(paramPrice);
+                    checkoutTotal = price;
+                }
+            }
+
+            // 2. Load product details to UI
             document.getElementById('productName').innerText = selectedProduct.name;
             document.getElementById('productSeller').innerText = selectedProduct.seller;
             
@@ -858,7 +873,7 @@
         }
 
         // Handle Submit Button Click
-        function handlePaymentSubmit() {
+        async function handlePaymentSubmit() {
             if (!hasEnoughBalance) {
                 // If insufficient balance, redirect to Top Up (Nạp tiền)
                 const missingAmount = checkoutTotal - (currentUser.balanceVnd || 0);
@@ -867,141 +882,131 @@
                 return;
             }
 
-            // Perform transaction: Subtract price from balance, save back, show success modal
-            const currentBalance = currentUser.balanceVnd || 0;
-            const finalBalance = currentBalance - checkoutTotal;
-            
-            // Update local user info state
-            currentUser.balanceVnd = finalBalance;
-            sessionStorage.setItem('userInfo', JSON.stringify(currentUser));
-            sessionStorage.setItem('user', JSON.stringify(currentUser));
+            const token = sessionStorage.getItem("accessToken");
+            if (!token) {
+                alert("Vui lòng đăng nhập trước khi thực hiện mua hàng!");
+                window.location.href = "/login";
+                return;
+            }
 
-            // Generate mock transaction code
-            const txnCode = "TXN" + Math.floor(10000000 + Math.random() * 90000000);
-            
-            // Inject into success modal
-            document.getElementById('invTxnId').innerText = txnCode;
-            document.getElementById('invProduct').innerText = checkoutMode === 'cart'
-                ? `${checkoutItems.reduce((sum, item) => sum + item.quantity, 0)} sản phẩm`
-                : selectedProduct.name;
-            document.getElementById('invAmount').innerText = formatVND(checkoutTotal);
+            const btnPay = document.getElementById('btnPay');
+            btnPay.setAttribute('disabled', 'true');
+            btnPay.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
 
-            // Save order and transaction in sessionStorage under user-specific keys
-            const userEmail = currentUser.email || '';
-            const ordersKey = userEmail ? `mmoMarketMyOrdersMock_${userEmail}` : `mmoMarketMyOrdersMock`;
-            const transactionsKey = userEmail ? `mmoMarketWalletTransactionsMock_${userEmail}` : `mmoMarketWalletTransactionsMock`;
-
-            let orders = [];
             try {
-                const savedOrders = sessionStorage.getItem(ordersKey);
-                if (savedOrders !== null) {
-                    orders = JSON.parse(savedOrders);
-                }
-            } catch (e) {
-                console.error("Lỗi đọc orders:", e);
-            }
+                // Call real payment API on the Spring Boot backend
+                const response = await fetch('/api/transactions/purchase', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        productId: Number(productId),
+                        variantLabel: paramVariantLabel || (duration + " Tháng")
+                    })
+                });
 
-            const now = new Date();
-            const orderCode = 'MMO-ORD-' + Math.floor(1000 + Math.random() * 9000);
-            
-            // Check if product is account to generate credentials
-            let credentials = null;
-            const prodName = checkoutMode === 'cart'
-                ? `${checkoutItems.reduce((sum, item) => sum + item.quantity, 0)} sản phẩm`
-                : selectedProduct.name;
-            const lowerName = prodName.toLowerCase();
-            const isAccount = lowerName.includes('tài khoản') || 
-                              lowerName.includes('premium') || 
-                              lowerName.includes('spotify') || 
-                              lowerName.includes('netflix') || 
-                              lowerName.includes('canva') || 
-                              lowerName.includes('chatgpt') || 
-                              lowerName.includes('gmail') || 
-                              lowerName.includes('vpn') || 
-                              lowerName.includes('key');
-            if (isAccount) {
-                const randomNum = Math.floor(1000 + Math.random() * 9000);
-                const cleanName = prodName.replace(/[^a-zA-Z0-9]/g, '').substring(0, 8).toLowerCase();
-                if (lowerName.includes('key')) {
-                    credentials = {
-                        username: `KEY-${randomNum}-ABCD-EFGH-IJKL`,
-                        password: '(Product Key)'
-                    };
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Lỗi thanh toán từ hệ thống.');
+                }
+
+                // Update local user info state with the exact balance calculated by the DB
+                currentUser.balanceVnd = data.finalBalance;
+                sessionStorage.setItem('userInfo', JSON.stringify(currentUser));
+                sessionStorage.setItem('user', JSON.stringify(currentUser));
+
+                // Save order and transaction in sessionStorage under user-specific keys (for UI compatibility)
+                const userEmail = currentUser.email || '';
+                const ordersKey = userEmail ? `mmoMarketMyOrdersMock_${userEmail}` : `mmoMarketMyOrdersMock`;
+                const transactionsKey = userEmail ? `mmoMarketWalletTransactionsMock_${userEmail}` : `mmoMarketWalletTransactionsMock`;
+
+                let orders = [];
+                try {
+                    const savedOrders = sessionStorage.getItem(ordersKey);
+                    if (savedOrders !== null) {
+                        orders = JSON.parse(savedOrders);
+                    }
+                } catch (e) {}
+
+                const now = new Date();
+                const newOrder = {
+                    orderCode: data.orderCode,
+                    productId: Number(productId),
+                    productName: data.productName,
+                    variantLabel: paramVariantLabel || (duration + " Tháng"),
+                    sellerName: selectedProduct.seller || 'Digital Store VN',
+                    amount: data.amount,
+                    status: 'PAID',
+                    paymentStatus: 'PAID',
+                    createdAt: now.toLocaleString('vi-VN'),
+                    escrowReleaseDate: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
+                    credentials: data.credentials,
+                    isReviewed: false
+                };
+                orders.unshift(newOrder);
+                sessionStorage.setItem(ordersKey, JSON.stringify(orders));
+
+                let txns = [];
+                try {
+                    const savedTxns = sessionStorage.getItem(transactionsKey);
+                    if (savedTxns !== null) {
+                        txns = JSON.parse(savedTxns);
+                    }
+                } catch (e) {}
+
+                const newTxn = {
+                    code: data.transactionCode,
+                    type: 'PAYMENT',
+                    amount: -data.amount,
+                    status: 'SUCCESS',
+                    description: `Thanh toán đơn hàng ${data.orderCode}`,
+                    createdAt: now.toLocaleString('vi-VN')
+                };
+                txns.unshift(newTxn);
+                sessionStorage.setItem(transactionsKey, JSON.stringify(txns));
+
+                if (checkoutMode === 'cart') {
+                    clearPurchasedCartItems();
+                }
+
+                // Inject credentials into modal if available
+                document.getElementById('invTxnId').innerText = data.transactionCode;
+                document.getElementById('invProduct').innerText = data.productName;
+                document.getElementById('invAmount').innerText = formatVND(data.amount);
+
+                const credRow = document.getElementById('modalCredentialsRow');
+                if (data.credentials) {
+                    const isKey = data.credentials.password === '(Product Key)';
+                    document.getElementById('modalCredLabel').innerText = isKey ? 'Mã kích hoạt (Key):' : 'Tài khoản (Email/Username):';
+                    document.getElementById('modalCredUsername').innerText = data.credentials.username;
+                    
+                    const passRow = document.getElementById('modalCredPasswordRow');
+                    if (isKey) {
+                        passRow.style.display = 'none';
+                    } else {
+                        passRow.style.display = 'flex';
+                        document.getElementById('modalCredPassword').innerText = data.credentials.password;
+                    }
+                    credRow.hidden = false;
                 } else {
-                    credentials = {
-                        username: `${cleanName}_${randomNum}@gmail.com`,
-                        password: `Pass_${randomNum}_Secure`
-                    };
+                    credRow.hidden = true;
                 }
+
+                // Set global order code for redirection
+                currentCreatedOrderCode = data.orderCode;
+
+                // Show success modal
+                const modal = document.getElementById('successModal');
+                modal.classList.add('active');
+
+            } catch (err) {
+                alert(err.message || 'Có lỗi xảy ra khi thực hiện thanh toán.');
+                btnPay.removeAttribute('disabled');
+                btnPay.innerHTML = '<i class="fa fa-lock"></i> Xác nhận thanh toán';
             }
-            
-            const newOrder = {
-                orderCode: orderCode,
-                productId: checkoutMode === 'cart' ? (checkoutItems.length > 0 ? checkoutItems[0].productId : productId) : productId,
-                productName: prodName,
-                variantLabel: checkoutMode === 'cart' ? (checkoutItems.length > 0 ? (checkoutItems[0].variantLabel || '') : '') : (paramVariantLabel || (duration + " Tháng")),
-                sellerName: selectedProduct.seller || 'Digital Store VN',
-                amount: checkoutTotal,
-                status: 'PAID',
-                paymentStatus: 'PAID',
-                createdAt: now.toLocaleString('vi-VN'),
-                escrowReleaseDate: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
-                credentials: credentials,
-                isReviewed: false
-            };
-            orders.unshift(newOrder);
-            sessionStorage.setItem(ordersKey, JSON.stringify(orders));
-
-            let txns = [];
-            try {
-                const savedTxns = sessionStorage.getItem(transactionsKey);
-                if (savedTxns !== null) {
-                    txns = JSON.parse(savedTxns);
-                }
-            } catch (e) {
-                console.error("Lỗi đọc transactions:", e);
-            }
-
-            const newTxn = {
-                code: txnCode,
-                type: 'PAYMENT',
-                amount: -checkoutTotal,
-                status: 'SUCCESS',
-                description: `Thanh toán đơn hàng ${orderCode}`,
-                createdAt: now.toLocaleString('vi-VN')
-            };
-            txns.unshift(newTxn);
-            sessionStorage.setItem(transactionsKey, JSON.stringify(txns));
-
-            if (checkoutMode === 'cart') {
-                clearPurchasedCartItems();
-            }
-
-            // Inject credentials into modal if available
-            const credRow = document.getElementById('modalCredentialsRow');
-            if (newOrder.credentials) {
-                const isKey = newOrder.credentials.password === '(Product Key)';
-                document.getElementById('modalCredLabel').innerText = isKey ? 'Mã kích hoạt (Key):' : 'Tài khoản (Email/Username):';
-                document.getElementById('modalCredUsername').innerText = newOrder.credentials.username;
-                
-                const passRow = document.getElementById('modalCredPasswordRow');
-                if (isKey) {
-                    passRow.style.display = 'none';
-                } else {
-                    passRow.style.display = 'flex';
-                    document.getElementById('modalCredPassword').innerText = newOrder.credentials.password;
-                }
-                credRow.hidden = false;
-            } else {
-                credRow.hidden = true;
-            }
-
-            // Set global order code for redirection
-            currentCreatedOrderCode = orderCode;
-
-            // Show success modal
-            const modal = document.getElementById('successModal');
-            modal.classList.add('active');
         }
 
         let currentCreatedOrderCode = '';

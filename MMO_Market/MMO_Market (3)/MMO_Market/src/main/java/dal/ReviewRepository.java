@@ -26,4 +26,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     @Query("SELECT r FROM Review r WHERE r.product.seller.id = :sellerId AND r.isDelete = false ORDER BY r.createdAt DESC")
     List<Review> findReviewsBySellerId(@Param("sellerId") Long sellerId);
+
+    /**
+     * Kiểm tra user đã đánh giá sản phẩm này chưa (chống review đụp lần).
+     */
+    boolean existsByProductIdAndUserIdAndIsDeleteFalse(Long productId, Long userId);
 }
