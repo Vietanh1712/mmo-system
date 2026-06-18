@@ -170,6 +170,7 @@ public class ProductSearchController {
                         .userName(r.getUser() != null && r.getUser().getFullName() != null ? r.getUser().getFullName() : "Người dùng MMO")
                         .rating(r.getRating())
                         .comment(r.getComment())
+                        .mediaUrl(r.getMediaUrl())
                         .createdAt(r.getCreatedAt())
                         .build())
                 .collect(java.util.stream.Collectors.toList());
@@ -206,21 +207,56 @@ public class ProductSearchController {
 
         // ============================================================
         // BẮT BUỘC: Kiểm tra user đã MUA và ĐƠN HÀNG ĐÃ HOÀN THÀNH
-        // (status = 'Completed') trước khi cho phép đánh giá.
+        // (status = 'Completed' hoặc 'Held') trước khi cho phép đánh giá.
         // ============================================================
-        boolean hasPurchased = transactionRepository.existsCompletedPurchaseByCustomerAndProduct(userId, productId);
-        if (!hasPurchased) {
-            return ResponseEntity.status(403).body(java.util.Map.of(
-                    "message", "Bạn chưa mua sản phẩm này hoặc đơn hàng chưa hoàn thành. Chỉ người mua hàng thành công mới được đánh giá."
-            ));
-        }
+        Long transactionId = request.getTransactionId();
 
-        // Kiểm tra user đã review sản phẩm này rồi hay chưa (chặn review trùng lặp)
-        boolean alreadyReviewed = reviewRepository.existsByProductIdAndUserIdAndIsDeleteFalse(productId, userId);
-        if (alreadyReviewed) {
-            return ResponseEntity.status(409).body(java.util.Map.of(
-                    "message", "Bạn đã đánh giá sản phẩm này rồi. Mỗi đơn hàng chỉ được đánh giá một lần."
-            ));
+        // Nếu có transactionId: validate giao dịch thuộc về user và sản phẩm này
+        if (transactionId != null) {
+            java.util.Optional<model.Transaction> txOpt = transactionRepository.findById(transactionId);
+            if (!txOpt.isPresent() || txOpt.get().getIsDelete()) {
+                return ResponseEntity.status(403).body(java.util.Map.of(
+                        "message", "Giao dịch không tồn tại hoặc đã bị xóa."
+                ));
+            }
+            model.Transaction tx = txOpt.get();
+            if (!tx.getCustomer().getId().equals(userId)) {
+                return ResponseEntity.status(403).body(java.util.Map.of(
+                        "message", "Giao dịch này không thuộc về tài khoản của bạn."
+                ));
+            }
+            if (!tx.getProduct().getId().equals(productId)) {
+                return ResponseEntity.status(403).body(java.util.Map.of(
+                        "message", "Giao dịch này không liên quan đến sản phẩm đang được đánh giá."
+                ));
+            }
+            if (!java.util.List.of("Completed", "Held").contains(tx.getStatus())) {
+                return ResponseEntity.status(403).body(java.util.Map.of(
+                        "message", "Đơn hàng chưa hoàn thành. Chỉ đơn đã thanh toán mới được đánh giá."
+                ));
+            }
+            // Kiểm tra giao dịch CỤ THỂ này đã được đánh giá chưa
+            boolean txAlreadyReviewed = reviewRepository.existsByTransactionIdAndIsDeleteFalse(transactionId);
+            if (txAlreadyReviewed) {
+                return ResponseEntity.status(409).body(java.util.Map.of(
+                        "message", "Đơn hàng này đã được đánh giá rồi. Mỗi đơn hàng chỉ được đánh giá một lần."
+                ));
+            }
+        } else {
+            // Fallback (backward compatibility): kiểm tra đã mua sản phẩm chưa
+            boolean hasPurchased = transactionRepository.existsCompletedPurchaseByCustomerAndProduct(userId, productId);
+            if (!hasPurchased) {
+                return ResponseEntity.status(403).body(java.util.Map.of(
+                        "message", "Bạn chưa mua sản phẩm này hoặc đơn hàng chưa hoàn thành. Chỉ người mua hàng thành công mới được đánh giá."
+                ));
+            }
+            // Fallback: chặn review trùng ở cấp độ sản phẩm
+            boolean alreadyReviewed = reviewRepository.existsByProductIdAndUserIdAndIsDeleteFalse(productId, userId);
+            if (alreadyReviewed) {
+                return ResponseEntity.status(409).body(java.util.Map.of(
+                        "message", "Bạn đã đánh giá sản phẩm này rồi. Vui lòng gửi đánh giá từ trang chi tiết đơn hàng."
+                ));
+            }
         }
 
         model.User user = userOpt.get();
@@ -229,8 +265,10 @@ public class ProductSearchController {
         model.Review review = model.Review.builder()
                 .product(product)
                 .user(user)
+                .transactionId(transactionId)
                 .rating(request.getRating())
                 .comment(request.getComment() != null ? request.getComment() : "")
+                .mediaUrl(request.getMediaUrl())
                 .isDelete(false)
                 .build();
         model.Review saved = reviewRepository.save(review);
@@ -240,11 +278,13 @@ public class ProductSearchController {
                 .userName(user.getFullName() != null ? user.getFullName() : "Người dùng MMO")
                 .rating(saved.getRating())
                 .comment(saved.getComment())
+                .mediaUrl(saved.getMediaUrl())
                 .createdAt(saved.getCreatedAt())
                 .build();
 
         return ResponseEntity.ok(responseDTO);
     }
+
 
     @GetMapping("/seller/{sellerId}")
     public ResponseEntity<?> getSellerProfile(

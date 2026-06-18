@@ -28,7 +28,15 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     List<Review> findReviewsBySellerId(@Param("sellerId") Long sellerId);
 
     /**
-     * Kiểm tra user đã đánh giá sản phẩm này chưa (chống review đụp lần).
+     * Kiểm tra user đã đánh giá sản phẩm này chưa (fallback khi không có transactionId).
+     * Chỉ dùng khi không có thông tin đơn hàng cụ thể.
      */
     boolean existsByProductIdAndUserIdAndIsDeleteFalse(Long productId, Long userId);
+
+    /**
+     * Kiểm tra đơn hàng cụ thể (transactionId) đã được đánh giá chưa.
+     * Dùng để cho phép user đánh giá cùng sản phẩm nhiều lần nếu mua nhiều đơn khác nhau.
+     */
+    boolean existsByTransactionIdAndIsDeleteFalse(Long transactionId);
 }
+

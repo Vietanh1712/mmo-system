@@ -16,6 +16,7 @@ public class PurchaseResponse {
     private String productName;
     private Long amount;
     private CredentialsDTO credentials;
+    private Long transactionId;
 
     @Data
     @NoArgsConstructor

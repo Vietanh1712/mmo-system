@@ -318,6 +318,15 @@
 
                 <article class="support-contact-card">
                     <div class="support-contact-card__icon-wrap">
+                        <i class="fa fa-gavel"></i>
+                    </div>
+                    <h3 class="support-contact-card__title">Khiếu nại đơn hàng</h3>
+                    <p class="support-contact-card__desc">Gặp sự cố với sản phẩm đã mua? Bạn có thể mở khiếu nại (escrow 3 ngày) trong trang chi tiết đơn hàng.</p>
+                    <button type="button" class="support-contact-card__btn" onclick="window.location.href='/account/orders'">Xem đơn hàng</button>
+                </article>
+
+                <article class="support-contact-card">
+                    <div class="support-contact-card__icon-wrap">
                         <i class="fa fa-envelope"></i>
                     </div>
                     <h3 class="support-contact-card__title">Email</h3>
@@ -326,6 +335,39 @@
                     <p class="support-contact-card__note">Thời gian phản hồi: 1–2 ngày làm việc</p>
                 </article>
 
+            </div>
+        </section>
+
+        <!-- Ticket History Section -->
+        <section class="support-section" id="ticket-history-section" style="margin-top: 56px;">
+            <div class="support-section__header">
+                <h2 class="support-section__title">Lịch sử Ticket hỗ trợ</h2>
+                <p class="support-section__subtitle">Theo dõi các yêu cầu hỗ trợ và khiếu nại bạn đã gửi đến hệ thống.</p>
+            </div>
+            <div class="support-faq-list" style="max-width: 1000px; width: 100%;">
+                <div class="ds-card" style="background: var(--card-bg, #ffffff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 12px; padding: 20px; box-shadow: var(--shadow-light, 0 1px 3px rgba(0,0,0,0.1));">
+                    <div class="ds-table-wrap" style="overflow-x: auto; width: 100%;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; min-width: 800px;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border-color, #e2e8f0); background: #f8fafc;">
+                                    <th style="padding: 12px 16px; font-weight: 600; color: var(--brand-dark, #0f172a);">Mã Ticket</th>
+                                    <th style="padding: 12px 16px; font-weight: 600; color: var(--brand-dark, #0f172a);">Danh mục</th>
+                                    <th style="padding: 12px 16px; font-weight: 600; color: var(--brand-dark, #0f172a);">Tiêu đề</th>
+                                    <th style="padding: 12px 16px; font-weight: 600; color: var(--brand-dark, #0f172a);">Phản hồi từ Staff</th>
+                                    <th style="padding: 12px 16px; font-weight: 600; color: var(--brand-dark, #0f172a); text-align: center;">Trạng thái</th>
+                                    <th style="padding: 12px 16px; font-weight: 600; color: var(--brand-dark, #0f172a);">Ngày gửi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ticket-history-body">
+                                <tr>
+                                    <td colspan="6" style="padding: 30px; text-align: center; color: var(--text-muted, #64748b);">
+                                        Bạn chưa gửi yêu cầu hỗ trợ nào.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -344,210 +386,29 @@
             <p class="support-ticket-modal__subtitle">Mô tả vấn đề để đội ngũ kỹ thuật hỗ trợ bạn.</p>
             <form id="support-ticket-form" onsubmit="submitTicketForm(event)">
                 <div class="support-ticket-field">
-                    <label for="ticket-category">Danh mục</label>
+                    <label for="ticket-category">Loại hỗ trợ (Danh mục)</label>
                     <select id="ticket-category" required>
-                        <option value="technical" selected>Hỗ trợ kỹ thuật</option>
+                        <option value="Lỗi nạp tiền" selected>Lỗi nạp tiền / giao dịch ví</option>
+                        <option value="Lỗi tài khoản">Lỗi tài khoản / bảo mật</option>
+                        <option value="Góp ý">Góp ý phát triển hệ thống</option>
+                        <option value="Khác">Khác</option>
                     </select>
                 </div>
                 <div class="support-ticket-field">
-                    <label for="ticket-subject">Tiêu đề</label>
-                    <input type="text" id="ticket-subject" required maxlength="200" placeholder="VD: Không nhận được sản phẩm sau khi mua">
+                    <label for="ticket-subject">Tiêu đề hỗ trợ</label>
+                    <input type="text" id="ticket-subject" required maxlength="200" placeholder="VD: Nạp tiền đúng cú pháp nhưng chưa cộng số dư">
                 </div>
                 <div class="support-ticket-field">
-                    <label for="ticket-order">Mã đơn hàng (nếu có)</label>
-                    <input type="text" id="ticket-order" placeholder="VD: ORD-12345">
+                    <label for="ticket-detail">Nội dung chi tiết</label>
+                    <textarea id="ticket-detail" rows="5" required placeholder="Mô tả chi tiết lỗi hoặc thắc mắc của bạn..."></textarea>
                 </div>
-                <div class="support-ticket-field">
-                    <label for="ticket-detail">Chi tiết</label>
-                    <textarea id="ticket-detail" rows="5" required placeholder="Mô tả chi tiết vấn đề, thời gian xảy ra, bước đã thử..."></textarea>
-                </div>
-                <button type="submit" class="support-ticket-modal__submit">Gửi ticket</button>
+                <button type="submit" class="support-ticket-modal__submit">Gửi ticket hỗ trợ</button>
             </form>
         </div>
     </div>
 
     <script th:src="@{/js/auth.js}"></script>
-    <script>
-        let currentFaqFilter = 'all';
-
-        // FAQ Accordion
-        document.querySelectorAll('.support-faq-item__trigger').forEach(trigger => {
-            trigger.addEventListener('click', () => {
-                const item = trigger.closest('.support-faq-item');
-                const isOpen = item.classList.contains('is-open');
-
-                document.querySelectorAll('.support-faq-item.is-open').forEach(openItem => {
-                    openItem.classList.remove('is-open');
-                    openItem.querySelector('.support-faq-item__trigger').setAttribute('aria-expanded', 'false');
-                });
-
-                if (!isOpen) {
-                    item.classList.add('is-open');
-                    trigger.setAttribute('aria-expanded', 'true');
-                }
-            });
-        });
-
-        function setActiveFaqTab(filter) {
-            document.querySelectorAll('.support-faq-tab').forEach(tab => {
-                tab.classList.toggle('is-active', tab.getAttribute('data-filter') === filter);
-            });
-        }
-
-        function setActiveTopicCard(filter) {
-            document.querySelectorAll('.support-topic-card[data-topic]').forEach(card => {
-                card.classList.toggle('is-active', card.getAttribute('data-topic') === filter);
-            });
-        }
-
-        function applyFaqGroupFilter() {
-            document.querySelectorAll('.support-faq-group').forEach(group => {
-                const groupName = group.getAttribute('data-group');
-                if (currentFaqFilter === 'all') {
-                    group.classList.remove('is-hidden');
-                } else {
-                    group.classList.toggle('is-hidden', groupName !== currentFaqFilter);
-                }
-            });
-
-            document.querySelectorAll('.support-faq-item').forEach(item => {
-                if (item.style.display === 'none' && item.dataset.searchHidden === '1') return;
-                if (currentFaqFilter === 'all') {
-                    if (item.dataset.searchHidden !== '1') item.style.display = '';
-                } else {
-                    if (item.dataset.searchHidden !== '1') {
-                        item.style.display = item.getAttribute('data-group') === currentFaqFilter ? '' : 'none';
-                    }
-                }
-            });
-        }
-
-        function filterFaqGroup(group) {
-            currentFaqFilter = group;
-            document.getElementById('support-search-input').value = '';
-
-            document.querySelectorAll('.support-faq-item').forEach(item => {
-                item.dataset.searchHidden = '0';
-                item.style.display = '';
-            });
-
-            setActiveFaqTab(group);
-            if (group === 'buyer' || group === 'seller') {
-                setActiveTopicCard(group);
-            } else {
-                document.querySelectorAll('.support-topic-card[data-topic]').forEach(c => c.classList.remove('is-active'));
-            }
-
-            applyFaqGroupFilter();
-
-            document.getElementById('faq').scrollIntoView({ behavior: 'smooth' });
-
-            const targetGroup = document.querySelector('.support-faq-group[data-group="' + group + '"]');
-            if (targetGroup && group !== 'all') {
-                setTimeout(() => targetGroup.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
-            }
-        }
-
-        function resetFaqSearch() {
-            document.querySelectorAll('.support-faq-item').forEach(item => {
-                item.dataset.searchHidden = '0';
-                item.style.display = '';
-            });
-            applyFaqGroupFilter();
-        }
-
-        function handleSupportSearch(e) {
-            e.preventDefault();
-            const q = document.getElementById('support-search-input').value.trim().toLowerCase();
-            if (!q) {
-                resetFaqSearch();
-                return;
-            }
-
-            currentFaqFilter = 'all';
-            setActiveFaqTab('all');
-            document.querySelectorAll('.support-topic-card[data-topic]').forEach(c => c.classList.remove('is-active'));
-
-            document.querySelectorAll('.support-faq-group').forEach(g => g.classList.remove('is-hidden'));
-
-            const items = document.querySelectorAll('.support-faq-item');
-            let firstMatch = null;
-
-            items.forEach(item => {
-                const keywords = (item.getAttribute('data-keywords') || '').toLowerCase();
-                const question = item.querySelector('.support-faq-item__question').innerText.toLowerCase();
-                const answer = item.querySelector('.support-faq-item__answer').innerText.toLowerCase();
-                const match = keywords.includes(q) || question.includes(q) || answer.includes(q);
-                item.style.display = match ? '' : 'none';
-                item.dataset.searchHidden = match ? '0' : '1';
-                if (match && !firstMatch) firstMatch = item;
-            });
-
-            document.getElementById('faq').scrollIntoView({ behavior: 'smooth' });
-
-            if (firstMatch) {
-                document.querySelectorAll('.support-faq-item.is-open').forEach(el => {
-                    el.classList.remove('is-open');
-                    el.querySelector('.support-faq-item__trigger').setAttribute('aria-expanded', 'false');
-                });
-                firstMatch.classList.add('is-open');
-                firstMatch.querySelector('.support-faq-item__trigger').setAttribute('aria-expanded', 'true');
-            }
-        }
-
-        function scrollToFaq(keyword) {
-            filterFaqGroup('all');
-            document.getElementById('support-search-input').value = keyword;
-            handleSupportSearch({ preventDefault: () => {} });
-        }
-
-        document.querySelectorAll('.support-hero__quick-links a[data-faq-query]').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const q = link.getAttribute('data-faq-query');
-                scrollToFaq(q);
-            });
-        });
-
-        document.getElementById('support-search-input').addEventListener('input', function () {
-            if (!this.value.trim()) resetFaqSearch();
-        });
-
-        function openTicketForm() {
-            const modal = document.getElementById('support-ticket-modal');
-            modal.classList.add('is-open');
-            modal.setAttribute('aria-hidden', 'false');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeTicketForm() {
-            const modal = document.getElementById('support-ticket-modal');
-            modal.classList.remove('is-open');
-            modal.setAttribute('aria-hidden', 'true');
-            document.body.style.overflow = '';
-        }
-
-        function submitTicketForm(e) {
-            e.preventDefault();
-            const subject = document.getElementById('ticket-subject').value.trim();
-            const detail = document.getElementById('ticket-detail').value.trim();
-            if (!subject || !detail) return;
-            closeTicketForm();
-            document.getElementById('support-ticket-form').reset();
-            alert('Ticket đã được gửi! Đội ngũ hỗ trợ kỹ thuật sẽ phản hồi trong vòng 24 giờ làm việc.');
-        }
-
-        function openLiveChat() {
-            window.location.href = '/messages';
-        }
-
-        // Mở FAQ khi vào từ menu "Câu hỏi thường gặp"
-        if (window.location.hash === '#faq') {
-            setTimeout(() => {
-                document.getElementById('faq').scrollIntoView({ behavior: 'smooth' });
-            }, 300);
-        }
-    </script>
+    <script th:src="@{/js/support.js}"></script>
 </body>
 
 </html>

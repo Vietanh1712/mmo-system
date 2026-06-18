@@ -18,6 +18,11 @@
                 <span class="staff-sidebar__badge">32</span>
             </a>
             <a class="staff-sidebar__link"
+               th:classappend="${active == 'support-tickets'} ? ' is-active' : ''"
+               href="/staff/support-tickets">
+                <i class="fa fa-ticket"></i> Ticket Hỗ Trợ
+            </a>
+            <a class="staff-sidebar__link"
                th:classappend="${active == 'kyc'} ? ' is-active' : ''"
                href="/staff/kyc">
                 <i class="fa fa-id-card"></i> Định danh KYC

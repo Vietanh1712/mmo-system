@@ -370,12 +370,15 @@ CREATE TABLE Reviews (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     product_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
+    transaction_id BIGINT NULL,
     rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
     comment NVARCHAR(MAX),
+    media_url NVARCHAR(MAX),
     created_at DATETIME DEFAULT GETDATE(),
     isDelete BIT DEFAULT 0,
     CONSTRAINT FK_Reviews_Product FOREIGN KEY (product_id) REFERENCES Products(id) ON DELETE NO ACTION,
-    CONSTRAINT FK_Reviews_User FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION
+    CONSTRAINT FK_Reviews_User FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION,
+    CONSTRAINT FK_Reviews_Transaction FOREIGN KEY (transaction_id) REFERENCES Transactions(id) ON DELETE NO ACTION
 );
 GO
 

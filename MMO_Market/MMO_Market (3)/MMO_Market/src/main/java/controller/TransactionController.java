@@ -80,6 +80,7 @@ public class TransactionController {
                     .productName(productName)
                     .amount(transaction.getAmountVnd())
                     .credentials(credentialsDTO)
+                    .transactionId(transaction.getId())
                     .build();
 
             return ResponseEntity.ok(response);

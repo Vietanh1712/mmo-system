@@ -340,13 +340,15 @@ function appendMockTopupTransaction(amount) {
         status: 'SUCCESS',
         createdAt: new Date().toLocaleString('vi-VN')
     });
-    sessionStorage.setItem(key, JSON.stringify(transactions.slice(0, 20)));
+    const serialized = JSON.stringify(transactions.slice(0, 20));
+    localStorage.setItem(key, serialized);
+    sessionStorage.setItem(key, serialized);
 }
 
 function readMockTransactions() {
     const key = getUserSpecificKey(WALLET_MOCK_TRANSACTIONS_KEY);
     try {
-        const saved = sessionStorage.getItem(key);
+        const saved = localStorage.getItem(key) || sessionStorage.getItem(key);
         if (saved !== null) {
             return JSON.parse(saved);
         }
@@ -371,6 +373,7 @@ function readMockTransactions() {
     }
 
     const seeded = isDemo ? createSeedTransactions() : [];
+    localStorage.setItem(key, JSON.stringify(seeded));
     sessionStorage.setItem(key, JSON.stringify(seeded));
     return seeded;
 }

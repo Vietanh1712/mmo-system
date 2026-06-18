@@ -514,7 +514,8 @@
             return;
         }
 
-        cart = normalizeCart(JSON.parse(localStorage.getItem('mmoCart') || '[]'));
+        const cartKey = typeof window.getCartStorageKey === 'function' ? window.getCartStorageKey() : 'mmoCart';
+        cart = normalizeCart(JSON.parse(localStorage.getItem(cartKey) || '[]'));
         saveCart();
         renderCart();
         loadRecommendations();
@@ -579,7 +580,8 @@
     }
 
     function saveCart() {
-        localStorage.setItem('mmoCart', JSON.stringify(cart));
+        const cartKey = typeof window.getCartStorageKey === 'function' ? window.getCartStorageKey() : 'mmoCart';
+        localStorage.setItem(cartKey, JSON.stringify(cart));
         if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
     }
 

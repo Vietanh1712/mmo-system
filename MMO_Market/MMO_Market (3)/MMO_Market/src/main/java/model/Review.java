@@ -26,11 +26,17 @@ public class Review {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(name = "transaction_id")
+    private Long transactionId;
+
     @Column(nullable = false)
     private Integer rating; // 1 to 5
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String comment;
+
+    @Column(name = "media_url", columnDefinition = "NVARCHAR(MAX)")
+    private String mediaUrl;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

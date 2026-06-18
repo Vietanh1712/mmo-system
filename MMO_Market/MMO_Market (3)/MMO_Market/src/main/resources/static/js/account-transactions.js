@@ -62,9 +62,12 @@ function getUserSpecificKey(baseKey) {
 function readWalletTransactions() {
     const key = getUserSpecificKey(WALLET_MOCK_TRANSACTIONS_KEY);
     try {
-        const saved = sessionStorage.getItem(key);
+        // Ưu tiên đọc localStorage (persist qua tab/session)
+        const saved = localStorage.getItem(key) || sessionStorage.getItem(key);
         if (saved !== null) {
-            return JSON.parse(saved);
+            const parsed = JSON.parse(saved);
+            sessionStorage.setItem(key, saved); // sync
+            return parsed;
         }
     } catch {
         // fallback to seeded data below
@@ -87,6 +90,7 @@ function readWalletTransactions() {
     }
 
     const seeded = isDemo ? createSeedTransactions() : [];
+    localStorage.setItem(key, JSON.stringify(seeded));
     sessionStorage.setItem(key, JSON.stringify(seeded));
     return seeded;
 }

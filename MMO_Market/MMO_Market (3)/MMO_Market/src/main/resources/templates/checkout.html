@@ -918,14 +918,15 @@
                 sessionStorage.setItem('userInfo', JSON.stringify(currentUser));
                 sessionStorage.setItem('user', JSON.stringify(currentUser));
 
-                // Save order and transaction in sessionStorage under user-specific keys (for UI compatibility)
+                // Save order and transaction in localStorage (persist qua nhiều tab) dưới user-specific keys
                 const userEmail = currentUser.email || '';
                 const ordersKey = userEmail ? `mmoMarketMyOrdersMock_${userEmail}` : `mmoMarketMyOrdersMock`;
                 const transactionsKey = userEmail ? `mmoMarketWalletTransactionsMock_${userEmail}` : `mmoMarketWalletTransactionsMock`;
 
                 let orders = [];
                 try {
-                    const savedOrders = sessionStorage.getItem(ordersKey);
+                    // Ưu tiên đọc localStorage, fallback sang sessionStorage
+                    const savedOrders = localStorage.getItem(ordersKey) || sessionStorage.getItem(ordersKey);
                     if (savedOrders !== null) {
                         orders = JSON.parse(savedOrders);
                     }
@@ -944,14 +945,18 @@
                     createdAt: now.toLocaleString('vi-VN'),
                     escrowReleaseDate: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
                     credentials: data.credentials,
-                    isReviewed: false
+                    isReviewed: false,
+                    transactionId: data.transactionId
                 };
                 orders.unshift(newOrder);
+                // Lưu vào cả localStorage và sessionStorage để đảm bảo đồng bộ
+                localStorage.setItem(ordersKey, JSON.stringify(orders));
                 sessionStorage.setItem(ordersKey, JSON.stringify(orders));
 
                 let txns = [];
                 try {
-                    const savedTxns = sessionStorage.getItem(transactionsKey);
+                    // Ưu tiên đọc localStorage, fallback sang sessionStorage
+                    const savedTxns = localStorage.getItem(transactionsKey) || sessionStorage.getItem(transactionsKey);
                     if (savedTxns !== null) {
                         txns = JSON.parse(savedTxns);
                     }
@@ -966,6 +971,8 @@
                     createdAt: now.toLocaleString('vi-VN')
                 };
                 txns.unshift(newTxn);
+                // Lưu vào cả localStorage và sessionStorage
+                localStorage.setItem(transactionsKey, JSON.stringify(txns));
                 sessionStorage.setItem(transactionsKey, JSON.stringify(txns));
 
                 if (checkoutMode === 'cart') {
@@ -1050,7 +1057,8 @@
             }
 
             try {
-                const cart = JSON.parse(localStorage.getItem('mmoCart') || '[]');
+                const cartKey = typeof window.getCartStorageKey === 'function' ? window.getCartStorageKey() : 'mmoCart';
+                const cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
                 return cart
                     .filter(item => item.selected !== false)
                     .map(item => ({
@@ -1090,10 +1098,11 @@
 
         function clearPurchasedCartItems() {
             try {
-                const cart = JSON.parse(localStorage.getItem('mmoCart') || '[]');
+                const cartKey = typeof window.getCartStorageKey === 'function' ? window.getCartStorageKey() : 'mmoCart';
+                const cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
                 const purchasedKeys = new Set(checkoutItems.map(item => `${Number(item.productId)}:${Number(item.duration || 1)}`));
                 const remaining = cart.filter(item => !item.selected || !purchasedKeys.has(`${Number(item.productId)}:${Number(item.duration || 1)}`));
-                localStorage.setItem('mmoCart', JSON.stringify(remaining));
+                localStorage.setItem(cartKey, JSON.stringify(remaining));
                 if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
             } catch (error) {
                 console.error('Không thể cập nhật giỏ hàng sau thanh toán:', error);

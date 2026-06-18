@@ -62,9 +62,13 @@ function getUserSpecificKey(baseKey) {
 function readOrders() {
     const key = getUserSpecificKey(ACCOUNT_ORDERS_MOCK_KEY);
     try {
-        const saved = sessionStorage.getItem(key);
+        // Ưu tiên đọc localStorage (persist qua tab/session), fallback sang sessionStorage
+        const saved = localStorage.getItem(key) || sessionStorage.getItem(key);
         if (saved !== null) {
-            return JSON.parse(saved);
+            const parsed = JSON.parse(saved);
+            // Sync lên sessionStorage để các thư viện khác đọc được
+            sessionStorage.setItem(key, saved);
+            return parsed;
         }
     } catch {
         // fallback to seeded data below
@@ -87,6 +91,8 @@ function readOrders() {
     }
 
     const seeded = isDemo ? createSeedOrders() : [];
+    // Seed vào cả hai storage
+    localStorage.setItem(key, JSON.stringify(seeded));
     sessionStorage.setItem(key, JSON.stringify(seeded));
     return seeded;
 }

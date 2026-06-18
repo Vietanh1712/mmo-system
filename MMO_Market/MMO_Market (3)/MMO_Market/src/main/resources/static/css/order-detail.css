@@ -193,3 +193,104 @@
         text-align: left;
     }
 }
+
+/* Premium Button Styling & micro-animations */
+.order-detail-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 18px;
+    width: 100%;
+}
+
+.order-detail-actions .ds-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 600;
+    padding: 10px 16px;
+    border-radius: 8px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.order-detail-actions .ds-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.order-detail-actions .ds-btn:active {
+    transform: translateY(0);
+}
+
+#orderViewProductButton {
+    background-color: var(--ds-surface, #ffffff);
+    color: var(--ds-text-primary, #0f172a);
+    border: 1.5px solid var(--ds-border, #cbd5e1);
+}
+
+#orderViewProductButton:hover {
+    background-color: var(--ds-surface-muted, #f8fafc);
+    border-color: var(--ds-text-muted, #94a3b8);
+}
+
+#orderFeedbackButton {
+    background-color: var(--ds-primary, #3b82f6);
+    color: #ffffff !important;
+    border: none;
+}
+
+#orderFeedbackButton:hover {
+    background-color: #2563eb;
+}
+
+#orderComplaintButton {
+    background-color: #fef2f2;
+    color: #ef4444;
+    border: 1.5px solid #fca5a5;
+}
+
+#orderComplaintButton:hover {
+    background-color: #fee2e2;
+    border-color: #ef4444;
+}
+
+/* Modal overlays and card styling */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-overlay .modal-card {
+    background: #ffffff;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    padding: 24px;
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.active .modal-card {
+    transform: scale(1);
+}
+

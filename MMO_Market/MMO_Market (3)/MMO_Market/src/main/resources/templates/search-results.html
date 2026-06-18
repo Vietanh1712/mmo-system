@@ -833,14 +833,15 @@
                 iconColor: getProductIconAndColor(product.productName).color,
                 quantity: 1
             };
-            const cart = JSON.parse(localStorage.getItem('mmoCart') || '[]');
+            const cartKey = typeof window.getCartStorageKey === 'function' ? window.getCartStorageKey() : 'mmoCart';
+            const cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
             const existing = cart.find(item => item.productId === cartItem.productId && item.duration === cartItem.duration);
             if (existing) {
                 existing.quantity += 1;
             } else {
                 cart.push(cartItem);
             }
-            localStorage.setItem('mmoCart', JSON.stringify(cart));
+            localStorage.setItem(cartKey, JSON.stringify(cart));
             alert('Đã thêm sản phẩm vào giỏ hàng thành công!');
             if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
         }
