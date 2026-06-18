@@ -47,4 +47,20 @@ public class EmailService {
             log.error("Failed to send password reset OTP email to {}: {}", toEmail, e.getMessage(), e);
         }
     }
+
+    @Async
+    public void sendWithdrawalOtpEmail(String toEmail, String otp, int timeoutMins) {
+        try {
+            log.info("Sending withdrawal OTP email to {}", toEmail);
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(FROM_EMAIL);
+            message.setTo(toEmail);
+            message.setSubject("Mã xác thực rút tiền - MMO Market");
+            message.setText("Chào bạn,\n\nMã OTP xác thực yêu cầu rút tiền của bạn là: " + otp + "\nMã OTP này có hiệu lực trong vòng " + timeoutMins + " phút.\n\nTrân trọng,\nMMO Market Team");
+            mailSender.send(message);
+            log.info("Successfully sent withdrawal OTP email to {}", toEmail);
+        } catch (Exception e) {
+            log.error("Failed to send withdrawal OTP email to {}: {}", toEmail, e.getMessage(), e);
+        }
+    }
 }

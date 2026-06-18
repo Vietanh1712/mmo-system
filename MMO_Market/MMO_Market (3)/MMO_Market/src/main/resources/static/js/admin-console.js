@@ -147,9 +147,24 @@
     document.addEventListener('DOMContentLoaded', () => {
         if (!guardAdminAccess()) return;
         initMock();
+        initSystemConfig();
         bindEvents();
         navigateFromHash();
     });
+
+    async function initSystemConfig() {
+        try {
+            const response = await authFetch('/admin/system-config');
+            if (response.ok) {
+                const data = await response.json();
+                mock.systemConfig = data.systemConfig;
+                mock.commissions = data.commissions;
+                saveMock();
+            }
+        } catch (e) {
+            // Keep local mock defaults if server connection fails
+        }
+    }
 
     function navigateFromHash() {
         const raw = (window.location.hash || '#dashboard').slice(1);
@@ -250,8 +265,108 @@
             });
         });
         document.getElementById('accountFormSubmitBtn')?.addEventListener('click', () => submitAccountForm());
-        document.getElementById('accountFormEmail')?.addEventListener('input', syncAccountFormProfile);
-        document.getElementById('accountFormFullName')?.addEventListener('input', syncAccountFormProfile);
+        document.getElementById('accountFormEmail')?.addEventListener('input', function() {
+            syncAccountFormProfile();
+            const val = this.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (val === '') {
+                showFieldError('accountFormEmail', 'Địa chỉ email không được để trống.');
+            } else if (!emailRegex.test(val)) {
+                showFieldError('accountFormEmail', 'Định dạng email không hợp lệ (Ví dụ: abc@gmail.com).');
+            } else {
+                clearFieldError('accountFormEmail');
+            }
+        });
+
+        document.getElementById('accountFormFullName')?.addEventListener('input', function() {
+            syncAccountFormProfile();
+            const val = this.value.trim();
+            if (val === '') {
+                showFieldError('accountFormFullName', 'Họ và tên không được để trống.');
+            } else if (val.length < 3) {
+                showFieldError('accountFormFullName', 'Họ và tên phải có ít nhất 3 ký tự.');
+            } else {
+                clearFieldError('accountFormFullName');
+            }
+        });
+
+        document.getElementById('accountFormPassword')?.addEventListener('input', function() {
+            const val = this.value;
+            const passwordRegex = /^(?=.*[A-Z])(?=.*[\W_]).{6,}$/;
+            if (accountFormMode === 'create') {
+                if (val === '') {
+                    showFieldError('accountFormPassword', 'Mật khẩu không được để trống.');
+                } else if (!passwordRegex.test(val)) {
+                    showFieldError('accountFormPassword', 'Mật khẩu phải có ít nhất 6 ký tự, gồm 1 chữ viết hoa và 1 ký tự đặc biệt.');
+                } else {
+                    clearFieldError('accountFormPassword');
+                }
+            } else if (accountFormMode === 'detail-edit') {
+                if (val !== '' && !passwordRegex.test(val)) {
+                    showFieldError('accountFormPassword', 'Mật khẩu phải có ít nhất 6 ký tự, gồm 1 chữ viết hoa và 1 ký tự đặc biệt.');
+                } else {
+                    clearFieldError('accountFormPassword');
+                }
+            }
+        });
+
+        document.getElementById('accountFormPhone')?.addEventListener('input', function() {
+            const val = this.value.trim();
+            if (val !== '') {
+                const phoneRegex = /^0\d{9}$/;
+                if (!phoneRegex.test(val)) {
+                    showFieldError('accountFormPhone', 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0.');
+                } else {
+                    clearFieldError('accountFormPhone');
+                }
+            } else {
+                clearFieldError('accountFormPhone');
+            }
+        });
+
+        document.getElementById('accountFormNationalId')?.addEventListener('input', function() {
+            const val = this.value.trim();
+            if (val !== '') {
+                const nationalIdRegex = /^\d{12}$/;
+                if (!nationalIdRegex.test(val)) {
+                    showFieldError('accountFormNationalId', 'Số CCCD không hợp lệ. Phải đúng 12 chữ số.');
+                } else {
+                    clearFieldError('accountFormNationalId');
+                }
+            } else {
+                clearFieldError('accountFormNationalId');
+            }
+        });
+
+        document.getElementById('accountFormBirthDate')?.addEventListener('change', function() {
+            const val = this.value;
+            if (val !== '') {
+                const birthDate = new Date(val);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                if (birthDate > today) {
+                    showFieldError('accountFormBirthDate', 'Ngày sinh không được ở tương lai.');
+                } else {
+                    clearFieldError('accountFormBirthDate');
+                }
+            } else {
+                clearFieldError('accountFormBirthDate');
+            }
+        });
+
+        document.getElementById('accountFormAddress')?.addEventListener('input', function() {
+            const val = this.value.trim();
+            if (val !== '') {
+                if (val.length < 5) {
+                    showFieldError('accountFormAddress', 'Địa chỉ phải có ít nhất 5 ký tự.');
+                } else {
+                    clearFieldError('accountFormAddress');
+                }
+            } else {
+                clearFieldError('accountFormAddress');
+            }
+        });
+
 
         document.getElementById('notifType')?.addEventListener('change', (e) => {
             const wrap = document.getElementById('notifMaintToggleWrap');
@@ -266,6 +381,26 @@
                         toggle.classList.add('ds-toggle-inactive');
                     }
                 }
+            }
+        });
+
+        document.getElementById('notifSearchBtn')?.addEventListener('click', () => {
+            notifPage = 0;
+            loadNotificationsView();
+        });
+        document.getElementById('notifResetFilter')?.addEventListener('click', () => {
+            const s = document.getElementById('notifSearch');
+            const f = document.getElementById('notifTypeFilter');
+            if (s) s.value = '';
+            if (f) f.value = '';
+            notifPage = 0;
+            loadNotificationsView();
+        });
+        document.getElementById('notifSearch')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                notifPage = 0;
+                loadNotificationsView();
             }
         });
     }
@@ -762,6 +897,7 @@
     };
 
     function prepareAccountFormCreate() {
+        clearAllErrors();
         accountFormMode = 'create';
         accountFormUserId = null;
         setAccountFormLayoutMode('create');
@@ -803,6 +939,7 @@
     }
 
     function fillAccountForm(user) {
+        clearAllErrors();
         const role = user.role || 'Customer';
         const isStaff = role === 'Staff';
         accountFormMode = isStaff ? 'detail-edit' : 'detail-readonly';
@@ -820,9 +957,9 @@
         setVal('accountFormAddress', user.address || '');
         setVal('accountFormNationalId', user.nationalId || '');
         setVal('accountFormBirthDate', user.dateOfBirth || '');
-        const gender = (user.gender || 'Nam').toLowerCase();
+        const gender = user.gender || 'Nam';
         document.querySelectorAll('input[name="accountFormGender"]').forEach(r => {
-            r.checked = (gender.startsWith('n') && r.value === 'Nữ') || (!gender.startsWith('n') && r.value === 'Nam');
+            r.checked = r.value.toLowerCase() === gender.toLowerCase();
         });
         setAccountFormActive(!user.isLocked);
         syncAccountFormProfile();
@@ -879,6 +1016,26 @@
         if (defaultGender) defaultGender.checked = true;
     }
 
+    function showFieldError(fieldId, message) {
+        const inputEl = document.getElementById(fieldId);
+        const errorEl = document.getElementById(fieldId + '-error');
+        if (inputEl) inputEl.classList.add('ds-input-error');
+        if (errorEl) errorEl.textContent = message;
+    }
+
+    function clearFieldError(fieldId) {
+        const inputEl = document.getElementById(fieldId);
+        const errorEl = document.getElementById(fieldId + '-error');
+        if (inputEl) inputEl.classList.remove('ds-input-error');
+        if (errorEl) errorEl.textContent = '';
+    }
+
+    function clearAllErrors() {
+        ['accountFormEmail', 'accountFormPassword', 'accountFormFullName', 'accountFormPhone', 'accountFormNationalId', 'accountFormBirthDate', 'accountFormAddress'].forEach(id => {
+            clearFieldError(id);
+        });
+    }
+
     function setAccountFormEditable(editable) {
         ['accountFormFullName', 'accountFormPhone', 'accountFormAddress', 'accountFormNationalId', 'accountFormBirthDate'].forEach(id => {
             const el = document.getElementById(id);
@@ -919,11 +1076,113 @@
         const id = document.getElementById('accountFormId').value;
         const payload = readAccountFormPayload();
 
+        let isValid = true;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const passwordRegex = /^(?=.*[A-Z])(?=.*[\W_]).{6,}$/;
+
+        // 1. Email (only for create)
         if (accountFormMode === 'create') {
-            if (!payload.email || !payload.fullName || !payload.password) {
-                showToast('Vui lòng nhập email, họ tên và mật khẩu.', true);
-                return;
+            if (!payload.email) {
+                showFieldError('accountFormEmail', 'Địa chỉ email không được để trống.');
+                isValid = false;
+            } else if (!emailRegex.test(payload.email)) {
+                showFieldError('accountFormEmail', 'Định dạng email không hợp lệ (Ví dụ: abc@gmail.com).');
+                isValid = false;
+            } else {
+                clearFieldError('accountFormEmail');
             }
+        }
+
+        // 2. Full Name
+        if (!payload.fullName) {
+            showFieldError('accountFormFullName', 'Họ và tên không được để trống.');
+            isValid = false;
+        } else if (payload.fullName.length < 3) {
+            showFieldError('accountFormFullName', 'Họ và tên phải có ít nhất 3 ký tự.');
+            isValid = false;
+        } else {
+            clearFieldError('accountFormFullName');
+        }
+
+        // 3. Password
+        if (accountFormMode === 'create') {
+            if (!payload.password) {
+                showFieldError('accountFormPassword', 'Mật khẩu không được để trống.');
+                isValid = false;
+            } else if (!passwordRegex.test(payload.password)) {
+                showFieldError('accountFormPassword', 'Mật khẩu phải có ít nhất 6 ký tự, gồm 1 chữ viết hoa và 1 ký tự đặc biệt.');
+                isValid = false;
+            } else {
+                clearFieldError('accountFormPassword');
+            }
+        } else if (accountFormMode === 'detail-edit') {
+            if (payload.password && !passwordRegex.test(payload.password)) {
+                showFieldError('accountFormPassword', 'Mật khẩu phải có ít nhất 6 ký tự, gồm 1 chữ viết hoa và 1 ký tự đặc biệt.');
+                isValid = false;
+            } else {
+                clearFieldError('accountFormPassword');
+            }
+        }
+
+        // 4. Phone (optional)
+        if (payload.phone) {
+            const phoneRegex = /^0\d{9}$/;
+            if (!phoneRegex.test(payload.phone)) {
+                showFieldError('accountFormPhone', 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0.');
+                isValid = false;
+            } else {
+                clearFieldError('accountFormPhone');
+            }
+        } else {
+            clearFieldError('accountFormPhone');
+        }
+
+        // 5. CCCD (optional)
+        if (payload.nationalId) {
+            const nationalIdRegex = /^\d{12}$/;
+            if (!nationalIdRegex.test(payload.nationalId)) {
+                showFieldError('accountFormNationalId', 'Số CCCD không hợp lệ. Phải đúng 12 chữ số.');
+                isValid = false;
+            } else {
+                clearFieldError('accountFormNationalId');
+            }
+        } else {
+            clearFieldError('accountFormNationalId');
+        }
+
+        // 6. Birth Date (optional)
+        if (payload.dateOfBirth) {
+            const birthDate = new Date(payload.dateOfBirth);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (birthDate > today) {
+                showFieldError('accountFormBirthDate', 'Ngày sinh không được ở tương lai.');
+                isValid = false;
+            } else {
+                clearFieldError('accountFormBirthDate');
+            }
+        } else {
+            clearFieldError('accountFormBirthDate');
+        }
+
+        // 7. Address (optional)
+        if (payload.address) {
+            if (payload.address.length < 5) {
+                showFieldError('accountFormAddress', 'Địa chỉ phải có ít nhất 5 ký tự.');
+                isValid = false;
+            } else {
+                clearFieldError('accountFormAddress');
+            }
+        } else {
+            clearFieldError('accountFormAddress');
+        }
+
+        if (!isValid) {
+            showToast('Vui lòng kiểm tra lại thông tin nhập vào.', true);
+            return;
+        }
+
+        if (accountFormMode === 'create') {
             try {
                 const response = await authFetch(`${ENDPOINT}/staff`, { method: 'POST', body: JSON.stringify(payload) });
                 const data = await response.json();
@@ -938,10 +1197,6 @@
         }
 
         if (accountFormMode === 'detail-edit' && id) {
-            if (!payload.fullName) {
-                showToast('Họ tên không được để trống.', true);
-                return;
-            }
             const body = { ...payload };
             delete body.email;
             if (!body.password) delete body.password;
@@ -958,80 +1213,165 @@
         }
     }
 
-    /* ---------- Mock: Audit logs ---------- */
-    function filterAuditLogs() {
-        const q = (document.getElementById('logSearch')?.value || '').toLowerCase();
+    /* ---------- API: Audit logs ---------- */
+    async function filterAuditLogs() {
+        const q = document.getElementById('logSearch')?.value || '';
         const action = document.getElementById('logActionFilter')?.value || '';
-        let list = [...mock.auditLogs];
-        if (q) {
-            list = list.filter(l =>
-                l.operator.toLowerCase().includes(q) ||
-                l.desc.toLowerCase().includes(q) ||
-                l.ipAddress.includes(q)
-            );
+
+        try {
+            const url = `/admin/audit-logs?search=${encodeURIComponent(q)}&action=${encodeURIComponent(action)}&page=${auditPage}&size=${auditPageSize}`;
+            const response = await authFetch(url);
+            if (!response.ok) {
+                throw new Error('Không thể tải nhật ký từ máy chủ.');
+            }
+            const data = await response.json();
+            auditFiltered = data.content || [];
+
+            const body = document.getElementById('auditLogsBody');
+            if (!body) return;
+            body.innerHTML = auditFiltered.length ? auditFiltered.map((l, i) => `
+                <tr>
+                    <td class="ds-table-center">${sttNumber(auditPage, auditPageSize, i)}</td>
+                    <td class="ds-table-center">${l.id}</td>
+                    <td>${formatDateTime(l.timestamp)}</td>
+                    <td>${escapeHtml(l.operator)}</td>
+                    <td class="ds-table-center"><span class="ds-badge ${auditBadgeClass(l.action)}">${escapeHtml(actionLabel(l.action))}</span></td>
+                    <td class="muted">${escapeHtml(l.desc)}</td>
+                    <td class="ds-table-center"><span class="ds-badge ds-badge-success">Thành công</span></td>
+                    <td>
+                        <div class="ds-table-actions">
+                            ${tableActionsView(`AdminConsole.openLogDetail(${l.id})`, 'Xem chi tiết')}
+                        </div>
+                    </td>
+                </tr>
+            `).join('') : '<tr><td colspan="8" class="ds-empty-state">Không có nhật ký phù hợp.</td></tr>';
+
+            mountPagination('auditPagination', {
+                page: data.page,
+                totalPages: data.totalPages,
+                totalElements: data.totalElements,
+                pageSize: data.size
+            }, {
+                onPage: (p) => { auditPage = p; filterAuditLogs(); },
+                onSize: (s) => { auditPageSize = s; auditPage = 0; filterAuditLogs(); }
+            });
+        } catch (e) {
+            console.error(e);
+            const body = document.getElementById('auditLogsBody');
+            if (body) {
+                body.innerHTML = `<tr><td colspan="8" class="ds-empty-state" style="color: var(--ds-color-danger)">Lỗi: ${escapeHtml(e.message)}</td></tr>`;
+            }
         }
-        if (action) list = list.filter(l => l.action === action);
-
-        auditFiltered = list;
-        const total = list.length;
-        const totalPg = Math.max(Math.ceil(total / auditPageSize), 1);
-        if (auditPage >= totalPg) auditPage = totalPg - 1;
-        const slice = list.slice(auditPage * auditPageSize, auditPage * auditPageSize + auditPageSize);
-
-        const body = document.getElementById('auditLogsBody');
-        if (!body) return;
-        body.innerHTML = slice.length ? slice.map((l, i) => `
-            <tr>
-                <td class="ds-table-center">${sttNumber(auditPage, auditPageSize, i)}</td>
-                <td class="ds-table-center">${l.id}</td>
-                <td>${formatDateTime(l.timestamp)}</td>
-                <td>${escapeHtml(l.operator)}</td>
-                <td class="ds-table-center"><span class="ds-badge ${auditBadgeClass(l.action)}">${escapeHtml(actionLabel(l.action))}</span></td>
-                <td class="muted">${escapeHtml(l.desc)}</td>
-                <td class="ds-table-center"><span class="ds-badge ds-badge-success">Thành công</span></td>
-                <td>
-                    <div class="ds-table-actions">
-                        ${tableActionsView(`AdminConsole.openLogDetail(${l.id})`, 'Xem chi tiết')}
-                    </div>
-                </td>
-            </tr>
-        `).join('') : '<tr><td colspan="8" class="ds-empty-state">Không có nhật ký phù hợp.</td></tr>';
-
-        mountPagination('auditPagination', {
-            page: auditPage,
-            totalPages: totalPg,
-            totalElements: total,
-            pageSize: auditPageSize
-        }, {
-            onPage: (p) => { auditPage = p; filterAuditLogs(); },
-            onSize: (s) => { auditPageSize = s; auditPage = 0; filterAuditLogs(); }
-        });
     }
-
+ 
     window.AdminConsole.openLogDetail = function (id) {
-        const log = mock.auditLogs.find(l => l.id === id);
+        const log = auditFiltered.find(l => l.id === id);
         if (!log) return;
+        
+        const idEl = document.getElementById('logDetId');
+        if (idEl) idEl.textContent = `ID: #${log.id}`;
+        
         document.getElementById('logDetTime').textContent = formatDateTime(log.timestamp);
         document.getElementById('logDetOperator').textContent = log.operator;
+        
+        const ipEl = document.getElementById('logDetIp');
+        if (ipEl) ipEl.textContent = log.ipAddress || 'Không rõ';
+        
         const actEl = document.getElementById('logDetAction');
-        actEl.textContent = actionLabel(log.action);
-        actEl.className = `ds-badge ${auditBadgeClass(log.action)}`;
+        if (actEl) {
+            actEl.textContent = actionLabel(log.action);
+            actEl.className = `ds-badge ${auditBadgeClass(log.action)}`;
+        }
+        
         document.getElementById('logDetDesc').textContent = log.desc;
+
+        // Populate Category and Severity
+        const categoryEl = document.getElementById('logDetCategory');
+        const severityEl = document.getElementById('logDetSeverity');
+        
+        let categoryText = 'Vận hành hệ thống';
+        let severityText = 'Thấp';
+        let severityClass = 'ds-badge-muted';
+        
+        if (log.action === 'KYC_Approve') {
+            categoryText = 'Xác thực người dùng';
+            severityText = 'Trung bình';
+            severityClass = 'ds-badge-success';
+        } else if (log.action === 'Lock_User') {
+            categoryText = 'Quản trị tài khoản';
+            severityText = 'Cao';
+            severityClass = 'ds-badge-danger';
+        } else if (log.action === 'Fund_Withdraw') {
+            categoryText = 'Giao dịch tài chính';
+            severityText = 'Cao';
+            severityClass = 'ds-badge-danger';
+        } else if (log.action === 'Config_Update') {
+            categoryText = 'Cấu hình hệ thống';
+            severityText = 'Trung bình';
+            severityClass = 'ds-badge-warning';
+        } else if (log.action === 'Maintenance_Toggle') {
+            categoryText = 'Bảo trì hệ thống';
+            severityText = 'Cao';
+            severityClass = 'ds-badge-danger';
+        }
+        
+        if (categoryEl) categoryEl.textContent = categoryText;
+        if (severityEl) {
+            severityEl.textContent = severityText;
+            severityEl.className = `ds-badge ${severityClass}`;
+        }
+        
+        // Extract target of the action
+        const targetValue = document.getElementById('logDetTargetValue');
+        let valText = 'Hệ thống';
+
+        if (log.action === 'KYC_Approve') {
+            const match = log.desc.match(/cho\s+([^\s]+)/i);
+            if (match) {
+                valText = match[1];
+            }
+        } else if (log.action === 'Lock_User') {
+            const match = log.desc.match(/Khóa\s+([^\s]+)/i);
+            if (match) {
+                valText = match[1];
+            }
+        } else if (log.action === 'Fund_Withdraw') {
+            // Find in cashFlow by timestamp
+            const logTime = new Date(log.timestamp).getTime();
+            const match = mock.cashFlow.find(tx => {
+                if (tx.type !== 'Withdrawal') return false;
+                const txTime = new Date(tx.timestamp).getTime();
+                return Math.abs(logTime - txTime) < 5 * 60 * 1000;
+            });
+            if (match) {
+                valText = match.email;
+            } else {
+                valText = 'Tài khoản người bán';
+            }
+        } else if (log.action === 'Config_Update') {
+            valText = 'Cấu hình hệ thống';
+        } else if (log.action === 'Maintenance_Toggle') {
+            valText = 'Bảo trì hệ thống';
+        }
+
+        if (targetValue) {
+            targetValue.textContent = valText;
+        }
         
         const diffWrap = document.getElementById('logDetDiffWrap');
         if (diffWrap) {
-            diffWrap.innerHTML = renderLogDiff(log.diff);
+            diffWrap.innerHTML = renderLogDiff(log.diff, log);
         }
         
         document.getElementById('logDetailModal').classList.remove('ds-hidden');
     };
-
-    window.AdminConsole.closeLogDetail = function () {
-        document.getElementById('logDetailModal').classList.add('ds-hidden');
-    };
+ 
+     window.AdminConsole.closeLogDetail = function () {
+         document.getElementById('logDetailModal').classList.add('ds-hidden');
+     };
 
     function renderLogDiff(diffJson) {
-        if (!diffJson) return '<span class="ds-caption">Không có chi tiết thay đổi.</span>';
+        if (!diffJson) return '<div style="color: var(--ds-text-muted); font-size: 13px; padding: 12px; background: var(--ds-surface-muted); border-radius: var(--ds-radius-sm); border: 1px dashed var(--ds-border); text-align: center;"><i class="fa fa-info-circle"></i> Không có chi tiết thay đổi dữ liệu.</div>';
         
         let data = {};
         let parsed = false;
@@ -1066,38 +1406,120 @@
         }
 
         if (!parsed) {
-            return `<pre style="background:var(--ds-surface-muted);padding:12px;border-radius:var(--ds-radius-sm);font-size:12px;overflow:auto;margin:0;white-space:pre-wrap;word-break:break-all;">${escapeHtml(diffJson || '—')}</pre>`;
+            return `<pre style="background:var(--ds-surface-muted);padding:12px;border-radius:var(--ds-radius-sm);font-size:12px;overflow:auto;margin:0;white-space:pre-wrap;word-break:break-all;border:1px solid var(--ds-border);">${escapeHtml(diffJson || '—')}</pre>`;
         }
 
-        let html = `
-            <table class="ds-table" style="margin-top: 10px; font-size: 13px;">
-                <thead>
-                    <tr>
-                        <th>Trường dữ liệu</th>
-                        <th style="color: var(--ds-danger);">Giá trị cũ</th>
-                        <th style="width: 24px; text-align: center;"></th>
-                        <th style="color: var(--ds-success);">Giá trị mới</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
+        const keyMap = {
+            'sessionTimeout': 'Thời gian phiên làm việc (phút)',
+            'otpTimeout': 'Thời hạn mã OTP (phút)',
+            'maxLoginRetries': 'Số lần thử đăng nhập tối đa',
+            'lockDurationMins': 'Thời gian khóa tài khoản (phút)',
+            'escrowHoldHours': 'Thời gian giam tiền bảo lãnh Escrow (giờ)',
+            'allowGoogleLogin': 'Cho phép đăng nhập bằng Google',
+            'allowRegister': 'Cho phép đăng ký tài khoản mới',
+            'requireWithdraw2FA': 'Yêu cầu OTP khi rút tiền',
+            'basePercent': 'Phí hoa hồng C2C cơ bản (%)',
+            'flatBuyerFee': 'Phí giao dịch cố định người mua (VNĐ)',
+            'withdrawalPercent': 'Phí rút tiền (%)',
+            'minWithdrawFee': 'Phí rút tiền tối thiểu (VNĐ)',
+            'minWithdrawLimit': 'Hạn mức rút tiền tối thiểu / lần (VNĐ)',
+            'maxWithdrawLimit': 'Hạn mức rút tiền tối đa / lần (VNĐ)',
+            'autoWithdrawLimit': 'Hạn mức duyệt rút tiền tự động (VNĐ)',
+            'minDepositLimit': 'Hạn mức nạp tiền tối thiểu (VNĐ)',
+            'isLocked': 'Trạng thái khóa tài khoản',
+            'kycStatus': 'Trạng thái xác thực KYC',
+            'status': 'Trạng thái giao dịch / yêu cầu',
+            'role': 'Vai trò người dùng',
+            'scheduled': 'Trạng thái lên lịch bảo trì'
+        };
+
+        function translateVal(val, key) {
+            const str = String(val).trim();
+            if (str === 'true') {
+                if (key && (key.startsWith('allow') || key.startsWith('require'))) return 'Bật (Cho phép)';
+                return 'Có / Bật';
+            }
+            if (str === 'false') {
+                if (key && (key.startsWith('allow') || key.startsWith('require'))) return 'Tắt (Chặn)';
+                return 'Không / Tắt';
+            }
+            if (str === 'pending') return 'Đang chờ duyệt (pending)';
+            if (str === 'verified') return 'Đã xác thực (verified)';
+            if (str === 'completed') return 'Hoàn thành (completed)';
+            
+            if (!isNaN(str) && str !== '') {
+                const num = Number(str);
+                if (key && (key.toLowerCase().includes('fee') || key.toLowerCase().includes('limit') || key.toLowerCase().includes('withdrawal') || key.toLowerCase().includes('deposit') || key === 'minWithdrawal')) {
+                    return formatVnd(num);
+                }
+                if (key && key.toLowerCase().includes('percent')) {
+                    return num + '%';
+                }
+            }
+            return val;
+        }
+
+        let html = '';
         let count = 0;
         for (const [key, val] of Object.entries(data)) {
             count++;
             const parts = String(val).split(' -> ');
             const oldVal = parts[0] !== undefined ? parts[0] : '—';
             const newVal = parts[1] !== undefined ? parts[1] : '—';
-            html += `
-                <tr>
-                    <td><strong>${escapeHtml(key)}</strong></td>
-                    <td style="color: var(--ds-danger); text-decoration: line-through; word-break: break-all;">${escapeHtml(oldVal)}</td>
-                    <td style="text-align: center; color: var(--ds-muted);"><i class="fa fa-arrow-right"></i></td>
-                    <td style="color: var(--ds-success); font-weight: bold; word-break: break-all;">${escapeHtml(newVal)}</td>
-                </tr>
-            `;
+            
+            const translatedKey = keyMap[key] || key;
+            const formattedOld = translateVal(oldVal, key);
+            const formattedNew = translateVal(newVal, key);
+
+            if (parts.length > 1) {
+                html += `
+                    <div style="border: 1px solid var(--ds-border); border-radius: var(--ds-radius-md); margin-bottom: 12px; background: var(--ds-surface); overflow: hidden;">
+                        <div style="background: var(--ds-table-head); padding: 8px 12px; border-bottom: 1px solid var(--ds-border); font-size: 13px; font-weight: 700; color: var(--ds-text); display: flex; align-items: center; justify-content: space-between;">
+                            <span>${escapeHtml(translatedKey)}</span>
+                            <span style="font-family: monospace; font-size: 11px; color: var(--ds-text-muted); font-weight: normal;">${escapeHtml(key)}</span>
+                        </div>
+                        <div style="padding: 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 120px; background: var(--ds-danger-soft); border-radius: var(--ds-radius-sm); padding: 8px 10px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa fa-minus-circle" style="color: var(--ds-danger);"></i>
+                                <div>
+                                    <div style="font-size: 10px; color: var(--ds-text-muted); text-transform: uppercase;">Trước</div>
+                                    <div style="font-size: 13px; color: var(--ds-danger); font-weight: 500; text-decoration: line-through; word-break: break-all;">${escapeHtml(formattedOld)}</div>
+                                </div>
+                            </div>
+                            <div style="color: var(--ds-text-subtle); display: flex; align-items: center;">
+                                <i class="fa fa-arrow-right"></i>
+                            </div>
+                            <div style="flex: 1; min-width: 120px; background: var(--ds-success-soft); border-radius: var(--ds-radius-sm); padding: 8px 10px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa fa-plus-circle" style="color: var(--ds-success);"></i>
+                                <div>
+                                    <div style="font-size: 10px; color: var(--ds-text-muted); text-transform: uppercase;">Sau</div>
+                                    <div style="font-size: 13px; color: var(--ds-success); font-weight: 700; word-break: break-all;">${escapeHtml(formattedNew)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div style="border: 1px solid var(--ds-border); border-radius: var(--ds-radius-md); margin-bottom: 12px; background: var(--ds-surface); overflow: hidden;">
+                        <div style="background: var(--ds-table-head); padding: 8px 12px; border-bottom: 1px solid var(--ds-border); font-size: 13px; font-weight: 700; color: var(--ds-text); display: flex; align-items: center; justify-content: space-between;">
+                            <span>${escapeHtml(translatedKey)}</span>
+                            <span style="font-family: monospace; font-size: 11px; color: var(--ds-text-muted); font-weight: normal;">${escapeHtml(key)}</span>
+                        </div>
+                        <div style="padding: 12px;">
+                            <div style="background: var(--ds-surface-muted); border-radius: var(--ds-radius-sm); padding: 8px 10px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa fa-info-circle" style="color: var(--ds-primary);"></i>
+                                <div>
+                                    <div style="font-size: 10px; color: var(--ds-text-muted); text-transform: uppercase;">Chi tiết</div>
+                                    <div style="font-size: 13px; color: var(--ds-text); font-weight: 600; word-break: break-all;">${escapeHtml(formattedOld)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
         }
-        html += '</tbody></table>';
-        return count > 0 ? html : '<span class="ds-caption">Không có chi tiết thay đổi.</span>';
+        return count > 0 ? html : '<div style="color: var(--ds-text-muted); font-size: 13px; padding: 12px; background: var(--ds-surface-muted); border-radius: var(--ds-radius-sm); border: 1px dashed var(--ds-border); text-align: center;"><i class="fa fa-info-circle"></i> Không có chi tiết thay đổi dữ liệu.</div>';
     }
 
     /* ---------- Mock: Revenue ---------- */
@@ -1168,41 +1590,99 @@
         setTimeout(() => showToast(`Đã tải báo cáo ${label} (demo).`), 1200);
     };
 
-    function loadSystemConfigForm() {
-        const c = mock.systemConfig;
-        document.getElementById('cfgSessionTimeout').value = c.sessionTimeout;
-        document.getElementById('cfgOtpTimeout').value = c.otpTimeout;
-        document.getElementById('cfgMaxLoginRetries').value = c.maxLoginRetries;
-        document.getElementById('cfgEscrowHoldHours').value = c.escrowHoldHours || 72;
-        
-        const toggleBtn = (id, active) => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.setAttribute('aria-pressed', String(active));
-                el.classList.toggle('ds-toggle-inactive', !active);
+    async function loadSystemConfigForm() {
+        try {
+            const response = await authFetch('/admin/system-config');
+            if (!response.ok) {
+                showToast('Không thể tải cấu hình hệ thống từ máy chủ.', true);
+                return;
             }
-        };
-        toggleBtn('cfgAllowGoogle', c.allowGoogleLogin);
-        toggleBtn('cfgAllowRegister', c.allowRegister);
-        toggleBtn('cfgWithdraw2FA', c.requireWithdraw2FA);
+            const data = await response.json();
+            const c = data.systemConfig;
+            
+            // Sync local mock data
+            mock.systemConfig = c;
+            mock.commissions = data.commissions;
+            saveMock();
+            
+            document.getElementById('cfgSessionTimeout').value = c.sessionTimeout;
+            document.getElementById('cfgOtpTimeout').value = c.otpTimeout;
+            document.getElementById('cfgMaxLoginRetries').value = c.maxLoginRetries;
+            document.getElementById('cfgLockDurationMins').value = c.lockDurationMins || 15;
+            document.getElementById('cfgEscrowHoldHours').value = c.escrowHoldHours || 72;
+            
+            const toggleBtn = (id, active) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.setAttribute('aria-pressed', String(active));
+                    el.classList.toggle('ds-toggle-inactive', !active);
+                }
+            };
+            toggleBtn('cfgAllowGoogle', c.allowGoogleLogin);
+            toggleBtn('cfgAllowRegister', c.allowRegister);
+            toggleBtn('cfgWithdraw2FA', c.requireWithdraw2FA);
+        } catch (error) {
+            showToast('Lỗi kết nối khi tải cấu hình.', true);
+        }
     }
 
-    window.AdminConsole.saveSystemConfig = function () {
-        mock.systemConfig = {
-            appName: mock.systemConfig.appName || 'MMO Market System',
+    window.AdminConsole.saveSystemConfig = async function () {
+        const payload = {
             sessionTimeout: Number(document.getElementById('cfgSessionTimeout').value),
             otpTimeout: Number(document.getElementById('cfgOtpTimeout').value),
             maxLoginRetries: Number(document.getElementById('cfgMaxLoginRetries').value),
+            lockDurationMins: Number(document.getElementById('cfgLockDurationMins').value),
             escrowHoldHours: Number(document.getElementById('cfgEscrowHoldHours').value),
             allowGoogleLogin: document.getElementById('cfgAllowGoogle')?.getAttribute('aria-pressed') === 'true',
             allowRegister: document.getElementById('cfgAllowRegister')?.getAttribute('aria-pressed') === 'true',
             requireWithdraw2FA: document.getElementById('cfgWithdraw2FA')?.getAttribute('aria-pressed') === 'true'
         };
-        saveMock();
-        showToast('Đã lưu cấu hình hệ thống (demo frontend).');
+        try {
+            const response = await authFetch('/admin/system-config/general', {
+                method: 'PUT',
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                mock.systemConfig = {
+                    ...mock.systemConfig,
+                    ...payload
+                };
+                saveMock();
+                showToast(data.message || 'Đã lưu cấu hình hệ thống.');
+            } else {
+                showToast(data.message || 'Không thể lưu cấu hình hệ thống.', true);
+            }
+        } catch (error) {
+            showToast('Lỗi kết nối khi lưu cấu hình.', true);
+        }
     };
 
     /* ---------- Mock: Notifications ---------- */
+    window.AdminConsole.openCreateNotification = function () {
+        document.getElementById('notifTitle').value = '';
+        document.getElementById('notifContent').value = '';
+        const select = document.getElementById('notifType');
+        if (select) select.value = 'info';
+        
+        const wrap = document.getElementById('notifMaintToggleWrap');
+        if (wrap) wrap.classList.add('ds-hidden');
+        
+        const toggle = document.getElementById('notifMaintToggle');
+        if (toggle) {
+            toggle.setAttribute('aria-pressed', 'false');
+            toggle.className = 'ds-toggle ds-toggle-system ds-toggle-inactive';
+        }
+
+        const modal = document.getElementById('createNotifModal');
+        if (modal) modal.classList.remove('ds-hidden');
+    };
+
+    window.AdminConsole.closeCreateNotification = function () {
+        const modal = document.getElementById('createNotifModal');
+        if (modal) modal.classList.add('ds-hidden');
+    };
+
     function loadNotificationsView() {
         // Toggle Active Maintenance Banner
         const maintBanner = document.getElementById('maintActiveBanner');
@@ -1217,7 +1697,7 @@
             }
         }
 
-        // Hide maintenance toggle wrap on load by default
+        // Hide maintenance toggle wrap on load by default in the form
         const maintToggleWrap = document.getElementById('notifMaintToggleWrap');
         if (maintToggleWrap) maintToggleWrap.classList.add('ds-hidden');
         const maintToggle = document.getElementById('notifMaintToggle');
@@ -1227,9 +1707,26 @@
         }
 
         const body = document.getElementById('notifHistoryBody');
-        const history = mock.notifications || [];
+        if (!body) return;
+
+        let history = [...(mock.notifications || [])];
+
+        // Apply filters
+        const keyword = (document.getElementById('notifSearch')?.value || '').toLowerCase().trim();
+        const typeFilter = document.getElementById('notifTypeFilter')?.value || '';
+
+        if (keyword) {
+            history = history.filter(n => 
+                (n.title && n.title.toLowerCase().includes(keyword)) || 
+                (n.content && n.content.toLowerCase().includes(keyword))
+            );
+        }
+        if (typeFilter) {
+            history = history.filter(n => n.type === typeFilter);
+        }
+
         if (history.length === 0) {
-            body.innerHTML = '<tr><td colspan="5" class="ds-empty-state">Chưa có thông báo nào.</td></tr>';
+            body.innerHTML = '<tr><td colspan="5" class="ds-empty-state">Chưa có thông báo nào phù hợp.</td></tr>';
             const pag = document.getElementById('notifPagination');
             if (pag) pag.innerHTML = '';
             return;
@@ -1257,7 +1754,7 @@
                 <tr>
                     <td class="ds-table-center">${sttNumber(notifPage, notifPageSize, idx)}</td>
                     <td class="ds-table-center">${formatDateTime(n.timestamp)}</td>
-                    <td><strong>${escapeHtml(n.title)}</strong><br><small class="muted">${escapeHtml(n.content)}</small></td>
+                    <td><strong>${escapeHtml(n.title)}</strong><br><small class="muted" style="font-size:12px; display:block; margin-top:2px;">${escapeHtml(n.content)}</small></td>
                     <td class="ds-table-center"><span class="ds-badge ${typeBadge}">${typeLabel}</span></td>
                     <td>${escapeHtml(n.author)}</td>
                 </tr>
@@ -1307,6 +1804,8 @@
         document.getElementById('notifTitle').value = '';
         document.getElementById('notifContent').value = '';
         
+        AdminConsole.closeCreateNotification();
+        
         showToast(shouldMaint ? 'Đã phát thông báo & kích hoạt bảo trì hệ thống.' : 'Đã phát thông báo thành công tới toàn bộ người dùng.');
         loadNotificationsView();
     };
@@ -1320,31 +1819,61 @@
     };
 
     /* ---------- Mock: Commissions ---------- */
-    function loadCommissionsForm() {
-        const c = mock.commissions;
-        document.getElementById('commBasePercent').value = c.basePercent;
-        document.getElementById('commFlatBuyer').value = c.flatBuyerFee;
-        document.getElementById('commWithdrawPercent').value = c.withdrawalPercent;
-        document.getElementById('commMinWithdrawFee').value = c.minWithdrawFee;
-        document.getElementById('commMinWithdrawLimit').value = c.minWithdrawLimit || 50000;
-        document.getElementById('commMaxWithdrawLimit').value = c.maxWithdrawLimit || 50000000;
-        document.getElementById('commAutoWithdrawLimit').value = c.autoWithdrawLimit || 5000000;
-        document.getElementById('commMinDepositLimit').value = c.minDepositLimit || 10000;
+    async function loadCommissionsForm() {
+        try {
+            const response = await authFetch('/admin/system-config');
+            if (!response.ok) {
+                showToast('Không thể tải cấu hình phí từ máy chủ.', true);
+                return;
+            }
+            const data = await response.json();
+            const c = data.commissions;
+            
+            // Sync local mock data
+            mock.systemConfig = data.systemConfig;
+            mock.commissions = c;
+            saveMock();
+            
+            document.getElementById('commBasePercent').value = c.basePercent;
+            document.getElementById('commFlatBuyer').value = formatNumberWithDots(c.flatBuyerFee);
+            document.getElementById('commWithdrawPercent').value = c.withdrawalPercent;
+            document.getElementById('commMinWithdrawFee').value = formatNumberWithDots(c.minWithdrawFee);
+            document.getElementById('commMinWithdrawLimit').value = formatNumberWithDots(c.minWithdrawLimit);
+            document.getElementById('commMaxWithdrawLimit').value = formatNumberWithDots(c.maxWithdrawLimit);
+            document.getElementById('commAutoWithdrawLimit').value = formatNumberWithDots(c.autoWithdrawLimit);
+            document.getElementById('commMinDepositLimit').value = formatNumberWithDots(c.minDepositLimit);
+        } catch (error) {
+            showToast('Lỗi kết nối khi tải cấu hình.', true);
+        }
     }
 
-    window.AdminConsole.saveCommissions = function () {
-        mock.commissions = {
+    window.AdminConsole.saveCommissions = async function () {
+        const payload = {
             basePercent: Number(document.getElementById('commBasePercent').value),
-            flatBuyerFee: Number(document.getElementById('commFlatBuyer').value),
+            flatBuyerFee: stripDots(document.getElementById('commFlatBuyer').value),
             withdrawalPercent: Number(document.getElementById('commWithdrawPercent').value),
-            minWithdrawFee: Number(document.getElementById('commMinWithdrawFee').value),
-            minWithdrawLimit: Number(document.getElementById('commMinWithdrawLimit').value),
-            maxWithdrawLimit: Number(document.getElementById('commMaxWithdrawLimit').value),
-            autoWithdrawLimit: Number(document.getElementById('commAutoWithdrawLimit').value),
-            minDepositLimit: Number(document.getElementById('commMinDepositLimit').value)
+            minWithdrawFee: stripDots(document.getElementById('commMinWithdrawFee').value),
+            minWithdrawLimit: stripDots(document.getElementById('commMinWithdrawLimit').value),
+            maxWithdrawLimit: stripDots(document.getElementById('commMaxWithdrawLimit').value),
+            autoWithdrawLimit: stripDots(document.getElementById('commAutoWithdrawLimit').value),
+            minDepositLimit: stripDots(document.getElementById('commMinDepositLimit').value)
         };
-        saveMock();
-        showToast('Đã lưu biểu phí và hạn mức hệ thống.');
+        try {
+            const response = await authFetch('/admin/system-config/commissions', {
+                method: 'PUT',
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                mock.commissions = payload;
+                saveMock();
+                showToast(data.message || 'Đã lưu biểu phí và hạn mức hệ thống.');
+            } else {
+                showToast(data.message || 'Không thể lưu cấu hình.', true);
+            }
+        } catch (error) {
+            showToast('Lỗi kết nối khi lưu cấu hình.', true);
+        }
     };
 
     /* ---------- Mock: Permissions ---------- */
@@ -1448,6 +1977,18 @@
 
     function formatVnd(n) {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
+    }
+
+    function formatNumberWithDots(val) {
+        if (val === null || val === undefined || val === '') return '';
+        const digits = String(val).replace(/\D/g, '');
+        if (!digits) return '';
+        return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    function stripDots(val) {
+        if (!val) return 0;
+        return Number(String(val).replace(/\./g, ''));
     }
 
     function formatDateTime(iso) {

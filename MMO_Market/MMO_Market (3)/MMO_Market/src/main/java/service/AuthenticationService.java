@@ -49,6 +49,9 @@ public class AuthenticationService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private dal.SystemConfigurationRepository systemConfigurationRepository;
+
     @Value("${google.oauth2.client-id}")
     private String googleClientId;
 
@@ -60,6 +63,16 @@ public class AuthenticationService {
      */
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
+        boolean allowRegister = systemConfigurationRepository.findByConfigKey("ALLOW_REGISTER")
+                .map(c -> "true".equalsIgnoreCase(c.getConfigValue()) || "1".equals(c.getConfigValue()))
+                .orElse(true);
+        if (!allowRegister) {
+            return RegisterResponse.builder()
+                    .success(false)
+                    .message("Hệ thống hiện tại đang tạm khóa chức năng đăng ký tài khoản mới.")
+                    .build();
+        }
+
         if (userRepository.existsByEmail(request.getEmail())) {
             return RegisterResponse.builder()
                     .success(false)
@@ -92,7 +105,7 @@ public class AuthenticationService {
         EmailVerification emailVerification = EmailVerification.builder()
                 .userId(savedUser.getId())
                 .verificationCode(otp)
-                .expiryDate(LocalDateTime.now().plusMinutes(5))
+                .expiryDate(LocalDateTime.now().plusMinutes(getOtpTimeoutMins()))
                 .isUsed(false)
                 .build();
         emailVerificationRepository.save(emailVerification);
@@ -202,7 +215,7 @@ public class AuthenticationService {
         EmailVerification emailVerification = EmailVerification.builder()
                 .userId(user.getId())
                 .verificationCode(newOtp)
-                .expiryDate(LocalDateTime.now().plusMinutes(5))
+                .expiryDate(LocalDateTime.now().plusMinutes(getOtpTimeoutMins()))
                 .isUsed(false)
                 .build();
         emailVerificationRepository.save(emailVerification);
@@ -226,7 +239,7 @@ public class AuthenticationService {
         EmailVerification emailVerification = EmailVerification.builder()
                 .userId(user.getId())
                 .verificationCode(newOtp)
-                .expiryDate(LocalDateTime.now().plusMinutes(5))
+                .expiryDate(LocalDateTime.now().plusMinutes(getOtpTimeoutMins()))
                 .isUsed(false)
                 .build();
         emailVerificationRepository.save(emailVerification);
@@ -285,22 +298,75 @@ public class AuthenticationService {
     public LoginResponse login(LoginRequest request) {
         Optional<User> userOptional = userRepository.findByEmailAndIsDeleteFalse(request.getEmail());
 
-        if (userOptional.isEmpty() || !passwordEncoder.matches(request.getPassword(), userOptional.get().getPassword())) {
-            log.warn("Email hoặc mật khẩu không chính xác cho: {}", request.getEmail());
+        if (userOptional.isEmpty()) {
             return LoginResponse.builder().message("Email hoặc mật khẩu không chính xác").build();
         }
 
         User user = userOptional.get();
 
+        // 1. Kiểm tra trạng thái khóa
         if (Boolean.TRUE.equals(user.getIsLocked())) {
-            log.warn("Tài khoản đã bị khóa cố gắng đăng nhập: {}", request.getEmail());
-            return LoginResponse.builder().message("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.").build();
+            if (user.getLockTime() != null) {
+                if (user.getLockTime().isAfter(LocalDateTime.now())) {
+                    log.warn("Tài khoản {} đang bị khóa tạm thời.", request.getEmail());
+                    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy");
+                    String unlockTimeStr = user.getLockTime().format(formatter);
+                    return LoginResponse.builder()
+                            .message("Tài khoản bị khóa tạm thời do nhập sai quá nhiều lần. Sẽ mở khóa vào: " + unlockTimeStr)
+                            .build();
+                } else {
+                    // Quá hạn khóa tạm thời -> Tự động mở khóa
+                    user.setIsLocked(false);
+                    user.setFailedAttempts(0);
+                    user.setLockTime(null);
+                    userRepository.save(user);
+                    log.info("Tài khoản {} đã hết hạn khóa tạm thời, tự động mở khóa.", request.getEmail());
+                }
+            } else {
+                // Khóa vĩnh viễn bởi Admin
+                log.warn("Tài khoản đã bị khóa cố gắng đăng nhập: {}", request.getEmail());
+                return LoginResponse.builder().message("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.").build();
+            }
         }
 
+        // 2. Kiểm tra mật khẩu
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            int attempts = (user.getFailedAttempts() == null ? 0 : user.getFailedAttempts()) + 1;
+            user.setFailedAttempts(attempts);
+            
+            int maxRetries = getMaxLoginRetries();
+            int lockDuration = getLockDurationMins();
+            
+            if (attempts >= maxRetries) {
+                user.setIsLocked(true);
+                user.setLockTime(LocalDateTime.now().plusMinutes(lockDuration));
+                userRepository.save(user);
+                
+                log.warn("Tài khoản {} bị khóa tạm thời trong {} phút do nhập sai {} lần.", 
+                        request.getEmail(), lockDuration, attempts);
+                return LoginResponse.builder()
+                        .message("Bạn đã nhập sai mật khẩu quá " + maxRetries + " lần. Tài khoản bị khóa tạm thời trong " + lockDuration + " phút.")
+                        .build();
+            } else {
+                userRepository.save(user);
+                log.warn("Email hoặc mật khẩu không chính xác cho: {}. Lần thử: {}/{}", 
+                        request.getEmail(), attempts, maxRetries);
+                return LoginResponse.builder()
+                        .message("Email hoặc mật khẩu không chính xác. Bạn còn " + (maxRetries - attempts) + " lần thử.")
+                        .build();
+            }
+        }
+
+        // 3. Kiểm tra xác thực email
         if (!user.getIsVerified()) {
             log.warn("User chưa xác thực email: {}", request.getEmail());
             return LoginResponse.builder().message("Vui lòng xác thực email (OTP) trước khi đăng nhập").build();
         }
+
+        // Đăng nhập thành công -> Reset failed attempts
+        user.setFailedAttempts(0);
+        user.setLockTime(null);
+        userRepository.save(user);
 
         revokeAllUserTokens(user.getId());
 
@@ -431,6 +497,12 @@ public class AuthenticationService {
 
     @Transactional
     public LoginResponse loginWithGoogle(String authCode) {
+        boolean allowGoogle = systemConfigurationRepository.findByConfigKey("ALLOW_GOOGLE_LOGIN")
+                .map(c -> "true".equalsIgnoreCase(c.getConfigValue()) || "1".equals(c.getConfigValue()))
+                .orElse(true);
+        if (!allowGoogle) {
+            throw new RuntimeException("Chức năng đăng nhập bằng Google hiện đang bị khóa.");
+        }
         try {
             RestTemplate restTemplate = new RestTemplate();
             HttpHeaders headers = new HttpHeaders();
@@ -533,5 +605,61 @@ public class AuthenticationService {
             log.error("Google login failed: {}", e.getMessage(), e);
             throw new RuntimeException("Đăng nhập bằng Google thất bại: " + e.getMessage());
         }
+    }
+
+    private int getMaxLoginRetries() {
+        return systemConfigurationRepository.findByConfigKey("MAX_LOGIN_RETRIES")
+                .map(c -> {
+                    try { return Integer.parseInt(c.getConfigValue()); }
+                    catch (NumberFormatException e) { return 5; }
+                }).orElse(5);
+    }
+
+    private int getLockDurationMins() {
+        return systemConfigurationRepository.findByConfigKey("LOCK_DURATION_MINS")
+                .map(c -> {
+                    try { return Integer.parseInt(c.getConfigValue()); }
+                    catch (NumberFormatException e) { return 15; }
+                }).orElse(15);
+    }
+
+    private int getOtpTimeoutMins() {
+        return systemConfigurationRepository.findByConfigKey("OTP_TIMEOUT_MINS")
+                .map(c -> {
+                    try { return Integer.parseInt(c.getConfigValue()); }
+                    catch (NumberFormatException e) { return 5; }
+                }).orElse(5);
+    }
+
+    @Transactional
+    public void sendWithdrawalOtp(User user) {
+        String otp = generateOtp();
+        int otpTimeout = getOtpTimeoutMins();
+
+        EmailVerification emailVerification = EmailVerification.builder()
+                .userId(user.getId())
+                .verificationCode(otp)
+                .expiryDate(LocalDateTime.now().plusMinutes(otpTimeout))
+                .isUsed(false)
+                .build();
+        emailVerificationRepository.save(emailVerification);
+
+        log.info("Đã sinh mã OTP xác thực rút tiền cho user ID [{}]", user.getId());
+        emailService.sendWithdrawalOtpEmail(user.getEmail(), otp, otpTimeout);
+    }
+
+    @Transactional
+    public void verifyWithdrawalOtp(Long userId, String otp) {
+        Optional<EmailVerification> otpOpt = emailVerificationRepository
+                .findByUserIdAndVerificationCodeAndIsUsedFalse(userId, otp);
+        if (otpOpt.isEmpty()) {
+            throw new IllegalArgumentException("Mã xác thực OTP không chính xác hoặc đã được sử dụng.");
+        }
+        EmailVerification verification = otpOpt.get();
+        if (verification.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Mã xác thực OTP đã hết hạn. Vui lòng yêu cầu mã mới.");
+        }
+        verification.setIsUsed(true);
+        emailVerificationRepository.save(verification);
     }
 }

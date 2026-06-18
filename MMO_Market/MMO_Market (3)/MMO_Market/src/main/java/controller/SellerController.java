@@ -2,6 +2,8 @@ package controller;
 
 import dal.*;
 import model.*;
+import service.EmailService;
+import service.AuthenticationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,6 +30,10 @@ public class SellerController {
     private final SellerBankInfoRepository sellerBankInfoRepository;
     private final SellerRegistrationRepository sellerRegistrationRepository;
     private final DigitalAssetRepository digitalAssetRepository;
+    private final SystemConfigurationRepository systemConfigurationRepository;
+    private final EmailVerificationRepository emailVerificationRepository;
+    private final EmailService emailService;
+    private final AuthenticationService authenticationService;
 
     public SellerController(UserRepository userRepository, ProductRepository productRepository,
                             ProductVariantRepository productVariantRepository, CategoryRepository categoryRepository,
@@ -36,7 +42,11 @@ public class SellerController {
                             ReviewRepository reviewRepository, ChatRepository chatRepository,
                             SellerBankInfoRepository sellerBankInfoRepository,
                             SellerRegistrationRepository sellerRegistrationRepository,
-                            DigitalAssetRepository digitalAssetRepository) {
+                            DigitalAssetRepository digitalAssetRepository,
+                            SystemConfigurationRepository systemConfigurationRepository,
+                            EmailVerificationRepository emailVerificationRepository,
+                            EmailService emailService,
+                            AuthenticationService authenticationService) {
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.productVariantRepository = productVariantRepository;
@@ -50,6 +60,10 @@ public class SellerController {
         this.sellerBankInfoRepository = sellerBankInfoRepository;
         this.sellerRegistrationRepository = sellerRegistrationRepository;
         this.digitalAssetRepository = digitalAssetRepository;
+        this.systemConfigurationRepository = systemConfigurationRepository;
+        this.emailVerificationRepository = emailVerificationRepository;
+        this.emailService = emailService;
+        this.authenticationService = authenticationService;
     }
 
     private User getSeller(Long userId) {
@@ -552,6 +566,60 @@ public class SellerController {
         }
     }
 
+    // 15.6. Withdrawal Config GET
+    @GetMapping("/withdrawals/config")
+    public ResponseEntity<?> getWithdrawalConfig(@AuthenticationPrincipal Long userId) {
+        try {
+            getSeller(userId); // Verify seller role
+
+            double withdrawalFeePercent = systemConfigurationRepository.findByConfigKey("WITHDRAWAL_FEE_PERCENT")
+                    .map(c -> {
+                        try { return Double.parseDouble(c.getConfigValue()); }
+                        catch (NumberFormatException e) { return 1.5; }
+                    }).orElse(1.5);
+            long minWithdrawFee = systemConfigurationRepository.findByConfigKey("MIN_WITHDRAW_FEE_VND")
+                    .map(c -> {
+                        try { return Long.parseLong(c.getConfigValue()); }
+                        catch (NumberFormatException e) { return 10000L; }
+                    }).orElse(10000L);
+            long minWithdrawalLimit = systemConfigurationRepository.findByConfigKey("MIN_WITHDRAWAL_VND")
+                    .map(c -> {
+                        try { return Long.parseLong(c.getConfigValue()); }
+                        catch (NumberFormatException e) { return 50000L; }
+                    }).orElse(50000L);
+            long maxWithdrawalLimit = systemConfigurationRepository.findByConfigKey("MAX_WITHDRAWAL_VND")
+                    .map(c -> {
+                        try { return Long.parseLong(c.getConfigValue()); }
+                        catch (NumberFormatException e) { return 50000000L; }
+                    }).orElse(50000000L);
+            boolean requireWithdraw2FA = systemConfigurationRepository.findByConfigKey("REQUIRE_WITHDRAW_2FA")
+                    .map(c -> "true".equalsIgnoreCase(c.getConfigValue()) || "1".equals(c.getConfigValue()))
+                    .orElse(true);
+
+            return ResponseEntity.ok(Map.of(
+                    "withdrawalFeePercent", withdrawalFeePercent,
+                    "minWithdrawFee", minWithdrawFee,
+                    "minWithdrawalLimit", minWithdrawalLimit,
+                    "maxWithdrawalLimit", maxWithdrawalLimit,
+                    "requireWithdraw2FA", requireWithdraw2FA
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    // 15.7. Send Withdrawal OTP (2FA)
+    @PostMapping("/withdrawals/send-otp")
+    public ResponseEntity<?> sendWithdrawalOtp(@AuthenticationPrincipal Long userId) {
+        try {
+            User seller = getSeller(userId);
+            authenticationService.sendWithdrawalOtp(seller);
+            return ResponseEntity.ok(Map.of("message", "Đã gửi mã OTP xác thực rút tiền về email của bạn."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
     // 16. Withdrawal POST (Create request)
     @PostMapping("/withdrawals")
     public ResponseEntity<?> requestWithdrawal(@AuthenticationPrincipal Long userId, @RequestBody Map<String, Object> request) {
@@ -564,19 +632,70 @@ public class SellerController {
             }
 
             long amount = Long.parseLong(amountObj.toString());
-            if (amount < 50000) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Số tiền rút tối thiểu phải là 50,000 VNĐ."));
+
+            // Load configurations dynamically
+            double withdrawalFeePercent = systemConfigurationRepository.findByConfigKey("WITHDRAWAL_FEE_PERCENT")
+                    .map(c -> {
+                        try { return Double.parseDouble(c.getConfigValue()); }
+                        catch (NumberFormatException e) { return 1.5; }
+                    }).orElse(1.5);
+            long minWithdrawFee = systemConfigurationRepository.findByConfigKey("MIN_WITHDRAW_FEE_VND")
+                    .map(c -> {
+                        try { return Long.parseLong(c.getConfigValue()); }
+                        catch (NumberFormatException e) { return 10000L; }
+                    }).orElse(10000L);
+            long minWithdrawalLimit = systemConfigurationRepository.findByConfigKey("MIN_WITHDRAWAL_VND")
+                    .map(c -> {
+                        try { return Long.parseLong(c.getConfigValue()); }
+                        catch (NumberFormatException e) { return 50000L; }
+                    }).orElse(50000L);
+            long maxWithdrawalLimit = systemConfigurationRepository.findByConfigKey("MAX_WITHDRAWAL_VND")
+                    .map(c -> {
+                        try { return Long.parseLong(c.getConfigValue()); }
+                        catch (NumberFormatException e) { return 50000000L; }
+                    }).orElse(50000000L);
+            boolean requireWithdraw2FA = systemConfigurationRepository.findByConfigKey("REQUIRE_WITHDRAW_2FA")
+                    .map(c -> "true".equalsIgnoreCase(c.getConfigValue()) || "1".equals(c.getConfigValue()))
+                    .orElse(true);
+
+            // Validate amounts
+            if (amount < minWithdrawalLimit) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Số tiền rút tối thiểu phải là " + String.format("%,d", minWithdrawalLimit) + " VNĐ."));
+            }
+            if (amount > maxWithdrawalLimit) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Số tiền rút tối đa phải là " + String.format("%,d", maxWithdrawalLimit) + " VNĐ."));
             }
 
-            if (seller.getBalanceVnd() < amount) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Số dư ví không đủ để thực hiện yêu cầu này."));
+            // Calculate fee
+            long fee = (long) (amount * (withdrawalFeePercent / 100.0));
+            if (fee < minWithdrawFee) {
+                fee = minWithdrawFee;
+            }
+
+            long totalDeduction = amount + fee;
+            if (seller.getBalanceVnd() < totalDeduction) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Số dư ví không đủ để thực hiện yêu cầu rút tiền này (cần " + String.format("%,d", totalDeduction) + " VNĐ bao gồm cả phí)."));
+            }
+
+            // Enforce 2FA Verification if active
+            if (requireWithdraw2FA) {
+                Object otpObj = request.get("otp");
+                if (otpObj == null || otpObj.toString().trim().isEmpty()) {
+                    return ResponseEntity.badRequest().body(Map.of("message", "Giao dịch rút tiền yêu cầu xác thực 2FA. Vui lòng nhập mã OTP."));
+                }
+                String otp = otpObj.toString().trim();
+                try {
+                    authenticationService.verifyWithdrawalOtp(seller.getId(), otp);
+                } catch (IllegalArgumentException e) {
+                    return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+                }
             }
 
             SellerBankInfo bank = sellerBankInfoRepository.findByUserAndIsDeleteFalse(seller)
                     .orElseThrow(() -> new IllegalArgumentException("Vui lòng cấu hình thông tin ngân hàng trước khi rút tiền."));
 
-            // Deduct balance and save
-            seller.setBalanceVnd(seller.getBalanceVnd() - amount);
+            // Deduct total balance (amount + fee) and save
+            seller.setBalanceVnd(seller.getBalanceVnd() - totalDeduction);
             userRepository.save(seller);
 
             Withdrawal w = new Withdrawal();

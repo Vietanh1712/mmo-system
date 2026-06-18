@@ -23,6 +23,9 @@ public class TopupService {
     @Autowired
     private TopupTransactionRepository topupTransactionRepository;
 
+    @Autowired
+    private dal.SystemConfigurationRepository systemConfigurationRepository;
+
     private static final Pattern TRANSFER_CONTENT_PATTERN = Pattern.compile("MMO[\\s-]*TOPUP[\\s-]*(\\d+)", Pattern.CASE_INSENSITIVE);
 
     @Transactional
@@ -78,6 +81,18 @@ public class TopupService {
         Long amount = request.getTransferAmount();
         if (amount == null || amount <= 0) {
             log.error("Invalid top-up amount: {}", amount);
+            return false;
+        }
+
+        long minDeposit = systemConfigurationRepository.findByConfigKey("MIN_DEPOSIT_LIMIT_VND")
+                .map(c -> {
+                    try { return Long.parseLong(c.getConfigValue()); }
+                    catch (NumberFormatException e) { return 10000L; }
+                }).orElse(10000L);
+
+        if (amount < minDeposit) {
+            log.error("Top-up amount {} VND is below minimum deposit limit {} VND. User ID: {}", 
+                    amount, minDeposit, user.getId());
             return false;
         }
 

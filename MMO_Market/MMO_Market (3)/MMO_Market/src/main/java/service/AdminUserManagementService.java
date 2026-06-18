@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.HashMap;
 import java.util.List;
@@ -33,17 +34,43 @@ public class AdminUserManagementService {
     private final AuthenticationRepository authenticationRepository;
     private final ObjectMapper objectMapper;
     private final PasswordEncoder passwordEncoder;
+    private final HttpServletRequest request;
 
     public AdminUserManagementService(UserRepository userRepository,
                                       AuditLogRepository auditLogRepository,
                                       AuthenticationRepository authenticationRepository,
                                       ObjectMapper objectMapper,
-                                      PasswordEncoder passwordEncoder) {
+                                      PasswordEncoder passwordEncoder,
+                                      HttpServletRequest request) {
         this.userRepository = userRepository;
         this.auditLogRepository = auditLogRepository;
         this.authenticationRepository = authenticationRepository;
         this.objectMapper = objectMapper;
         this.passwordEncoder = passwordEncoder;
+        this.request = request;
+    }
+
+    private String getClientIp() {
+        if (request == null) {
+            return "127.0.0.1";
+        }
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        if (ip != null && ip.contains(",")) {
+            ip = ip.split(",")[0].trim();
+        }
+        if ("0:0:0:0:0:0:0:1".equals(ip) || "::1".equals(ip)) {
+            ip = "127.0.0.1";
+        }
+        return ip;
     }
 
     @Transactional(readOnly = true)
@@ -127,13 +154,12 @@ public class AdminUserManagementService {
         userRepository.save(target);
 
         String action = nextLocked ? "LOCK_USER" : "UNLOCK_USER";
-        String details = String.format("%s (%d) da %s tai khoan %s (%d)",
-                displayName(operator), operator.getId(), nextLocked ? "khoa" : "mo khoa", target.getEmail(), target.getId());
-        auditLogRepository.save(AuditLog.builder()
-                .userId(operator.getId())
-                .action(action)
-                .details(details)
-                .build());
+        String details = String.format("%s %s", nextLocked ? "Khóa" : "Mở khóa", target.getEmail());
+        
+        Map<String, Object> diff = new HashMap<>();
+        diff.put("isLocked", !nextLocked + " -> " + nextLocked);
+        
+        audit(operator, action, details, diff);
 
         return AdminActionResponse.builder()
                 .success(true)
@@ -168,8 +194,10 @@ public class AdminUserManagementService {
                 .isDelete(false)
                 .build();
         User saved = userRepository.save(staff);
-        audit(operator, "CREATE_STAFF", String.format("%s (%d) da tao tai khoan Staff %s (%d)",
-                displayName(operator), operator.getId(), saved.getEmail(), saved.getId()));
+        Map<String, Object> diff = new HashMap<>();
+        diff.put("role", "none -> Staff");
+        audit(operator, "CREATE_STAFF", String.format("%s (%d) đã tạo tài khoản Staff %s (%d)",
+                displayName(operator), operator.getId(), saved.getEmail(), saved.getId()), diff);
         return toResponse(saved);
     }
 
@@ -178,6 +206,13 @@ public class AdminUserManagementService {
         User operator = requireAdmin(operatorId);
         User staff = requireStaff(staffId);
         validateStaffUpdatePayload(request);
+
+        String oldName = staff.getFullName();
+        String oldPhone = staff.getPhone();
+        String oldGender = staff.getGender();
+        String oldAddress = staff.getAddress();
+        String oldNationalId = staff.getNationalId();
+        Boolean oldActive = !Boolean.TRUE.equals(staff.getIsLocked());
 
         staff.setFullName(request.getFullName().trim());
         staff.setPhone(blankToNull(request.getPhone()));
@@ -192,8 +227,29 @@ public class AdminUserManagementService {
             staff.setPassword(passwordEncoder.encode(request.getPassword()));
         }
         User saved = userRepository.save(staff);
-        audit(operator, "UPDATE_STAFF", String.format("%s (%d) da cap nhat tai khoan Staff %s (%d)",
-                displayName(operator), operator.getId(), saved.getEmail(), saved.getId()));
+
+        Map<String, Object> diff = new HashMap<>();
+        if (oldName != null && !oldName.equals(saved.getFullName())) {
+            diff.put("fullName", oldName + " -> " + saved.getFullName());
+        }
+        if (oldPhone != null && !oldPhone.equals(saved.getPhone())) {
+            diff.put("phone", oldPhone + " -> " + saved.getPhone());
+        }
+        if (oldGender != null && !oldGender.equals(saved.getGender())) {
+            diff.put("gender", oldGender + " -> " + saved.getGender());
+        }
+        if (oldAddress != null && !oldAddress.equals(saved.getAddress())) {
+            diff.put("address", oldAddress + " -> " + saved.getAddress());
+        }
+        if (oldNationalId != null && !oldNationalId.equals(saved.getNationalId())) {
+            diff.put("nationalId", oldNationalId + " -> " + saved.getNationalId());
+        }
+        if (request.getActive() != null && !request.getActive().equals(oldActive)) {
+            diff.put("active", oldActive + " -> " + request.getActive());
+        }
+
+        audit(operator, "UPDATE_STAFF", String.format("%s (%d) đã cập nhật tài khoản Staff %s (%d)",
+                displayName(operator), operator.getId(), saved.getEmail(), saved.getId()), diff);
         return toResponse(saved);
     }
 
@@ -210,8 +266,12 @@ public class AdminUserManagementService {
 
         target.setIsDelete(true);
         userRepository.save(target);
-        audit(operator, "SOFT_DELETE_USER", String.format("%s (%d) da xoa mem tai khoan %s (%d)",
-                displayName(operator), operator.getId(), target.getEmail(), target.getId()));
+        
+        Map<String, Object> diff = new HashMap<>();
+        diff.put("isDelete", "false -> true");
+        
+        audit(operator, "SOFT_DELETE_USER", String.format("%s (%d) đã xóa mềm tài khoản %s (%d)",
+                displayName(operator), operator.getId(), target.getEmail(), target.getId()), diff);
         return AdminActionResponse.builder()
                 .success(true)
                 .message("Da xoa tai khoan khoi he thong.")
@@ -228,8 +288,12 @@ public class AdminUserManagementService {
 
         staff.setIsDelete(true);
         userRepository.save(staff);
-        audit(operator, "DELETE_STAFF", String.format("%s (%d) da xoa mem tai khoan Staff %s (%d)",
-                displayName(operator), operator.getId(), staff.getEmail(), staff.getId()));
+        
+        Map<String, Object> diff = new HashMap<>();
+        diff.put("isDelete", "false -> true");
+        
+        audit(operator, "DELETE_STAFF", String.format("%s (%d) đã xóa mềm tài khoản Staff %s (%d)",
+                displayName(operator), operator.getId(), staff.getEmail(), staff.getId()), diff);
         return AdminActionResponse.builder()
                 .success(true)
                 .message("Da xoa tai khoan Staff.")
@@ -253,13 +317,12 @@ public class AdminUserManagementService {
         target.setRole(toRoleJson(normalizedTargetRole));
         userRepository.save(target);
 
-        String details = String.format("%s (%d) da doi vai tro cua %s (%d) tu %s sang %s",
-                displayName(operator), operator.getId(), target.getEmail(), target.getId(), oldRole, normalizedTargetRole);
-        auditLogRepository.save(AuditLog.builder()
-                .userId(operator.getId())
-                .action("CHANGE_USER_ROLE")
-                .details(details)
-                .build());
+        String details = String.format("Đổi vai trò của %s từ %s sang %s", target.getEmail(), oldRole, normalizedTargetRole);
+        
+        Map<String, Object> diff = new HashMap<>();
+        diff.put("role", oldRole + " -> " + normalizedTargetRole);
+        
+        audit(operator, "CHANGE_USER_ROLE", details, diff);
 
         return AdminActionResponse.builder()
                 .success(true)
@@ -416,12 +479,31 @@ public class AdminUserManagementService {
         return value == null || value.isBlank() ? null : value.trim();
     }
 
-    private void audit(User operator, String action, String details) {
-        auditLogRepository.save(AuditLog.builder()
-                .userId(operator.getId())
-                .action(action)
-                .details(details)
-                .build());
+    private void audit(User operator, String action, String desc) {
+        audit(operator, action, desc, null);
+    }
+
+    private void audit(User operator, String action, String desc, Map<String, Object> diff) {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("desc", desc);
+            payload.put("ipAddress", getClientIp());
+            payload.put("diff", diff);
+            
+            String jsonDetails = objectMapper.writeValueAsString(payload);
+            
+            auditLogRepository.save(AuditLog.builder()
+                    .userId(operator.getId())
+                    .action(action)
+                    .details(jsonDetails)
+                    .build());
+        } catch (Exception e) {
+            auditLogRepository.save(AuditLog.builder()
+                    .userId(operator.getId())
+                    .action(action)
+                    .details(desc)
+                    .build());
+        }
     }
 
     private String normalize(String value) {

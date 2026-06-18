@@ -59,6 +59,12 @@ public class User {
     @Column(name = "isLocked")
     private Boolean isLocked; // Default: false
 
+    @Column(name = "failed_attempts")
+    private Integer failedAttempts; // Default: 0
+
+    @Column(name = "lock_time")
+    private LocalDateTime lockTime;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -87,6 +93,9 @@ public class User {
         }
         if (isDelete == null) {
             isDelete = false;
+        }
+        if (failedAttempts == null) {
+            failedAttempts = 0;
         }
         if (shopStatus == null) {
             shopStatus = "Pending";
