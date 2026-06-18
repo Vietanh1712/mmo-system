@@ -125,6 +125,10 @@
     transition: background-color 0.2s, color 0.2s;
 }
 
+.account-sidebar__menu-link[hidden] {
+    display: none;
+}
+
 .account-sidebar__menu-link i {
     width: 18px;
     color: var(--ds-text-muted);

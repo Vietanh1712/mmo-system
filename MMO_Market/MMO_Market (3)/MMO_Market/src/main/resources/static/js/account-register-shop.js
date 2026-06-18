@@ -21,6 +21,9 @@ async function initializeShopRegistrationPage() {
         const response = await authFetch('/v1/profile');
         if (!response.ok) throw new Error('Không thể tải thông tin tài khoản.');
         const profile = await response.json();
+        if (!allowShopRegistration(profile.role)) {
+            return;
+        }
         shopAccountSidebar.render(profile);
         prefillShopContact(profile);
     } catch (error) {
@@ -29,6 +32,19 @@ async function initializeShopRegistrationPage() {
 
     shopRegistrationState = readShopRegistrationState();
     renderShopRegistrationState();
+}
+
+function allowShopRegistration(roleValue) {
+    const role = shopAccountSidebar.normalizeRole(roleValue);
+    if (role === 'Customer') return true;
+
+    const targetByRole = {
+        Seller: '/seller/dashboard',
+        Staff: '/staff/dashboard',
+        Admin: '/admin/users'
+    };
+    window.location.replace(targetByRole[role] || '/');
+    return false;
 }
 
 function readShopRegistrationState() {
