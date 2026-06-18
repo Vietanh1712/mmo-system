@@ -254,10 +254,11 @@
                     if (prodRes.ok) {
                         const prod = await prodRes.json();
                         urlContextProduct = {
-                            id: prod.productId || productIdParam,
-                            name: prod.productName,
+                            id: prod.id || productIdParam,
+                            name: prod.name,
                             price: prod.price,
-                            sellerId: prod.sellerId
+                            sellerId: prod.sellerId,
+                            stock: prod.stock !== undefined ? prod.stock : 0
                         };
                     }
                 } catch (err) {
@@ -469,6 +470,11 @@
                     formattedPrice = urlContextProduct.price + ' VNĐ';
                 }
 
+                const isOutOfStock = (urlContextProduct.stock === undefined || urlContextProduct.stock <= 0);
+                const stockBadge = isOutOfStock 
+                    ? `<span class="messages-context-card__stock" style="color: #ef4444; background: #fef2f2;">HẾT HÀNG</span>`
+                    : `<span class="messages-context-card__stock">CÒN HÀNG</span>`;
+
                 contextCard.innerHTML = `
                     <div class="messages-context-card__thumb"><i class="fa fa-play-circle"></i></div>
                     <div class="messages-context-card__info">
@@ -476,7 +482,7 @@
                         <div class="messages-context-card__name">${urlContextProduct.name}</div>
                         <div class="messages-context-card__meta">
                             <span class="messages-context-card__price">${formattedPrice}</span>
-                            <span class="messages-context-card__stock">CÒN HÀNG</span>
+                            ${stockBadge}
                         </div>
                     </div>
                     <i class="fa fa-chevron-right messages-context-card__chevron"></i>

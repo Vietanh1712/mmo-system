@@ -286,7 +286,7 @@ async function submitTicketForm(e) {
 }
 
 function openLiveChat() {
-    window.location.href = '/messages';
+    window.location.href = '/messages?sellerId=35';
 }
 
 // Render list on load
