@@ -96,6 +96,18 @@ public class TopupService {
             return false;
         }
 
+        long maxDeposit = systemConfigurationRepository.findByConfigKey("MAX_DEPOSIT_LIMIT_VND")
+                .map(c -> {
+                    try { return Long.parseLong(c.getConfigValue()); }
+                    catch (NumberFormatException e) { return 50000000L; }
+                }).orElse(50000000L);
+
+        if (amount > maxDeposit) {
+            log.error("Top-up amount {} VND is above maximum deposit limit {} VND. User ID: {}", 
+                    amount, maxDeposit, user.getId());
+            return false;
+        }
+
         Long oldBalance = user.getBalanceVnd() != null ? user.getBalanceVnd() : 0L;
         user.setBalanceVnd(oldBalance + amount);
         userRepository.save(user);

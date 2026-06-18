@@ -11,15 +11,14 @@
     ];
 
     const ALL_PERMISSIONS = [
-        { id: 'APPROVE_KYC', label: 'Duyệt hồ sơ KYC', group: 'Kiểm duyệt' },
-        { id: 'REVIEW_SUSPICIOUS', label: 'Rà soát giao dịch bất thường', group: 'Kiểm duyệt' },
-        { id: 'AUDIT_ACCOUNTS', label: 'Kiểm tra tài khoản', group: 'Kiểm duyệt' },
-        { id: 'APPROVE_WITHDRAWALS', label: 'Duyệt lệnh rút tiền', group: 'Tài chính' },
-        { id: 'MANAGE_ESCROW', label: 'Quản lý giam tiền Escrow', group: 'Tài chính' },
-        { id: 'VIEW_REVENUE_REPORTS', label: 'Xem báo cáo doanh thu', group: 'Tài chính' },
-        { id: 'HANDLE_DISPUTES', label: 'Xử lý tranh chấp', group: 'Vận hành' },
-        { id: 'MANAGE_REQUESTS', label: 'Quản lý yêu cầu hỗ trợ', group: 'Vận hành' },
-        { id: 'RECEIVE_SYSTEM_ALERTS', label: 'Nhận & xử lý email cảnh báo hệ thống', group: 'Vận hành' }
+        { id: 'APPROVE_KYC', label: 'Duyệt hồ sơ định danh KYC', group: 'Kiểm duyệt', desc: 'Cho phép xem, duyệt hoặc từ chối thông tin định danh cá nhân của người dùng.' },
+        { id: 'AUDIT_USERS', label: 'Tra cứu & Kiểm tra tài khoản', group: 'Kiểm duyệt', desc: 'Cho phép kiểm tra thông tin tài khoản, ví số dư, địa chỉ IP và lịch sử hoạt động.' },
+        { id: 'MANAGE_SHOPS', label: 'Kiểm duyệt sản phẩm & Cửa hàng', group: 'Kiểm duyệt', desc: 'Cho phép phê duyệt mở cửa hàng của người bán, cấm hoạt động (ban) hoặc kiểm duyệt các sản phẩm số.' },
+        { id: 'FLAG_SELLER', label: 'Cắm cờ & Đánh gạch Seller', group: 'Kiểm duyệt', desc: 'Cho phép gắn cờ vi phạm (gạch phạt) đối với người bán vi phạm chính sách.' },
+        { id: 'APPROVE_WITHDRAWALS', label: 'Phê duyệt yêu cầu rút tiền', group: 'Tài chính', desc: 'Cho phép duyệt lệnh chuyển tiền/rút tiền của Seller từ ví hệ thống về tài khoản ngân hàng.' },
+        { id: 'VIEW_REVENUE', label: 'Xem báo cáo doanh thu sàn', group: 'Tài chính', desc: 'Cho phép xem thống kê phí giao dịch C2C, phí rút tiền, dòng tiền nạp và doanh thu ròng của hệ thống.' },
+        { id: 'HANDLE_DISPUTES', label: 'Phân xử tranh chấp & Hoàn tiền', group: 'Vận hành', desc: 'Cho phép làm trung gian giải quyết khiếu nại giữa người mua và người bán, hoàn trả hoặc giải ngân tiền Escrow.' },
+        { id: 'MANAGE_SUPPORT', label: 'Tiếp nhận & Hỗ trợ khách hàng', group: 'Vận hành', desc: 'Cho phép tiếp nhận, phản hồi và hỗ trợ giải đáp các thắc mắc (ticketing/live chat) của khách hàng.' }
     ];
 
     const MOCK_DEFAULT = {
@@ -53,13 +52,13 @@
         },
         commissions: {
             basePercent: 5.0,
-            flatBuyerFee: 1000,
             withdrawalPercent: 1.5,
-            minWithdrawFee: 10000,
+            sellerUpgradeFee: 50000,
+            productFeaturedFee: 10000,
             minWithdrawLimit: 50000,
             maxWithdrawLimit: 50000000,
-            autoWithdrawLimit: 5000000,
-            minDepositLimit: 10000
+            minDepositLimit: 10000,
+            maxDepositLimit: 50000000
         },
         maintenance: {
             active: false,
@@ -100,6 +99,8 @@
     let totalPages = 1;
     let totalElements = 0;
     let selectedStaffId = null;
+    let selectedPermId = null;
+    let selectedGroupId = 'ALL';
     let auditPage = 0;
     let auditPageSize = 10;
     let auditFiltered = [];
@@ -401,6 +402,17 @@
                 e.preventDefault();
                 notifPage = 0;
                 loadNotificationsView();
+            }
+        });
+
+        // Click outside listener for custom multiselect dropdown
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('multiselectDropdown');
+            const trigger = document.getElementById('multiselectTrigger');
+            if (dropdown && !dropdown.classList.contains('ds-hidden')) {
+                if (trigger && !trigger.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.classList.add('ds-hidden');
+                }
             }
         });
     }
@@ -1523,68 +1535,111 @@
     }
 
     /* ---------- Mock: Revenue ---------- */
-    function renderRevenueView() {
+    async function renderRevenueView() {
         const filter = document.getElementById('revTimeFilter')?.value || '7days';
         const typeFilter = document.getElementById('revTypeFilter')?.value || '';
-        const keyword = (document.getElementById('revKeywordFilter')?.value || '').toLowerCase().trim();
+        const keyword = (document.getElementById('revKeywordFilter')?.value || '').trim();
 
-        let txs = [...mock.cashFlow];
-        if (filter === 'today') txs = txs.slice(0, 2);
-        else if (filter === '30days') { /* giữ nguyên demo */ }
+        try {
+            // 1. Tải thông tin tóm tắt doanh thu
+            const summaryRes = await authFetch('/api/admin/revenue/summary');
+            if (summaryRes.ok) {
+                const summary = await summaryRes.json();
+                setText('revCommissions', formatVnd(summary.commissions));
+                // Cột 'revBuyerFees' bây giờ hiển thị tổng phí dịch vụ Seller (Upgrade + Featured)
+                setText('revBuyerFees', formatVnd((summary.sellerUpgradeFees || 0) + (summary.productFeaturedFees || 0)));
+                setText('revWithdrawalFees', formatVnd(summary.withdrawalFees));
+                setText('revNetTotal', formatVnd(summary.netTotal));
+            }
 
-        if (typeFilter) {
-            txs = txs.filter(t => t.type === typeFilter);
+            // 2. Tải danh sách giao dịch dòng tiền phân trang
+            const params = new URLSearchParams({
+                keyword: keyword,
+                type: typeFilter,
+                time: filter,
+                page: String(revPage),
+                size: String(revPageSize)
+            });
+
+            const listRes = await authFetch(`/api/admin/revenue/transactions?${params.toString()}`);
+            const body = document.getElementById('revTransactionsBody');
+            if (!body) return;
+
+            if (listRes.ok) {
+                const data = await listRes.json();
+                const slice = data.content || [];
+                const total = data.totalElements || 0;
+                const totalPg = Math.max(data.totalPages || 1, 1);
+                
+                body.innerHTML = slice.length ? slice.map((t, i) => {
+                    const typeClass = t.type === 'Deposit' ? 'ds-badge-success' : (t.type === 'Withdrawal' ? 'ds-badge-warning' : 'ds-badge-info');
+                    return `
+                        <tr>
+                            <td class="ds-table-center">${sttNumber(revPage, revPageSize, i)}</td>
+                            <td class="ds-table-center"><code>${escapeHtml(t.id)}</code></td>
+                            <td>${formatDateTime(t.timestamp)}</td>
+                            <td>${escapeHtml(t.email)}</td>
+                            <td class="ds-table-center"><span class="ds-badge ${typeClass}">${escapeHtml(txTypeLabel(t.type))}</span></td>
+                            <td class="ds-money">${formatVnd(t.amount)}</td>
+                            <td class="ds-money">${formatVnd(t.fee)}</td>
+                            <td class="ds-table-center"><span class="ds-badge ${t.status === 'Completed' ? 'ds-badge-success' : (t.status === 'Held' ? 'badge held' : 'ds-badge-danger')}">${escapeHtml(txStatusLabel(t.status))}</span></td>
+                        </tr>
+                    `;
+                }).join('') : '<tr><td colspan="8" class="ds-empty-state">Không có giao dịch phù hợp.</td></tr>';
+
+                mountPagination('revenuePagination', {
+                    page: revPage,
+                    totalPages: totalPg,
+                    totalElements: total,
+                    pageSize: revPageSize
+                }, {
+                    onPage: (p) => { revPage = p; renderRevenueView(); },
+                    onSize: (s) => { revPageSize = s; revPage = 0; renderRevenueView(); }
+                });
+            } else {
+                body.innerHTML = '<tr><td colspan="8" class="ds-empty-state" style="color: var(--ds-color-danger)">Không thể tải danh sách giao dịch từ máy chủ.</td></tr>';
+            }
+        } catch (error) {
+            console.error(error);
+            const body = document.getElementById('revTransactionsBody');
+            if (body) {
+                body.innerHTML = `<tr><td colspan="8" class="ds-empty-state" style="color: var(--ds-color-danger)">Lỗi: ${escapeHtml(error.message)}</td></tr>`;
+            }
         }
-        if (keyword) {
-            txs = txs.filter(t => t.id.toLowerCase().includes(keyword) || t.email.toLowerCase().includes(keyword));
-        }
-
-        revFiltered = txs;
-        const commissions = txs.filter(t => t.type === 'C2C_Purchase').reduce((s, t) => s + t.fee * 0.8, 0);
-        const buyerFees = txs.filter(t => t.type === 'C2C_Purchase').length * (mock.commissions.flatBuyerFee || 1000);
-        const withdrawFees = txs.filter(t => t.type === 'Withdrawal').reduce((s, t) => s + (t.fee || 0), 0);
-        const net = commissions + buyerFees + withdrawFees;
-
-        setText('revCommissions', formatVnd(commissions));
-        setText('revBuyerFees', formatVnd(buyerFees));
-        setText('revWithdrawalFees', formatVnd(withdrawFees));
-        setText('revNetTotal', formatVnd(net));
-
-        const total = txs.length;
-        const totalPg = Math.max(Math.ceil(total / revPageSize), 1);
-        if (revPage >= totalPg) revPage = totalPg - 1;
-        const slice = txs.slice(revPage * revPageSize, revPage * revPageSize + revPageSize);
-
-        const body = document.getElementById('revTransactionsBody');
-        if (!body) return;
-        body.innerHTML = slice.length ? slice.map((t, i) => {
-            const typeClass = t.type === 'Deposit' ? 'ds-badge-success' : (t.type === 'Withdrawal' ? 'ds-badge-warning' : 'ds-badge-info');
-            return `
-                <tr>
-                    <td class="ds-table-center">${sttNumber(revPage, revPageSize, i)}</td>
-                    <td class="ds-table-center"><code>${escapeHtml(t.id)}</code></td>
-                    <td>${formatDateTime(t.timestamp)}</td>
-                    <td>${escapeHtml(t.email)}</td>
-                    <td class="ds-table-center"><span class="ds-badge ${typeClass}">${escapeHtml(txTypeLabel(t.type))}</span></td>
-                    <td class="ds-money">${formatVnd(t.amount)}</td>
-                    <td class="ds-money">${formatVnd(t.fee)}</td>
-                    <td class="ds-table-center"><span class="ds-badge ds-badge-success">${escapeHtml(txStatusLabel(t.status))}</span></td>
-                </tr>
-            `;
-        }).join('') : '<tr><td colspan="8" class="ds-empty-state">Không có giao dịch phù hợp.</td></tr>';
-
-        mountPagination('revenuePagination', {
-            page: revPage,
-            totalPages: totalPg,
-            totalElements: total,
-            pageSize: revPageSize
-        }, {
-            onPage: (p) => { revPage = p; renderRevenueView(); },
-            onSize: (s) => { revPageSize = s; revPage = 0; renderRevenueView(); }
-        });
     }
 
-    window.AdminConsole.mockExport = function (type) {
+    window.AdminConsole.mockExport = async function (type) {
+        if (type === 'revenue') {
+            showToast('Đang xuất báo cáo doanh thu...');
+            try {
+                const filter = document.getElementById('revTimeFilter')?.value || '7days';
+                const typeFilter = document.getElementById('revTypeFilter')?.value || '';
+                const keyword = (document.getElementById('revKeywordFilter')?.value || '').trim();
+                const params = new URLSearchParams({
+                    keyword: keyword,
+                    type: typeFilter,
+                    time: filter
+                });
+                const response = await authFetch(`/api/admin/revenue/export?${params.toString()}`);
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `bao-cao-doanh-thu-${new Date().toISOString().slice(0, 10)}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                    showToast('Đã tải báo cáo doanh thu thành công.');
+                } else {
+                    showToast('Không thể xuất báo cáo từ máy chủ.', true);
+                }
+            } catch (e) {
+                showToast('Lỗi kết nối khi xuất báo cáo.', true);
+            }
+            return;
+        }
         const label = type === 'audit' ? 'nhật ký' : 'doanh thu';
         showToast(`Đang xuất báo cáo ${label}...`);
         setTimeout(() => showToast(`Đã tải báo cáo ${label} (demo).`), 1200);
@@ -1835,13 +1890,13 @@
             saveMock();
             
             document.getElementById('commBasePercent').value = c.basePercent;
-            document.getElementById('commFlatBuyer').value = formatNumberWithDots(c.flatBuyerFee);
             document.getElementById('commWithdrawPercent').value = c.withdrawalPercent;
-            document.getElementById('commMinWithdrawFee').value = formatNumberWithDots(c.minWithdrawFee);
+            document.getElementById('commSellerUpgradeFee').value = formatNumberWithDots(c.sellerUpgradeFee);
+            document.getElementById('commProductFeaturedFee').value = formatNumberWithDots(c.productFeaturedFee);
             document.getElementById('commMinWithdrawLimit').value = formatNumberWithDots(c.minWithdrawLimit);
             document.getElementById('commMaxWithdrawLimit').value = formatNumberWithDots(c.maxWithdrawLimit);
-            document.getElementById('commAutoWithdrawLimit').value = formatNumberWithDots(c.autoWithdrawLimit);
             document.getElementById('commMinDepositLimit').value = formatNumberWithDots(c.minDepositLimit);
+            document.getElementById('commMaxDepositLimit').value = formatNumberWithDots(c.maxDepositLimit);
         } catch (error) {
             showToast('Lỗi kết nối khi tải cấu hình.', true);
         }
@@ -1850,13 +1905,13 @@
     window.AdminConsole.saveCommissions = async function () {
         const payload = {
             basePercent: Number(document.getElementById('commBasePercent').value),
-            flatBuyerFee: stripDots(document.getElementById('commFlatBuyer').value),
             withdrawalPercent: Number(document.getElementById('commWithdrawPercent').value),
-            minWithdrawFee: stripDots(document.getElementById('commMinWithdrawFee').value),
+            sellerUpgradeFee: stripDots(document.getElementById('commSellerUpgradeFee').value),
+            productFeaturedFee: stripDots(document.getElementById('commProductFeaturedFee').value),
             minWithdrawLimit: stripDots(document.getElementById('commMinWithdrawLimit').value),
             maxWithdrawLimit: stripDots(document.getElementById('commMaxWithdrawLimit').value),
-            autoWithdrawLimit: stripDots(document.getElementById('commAutoWithdrawLimit').value),
-            minDepositLimit: stripDots(document.getElementById('commMinDepositLimit').value)
+            minDepositLimit: stripDots(document.getElementById('commMinDepositLimit').value),
+            maxDepositLimit: stripDots(document.getElementById('commMaxDepositLimit').value)
         };
         try {
             const response = await authFetch('/admin/system-config/commissions', {
@@ -1877,73 +1932,250 @@
     };
 
     /* ---------- Mock: Permissions ---------- */
+    let staffListCache = [];
+
     async function loadPermissionsView() {
-        let staffList = users.filter(u => u.role === 'Staff');
-        try {
-            const response = await authFetch(`${ENDPOINT}/users?size=50&role=Staff`);
-            const data = await response.json();
-            if (response.ok && data.content?.length) staffList = data.content;
-        } catch (_) { /* giữ cache */ }
-        const selectBox = document.getElementById('staffPermSelect');
+        let staffList = staffListCache;
         if (!staffList.length) {
-            selectBox.innerHTML = '<option value="">-- Không có nhân viên nào --</option>';
-            document.getElementById('permPanel').innerHTML = '<p class="ds-caption">Vui lòng tạo tài khoản nhân viên trước.</p>';
-            return;
+            staffList = users.filter(u => normalizeRole(u.role) === 'Staff');
+            try {
+                const response = await authFetch(`${ENDPOINT}/users?size=50&role=Staff`);
+                const data = await response.json();
+                if (response.ok && data.content?.length) {
+                    staffList = data.content;
+                    staffListCache = data.content;
+                }
+            } catch (_) { /* giữ cache */ }
         }
-        if (!selectedStaffId || !staffList.find(s => s.id === selectedStaffId)) {
-            selectedStaffId = staffList[0].id;
+
+        // Get filtered permissions list based on selected group
+        const filteredPermissions = selectedGroupId === 'ALL'
+            ? ALL_PERMISSIONS
+            : ALL_PERMISSIONS.filter(p => p.group === selectedGroupId);
+
+        // Adjust selectedPermId if it is not in the filtered permissions list
+        if (!selectedPermId || !filteredPermissions.some(p => p.id === selectedPermId)) {
+            selectedPermId = filteredPermissions.length > 0 ? filteredPermissions[0].id : null;
         }
-        selectBox.innerHTML = staffList.map(s => `
-            <option value="${s.id}" ${s.id === selectedStaffId ? 'selected' : ''}>
-                ${escapeHtml(s.fullName)} (${escapeHtml(s.email)})
-            </option>
-        `).join('');
-        renderPermissionCheckboxes(staffList);
+
+        // Populate group select dropdown (#permGroupFilter)
+        const permGroupFilter = document.getElementById('permGroupFilter');
+        if (permGroupFilter) {
+            permGroupFilter.value = selectedGroupId;
+        }
+
+        // Populate permissions select dropdown (#permDetailFilter)
+        const permDetailFilter = document.getElementById('permDetailFilter');
+        if (permDetailFilter) {
+            permDetailFilter.innerHTML = filteredPermissions.map(p =>
+                `<option value="${p.id}" ${p.id === selectedPermId ? 'selected' : ''}>${escapeHtml(p.label)}</option>`
+            ).join('');
+            if (filteredPermissions.length === 0) {
+                permDetailFilter.innerHTML = '<option value="">-- Không có quyền --</option>';
+            }
+        }
+
+        // Update selected permission description box
+        const descBox = document.getElementById('selectedPermDescBox');
+        const activePerm = ALL_PERMISSIONS.find(p => p.id === selectedPermId);
+        if (descBox) {
+            if (activePerm) {
+                descBox.style.display = 'block';
+                descBox.innerHTML = `<strong>Mô tả quyền:</strong> ${escapeHtml(activePerm.desc)}`;
+            } else {
+                descBox.style.display = 'none';
+                descBox.innerHTML = '';
+            }
+        }
+
+        if (!mock.permissions) {
+            mock.permissions = {};
+        }
+
+        // Filter the staff who have the selected permission and who don't
+        const assignedStaff = selectedPermId ? staffList.filter(s => {
+            const perms = mock.permissions[s.id] || [];
+            return perms.includes(selectedPermId);
+        }) : [];
+
+        const unassignedStaff = selectedPermId ? staffList.filter(s => {
+            const perms = mock.permissions[s.id] || [];
+            return !perms.includes(selectedPermId);
+        }) : [];
+
+        // Render assigned staff in table
+        const assignedStaffBody = document.getElementById('assignedStaffTableBody');
+        if (assignedStaffBody) {
+            if (assignedStaff.length > 0) {
+                assignedStaffBody.innerHTML = assignedStaff.map((s, index) => `
+                    <tr>
+                        <td class="ds-table-center">${index + 1}</td>
+                        <td class="ds-table-center">${s.id}</td>
+                        <td>
+                            <div class="ds-entity">
+                                <span class="ds-avatar ds-avatar-sm ds-avatar-primary">${escapeHtml(s.fullName.charAt(0).toUpperCase())}</span>
+                                <div>
+                                    <div class="ds-entity-title">${escapeHtml(s.fullName)}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${escapeHtml(s.email)}</td>
+                        <td class="ds-table-center">
+                            <div class="ds-table-actions">
+                                ${tableActionsDelete(`window.AdminConsole.removeStaffFromPermission(${s.id})`, 'Thu hồi quyền')}
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                assignedStaffBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="ds-empty-state" style="text-align: center; padding: 24px; color: var(--ds-text-muted); font-size: 13px;">
+                            Chưa có nhân viên nào được gán quyền này.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Render unassigned staff checklist in custom multiselect dropdown
+        const multiselectList = document.getElementById('multiselectList');
+        if (multiselectList) {
+            if (unassignedStaff.length > 0) {
+                multiselectList.innerHTML = unassignedStaff.map(s => `
+                    <label class="multiselect-item ds-dropdown-option" data-search="${escapeHtml(s.fullName.toLowerCase())} ${escapeHtml(s.email.toLowerCase())}" style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0; padding: 8px 12px;" onclick="event.stopPropagation()">
+                        <input type="checkbox" name="assignStaffCheckbox" value="${s.id}" style="cursor: pointer; width: 14px; height: 14px; margin: 0;" onchange="window.AdminConsole.updateSelectedStaffCount()">
+                        <span style="font-size: 13px; color: var(--ds-text);">
+                            <strong>${escapeHtml(s.fullName)}</strong>
+                        </span>
+                    </label>
+                `).join('');
+            } else {
+                multiselectList.innerHTML = `
+                    <div style="padding: 10px; color: var(--ds-text-muted); font-size: 12.5px; text-align: center; font-style: italic;">
+                        Tất cả nhân viên đã được gán quyền này.
+                    </div>
+                `;
+            }
+        }
+
+        // Reset search, checkbox state, and trigger text inside multiselect
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        if (selectAllCheckbox) selectAllCheckbox.checked = false;
+        
+        const multiselectSearch = document.getElementById('multiselectSearch');
+        if (multiselectSearch) multiselectSearch.value = '';
+
+        window.AdminConsole.updateSelectedStaffCount();
     }
 
-    window.AdminConsole.selectStaffPerm = function (id) {
-        selectedStaffId = Number(id);
+    window.AdminConsole.changePermGroup = function (groupId) {
+        selectedGroupId = groupId;
         loadPermissionsView();
     };
 
-    function renderPermissionCheckboxes(staffList) {
-        const staff = (staffList || users).find(u => u.id === selectedStaffId);
-        const granted = mock.permissions[selectedStaffId] || [];
-        const groups = [...new Set(ALL_PERMISSIONS.map(p => p.group))];
-        const panel = document.getElementById('permPanel');
-        panel.innerHTML = `
-            <div class="view-header" style="margin-bottom:12px">
-                <div>
-                    <h3 class="ds-heading-md" style="margin:0">${escapeHtml(staff?.fullName || '')}</h3>
-                    <p class="ds-caption">${escapeHtml(staff?.email || '')}</p>
-                </div>
-                <button type="button" class="ds-btn ds-btn-primary" onclick="AdminConsole.savePermissions()"><i class="fa fa-save"></i> Lưu quyền</button>
-            </div>
-            ${groups.map(g => `
-                <div class="perm-group">
-                    <div class="perm-group-title">${escapeHtml(g)}</div>
-                    <div class="perm-checkboxes">
-                        ${ALL_PERMISSIONS.filter(p => p.group === g).map(p => `
-                            <label class="perm-label-checkbox">
-                                <input type="checkbox" value="${p.id}" ${granted.includes(p.id) ? 'checked' : ''}>
-                                ${escapeHtml(p.label)}
-                            </label>
-                        `).join('')}
-                    </div>
-                </div>
-            `).join('')}
-        `;
-    }
+    window.AdminConsole.changePermDetail = function (permId) {
+        selectedPermId = permId;
+        loadPermissionsView();
+    };
 
-    window.AdminConsole.savePermissions = function () {
-        if (!selectedStaffId) {
-            showToast('Chọn nhân viên trước.', true);
+    window.AdminConsole.selectPermission = function (permId) {
+        selectedPermId = permId;
+        loadPermissionsView();
+    };
+
+    window.AdminConsole.toggleMultiselectDropdown = function (event) {
+        if (event) event.stopPropagation();
+        const dropdown = document.getElementById('multiselectDropdown');
+        if (dropdown) {
+            dropdown.classList.toggle('ds-hidden');
+            const searchInput = document.getElementById('multiselectSearch');
+            if (searchInput) {
+                searchInput.value = '';
+                window.AdminConsole.filterMultiselectList('');
+            }
+        }
+    };
+
+    window.AdminConsole.filterMultiselectList = function (query) {
+        const q = query.toLowerCase().trim();
+        const items = document.querySelectorAll('.multiselect-item');
+        items.forEach(item => {
+            const searchText = item.getAttribute('data-search') || '';
+            const isMatch = searchText.includes(q);
+            item.style.display = isMatch ? 'flex' : 'none';
+        });
+        const selectAll = document.getElementById('selectAllCheckbox');
+        if (selectAll) selectAll.checked = false;
+    };
+
+    window.AdminConsole.toggleSelectAll = function (checked) {
+        const items = document.querySelectorAll('.multiselect-item');
+        items.forEach(item => {
+            if (item.style.display !== 'none') {
+                const cb = item.querySelector('input[name="assignStaffCheckbox"]');
+                if (cb) cb.checked = checked;
+            }
+        });
+        window.AdminConsole.updateSelectedStaffCount();
+    };
+
+    window.AdminConsole.updateSelectedStaffCount = function () {
+        const checked = document.querySelectorAll('input[name="assignStaffCheckbox"]:checked');
+        const count = checked.length;
+        const triggerText = document.getElementById('multiselectTriggerText');
+        if (triggerText) {
+            if (count > 0) {
+                triggerText.textContent = `Đã chọn: ${count} nhân viên`;
+                triggerText.style.color = 'var(--ds-text)';
+            } else {
+                triggerText.textContent = '-- Chọn nhân viên --';
+                triggerText.style.color = 'var(--ds-text-muted)';
+            }
+        }
+    };
+
+    window.AdminConsole.addStaffToPermission = function () {
+        if (!selectedPermId) {
+            showToast('Vui lòng chọn một quyền cụ thể trước.', true);
             return;
         }
-        const checked = [...document.querySelectorAll('#permPanel input[type=checkbox]:checked')].map(el => el.value);
-        mock.permissions[selectedStaffId] = checked;
+        const checkboxes = document.querySelectorAll('input[name="assignStaffCheckbox"]:checked');
+        if (checkboxes.length === 0) {
+            showToast('Vui lòng chọn ít nhất một nhân viên để gán quyền.', true);
+            return;
+        }
+
+        if (!mock.permissions) {
+            mock.permissions = {};
+        }
+
+        checkboxes.forEach(cb => {
+            const staffId = Number(cb.value);
+            if (!mock.permissions[staffId]) {
+                mock.permissions[staffId] = [];
+            }
+            if (!mock.permissions[staffId].includes(selectedPermId)) {
+                mock.permissions[staffId].push(selectedPermId);
+            }
+        });
+
         saveMock();
-        showToast('Đã lưu phân quyền nhân viên (dữ liệu mẫu).');
+        showToast(`Đã gán quyền thành công cho ${checkboxes.length} nhân viên.`);
+        
+        const dropdown = document.getElementById('multiselectDropdown');
+        if (dropdown) dropdown.classList.add('ds-hidden');
+        
+        loadPermissionsView();
+    };
+
+    window.AdminConsole.removeStaffFromPermission = function (staffId) {
+        if (!mock.permissions || !mock.permissions[staffId]) return;
+
+        mock.permissions[staffId] = mock.permissions[staffId].filter(id => id !== selectedPermId);
+        saveMock();
+        showToast('Đã xóa quyền thành công (lưu cấu hình).');
+        loadPermissionsView();
     };
 
     /* ---------- Helpers ---------- */

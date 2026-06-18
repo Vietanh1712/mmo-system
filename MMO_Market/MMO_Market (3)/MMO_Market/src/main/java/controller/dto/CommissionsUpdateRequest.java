@@ -11,11 +11,11 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CommissionsUpdateRequest {
     private Double basePercent;
-    private Long flatBuyerFee;
     private Double withdrawalPercent;
-    private Long minWithdrawFee;
+    private Long sellerUpgradeFee;
+    private Long productFeaturedFee;
     private Long minWithdrawLimit;
     private Long maxWithdrawLimit;
-    private Long autoWithdrawLimit;
     private Long minDepositLimit;
+    private Long maxDepositLimit;
 }

@@ -182,7 +182,7 @@
                 </div>
                 <div class="stats-grid-4">
                     <div class="stat-card-modern"><span class="stat-card-label">Hoa hồng</span><div class="stat-card-value ds-money" id="revCommissions">₫0</div></div>
-                    <div class="stat-card-modern blue"><span class="stat-card-label">Phí người mua</span><div class="stat-card-value ds-money" id="revBuyerFees">₫0</div></div>
+                    <div class="stat-card-modern blue"><span class="stat-card-label">Phí dịch vụ Seller</span><div class="stat-card-value ds-money" id="revBuyerFees">₫0</div></div>
                     <div class="stat-card-modern green"><span class="stat-card-label">Phí rút tiền</span><div class="stat-card-value ds-money" id="revWithdrawalFees">₫0</div></div>
                     <div class="stat-card-modern yellow"><span class="stat-card-label">Doanh thu ròng</span><div class="stat-card-value ds-money" id="revNetTotal">₫0</div></div>
                 </div>
@@ -390,13 +390,13 @@
                 <div class="ds-card" style="padding: 24px; max-width: 900px;">
                     <div class="ds-form-grid">
                         <div class="ds-form-field"><label class="ds-label" for="commBasePercent">Hoa hồng C2C (%)</label><input id="commBasePercent" class="ds-input" type="number" step="0.1"></div>
-                        <div class="ds-form-field"><label class="ds-label" for="commFlatBuyer">Phí cố định người mua (VNĐ)</label><input id="commFlatBuyer" class="ds-input" type="text"></div>
                         <div class="ds-form-field"><label class="ds-label" for="commWithdrawPercent">Phí rút tiền (%)</label><input id="commWithdrawPercent" class="ds-input" type="number" step="0.1"></div>
-                        <div class="ds-form-field"><label class="ds-label" for="commMinWithdrawFee">Phí rút tối thiểu (VNĐ)</label><input id="commMinWithdrawFee" class="ds-input" type="text"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="commSellerUpgradeFee">Phí nâng cấp tài khoản Seller (VNĐ)</label><input id="commSellerUpgradeFee" class="ds-input" type="text"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="commProductFeaturedFee">Phí đẩy tin nổi bật sản phẩm (VNĐ)</label><input id="commProductFeaturedFee" class="ds-input" type="text"></div>
                         <div class="ds-form-field"><label class="ds-label" for="commMinWithdrawLimit">Hạn mức rút tối thiểu (VNĐ)</label><input id="commMinWithdrawLimit" class="ds-input" type="text"></div>
                         <div class="ds-form-field"><label class="ds-label" for="commMaxWithdrawLimit">Hạn mức rút tối đa (VNĐ)</label><input id="commMaxWithdrawLimit" class="ds-input" type="text"></div>
                         <div class="ds-form-field"><label class="ds-label" for="commMinDepositLimit">Hạn mức nạp tối thiểu (VNĐ)</label><input id="commMinDepositLimit" class="ds-input" type="text"></div>
-                        <div class="ds-form-field"><label class="ds-label" for="commAutoWithdrawLimit">Hạn mức tự động rút (VNĐ)</label><input id="commAutoWithdrawLimit" class="ds-input" type="text"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="commMaxDepositLimit">Hạn mức nạp tối đa (VNĐ)</label><input id="commMaxDepositLimit" class="ds-input" type="text"></div>
                     </div>
                 </div>
             </div>
@@ -518,18 +518,81 @@
                 <div class="view-header">
                     <div>
                         <h2 class="ds-heading-lg">Quản lý &amp; phân quyền nhân viên</h2>
-                        <p class="ds-caption">Gán quyền cho từng nhân viên (lưu demo).</p>
+                        <p class="ds-caption">Cấu hình vai trò, gán và thu hồi quyền hạn của nhân viên hệ thống.</p>
                     </div>
                 </div>
-                <div class="ds-card" style="padding: 24px; max-width: 900px;">
-                    <div class="ds-form-field" style="margin-bottom: 24px;">
-                        <label class="ds-label" for="staffPermSelect">Chọn nhân viên</label>
-                        <select id="staffPermSelect" class="ds-input" onchange="AdminConsole.selectStaffPerm(this.value)">
-                            <option value="">-- Đang tải --</option>
-                        </select>
+                
+                <div class="admin-card admin-list-card">
+                    <div class="ds-filter-panel">
+                        <h2 class="ds-card-title">Bộ lọc quyền &amp; Gán nhân viên</h2>
+                        <div class="ds-filter-grid">
+                            <!-- Dropdown 1: Nhóm quyền -->
+                            <select id="permGroupFilter" class="ds-input" onchange="AdminConsole.changePermGroup(this.value)" aria-label="Nhóm quyền">
+                                <option value="ALL">Tất cả nhóm quyền</option>
+                                <option value="Kiểm duyệt">Nhóm: Kiểm duyệt</option>
+                                <option value="Tài chính">Nhóm: Tài chính</option>
+                                <option value="Vận hành">Nhóm: Vận hành</option>
+                            </select>
+                            
+                            <!-- Dropdown 2: Quyền cụ thể -->
+                            <select id="permDetailFilter" class="ds-input" onchange="AdminConsole.changePermDetail(this.value)" aria-label="Quyền cụ thể">
+                                <!-- Populated by JS -->
+                            </select>
+
+                            <!-- Custom Searchable Multiselect Dropdown -->
+                            <div class="ds-dropdown">
+                                <div id="multiselectTrigger" class="ds-dropdown-toggle" onclick="AdminConsole.toggleMultiselectDropdown(event)" style="cursor: pointer; user-select: none;">
+                                    <span id="multiselectTriggerText" style="color: var(--ds-text-muted);">-- Chọn nhân viên --</span>
+                                    <i class="fa fa-caret-down"></i>
+                                </div>
+                                
+                                <div id="multiselectDropdown" class="ds-dropdown-panel ds-hidden" style="max-height: 250px; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+                                    <!-- Search input inside dropdown -->
+                                    <div style="position: relative; margin: 0;" onclick="event.stopPropagation()">
+                                        <i class="fa fa-search" style="position: absolute; left: 10px; top: 10px; color: var(--ds-text-muted); font-size: 12px;"></i>
+                                        <input type="text" id="multiselectSearch" class="ds-input" style="padding-left: 28px; width: 100%; height: 32px; box-sizing: border-box; font-size: 12.5px;" placeholder="Tìm nhanh..." oninput="AdminConsole.filterMultiselectList(this.value)">
+                                    </div>
+                                    <!-- Select All checkbox -->
+                                    <label class="ds-dropdown-option" style="display: flex; align-items: center; gap: 8px; font-weight: bold; border-bottom: 1px solid var(--ds-border); padding-bottom: 6px; cursor: pointer; font-size: 12.5px; margin: 0;" onclick="event.stopPropagation()">
+                                        <input type="checkbox" id="selectAllCheckbox" onchange="AdminConsole.toggleSelectAll(this.checked)" style="cursor: pointer; width: 14px; height: 14px; margin: 0;">
+                                        Chọn tất cả hiển thị
+                                    </label>
+                                    <!-- Checkbox list -->
+                                    <div id="multiselectList" style="display: flex; flex-direction: column; gap: 4px;">
+                                        <!-- Populated by JS -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Description of the selected permission -->
+                        <div id="selectedPermDescBox" style="margin-top: 12px; padding: 10px 14px; background: rgba(37, 99, 235, 0.05); border-left: 3px solid var(--ds-primary); border-radius: var(--ds-radius-sm); font-size: 13px; color: var(--ds-text-subtle); line-height: 1.45;">
+                            <!-- Populated by JS -->
+                        </div>
+                        
+                        <div class="ds-filter-actions" style="margin-top: 12px;">
+                            <button type="button" class="ds-btn ds-btn-primary" onclick="AdminConsole.addStaffToPermission()">
+                                <i class="fa fa-plus"></i> Gán quyền cho nhân viên đã chọn
+                            </button>
+                        </div>
                     </div>
-                    <div class="permissions-panel" id="permPanel">
-                        <p class="ds-caption">Vui lòng chọn nhân viên ở trên.</p>
+                    
+                    <!-- Table: Assigned staff -->
+                    <div class="ds-table-wrap">
+                        <table class="ds-table">
+                            <thead>
+                                <tr>
+                                    <th class="ds-table-center" style="width: 80px;">STT</th>
+                                    <th class="ds-table-center" style="width: 100px;">Mã NV</th>
+                                    <th>Họ và tên</th>
+                                    <th>Email</th>
+                                    <th class="ds-table-center" style="width: 150px;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="assignedStaffTableBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

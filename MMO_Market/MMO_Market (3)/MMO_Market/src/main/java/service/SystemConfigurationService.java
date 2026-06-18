@@ -130,13 +130,13 @@ public class SystemConfigurationService {
 
         SystemConfigResponse.CommissionsDto comm = SystemConfigResponse.CommissionsDto.builder()
                 .basePercent(getDouble(map, "DEFAULT_COMMISSION_PERCENT", 5.0))
-                .flatBuyerFee(getLong(map, "FLAT_BUYER_FEE_VND", 1000L))
                 .withdrawalPercent(getDouble(map, "WITHDRAWAL_FEE_PERCENT", 1.5))
-                .minWithdrawFee(getLong(map, "MIN_WITHDRAW_FEE_VND", 10000L))
+                .sellerUpgradeFee(getLong(map, "SELLER_UPGRADE_FEE_VND", 50000L))
+                .productFeaturedFee(getLong(map, "PRODUCT_FEATURED_FEE_VND", 10000L))
                 .minWithdrawLimit(getLong(map, "MIN_WITHDRAWAL_VND", 50000L))
                 .maxWithdrawLimit(getLong(map, "MAX_WITHDRAWAL_VND", 50000000L))
-                .autoWithdrawLimit(getLong(map, "AUTO_WITHDRAWAL_LIMIT_VND", 5000000L))
                 .minDepositLimit(getLong(map, "MIN_DEPOSIT_LIMIT_VND", 10000L))
+                .maxDepositLimit(getLong(map, "MAX_DEPOSIT_LIMIT_VND", 50000000L))
                 .build();
 
         return SystemConfigResponse.builder()
@@ -230,13 +230,6 @@ public class SystemConfigurationService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Hoa hồng C2C phải nằm trong khoảng từ 0% đến 100%.");
         }
 
-        if (request.getFlatBuyerFee() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phí cố định người mua không được để trống.");
-        }
-        if (request.getFlatBuyerFee() < 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phí cố định người mua không được nhỏ hơn 0 VNĐ.");
-        }
-
         if (request.getWithdrawalPercent() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phí rút tiền không được để trống.");
         }
@@ -244,11 +237,18 @@ public class SystemConfigurationService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phí rút tiền phải nằm trong khoảng từ 0% đến 100%.");
         }
 
-        if (request.getMinWithdrawFee() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phí rút tối thiểu không được để trống.");
+        if (request.getSellerUpgradeFee() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phí nâng cấp tài khoản Seller không được để trống.");
         }
-        if (request.getMinWithdrawFee() < 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phí rút tối thiểu không được nhỏ hơn 0 VNĐ.");
+        if (request.getSellerUpgradeFee() < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phí nâng cấp tài khoản Seller không được nhỏ hơn 0 VNĐ.");
+        }
+
+        if (request.getProductFeaturedFee() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phí đẩy tin nổi bật sản phẩm không được để trống.");
+        }
+        if (request.getProductFeaturedFee() < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phí đẩy tin nổi bật sản phẩm không được nhỏ hơn 0 VNĐ.");
         }
 
         if (request.getMinWithdrawLimit() == null) {
@@ -272,32 +272,32 @@ public class SystemConfigurationService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Hạn mức nạp tối thiểu không được nhỏ hơn 0 VNĐ.");
         }
 
-        if (request.getAutoWithdrawLimit() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Hạn mức tự động rút không được để trống.");
+        if (request.getMaxDepositLimit() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Hạn mức nạp tối đa không được để trống.");
         }
-        if (request.getAutoWithdrawLimit() < 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Hạn mức tự động rút không được nhỏ hơn 0 VNĐ.");
+        if (request.getMaxDepositLimit() < request.getMinDepositLimit()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Hạn mức nạp tối đa phải lớn hơn hoặc bằng hạn mức nạp tối thiểu.");
         }
 
         Map<String, String> original = getCurrentConfigMap();
         Map<String, Object> diff = new HashMap<>();
         checkAndAddDiff(diff, "basePercent", getDouble(original, "DEFAULT_COMMISSION_PERCENT", 5.0), request.getBasePercent());
-        checkAndAddDiff(diff, "flatBuyerFee", getLong(original, "FLAT_BUYER_FEE_VND", 1000L), request.getFlatBuyerFee());
         checkAndAddDiff(diff, "withdrawalPercent", getDouble(original, "WITHDRAWAL_FEE_PERCENT", 1.5), request.getWithdrawalPercent());
-        checkAndAddDiff(diff, "minWithdrawFee", getLong(original, "MIN_WITHDRAW_FEE_VND", 10000L), request.getMinWithdrawFee());
+        checkAndAddDiff(diff, "sellerUpgradeFee", getLong(original, "SELLER_UPGRADE_FEE_VND", 50000L), request.getSellerUpgradeFee());
+        checkAndAddDiff(diff, "productFeaturedFee", getLong(original, "PRODUCT_FEATURED_FEE_VND", 10000L), request.getProductFeaturedFee());
         checkAndAddDiff(diff, "minWithdrawLimit", getLong(original, "MIN_WITHDRAWAL_VND", 50000L), request.getMinWithdrawLimit());
         checkAndAddDiff(diff, "maxWithdrawLimit", getLong(original, "MAX_WITHDRAWAL_VND", 50000000L), request.getMaxWithdrawLimit());
-        checkAndAddDiff(diff, "autoWithdrawLimit", getLong(original, "AUTO_WITHDRAWAL_LIMIT_VND", 5000000L), request.getAutoWithdrawLimit());
         checkAndAddDiff(diff, "minDepositLimit", getLong(original, "MIN_DEPOSIT_LIMIT_VND", 10000L), request.getMinDepositLimit());
+        checkAndAddDiff(diff, "maxDepositLimit", getLong(original, "MAX_DEPOSIT_LIMIT_VND", 50000000L), request.getMaxDepositLimit());
 
         updateKey("DEFAULT_COMMISSION_PERCENT", String.valueOf(request.getBasePercent()), "Phần trăm hoa hồng mặc định sàn thu của Seller", operator.getId());
-        updateKey("FLAT_BUYER_FEE_VND", String.valueOf(request.getFlatBuyerFee()), "Phí cố định người mua (VNĐ)", operator.getId());
         updateKey("WITHDRAWAL_FEE_PERCENT", String.valueOf(request.getWithdrawalPercent()), "Phí rút tiền (%)", operator.getId());
-        updateKey("MIN_WITHDRAW_FEE_VND", String.valueOf(request.getMinWithdrawFee()), "Phí rút tối thiểu (VNĐ)", operator.getId());
+        updateKey("SELLER_UPGRADE_FEE_VND", String.valueOf(request.getSellerUpgradeFee()), "Phí nâng cấp tài khoản Seller (VNĐ)", operator.getId());
+        updateKey("PRODUCT_FEATURED_FEE_VND", String.valueOf(request.getProductFeaturedFee()), "Phí đẩy tin nổi bật sản phẩm (VNĐ)", operator.getId());
         updateKey("MIN_WITHDRAWAL_VND", String.valueOf(request.getMinWithdrawLimit()), "Số tiền rút tối thiểu", operator.getId());
         updateKey("MAX_WITHDRAWAL_VND", String.valueOf(request.getMaxWithdrawLimit()), "Số tiền rút tối đa", operator.getId());
-        updateKey("AUTO_WITHDRAWAL_LIMIT_VND", String.valueOf(request.getAutoWithdrawLimit()), "Hạn mức tự động rút", operator.getId());
         updateKey("MIN_DEPOSIT_LIMIT_VND", String.valueOf(request.getMinDepositLimit()), "Số tiền nạp tối thiểu", operator.getId());
+        updateKey("MAX_DEPOSIT_LIMIT_VND", String.valueOf(request.getMaxDepositLimit()), "Số tiền nạp tối đa", operator.getId());
 
         String details = String.format("%s (%d) đã cập nhật cấu hình phí & hoa hồng.",
                 operator.getFullName(), operator.getId());

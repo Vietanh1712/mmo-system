@@ -104,7 +104,7 @@ function prefillShopContact(profile) {
     document.getElementById('shopSupportPhone').value = profile.phone || '';
 }
 
-function submitShopRegistration(event) {
+async function submitShopRegistration(event) {
     event.preventDefault();
     clearShopErrors();
 
@@ -132,14 +132,54 @@ function submitShopRegistration(event) {
     }
     if (!valid) return;
 
-    saveShopRegistrationState({
-        status: 'PENDING',
-        code: `SHOP-${Date.now().toString().slice(-6)}`,
-        submittedAt: new Date().toLocaleDateString('vi-VN'),
-        ...data
-    });
-    renderShopRegistrationState();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const submitBtn = document.getElementById('shopSubmitButton');
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+        const response = await authFetch('/api/v1/profile/register-shop', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        
+        if (response.ok) {
+            // Đăng ký thành công và đã được trừ tiền
+            saveShopRegistrationState({
+                status: 'APPROVED',
+                code: `SHOP-${Date.now().toString().slice(-6)}`,
+                submittedAt: new Date().toLocaleDateString('vi-VN'),
+                ...data
+            });
+            
+            // Cập nhật lại số dư ví hiển thị ở sidebar và session
+            if (result.balanceVnd !== undefined) {
+                const sidebarBalance = document.getElementById('sidebarBalance');
+                if (sidebarBalance) {
+                    sidebarBalance.textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(result.balanceVnd);
+                }
+                // Cập nhật user info lưu trong session
+                const user = JSON.parse(sessionStorage.getItem('userInfo') || sessionStorage.getItem('user') || '{}');
+                user.balanceVnd = result.balanceVnd;
+                user.role = result.role;
+                user.shopStatus = result.shopStatus;
+                sessionStorage.setItem('userInfo', JSON.stringify(user));
+                
+                // Cập nhật lại sidebar
+                if (shopAccountSidebar) {
+                    shopAccountSidebar.render(result);
+                }
+            }
+
+            renderShopRegistrationState();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            showShopFormMessage(result.message || 'Không thể gửi yêu cầu đăng ký shop.');
+            if (submitBtn) submitBtn.disabled = false;
+        }
+    } catch (error) {
+        showShopFormMessage('Lỗi kết nối khi gửi yêu cầu đăng ký shop.');
+        if (submitBtn) submitBtn.disabled = false;
+    }
 }
 
 function editShopRegistration() {
