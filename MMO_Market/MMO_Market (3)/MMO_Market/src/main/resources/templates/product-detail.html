@@ -1429,7 +1429,7 @@ stock: 50,
         // Chat Shop Handler
         function chatShop() {
             if (selectedProduct && selectedProduct.sellerId) {
-                window.location.href = `/messages?sellerId=${selectedProduct.sellerId}`;
+                window.location.href = `/messages?sellerId=${selectedProduct.sellerId}&productId=${selectedProduct.id}`;
             } else {
                 window.location.href = `/messages?sellerId=35`;
             }

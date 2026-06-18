@@ -235,6 +235,7 @@
         let pendingAttachment = null;
         let activeChatList = []; // list from backend
         let chatPollInterval = null;
+        let urlContextProduct = null;
 
         // Initialize chat page
         async function initChats() {
@@ -242,6 +243,26 @@
             if (!token) {
                 window.location.href = '/login';
                 return;
+            }
+
+            // Load context product if productId query parameter exists
+            const urlParams = new URLSearchParams(window.location.search);
+            const productIdParam = urlParams.get('productId');
+            if (productIdParam) {
+                try {
+                    const prodRes = await fetch(`/api/search/products/${productIdParam}`);
+                    if (prodRes.ok) {
+                        const prod = await prodRes.json();
+                        urlContextProduct = {
+                            id: prod.productId || productIdParam,
+                            name: prod.productName,
+                            price: prod.price,
+                            sellerId: prod.sellerId
+                        };
+                    }
+                } catch (err) {
+                    console.error('Cannot load context product details:', err);
+                }
             }
 
             try {
@@ -431,34 +452,31 @@
             dateBadge.textContent = 'TODAY';
             body.appendChild(dateBadge);
 
-            // 2. Add context card
-            let chat = activeChatList.find(c => c.contactId === currentSelectedChatId);
-            if (!chat) {
-                const mockKey = Object.keys(CHAT_DATA).find(k => 
-                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 35)
-                );
-                if (mockKey) {
-                    chat = CHAT_DATA[mockKey];
-                }
-            }
-            if (chat) {
+            // 2. Add context card (conditional on urlContextProduct matching the selected contact)
+            if (urlContextProduct && urlContextProduct.sellerId === currentSelectedChatId) {
                 const contextCard = document.createElement('article');
                 contextCard.className = 'messages-context-card';
                 contextCard.onclick = () => {
-                    if (chat.sellerId || chat.contactId) {
-                        window.location.href = `/shop/${chat.sellerId || chat.contactId}`;
-                    } else {
-                        showAlert('Đây là tài khoản hỗ trợ chính thức của hệ thống MMO Market.');
-                    }
+                    window.location.href = `/products/${urlContextProduct.id}`;
                 };
+                
+                let formattedPrice = '—';
+                try {
+                    formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
+                        .format(urlContextProduct.price)
+                        .replace('₫', 'VNĐ');
+                } catch (e) {
+                    formattedPrice = urlContextProduct.price + ' VNĐ';
+                }
+
                 contextCard.innerHTML = `
                     <div class="messages-context-card__thumb"><i class="fa fa-play-circle"></i></div>
                     <div class="messages-context-card__info">
-                        <div class="messages-context-card__label">ITEM OF DISCUSSION</div>
-                        <div class="messages-context-card__name">${chat.product || 'Tin nhắn trực tuyến'}</div>
+                        <div class="messages-context-card__label">SẢN PHẨM ĐANG HỎI</div>
+                        <div class="messages-context-card__name">${urlContextProduct.name}</div>
                         <div class="messages-context-card__meta">
-                            <span class="messages-context-card__price">${chat.price || '—'}</span>
-                            <span class="messages-context-card__stock">IN STOCK</span>
+                            <span class="messages-context-card__price">${formattedPrice}</span>
+                            <span class="messages-context-card__stock">CÒN HÀNG</span>
                         </div>
                     </div>
                     <i class="fa fa-chevron-right messages-context-card__chevron"></i>
