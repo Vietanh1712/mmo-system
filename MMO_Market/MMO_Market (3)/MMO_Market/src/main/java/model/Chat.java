@@ -39,6 +39,12 @@ public class Chat {
     @Column(name = "isDelete")
     private Boolean isDelete = false;
 
+    @Column(name = "sender_deleted")
+    private Boolean senderDeleted = false;
+
+    @Column(name = "receiver_deleted")
+    private Boolean receiverDeleted = false;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
@@ -49,6 +55,12 @@ public class Chat {
         }
         if (isDelete == null) {
             isDelete = false;
+        }
+        if (senderDeleted == null) {
+            senderDeleted = false;
+        }
+        if (receiverDeleted == null) {
+            receiverDeleted = false;
         }
     }
 }

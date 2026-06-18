@@ -32,7 +32,7 @@ function bindOrderDetailEvents() {
 
 function openComplaintModal() {
     if (!currentOrder) return;
-    
+
     // Reset form fields
     document.getElementById('complaintDescription').value = '';
     document.getElementById('complaintEvidence').value = '';
@@ -40,11 +40,11 @@ function openComplaintModal() {
     if (fileInput) fileInput.value = '';
     const statusText = document.getElementById('uploadStatusText');
     if (statusText) statusText.textContent = '';
-    
+
     document.getElementById('complaintModal').classList.add('active');
 }
 
-window.closeComplaintModal = function() {
+window.closeComplaintModal = function () {
     document.getElementById('complaintModal').classList.remove('active');
 }
 
@@ -172,10 +172,10 @@ function syncToStaffComplaints(backendData, description, evidence) {
     let list = [];
     try {
         list = JSON.parse(sessionStorage.getItem(key)) || [];
-    } catch(e) {}
+    } catch (e) { }
 
     const currentUser = getCurrentUser() || { fullName: 'Nguyễn An', email: 'buyer@mmo.com' };
-    
+
     const newMock = {
         id: backendData.id ? `CMP-${backendData.id}` : `CMP-${Math.floor(1000 + Math.random() * 9000)}`,
         senderName: currentUser.fullName || currentUser.email.split('@')[0],
@@ -418,22 +418,22 @@ function createAccessInfo(order) {
     if (order.status === 'PENDING') return 'Đơn hàng đang chờ xử lý, thông tin nhận hàng chưa sẵn sàng.';
     if (order.status === 'CANCELLED') return 'Đơn hàng đã hủy, không có thông tin nhận hàng.';
     if (order.status === 'DISPUTED') return 'Thông tin nhận hàng đang được giữ để xử lý tranh chấp.';
-    
+
     // Check if credentials exist in the order object
     let creds = order.credentials;
-    
+
     // If not in order object but name indicates account, auto-generate mock credentials dynamically so that all existing account orders show them!
     if (!creds) {
         const lowerName = order.productName.toLowerCase();
-        const isAccount = lowerName.includes('tài khoản') || 
-                          lowerName.includes('premium') || 
-                          lowerName.includes('spotify') || 
-                          lowerName.includes('netflix') || 
-                          lowerName.includes('canva') || 
-                          lowerName.includes('chatgpt') || 
-                          lowerName.includes('gmail') || 
-                          lowerName.includes('vpn') || 
-                          lowerName.includes('key');
+        const isAccount = lowerName.includes('tài khoản') ||
+            lowerName.includes('premium') ||
+            lowerName.includes('spotify') ||
+            lowerName.includes('netflix') ||
+            lowerName.includes('canva') ||
+            lowerName.includes('chatgpt') ||
+            lowerName.includes('gmail') ||
+            lowerName.includes('vpn') ||
+            lowerName.includes('key');
         if (isAccount) {
             // Generate deterministic mock credentials based on orderCode
             const hash = order.orderCode.replace(/[^0-9]/g, '') || '1234';
@@ -451,7 +451,7 @@ function createAccessInfo(order) {
             }
         }
     }
-    
+
     if (creds) {
         const isKeyOnly = creds.password === '(Product Key)';
         return `
@@ -484,7 +484,7 @@ function createAccessInfo(order) {
             </div>
         `;
     }
-    
+
     return 'Thông tin nhận hàng sẽ được hiển thị tại đây khi sản phẩm được giao thành công.';
 }
 
@@ -566,7 +566,7 @@ function showOrderDetailMessage(message, type) {
     messageElement.classList.add(`ds-alert-${type}`);
 }
 
-window.copyToClipboard = async function(text, label) {
+window.copyToClipboard = async function (text, label) {
     try {
         await navigator.clipboard.writeText(text);
         showOrderDetailMessage(`Đã copy ${label} vào bộ nhớ tạm thành công.`, 'success');

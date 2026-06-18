@@ -330,9 +330,33 @@ CREATE TABLE Chats (
     message NVARCHAR(MAX) NOT NULL,
     created_at DATETIME DEFAULT GETDATE(),
     isDelete BIT DEFAULT 0,
+    sender_deleted BIT DEFAULT 0,
+    receiver_deleted BIT DEFAULT 0,
     CONSTRAINT FK_Chats_Sender FOREIGN KEY (sender_id) REFERENCES Users(id) ON DELETE NO ACTION,
     CONSTRAINT FK_Chats_Receiver FOREIGN KEY (receiver_id) REFERENCES Users(id) ON DELETE NO ACTION,
     CONSTRAINT FK_Chats_Complaint FOREIGN KEY (complaint_id) REFERENCES Complaints(id) ON DELETE NO ACTION
+);
+GO
+
+CREATE TABLE ChatBlocks (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    blocker_id BIGINT NOT NULL,
+    blocked_id BIGINT NOT NULL,
+    created_at DATETIME DEFAULT GETDATE(),
+    CONSTRAINT FK_ChatBlocks_Blocker FOREIGN KEY (blocker_id) REFERENCES Users(id) ON DELETE NO ACTION,
+    CONSTRAINT FK_ChatBlocks_Blocked FOREIGN KEY (blocked_id) REFERENCES Users(id) ON DELETE NO ACTION,
+    CONSTRAINT UQ_ChatBlocks UNIQUE (blocker_id, blocked_id)
+);
+GO
+
+CREATE TABLE ChatMutes (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    contact_id BIGINT NOT NULL,
+    created_at DATETIME DEFAULT GETDATE(),
+    CONSTRAINT FK_ChatMutes_User FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION,
+    CONSTRAINT FK_ChatMutes_Contact FOREIGN KEY (contact_id) REFERENCES Users(id) ON DELETE NO ACTION,
+    CONSTRAINT UQ_ChatMutes UNIQUE (user_id, contact_id)
 );
 GO
 
