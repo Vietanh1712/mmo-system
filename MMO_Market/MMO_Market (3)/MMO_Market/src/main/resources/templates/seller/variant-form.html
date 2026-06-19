@@ -275,13 +275,20 @@
                         <button class="profile-button profile-button--primary" type="submit">
                             <i class="fa fa-save"></i> Lưu biến thể & tài sản
                         </button>
-                        <a class="profile-button p    <script th:src="@{/js/auth.js}"></script>
+                        <a class="profile-button profile-button--secondary" href="/seller/inventory">Hủy</a>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <script th:src="@{/js/auth.js}"></script>
     <script th:src="@{/js/seller-console.js}"></script>
     <script>
         // Get product data from session
         const productData = JSON.parse(sessionStorage.getItem('productData') || '{}');
-        let productType = productData.productType || 'ACCOUNT';
-        let assets = [];
+        var productType = productData.productType || 'ACCOUNT';
+        var assets = [];
 
         // Initialize form
         document.addEventListener('DOMContentLoaded', function() {

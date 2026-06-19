@@ -458,12 +458,16 @@
 }
 
 .row-actions {
-    display: flex;
+    display: inline-flex;
     justify-content: flex-end;
     gap: 8px;
+    vertical-align: middle;
 }
 
 .icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 36px;
     height: 36px;
     border-radius: 8px;
@@ -473,14 +477,17 @@
     cursor: pointer;
     transition: 0.2s;
     box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    text-decoration: none;
+    position: relative;
+    z-index: 10;
 }
 
-a.icon-button {
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+.icon-button i {
+    pointer-events: none;
 }
+
 
 .icon-button:hover {
     border-color: var(--seller-primary-strong);

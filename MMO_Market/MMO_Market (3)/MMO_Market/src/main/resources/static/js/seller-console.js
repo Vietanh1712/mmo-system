@@ -258,11 +258,28 @@ async function initInventory() {
 
         tbody.innerHTML = products.map(p => {
             const statusClass = p.status === 'Active' ? 'ok' : 'locked';
+            
+            // Format productType badge
+            let typeBadge = '';
+            if (p.productType === 'ACCOUNT') {
+                typeBadge = `<span style="background: #f0f7ff; color: #1e40af; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;"><i class="fa fa-user-circle"></i> Tài khoản</span>`;
+            } else if (p.productType === 'KEY') {
+                typeBadge = `<span style="background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;"><i class="fa fa-key"></i> Mã Key</span>`;
+            } else if (p.productType === 'GAME_CARD') {
+                typeBadge = `<span style="background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;"><i class="fa fa-credit-card"></i> Thẻ nạp</span>`;
+            } else {
+                typeBadge = `<span class="badge">${p.productType || 'N/A'}</span>`;
+            }
+
+            const imageUrl = p.image || 'https://via.placeholder.com/50x50/2563eb/ffffff?text=MMO';
+
             return `
                 <tr>
                     <td>
+                        <img src="${imageUrl}" class="product-image" alt="${p.name}">
+                    </td>
+                    <td>
                         <div class="product-cell">
-                            <div class="product-thumb"><i class="fa fa-shopping-bag"></i></div>
                             <div>
                                 <strong>${p.name}</strong>
                                 <div class="muted">ID #${p.id}</div>
@@ -270,7 +287,8 @@ async function initInventory() {
                         </div>
                     </td>
                     <td>${p.categoryName}</td>
-                    <td>${p.variantCount}</td>
+                    <td>${typeBadge}</td>
+                    <td class="text-right">${p.variantCount}</td>
                     <td class="text-right">${p.totalStock}</td>
                     <td><span class="badge ${statusClass}">${p.status}</span></td>
                     <td class="text-right">

@@ -197,6 +197,7 @@ public class SellerController {
                 map.put("categoryName", p.getCategory().getName());
                 map.put("description", p.getDescription());
                 map.put("image", p.getImage());
+                map.put("productType", p.getProductType());
 
                 List<ProductVariant> variants = productVariantRepository.findByProductAndIsDeleteFalse(p);
                 map.put("variantCount", variants.size());
@@ -545,6 +546,13 @@ public class SellerController {
 
             v.setIsDelete(true);
             productVariantRepository.save(v);
+
+            // Cascade delete digital assets
+            List<DigitalAsset> assets = digitalAssetRepository.findByVariantAndIsDeleteFalse(v);
+            for (DigitalAsset asset : assets) {
+                asset.setIsDelete(true);
+                digitalAssetRepository.save(asset);
+            }
 
             return ResponseEntity.ok(Map.of("message", "Xóa biến thể thành công."));
         } catch (Exception e) {
