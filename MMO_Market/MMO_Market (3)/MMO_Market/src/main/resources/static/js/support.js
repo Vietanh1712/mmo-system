@@ -154,81 +154,6 @@ function getUserEmail() {
     return 'guest';
 }
 
-async function getSupportTickets() {
-    try {
-        const token = sessionStorage.getItem('accessToken');
-        if (!token) return [];
-        const res = await authFetch('/support-tickets');
-        if (!res.ok) return [];
-        return await res.json();
-    } catch(e) {
-        console.error(e);
-        return [];
-    }
-}
-
-function escapeHtml(value) {
-    return String(value || '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
-}
-
-function getStatusBadgeStyle(status) {
-    if (status === 'Open') {
-        return 'background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;';
-    } else if (status === 'Resolved' || status === 'Closed') {
-        return 'background: #dcfce7; color: #15803d; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;';
-    } else {
-        // Processing
-        return 'background: #fef3c7; color: #b45309; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;';
-    }
-}
-
-async function renderTicketHistory() {
-    const body = document.getElementById('ticket-history-body');
-    if (!body) return;
-
-    const list = await getSupportTickets();
-
-    if (list.length === 0) {
-        body.innerHTML = `
-            <tr>
-                <td colspan="6" style="padding: 30px; text-align: center; color: var(--text-muted, #64748b);">
-                    Bạn chưa gửi yêu cầu hỗ trợ nào.
-                </td>
-            </tr>
-        `;
-        return;
-    }
-
-    body.innerHTML = list.map(item => {
-        let statusText = 'Đang xử lý';
-        if (item.status === 'Open') statusText = 'Mới';
-        else if (item.status === 'Resolved') statusText = 'Đã giải quyết';
-        else if (item.status === 'Closed') statusText = 'Đã đóng';
-        else if (item.status === 'Processing') statusText = 'Đang xử lý';
-
-        const formattedDate = item.createdAt ? item.createdAt.substring(0, 16).replace('T', ' ') : 'N/A';
-        const staffReply = item.resolution ? escapeHtml(item.resolution) : '<span style="color:#94a3b8; font-style:italic;">Đang chờ phản hồi...</span>';
-
-        return `
-            <tr style="border-bottom: 1px solid var(--border-color, #e2e8f0); transition: background 0.15s;">
-                <td style="padding: 12px 16px; font-weight: 600; color: #0058be;">#ST-${escapeHtml(item.id)}</td>
-                <td style="padding: 12px 16px;">${escapeHtml(item.category)}</td>
-                <td style="padding: 12px 16px; font-weight: 500; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(item.title)}</td>
-                <td style="padding: 12px 16px; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${staffReply}</td>
-                <td style="padding: 12px 16px; text-align: center;">
-                    <span style="${getStatusBadgeStyle(item.status)}">${statusText}</span>
-                </td>
-                <td style="padding: 12px 16px; color: var(--text-muted, #64748b); font-size: 13px;">${escapeHtml(formattedDate)}</td>
-            </tr>
-        `;
-    }).join('');
-}
-
 function openTicketForm() {
     const token = sessionStorage.getItem('accessToken');
     if (!token) {
@@ -265,7 +190,7 @@ async function submitTicketForm(e) {
                 title: subject,
                 description: detail
             })
-                });
+        });
 
         if (!res.ok) {
             const data = await res.json();
@@ -275,10 +200,8 @@ async function submitTicketForm(e) {
         closeTicketForm();
         document.getElementById('support-ticket-form').reset();
         
-        // Re-render
-        await renderTicketHistory();
-
         alert('Gửi ticket hỗ trợ thành công! Ticket của bạn đã được đưa lên hệ thống xử lý của Staff.');
+        window.location.href = '/account/tickets';
     } catch(err) {
         console.error(err);
         alert('Không thể gửi ticket hỗ trợ: ' + err.message);
@@ -288,11 +211,6 @@ async function submitTicketForm(e) {
 function openLiveChat() {
     window.location.href = '/messages?sellerId=35';
 }
-
-// Render list on load
-document.addEventListener('DOMContentLoaded', () => {
-    renderTicketHistory();
-});
 
 // Mở FAQ khi vào từ menu "Câu hỏi thường gặp"
 if (window.location.hash === '#faq') {

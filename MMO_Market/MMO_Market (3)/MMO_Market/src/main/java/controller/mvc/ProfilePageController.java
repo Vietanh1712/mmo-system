@@ -60,4 +60,9 @@ public class ProfilePageController {
     public String showNotificationsPage() {
         return "account/notifications";
     }
+
+    @GetMapping("/account/tickets")
+    public String showMyTicketsPage() {
+        return "account/tickets";
+    }
 }

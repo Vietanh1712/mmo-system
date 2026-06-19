@@ -85,6 +85,13 @@
             <i class="fa fa-power-off" aria-hidden="true"></i>
             <span>Đóng cửa hàng</span>
         </a>
+        <div class="seller-sidebar__divider"></div>
+        <a class="seller-sidebar__menu-link seller-sidebar__menu-link--logout"
+           href="javascript:void(0)"
+           onclick="if(typeof logout === 'function') logout(); else { sessionStorage.clear(); localStorage.removeItem('accessToken'); localStorage.removeItem('refreshToken'); localStorage.removeItem('loginTimestamp'); localStorage.removeItem('userInfo'); localStorage.removeItem('user'); window.location.href='/login'; }">
+            <i class="fa fa-sign-out" aria-hidden="true"></i>
+            <span>Đăng xuất</span>
+        </a>
     </nav>
 </aside>
 

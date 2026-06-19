@@ -80,6 +80,20 @@
             <i class="fa fa-bell-o" aria-hidden="true"></i>
             <span>Thông báo</span>
         </a>
+        <a class="account-sidebar__menu-link"
+           th:classappend="${activeMenu == 'tickets'} ? ' account-sidebar__menu-link--active' : ''"
+           th:href="@{/account/tickets}">
+            <i class="fa fa-ticket" aria-hidden="true"></i>
+            <span>Ticket của tôi</span>
+        </a>
+
+        <div class="account-sidebar__divider"></div>
+        <a class="account-sidebar__menu-link account-sidebar__menu-link--logout"
+           href="javascript:void(0)"
+           onclick="if(typeof logout === 'function') logout(); else { sessionStorage.clear(); localStorage.removeItem('accessToken'); localStorage.removeItem('refreshToken'); localStorage.removeItem('loginTimestamp'); localStorage.removeItem('userInfo'); localStorage.removeItem('user'); window.location.href='/login'; }">
+            <i class="fa fa-sign-out" aria-hidden="true"></i>
+            <span>Đăng xuất</span>
+        </a>
     </nav>
 </aside>
 
