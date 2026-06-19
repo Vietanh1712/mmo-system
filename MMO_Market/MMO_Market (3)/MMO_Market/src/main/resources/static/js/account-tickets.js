@@ -1,6 +1,8 @@
 const TICKET_STATUS_MAP = {
+    'Open':       { label: 'Mới',            cls: 'ticket-badge--processing', icon: 'fa-plus-circle' },
     'Pending':    { label: 'Chờ xử lý',      cls: 'ticket-badge--pending',    icon: 'fa-clock-o' },
-    'Processing': { label: 'Đang xử lý',     cls: 'ticket-badge--processing', icon: 'fa-spinner' },
+    'Processing': { label: 'Đang xử lý',     cls: 'ticket-badge--processing', icon: 'fa-spinner fa-spin' },
+    'Replied':    { label: 'Đã phản hồi',   cls: 'ticket-badge--replied',    icon: 'fa-reply' },
     'Resolved':   { label: 'Đã giải quyết',  cls: 'ticket-badge--resolved',   icon: 'fa-check-circle' },
     'Closed':     { label: 'Đã đóng',        cls: 'ticket-badge--closed',     icon: 'fa-times-circle' },
 };
@@ -39,7 +41,7 @@ async function loadTickets() {
         if (!tickets || tickets.length === 0) return;
 
         tbody.innerHTML = tickets.map(t => `
-            <tr>
+            <tr onclick="viewTicketDetail(${t.id})" style="cursor: pointer;">
                 <td><span class="ticket-id">#${String(t.id || '').padStart(4, '0')}</span></td>
                 <td>${t.category || '—'}</td>
                 <td><div class="ticket-title">${t.title || '—'}</div></td>
@@ -114,6 +116,49 @@ async function submitNewTicket(e) {
 
 document.addEventListener('DOMContentLoaded', loadTickets);
 
+async function viewTicketDetail(id) {
+    try {
+        const res = await authFetch('/support-tickets/' + id);
+        if (!res.ok) return;
+        const t = await res.json();
+        
+        document.getElementById('dt-id').innerText = '#' + String(t.id || '').padStart(4, '0');
+        document.getElementById('dt-category').innerText = t.category || '—';
+        
+        const statusHtml = renderTicketBadge(t.status || 'Pending');
+        document.getElementById('dt-status').innerHTML = statusHtml;
+        
+        document.getElementById('dt-date').innerText = formatTicketDate(t.createdAt);
+        document.getElementById('dt-title').innerText = t.title || '—';
+        document.getElementById('dt-description').innerText = t.description || '—';
+        
+        const replyContainer = document.getElementById('dt-reply-container');
+        if (t.resolution && t.resolution.trim() !== '') {
+            replyContainer.style.display = 'block';
+            document.getElementById('dt-reply').innerText = t.resolution;
+        } else {
+            replyContainer.style.display = 'none';
+        }
+        
+        document.getElementById('ticket-detail-modal').classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+    } catch (e) {
+        console.error('Lỗi lấy chi tiết ticket:', e);
+    }
+}
+
+function closeTicketDetail() {
+    document.getElementById('ticket-detail-modal').classList.remove('is-open');
+    document.body.style.overflow = '';
+}
+
+function handleDetailOverlayClick(e) {
+    if (e.target === document.getElementById('ticket-detail-modal')) closeTicketDetail();
+}
+
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeNewTicket();
+    if (e.key === 'Escape') {
+        closeNewTicket();
+        closeTicketDetail();
+    }
 });

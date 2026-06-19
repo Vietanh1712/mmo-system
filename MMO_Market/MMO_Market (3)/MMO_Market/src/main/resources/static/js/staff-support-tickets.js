@@ -25,7 +25,7 @@ function updateStats() {
     document.getElementById('stat-total').textContent = ticketsList.length;
     document.getElementById('stat-new').textContent = ticketsList.filter(t => t.status === 'Open').length;
     document.getElementById('stat-processing').textContent = ticketsList.filter(t => t.status === 'Processing').length;
-    document.getElementById('stat-resolved').textContent = ticketsList.filter(t => t.status === 'Resolved' || t.status === 'Closed').length;
+    document.getElementById('stat-resolved').textContent = ticketsList.filter(t => t.status === 'Resolved' || t.status === 'Closed' || t.status === 'Replied').length;
 }
 
 function renderTickets() {
@@ -73,6 +73,9 @@ function renderTickets() {
         } else if (item.status === 'Processing') {
             badgeClass = 'ds-badge-warning';
             statusText = 'Đang xử lý';
+        } else if (item.status === 'Replied') {
+            badgeClass = 'ds-badge-success';
+            statusText = 'Đã phản hồi';
         }
 
         const userName = item.user ? item.user.fullName : 'Guest';

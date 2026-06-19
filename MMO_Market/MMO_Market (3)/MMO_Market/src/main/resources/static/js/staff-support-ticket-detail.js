@@ -54,6 +54,9 @@ function populateFields() {
     } else if (currentTicket.status === 'Processing') {
         badgeClass = 'ds-badge-warning';
         statusText = 'Đang xử lý';
+    } else if (currentTicket.status === 'Replied') {
+        badgeClass = 'ds-badge-success';
+        statusText = 'Đã phản hồi';
     }
     badge.className = `ds-badge ${badgeClass}`;
     badge.textContent = statusText;
@@ -92,7 +95,7 @@ function renderTimeline() {
         </div>
     `;
 
-    if (currentTicket.status === 'Processing' || currentTicket.status === 'Resolved' || currentTicket.status === 'Closed') {
+    if (currentTicket.status === 'Processing' || currentTicket.status === 'Resolved' || currentTicket.status === 'Closed' || currentTicket.status === 'Replied') {
         html += `
             <div class="staff-timeline__item">
                 <span class="staff-timeline__dot" style="background-color: #f59e0b;"></span>
