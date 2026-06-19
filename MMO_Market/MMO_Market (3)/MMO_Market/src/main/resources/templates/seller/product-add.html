@@ -216,6 +216,117 @@
             flex: 1;
             justify-content: center;
         }
+
+        /* Product Variant Section Styling */
+        .variant-card {
+            background: #f8fafc;
+            border: 1px solid var(--seller-border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            position: relative;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .variant-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--seller-ink);
+        }
+
+        .variant-card__delete {
+            background: none;
+            border: none;
+            color: var(--seller-danger, #ef4444);
+            cursor: pointer;
+            padding: 4px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .variant-card__delete:hover {
+            color: #b91c1c;
+            transform: scale(1.1);
+        }
+
+        .variant-card__grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        @media (max-width: 640px) {
+            .variant-card__grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .variant-img-upload {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .variant-img-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 1px solid var(--seller-border);
+            background: #fff;
+            display: none;
+        }
+
+        .variant-img-preview.active {
+            display: block;
+        }
+
+        .variant-img-btn {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .variant-img-btn input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+            height: 100%;
+            width: 100%;
+        }
+
+        .variant-img-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: #fff;
+            border: 1px solid var(--seller-border);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--seller-ink);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .variant-img-label:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
     </style>
 </head>
 <body>
@@ -284,13 +395,13 @@
                             <input type="radio" id="typeGameCard" name="productType" value="GAME_CARD">
                             <label for="typeGameCard">
                                 <div class="product-type-icon"><i class="fa fa-credit-card"></i></div>
-                                <div class="product-type-name">Thẻ Game</div>
+                                <div class="product-type-name">Thẻ nạp</div>
                             </label>
                         </div>
                     </div>
 
-                    <!-- Section 3: Description & Image -->
-                    <div class="form-section-title">Mô tả & Hình ảnh</div>
+                    <!-- Section 3: Description -->
+                    <div class="form-section-title">Mô tả</div>
 
                     <div class="profile-edit-form__group">
                         <label for="description">Mô tả sản phẩm</label>
@@ -299,22 +410,23 @@
                         <small class="profile-edit-form__hint">Mô tả giúp người mua hiểu rõ sản phẩm</small>
                     </div>
 
-                    <div class="profile-edit-form__group">
-                        <label for="productImage">Hình ảnh sản phẩm</label>
-                        <div class="file-input-wrapper">
-                            <input id="productImage" type="file" accept="image/*">
-                            <label for="productImage" class="file-input-label">
-                                <i class="fa fa-cloud-upload"></i>
-                                <span>Kéo thả hoặc chọn ảnh (JPG, PNG, tối đa 2MB)</span>
-                            </label>
-                        </div>
-                        <img id="imagePreview" class="image-preview" alt="Xem trước ảnh">
-                        <small class="profile-edit-form__hint">Ảnh sẽ hiển thị trên trang chi tiết sản phẩm</small>
+                    <!-- Section 4: Variants -->
+                    <div class="form-section-title">Biến thể sản phẩm <span style="color: #ef4444;">*</span></div>
+                    <p class="profile-edit-form__hint" style="margin-bottom: 16px;">
+                        Thêm các lựa chọn / phân loại cho sản phẩm của bạn. Mỗi biến thể cần có tên, giá tiền và ít nhất 1 hình ảnh minh họa riêng biệt.
+                    </p>
+                    
+                    <div id="variantsContainer">
+                        <!-- Dynamic variant cards will be inserted here by seller-console.js -->
                     </div>
+                    
+                    <button type="button" class="profile-button profile-button--secondary" id="btnAddVariant" style="width: 100%; margin-top: 8px; margin-bottom: 24px; border-style: dashed; border-width: 2px;">
+                        <i class="fa fa-plus"></i> Thêm phân loại / biến thể
+                    </button>
 
                     <div class="profile-actions" style="margin-top: 32px;">
                         <button class="profile-button profile-button--primary" type="submit">
-                            Tiếp tục → Thêm biến thể
+                            Đăng bán sản phẩm
                         </button>
                         <a class="profile-button profile-button--secondary" th:href="@{/seller/inventory}">Hủy</a>
                     </div>
@@ -326,36 +438,7 @@
     <script th:src="@{/js/auth.js}"></script>
     <script th:src="@{/js/seller-console.js}"></script>
     <script>
-        document.getElementById('productForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const productName = document.getElementById('productName').value.trim();
-            const category = document.getElementById('category').value;
-            const productType = document.querySelector('input[name="productType"]:checked').value;
-            const description = document.getElementById('description').value.trim();
 
-            if (!productName) {
-                alert('Vui lòng nhập tên sản phẩm');
-                return;
-            }
-            if (!category) {
-                alert('Vui lòng chọn danh mục');
-                return;
-            }
-            if (!productType) {
-                alert('Vui lòng chọn loại sản phẩm');
-                return;
-            }
-
-            // Store in sessionStorage for next step
-            sessionStorage.setItem('productData', JSON.stringify({
-                name: productName,
-                categoryId: category,
-                productType: productType,
-                description: description
-            }));
-
-            window.location.href = '/seller/variants/new';
-        });
 
         // Image preview
         document.getElementById('productImage').addEventListener('change', function(e) {

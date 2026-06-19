@@ -275,39 +275,41 @@
                         <button class="profile-button profile-button--primary" type="submit">
                             <i class="fa fa-save"></i> Lưu biến thể & tài sản
                         </button>
-                        <a class="profile-button profile-button--secondary" th:href="@{/seller/inventory}">Hủy</a>
-                    </div>
-                </form>
-            </section>
-        </div>
-    </main>
-
-    <script th:src="@{/js/auth.js}"></script>
+                        <a class="profile-button p    <script th:src="@{/js/auth.js}"></script>
     <script th:src="@{/js/seller-console.js}"></script>
     <script>
         // Get product data from session
         const productData = JSON.parse(sessionStorage.getItem('productData') || '{}');
-        const productType = productData.productType || 'ACCOUNT';
+        let productType = productData.productType || 'ACCOUNT';
         let assets = [];
 
         // Initialize form
         document.addEventListener('DOMContentLoaded', function() {
-            updateProductDisplay();
-            renderAssetFields();
+            const urlParams = new URLSearchParams(window.location.search);
+            const isEdit = urlParams.has('id');
+            
+            // If not edit, initialize layout from sessionStorage
+            if (!isEdit) {
+                updateProductDisplay(productType);
+                renderAssetFields(productType);
+            }
             setupEventListeners();
         });
 
-        function updateProductDisplay() {
+        function updateProductDisplay(pType) {
+            if (pType) productType = pType;
             const typeLabel = {
                 'ACCOUNT': 'Tài khoản (username & password)',
                 'KEY': 'Mã Key (mã kích hoạt)',
-                'GAME_CARD': 'Thẻ Game (code & PIN)'
+                'GAME_CARD': 'Thẻ nạp (mã thẻ)'
             };
+            const nameStr = productData.name || 'Sản phẩm mới';
             document.getElementById('productTypeDisplay').textContent = 
-                'Sản phẩm: ' + (productData.name || 'Sản phẩm mới') + ' (' + typeLabel[productType] + ')';
+                'Sản phẩm: ' + nameStr + ' (' + (typeLabel[productType] || productType) + ')';
         }
 
-        function renderAssetFields() {
+        function renderAssetFields(pType) {
+            if (pType) productType = pType;
             const container = document.getElementById('assetFieldsContainer');
             container.innerHTML = '';
 
@@ -340,19 +342,13 @@
                     </div>
                 `,
                 'GAME_CARD': `
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-                        <div>
-                            <label for="assetCardCode" style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 500;">Mã thẻ <span style="color: #ef4444;">*</span></label>
-                            <input type="text" id="assetCardCode" placeholder="123456789" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;" required>
-                        </div>
-                        <div>
-                            <label for="assetCardPin" style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 500;">PIN <span style="color: #ef4444;">*</span></label>
-                            <input type="password" id="assetCardPin" placeholder="••••••" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;" required>
-                        </div>
+                    <div style="margin-bottom: 12px;">
+                        <label for="assetCardCode" style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 500;">Mã thẻ nạp <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="assetCardCode" placeholder="Mã thẻ nạp hoặc số serial" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;" required>
                     </div>
                     <div>
                         <label for="assetNotes3" style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 500;">Ghi chú</label>
-                        <input type="text" id="assetNotes3" placeholder="VD: Thẻ Garena 100k, chưa sử dụng" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;">
+                        <input type="text" id="assetNotes3" placeholder="VD: Thẻ nạp 100k, chưa sử dụng" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;">
                     </div>
                 `
             };
@@ -360,9 +356,11 @@
             container.innerHTML = fieldsets[productType] || '';
         }
 
+        // Dummy onSubmit override to let seller-console handle submission
         function setupEventListeners() {
             document.getElementById('addAssetBtn').addEventListener('click', addAsset);
-            document.getElementById('variantForm').addEventListener('submit', submitForm);
+            // Submit handled via saveBtn in seller-console.js
+            document.getElementById('variantForm').addEventListener('submit', (e) => e.preventDefault());
         }
 
         function addAsset() {
@@ -397,21 +395,20 @@
                 asset = { type: 'KEY', keyCode, notes };
             } else if (productType === 'GAME_CARD') {
                 const cardCode = document.getElementById('assetCardCode').value.trim();
-                const cardPin = document.getElementById('assetCardPin').value.trim();
                 const notes = document.getElementById('assetNotes3').value.trim();
 
-                if (!cardCode || !cardPin) {
-                    alert('Vui lòng nhập mã thẻ và PIN');
+                if (!cardCode) {
+                    alert('Vui lòng nhập mã thẻ nạp');
                     return;
                 }
 
                 // Check for duplicate card
                 if (assets.some(a => a.cardCode === cardCode)) {
-                    alert('Mã thẻ này đã được nhập!');
+                    alert('Mã thẻ nạp này đã được nhập!');
                     return;
                 }
 
-                asset = { type: 'GAME_CARD', cardCode, cardPin, notes };
+                asset = { type: 'GAME_CARD', cardCode, notes };
             }
 
             assets.push(asset);
@@ -429,7 +426,6 @@
                 document.getElementById('assetNotes2').value = '';
             } else if (productType === 'GAME_CARD') {
                 document.getElementById('assetCardCode').value = '';
-                document.getElementById('assetCardPin').value = '';
                 document.getElementById('assetNotes3').value = '';
             }
         }
@@ -464,8 +460,7 @@
                     col2Label = asset.notes ? `<small>${asset.notes}</small>` : '';
                 } else if (productType === 'GAME_CARD') {
                     col1Label = `<code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 12px;">${asset.cardCode}</code>`;
-                    col2Label = `PIN: <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 12px;">••••</code>`;
-                    if (asset.notes) col2Label += `<br><small>${asset.notes}</small>`;
+                    col2Label = asset.notes ? `<small>${asset.notes}</small>` : '';
                 }
 
                 return `
@@ -493,49 +488,27 @@
                 document.getElementById('assetCol1').textContent = 'Mã Key';
                 document.getElementById('assetCol2').textContent = 'Ghi chú';
             } else if (productType === 'GAME_CARD') {
-                document.getElementById('assetCol1').textContent = 'Mã Thẻ';
-                document.getElementById('assetCol2').textContent = 'PIN';
+                document.getElementById('assetCol1').textContent = 'Mã Thẻ Nạp';
+                document.getElementById('assetCol2').textContent = 'Ghi chú';
             }
         }
 
-        function deleteAsset(index) {
+        async function deleteAsset(index) {
+            const asset = assets[index];
             if (confirm('Bạn chắc chắn muốn xóa tài sản này?')) {
+                if (asset.id) {
+                    try {
+                        const delRes = await sellerFetch(`/digital-assets/${asset.id}`, { method: 'DELETE' });
+                        if (!delRes.ok) throw new Error('Không thể xóa tài sản khỏi hệ thống.');
+                        showToast('Xóa tài sản thành công!');
+                    } catch (err) {
+                        alert(err.message);
+                        return;
+                    }
+                }
                 assets.splice(index, 1);
                 updateAssetList();
             }
-        }
-
-        function submitForm(e) {
-            e.preventDefault();
-
-            const variantName = document.getElementById('variantName').value.trim();
-            const priceVnd = document.getElementById('priceVnd').value.trim();
-            const status = document.getElementById('status').value;
-
-            if (!variantName || !priceVnd) {
-                alert('Vui lòng nhập tên biến thể và giá bán');
-                return;
-            }
-
-            if (assets.length === 0) {
-                alert('Bạn phải nhập ít nhất 1 tài sản trước khi lưu');
-                return;
-            }
-
-            // Store data in session
-            const variantData = {
-                productData,
-                variantName,
-                priceVnd: parseInt(priceVnd),
-                status,
-                assets
-            };
-
-            sessionStorage.setItem('variantData', JSON.stringify(variantData));
-
-            // In a real app, you would send this to the backend
-            alert('Đã tạo biến thể với ' + assets.length + ' tài sản. Hệ thống sẽ lưu thông tin này.');
-            window.location.href = '/seller/inventory';
         }
     </script>
 </body>
