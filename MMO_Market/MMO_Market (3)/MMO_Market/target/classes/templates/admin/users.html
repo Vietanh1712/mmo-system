@@ -451,10 +451,11 @@
                                 <th>Tiêu đề &amp; Nội dung</th>
                                 <th class="ds-table-center">Loại</th>
                                 <th>Người phát</th>
+                                <th class="ds-table-center" style="width: 100px;">Thao tác</th>
                             </tr>
                             </thead>
                             <tbody id="notifHistoryBody">
-                                <tr><td colspan="5" class="ds-empty-state">Chưa có thông báo nào.</td></tr>
+                                <tr><td colspan="6" class="ds-empty-state">Chưa có thông báo nào.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -525,7 +526,7 @@
                 <div class="admin-card admin-list-card">
                     <div class="ds-filter-panel">
                         <h2 class="ds-card-title">Bộ lọc quyền &amp; Gán nhân viên</h2>
-                        <div class="ds-filter-grid">
+                        <div class="ds-filter-grid" style="gap: 16px;">
                             <!-- Dropdown 1: Nhóm quyền -->
                             <select id="permGroupFilter" class="ds-input" onchange="AdminConsole.changePermGroup(this.value)" aria-label="Nhóm quyền">
                                 <option value="ALL">Tất cả nhóm quyền</option>
@@ -534,13 +535,33 @@
                                 <option value="Vận hành">Nhóm: Vận hành</option>
                             </select>
                             
-                            <!-- Dropdown 2: Quyền cụ thể -->
-                            <select id="permDetailFilter" class="ds-input" onchange="AdminConsole.changePermDetail(this.value)" aria-label="Quyền cụ thể">
-                                <!-- Populated by JS -->
-                            </select>
+                            <!-- Dropdown 2: Custom Searchable Multiselect Dropdown for Permissions -->
+                            <div class="ds-dropdown" style="width: 100%; min-width: 0;">
+                                <div id="permMultiselectTrigger" class="ds-dropdown-toggle" onclick="AdminConsole.togglePermMultiselectDropdown(event)" style="cursor: pointer; user-select: none;">
+                                    <span id="permMultiselectTriggerText" style="color: var(--ds-text-muted);">-- Chọn quyền --</span>
+                                    <i class="fa fa-caret-down"></i>
+                                </div>
+                                
+                                <div id="permMultiselectDropdown" class="ds-dropdown-panel ds-hidden" style="max-height: 250px; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+                                    <!-- Search input inside dropdown -->
+                                    <div style="position: relative; margin: 0;" onclick="event.stopPropagation()">
+                                        <i class="fa fa-search" style="position: absolute; left: 10px; top: 10px; color: var(--ds-text-muted); font-size: 12px;"></i>
+                                        <input type="text" id="permMultiselectSearch" class="ds-input" style="padding-left: 28px; width: 100%; height: 32px; box-sizing: border-box; font-size: 12.5px;" placeholder="Tìm nhanh..." oninput="AdminConsole.filterPermMultiselectList(this.value)">
+                                    </div>
+                                    <!-- Select All checkbox -->
+                                    <label class="ds-dropdown-option" style="display: flex; align-items: center; gap: 8px; font-weight: bold; border-bottom: 1px solid var(--ds-border); padding-bottom: 6px; cursor: pointer; font-size: 12.5px; margin: 0;" onclick="event.stopPropagation()">
+                                        <input type="checkbox" id="permSelectAllCheckbox" onchange="AdminConsole.togglePermSelectAll(this.checked)" style="cursor: pointer; width: 14px; height: 14px; margin: 0;">
+                                        Chọn tất cả hiển thị
+                                    </label>
+                                    <!-- Checkbox list -->
+                                    <div id="permMultiselectList" style="display: flex; flex-direction: column; gap: 4px;">
+                                        <!-- Populated by JS -->
+                                    </div>
+                                </div>
+                            </div>
 
                             <!-- Custom Searchable Multiselect Dropdown -->
-                            <div class="ds-dropdown">
+                            <div class="ds-dropdown" style="width: 100%; min-width: 0;">
                                 <div id="multiselectTrigger" class="ds-dropdown-toggle" onclick="AdminConsole.toggleMultiselectDropdown(event)" style="cursor: pointer; user-select: none;">
                                     <span id="multiselectTriggerText" style="color: var(--ds-text-muted);">-- Chọn nhân viên --</span>
                                     <i class="fa fa-caret-down"></i>
@@ -570,9 +591,12 @@
                             <!-- Populated by JS -->
                         </div>
                         
-                        <div class="ds-filter-actions" style="margin-top: 12px;">
+                        <div class="ds-filter-actions" style="margin-top: 12px; display: flex; gap: 10px;">
                             <button type="button" class="ds-btn ds-btn-primary" onclick="AdminConsole.addStaffToPermission()">
                                 <i class="fa fa-plus"></i> Gán quyền cho nhân viên đã chọn
+                            </button>
+                            <button type="button" class="ds-btn ds-btn-secondary" onclick="AdminConsole.searchStaffByPermissions()">
+                                <i class="fa fa-search"></i> Tìm kiếm nhân viên
                             </button>
                         </div>
                     </div>
@@ -594,6 +618,7 @@
                             </tbody>
                         </table>
                     </div>
+                    <div id="permissionsPagination"></div>
                 </div>
             </div>
 

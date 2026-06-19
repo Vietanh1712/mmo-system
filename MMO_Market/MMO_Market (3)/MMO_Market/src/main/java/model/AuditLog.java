@@ -24,6 +24,15 @@ public class AuditLog {
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String details;
 
+    @Column(name = "target_user_id")
+    private Long targetUserId;
+
+    @Column(name = "target_id")
+    private Long targetId;
+
+    @Column(name = "target_type", length = 100)
+    private String targetType;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

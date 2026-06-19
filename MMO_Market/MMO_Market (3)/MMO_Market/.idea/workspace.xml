@@ -6,16 +6,33 @@
   <component name="ChangeListManager">
     <list default="true" id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controller/ProfileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/ProfileController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controller/dto/CommissionsUpdateRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/dto/CommissionsUpdateRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controller/dto/SystemConfigResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/dto/SystemConfigResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/service/SystemConfigurationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/SystemConfigurationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/service/TopupService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/TopupService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/UserService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/account-register-shop.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/account-register-shop.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/config/WebConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/config/WebConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controller/SellerController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/SellerController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controller/dto/AuditLogDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/dto/AuditLogDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/dal/AuditLogRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/dal/AuditLogRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/dal/ProductRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/dal/ProductRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/dal/SellerRegistrationRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/dal/SellerRegistrationRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/dal/TopupTransactionRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/dal/TopupTransactionRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/dal/TransactionRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/dal/TransactionRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/dal/WithdrawalRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/dal/WithdrawalRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/model/AuditLog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/AuditLog.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/model/Complaint.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/Complaint.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/model/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/model/Withdrawal.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/Withdrawal.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/service/AdminRevenueService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/AdminRevenueService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/service/AuditLogService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/AuditLogService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/filters.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/filters.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/notifications.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/notifications.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/account-notifications.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/account-notifications.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/admin-console.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/admin-console.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/auth.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/auth.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/account/notifications.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/account/notifications.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/templates/admin/users.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/admin/users.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/header.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/header.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/notifications.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/notifications.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/static/js/auth.js" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/js/auth.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/templates/admin/users.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/admin/users.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/fragments/header.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/fragments/header.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -554,7 +571,10 @@
       <workItem from="1781688853059" duration="2760000" />
       <workItem from="1781703264691" duration="1749000" />
       <workItem from="1781765337608" duration="4312000" />
-      <workItem from="1781791584336" duration="5026000" />
+      <workItem from="1781791584336" duration="5807000" />
+      <workItem from="1781848920812" duration="5284000" />
+      <workItem from="1781858198969" duration="4544000" />
+      <workItem from="1781876585091" duration="3142000" />
     </task>
     <servers />
   </component>

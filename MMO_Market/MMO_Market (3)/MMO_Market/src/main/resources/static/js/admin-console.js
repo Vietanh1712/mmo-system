@@ -101,6 +101,13 @@
     let selectedStaffId = null;
     let selectedPermId = null;
     let selectedGroupId = 'ALL';
+    let isSearchActive = false;
+    let activeFilterPermIds = [];
+    let activeFilterGroupId = 'ALL';
+    let permissionsPage = 0;
+    let permissionsPageSize = 10;
+    let permissionsTotalPages = 1;
+    let permissionsTotalElements = 0;
     let auditPage = 0;
     let auditPageSize = 10;
     let auditFiltered = [];
@@ -405,13 +412,21 @@
             }
         });
 
-        // Click outside listener for custom multiselect dropdown
+        // Click outside listener for custom multiselect dropdowns
         document.addEventListener('click', (e) => {
             const dropdown = document.getElementById('multiselectDropdown');
             const trigger = document.getElementById('multiselectTrigger');
             if (dropdown && !dropdown.classList.contains('ds-hidden')) {
                 if (trigger && !trigger.contains(e.target) && !dropdown.contains(e.target)) {
                     dropdown.classList.add('ds-hidden');
+                }
+            }
+
+            const permDropdown = document.getElementById('permMultiselectDropdown');
+            const permTrigger = document.getElementById('permMultiselectTrigger');
+            if (permDropdown && !permDropdown.classList.contains('ds-hidden')) {
+                if (permTrigger && !permTrigger.contains(e.target) && !permDropdown.contains(e.target)) {
+                    permDropdown.classList.add('ds-hidden');
                 }
             }
         });
@@ -573,8 +588,34 @@
             case 'commissions': loadCommissionsForm(); break;
             case 'notifications': loadNotificationsView(); break;
             case 'accounts': loadUsers(); break;
-            case 'permissions': loadPermissionsView(); break;
+            case 'permissions':
+                resetSearchFilters();
+                loadPermissionsView();
+                break;
         }
+    }
+
+    function resetSearchFilters() {
+        isSearchActive = false;
+        activeFilterPermIds = [];
+        activeFilterGroupId = 'ALL';
+        selectedGroupId = 'ALL';
+        permissionsPage = 0;
+        permissionsPageSize = 10;
+
+        // Clear permission checkboxes
+        const permSelectAll = document.getElementById('permSelectAllCheckbox');
+        if (permSelectAll) permSelectAll.checked = false;
+        const permSearch = document.getElementById('permMultiselectSearch');
+        if (permSearch) permSearch.value = '';
+        window.AdminConsole.updateSelectedPermsCount();
+
+        // Clear staff checkboxes
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        if (selectAllCheckbox) selectAllCheckbox.checked = false;
+        const multiselectSearch = document.getElementById('multiselectSearch');
+        if (multiselectSearch) multiselectSearch.value = '';
+        window.AdminConsole.updateSelectedStaffCount();
     }
 
     function guardAdminAccess() {
@@ -1738,18 +1779,25 @@
         if (modal) modal.classList.add('ds-hidden');
     };
 
-    function loadNotificationsView() {
+    async function loadNotificationsView() {
         // Toggle Active Maintenance Banner
         const maintBanner = document.getElementById('maintActiveBanner');
         const maintMsg = document.getElementById('maintActiveMessage');
-        const isMaintActive = mock.maintenance && mock.maintenance.active;
-        if (maintBanner) {
-            if (isMaintActive) {
-                maintBanner.classList.remove('ds-hidden');
-                if (maintMsg) maintMsg.textContent = mock.maintenance.message || 'Hệ thống đang bảo trì nâng cấp.';
-            } else {
-                maintBanner.classList.add('ds-hidden');
+        try {
+            const maintRes = await authFetch('/admin/notifications/maintenance-status');
+            if (maintRes.ok) {
+                const status = await maintRes.json();
+                if (maintBanner) {
+                    if (status.active) {
+                        maintBanner.classList.remove('ds-hidden');
+                        if (maintMsg) maintMsg.textContent = status.message || 'Hệ thống đang bảo trì nâng cấp.';
+                    } else {
+                        maintBanner.classList.add('ds-hidden');
+                    }
+                }
             }
+        } catch (e) {
+            console.error('Failed to load maintenance status', e);
         }
 
         // Hide maintenance toggle wrap on load by default in the form
@@ -1758,76 +1806,82 @@
         const maintToggle = document.getElementById('notifMaintToggle');
         if (maintToggle) {
             maintToggle.setAttribute('aria-pressed', 'false');
-            maintToggle.classList.add('ds-toggle-inactive');
+            maintToggle.className = 'ds-toggle ds-toggle-system ds-toggle-inactive';
         }
 
         const body = document.getElementById('notifHistoryBody');
         if (!body) return;
 
-        let history = [...(mock.notifications || [])];
-
         // Apply filters
-        const keyword = (document.getElementById('notifSearch')?.value || '').toLowerCase().trim();
+        const keyword = (document.getElementById('notifSearch')?.value || '').trim();
         const typeFilter = document.getElementById('notifTypeFilter')?.value || '';
 
-        if (keyword) {
-            history = history.filter(n => 
-                (n.title && n.title.toLowerCase().includes(keyword)) || 
-                (n.content && n.content.toLowerCase().includes(keyword))
-            );
-        }
-        if (typeFilter) {
-            history = history.filter(n => n.type === typeFilter);
-        }
+        const params = new URLSearchParams();
+        params.append('page', notifPage);
+        params.append('size', notifPageSize);
+        if (keyword) params.append('search', keyword);
+        if (typeFilter) params.append('type', typeFilter);
 
-        if (history.length === 0) {
-            body.innerHTML = '<tr><td colspan="5" class="ds-empty-state">Chưa có thông báo nào phù hợp.</td></tr>';
-            const pag = document.getElementById('notifPagination');
-            if (pag) pag.innerHTML = '';
-            return;
-        }
-
-        const total = history.length;
-        const totalPg = Math.max(Math.ceil(total / notifPageSize), 1);
-        if (notifPage >= totalPg) notifPage = totalPg - 1;
-        const slice = history.slice(notifPage * notifPageSize, notifPage * notifPageSize + notifPageSize);
-
-        body.innerHTML = slice.map((n, idx) => {
-            let typeLabel = 'Thông tin';
-            let typeBadge = 'ds-badge-info';
-            if (n.type === 'warning') {
-                typeLabel = 'Cảnh báo';
-                typeBadge = 'ds-badge-warning';
-            } else if (n.type === 'maintenance') {
-                typeLabel = 'Bảo trì';
-                typeBadge = 'ds-badge-danger';
-            } else if (n.type === 'policy') {
-                typeLabel = 'Chính sách';
-                typeBadge = 'ds-badge-muted';
+        try {
+            const response = await authFetch('/notifications?' + params.toString());
+            if (!response.ok) {
+                body.innerHTML = '<tr><td colspan="6" class="ds-empty-state">Không thể tải danh sách thông báo.</td></tr>';
+                return;
             }
-            return `
-                <tr>
-                    <td class="ds-table-center">${sttNumber(notifPage, notifPageSize, idx)}</td>
-                    <td class="ds-table-center">${formatDateTime(n.timestamp)}</td>
-                    <td><strong>${escapeHtml(n.title)}</strong><br><small class="muted" style="font-size:12px; display:block; margin-top:2px;">${escapeHtml(n.content)}</small></td>
-                    <td class="ds-table-center"><span class="ds-badge ${typeBadge}">${typeLabel}</span></td>
-                    <td>${escapeHtml(n.author)}</td>
-                </tr>
-            `;
-        }).join('');
+            const data = await response.json();
+            const list = data.content || [];
+            const total = data.totalElements || 0;
+            const totalPg = data.totalPages || 1;
 
-        mountPagination('notifPagination', {
-            page: notifPage,
-            totalPages: totalPg,
-            totalElements: total,
-            pageSize: notifPageSize
-        }, {
-            onPage: (p) => { notifPage = p; loadNotificationsView(); },
-            onSize: (s) => { notifPageSize = s; notifPage = 0; loadNotificationsView(); }
-        });
+            if (list.length === 0) {
+                body.innerHTML = '<tr><td colspan="6" class="ds-empty-state">Chưa có thông báo nào phù hợp.</td></tr>';
+                const pag = document.getElementById('notifPagination');
+                if (pag) pag.innerHTML = '';
+                return;
+            }
+
+            body.innerHTML = list.map((n, idx) => {
+                let typeLabel = 'Thông tin';
+                let typeBadge = 'ds-badge-info';
+                if (n.type === 'warning') {
+                    typeLabel = 'Cảnh báo';
+                    typeBadge = 'ds-badge-warning';
+                } else if (n.type === 'maintenance') {
+                    typeLabel = 'Bảo trì';
+                    typeBadge = 'ds-badge-danger';
+                } else if (n.type === 'policy') {
+                    typeLabel = 'Chính sách';
+                    typeBadge = 'ds-badge-muted';
+                }
+                return `
+                    <tr>
+                        <td class="ds-table-center">${sttNumber(notifPage, notifPageSize, idx)}</td>
+                        <td class="ds-table-center">${formatDateTime(n.timestamp)}</td>
+                        <td><strong>${escapeHtml(n.title)}</strong><br><small class="muted" style="font-size:12px; display:block; margin-top:2px;">${escapeHtml(n.content)}</small></td>
+                        <td class="ds-table-center"><span class="ds-badge ${typeBadge}">${typeLabel}</span></td>
+                        <td>${escapeHtml(n.author)}</td>
+                        <td class="ds-table-center">
+                            ${tableActionsDelete(`AdminConsole.deleteNotification(${n.id})`, 'Xóa thông báo')}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            mountPagination('notifPagination', {
+                page: notifPage,
+                totalPages: totalPg,
+                totalElements: total,
+                pageSize: notifPageSize
+            }, {
+                onPage: (p) => { notifPage = p; loadNotificationsView(); },
+                onSize: (s) => { notifPageSize = s; notifPage = 0; loadNotificationsView(); }
+            });
+        } catch (err) {
+            body.innerHTML = '<tr><td colspan="6" class="ds-empty-state">Lỗi kết nối khi tải danh sách thông báo.</td></tr>';
+        }
     }
 
-    window.AdminConsole.pushNotification = function () {
+    window.AdminConsole.pushNotification = async function () {
         const title = document.getElementById('notifTitle').value.trim();
         const type = document.getElementById('notifType').value;
         const content = document.getElementById('notifContent').value.trim();
@@ -1835,42 +1889,74 @@
             showToast('Vui lòng nhập tiêu đề và nội dung thông báo.', true);
             return;
         }
-        
+
         const isMaint = (type === 'maintenance');
         const maintToggle = document.getElementById('notifMaintToggle');
         const shouldMaint = isMaint && maintToggle && (maintToggle.getAttribute('aria-pressed') === 'true');
 
-        if (shouldMaint) {
-            mock.maintenance = mock.maintenance || {};
-            mock.maintenance.active = true;
-            mock.maintenance.message = content;
-        }
-
-        mock.notifications = mock.notifications || [];
-        mock.notifications.unshift({
-            timestamp: new Date().toISOString(),
+        const payload = {
             title: title,
-            type: type,
             content: content,
-            author: readCurrentUser()?.fullName || 'Admin'
-        });
-        saveMock();
-        
-        document.getElementById('notifTitle').value = '';
-        document.getElementById('notifContent').value = '';
-        
-        AdminConsole.closeCreateNotification();
-        
-        showToast(shouldMaint ? 'Đã phát thông báo & kích hoạt bảo trì hệ thống.' : 'Đã phát thông báo thành công tới toàn bộ người dùng.');
-        loadNotificationsView();
+            type: type,
+            activateMaintenance: shouldMaint
+        };
+
+        try {
+            const response = await authFetch('/admin/notifications', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                document.getElementById('notifTitle').value = '';
+                document.getElementById('notifContent').value = '';
+                AdminConsole.closeCreateNotification();
+                showToast(shouldMaint ? 'Đã phát thông báo & kích hoạt bảo trì hệ thống.' : 'Đã phát thông báo thành công tới toàn bộ người dùng.');
+                await loadNotificationsView();
+            } else {
+                showToast(data.message || 'Không thể phát thông báo.', true);
+            }
+        } catch (e) {
+            showToast('Lỗi kết nối khi phát thông báo.', true);
+        }
     };
 
-    window.AdminConsole.disableMaintenance = function () {
-        mock.maintenance = mock.maintenance || {};
-        mock.maintenance.active = false;
-        saveMock();
-        showToast('Đã tắt chế độ bảo trì hệ thống.');
-        loadNotificationsView();
+    window.AdminConsole.deleteNotification = async function (id) {
+        if (!confirm('Bạn có chắc chắn muốn xóa thông báo này?')) {
+            return;
+        }
+        try {
+            const response = await authFetch('/admin/notifications/' + id, {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                showToast('Đã xóa thông báo thành công.');
+                await loadNotificationsView();
+            } else {
+                showToast(data.message || 'Không thể xóa thông báo.', true);
+            }
+        } catch (e) {
+            showToast('Lỗi kết nối khi xóa thông báo.', true);
+        }
+    };
+
+    window.AdminConsole.disableMaintenance = async function () {
+        try {
+            const response = await authFetch('/admin/notifications/toggle-maintenance', {
+                method: 'POST',
+                body: JSON.stringify({ active: false })
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                showToast('Đã tắt chế độ bảo trì hệ thống.');
+                await loadNotificationsView();
+            } else {
+                showToast(data.message || 'Không thể tắt chế độ bảo trì.', true);
+            }
+        } catch (e) {
+            showToast('Lỗi kết nối khi tắt chế độ bảo trì.', true);
+        }
     };
 
     /* ---------- Mock: Commissions ---------- */
@@ -1934,6 +2020,64 @@
     /* ---------- Mock: Permissions ---------- */
     let staffListCache = [];
 
+    function populatePermDropdown(filteredPermissions) {
+        const permMultiselectList = document.getElementById('permMultiselectList');
+        if (!permMultiselectList) return;
+
+        // Get currently checked permission IDs
+        const checked = Array.from(document.querySelectorAll('input[name="filterPermCheckbox"]:checked')).map(cb => cb.value);
+
+        if (filteredPermissions.length > 0) {
+            permMultiselectList.innerHTML = filteredPermissions.map(p => {
+                const isChecked = checked.includes(p.id) ? 'checked' : '';
+                return `
+                    <label class="perm-multiselect-item ds-dropdown-option" data-search="${escapeHtml(p.label.toLowerCase())} ${escapeHtml(p.desc.toLowerCase())}" style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0; padding: 8px 12px;" onclick="event.stopPropagation()">
+                        <input type="checkbox" name="filterPermCheckbox" value="${p.id}" ${isChecked} style="cursor: pointer; width: 14px; height: 14px; margin: 0;" onchange="window.AdminConsole.updateSelectedPermsCount()">
+                        <span style="font-size: 13px; color: var(--ds-text);">
+                            <strong>${escapeHtml(p.label)}</strong>
+                        </span>
+                    </label>
+                `;
+            }).join('');
+        } else {
+            permMultiselectList.innerHTML = `
+                <div style="padding: 10px; color: var(--ds-text-muted); font-size: 12.5px; text-align: center; font-style: italic;">
+                    Không có quyền nào.
+                </div>
+            `;
+        }
+        window.AdminConsole.updateSelectedPermsCount();
+    }
+
+    function populateStaffDropdown(staffList) {
+        const multiselectList = document.getElementById('multiselectList');
+        if (!multiselectList) return;
+
+        // Get currently checked staff IDs
+        const checked = Array.from(document.querySelectorAll('input[name="assignStaffCheckbox"]:checked')).map(cb => cb.value);
+
+        if (staffList.length > 0) {
+            multiselectList.innerHTML = staffList.map(s => {
+                const isChecked = checked.includes(String(s.id)) ? 'checked' : '';
+                return `
+                    <label class="multiselect-item ds-dropdown-option" data-search="${escapeHtml(s.fullName.toLowerCase())} ${escapeHtml(s.email.toLowerCase())}" style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0; padding: 8px 12px;" onclick="event.stopPropagation()">
+                        <input type="checkbox" name="assignStaffCheckbox" value="${s.id}" ${isChecked} style="cursor: pointer; width: 14px; height: 14px; margin: 0;" onchange="window.AdminConsole.updateSelectedStaffCount()">
+                        <span style="font-size: 13px; color: var(--ds-text);">
+                            <strong>${escapeHtml(s.fullName)}</strong>
+                        </span>
+                    </label>
+                `;
+            }).join('');
+        } else {
+            multiselectList.innerHTML = `
+                <div style="padding: 10px; color: var(--ds-text-muted); font-size: 12.5px; text-align: center; font-style: italic;">
+                    Không có nhân viên nào.
+                </div>
+            `;
+        }
+        window.AdminConsole.updateSelectedStaffCount();
+    }
+
     async function loadPermissionsView() {
         let staffList = staffListCache;
         if (!staffList.length) {
@@ -1953,139 +2097,262 @@
             ? ALL_PERMISSIONS
             : ALL_PERMISSIONS.filter(p => p.group === selectedGroupId);
 
-        // Adjust selectedPermId if it is not in the filtered permissions list
-        if (!selectedPermId || !filteredPermissions.some(p => p.id === selectedPermId)) {
-            selectedPermId = filteredPermissions.length > 0 ? filteredPermissions[0].id : null;
-        }
-
         // Populate group select dropdown (#permGroupFilter)
         const permGroupFilter = document.getElementById('permGroupFilter');
         if (permGroupFilter) {
             permGroupFilter.value = selectedGroupId;
         }
 
-        // Populate permissions select dropdown (#permDetailFilter)
-        const permDetailFilter = document.getElementById('permDetailFilter');
-        if (permDetailFilter) {
-            permDetailFilter.innerHTML = filteredPermissions.map(p =>
-                `<option value="${p.id}" ${p.id === selectedPermId ? 'selected' : ''}>${escapeHtml(p.label)}</option>`
-            ).join('');
-            if (filteredPermissions.length === 0) {
-                permDetailFilter.innerHTML = '<option value="">-- Không có quyền --</option>';
-            }
-        }
+        // Populate permissions select checklist dropdown
+        populatePermDropdown(filteredPermissions);
 
-        // Update selected permission description box
-        const descBox = document.getElementById('selectedPermDescBox');
-        const activePerm = ALL_PERMISSIONS.find(p => p.id === selectedPermId);
-        if (descBox) {
-            if (activePerm) {
-                descBox.style.display = 'block';
-                descBox.innerHTML = `<strong>Mô tả quyền:</strong> ${escapeHtml(activePerm.desc)}`;
-            } else {
-                descBox.style.display = 'none';
-                descBox.innerHTML = '';
-            }
-        }
-
+        // Build mock.permissions if undefined
         if (!mock.permissions) {
             mock.permissions = {};
         }
 
-        // Filter the staff who have the selected permission and who don't
-        const assignedStaff = selectedPermId ? staffList.filter(s => {
-            const perms = mock.permissions[s.id] || [];
-            return perms.includes(selectedPermId);
-        }) : [];
+        // Filter the staff according to search criteria
+        let displayedStaff = [];
+        if (!isSearchActive) {
+            if (selectedGroupId === 'ALL') {
+                displayedStaff = staffList.filter(s => {
+                    const userPerms = mock.permissions[s.id] || [];
+                    const groups = new Set();
+                    userPerms.forEach(pid => {
+                        const p = ALL_PERMISSIONS.find(ap => ap.id === pid);
+                        if (p) groups.add(p.group);
+                    });
+                    return groups.has('Kiểm duyệt') && groups.has('Tài chính') && groups.has('Vận hành');
+                });
+            } else {
+                const groupPerms = ALL_PERMISSIONS.filter(p => p.group === selectedGroupId).map(p => p.id);
+                displayedStaff = staffList.filter(s => {
+                    const userPerms = mock.permissions[s.id] || [];
+                    return groupPerms.every(pid => userPerms.includes(pid));
+                });
+            }
+        } else {
+            if (activeFilterPermIds.length > 0) {
+                // Filter staff who have ALL checked permissions (AND logic)
+                displayedStaff = staffList.filter(s => {
+                    const userPerms = mock.permissions[s.id] || [];
+                    return activeFilterPermIds.every(pid => userPerms.includes(pid));
+                });
+            } else if (activeFilterGroupId !== 'ALL') {
+                // Filter staff who have ALL permissions in the selected group (AND logic)
+                const groupPerms = ALL_PERMISSIONS.filter(p => p.group === activeFilterGroupId).map(p => p.id);
+                displayedStaff = staffList.filter(s => {
+                    const userPerms = mock.permissions[s.id] || [];
+                    return groupPerms.every(pid => userPerms.includes(pid));
+                });
+            } else {
+                // Filter staff who have permissions in all groups (ALL group selected, no details checked)
+                displayedStaff = staffList.filter(s => {
+                    const userPerms = mock.permissions[s.id] || [];
+                    const groups = new Set();
+                    userPerms.forEach(pid => {
+                        const p = ALL_PERMISSIONS.find(ap => ap.id === pid);
+                        if (p) groups.add(p.group);
+                    });
+                    return groups.has('Kiểm duyệt') && groups.has('Tài chính') && groups.has('Vận hành');
+                });
+            }
+        }
 
-        const unassignedStaff = selectedPermId ? staffList.filter(s => {
-            const perms = mock.permissions[s.id] || [];
-            return !perms.includes(selectedPermId);
-        }) : [];
+        // Calculate pagination metadata
+        permissionsTotalElements = displayedStaff.length;
+        permissionsTotalPages = Math.ceil(permissionsTotalElements / permissionsPageSize) || 1;
+        if (permissionsPage >= permissionsTotalPages) {
+            permissionsPage = 0;
+        }
+
+        const startIndex = permissionsPage * permissionsPageSize;
+        const paginatedStaff = displayedStaff.slice(startIndex, startIndex + permissionsPageSize);
 
         // Render assigned staff in table
         const assignedStaffBody = document.getElementById('assignedStaffTableBody');
         if (assignedStaffBody) {
-            if (assignedStaff.length > 0) {
-                assignedStaffBody.innerHTML = assignedStaff.map((s, index) => `
-                    <tr>
-                        <td class="ds-table-center">${index + 1}</td>
-                        <td class="ds-table-center">${s.id}</td>
-                        <td>
-                            <div class="ds-entity">
-                                <span class="ds-avatar ds-avatar-sm ds-avatar-primary">${escapeHtml(s.fullName.charAt(0).toUpperCase())}</span>
-                                <div>
-                                    <div class="ds-entity-title">${escapeHtml(s.fullName)}</div>
+            if (paginatedStaff.length > 0) {
+                assignedStaffBody.innerHTML = paginatedStaff.map((s, index) => {
+                    const rowNum = startIndex + index + 1;
+                    return `
+                        <tr>
+                            <td class="ds-table-center">${rowNum}</td>
+                            <td class="ds-table-center">${s.id}</td>
+                            <td>
+                                <div class="ds-entity">
+                                    <span class="ds-avatar ds-avatar-sm ds-avatar-primary">${escapeHtml(s.fullName.charAt(0).toUpperCase())}</span>
+                                    <div>
+                                        <div class="ds-entity-title">${escapeHtml(s.fullName)}</div>
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                        <td>${escapeHtml(s.email)}</td>
-                        <td class="ds-table-center">
-                            <div class="ds-table-actions">
-                                ${tableActionsDelete(`window.AdminConsole.removeStaffFromPermission(${s.id})`, 'Thu hồi quyền')}
-                            </div>
-                        </td>
-                    </tr>
-                `).join('');
+                            </td>
+                            <td>${escapeHtml(s.email)}</td>
+                            <td class="ds-table-center">
+                                <div class="ds-table-actions">
+                                    ${tableActionsDelete(`window.AdminConsole.removeStaffPermissions(${s.id})`, 'Thu hồi quyền')}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
             } else {
                 assignedStaffBody.innerHTML = `
                     <tr>
                         <td colspan="5" class="ds-empty-state" style="text-align: center; padding: 24px; color: var(--ds-text-muted); font-size: 13px;">
-                            Chưa có nhân viên nào được gán quyền này.
+                            Không tìm thấy nhân viên nào phù hợp bộ lọc.
                         </td>
                     </tr>
                 `;
             }
         }
 
-        // Render unassigned staff checklist in custom multiselect dropdown
-        const multiselectList = document.getElementById('multiselectList');
-        if (multiselectList) {
-            if (unassignedStaff.length > 0) {
-                multiselectList.innerHTML = unassignedStaff.map(s => `
-                    <label class="multiselect-item ds-dropdown-option" data-search="${escapeHtml(s.fullName.toLowerCase())} ${escapeHtml(s.email.toLowerCase())}" style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0; padding: 8px 12px;" onclick="event.stopPropagation()">
-                        <input type="checkbox" name="assignStaffCheckbox" value="${s.id}" style="cursor: pointer; width: 14px; height: 14px; margin: 0;" onchange="window.AdminConsole.updateSelectedStaffCount()">
+        // Render pagination controls
+        mountPagination('permissionsPagination', {
+            page: permissionsPage,
+            totalPages: permissionsTotalPages,
+            totalElements: permissionsTotalElements,
+            pageSize: permissionsPageSize
+        }, {
+            onPage: (p) => {
+                permissionsPage = p;
+                loadPermissionsView();
+            },
+            onSize: (s) => {
+                permissionsPageSize = s;
+                permissionsPage = 0;
+                loadPermissionsView();
+            }
+        });
+
+        // Render staff list inside custom dropdown
+        populateStaffDropdown(staffList);
+    }
+
+    window.AdminConsole.changePermGroup = function (groupId) {
+        selectedGroupId = groupId;
+        permissionsPage = 0;
+        
+        // Repopulate without preserving checked items to reset filter
+        const filteredPermissions = selectedGroupId === 'ALL'
+            ? ALL_PERMISSIONS
+            : ALL_PERMISSIONS.filter(p => p.group === selectedGroupId);
+
+        const permMultiselectList = document.getElementById('permMultiselectList');
+        if (permMultiselectList) {
+            if (filteredPermissions.length > 0) {
+                permMultiselectList.innerHTML = filteredPermissions.map(p => `
+                    <label class="perm-multiselect-item ds-dropdown-option" data-search="${escapeHtml(p.label.toLowerCase())} ${escapeHtml(p.desc.toLowerCase())}" style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0; padding: 8px 12px;" onclick="event.stopPropagation()">
+                        <input type="checkbox" name="filterPermCheckbox" value="${p.id}" style="cursor: pointer; width: 14px; height: 14px; margin: 0;" onchange="window.AdminConsole.updateSelectedPermsCount()">
                         <span style="font-size: 13px; color: var(--ds-text);">
-                            <strong>${escapeHtml(s.fullName)}</strong>
+                            <strong>${escapeHtml(p.label)}</strong>
                         </span>
                     </label>
                 `).join('');
             } else {
-                multiselectList.innerHTML = `
+                permMultiselectList.innerHTML = `
                     <div style="padding: 10px; color: var(--ds-text-muted); font-size: 12.5px; text-align: center; font-style: italic;">
-                        Tất cả nhân viên đã được gán quyền này.
+                        Không có quyền nào.
                     </div>
                 `;
             }
         }
 
-        // Reset search, checkbox state, and trigger text inside multiselect
-        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-        if (selectAllCheckbox) selectAllCheckbox.checked = false;
-        
-        const multiselectSearch = document.getElementById('multiselectSearch');
-        if (multiselectSearch) multiselectSearch.value = '';
+        const permSelectAll = document.getElementById('permSelectAllCheckbox');
+        if (permSelectAll) permSelectAll.checked = false;
 
-        window.AdminConsole.updateSelectedStaffCount();
-    }
+        const permSearch = document.getElementById('permMultiselectSearch');
+        if (permSearch) permSearch.value = '';
 
-    window.AdminConsole.changePermGroup = function (groupId) {
-        selectedGroupId = groupId;
-        loadPermissionsView();
+        window.AdminConsole.updateSelectedPermsCount();
+
+        // Clear permission description box since no permission is active
+        const descBox = document.getElementById('selectedPermDescBox');
+        if (descBox) {
+            descBox.style.display = 'none';
+            descBox.innerHTML = '';
+        }
     };
 
-    window.AdminConsole.changePermDetail = function (permId) {
-        selectedPermId = permId;
-        loadPermissionsView();
+    window.AdminConsole.togglePermMultiselectDropdown = function (event) {
+        if (event) event.stopPropagation();
+        // Close employee dropdown
+        const empDropdown = document.getElementById('multiselectDropdown');
+        if (empDropdown) empDropdown.classList.add('ds-hidden');
+
+        const dropdown = document.getElementById('permMultiselectDropdown');
+        if (dropdown) {
+            dropdown.classList.toggle('ds-hidden');
+            const searchInput = document.getElementById('permMultiselectSearch');
+            if (searchInput) {
+                searchInput.value = '';
+                window.AdminConsole.filterPermMultiselectList('');
+            }
+        }
     };
 
-    window.AdminConsole.selectPermission = function (permId) {
-        selectedPermId = permId;
-        loadPermissionsView();
+    window.AdminConsole.filterPermMultiselectList = function (query) {
+        const q = query.toLowerCase().trim();
+        const items = document.querySelectorAll('.perm-multiselect-item');
+        items.forEach(item => {
+            const searchText = item.getAttribute('data-search') || '';
+            const isMatch = searchText.includes(q);
+            item.style.display = isMatch ? 'flex' : 'none';
+        });
+        const selectAll = document.getElementById('permSelectAllCheckbox');
+        if (selectAll) selectAll.checked = false;
+    };
+
+    window.AdminConsole.togglePermSelectAll = function (checked) {
+        const items = document.querySelectorAll('.perm-multiselect-item');
+        items.forEach(item => {
+            if (item.style.display !== 'none') {
+                const cb = item.querySelector('input[name="filterPermCheckbox"]');
+                if (cb) cb.checked = checked;
+            }
+        });
+        window.AdminConsole.updateSelectedPermsCount();
+    };
+
+    window.AdminConsole.updateSelectedPermsCount = function () {
+        const checked = document.querySelectorAll('input[name="filterPermCheckbox"]:checked');
+        const count = checked.length;
+        const triggerText = document.getElementById('permMultiselectTriggerText');
+        if (triggerText) {
+            if (count > 0) {
+                triggerText.textContent = `Đã chọn: ${count} quyền`;
+                triggerText.style.color = 'var(--ds-text)';
+            } else {
+                triggerText.textContent = '-- Chọn quyền --';
+                triggerText.style.color = 'var(--ds-text-muted)';
+            }
+        }
+
+        // Also update description box dynamically
+        const descBox = document.getElementById('selectedPermDescBox');
+        if (descBox) {
+            if (count > 0) {
+                descBox.style.display = 'block';
+                const descHtml = Array.from(checked).map(cb => {
+                    const pInfo = ALL_PERMISSIONS.find(ap => ap.id === cb.value);
+                    if (!pInfo) return '';
+                    return `<div><strong>${escapeHtml(pInfo.label)}:</strong> ${escapeHtml(pInfo.desc)}</div>`;
+                }).filter(html => html !== '').join('<hr style="margin: 6px 0; border: none; border-top: 1px dashed rgba(0,0,0,0.1);" />');
+
+                descBox.innerHTML = `<strong>Mô tả các quyền đã chọn:</strong><div style="margin-top: 6px; display: flex; flex-direction: column; gap: 4px;">${descHtml}</div>`;
+            } else {
+                descBox.style.display = 'none';
+                descBox.innerHTML = '';
+            }
+        }
     };
 
     window.AdminConsole.toggleMultiselectDropdown = function (event) {
         if (event) event.stopPropagation();
+        // Close permissions dropdown
+        const permDropdown = document.getElementById('permMultiselectDropdown');
+        if (permDropdown) permDropdown.classList.add('ds-hidden');
+
         const dropdown = document.getElementById('multiselectDropdown');
         if (dropdown) {
             dropdown.classList.toggle('ds-hidden');
@@ -2136,8 +2403,9 @@
     };
 
     window.AdminConsole.addStaffToPermission = function () {
-        if (!selectedPermId) {
-            showToast('Vui lòng chọn một quyền cụ thể trước.', true);
+        const checkedPerms = Array.from(document.querySelectorAll('input[name="filterPermCheckbox"]:checked')).map(cb => cb.value);
+        if (checkedPerms.length === 0) {
+            showToast('Vui lòng chọn ít nhất một quyền cụ thể để gán.', true);
             return;
         }
         const checkboxes = document.querySelectorAll('input[name="assignStaffCheckbox"]:checked');
@@ -2155,27 +2423,86 @@
             if (!mock.permissions[staffId]) {
                 mock.permissions[staffId] = [];
             }
-            if (!mock.permissions[staffId].includes(selectedPermId)) {
-                mock.permissions[staffId].push(selectedPermId);
-            }
+            checkedPerms.forEach(pid => {
+                if (!mock.permissions[staffId].includes(pid)) {
+                    mock.permissions[staffId].push(pid);
+                }
+            });
         });
 
         saveMock();
-        showToast(`Đã gán quyền thành công cho ${checkboxes.length} nhân viên.`);
-        
+        showToast(`Đã gán thành công ${checkedPerms.length} quyền cho ${checkboxes.length} nhân viên.`);
+
+        // Hide staff dropdown
         const dropdown = document.getElementById('multiselectDropdown');
         if (dropdown) dropdown.classList.add('ds-hidden');
-        
+
+        // Clear staff dropdown checkboxes
+        const staffCbs = document.querySelectorAll('input[name="assignStaffCheckbox"]');
+        staffCbs.forEach(cb => cb.checked = false);
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        if (selectAllCheckbox) selectAllCheckbox.checked = false;
+        window.AdminConsole.updateSelectedStaffCount();
+
         loadPermissionsView();
     };
 
-    window.AdminConsole.removeStaffFromPermission = function (staffId) {
+    window.AdminConsole.removeStaffPermissions = function (staffId) {
         if (!mock.permissions || !mock.permissions[staffId]) return;
 
-        mock.permissions[staffId] = mock.permissions[staffId].filter(id => id !== selectedPermId);
-        saveMock();
-        showToast('Đã xóa quyền thành công (lưu cấu hình).');
+        let permsToRevoke = [];
+        if (isSearchActive) {
+            if (activeFilterPermIds.length > 0) {
+                permsToRevoke = activeFilterPermIds;
+            } else if (activeFilterGroupId !== 'ALL') {
+                permsToRevoke = ALL_PERMISSIONS.filter(p => p.group === activeFilterGroupId).map(p => p.id);
+            } else {
+                const groups = ['Kiểm duyệt', 'Tài chính', 'Vận hành'];
+                permsToRevoke = mock.permissions[staffId].filter(pid => {
+                    const p = ALL_PERMISSIONS.find(ap => ap.id === pid);
+                    return p && groups.includes(p.group);
+                });
+            }
+        } else {
+            if (selectedGroupId === 'ALL') {
+                const groups = ['Kiểm duyệt', 'Tài chính', 'Vận hành'];
+                permsToRevoke = mock.permissions[staffId].filter(pid => {
+                    const p = ALL_PERMISSIONS.find(ap => ap.id === pid);
+                    return p && groups.includes(p.group);
+                });
+            } else {
+                permsToRevoke = ALL_PERMISSIONS.filter(p => p.group === selectedGroupId).map(p => p.id);
+            }
+        }
+
+        if (permsToRevoke.length === 0) {
+            showToast('Không tìm thấy quyền phù hợp để thu hồi.', true);
+            return;
+        }
+
+        const permNames = permsToRevoke.map(pid => {
+            const p = ALL_PERMISSIONS.find(ap => ap.id === pid);
+            return p ? p.label : pid;
+        }).join(', ');
+
+        if (confirm(`Bạn có chắc chắn muốn thu hồi các quyền sau của nhân viên: ${permNames}?`)) {
+            mock.permissions[staffId] = mock.permissions[staffId].filter(id => !permsToRevoke.includes(id));
+            saveMock();
+            showToast('Đã thu hồi quyền thành công.');
+            loadPermissionsView();
+        }
+    };
+
+    window.AdminConsole.searchStaffByPermissions = function () {
+        isSearchActive = true;
+        permissionsPage = 0;
+
+        const checkedPerms = Array.from(document.querySelectorAll('input[name="filterPermCheckbox"]:checked')).map(cb => cb.value);
+        activeFilterPermIds = checkedPerms;
+        activeFilterGroupId = selectedGroupId;
+
         loadPermissionsView();
+        showToast('Đã cập nhật danh sách tìm kiếm.');
     };
 
     /* ---------- Helpers ---------- */

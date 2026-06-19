@@ -98,11 +98,7 @@ public class AdminRevenueService {
         requireAdmin(operatorId);
 
         // 1. Phí hoa hồng: từ các C2C Transactions có trạng thái 'Completed' hoặc 'Held'
-        List<Transaction> transactions = transactionRepository.findAll().stream()
-                .filter(t -> !Boolean.TRUE.equals(t.getIsDelete()))
-                .filter(t -> "Completed".equals(t.getStatus()) || "Held".equals(t.getStatus()))
-                .toList();
-        long commissions = transactions.stream().mapToLong(Transaction::getCommissionVnd).sum();
+        long commissions = transactionRepository.sumCommissionForCompletedOrHeldTransactions();
 
         // 2. Phí nâng cấp Seller: từ số lượng SellerRegistrations có trạng thái 'Approved'
         long upgradeFee = systemConfigurationRepository.findByConfigKey("SELLER_UPGRADE_FEE_VND")
@@ -111,9 +107,7 @@ public class AdminRevenueService {
                     catch (NumberFormatException e) { return 50000L; }
                 }).orElse(50000L);
 
-        long approvedSellers = sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc().stream()
-                .filter(r -> "Approved".equals(r.getStatus()))
-                .count();
+        long approvedSellers = sellerRegistrationRepository.countByStatusAndIsDeleteFalse("Approved");
         long sellerUpgradeFees = approvedSellers * upgradeFee;
 
         // 3. Phí đẩy tin nổi bật sản phẩm: từ số lượng sản phẩm đang hoạt động
@@ -123,7 +117,7 @@ public class AdminRevenueService {
                     catch (NumberFormatException e) { return 10000L; }
                 }).orElse(10000L);
 
-        long activeProducts = productRepository.findAllByIsDeleteFalse().size();
+        long activeProducts = productRepository.countByIsDeleteFalse();
         // Giả sử có khoảng 20% sản phẩm sử dụng tính năng đẩy tin nổi bật
         long productFeaturedFees = (long) (activeProducts * 0.2) * featuredFee;
 
@@ -140,12 +134,12 @@ public class AdminRevenueService {
                     catch (NumberFormatException e) { return 10000L; }
                 }).orElse(10000L);
 
-        List<Withdrawal> withdrawals = withdrawalRepository.findAll().stream()
-                .filter(w -> !Boolean.TRUE.equals(w.getIsDelete()))
-                .filter(w -> "Completed".equals(w.getStatus()))
-                .toList();
+        List<Withdrawal> withdrawals = withdrawalRepository.findByStatusAndIsDeleteFalse("Completed");
 
         long withdrawalFees = withdrawals.stream().mapToLong(w -> {
+            if (w.getFeeVnd() != null) {
+                return w.getFeeVnd();
+            }
             long calculatedFee = (long) (w.getAmountVnd() * (withdrawalPercent / 100.0));
             return Math.max(calculatedFee, minWithdrawFee);
         }).sum();
@@ -227,11 +221,16 @@ public class AdminRevenueService {
         List<CashflowTransactionDto> allCashflow = new ArrayList<>();
 
         // 1. Nạp tiền (TopupTransactions)
-        List<TopupTransaction> topups = topupTransactionRepository.findAll().stream()
-                .filter(t -> !Boolean.TRUE.equals(t.getIsDelete()))
-                .toList();
+        List<TopupTransaction> topups = topupTransactionRepository.findAllByIsDeleteFalse();
+        Set<Long> topupUserIds = topups.stream().map(TopupTransaction::getUserId).collect(Collectors.toSet());
+        Map<Long, String> userEmailMap = new HashMap<>();
+        if (!topupUserIds.isEmpty()) {
+            userEmailMap = userRepository.findAllById(topupUserIds).stream()
+                    .collect(Collectors.toMap(User::getId, User::getEmail, (e1, e2) -> e1));
+        }
+
         for (TopupTransaction t : topups) {
-            String email = userRepository.findById(t.getUserId()).map(User::getEmail).orElse("unknown@mmo.com");
+            String email = userEmailMap.getOrDefault(t.getUserId(), "unknown@mmo.com");
             allCashflow.add(CashflowTransactionDto.builder()
                     .id("DEP" + t.getId())
                     .timestamp(t.getCreatedAt())
@@ -244,18 +243,21 @@ public class AdminRevenueService {
         }
 
         // 2. Rút tiền (Withdrawals)
-        List<Withdrawal> withdrawals = withdrawalRepository.findAll().stream()
-                .filter(w -> !Boolean.TRUE.equals(w.getIsDelete()))
-                .toList();
+        List<Withdrawal> withdrawals = withdrawalRepository.findAllWithSellerByIsDeleteFalse();
         for (Withdrawal w : withdrawals) {
-            long calculatedFee = (long) (w.getAmountVnd() * (withdrawalPercent / 100.0));
-            long fee = Math.max(calculatedFee, minWithdrawFee);
+            long fee;
+            if (w.getFeeVnd() != null) {
+                fee = w.getFeeVnd();
+            } else {
+                long calculatedFee = (long) (w.getAmountVnd() * (withdrawalPercent / 100.0));
+                fee = Math.max(calculatedFee, minWithdrawFee);
+            }
             String status = "Rejected".equalsIgnoreCase(w.getStatus()) ? "Failed" : w.getStatus();
 
             allCashflow.add(CashflowTransactionDto.builder()
                     .id("WTH" + w.getId())
                     .timestamp(w.getCreatedAt())
-                    .email(w.getSeller().getEmail())
+                    .email(w.getSeller() != null ? w.getSeller().getEmail() : "unknown@mmo.com")
                     .type("Withdrawal")
                     .amount(w.getAmountVnd())
                     .fee(fee)
@@ -264,9 +266,7 @@ public class AdminRevenueService {
         }
 
         // 3. Giao dịch mua bán C2C (Transactions)
-        List<Transaction> transactions = transactionRepository.findAll().stream()
-                .filter(t -> !Boolean.TRUE.equals(t.getIsDelete()))
-                .toList();
+        List<Transaction> transactions = transactionRepository.findAllWithCustomerByIsDeleteFalse();
         for (Transaction t : transactions) {
             String status = t.getStatus();
             if ("Refunded".equalsIgnoreCase(status) || "Cancelled".equalsIgnoreCase(status)) {
@@ -275,7 +275,7 @@ public class AdminRevenueService {
             allCashflow.add(CashflowTransactionDto.builder()
                     .id("TX" + t.getId())
                     .timestamp(t.getCreatedAt())
-                    .email(t.getCustomer().getEmail())
+                    .email(t.getCustomer() != null ? t.getCustomer().getEmail() : "unknown@mmo.com")
                     .type("C2C_Purchase")
                     .amount(t.getAmountVnd())
                     .fee(t.getCommissionVnd())

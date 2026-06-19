@@ -17,4 +17,7 @@ public class AuditLogDto {
     private String ipAddress;
     private String desc;
     private String diff;
+    private Long targetUserId;
+    private Long targetId;
+    private String targetType;
 }

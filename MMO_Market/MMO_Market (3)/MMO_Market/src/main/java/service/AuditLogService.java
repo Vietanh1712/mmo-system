@@ -125,6 +125,9 @@ public class AuditLogService {
                     .ipAddress(ipAddress)
                     .desc(desc)
                     .diff(diff)
+                    .targetUserId(log.getTargetUserId())
+                    .targetId(log.getTargetId())
+                    .targetType(log.getTargetType())
                     .build();
         }).collect(Collectors.toList());
 

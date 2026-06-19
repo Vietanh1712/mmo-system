@@ -53,6 +53,14 @@ public class User {
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String permissions;
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "UserPermissions",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "permission_id")
+    )
+    private java.util.Set<Permission> userPermissions;
+
     @Column(name = "isVerified")
     private Boolean isVerified; // Default: false
 

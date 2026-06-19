@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface TopupTransactionRepository extends JpaRepository<TopupTransaction, Long> {
     Optional<TopupTransaction> findBySepayCode(String sepayCode);
     List<TopupTransaction> findByUserIdAndIsDeleteFalse(Long userId);
+    List<TopupTransaction> findAllByIsDeleteFalse();
 }

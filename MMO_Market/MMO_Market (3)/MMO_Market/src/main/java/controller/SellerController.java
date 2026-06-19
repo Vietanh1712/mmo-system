@@ -702,6 +702,7 @@ public class SellerController {
             w.setSeller(seller);
             w.setBankInfo(bank);
             w.setAmountVnd(amount);
+            w.setFeeVnd(fee);
             w.setStatus("Pending");
             w.setIsDelete(false);
             withdrawalRepository.save(w);

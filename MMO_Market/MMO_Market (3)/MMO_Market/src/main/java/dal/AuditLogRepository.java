@@ -16,7 +16,7 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
     @Query("SELECT a FROM AuditLog a WHERE " +
            "(:action IS NULL OR :action = '' OR " +
            "a.action = :action OR " +
-           "(:action = 'Lock_User' AND LOWER(a.action) IN ('lock_user', 'unlock_user', 'create_staff', 'update_staff', 'delete_staff', 'soft_delete_user', 'update_role')) OR " +
+           "(:action = 'Lock_User' AND LOWER(a.action) IN ('lock_user', 'unlock_user', 'create_staff', 'update_staff', 'delete_staff', 'soft_delete_user', 'update_role', 'change_user_role')) OR " +
            "(:action = 'Config_Update' AND LOWER(a.action) IN ('update_system_config', 'update_commissions_config', 'config_update'))) AND " +
            "(:search IS NULL OR :search = '' OR LOWER(a.details) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "EXISTS (SELECT u FROM User u WHERE u.id = a.userId AND (LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :search, '%'))))) " +

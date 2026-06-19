@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:8080/api';
+const API_BASE = '/api';
 const AUTH_STORAGE_KEYS = ['accessToken', 'refreshToken', 'loginTimestamp', 'userInfo', 'user', 'redirectPath'];
 
 if (!sessionStorage.getItem('accessToken') && localStorage.getItem('accessToken')) {
@@ -1203,3 +1203,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     });
 });
+
+// Sync notification badge once auth.js is loaded and storage sync completes
+if (typeof refreshHeaderNotifBadge === 'function') {
+    refreshHeaderNotifBadge();
+}
