@@ -33,6 +33,12 @@
     color: #991b1b;
 }
 
+.ds-toast-info {
+    border-left-color: #3b82f6;
+    background: #dbeafe;
+    color: #1e3a8a;
+}
+
 .ds-toast-title {
     margin: 0;
     font-size: 15px;

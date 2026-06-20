@@ -79,7 +79,7 @@ public class AdminUserManagementService {
         List<AdminUserResponse> users = filteredUsers(null, null, null, null, null, null);
         Map<String, Object> summary = new HashMap<>();
         summary.put("totalAccounts", users.size());
-        summary.put("activeAccounts", users.stream().filter(user -> Boolean.TRUE.equals(user.getIsOnline()) && !Boolean.TRUE.equals(user.getIsLocked())).count());
+        summary.put("activeAccounts", users.stream().filter(user -> !Boolean.TRUE.equals(user.getIsLocked())).count());
         summary.put("lockedAccounts", users.stream().filter(user -> Boolean.TRUE.equals(user.getIsLocked())).count());
         summary.put("staffAccounts", users.stream().filter(user -> "Staff".equals(user.getRole())).count());
         summary.put("verifiedAccounts", users.stream().filter(user -> Boolean.TRUE.equals(user.getIsVerified())).count());

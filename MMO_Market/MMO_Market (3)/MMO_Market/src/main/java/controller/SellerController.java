@@ -4,6 +4,7 @@ import dal.*;
 import model.*;
 import service.EmailService;
 import service.AuthenticationService;
+import service.WithdrawalService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -34,6 +35,7 @@ public class SellerController {
     private final EmailVerificationRepository emailVerificationRepository;
     private final EmailService emailService;
     private final AuthenticationService authenticationService;
+    private final WithdrawalService withdrawalService;
 
     public SellerController(UserRepository userRepository, ProductRepository productRepository,
                             ProductVariantRepository productVariantRepository, CategoryRepository categoryRepository,
@@ -46,7 +48,8 @@ public class SellerController {
                             SystemConfigurationRepository systemConfigurationRepository,
                             EmailVerificationRepository emailVerificationRepository,
                             EmailService emailService,
-                            AuthenticationService authenticationService) {
+                            AuthenticationService authenticationService,
+                            WithdrawalService withdrawalService) {
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.productVariantRepository = productVariantRepository;
@@ -64,7 +67,9 @@ public class SellerController {
         this.emailVerificationRepository = emailVerificationRepository;
         this.emailService = emailService;
         this.authenticationService = authenticationService;
+        this.withdrawalService = withdrawalService;
     }
+
 
     private User getSeller(Long userId) {
         if (userId == null) {
@@ -624,97 +629,22 @@ public class SellerController {
     @PostMapping("/withdrawals")
     public ResponseEntity<?> requestWithdrawal(@AuthenticationPrincipal Long userId, @RequestBody Map<String, Object> request) {
         try {
-            User seller = getSeller(userId);
             Object amountObj = request.get("amountVnd");
-
             if (amountObj == null) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Vui lòng nhập số tiền rút."));
             }
 
             long amount = Long.parseLong(amountObj.toString());
+            Object otpObj = request.get("otp");
+            String otp = otpObj != null ? otpObj.toString() : null;
 
-            // Load configurations dynamically
-            double withdrawalFeePercent = systemConfigurationRepository.findByConfigKey("WITHDRAWAL_FEE_PERCENT")
-                    .map(c -> {
-                        try { return Double.parseDouble(c.getConfigValue()); }
-                        catch (NumberFormatException e) { return 1.5; }
-                    }).orElse(1.5);
-            long minWithdrawFee = systemConfigurationRepository.findByConfigKey("MIN_WITHDRAW_FEE_VND")
-                    .map(c -> {
-                        try { return Long.parseLong(c.getConfigValue()); }
-                        catch (NumberFormatException e) { return 10000L; }
-                    }).orElse(10000L);
-            long minWithdrawalLimit = systemConfigurationRepository.findByConfigKey("MIN_WITHDRAWAL_VND")
-                    .map(c -> {
-                        try { return Long.parseLong(c.getConfigValue()); }
-                        catch (NumberFormatException e) { return 50000L; }
-                    }).orElse(50000L);
-            long maxWithdrawalLimit = systemConfigurationRepository.findByConfigKey("MAX_WITHDRAWAL_VND")
-                    .map(c -> {
-                        try { return Long.parseLong(c.getConfigValue()); }
-                        catch (NumberFormatException e) { return 50000000L; }
-                    }).orElse(50000000L);
-            boolean requireWithdraw2FA = systemConfigurationRepository.findByConfigKey("REQUIRE_WITHDRAW_2FA")
-                    .map(c -> "true".equalsIgnoreCase(c.getConfigValue()) || "1".equals(c.getConfigValue()))
-                    .orElse(true);
-
-            // Validate amounts
-            if (amount < minWithdrawalLimit) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Số tiền rút tối thiểu phải là " + String.format("%,d", minWithdrawalLimit) + " VNĐ."));
-            }
-            if (amount > maxWithdrawalLimit) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Số tiền rút tối đa phải là " + String.format("%,d", maxWithdrawalLimit) + " VNĐ."));
-            }
-
-            // Calculate fee
-            long fee = (long) (amount * (withdrawalFeePercent / 100.0));
-            if (fee < minWithdrawFee) {
-                fee = minWithdrawFee;
-            }
-
-            long totalDeduction = amount + fee;
-            if (seller.getBalanceVnd() < totalDeduction) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Số dư ví không đủ để thực hiện yêu cầu rút tiền này (cần " + String.format("%,d", totalDeduction) + " VNĐ bao gồm cả phí)."));
-            }
-
-            // Enforce 2FA Verification if active
-            if (requireWithdraw2FA) {
-                Object otpObj = request.get("otp");
-                if (otpObj == null || otpObj.toString().trim().isEmpty()) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "Giao dịch rút tiền yêu cầu xác thực 2FA. Vui lòng nhập mã OTP."));
-                }
-                String otp = otpObj.toString().trim();
-                try {
-                    authenticationService.verifyWithdrawalOtp(seller.getId(), otp);
-                } catch (IllegalArgumentException e) {
-                    return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-                }
-            }
-
-            SellerBankInfo bank = sellerBankInfoRepository.findByUserAndIsDeleteFalse(seller)
-                    .orElseThrow(() -> new IllegalArgumentException("Vui lòng cấu hình thông tin ngân hàng trước khi rút tiền."));
-
-            // Deduct total balance (amount + fee) and save
-            seller.setBalanceVnd(seller.getBalanceVnd() - totalDeduction);
-            userRepository.save(seller);
-
-            Withdrawal w = new Withdrawal();
-            w.setSeller(seller);
-            w.setBankInfo(bank);
-            w.setAmountVnd(amount);
-            w.setFeeVnd(fee);
-            w.setStatus("Pending");
-            w.setIsDelete(false);
-            withdrawalRepository.save(w);
-
-            return ResponseEntity.ok(Map.of(
-                    "newBalance", seller.getBalanceVnd(),
-                    "message", "Yêu cầu rút tiền đã được gửi thành công!"
-            ));
+            Map<String, Object> result = withdrawalService.requestWithdrawal(userId, amount, otp);
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
+
 
     // 17. Statistics GET
     @GetMapping("/statistics")

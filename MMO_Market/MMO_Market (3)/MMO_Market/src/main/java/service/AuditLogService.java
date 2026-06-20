@@ -171,6 +171,60 @@ public class AuditLogService {
         return canonicalRole(roleValue.replace("\"", "").trim());
     }
 
+    @Transactional(readOnly = true)
+    public byte[] exportAuditLogsCsv(Long operatorId, String search, String action) {
+        User operator = requireAdminOrStaff(operatorId);
+
+        Pageable pageable = PageRequest.of(0, 5000);
+        Page<AuditLog> logPage = auditLogRepository.searchLogs(
+                (action == null || action.isBlank()) ? null : action,
+                (search == null || search.isBlank()) ? null : search.trim(),
+                pageable
+        );
+
+        StringBuilder csv = new StringBuilder();
+        // BOM for UTF-8 CSV Excel compatibility
+        csv.append("\uFEFF");
+        csv.append("STT,Mã,Thời gian,Nhân viên,Hành động,Chi tiết,Trạng thái\n");
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+        List<AuditLog> logs = logPage.getContent();
+        for (int i = 0; i < logs.size(); i++) {
+            AuditLog log = logs.get(i);
+
+            String operatorEmail = "Không rõ";
+            if (log.getUserId() != null) {
+                operatorEmail = userRepository.findById(log.getUserId())
+                        .map(User::getEmail)
+                        .orElse("ID: " + log.getUserId());
+            }
+
+            String desc = log.getDetails();
+            if (log.getDetails() != null && log.getDetails().trim().startsWith("{")) {
+                try {
+                    JsonNode node = objectMapper.readTree(log.getDetails());
+                    if (node.has("desc")) {
+                        desc = node.get("desc").asText();
+                    }
+                } catch (Exception ignored) {}
+            }
+
+            String cleanDesc = desc == null ? "" : desc.replace("\"", "\"\"").replace("\n", " ").replace("\r", "");
+            String cleanOperator = operatorEmail.replace("\"", "\"\"");
+            String displayAction = log.getAction() == null ? "" : log.getAction();
+
+            csv.append(i + 1).append(",")
+                    .append(log.getId()).append(",")
+                    .append(log.getCreatedAt() != null ? log.getCreatedAt().format(formatter) : "").append(",")
+                    .append("\"").append(cleanOperator).append("\",")
+                    .append("\"").append(displayAction).append("\",")
+                    .append("\"").append(cleanDesc).append("\",")
+                    .append("Thành công\n");
+        }
+
+        return csv.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+    }
+
     private String canonicalRole(String role) {
         if (role == null || role.isBlank()) {
             return "Customer";

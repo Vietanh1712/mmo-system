@@ -430,7 +430,22 @@
                 }
             }
         });
+
+        const currencyInputIds = [
+            'commSellerUpgradeFee',
+            'commProductFeaturedFee',
+            'commMinWithdrawLimit',
+            'commMaxWithdrawLimit',
+            'commMinDepositLimit',
+            'commMaxDepositLimit'
+        ];
+        currencyInputIds.forEach(id => {
+            document.getElementById(id)?.addEventListener('input', function() {
+                this.value = formatNumberWithDots(this.value);
+            });
+        });
     }
+
 
     function syncAccountFormProfile() {
         const name = document.getElementById('accountFormFullName')?.value.trim();
@@ -645,35 +660,87 @@
             setText('statStaff', data.staffAccounts ?? 0);
             setText('statVerified', data.verifiedAccounts ?? 0);
             setText('statSeller', data.sellerAccounts ?? 0);
-            renderDashboardChart();
-            renderDashboardRecentLogs();
+            await renderDashboardChart();
+            await renderDashboardRecentLogs();
         } catch (error) {
             showToast(error.message, true);
         }
     }
 
-    function renderDashboardChart() {
-        const fees = mock.cashFlow.reduce((s, t) => s + (t.fee || 0), 0);
-        const dataPoints = [1200000, 2450000, 1800000, 3100000, 2900000, 4200000, fees];
-        const labels = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
-        drawRevenueChart(dataPoints, labels);
+    async function renderDashboardChart() {
+        let feesByDay = [0, 0, 0, 0, 0, 0, 0];
+        let labels = [];
+        const daysOfWeek = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+        const dateKeys = [];
+        
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            labels.push(daysOfWeek[d.getDay()]);
+            const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            dateKeys.push(key);
+        }
+
+        try {
+            const listRes = await authFetch('/admin/revenue/transactions?time=7days&size=100');
+            if (listRes.ok) {
+                const listData = await listRes.json();
+                const txs = listData.content || [];
+                txs.forEach(tx => {
+                    if (tx.status === 'Completed' || tx.status === 'Held') {
+                        const txDate = tx.timestamp.split('T')[0];
+                        const idx = dateKeys.indexOf(txDate);
+                        if (idx !== -1) {
+                            feesByDay[idx] += Number(tx.fee) || 0;
+                        }
+                    }
+                });
+            }
+        } catch (e) {
+            console.error('Lỗi khi tải transactions thật cho dashboard chart:', e);
+            const mockFees = mock.cashFlow.reduce((s, t) => s + (t.fee || 0), 0);
+            feesByDay = [1200000, 2450000, 1800000, 3100000, 2900000, 4200000, mockFees];
+            labels = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
+        }
+
+        drawRevenueChart(feesByDay, labels);
 
         const summary = document.getElementById('chartSummary');
         if (summary) {
-            const total = dataPoints.reduce((a, b) => a + b, 0);
-            const peak = Math.max(...dataPoints);
-            const peakIdx = dataPoints.indexOf(peak);
+            const total = feesByDay.reduce((a, b) => a + b, 0);
+            const peak = Math.max(...feesByDay);
+            const peakIdx = feesByDay.indexOf(peak);
             summary.innerHTML = `
                 <span class="ds-caption">Tổng tuần: <strong class="ds-money">${formatVnd(total)}</strong></span>
                 <span class="ds-caption">Cao nhất: <strong class="ds-money">${formatVnd(peak)}</strong> (${labels[peakIdx]})</span>
-                <span class="ds-caption">Trung bình/ngày: <strong class="ds-money">${formatVnd(Math.round(total / dataPoints.length))}</strong></span>
+                <span class="ds-caption">Trung bình/ngày: <strong class="ds-money">${formatVnd(Math.round(total / feesByDay.length))}</strong></span>
             `;
         }
     }
 
-    function renderDashboardRecentLogs() {
+    async function renderDashboardRecentLogs() {
         const body = document.getElementById('dashLogsBody');
         if (!body) return;
+        try {
+            const response = await authFetch('/admin/audit-logs?page=0&size=4');
+            if (response.ok) {
+                const data = await response.json();
+                const logs = data.content || [];
+                body.innerHTML = logs.map((l, i) => `
+                    <tr>
+                        <td class="ds-table-center">${i + 1}</td>
+                        <td>${formatDateTime(l.timestamp)}</td>
+                        <td><strong>${escapeHtml(l.operator)}</strong></td>
+                        <td><span class="ds-badge ${auditBadgeClass(l.action)}">${escapeHtml(actionLabel(l.action))}</span></td>
+                        <td class="muted">${escapeHtml(l.desc)}</td>
+                    </tr>
+                `).join('') || '<tr><td colspan="5" class="ds-empty-state">Chưa có nhật ký.</td></tr>';
+                return;
+            }
+        } catch (e) {
+            console.error('Lỗi khi tải audit logs thật cho dashboard:', e);
+        }
+
         const rows = mock.auditLogs.slice(0, 4);
         body.innerHTML = rows.map((l, i) => `
             <tr>
@@ -686,7 +753,7 @@
         `).join('') || '<tr><td colspan="5" class="ds-empty-state">Chưa có nhật ký.</td></tr>';
     }
 
-    const CHART_DAY_LABELS = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
+    let CHART_DAY_LABELS = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
 
     function formatVndShort(value) {
         const n = Number(value) || 0;
@@ -697,6 +764,7 @@
     }
 
     function drawRevenueChart(dataPoints, dayLabels = CHART_DAY_LABELS) {
+        CHART_DAY_LABELS = dayLabels;
         const pathEl = document.getElementById('revenueChartPath');
         const areaEl = document.getElementById('revenueChartArea');
         const dotsEl = document.getElementById('revenueChartDots');
@@ -1583,7 +1651,7 @@
 
         try {
             // 1. Tải thông tin tóm tắt doanh thu
-            const summaryRes = await authFetch('/api/admin/revenue/summary');
+            const summaryRes = await authFetch('/admin/revenue/summary');
             if (summaryRes.ok) {
                 const summary = await summaryRes.json();
                 setText('revCommissions', formatVnd(summary.commissions));
@@ -1602,7 +1670,7 @@
                 size: String(revPageSize)
             });
 
-            const listRes = await authFetch(`/api/admin/revenue/transactions?${params.toString()}`);
+            const listRes = await authFetch(`/admin/revenue/transactions?${params.toString()}`);
             const body = document.getElementById('revTransactionsBody');
             if (!body) return;
 
@@ -1651,7 +1719,7 @@
 
     window.AdminConsole.mockExport = async function (type) {
         if (type === 'revenue') {
-            showToast('Đang xuất báo cáo doanh thu...');
+            const loadingToast = showToast('Đang xuất báo cáo doanh thu...', 'info');
             try {
                 const filter = document.getElementById('revTimeFilter')?.value || '7days';
                 const typeFilter = document.getElementById('revTypeFilter')?.value || '';
@@ -1661,7 +1729,8 @@
                     type: typeFilter,
                     time: filter
                 });
-                const response = await authFetch(`/api/admin/revenue/export?${params.toString()}`);
+                const response = await authFetch(`/admin/revenue/export?${params.toString()}`);
+                if (loadingToast) loadingToast.remove();
                 if (response.ok) {
                     const blob = await response.blob();
                     const url = window.URL.createObjectURL(blob);
@@ -1677,7 +1746,38 @@
                     showToast('Không thể xuất báo cáo từ máy chủ.', true);
                 }
             } catch (e) {
+                if (loadingToast) loadingToast.remove();
                 showToast('Lỗi kết nối khi xuất báo cáo.', true);
+            }
+            return;
+        } else if (type === 'audit') {
+            const loadingToast = showToast('Đang xuất nhật ký hệ thống...', 'info');
+            try {
+                const search = (document.getElementById('logSearch')?.value || '').trim();
+                const action = document.getElementById('logActionFilter')?.value || '';
+                const params = new URLSearchParams({
+                    search: search,
+                    action: action
+                });
+                const response = await authFetch(`/admin/audit-logs/export?${params.toString()}`);
+                if (loadingToast) loadingToast.remove();
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `nhat-ky-he-thong-${new Date().toISOString().slice(0, 10)}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                    showToast('Đã tải nhật ký hệ thống thành công.');
+                } else {
+                    showToast('Không thể xuất nhật ký từ máy chủ.', true);
+                }
+            } catch (e) {
+                if (loadingToast) loadingToast.remove();
+                showToast('Lỗi kết nối khi xuất nhật ký.', true);
             }
             return;
         }
@@ -2556,12 +2656,23 @@
 
     function showToast(message, isError = false) {
         const container = document.getElementById('toastContainer');
-        if (!container) return;
+        if (!container) return null;
         const toast = document.createElement('div');
-        toast.className = `ds-toast ds-toast-${isError ? 'error' : 'success'}`;
+        
+        let type = 'success';
+        let title = 'Thành công';
+        if (isError === true) {
+            type = 'error';
+            title = 'Thất bại';
+        } else if (isError === 'info') {
+            type = 'info';
+            title = 'Thông báo';
+        }
+        
+        toast.className = `ds-toast ds-toast-${type}`;
         toast.innerHTML = `
             <div>
-                <p class="ds-toast-title">${isError ? 'Thất bại' : 'Thành công'}</p>
+                <p class="ds-toast-title">${title}</p>
                 <p class="ds-toast-message">${escapeHtml(message)}</p>
             </div>
             <button class="ds-toast-close" onclick="this.parentElement.remove()">×</button>
@@ -2570,6 +2681,7 @@
         setTimeout(() => {
             if (toast.parentElement) toast.remove();
         }, 3000);
+        return toast;
     }
 
     function readCurrentUser() {
