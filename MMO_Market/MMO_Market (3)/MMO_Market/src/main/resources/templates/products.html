@@ -528,6 +528,12 @@
             const sortParts = currentSort.split(',');
             params.append('sort', sortParts[0] + ',' + (sortParts[1] || 'desc'));
 
+            // Append ratings to API parameters
+            const ratingChecks = document.querySelectorAll('input[name="rating-filter"]:checked');
+            ratingChecks.forEach(cb => {
+                params.append('rating', cb.value);
+            });
+
             try {
                 const response = await fetch(`/api/search/products?${params.toString()}`);
                 if (response.ok) {
@@ -775,11 +781,11 @@
         function addToCartFromCard(productId) {
             const product = (window.currentRenderedProducts || []).find(item => item.productId === productId);
             if (!product) {
-                alert('Không tìm thấy thông tin sản phẩm để thêm vào giỏ hàng.');
+                showWarningToast('Không tìm thấy thông tin sản phẩm để thêm vào giỏ hàng.');
                 return;
             }
             if (Number(product.stock || 0) <= 0) {
-                alert('Sản phẩm đã hết hàng, vui lòng đặt trước.');
+                showWarningToast('Sản phẩm đã hết hàng, vui lòng đặt trước.');
                 preOrderNow(productId);
                 return;
             }
@@ -806,38 +812,23 @@
             if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
         }
 
-        function showSuccessToast(message) {
-            let container = document.querySelector('.ds-toast-container');
-            if (!container) {
-                container = document.createElement('div');
-                container.className = 'ds-toast-container';
-                document.body.appendChild(container);
-            }
-            const toast = document.createElement('div');
-            toast.className = 'ds-toast ds-toast-success';
-            toast.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fa fa-check-circle" style="font-size: 18px; color: #22c55e;"></i>
-                    <div>
-                        <h4 class="ds-toast-title">Thành công</h4>
-                        <p class="ds-toast-message">${message}</p>
-                    </div>
-                </div>
-                <button class="ds-toast-close" onclick="this.parentElement.remove()">&times;</button>
-            `;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transition = 'opacity 0.5s ease';
-                setTimeout(() => {
-                    toast.remove();
-                }, 500);
-            }, 3000);
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
             syncUIFromURL();
             fetchProducts();
+
+            // Add automatic change listeners for immediate filtering
+            const filterForm = document.getElementById('filter-form');
+            if (filterForm) {
+                // Listen to changes on select & checkboxes
+                filterForm.querySelectorAll('select, input[type="checkbox"]').forEach(el => {
+                    el.addEventListener('change', () => applyFilters());
+                });
+                // Listen to slider when user releases it (change event)
+                const slider = document.getElementById('price-slider');
+                if (slider) {
+                    slider.addEventListener('change', () => applyFilters());
+                }
+            }
         });
 
         // Listen for history popstate (Back/Forward buttons)

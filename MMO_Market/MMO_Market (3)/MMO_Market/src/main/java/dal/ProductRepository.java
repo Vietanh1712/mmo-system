@@ -23,14 +23,14 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     List<Product> findByCategoryAndNameContainingIgnoreCaseOrCategoryAndDescriptionContainingIgnoreCaseAndIsDeleteFalse(Category category, String name, Category category2, String description);
     long countBySellerIdAndIsDeleteFalse(Long sellerId);
 
-    // Lấy top sản phẩm bán chạy nhất dựa trên số lượng giao dịch HOÀN THÀNH (Completed)
+    // Lấy top sản phẩm bán chạy nhất dựa trên số lượng giao dịch HOÀN THÀNH (Completed) hoặc GIỮ TIỀN (Held)
     @Query(value = """
         SELECT p.*
         FROM Products p
         LEFT JOIN (
             SELECT product_id, COUNT(*) AS sales_count
             FROM Transactions
-            WHERE isDelete = 0 AND status = 'Completed'
+            WHERE isDelete = 0 AND status IN ('Completed', 'Held')
             GROUP BY product_id
         ) t ON t.product_id = p.id
         WHERE p.isDelete = 0

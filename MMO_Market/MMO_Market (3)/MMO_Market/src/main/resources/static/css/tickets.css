@@ -40,18 +40,18 @@
 }
 
 .ticket-badge--pending {
-    background: #fef3c7;
-    color: #92400e;
+    background: #ffedd5;
+    color: #c2410c;
 }
 
 .ticket-badge--processing {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: var(--ds-primary-soft);
+    color: var(--ds-primary);
 }
 
 .ticket-badge--resolved {
-    background: #dcfce7;
-    color: #166534;
+    background: var(--ds-success-soft);
+    color: #15803d;
 }
 
 .ticket-badge--closed {
@@ -104,7 +104,7 @@
 }
 
 .tickets-table tbody tr:hover {
-    background: rgba(99, 102, 241, 0.08) !important;
+    background: var(--ds-primary-soft) !important;
 }
 
 .ticket-id {
@@ -251,7 +251,7 @@
 .ticket-field textarea:focus {
     outline: none;
     border-color: var(--ds-primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 .ticket-submit-btn {
@@ -269,7 +269,7 @@
 }
 
 .ticket-submit-btn:hover {
-    background: var(--ds-primary-dark, #4f46e5);
+    background: var(--ds-primary-hover, #1d4ed8);
 }
 
 /* ─── Replied Status Badge ─── */
@@ -343,8 +343,8 @@
 }
 
 .detail-reply-box {
-    background: rgba(99, 102, 241, 0.05);
-    border: 1px solid rgba(99, 102, 241, 0.15);
+    background: var(--ds-primary-soft);
+    border: 1px solid rgba(37, 99, 235, 0.15);
     border-left: 4px solid var(--ds-primary);
     border-radius: 0 var(--ds-radius-md) var(--ds-radius-md) 0;
     padding: 14px 16px;
@@ -353,5 +353,5 @@
     line-height: 1.6;
     white-space: pre-wrap;
     font-style: italic;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.03);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.03);
 }

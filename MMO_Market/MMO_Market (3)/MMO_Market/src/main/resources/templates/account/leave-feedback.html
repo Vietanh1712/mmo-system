@@ -310,15 +310,15 @@
                 const isVideo = allowedVideoTypes.includes(file.type) || ['.mp4', '.webm', '.avi', '.mov'].includes(extension);
 
                 if (!isImage && !isVideo) {
-                    alert(`Định dạng tệp "${file.name}" không hợp lệ. Chỉ hỗ trợ JPG, PNG, GIF, MP4, WEBM, MOV.`);
+                    showWarningToast(`Định dạng tệp "${file.name}" không hợp lệ. Chỉ hỗ trợ JPG, PNG, GIF, MP4, WEBM, MOV.`);
                     return;
                 }
                 if (isImage && file.size > maxImageSize) {
-                    alert(`Kích thước ảnh "${file.name}" vượt quá 10MB.`);
+                    showWarningToast(`Kích thước ảnh "${file.name}" vượt quá 10MB.`);
                     return;
                 }
                 if (isVideo && file.size > maxVideoSize) {
-                    alert(`Kích thước video "${file.name}" vượt quá 50MB.`);
+                    showWarningToast(`Kích thước video "${file.name}" vượt quá 50MB.`);
                     return;
                 }
 
@@ -389,13 +389,13 @@
 
         async function submitFeedback() {
             if (selectedScore === 0) {
-                alert('Vui lòng chọn số sao để đánh giá sản phẩm.');
+                showWarningToast('Vui lòng chọn số sao để đánh giá sản phẩm.');
                 return;
             }
 
             const comment = document.getElementById('reviewComment').value.trim();
             if (!comment) {
-                alert('Vui lòng nhập nội dung chia sẻ trải nghiệm mua hàng.');
+                showWarningToast('Vui lòng nhập nội dung chia sẻ trải nghiệm mua hàng.');
                 return;
             }
 
@@ -465,11 +465,11 @@
                     modal.style.display = 'flex';
                 } else {
                     const errorResponse = await res.json();
-                    alert(errorResponse.message || 'Gửi đánh giá thất bại. Vui lòng thử lại sau.');
+                    showErrorToast(errorResponse.message || 'Gửi đánh giá thất bại. Vui lòng thử lại sau.');
                 }
             } catch (err) {
                 console.error('Lỗi khi gửi đánh giá:', err);
-                alert(err.message || 'Có lỗi xảy ra trong quá trình kết nối đến máy chủ.');
+                showErrorToast(err.message || 'Có lỗi xảy ra trong quá trình kết nối đến máy chủ.');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalBtnHtml;

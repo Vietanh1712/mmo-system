@@ -3,6 +3,9 @@
 <body>
 
 <header class="header" th:fragment="header">
+    <!-- Global Toast CSS + JS (loaded once for all pages) -->
+    <link rel="stylesheet" th:href="@{/css/toast.css}">
+    <script th:src="@{/js/toast.js}"></script>
     <div class="header__top">
         <a href="/" class="header__logo">
             <i class="fa fa-diamond"></i>

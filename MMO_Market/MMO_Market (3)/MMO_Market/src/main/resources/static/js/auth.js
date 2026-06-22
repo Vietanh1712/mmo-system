@@ -117,7 +117,7 @@ async function loadProducts(category = '') {
 // =======================================================
 async function topUp(amount) {
     if (!amount || isNaN(amount) || amount <= 0) {
-        alert("Số tiền nạp không hợp lệ!");
+        showWarningToast("Số tiền nạp không hợp lệ!");
         return;
     }
 
@@ -130,12 +130,12 @@ async function topUp(amount) {
         const data = await res.json();
 
         if (res.ok) {
-            alert('Yêu cầu nạp tiền thành công!');
+            showSuccessToast('Yêu cầu nạp tiền thành công!');
             if (data.newBalance !== undefined) {
                 updateUserBalance(data.newBalance);
             }
         } else {
-            alert(data.message || 'Nạp tiền thất bại. Vui lòng thử lại.');
+            showErrorToast(data.message || 'Nạp tiền thất bại. Vui lòng thử lại.');
         }
     } catch (err) {
         console.error('Lỗi khi nạp tiền:', err);

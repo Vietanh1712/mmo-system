@@ -63,7 +63,7 @@ async function handleComplaintSubmit(e) {
     let evidence = '';
 
     if (!description) {
-        alert('Vui lòng nhập chi tiết lý do khiếu nại.');
+        showWarningToast('Vui lòng nhập chi tiết lý do khiếu nại.');
         return;
     }
 
@@ -90,7 +90,7 @@ async function handleComplaintSubmit(e) {
             evidence = uploadData.url;
             if (statusText) statusText.innerHTML = '<span style="color: #16a34a;"><i class="fa fa-check-circle"></i> Đã tải lên bằng chứng thành công.</span>';
         } catch (uploadErr) {
-            alert(uploadErr.message || 'Không thể tải lên file bằng chứng.');
+            showErrorToast(uploadErr.message || 'Không thể tải lên file bằng chứng.');
             if (statusText) statusText.innerHTML = '<span style="color: #ef4444;"><i class="fa fa-times-circle"></i> Lỗi tải lên.</span>';
             return;
         }
@@ -143,7 +143,7 @@ async function handleComplaintSubmit(e) {
         showSuccessToast('Đã gửi khiếu nại đơn hàng thành công. Tiền thanh toán đã được đóng băng.');
 
     } catch (err) {
-        alert(err.message || 'Lỗi khi gửi khiếu nại.');
+        showErrorToast(err.message || 'Lỗi khi gửi khiếu nại.');
     } finally {
         btnSubmit.removeAttribute('disabled');
         btnSubmit.innerHTML = oldBtnHtml;

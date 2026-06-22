@@ -688,7 +688,7 @@
     function checkoutCart() {
         const selectedItems = getSelectedItems();
         if (selectedItems.length === 0) {
-            alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán.');
+            showWarningToast('Vui lòng chọn ít nhất một sản phẩm để thanh toán.');
             return;
         }
 

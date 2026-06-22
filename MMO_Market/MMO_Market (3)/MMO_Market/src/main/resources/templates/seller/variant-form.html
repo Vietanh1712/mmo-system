@@ -374,7 +374,7 @@
                 const notes = document.getElementById('assetNotes').value.trim();
 
                 if (!username || !password) {
-                    alert('Vui lòng nhập tài khoản và mật khẩu');
+                    showWarningToast('Vui lòng nhập tài khoản và mật khẩu');
                     return;
                 }
 
@@ -384,13 +384,13 @@
                 const notes = document.getElementById('assetNotes2').value.trim();
 
                 if (!keyCode) {
-                    alert('Vui lòng nhập mã key');
+                    showWarningToast('Vui lòng nhập mã key');
                     return;
                 }
 
                 // Check for duplicate key
                 if (assets.some(a => a.keyCode === keyCode)) {
-                    alert('Mã key này đã được nhập. Mỗi key phải là duy nhất!');
+                    showWarningToast('Mã key này đã được nhập. Mỗi key phải là duy nhất!');
                     return;
                 }
 
@@ -401,13 +401,13 @@
                 const notes = document.getElementById('assetNotes3').value.trim();
 
                 if (!cardCode || !cardPin) {
-                    alert('Vui lòng nhập mã thẻ và PIN');
+                    showWarningToast('Vui lòng nhập mã thẻ và PIN');
                     return;
                 }
 
                 // Check for duplicate card
                 if (assets.some(a => a.cardCode === cardCode)) {
-                    alert('Mã thẻ này đã được nhập!');
+                    showWarningToast('Mã thẻ này đã được nhập!');
                     return;
                 }
 
@@ -513,12 +513,12 @@
             const status = document.getElementById('status').value;
 
             if (!variantName || !priceVnd) {
-                alert('Vui lòng nhập tên biến thể và giá bán');
+                showWarningToast('Vui lòng nhập tên biến thể và giá bán');
                 return;
             }
 
             if (assets.length === 0) {
-                alert('Bạn phải nhập ít nhất 1 tài sản trước khi lưu');
+                showWarningToast('Bạn phải nhập ít nhất 1 tài sản trước khi lưu');
                 return;
             }
 
@@ -534,7 +534,7 @@
             sessionStorage.setItem('variantData', JSON.stringify(variantData));
 
             // In a real app, you would send this to the backend
-            alert('Đã tạo biến thể với ' + assets.length + ' tài sản. Hệ thống sẽ lưu thông tin này.');
+            showSuccessToast('Đã tạo biến thể với ' + assets.length + ' tài sản. Hệ thống sẽ lưu thông tin này.');
             window.location.href = '/seller/inventory';
         }
     </script>

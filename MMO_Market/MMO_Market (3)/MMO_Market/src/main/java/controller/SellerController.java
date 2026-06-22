@@ -205,11 +205,19 @@ public class SellerController {
                 map.put("categoryName", p.getCategory().getName());
                 map.put("description", p.getDescription());
                 map.put("image", p.getImage());
+                map.put("productType", p.getProductType());
 
                 List<ProductVariant> variants = productVariantRepository.findByProductAndIsDeleteFalse(p);
                 map.put("variantCount", variants.size());
                 map.put("totalStock", variants.stream().mapToInt(v -> v.getStock() != null ? v.getStock() : 0).sum());
                 map.put("status", variants.stream().anyMatch(v -> "Active".equals(v.getStatus())) ? "Active" : "Locked");
+
+                long unusedAssetsCount = 0;
+                for (model.ProductVariant v : variants) {
+                    unusedAssetsCount += digitalAssetRepository.countByVariantAndIsUsedFalseAndIsDeleteFalse(v);
+                }
+                map.put("unusedAssetsCount", unusedAssetsCount);
+
                 return map;
             }).collect(Collectors.toList());
 

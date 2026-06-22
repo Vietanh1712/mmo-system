@@ -157,7 +157,7 @@ function getUserEmail() {
 function openTicketForm() {
     const token = sessionStorage.getItem('accessToken');
     if (!token) {
-        alert('Vui lòng đăng nhập để gửi ticket hỗ trợ!');
+        showWarningToast('Vui lòng đăng nhập để gửi ticket hỗ trợ!');
         window.location.href = '/login?returnUrl=/support';
         return;
     }
@@ -200,11 +200,11 @@ async function submitTicketForm(e) {
         closeTicketForm();
         document.getElementById('support-ticket-form').reset();
         
-        alert('Gửi ticket hỗ trợ thành công! Ticket của bạn đã được đưa lên hệ thống xử lý của Staff.');
+        showSuccessToast('Gửi ticket hỗ trợ thành công! Ticket của bạn đã được đưa lên hệ thống xử lý của Staff.');
         window.location.href = '/account/tickets';
     } catch(err) {
         console.error(err);
-        alert('Không thể gửi ticket hỗ trợ: ' + err.message);
+        showErrorToast('Không thể gửi ticket hỗ trợ: ' + err.message);
     }
 }
 

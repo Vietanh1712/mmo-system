@@ -67,7 +67,7 @@ async function loadComplaintDetails() {
     }
 
     if (!currentComplaint) {
-        alert('Không tìm thấy thông tin khiếu nại!');
+        showErrorToast('Không tìm thấy thông tin khiếu nại!');
         window.location.href = '/staff/complaints';
         return;
     }
@@ -182,7 +182,7 @@ function renderTimeline() {
 async function handleStaffAction(status) {
     const resolution = document.getElementById('complaintResolution').value.trim();
     if (!resolution && status === 'Rejected') {
-        alert('Vui lòng nhập lý do từ chối vào mục "Kết quả / ghi chú"!');
+        showWarningToast('Vui lòng nhập lý do từ chối vào mục “Kết quả / ghi chú”!');
         return;
     }
 
@@ -210,7 +210,7 @@ async function handleStaffAction(status) {
             }
         } catch (err) {
             console.error(err);
-            alert('Lỗi cập nhật backend: ' + err.message + '. Hệ thống sẽ thực hiện cập nhật mock tạm thời.');
+            showWarningToast('Lỗi cập nhật backend: ' + err.message + '. Hệ thống sẽ thực hiện cập nhật mock tạm thời.');
         }
     }
 
@@ -227,7 +227,7 @@ async function handleStaffAction(status) {
         sessionStorage.setItem(key, JSON.stringify(list));
     }
 
-    alert(`Đã cập nhật trạng thái khiếu nại sang: ${status === 'Resolved' ? 'Đã giải quyết' : 'Từ chối'}`);
+    showSuccessToast(`Đã cập nhật trạng thái khiếu nại sang: ${status === 'Resolved' ? 'Đã giải quyết' : 'Từ chối'}`);
     window.location.href = '/staff/complaints';
 }
 

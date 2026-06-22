@@ -12,7 +12,7 @@ function escapeHtml(value) {
 async function loadTicketDetails() {
     const id = sessionStorage.getItem('selectedSupportTicketId');
     if (!id) {
-        alert('Không tìm thấy mã ticket!');
+        showErrorToast('Không tìm thấy mã ticket!');
         window.location.href = '/staff/support-tickets';
         return;
     }
@@ -26,7 +26,7 @@ async function loadTicketDetails() {
         populateFields();
     } catch (e) {
         console.error(e);
-        alert('Lỗi tải dữ liệu ticket từ máy chủ.');
+        showErrorToast('Lỗi tải dữ liệu ticket từ máy chủ.');
         window.location.href = '/staff/support-tickets';
     }
 }
@@ -137,7 +137,7 @@ async function submitStaffAction() {
     const resolution = document.getElementById('ticketResolution').value.trim();
 
     if ((status === 'Resolved' || status === 'Closed') && !resolution) {
-        alert('Vui lòng nhập nội dung phản hồi trực tiếp khi giải quyết hoặc đóng ticket!');
+        showWarningToast('Vui lòng nhập nội dung phản hồi trực tiếp khi giải quyết hoặc đóng ticket!');
         return;
     }
 
@@ -152,11 +152,11 @@ async function submitStaffAction() {
             throw new Error(err.message || 'Lỗi cập nhật ticket');
         }
 
-        alert('Đã cập nhật trạng thái và phản hồi ticket thành công!');
+        showSuccessToast('Đã cập nhật trạng thái và phản hồi ticket thành công!');
         window.location.href = '/staff/support-tickets';
     } catch (e) {
         console.error(e);
-        alert('Lỗi cập nhật ticket: ' + e.message);
+        showErrorToast('Lỗi cập nhật ticket: ' + e.message);
     }
 }
 

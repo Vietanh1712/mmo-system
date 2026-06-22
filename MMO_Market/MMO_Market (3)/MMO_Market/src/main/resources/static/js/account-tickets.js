@@ -34,6 +34,10 @@ async function loadTickets() {
     try {
         // Dùng authFetch — tự động thêm Authorization header + base URL
         const res = await authFetch('/support-tickets');
+        if (res.status === 403) {
+            window.location.href = '/profile';
+            return;
+        }
         if (!res.ok) return;
 
         const tickets = await res.json();
@@ -101,13 +105,13 @@ async function submitNewTicket(e) {
             loadTickets();
         } else {
             const err = await res.json().catch(() => ({}));
-            alert(err.message || 'Gửi ticket thất bại, vui lòng thử lại.');
+            showErrorToast(err.message || 'Gửi ticket thất bại, vui lòng thử lại.');
         }
     } catch (ex) {
         // authFetch tự xử lý 401 (redirect về login)
         // Chỉ catch các lỗi network khác
         if (ex.message && ex.message.includes('đăng nhập')) return;
-        alert('Lỗi kết nối, vui lòng thử lại.');
+        showErrorToast('Lỗi kết nối, vui lòng thử lại.');
     } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa fa-paper-plane"></i> Gửi ticket hỗ trợ';

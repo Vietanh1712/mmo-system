@@ -57,6 +57,18 @@ public class SupportTicketController {
         return map;
     }
 
+    private boolean isCustomerOrSeller(Long userId) {
+        if (userId == null) return false;
+        return userRepository.findByIdAndIsDeleteFalse(userId)
+                .map(user -> {
+                    String roleValue = user.getRole();
+                    if (roleValue == null) return false;
+                    String roleLower = roleValue.toLowerCase();
+                    return roleLower.contains("customer") || roleLower.contains("seller");
+                })
+                .orElse(false);
+    }
+
     @PostMapping
     public ResponseEntity<?> createTicket(
             @AuthenticationPrincipal Long userId,
@@ -64,6 +76,9 @@ public class SupportTicketController {
 
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập trước khi gửi ticket."));
+        }
+        if (!isCustomerOrSeller(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Chỉ tài khoản Customer hoặc Seller mới được phép tạo ticket hỗ trợ."));
         }
 
         String category = request.get("category");
@@ -88,6 +103,9 @@ public class SupportTicketController {
     public ResponseEntity<?> getUserTickets(@AuthenticationPrincipal Long userId) {
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập để xem lịch sử ticket."));
+        }
+        if (!isCustomerOrSeller(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Chỉ tài khoản Customer hoặc Seller mới có lịch sử ticket."));
         }
 
         try {

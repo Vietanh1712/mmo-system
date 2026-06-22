@@ -718,7 +718,7 @@
             if (checkoutMode === 'cart') {
                 checkoutItems = loadCartCheckoutItems();
                 if (checkoutItems.length === 0) {
-                    alert('Giỏ hàng của bạn đang trống hoặc chưa chọn sản phẩm nào.');
+                    showWarningToast('Giỏ hàng của bạn đang trống hoặc chưa chọn sản phẩm nào.');
                     window.location.href = '/cart';
                     return;
                 }
@@ -811,7 +811,7 @@
             // 3. Check Session Storage user info & Balance
             const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
             if (!userStr) {
-                alert("Vui lòng đăng nhập trước khi thực hiện thanh toán!");
+                showWarningToast("Vui lòng đăng nhập trước khi thực hiện thanh toán!");
                 window.location.href = "/login";
                 return;
             }
@@ -884,7 +884,7 @@
 
             const token = sessionStorage.getItem("accessToken");
             if (!token) {
-                alert("Vui lòng đăng nhập trước khi thực hiện mua hàng!");
+                showWarningToast("Vui lòng đăng nhập trước khi thực hiện mua hàng!");
                 window.location.href = "/login";
                 return;
             }
@@ -1010,7 +1010,7 @@
                 modal.classList.add('active');
 
             } catch (err) {
-                alert(err.message || 'Có lỗi xảy ra khi thực hiện thanh toán.');
+                showErrorToast(err.message || 'Có lỗi xảy ra khi thực hiện thanh toán.');
                 btnPay.removeAttribute('disabled');
                 btnPay.innerHTML = '<i class="fa fa-lock"></i> Xác nhận thanh toán';
             }

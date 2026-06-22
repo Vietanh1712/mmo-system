@@ -334,15 +334,15 @@
             const description = document.getElementById('description').value.trim();
 
             if (!productName) {
-                alert('Vui lòng nhập tên sản phẩm');
+                showWarningToast('Vui lòng nhập tên sản phẩm');
                 return;
             }
             if (!category) {
-                alert('Vui lòng chọn danh mục');
+                showWarningToast('Vui lòng chọn danh mục');
                 return;
             }
             if (!productType) {
-                alert('Vui lòng chọn loại sản phẩm');
+                showWarningToast('Vui lòng chọn loại sản phẩm');
                 return;
             }
 

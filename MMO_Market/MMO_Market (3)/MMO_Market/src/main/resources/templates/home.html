@@ -548,7 +548,7 @@
             const hasFilter = keyword || subCat || categoryId;
 
             if (!hasFilter) {
-                alert('Vui lòng chọn danh mục hoặc nhập từ khóa tìm kiếm!');
+                showWarningToast('Vui lòng chọn danh mục hoặc nhập từ khóa tìm kiếm!');
                 return;
             }
 
@@ -667,7 +667,6 @@
                     card.innerHTML = `
                         <div class="product-card__image-container">
                             <i class="fa ${icon} product-card__img-icon" style="color:${color};"></i>
-                            <span class="product-card__badge-ads">Bán chạy</span>
                         </div>
                         <div class="product-card__body">
                             <div class="product-card__stock">Tồn: ${stockText}</div>
@@ -698,7 +697,7 @@
             const existing = cart.find(i => i.productId === productId && i.duration === 1);
             if (existing) { existing.quantity += 1; } else { cart.push(cartItem); }
             localStorage.setItem(cartKey, JSON.stringify(cart));
-            alert('Đã thêm sản phẩm vào giỏ hàng!');
+            showSuccessToast('Đã thêm sản phẩm vào giỏ hàng!');
             if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
         }
 
