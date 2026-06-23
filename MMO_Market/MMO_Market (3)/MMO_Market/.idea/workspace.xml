@@ -6,11 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controller/NotificationController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/NotificationController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/service/AdminUserManagementService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/AdminUserManagementService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/service/AuditLogService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/AuditLogService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/service/SystemConfigurationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/SystemConfigurationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/admin-console.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/admin-console.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/admin/users.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/admin/users.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -557,7 +553,7 @@
       <workItem from="1782056144352" duration="2000" />
       <workItem from="1782194611389" duration="116000" />
       <workItem from="1782195097819" duration="310000" />
-      <workItem from="1782204741234" duration="1385000" />
+      <workItem from="1782204741234" duration="3896000" />
     </task>
     <servers />
   </component>
