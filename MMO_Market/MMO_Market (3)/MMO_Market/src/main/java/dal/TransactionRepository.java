@@ -12,7 +12,7 @@ import java.util.List;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
     /**
-     * Đếm số lượt bán THỰC TẾ (chỉ đơn Completed) của một sản phẩm.
+     * Đếm số lượt bán THỰC TẾ (đơn Completed và Held) của một sản phẩm.
      * Không đếm đơn Pending / Cancelled / Refunded / Disputed.
      */
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.product.id = :productId AND t.status IN ('Completed', 'Held') AND t.isDelete = false")

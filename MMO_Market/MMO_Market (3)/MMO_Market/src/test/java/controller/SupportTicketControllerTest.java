@@ -17,6 +17,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import service.SupportTicketService;
 
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.method.support.ModelAndViewContainer;
+import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.bind.support.WebDataBinderFactory;
+import org.springframework.core.MethodParameter;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +54,21 @@ class SupportTicketControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(supportTicketController).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(supportTicketController)
+                .setCustomArgumentResolvers(new HandlerMethodArgumentResolver() {
+                    @Override
+                    public boolean supportsParameter(MethodParameter parameter) {
+                        return parameter.hasParameterAnnotation(AuthenticationPrincipal.class);
+                    }
+
+                    @Override
+                    public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
+                                                  NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
+                        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                        return auth != null ? auth.getPrincipal() : null;
+                    }
+                })
+                .build();
         SecurityContextHolder.clearContext();
     }
 

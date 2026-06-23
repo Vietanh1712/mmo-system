@@ -23,7 +23,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     List<Product> findByCategoryAndNameContainingIgnoreCaseOrCategoryAndDescriptionContainingIgnoreCaseAndIsDeleteFalse(Category category, String name, Category category2, String description);
     long countBySellerIdAndIsDeleteFalse(Long sellerId);
 
-    // Lấy top sản phẩm bán chạy nhất dựa trên số lượng giao dịch HOÀN THÀNH (Completed) hoặc GIỮ TIỀN (Held)
+    // Lấy top sản phẩm bán chạy nhất dựa trên số lượng giao dịch HOÀN THÀNH hoặc TẠM GIỮ (Completed, Held)
     @Query(value = """
         SELECT p.*
         FROM Products p
