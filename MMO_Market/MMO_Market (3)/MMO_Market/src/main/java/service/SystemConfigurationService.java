@@ -59,10 +59,19 @@ public class SystemConfigurationService {
         }
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("X-Real-IP");
+        }
+        if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getHeader("Proxy-Client-IP");
         }
         if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_CLIENT_IP");
+        }
+        if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
         }
         if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getRemoteAddr();
@@ -214,8 +223,7 @@ public class SystemConfigurationService {
         updateKey("ALLOW_REGISTER", String.valueOf(request.getAllowRegister()), "Cho phép người dùng đăng ký mới", operator.getId());
         updateKey("REQUIRE_WITHDRAW_2FA", String.valueOf(request.getRequireWithdraw2FA()), "Bắt buộc dùng xác thực 2 bước (2FA) khi rút tiền", operator.getId());
 
-        String details = String.format("%s (%d) đã cập nhật cấu hình hệ thống chung.",
-                operator.getFullName(), operator.getId());
+        String details = "Đã cập nhật cấu hình hệ thống chung.";
         saveAuditLog(operator, "Config_Update", details, getClientIp(), diff);
     }
 
@@ -299,8 +307,7 @@ public class SystemConfigurationService {
         updateKey("MIN_DEPOSIT_LIMIT_VND", String.valueOf(request.getMinDepositLimit()), "Số tiền nạp tối thiểu", operator.getId());
         updateKey("MAX_DEPOSIT_LIMIT_VND", String.valueOf(request.getMaxDepositLimit()), "Số tiền nạp tối đa", operator.getId());
 
-        String details = String.format("%s (%d) đã cập nhật cấu hình phí & hoa hồng.",
-                operator.getFullName(), operator.getId());
+        String details = "Đã cập nhật cấu hình phí & hoa hồng.";
         saveAuditLog(operator, "Config_Update", details, getClientIp(), diff);
     }
 

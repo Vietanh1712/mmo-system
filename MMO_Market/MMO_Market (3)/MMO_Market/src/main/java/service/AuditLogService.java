@@ -52,10 +52,13 @@ public class AuditLogService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
         List<AuditLogDto> dtos = logPage.getContent().stream().map(log -> {
-            String operatorEmail = "Không rõ";
+            String operatorName = "Không rõ";
             if (log.getUserId() != null) {
-                operatorEmail = userRepository.findById(log.getUserId())
-                        .map(User::getEmail)
+                operatorName = userRepository.findById(log.getUserId())
+                        .map(u -> {
+                            String name = u.getFullName();
+                            return (name == null || name.isBlank()) ? u.getEmail() : name;
+                        })
                         .orElse("ID: " + log.getUserId());
             }
 
@@ -86,6 +89,8 @@ public class AuditLogService {
                 }
             }
 
+            desc = cleanDescription(desc);
+
             // Fallback diff calculation for legacy plain-text logs
             if (diff == null || diff.isBlank() || "null".equals(diff)) {
                 if ("LOCK_USER".equalsIgnoreCase(log.getAction())) {
@@ -114,13 +119,17 @@ public class AuditLogService {
                     displayAction = "Fund_Withdraw";
                 } else if (actUpper.contains("MAINTENANCE")) {
                     displayAction = "Maintenance_Toggle";
+                } else if (actUpper.contains("NOTIFICATION_CREATE") || (actUpper.contains("NOTIFICATION") && actUpper.contains("CREATE"))) {
+                    displayAction = "Notification_Create";
+                } else if (actUpper.contains("NOTIFICATION_DELETE") || (actUpper.contains("NOTIFICATION") && actUpper.contains("DELETE"))) {
+                    displayAction = "Notification_Delete";
                 }
             }
 
             return AuditLogDto.builder()
                     .id(log.getId())
                     .timestamp(log.getCreatedAt() != null ? log.getCreatedAt().format(formatter) : "")
-                    .operator(operatorEmail)
+                    .operator(operatorName)
                     .action(displayAction)
                     .ipAddress(ipAddress)
                     .desc(desc)
@@ -192,10 +201,13 @@ public class AuditLogService {
         for (int i = 0; i < logs.size(); i++) {
             AuditLog log = logs.get(i);
 
-            String operatorEmail = "Không rõ";
+            String operatorName = "Không rõ";
             if (log.getUserId() != null) {
-                operatorEmail = userRepository.findById(log.getUserId())
-                        .map(User::getEmail)
+                operatorName = userRepository.findById(log.getUserId())
+                        .map(u -> {
+                            String name = u.getFullName();
+                            return (name == null || name.isBlank()) ? u.getEmail() : name;
+                        })
                         .orElse("ID: " + log.getUserId());
             }
 
@@ -209,9 +221,9 @@ public class AuditLogService {
                 } catch (Exception ignored) {}
             }
 
-            String cleanDesc = desc == null ? "" : desc.replace("\"", "\"\"").replace("\n", " ").replace("\r", "");
-            String cleanOperator = operatorEmail.replace("\"", "\"\"");
-            String displayAction = log.getAction() == null ? "" : log.getAction();
+            String cleanDesc = desc == null ? "" : cleanDescription(desc).replace("\"", "\"\"").replace("\n", " ").replace("\r", "");
+            String cleanOperator = operatorName.replace("\"", "\"\"");
+            String displayAction = translateAction(log.getAction());
 
             csv.append(i + 1).append(",")
                     .append(log.getId()).append(",")
@@ -240,5 +252,39 @@ public class AuditLogService {
             return "Seller";
         }
         return "Customer";
+    }
+
+    private String cleanDescription(String desc) {
+        if (desc == null) {
+            return "";
+        }
+        String cleaned = desc.replaceAll("^.+?\\(\\d+\\)\\s+đã\s+", "Đã ");
+        if (cleaned.length() > 0) {
+            cleaned = cleaned.substring(0, 1).toUpperCase(Locale.ROOT) + cleaned.substring(1);
+        }
+        return cleaned;
+    }
+
+    private String translateAction(String action) {
+        if (action == null) {
+            return "";
+        }
+        String actUpper = action.toUpperCase(Locale.ROOT);
+        if (actUpper.contains("LOCK_USER") || actUpper.contains("UNLOCK_USER") || actUpper.contains("STAFF") || actUpper.contains("ROLE") || actUpper.contains("SOFT_DELETE_USER") || actUpper.contains("DELETE_USER")) {
+            return "Khóa tài khoản";
+        } else if (actUpper.contains("CONFIG")) {
+            return "Cập nhật cấu hình";
+        } else if (actUpper.contains("KYC")) {
+            return "Duyệt KYC";
+        } else if (actUpper.contains("WITHDRAW")) {
+            return "Duyệt rút tiền";
+        } else if (actUpper.contains("MAINTENANCE")) {
+            return "Bảo trì hệ thống";
+        } else if (actUpper.contains("NOTIFICATION_CREATE") || (actUpper.contains("NOTIFICATION") && actUpper.contains("CREATE"))) {
+            return "Tạo thông báo";
+        } else if (actUpper.contains("NOTIFICATION_DELETE") || (actUpper.contains("NOTIFICATION") && actUpper.contains("DELETE"))) {
+            return "Xóa thông báo";
+        }
+        return action;
     }
 }

@@ -133,7 +133,9 @@
         Fund_Withdraw: 'Duyệt rút tiền',
         Lock_User: 'Khóa tài khoản',
         Config_Update: 'Cập nhật cấu hình',
-        Maintenance_Toggle: 'Bảo trì hệ thống'
+        Maintenance_Toggle: 'Bảo trì hệ thống',
+        Notification_Create: 'Tạo thông báo',
+        Notification_Delete: 'Xóa thông báo'
     };
 
     const TX_TYPE_LABELS = {
@@ -1434,6 +1436,10 @@
             categoryText = 'Bảo trì hệ thống';
             severityText = 'Cao';
             severityClass = 'ds-badge-danger';
+        } else if (log.action === 'Notification_Create' || log.action === 'Notification_Delete') {
+            categoryText = 'Thông báo hệ thống';
+            severityText = 'Thấp';
+            severityClass = 'ds-badge-success';
         }
         
         if (categoryEl) categoryEl.textContent = categoryText;
@@ -1473,6 +1479,8 @@
             valText = 'Cấu hình hệ thống';
         } else if (log.action === 'Maintenance_Toggle') {
             valText = 'Bảo trì hệ thống';
+        } else if (log.action === 'Notification_Create' || log.action === 'Notification_Delete') {
+            valText = 'Thông báo';
         }
 
         if (targetValue) {
@@ -1531,52 +1539,131 @@
         }
 
         const keyMap = {
-            'sessionTimeout': 'Thời gian phiên làm việc (phút)',
-            'otpTimeout': 'Thời hạn mã OTP (phút)',
+            'sessionTimeout': 'Thời gian phiên làm việc',
+            'otpTimeout': 'Thời hạn mã OTP',
             'maxLoginRetries': 'Số lần thử đăng nhập tối đa',
-            'lockDurationMins': 'Thời gian khóa tài khoản (phút)',
-            'escrowHoldHours': 'Thời gian giam tiền bảo lãnh Escrow (giờ)',
-            'allowGoogleLogin': 'Cho phép đăng nhập bằng Google',
+            'lockDurationMins': 'Thời gian khóa tài khoản tạm thời',
+            'escrowHoldHours': 'Thời gian giam tiền bảo lãnh Escrow',
+            'allowGoogleLogin': 'Đăng nhập bằng Google',
             'allowRegister': 'Cho phép đăng ký tài khoản mới',
-            'requireWithdraw2FA': 'Yêu cầu OTP khi rút tiền',
-            'basePercent': 'Phí hoa hồng C2C cơ bản (%)',
-            'flatBuyerFee': 'Phí giao dịch cố định người mua (VNĐ)',
-            'withdrawalPercent': 'Phí rút tiền (%)',
-            'minWithdrawFee': 'Phí rút tiền tối thiểu (VNĐ)',
-            'minWithdrawLimit': 'Hạn mức rút tiền tối thiểu / lần (VNĐ)',
-            'maxWithdrawLimit': 'Hạn mức rút tiền tối đa / lần (VNĐ)',
-            'autoWithdrawLimit': 'Hạn mức duyệt rút tiền tự động (VNĐ)',
-            'minDepositLimit': 'Hạn mức nạp tiền tối thiểu (VNĐ)',
+            'requireWithdraw2FA': 'Yêu cầu xác thực 2 bước (2FA) khi rút tiền',
+            'basePercent': 'Phí hoa hồng C2C cơ bản',
+            'flatBuyerFee': 'Phí giao dịch cố định người mua',
+            'withdrawalPercent': 'Phí rút tiền',
+            'minWithdrawFee': 'Phí rút tiền tối thiểu',
+            'minWithdrawLimit': 'Hạn mức rút tiền tối thiểu / lần',
+            'maxWithdrawLimit': 'Hạn mức rút tiền tối đa / lần',
+            'autoWithdrawLimit': 'Hạn mức duyệt rút tiền tự động',
+            'minDepositLimit': 'Hạn mức nạp tiền tối thiểu',
+            'maxDepositLimit': 'Hạn mức nạp tiền tối đa',
             'isLocked': 'Trạng thái khóa tài khoản',
             'kycStatus': 'Trạng thái xác thực KYC',
             'status': 'Trạng thái giao dịch / yêu cầu',
             'role': 'Vai trò người dùng',
-            'scheduled': 'Trạng thái lên lịch bảo trì'
+            'scheduled': 'Trạng thái lên lịch bảo trì',
+            'active': 'Trạng thái hoạt động',
+            'isDelete': 'Trạng thái xóa',
+            'shopStatus': 'Trạng thái cửa hàng (Shop)',
+            'fullName': 'Họ và tên',
+            'phone': 'Số điện thoại',
+            'address': 'Địa chỉ',
+            'nationalId': 'Số CCCD',
+            'dateOfBirth': 'Ngày sinh',
+            'title': 'Tiêu đề thông báo',
+            'type': 'Loại thông báo',
+            'content': 'Nội dung thông báo'
         };
 
         function translateVal(val, key) {
+            if (val === null || val === undefined || String(val).trim() === '' || String(val).trim() === '—' || String(val).trim() === 'none') {
+                return 'Trống / Không có';
+            }
             const str = String(val).trim();
-            if (str === 'true') {
-                if (key && (key.startsWith('allow') || key.startsWith('require'))) return 'Bật (Cho phép)';
-                return 'Có / Bật';
+            const lowerStr = str.toLowerCase();
+
+            // 1. Vai trò người dùng
+            if (key === 'role') {
+                if (lowerStr.includes('admin')) return 'Quản trị viên';
+                if (lowerStr.includes('staff')) return 'Nhân viên';
+                if (lowerStr.includes('seller')) return 'Người bán';
+                if (lowerStr.includes('customer')) return 'Khách hàng';
+                return str;
             }
-            if (str === 'false') {
-                if (key && (key.startsWith('allow') || key.startsWith('require'))) return 'Tắt (Chặn)';
-                return 'Không / Tắt';
+
+            // 2. Trạng thái khóa tài khoản
+            if (key === 'isLocked') {
+                if (lowerStr === 'true') return 'Đã khóa';
+                if (lowerStr === 'false') return 'Đang hoạt động (Không khóa)';
             }
-            if (str === 'pending') return 'Đang chờ duyệt (pending)';
-            if (str === 'verified') return 'Đã xác thực (verified)';
-            if (str === 'completed') return 'Hoàn thành (completed)';
-            
-            if (!isNaN(str) && str !== '') {
+
+            // 3. Trạng thái xóa
+            if (key === 'isDelete') {
+                if (lowerStr === 'true') return 'Đã xóa';
+                if (lowerStr === 'false') return 'Hoạt động (Chưa xóa)';
+            }
+
+            // 4. Trạng thái hoạt động
+            if (key === 'active') {
+                if (lowerStr === 'true') return 'Đang hoạt động';
+                if (lowerStr === 'false') return 'Tạm dừng';
+            }
+
+            // 5. KYC Status
+            if (key === 'kycStatus') {
+                if (lowerStr === 'pending') return 'Đang chờ duyệt';
+                if (lowerStr === 'verified') return 'Đã xác thực';
+                if (lowerStr === 'rejected') return 'Đã từ chối';
+            }
+
+            // 6. Trạng thái yêu cầu
+            if (key === 'status') {
+                if (lowerStr === 'pending') return 'Đang chờ';
+                if (lowerStr === 'completed') return 'Đã hoàn thành';
+                if (lowerStr === 'failed') return 'Thất bại';
+            }
+
+            // 7. Trạng thái cửa hàng
+            if (key === 'shopStatus') {
+                if (lowerStr === 'pending') return 'Chờ duyệt';
+                if (lowerStr === 'active') return 'Đang hoạt động';
+                if (lowerStr === 'banned') return 'Đã bị khóa';
+            }
+
+            // 8. Đơn vị thời gian
+            if (key === 'sessionTimeout' || key === 'otpTimeout' || key === 'lockDurationMins') {
+                return str + ' phút';
+            }
+            if (key === 'escrowHoldHours') {
+                return str + ' giờ';
+            }
+
+            // 9. Phần trăm
+            if (key === 'basePercent' || key === 'withdrawalPercent') {
+                return str + '%';
+            }
+
+            // 10. Đơn vị tiền tệ VNĐ
+            if (key && (key.toLowerCase().includes('fee') || key.toLowerCase().includes('limit') || key.toLowerCase().includes('vnd') || key.toLowerCase().includes('balance'))) {
                 const num = Number(str);
-                if (key && (key.toLowerCase().includes('fee') || key.toLowerCase().includes('limit') || key.toLowerCase().includes('withdrawal') || key.toLowerCase().includes('deposit') || key === 'minWithdrawal')) {
+                if (!isNaN(num)) {
                     return formatVnd(num);
                 }
-                if (key && key.toLowerCase().includes('percent')) {
-                    return num + '%';
-                }
             }
+
+            // 11. Các giá trị Đúng/Sai Boolean
+            if (lowerStr === 'true') {
+                if (key && (key.startsWith('allow') || key.startsWith('require') || key.endsWith('2FA'))) {
+                    return 'Bật (Cho phép)';
+                }
+                return 'Bật';
+            }
+            if (lowerStr === 'false') {
+                if (key && (key.startsWith('allow') || key.startsWith('require') || key.endsWith('2FA'))) {
+                    return 'Tắt (Chặn)';
+                }
+                return 'Tắt';
+            }
+
             return val;
         }
 

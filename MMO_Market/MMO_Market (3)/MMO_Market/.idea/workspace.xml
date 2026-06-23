@@ -6,13 +6,10 @@
   <component name="ChangeListManager">
     <list default="true" id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controller/AuditLogController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/AuditLogController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controller/SellerController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/SellerController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/security/JwtTokenProvider.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/security/JwtTokenProvider.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controller/NotificationController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/NotificationController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/service/AdminUserManagementService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/AdminUserManagementService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/service/AuditLogService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/AuditLogService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/service/EmailService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/EmailService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/toast.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/toast.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/service/SystemConfigurationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/SystemConfigurationService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/admin-console.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/admin-console.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -477,10 +474,10 @@
       </method>
     </configuration>
     <list>
-      <item itemvalue="JUnit.All in MMO_Market" />
-      <item itemvalue="JUnit.DBTest.testConnection" />
       <item itemvalue="JUnit.All in MMO_Market (2)" />
+      <item itemvalue="JUnit.All in MMO_Market" />
       <item itemvalue="JUnit.DBTest" />
+      <item itemvalue="JUnit.DBTest.testConnection" />
       <item itemvalue="Spring Boot.MMOMarketApplication" />
       <item itemvalue="Spring Boot.MMOMarketApplication (1)" />
     </list>
@@ -557,6 +554,10 @@
       <workItem from="1781858198969" duration="4544000" />
       <workItem from="1781876585091" duration="3142000" />
       <workItem from="1781944815275" duration="3426000" />
+      <workItem from="1782056144352" duration="2000" />
+      <workItem from="1782194611389" duration="116000" />
+      <workItem from="1782195097819" duration="310000" />
+      <workItem from="1782204741234" duration="1385000" />
     </task>
     <servers />
   </component>
