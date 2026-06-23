@@ -15,4 +15,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findAllByIsDeleteFalseOrderByCreatedAtDesc();
     Boolean existsByEmail(String email);
     Boolean existsByEmailAndIsDeleteFalse(String email);
+    long countByIsDeleteFalse();
 }

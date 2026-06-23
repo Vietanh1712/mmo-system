@@ -12,4 +12,6 @@ import java.util.Optional;
 public interface SellerRegistrationRepository extends JpaRepository<SellerRegistration, Long> {
     Optional<SellerRegistration> findByUserAndIsDeleteFalse(User user);
     List<SellerRegistration> findAllByIsDeleteFalseOrderByCreatedAtDesc();
+
+    long countByStatusAndIsDeleteFalse(String status);
 }

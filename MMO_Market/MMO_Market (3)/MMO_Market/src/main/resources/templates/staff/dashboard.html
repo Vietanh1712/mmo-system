@@ -23,22 +23,22 @@
                 <div class="staff-stat-grid">
                     <div class="ds-card staff-stat-card">
                         <p class="staff-stat-card__label">Khiếu nại đang mở</p>
-                        <p class="staff-stat-card__value">32</p>
+                        <p class="staff-stat-card__value" th:text="${dashboard.openComplaints}"></p>
                         <p class="staff-stat-card__hint">12 ưu tiên cao</p>
                     </div>
                     <div class="ds-card staff-stat-card">
                         <p class="staff-stat-card__label">Hồ sơ KYC chờ duyệt</p>
-                        <p class="staff-stat-card__value">18</p>
+                        <p class="staff-stat-card__value" th:text="${dashboard.pendingKyc}"></p>
                         <p class="staff-stat-card__hint">5 hồ sơ quá 24h</p>
                     </div>
                     <div class="ds-card staff-stat-card">
                         <p class="staff-stat-card__label">Yêu cầu rút tiền</p>
-                        <p class="staff-stat-card__value">15</p>
+                        <p class="staff-stat-card__value" th:text="${dashboard.pendingWithdrawals}"></p>
                         <p class="staff-stat-card__hint">Tổng 245.800.000 đ</p>
                     </div>
                     <div class="ds-card staff-stat-card">
                         <p class="staff-stat-card__label">Cờ cảnh báo shop</p>
-                        <p class="staff-stat-card__value">7</p>
+                        <p class="staff-stat-card__value" th:text="${dashboard.shopFlags}"></p>
                         <p class="staff-stat-card__hint">2 mức nghiêm trọng</p>
                     </div>
                 </div>
@@ -76,50 +76,50 @@
                     </div>
                 </div>
 
-                <div class="ds-card">
-                    <div class="ds-card-header ds-cluster-between">
-                        <h2 class="ds-card-title">Hoạt động gần đây</h2>
-                        <span class="ds-caption">Demo dữ liệu tĩnh</span>
-                    </div>
-                    <div class="ds-table-wrap">
-                        <table class="ds-table">
-                            <thead>
-                            <tr>
-                                <th>Mã</th>
-                                <th>Nội dung</th>
-                                <th>Nhân viên</th>
-                                <th>Thời gian</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr>
-                                <td>#LOG-1042</td>
-                                <td>Phê duyệt rút tiền #WD-8821</td>
-                                <td>Nguyễn Văn Staff</td>
-                                <td>05/06/2026 09:42</td>
-                            </tr>
-                            <tr>
-                                <td>#LOG-1041</td>
-                                <td>Giải quyết khiếu nại #CMP-3310</td>
-                                <td>Trần Thị Support</td>
-                                <td>05/06/2026 09:15</td>
-                            </tr>
-                            <tr>
-                                <td>#LOG-1040</td>
-                                <td>Từ chối hồ sơ KYC #KYC-1198</td>
-                                <td>Nguyễn Văn Staff</td>
-                                <td>05/06/2026 08:58</td>
-                            </tr>
-                            <tr>
-                                <td>#LOG-1039</td>
-                                <td>Cắm cờ cảnh báo shop GameHub Pro</td>
-                                <td>Lê Minh Ops</td>
-                                <td>04/06/2026 17:20</td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+<!--                <div class="ds-card">-->
+<!--                    <div class="ds-card-header ds-cluster-between">-->
+<!--                        <h2 class="ds-card-title">Hoạt động gần đây</h2>-->
+<!--                        <span class="ds-caption">Demo dữ liệu tĩnh</span>-->
+<!--                    </div>-->
+<!--                    <div class="ds-table-wrap">-->
+<!--                        <table class="ds-table">-->
+<!--                            <thead>-->
+<!--                            <tr>-->
+<!--                                <th>Mã</th>-->
+<!--                                <th>Nội dung</th>-->
+<!--                                <th>Nhân viên</th>-->
+<!--                                <th>Thời gian</th>-->
+<!--                            </tr>-->
+<!--                            </thead>-->
+<!--                            <tbody>-->
+<!--                            <tr>-->
+<!--                                <td>#LOG-1042</td>-->
+<!--                                <td>Phê duyệt rút tiền #WD-8821</td>-->
+<!--                                <td>Nguyễn Văn Staff</td>-->
+<!--                                <td>05/06/2026 09:42</td>-->
+<!--                            </tr>-->
+<!--                            <tr>-->
+<!--                                <td>#LOG-1041</td>-->
+<!--                                <td>Giải quyết khiếu nại #CMP-3310</td>-->
+<!--                                <td>Trần Thị Support</td>-->
+<!--                                <td>05/06/2026 09:15</td>-->
+<!--                            </tr>-->
+<!--                            <tr>-->
+<!--                                <td>#LOG-1040</td>-->
+<!--                                <td>Từ chối hồ sơ KYC #KYC-1198</td>-->
+<!--                                <td>Nguyễn Văn Staff</td>-->
+<!--                                <td>05/06/2026 08:58</td>-->
+<!--                            </tr>-->
+<!--                            <tr>-->
+<!--                                <td>#LOG-1039</td>-->
+<!--                                <td>Cắm cờ cảnh báo shop GameHub Pro</td>-->
+<!--                                <td>Lê Minh Ops</td>-->
+<!--                                <td>04/06/2026 17:20</td>-->
+<!--                            </tr>-->
+<!--                            </tbody>-->
+<!--                        </table>-->
+<!--                    </div>-->
+<!--                </div>-->
             </section>
         </div>
     </div>

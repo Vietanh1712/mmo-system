@@ -15,15 +15,15 @@
                 <nav class="staff-breadcrumb">
                     <a href="/staff/complaints">Khiếu nại</a>
                     <span>/</span>
-                    <span>#CMP-3310</span>
+                    <span th:text="'#CMP-' + ${complaint.id}"></span>
                 </nav>
 
                 <div class="staff-page-header">
                     <div>
                         <h1 class="ds-page-title">Chi tiết &amp; xử lý khiếu nại</h1>
-                        <p class="ds-page-subtitle">Mã khiếu nại #CMP-3310 — Shop GameHub Pro</p>
+                        <p class="ds-page-subtitle"  th:text="'Mã khiếu nại #CMP-' + ${complaint.id}"></p>
                     </div>
-                    <span class="ds-badge ds-badge-warning">Đang xử lý</span>
+<!--                    <span class="ds-badge ds-badge-warning">Đang xử lý</span>-->
                 </div>
 
                 <div class="staff-detail-grid">
@@ -35,27 +35,49 @@
                             <dl class="staff-info-list">
                                 <div class="staff-info-row">
                                     <dt>Mã khiếu nại</dt>
-                                    <dd>#CMP-3310</dd>
+                                    <dd th:text="'#CMP-' + ${complaint.id}"></dd>
                                 </div>
                                 <div class="staff-info-row">
                                     <dt>Người gửi</dt>
-                                    <dd>Nguyễn An — buyer@mmo.com</dd>
+                                    <dd th:text="${complaint.customerName}
+                                                  + ' — '
+                                                  + ${complaint.customerEmail}">
+                                    </dd>
                                 </div>
                                 <div class="staff-info-row">
                                     <dt>Đối tượng</dt>
-                                    <dd>Shop GameHub Pro / Sản phẩm Gmail Premium</dd>
+                                    <dd th:text="${complaint.sellerName}"></dd>
                                 </div>
                                 <div class="staff-info-row">
-                                    <dt>Loại</dt>
-                                    <dd>Sản phẩm không đúng mô tả</dd>
+                                    <dt>Trạng thái</dt>
+                                    <dd th:text="${complaint.status}"></dd>
                                 </div>
                                 <div class="staff-info-row">
-                                    <dt>Số tiền liên quan</dt>
-                                    <dd class="ds-money">350.000 đ</dd>
+                                    <dt>Giá trị giao dịch</dt>
+                                    <dd th:text="${#numbers.formatDecimal(
+                                        complaint.amountVnd,
+                                        0,
+                                        'COMMA',
+                                        0,
+                                        'POINT')} + ' VND'">
+                                    </dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Phí hoa hồng</dt>
+                                    <dd th:text="${#numbers.formatDecimal(
+                                    complaint.commissionVnd,
+                                    0,
+                                    'COMMA',
+                                    0,
+                                    'POINT')} + ' VND'">
+                                    </dd>
                                 </div>
                                 <div class="staff-info-row">
                                     <dt>Ngày tạo</dt>
-                                    <dd>05/06/2026 08:12</dd>
+                                    <dd th:text="${#temporals.format(
+                                                  complaint.createdAt,
+                                                  'dd/MM/yyyy HH:mm')}">
+                                    </dd>
                                 </div>
                             </dl>
                         </div>
@@ -64,7 +86,18 @@
                             <div class="ds-card-header">
                                 <h2 class="ds-card-title">Nội dung khiếu nại</h2>
                             </div>
-                            <p class="ds-body">Tôi mua tài khoản Gmail Premium nhưng nhận được tài khoản đã bị khóa sau 2 giờ sử dụng. Đã liên hệ shop nhưng không được phản hồi. Yêu cầu hoàn tiền hoặc cấp tài khoản thay thế.</p>
+                            <p class="ds-body" th:text="${complaint.description}"></p>
+                            <div class="ds-cluster ds-mt-md">
+                                <span class="ds-badge ds-badge-muted">Ảnh đính kèm x1</span>
+                                <span class="ds-badge ds-badge-muted">Chat log x3</span>
+                            </div>
+                        </div>
+
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Ghi chú xử lý</h2>
+                            </div>
+                            <p class="ds-body" th:text="${complaint.getResolution()}"></p>
                             <div class="ds-cluster ds-mt-md">
                                 <span class="ds-badge ds-badge-muted">Ảnh đính kèm x1</span>
                                 <span class="ds-badge ds-badge-muted">Chat log x3</span>
@@ -94,27 +127,83 @@
                         </div>
                     </div>
 
+
+
                     <div class="ds-card staff-action-card">
                         <div class="ds-card-header">
                             <h2 class="ds-card-title">Xử lý khiếu nại</h2>
                         </div>
-                        <div class="ds-alert ds-alert-info">Đây là giao diện demo. Các nút thao tác chưa kết nối backend.</div>
-                        <div class="ds-form-field">
-                            <label class="ds-label" for="complaintStatus">Trạng thái xử lý</label>
-                            <select class="ds-input" id="complaintStatus">
-                                <option>Đang xử lý</option>
-                                <option>Đã giải quyết</option>
-                                <option>Từ chối</option>
-                            </select>
+
+                        <div th:if="${success}"
+                             class="ds-alert ds-alert-success"
+                             th:text="${success}">
                         </div>
-                        <div class="ds-form-field">
-                            <label class="ds-label" for="complaintResolution">Kết quả / ghi chú</label>
-                            <textarea class="ds-textarea" id="complaintResolution" placeholder="Mô tả cách xử lý, hoàn tiền, cảnh báo shop..."></textarea>
+
+                        <div th:if="${warning}"
+                             class="ds-alert ds-alert-warning"
+                             th:text="${warning}">
                         </div>
-                        <div class="ds-cluster">
-                            <button class="ds-btn ds-btn-success" type="button" data-staff-action="resolve" data-staff-label="Đã giải quyết khiếu nại">Giải quyết</button>
-                            <button class="ds-btn ds-btn-danger" type="button" data-staff-action="reject" data-staff-label="Đã từ chối khiếu nại">Từ chối</button>
-                        </div>
+
+                        <form th:action="@{/staff/complaints/process}"
+                              method="post">
+
+                            <input type="hidden"
+                                   name="id"
+                                   th:value="${complaint.id}"/>
+
+                            <div class="ds-form-field">
+                                <label class="ds-label">
+                                    Trạng thái xử lý
+                                </label>
+
+                                <select class="ds-input"
+                                        name="status">
+
+                                    <option value="InProgress"
+                                            th:selected="${complaint.status=='InProgress'}">
+                                        InProgress
+                                    </option>
+
+                                    <option value="Resolved"
+                                            th:selected="${complaint.status=='Resolved'}">
+                                        Resolved
+                                    </option>
+
+                                    <option value="refuse"
+                                            th:selected="${complaint.status=='refuse'}">
+                                        Refuse
+                                    </option>
+
+                                </select>
+                            </div>
+
+                            <div class="ds-form-field">
+                                <label class="ds-label">
+                                    Kết quả / ghi chú
+                                </label>
+
+                                <textarea class="ds-textarea"
+                                          name="resolution"
+                                          th:text="${complaint.resolution}">
+                                </textarea>
+                            </div>
+
+                            <button class="ds-btn ds-btn-success"
+                                    type="submit">
+                                Lưu xử lý
+                            </button>
+
+
+                            <button class="ds-btn ds-btn-danger"
+                                    type="submit"
+                                    th:formaction="@{/staff/complaints/reject}">
+                                Từ chối
+                            </button>
+
+                        </form>
+
+
+
                         <a class="ds-btn ds-btn-outline" href="/staff/complaints">Quay lại danh sách</a>
                     </div>
                 </div>
