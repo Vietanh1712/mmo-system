@@ -11,15 +11,14 @@
     ];
 
     const ALL_PERMISSIONS = [
-        { id: 'APPROVE_KYC', label: 'Duyệt hồ sơ KYC', group: 'Kiểm duyệt' },
-        { id: 'REVIEW_SUSPICIOUS', label: 'Rà soát giao dịch bất thường', group: 'Kiểm duyệt' },
-        { id: 'AUDIT_ACCOUNTS', label: 'Kiểm tra tài khoản', group: 'Kiểm duyệt' },
-        { id: 'APPROVE_WITHDRAWALS', label: 'Duyệt lệnh rút tiền', group: 'Tài chính' },
-        { id: 'MANAGE_ESCROW', label: 'Quản lý giam tiền Escrow', group: 'Tài chính' },
-        { id: 'VIEW_REVENUE_REPORTS', label: 'Xem báo cáo doanh thu', group: 'Tài chính' },
-        { id: 'HANDLE_DISPUTES', label: 'Xử lý tranh chấp', group: 'Vận hành' },
-        { id: 'MANAGE_REQUESTS', label: 'Quản lý yêu cầu hỗ trợ', group: 'Vận hành' },
-        { id: 'RECEIVE_SYSTEM_ALERTS', label: 'Nhận & xử lý email cảnh báo hệ thống', group: 'Vận hành' }
+        { id: 'APPROVE_KYC', label: 'Duyệt hồ sơ định danh KYC', group: 'Kiểm duyệt', desc: 'Cho phép xem, duyệt hoặc từ chối thông tin định danh cá nhân của người dùng.' },
+        { id: 'AUDIT_USERS', label: 'Tra cứu & Kiểm tra tài khoản', group: 'Kiểm duyệt', desc: 'Cho phép kiểm tra thông tin tài khoản, ví số dư, địa chỉ IP và lịch sử hoạt động.' },
+        { id: 'MANAGE_SHOPS', label: 'Kiểm duyệt sản phẩm & Cửa hàng', group: 'Kiểm duyệt', desc: 'Cho phép phê duyệt mở cửa hàng của người bán, cấm hoạt động (ban) hoặc kiểm duyệt các sản phẩm số.' },
+        { id: 'FLAG_SELLER', label: 'Cắm cờ & Đánh gạch Seller', group: 'Kiểm duyệt', desc: 'Cho phép gắn cờ vi phạm (gạch phạt) đối với người bán vi phạm chính sách.' },
+        { id: 'APPROVE_WITHDRAWALS', label: 'Phê duyệt yêu cầu rút tiền', group: 'Tài chính', desc: 'Cho phép duyệt lệnh chuyển tiền/rút tiền của Seller từ ví hệ thống về tài khoản ngân hàng.' },
+        { id: 'VIEW_REVENUE', label: 'Xem báo cáo doanh thu sàn', group: 'Tài chính', desc: 'Cho phép xem thống kê phí giao dịch C2C, phí rút tiền, dòng tiền nạp và doanh thu ròng của hệ thống.' },
+        { id: 'HANDLE_DISPUTES', label: 'Phân xử tranh chấp & Hoàn tiền', group: 'Vận hành', desc: 'Cho phép làm trung gian giải quyết khiếu nại giữa người mua và người bán, hoàn trả hoặc giải ngân tiền Escrow.' },
+        { id: 'MANAGE_SUPPORT', label: 'Tiếp nhận & Hỗ trợ khách hàng', group: 'Vận hành', desc: 'Cho phép tiếp nhận, phản hồi và hỗ trợ giải đáp các thắc mắc (ticketing/live chat) của khách hàng.' }
     ];
 
     const MOCK_DEFAULT = {
@@ -53,13 +52,13 @@
         },
         commissions: {
             basePercent: 5.0,
-            flatBuyerFee: 1000,
             withdrawalPercent: 1.5,
-            minWithdrawFee: 10000,
+            sellerUpgradeFee: 50000,
+            productFeaturedFee: 10000,
             minWithdrawLimit: 50000,
             maxWithdrawLimit: 50000000,
-            autoWithdrawLimit: 5000000,
-            minDepositLimit: 10000
+            minDepositLimit: 10000,
+            maxDepositLimit: 50000000
         },
         maintenance: {
             active: false,
@@ -100,6 +99,15 @@
     let totalPages = 1;
     let totalElements = 0;
     let selectedStaffId = null;
+    let selectedPermId = null;
+    let selectedGroupId = 'ALL';
+    let isSearchActive = false;
+    let activeFilterPermIds = [];
+    let activeFilterGroupId = 'ALL';
+    let permissionsPage = 0;
+    let permissionsPageSize = 10;
+    let permissionsTotalPages = 1;
+    let permissionsTotalElements = 0;
     let auditPage = 0;
     let auditPageSize = 10;
     let auditFiltered = [];
@@ -147,9 +155,24 @@
     document.addEventListener('DOMContentLoaded', () => {
         if (!guardAdminAccess()) return;
         initMock();
+        initSystemConfig();
         bindEvents();
         navigateFromHash();
     });
+
+    async function initSystemConfig() {
+        try {
+            const response = await authFetch('/admin/system-config');
+            if (response.ok) {
+                const data = await response.json();
+                mock.systemConfig = data.systemConfig;
+                mock.commissions = data.commissions;
+                saveMock();
+            }
+        } catch (e) {
+            // Keep local mock defaults if server connection fails
+        }
+    }
 
     function navigateFromHash() {
         const raw = (window.location.hash || '#dashboard').slice(1);
@@ -250,8 +273,108 @@
             });
         });
         document.getElementById('accountFormSubmitBtn')?.addEventListener('click', () => submitAccountForm());
-        document.getElementById('accountFormEmail')?.addEventListener('input', syncAccountFormProfile);
-        document.getElementById('accountFormFullName')?.addEventListener('input', syncAccountFormProfile);
+        document.getElementById('accountFormEmail')?.addEventListener('input', function() {
+            syncAccountFormProfile();
+            const val = this.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (val === '') {
+                showFieldError('accountFormEmail', 'Địa chỉ email không được để trống.');
+            } else if (!emailRegex.test(val)) {
+                showFieldError('accountFormEmail', 'Định dạng email không hợp lệ (Ví dụ: abc@gmail.com).');
+            } else {
+                clearFieldError('accountFormEmail');
+            }
+        });
+
+        document.getElementById('accountFormFullName')?.addEventListener('input', function() {
+            syncAccountFormProfile();
+            const val = this.value.trim();
+            if (val === '') {
+                showFieldError('accountFormFullName', 'Họ và tên không được để trống.');
+            } else if (val.length < 3) {
+                showFieldError('accountFormFullName', 'Họ và tên phải có ít nhất 3 ký tự.');
+            } else {
+                clearFieldError('accountFormFullName');
+            }
+        });
+
+        document.getElementById('accountFormPassword')?.addEventListener('input', function() {
+            const val = this.value;
+            const passwordRegex = /^(?=.*[A-Z])(?=.*[\W_]).{6,}$/;
+            if (accountFormMode === 'create') {
+                if (val === '') {
+                    showFieldError('accountFormPassword', 'Mật khẩu không được để trống.');
+                } else if (!passwordRegex.test(val)) {
+                    showFieldError('accountFormPassword', 'Mật khẩu phải có ít nhất 6 ký tự, gồm 1 chữ viết hoa và 1 ký tự đặc biệt.');
+                } else {
+                    clearFieldError('accountFormPassword');
+                }
+            } else if (accountFormMode === 'detail-edit') {
+                if (val !== '' && !passwordRegex.test(val)) {
+                    showFieldError('accountFormPassword', 'Mật khẩu phải có ít nhất 6 ký tự, gồm 1 chữ viết hoa và 1 ký tự đặc biệt.');
+                } else {
+                    clearFieldError('accountFormPassword');
+                }
+            }
+        });
+
+        document.getElementById('accountFormPhone')?.addEventListener('input', function() {
+            const val = this.value.trim();
+            if (val !== '') {
+                const phoneRegex = /^0\d{9}$/;
+                if (!phoneRegex.test(val)) {
+                    showFieldError('accountFormPhone', 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0.');
+                } else {
+                    clearFieldError('accountFormPhone');
+                }
+            } else {
+                clearFieldError('accountFormPhone');
+            }
+        });
+
+        document.getElementById('accountFormNationalId')?.addEventListener('input', function() {
+            const val = this.value.trim();
+            if (val !== '') {
+                const nationalIdRegex = /^\d{12}$/;
+                if (!nationalIdRegex.test(val)) {
+                    showFieldError('accountFormNationalId', 'Số CCCD không hợp lệ. Phải đúng 12 chữ số.');
+                } else {
+                    clearFieldError('accountFormNationalId');
+                }
+            } else {
+                clearFieldError('accountFormNationalId');
+            }
+        });
+
+        document.getElementById('accountFormBirthDate')?.addEventListener('change', function() {
+            const val = this.value;
+            if (val !== '') {
+                const birthDate = new Date(val);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                if (birthDate > today) {
+                    showFieldError('accountFormBirthDate', 'Ngày sinh không được ở tương lai.');
+                } else {
+                    clearFieldError('accountFormBirthDate');
+                }
+            } else {
+                clearFieldError('accountFormBirthDate');
+            }
+        });
+
+        document.getElementById('accountFormAddress')?.addEventListener('input', function() {
+            const val = this.value.trim();
+            if (val !== '') {
+                if (val.length < 5) {
+                    showFieldError('accountFormAddress', 'Địa chỉ phải có ít nhất 5 ký tự.');
+                } else {
+                    clearFieldError('accountFormAddress');
+                }
+            } else {
+                clearFieldError('accountFormAddress');
+            }
+        });
+
 
         document.getElementById('notifType')?.addEventListener('change', (e) => {
             const wrap = document.getElementById('notifMaintToggleWrap');
@@ -268,7 +391,61 @@
                 }
             }
         });
+
+        document.getElementById('notifSearchBtn')?.addEventListener('click', () => {
+            notifPage = 0;
+            loadNotificationsView();
+        });
+        document.getElementById('notifResetFilter')?.addEventListener('click', () => {
+            const s = document.getElementById('notifSearch');
+            const f = document.getElementById('notifTypeFilter');
+            if (s) s.value = '';
+            if (f) f.value = '';
+            notifPage = 0;
+            loadNotificationsView();
+        });
+        document.getElementById('notifSearch')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                notifPage = 0;
+                loadNotificationsView();
+            }
+        });
+
+        // Click outside listener for custom multiselect dropdowns
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('multiselectDropdown');
+            const trigger = document.getElementById('multiselectTrigger');
+            if (dropdown && !dropdown.classList.contains('ds-hidden')) {
+                if (trigger && !trigger.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.classList.add('ds-hidden');
+                }
+            }
+
+            const permDropdown = document.getElementById('permMultiselectDropdown');
+            const permTrigger = document.getElementById('permMultiselectTrigger');
+            if (permDropdown && !permDropdown.classList.contains('ds-hidden')) {
+                if (permTrigger && !permTrigger.contains(e.target) && !permDropdown.contains(e.target)) {
+                    permDropdown.classList.add('ds-hidden');
+                }
+            }
+        });
+
+        const currencyInputIds = [
+            'commSellerUpgradeFee',
+            'commProductFeaturedFee',
+            'commMinWithdrawLimit',
+            'commMaxWithdrawLimit',
+            'commMinDepositLimit',
+            'commMaxDepositLimit'
+        ];
+        currencyInputIds.forEach(id => {
+            document.getElementById(id)?.addEventListener('input', function() {
+                this.value = formatNumberWithDots(this.value);
+            });
+        });
     }
+
 
     function syncAccountFormProfile() {
         const name = document.getElementById('accountFormFullName')?.value.trim();
@@ -426,8 +603,34 @@
             case 'commissions': loadCommissionsForm(); break;
             case 'notifications': loadNotificationsView(); break;
             case 'accounts': loadUsers(); break;
-            case 'permissions': loadPermissionsView(); break;
+            case 'permissions':
+                resetSearchFilters();
+                loadPermissionsView();
+                break;
         }
+    }
+
+    function resetSearchFilters() {
+        isSearchActive = false;
+        activeFilterPermIds = [];
+        activeFilterGroupId = 'ALL';
+        selectedGroupId = 'ALL';
+        permissionsPage = 0;
+        permissionsPageSize = 10;
+
+        // Clear permission checkboxes
+        const permSelectAll = document.getElementById('permSelectAllCheckbox');
+        if (permSelectAll) permSelectAll.checked = false;
+        const permSearch = document.getElementById('permMultiselectSearch');
+        if (permSearch) permSearch.value = '';
+        window.AdminConsole.updateSelectedPermsCount();
+
+        // Clear staff checkboxes
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        if (selectAllCheckbox) selectAllCheckbox.checked = false;
+        const multiselectSearch = document.getElementById('multiselectSearch');
+        if (multiselectSearch) multiselectSearch.value = '';
+        window.AdminConsole.updateSelectedStaffCount();
     }
 
     function guardAdminAccess() {
@@ -457,35 +660,87 @@
             setText('statStaff', data.staffAccounts ?? 0);
             setText('statVerified', data.verifiedAccounts ?? 0);
             setText('statSeller', data.sellerAccounts ?? 0);
-            renderDashboardChart();
-            renderDashboardRecentLogs();
+            await renderDashboardChart();
+            await renderDashboardRecentLogs();
         } catch (error) {
             showToast(error.message, true);
         }
     }
 
-    function renderDashboardChart() {
-        const fees = mock.cashFlow.reduce((s, t) => s + (t.fee || 0), 0);
-        const dataPoints = [1200000, 2450000, 1800000, 3100000, 2900000, 4200000, fees];
-        const labels = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
-        drawRevenueChart(dataPoints, labels);
+    async function renderDashboardChart() {
+        let feesByDay = [0, 0, 0, 0, 0, 0, 0];
+        let labels = [];
+        const daysOfWeek = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+        const dateKeys = [];
+        
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            labels.push(daysOfWeek[d.getDay()]);
+            const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            dateKeys.push(key);
+        }
+
+        try {
+            const listRes = await authFetch('/admin/revenue/transactions?time=7days&size=100');
+            if (listRes.ok) {
+                const listData = await listRes.json();
+                const txs = listData.content || [];
+                txs.forEach(tx => {
+                    if (tx.status === 'Completed' || tx.status === 'Held') {
+                        const txDate = tx.timestamp.split('T')[0];
+                        const idx = dateKeys.indexOf(txDate);
+                        if (idx !== -1) {
+                            feesByDay[idx] += Number(tx.fee) || 0;
+                        }
+                    }
+                });
+            }
+        } catch (e) {
+            console.error('Lỗi khi tải transactions thật cho dashboard chart:', e);
+            const mockFees = mock.cashFlow.reduce((s, t) => s + (t.fee || 0), 0);
+            feesByDay = [1200000, 2450000, 1800000, 3100000, 2900000, 4200000, mockFees];
+            labels = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
+        }
+
+        drawRevenueChart(feesByDay, labels);
 
         const summary = document.getElementById('chartSummary');
         if (summary) {
-            const total = dataPoints.reduce((a, b) => a + b, 0);
-            const peak = Math.max(...dataPoints);
-            const peakIdx = dataPoints.indexOf(peak);
+            const total = feesByDay.reduce((a, b) => a + b, 0);
+            const peak = Math.max(...feesByDay);
+            const peakIdx = feesByDay.indexOf(peak);
             summary.innerHTML = `
                 <span class="ds-caption">Tổng tuần: <strong class="ds-money">${formatVnd(total)}</strong></span>
                 <span class="ds-caption">Cao nhất: <strong class="ds-money">${formatVnd(peak)}</strong> (${labels[peakIdx]})</span>
-                <span class="ds-caption">Trung bình/ngày: <strong class="ds-money">${formatVnd(Math.round(total / dataPoints.length))}</strong></span>
+                <span class="ds-caption">Trung bình/ngày: <strong class="ds-money">${formatVnd(Math.round(total / feesByDay.length))}</strong></span>
             `;
         }
     }
 
-    function renderDashboardRecentLogs() {
+    async function renderDashboardRecentLogs() {
         const body = document.getElementById('dashLogsBody');
         if (!body) return;
+        try {
+            const response = await authFetch('/admin/audit-logs?page=0&size=4');
+            if (response.ok) {
+                const data = await response.json();
+                const logs = data.content || [];
+                body.innerHTML = logs.map((l, i) => `
+                    <tr>
+                        <td class="ds-table-center">${i + 1}</td>
+                        <td>${formatDateTime(l.timestamp)}</td>
+                        <td><strong>${escapeHtml(l.operator)}</strong></td>
+                        <td><span class="ds-badge ${auditBadgeClass(l.action)}">${escapeHtml(actionLabel(l.action))}</span></td>
+                        <td class="muted">${escapeHtml(l.desc)}</td>
+                    </tr>
+                `).join('') || '<tr><td colspan="5" class="ds-empty-state">Chưa có nhật ký.</td></tr>';
+                return;
+            }
+        } catch (e) {
+            console.error('Lỗi khi tải audit logs thật cho dashboard:', e);
+        }
+
         const rows = mock.auditLogs.slice(0, 4);
         body.innerHTML = rows.map((l, i) => `
             <tr>
@@ -498,7 +753,7 @@
         `).join('') || '<tr><td colspan="5" class="ds-empty-state">Chưa có nhật ký.</td></tr>';
     }
 
-    const CHART_DAY_LABELS = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
+    let CHART_DAY_LABELS = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
 
     function formatVndShort(value) {
         const n = Number(value) || 0;
@@ -509,6 +764,7 @@
     }
 
     function drawRevenueChart(dataPoints, dayLabels = CHART_DAY_LABELS) {
+        CHART_DAY_LABELS = dayLabels;
         const pathEl = document.getElementById('revenueChartPath');
         const areaEl = document.getElementById('revenueChartArea');
         const dotsEl = document.getElementById('revenueChartDots');
@@ -762,6 +1018,7 @@
     };
 
     function prepareAccountFormCreate() {
+        clearAllErrors();
         accountFormMode = 'create';
         accountFormUserId = null;
         setAccountFormLayoutMode('create');
@@ -803,6 +1060,7 @@
     }
 
     function fillAccountForm(user) {
+        clearAllErrors();
         const role = user.role || 'Customer';
         const isStaff = role === 'Staff';
         accountFormMode = isStaff ? 'detail-edit' : 'detail-readonly';
@@ -820,9 +1078,9 @@
         setVal('accountFormAddress', user.address || '');
         setVal('accountFormNationalId', user.nationalId || '');
         setVal('accountFormBirthDate', user.dateOfBirth || '');
-        const gender = (user.gender || 'Nam').toLowerCase();
+        const gender = user.gender || 'Nam';
         document.querySelectorAll('input[name="accountFormGender"]').forEach(r => {
-            r.checked = (gender.startsWith('n') && r.value === 'Nữ') || (!gender.startsWith('n') && r.value === 'Nam');
+            r.checked = r.value.toLowerCase() === gender.toLowerCase();
         });
         setAccountFormActive(!user.isLocked);
         syncAccountFormProfile();
@@ -879,6 +1137,26 @@
         if (defaultGender) defaultGender.checked = true;
     }
 
+    function showFieldError(fieldId, message) {
+        const inputEl = document.getElementById(fieldId);
+        const errorEl = document.getElementById(fieldId + '-error');
+        if (inputEl) inputEl.classList.add('ds-input-error');
+        if (errorEl) errorEl.textContent = message;
+    }
+
+    function clearFieldError(fieldId) {
+        const inputEl = document.getElementById(fieldId);
+        const errorEl = document.getElementById(fieldId + '-error');
+        if (inputEl) inputEl.classList.remove('ds-input-error');
+        if (errorEl) errorEl.textContent = '';
+    }
+
+    function clearAllErrors() {
+        ['accountFormEmail', 'accountFormPassword', 'accountFormFullName', 'accountFormPhone', 'accountFormNationalId', 'accountFormBirthDate', 'accountFormAddress'].forEach(id => {
+            clearFieldError(id);
+        });
+    }
+
     function setAccountFormEditable(editable) {
         ['accountFormFullName', 'accountFormPhone', 'accountFormAddress', 'accountFormNationalId', 'accountFormBirthDate'].forEach(id => {
             const el = document.getElementById(id);
@@ -919,11 +1197,113 @@
         const id = document.getElementById('accountFormId').value;
         const payload = readAccountFormPayload();
 
+        let isValid = true;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const passwordRegex = /^(?=.*[A-Z])(?=.*[\W_]).{6,}$/;
+
+        // 1. Email (only for create)
         if (accountFormMode === 'create') {
-            if (!payload.email || !payload.fullName || !payload.password) {
-                showToast('Vui lòng nhập email, họ tên và mật khẩu.', true);
-                return;
+            if (!payload.email) {
+                showFieldError('accountFormEmail', 'Địa chỉ email không được để trống.');
+                isValid = false;
+            } else if (!emailRegex.test(payload.email)) {
+                showFieldError('accountFormEmail', 'Định dạng email không hợp lệ (Ví dụ: abc@gmail.com).');
+                isValid = false;
+            } else {
+                clearFieldError('accountFormEmail');
             }
+        }
+
+        // 2. Full Name
+        if (!payload.fullName) {
+            showFieldError('accountFormFullName', 'Họ và tên không được để trống.');
+            isValid = false;
+        } else if (payload.fullName.length < 3) {
+            showFieldError('accountFormFullName', 'Họ và tên phải có ít nhất 3 ký tự.');
+            isValid = false;
+        } else {
+            clearFieldError('accountFormFullName');
+        }
+
+        // 3. Password
+        if (accountFormMode === 'create') {
+            if (!payload.password) {
+                showFieldError('accountFormPassword', 'Mật khẩu không được để trống.');
+                isValid = false;
+            } else if (!passwordRegex.test(payload.password)) {
+                showFieldError('accountFormPassword', 'Mật khẩu phải có ít nhất 6 ký tự, gồm 1 chữ viết hoa và 1 ký tự đặc biệt.');
+                isValid = false;
+            } else {
+                clearFieldError('accountFormPassword');
+            }
+        } else if (accountFormMode === 'detail-edit') {
+            if (payload.password && !passwordRegex.test(payload.password)) {
+                showFieldError('accountFormPassword', 'Mật khẩu phải có ít nhất 6 ký tự, gồm 1 chữ viết hoa và 1 ký tự đặc biệt.');
+                isValid = false;
+            } else {
+                clearFieldError('accountFormPassword');
+            }
+        }
+
+        // 4. Phone (optional)
+        if (payload.phone) {
+            const phoneRegex = /^0\d{9}$/;
+            if (!phoneRegex.test(payload.phone)) {
+                showFieldError('accountFormPhone', 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0.');
+                isValid = false;
+            } else {
+                clearFieldError('accountFormPhone');
+            }
+        } else {
+            clearFieldError('accountFormPhone');
+        }
+
+        // 5. CCCD (optional)
+        if (payload.nationalId) {
+            const nationalIdRegex = /^\d{12}$/;
+            if (!nationalIdRegex.test(payload.nationalId)) {
+                showFieldError('accountFormNationalId', 'Số CCCD không hợp lệ. Phải đúng 12 chữ số.');
+                isValid = false;
+            } else {
+                clearFieldError('accountFormNationalId');
+            }
+        } else {
+            clearFieldError('accountFormNationalId');
+        }
+
+        // 6. Birth Date (optional)
+        if (payload.dateOfBirth) {
+            const birthDate = new Date(payload.dateOfBirth);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (birthDate > today) {
+                showFieldError('accountFormBirthDate', 'Ngày sinh không được ở tương lai.');
+                isValid = false;
+            } else {
+                clearFieldError('accountFormBirthDate');
+            }
+        } else {
+            clearFieldError('accountFormBirthDate');
+        }
+
+        // 7. Address (optional)
+        if (payload.address) {
+            if (payload.address.length < 5) {
+                showFieldError('accountFormAddress', 'Địa chỉ phải có ít nhất 5 ký tự.');
+                isValid = false;
+            } else {
+                clearFieldError('accountFormAddress');
+            }
+        } else {
+            clearFieldError('accountFormAddress');
+        }
+
+        if (!isValid) {
+            showToast('Vui lòng kiểm tra lại thông tin nhập vào.', true);
+            return;
+        }
+
+        if (accountFormMode === 'create') {
             try {
                 const response = await authFetch(`${ENDPOINT}/staff`, { method: 'POST', body: JSON.stringify(payload) });
                 const data = await response.json();
@@ -938,10 +1318,6 @@
         }
 
         if (accountFormMode === 'detail-edit' && id) {
-            if (!payload.fullName) {
-                showToast('Họ tên không được để trống.', true);
-                return;
-            }
             const body = { ...payload };
             delete body.email;
             if (!body.password) delete body.password;
@@ -958,80 +1334,165 @@
         }
     }
 
-    /* ---------- Mock: Audit logs ---------- */
-    function filterAuditLogs() {
-        const q = (document.getElementById('logSearch')?.value || '').toLowerCase();
+    /* ---------- API: Audit logs ---------- */
+    async function filterAuditLogs() {
+        const q = document.getElementById('logSearch')?.value || '';
         const action = document.getElementById('logActionFilter')?.value || '';
-        let list = [...mock.auditLogs];
-        if (q) {
-            list = list.filter(l =>
-                l.operator.toLowerCase().includes(q) ||
-                l.desc.toLowerCase().includes(q) ||
-                l.ipAddress.includes(q)
-            );
+
+        try {
+            const url = `/admin/audit-logs?search=${encodeURIComponent(q)}&action=${encodeURIComponent(action)}&page=${auditPage}&size=${auditPageSize}`;
+            const response = await authFetch(url);
+            if (!response.ok) {
+                throw new Error('Không thể tải nhật ký từ máy chủ.');
+            }
+            const data = await response.json();
+            auditFiltered = data.content || [];
+
+            const body = document.getElementById('auditLogsBody');
+            if (!body) return;
+            body.innerHTML = auditFiltered.length ? auditFiltered.map((l, i) => `
+                <tr>
+                    <td class="ds-table-center">${sttNumber(auditPage, auditPageSize, i)}</td>
+                    <td class="ds-table-center">${l.id}</td>
+                    <td>${formatDateTime(l.timestamp)}</td>
+                    <td>${escapeHtml(l.operator)}</td>
+                    <td class="ds-table-center"><span class="ds-badge ${auditBadgeClass(l.action)}">${escapeHtml(actionLabel(l.action))}</span></td>
+                    <td class="muted">${escapeHtml(l.desc)}</td>
+                    <td class="ds-table-center"><span class="ds-badge ds-badge-success">Thành công</span></td>
+                    <td>
+                        <div class="ds-table-actions">
+                            ${tableActionsView(`AdminConsole.openLogDetail(${l.id})`, 'Xem chi tiết')}
+                        </div>
+                    </td>
+                </tr>
+            `).join('') : '<tr><td colspan="8" class="ds-empty-state">Không có nhật ký phù hợp.</td></tr>';
+
+            mountPagination('auditPagination', {
+                page: data.page,
+                totalPages: data.totalPages,
+                totalElements: data.totalElements,
+                pageSize: data.size
+            }, {
+                onPage: (p) => { auditPage = p; filterAuditLogs(); },
+                onSize: (s) => { auditPageSize = s; auditPage = 0; filterAuditLogs(); }
+            });
+        } catch (e) {
+            console.error(e);
+            const body = document.getElementById('auditLogsBody');
+            if (body) {
+                body.innerHTML = `<tr><td colspan="8" class="ds-empty-state" style="color: var(--ds-color-danger)">Lỗi: ${escapeHtml(e.message)}</td></tr>`;
+            }
         }
-        if (action) list = list.filter(l => l.action === action);
-
-        auditFiltered = list;
-        const total = list.length;
-        const totalPg = Math.max(Math.ceil(total / auditPageSize), 1);
-        if (auditPage >= totalPg) auditPage = totalPg - 1;
-        const slice = list.slice(auditPage * auditPageSize, auditPage * auditPageSize + auditPageSize);
-
-        const body = document.getElementById('auditLogsBody');
-        if (!body) return;
-        body.innerHTML = slice.length ? slice.map((l, i) => `
-            <tr>
-                <td class="ds-table-center">${sttNumber(auditPage, auditPageSize, i)}</td>
-                <td class="ds-table-center">${l.id}</td>
-                <td>${formatDateTime(l.timestamp)}</td>
-                <td>${escapeHtml(l.operator)}</td>
-                <td class="ds-table-center"><span class="ds-badge ${auditBadgeClass(l.action)}">${escapeHtml(actionLabel(l.action))}</span></td>
-                <td class="muted">${escapeHtml(l.desc)}</td>
-                <td class="ds-table-center"><span class="ds-badge ds-badge-success">Thành công</span></td>
-                <td>
-                    <div class="ds-table-actions">
-                        ${tableActionsView(`AdminConsole.openLogDetail(${l.id})`, 'Xem chi tiết')}
-                    </div>
-                </td>
-            </tr>
-        `).join('') : '<tr><td colspan="8" class="ds-empty-state">Không có nhật ký phù hợp.</td></tr>';
-
-        mountPagination('auditPagination', {
-            page: auditPage,
-            totalPages: totalPg,
-            totalElements: total,
-            pageSize: auditPageSize
-        }, {
-            onPage: (p) => { auditPage = p; filterAuditLogs(); },
-            onSize: (s) => { auditPageSize = s; auditPage = 0; filterAuditLogs(); }
-        });
     }
-
+ 
     window.AdminConsole.openLogDetail = function (id) {
-        const log = mock.auditLogs.find(l => l.id === id);
+        const log = auditFiltered.find(l => l.id === id);
         if (!log) return;
+        
+        const idEl = document.getElementById('logDetId');
+        if (idEl) idEl.textContent = `ID: #${log.id}`;
+        
         document.getElementById('logDetTime').textContent = formatDateTime(log.timestamp);
         document.getElementById('logDetOperator').textContent = log.operator;
+        
+        const ipEl = document.getElementById('logDetIp');
+        if (ipEl) ipEl.textContent = log.ipAddress || 'Không rõ';
+        
         const actEl = document.getElementById('logDetAction');
-        actEl.textContent = actionLabel(log.action);
-        actEl.className = `ds-badge ${auditBadgeClass(log.action)}`;
+        if (actEl) {
+            actEl.textContent = actionLabel(log.action);
+            actEl.className = `ds-badge ${auditBadgeClass(log.action)}`;
+        }
+        
         document.getElementById('logDetDesc').textContent = log.desc;
+
+        // Populate Category and Severity
+        const categoryEl = document.getElementById('logDetCategory');
+        const severityEl = document.getElementById('logDetSeverity');
+        
+        let categoryText = 'Vận hành hệ thống';
+        let severityText = 'Thấp';
+        let severityClass = 'ds-badge-muted';
+        
+        if (log.action === 'KYC_Approve') {
+            categoryText = 'Xác thực người dùng';
+            severityText = 'Trung bình';
+            severityClass = 'ds-badge-success';
+        } else if (log.action === 'Lock_User') {
+            categoryText = 'Quản trị tài khoản';
+            severityText = 'Cao';
+            severityClass = 'ds-badge-danger';
+        } else if (log.action === 'Fund_Withdraw') {
+            categoryText = 'Giao dịch tài chính';
+            severityText = 'Cao';
+            severityClass = 'ds-badge-danger';
+        } else if (log.action === 'Config_Update') {
+            categoryText = 'Cấu hình hệ thống';
+            severityText = 'Trung bình';
+            severityClass = 'ds-badge-warning';
+        } else if (log.action === 'Maintenance_Toggle') {
+            categoryText = 'Bảo trì hệ thống';
+            severityText = 'Cao';
+            severityClass = 'ds-badge-danger';
+        }
+        
+        if (categoryEl) categoryEl.textContent = categoryText;
+        if (severityEl) {
+            severityEl.textContent = severityText;
+            severityEl.className = `ds-badge ${severityClass}`;
+        }
+        
+        // Extract target of the action
+        const targetValue = document.getElementById('logDetTargetValue');
+        let valText = 'Hệ thống';
+
+        if (log.action === 'KYC_Approve') {
+            const match = log.desc.match(/cho\s+([^\s]+)/i);
+            if (match) {
+                valText = match[1];
+            }
+        } else if (log.action === 'Lock_User') {
+            const match = log.desc.match(/Khóa\s+([^\s]+)/i);
+            if (match) {
+                valText = match[1];
+            }
+        } else if (log.action === 'Fund_Withdraw') {
+            // Find in cashFlow by timestamp
+            const logTime = new Date(log.timestamp).getTime();
+            const match = mock.cashFlow.find(tx => {
+                if (tx.type !== 'Withdrawal') return false;
+                const txTime = new Date(tx.timestamp).getTime();
+                return Math.abs(logTime - txTime) < 5 * 60 * 1000;
+            });
+            if (match) {
+                valText = match.email;
+            } else {
+                valText = 'Tài khoản người bán';
+            }
+        } else if (log.action === 'Config_Update') {
+            valText = 'Cấu hình hệ thống';
+        } else if (log.action === 'Maintenance_Toggle') {
+            valText = 'Bảo trì hệ thống';
+        }
+
+        if (targetValue) {
+            targetValue.textContent = valText;
+        }
         
         const diffWrap = document.getElementById('logDetDiffWrap');
         if (diffWrap) {
-            diffWrap.innerHTML = renderLogDiff(log.diff);
+            diffWrap.innerHTML = renderLogDiff(log.diff, log);
         }
         
         document.getElementById('logDetailModal').classList.remove('ds-hidden');
     };
-
-    window.AdminConsole.closeLogDetail = function () {
-        document.getElementById('logDetailModal').classList.add('ds-hidden');
-    };
+ 
+     window.AdminConsole.closeLogDetail = function () {
+         document.getElementById('logDetailModal').classList.add('ds-hidden');
+     };
 
     function renderLogDiff(diffJson) {
-        if (!diffJson) return '<span class="ds-caption">Không có chi tiết thay đổi.</span>';
+        if (!diffJson) return '<div style="color: var(--ds-text-muted); font-size: 13px; padding: 12px; background: var(--ds-surface-muted); border-radius: var(--ds-radius-sm); border: 1px dashed var(--ds-border); text-align: center;"><i class="fa fa-info-circle"></i> Không có chi tiết thay đổi dữ liệu.</div>';
         
         let data = {};
         let parsed = false;
@@ -1066,216 +1527,461 @@
         }
 
         if (!parsed) {
-            return `<pre style="background:var(--ds-surface-muted);padding:12px;border-radius:var(--ds-radius-sm);font-size:12px;overflow:auto;margin:0;white-space:pre-wrap;word-break:break-all;">${escapeHtml(diffJson || '—')}</pre>`;
+            return `<pre style="background:var(--ds-surface-muted);padding:12px;border-radius:var(--ds-radius-sm);font-size:12px;overflow:auto;margin:0;white-space:pre-wrap;word-break:break-all;border:1px solid var(--ds-border);">${escapeHtml(diffJson || '—')}</pre>`;
         }
 
-        let html = `
-            <table class="ds-table" style="margin-top: 10px; font-size: 13px;">
-                <thead>
-                    <tr>
-                        <th>Trường dữ liệu</th>
-                        <th style="color: var(--ds-danger);">Giá trị cũ</th>
-                        <th style="width: 24px; text-align: center;"></th>
-                        <th style="color: var(--ds-success);">Giá trị mới</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
+        const keyMap = {
+            'sessionTimeout': 'Thời gian phiên làm việc (phút)',
+            'otpTimeout': 'Thời hạn mã OTP (phút)',
+            'maxLoginRetries': 'Số lần thử đăng nhập tối đa',
+            'lockDurationMins': 'Thời gian khóa tài khoản (phút)',
+            'escrowHoldHours': 'Thời gian giam tiền bảo lãnh Escrow (giờ)',
+            'allowGoogleLogin': 'Cho phép đăng nhập bằng Google',
+            'allowRegister': 'Cho phép đăng ký tài khoản mới',
+            'requireWithdraw2FA': 'Yêu cầu OTP khi rút tiền',
+            'basePercent': 'Phí hoa hồng C2C cơ bản (%)',
+            'flatBuyerFee': 'Phí giao dịch cố định người mua (VNĐ)',
+            'withdrawalPercent': 'Phí rút tiền (%)',
+            'minWithdrawFee': 'Phí rút tiền tối thiểu (VNĐ)',
+            'minWithdrawLimit': 'Hạn mức rút tiền tối thiểu / lần (VNĐ)',
+            'maxWithdrawLimit': 'Hạn mức rút tiền tối đa / lần (VNĐ)',
+            'autoWithdrawLimit': 'Hạn mức duyệt rút tiền tự động (VNĐ)',
+            'minDepositLimit': 'Hạn mức nạp tiền tối thiểu (VNĐ)',
+            'isLocked': 'Trạng thái khóa tài khoản',
+            'kycStatus': 'Trạng thái xác thực KYC',
+            'status': 'Trạng thái giao dịch / yêu cầu',
+            'role': 'Vai trò người dùng',
+            'scheduled': 'Trạng thái lên lịch bảo trì'
+        };
+
+        function translateVal(val, key) {
+            const str = String(val).trim();
+            if (str === 'true') {
+                if (key && (key.startsWith('allow') || key.startsWith('require'))) return 'Bật (Cho phép)';
+                return 'Có / Bật';
+            }
+            if (str === 'false') {
+                if (key && (key.startsWith('allow') || key.startsWith('require'))) return 'Tắt (Chặn)';
+                return 'Không / Tắt';
+            }
+            if (str === 'pending') return 'Đang chờ duyệt (pending)';
+            if (str === 'verified') return 'Đã xác thực (verified)';
+            if (str === 'completed') return 'Hoàn thành (completed)';
+            
+            if (!isNaN(str) && str !== '') {
+                const num = Number(str);
+                if (key && (key.toLowerCase().includes('fee') || key.toLowerCase().includes('limit') || key.toLowerCase().includes('withdrawal') || key.toLowerCase().includes('deposit') || key === 'minWithdrawal')) {
+                    return formatVnd(num);
+                }
+                if (key && key.toLowerCase().includes('percent')) {
+                    return num + '%';
+                }
+            }
+            return val;
+        }
+
+        let html = '';
         let count = 0;
         for (const [key, val] of Object.entries(data)) {
             count++;
             const parts = String(val).split(' -> ');
             const oldVal = parts[0] !== undefined ? parts[0] : '—';
             const newVal = parts[1] !== undefined ? parts[1] : '—';
-            html += `
-                <tr>
-                    <td><strong>${escapeHtml(key)}</strong></td>
-                    <td style="color: var(--ds-danger); text-decoration: line-through; word-break: break-all;">${escapeHtml(oldVal)}</td>
-                    <td style="text-align: center; color: var(--ds-muted);"><i class="fa fa-arrow-right"></i></td>
-                    <td style="color: var(--ds-success); font-weight: bold; word-break: break-all;">${escapeHtml(newVal)}</td>
-                </tr>
-            `;
+            
+            const translatedKey = keyMap[key] || key;
+            const formattedOld = translateVal(oldVal, key);
+            const formattedNew = translateVal(newVal, key);
+
+            if (parts.length > 1) {
+                html += `
+                    <div style="border: 1px solid var(--ds-border); border-radius: var(--ds-radius-md); margin-bottom: 12px; background: var(--ds-surface); overflow: hidden;">
+                        <div style="background: var(--ds-table-head); padding: 8px 12px; border-bottom: 1px solid var(--ds-border); font-size: 13px; font-weight: 700; color: var(--ds-text); display: flex; align-items: center; justify-content: space-between;">
+                            <span>${escapeHtml(translatedKey)}</span>
+                            <span style="font-family: monospace; font-size: 11px; color: var(--ds-text-muted); font-weight: normal;">${escapeHtml(key)}</span>
+                        </div>
+                        <div style="padding: 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 120px; background: var(--ds-danger-soft); border-radius: var(--ds-radius-sm); padding: 8px 10px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa fa-minus-circle" style="color: var(--ds-danger);"></i>
+                                <div>
+                                    <div style="font-size: 10px; color: var(--ds-text-muted); text-transform: uppercase;">Trước</div>
+                                    <div style="font-size: 13px; color: var(--ds-danger); font-weight: 500; text-decoration: line-through; word-break: break-all;">${escapeHtml(formattedOld)}</div>
+                                </div>
+                            </div>
+                            <div style="color: var(--ds-text-subtle); display: flex; align-items: center;">
+                                <i class="fa fa-arrow-right"></i>
+                            </div>
+                            <div style="flex: 1; min-width: 120px; background: var(--ds-success-soft); border-radius: var(--ds-radius-sm); padding: 8px 10px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa fa-plus-circle" style="color: var(--ds-success);"></i>
+                                <div>
+                                    <div style="font-size: 10px; color: var(--ds-text-muted); text-transform: uppercase;">Sau</div>
+                                    <div style="font-size: 13px; color: var(--ds-success); font-weight: 700; word-break: break-all;">${escapeHtml(formattedNew)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div style="border: 1px solid var(--ds-border); border-radius: var(--ds-radius-md); margin-bottom: 12px; background: var(--ds-surface); overflow: hidden;">
+                        <div style="background: var(--ds-table-head); padding: 8px 12px; border-bottom: 1px solid var(--ds-border); font-size: 13px; font-weight: 700; color: var(--ds-text); display: flex; align-items: center; justify-content: space-between;">
+                            <span>${escapeHtml(translatedKey)}</span>
+                            <span style="font-family: monospace; font-size: 11px; color: var(--ds-text-muted); font-weight: normal;">${escapeHtml(key)}</span>
+                        </div>
+                        <div style="padding: 12px;">
+                            <div style="background: var(--ds-surface-muted); border-radius: var(--ds-radius-sm); padding: 8px 10px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa fa-info-circle" style="color: var(--ds-primary);"></i>
+                                <div>
+                                    <div style="font-size: 10px; color: var(--ds-text-muted); text-transform: uppercase;">Chi tiết</div>
+                                    <div style="font-size: 13px; color: var(--ds-text); font-weight: 600; word-break: break-all;">${escapeHtml(formattedOld)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
         }
-        html += '</tbody></table>';
-        return count > 0 ? html : '<span class="ds-caption">Không có chi tiết thay đổi.</span>';
+        return count > 0 ? html : '<div style="color: var(--ds-text-muted); font-size: 13px; padding: 12px; background: var(--ds-surface-muted); border-radius: var(--ds-radius-sm); border: 1px dashed var(--ds-border); text-align: center;"><i class="fa fa-info-circle"></i> Không có chi tiết thay đổi dữ liệu.</div>';
     }
 
     /* ---------- Mock: Revenue ---------- */
-    function renderRevenueView() {
+    async function renderRevenueView() {
         const filter = document.getElementById('revTimeFilter')?.value || '7days';
         const typeFilter = document.getElementById('revTypeFilter')?.value || '';
-        const keyword = (document.getElementById('revKeywordFilter')?.value || '').toLowerCase().trim();
+        const keyword = (document.getElementById('revKeywordFilter')?.value || '').trim();
 
-        let txs = [...mock.cashFlow];
-        if (filter === 'today') txs = txs.slice(0, 2);
-        else if (filter === '30days') { /* giữ nguyên demo */ }
+        try {
+            // 1. Tải thông tin tóm tắt doanh thu
+            const summaryRes = await authFetch('/admin/revenue/summary');
+            if (summaryRes.ok) {
+                const summary = await summaryRes.json();
+                setText('revCommissions', formatVnd(summary.commissions));
+                // Cột 'revBuyerFees' bây giờ hiển thị tổng phí dịch vụ Seller (Upgrade + Featured)
+                setText('revBuyerFees', formatVnd((summary.sellerUpgradeFees || 0) + (summary.productFeaturedFees || 0)));
+                setText('revWithdrawalFees', formatVnd(summary.withdrawalFees));
+                setText('revNetTotal', formatVnd(summary.netTotal));
+            }
 
-        if (typeFilter) {
-            txs = txs.filter(t => t.type === typeFilter);
+            // 2. Tải danh sách giao dịch dòng tiền phân trang
+            const params = new URLSearchParams({
+                keyword: keyword,
+                type: typeFilter,
+                time: filter,
+                page: String(revPage),
+                size: String(revPageSize)
+            });
+
+            const listRes = await authFetch(`/admin/revenue/transactions?${params.toString()}`);
+            const body = document.getElementById('revTransactionsBody');
+            if (!body) return;
+
+            if (listRes.ok) {
+                const data = await listRes.json();
+                const slice = data.content || [];
+                const total = data.totalElements || 0;
+                const totalPg = Math.max(data.totalPages || 1, 1);
+                
+                body.innerHTML = slice.length ? slice.map((t, i) => {
+                    const typeClass = t.type === 'Deposit' ? 'ds-badge-success' : (t.type === 'Withdrawal' ? 'ds-badge-warning' : 'ds-badge-info');
+                    return `
+                        <tr>
+                            <td class="ds-table-center">${sttNumber(revPage, revPageSize, i)}</td>
+                            <td class="ds-table-center"><code>${escapeHtml(t.id)}</code></td>
+                            <td>${formatDateTime(t.timestamp)}</td>
+                            <td>${escapeHtml(t.email)}</td>
+                            <td class="ds-table-center"><span class="ds-badge ${typeClass}">${escapeHtml(txTypeLabel(t.type))}</span></td>
+                            <td class="ds-money">${formatVnd(t.amount)}</td>
+                            <td class="ds-money">${formatVnd(t.fee)}</td>
+                            <td class="ds-table-center"><span class="ds-badge ${t.status === 'Completed' ? 'ds-badge-success' : (t.status === 'Held' ? 'badge held' : 'ds-badge-danger')}">${escapeHtml(txStatusLabel(t.status))}</span></td>
+                        </tr>
+                    `;
+                }).join('') : '<tr><td colspan="8" class="ds-empty-state">Không có giao dịch phù hợp.</td></tr>';
+
+                mountPagination('revenuePagination', {
+                    page: revPage,
+                    totalPages: totalPg,
+                    totalElements: total,
+                    pageSize: revPageSize
+                }, {
+                    onPage: (p) => { revPage = p; renderRevenueView(); },
+                    onSize: (s) => { revPageSize = s; revPage = 0; renderRevenueView(); }
+                });
+            } else {
+                body.innerHTML = '<tr><td colspan="8" class="ds-empty-state" style="color: var(--ds-color-danger)">Không thể tải danh sách giao dịch từ máy chủ.</td></tr>';
+            }
+        } catch (error) {
+            console.error(error);
+            const body = document.getElementById('revTransactionsBody');
+            if (body) {
+                body.innerHTML = `<tr><td colspan="8" class="ds-empty-state" style="color: var(--ds-color-danger)">Lỗi: ${escapeHtml(error.message)}</td></tr>`;
+            }
         }
-        if (keyword) {
-            txs = txs.filter(t => t.id.toLowerCase().includes(keyword) || t.email.toLowerCase().includes(keyword));
-        }
-
-        revFiltered = txs;
-        const commissions = txs.filter(t => t.type === 'C2C_Purchase').reduce((s, t) => s + t.fee * 0.8, 0);
-        const buyerFees = txs.filter(t => t.type === 'C2C_Purchase').length * (mock.commissions.flatBuyerFee || 1000);
-        const withdrawFees = txs.filter(t => t.type === 'Withdrawal').reduce((s, t) => s + (t.fee || 0), 0);
-        const net = commissions + buyerFees + withdrawFees;
-
-        setText('revCommissions', formatVnd(commissions));
-        setText('revBuyerFees', formatVnd(buyerFees));
-        setText('revWithdrawalFees', formatVnd(withdrawFees));
-        setText('revNetTotal', formatVnd(net));
-
-        const total = txs.length;
-        const totalPg = Math.max(Math.ceil(total / revPageSize), 1);
-        if (revPage >= totalPg) revPage = totalPg - 1;
-        const slice = txs.slice(revPage * revPageSize, revPage * revPageSize + revPageSize);
-
-        const body = document.getElementById('revTransactionsBody');
-        if (!body) return;
-        body.innerHTML = slice.length ? slice.map((t, i) => {
-            const typeClass = t.type === 'Deposit' ? 'ds-badge-success' : (t.type === 'Withdrawal' ? 'ds-badge-warning' : 'ds-badge-info');
-            return `
-                <tr>
-                    <td class="ds-table-center">${sttNumber(revPage, revPageSize, i)}</td>
-                    <td class="ds-table-center"><code>${escapeHtml(t.id)}</code></td>
-                    <td>${formatDateTime(t.timestamp)}</td>
-                    <td>${escapeHtml(t.email)}</td>
-                    <td class="ds-table-center"><span class="ds-badge ${typeClass}">${escapeHtml(txTypeLabel(t.type))}</span></td>
-                    <td class="ds-money">${formatVnd(t.amount)}</td>
-                    <td class="ds-money">${formatVnd(t.fee)}</td>
-                    <td class="ds-table-center"><span class="ds-badge ds-badge-success">${escapeHtml(txStatusLabel(t.status))}</span></td>
-                </tr>
-            `;
-        }).join('') : '<tr><td colspan="8" class="ds-empty-state">Không có giao dịch phù hợp.</td></tr>';
-
-        mountPagination('revenuePagination', {
-            page: revPage,
-            totalPages: totalPg,
-            totalElements: total,
-            pageSize: revPageSize
-        }, {
-            onPage: (p) => { revPage = p; renderRevenueView(); },
-            onSize: (s) => { revPageSize = s; revPage = 0; renderRevenueView(); }
-        });
     }
 
-    window.AdminConsole.mockExport = function (type) {
+    window.AdminConsole.mockExport = async function (type) {
+        if (type === 'revenue') {
+            const loadingToast = showToast('Đang xuất báo cáo doanh thu...', 'info');
+            try {
+                const filter = document.getElementById('revTimeFilter')?.value || '7days';
+                const typeFilter = document.getElementById('revTypeFilter')?.value || '';
+                const keyword = (document.getElementById('revKeywordFilter')?.value || '').trim();
+                const params = new URLSearchParams({
+                    keyword: keyword,
+                    type: typeFilter,
+                    time: filter
+                });
+                const response = await authFetch(`/admin/revenue/export?${params.toString()}`);
+                if (loadingToast) loadingToast.remove();
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `bao-cao-doanh-thu-${new Date().toISOString().slice(0, 10)}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                    showToast('Đã tải báo cáo doanh thu thành công.');
+                } else {
+                    showToast('Không thể xuất báo cáo từ máy chủ.', true);
+                }
+            } catch (e) {
+                if (loadingToast) loadingToast.remove();
+                showToast('Lỗi kết nối khi xuất báo cáo.', true);
+            }
+            return;
+        } else if (type === 'audit') {
+            const loadingToast = showToast('Đang xuất nhật ký hệ thống...', 'info');
+            try {
+                const search = (document.getElementById('logSearch')?.value || '').trim();
+                const action = document.getElementById('logActionFilter')?.value || '';
+                const params = new URLSearchParams({
+                    search: search,
+                    action: action
+                });
+                const response = await authFetch(`/admin/audit-logs/export?${params.toString()}`);
+                if (loadingToast) loadingToast.remove();
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `nhat-ky-he-thong-${new Date().toISOString().slice(0, 10)}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                    showToast('Đã tải nhật ký hệ thống thành công.');
+                } else {
+                    showToast('Không thể xuất nhật ký từ máy chủ.', true);
+                }
+            } catch (e) {
+                if (loadingToast) loadingToast.remove();
+                showToast('Lỗi kết nối khi xuất nhật ký.', true);
+            }
+            return;
+        }
         const label = type === 'audit' ? 'nhật ký' : 'doanh thu';
         showToast(`Đang xuất báo cáo ${label}...`);
         setTimeout(() => showToast(`Đã tải báo cáo ${label} (demo).`), 1200);
     };
 
-    function loadSystemConfigForm() {
-        const c = mock.systemConfig;
-        document.getElementById('cfgSessionTimeout').value = c.sessionTimeout;
-        document.getElementById('cfgOtpTimeout').value = c.otpTimeout;
-        document.getElementById('cfgMaxLoginRetries').value = c.maxLoginRetries;
-        document.getElementById('cfgEscrowHoldHours').value = c.escrowHoldHours || 72;
-        
-        const toggleBtn = (id, active) => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.setAttribute('aria-pressed', String(active));
-                el.classList.toggle('ds-toggle-inactive', !active);
+    async function loadSystemConfigForm() {
+        try {
+            const response = await authFetch('/admin/system-config');
+            if (!response.ok) {
+                showToast('Không thể tải cấu hình hệ thống từ máy chủ.', true);
+                return;
             }
-        };
-        toggleBtn('cfgAllowGoogle', c.allowGoogleLogin);
-        toggleBtn('cfgAllowRegister', c.allowRegister);
-        toggleBtn('cfgWithdraw2FA', c.requireWithdraw2FA);
+            const data = await response.json();
+            const c = data.systemConfig;
+            
+            // Sync local mock data
+            mock.systemConfig = c;
+            mock.commissions = data.commissions;
+            saveMock();
+            
+            document.getElementById('cfgSessionTimeout').value = c.sessionTimeout;
+            document.getElementById('cfgOtpTimeout').value = c.otpTimeout;
+            document.getElementById('cfgMaxLoginRetries').value = c.maxLoginRetries;
+            document.getElementById('cfgLockDurationMins').value = c.lockDurationMins || 15;
+            document.getElementById('cfgEscrowHoldHours').value = c.escrowHoldHours || 72;
+            
+            const toggleBtn = (id, active) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.setAttribute('aria-pressed', String(active));
+                    el.classList.toggle('ds-toggle-inactive', !active);
+                }
+            };
+            toggleBtn('cfgAllowGoogle', c.allowGoogleLogin);
+            toggleBtn('cfgAllowRegister', c.allowRegister);
+            toggleBtn('cfgWithdraw2FA', c.requireWithdraw2FA);
+        } catch (error) {
+            showToast('Lỗi kết nối khi tải cấu hình.', true);
+        }
     }
 
-    window.AdminConsole.saveSystemConfig = function () {
-        mock.systemConfig = {
-            appName: mock.systemConfig.appName || 'MMO Market System',
+    window.AdminConsole.saveSystemConfig = async function () {
+        const payload = {
             sessionTimeout: Number(document.getElementById('cfgSessionTimeout').value),
             otpTimeout: Number(document.getElementById('cfgOtpTimeout').value),
             maxLoginRetries: Number(document.getElementById('cfgMaxLoginRetries').value),
+            lockDurationMins: Number(document.getElementById('cfgLockDurationMins').value),
             escrowHoldHours: Number(document.getElementById('cfgEscrowHoldHours').value),
             allowGoogleLogin: document.getElementById('cfgAllowGoogle')?.getAttribute('aria-pressed') === 'true',
             allowRegister: document.getElementById('cfgAllowRegister')?.getAttribute('aria-pressed') === 'true',
             requireWithdraw2FA: document.getElementById('cfgWithdraw2FA')?.getAttribute('aria-pressed') === 'true'
         };
-        saveMock();
-        showToast('Đã lưu cấu hình hệ thống (demo frontend).');
+        try {
+            const response = await authFetch('/admin/system-config/general', {
+                method: 'PUT',
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                mock.systemConfig = {
+                    ...mock.systemConfig,
+                    ...payload
+                };
+                saveMock();
+                showToast(data.message || 'Đã lưu cấu hình hệ thống.');
+            } else {
+                showToast(data.message || 'Không thể lưu cấu hình hệ thống.', true);
+            }
+        } catch (error) {
+            showToast('Lỗi kết nối khi lưu cấu hình.', true);
+        }
     };
 
     /* ---------- Mock: Notifications ---------- */
-    function loadNotificationsView() {
+    window.AdminConsole.openCreateNotification = function () {
+        document.getElementById('notifTitle').value = '';
+        document.getElementById('notifContent').value = '';
+        const select = document.getElementById('notifType');
+        if (select) select.value = 'info';
+        
+        const wrap = document.getElementById('notifMaintToggleWrap');
+        if (wrap) wrap.classList.add('ds-hidden');
+        
+        const toggle = document.getElementById('notifMaintToggle');
+        if (toggle) {
+            toggle.setAttribute('aria-pressed', 'false');
+            toggle.className = 'ds-toggle ds-toggle-system ds-toggle-inactive';
+        }
+
+        const modal = document.getElementById('createNotifModal');
+        if (modal) modal.classList.remove('ds-hidden');
+    };
+
+    window.AdminConsole.closeCreateNotification = function () {
+        const modal = document.getElementById('createNotifModal');
+        if (modal) modal.classList.add('ds-hidden');
+    };
+
+    async function loadNotificationsView() {
         // Toggle Active Maintenance Banner
         const maintBanner = document.getElementById('maintActiveBanner');
         const maintMsg = document.getElementById('maintActiveMessage');
-        const isMaintActive = mock.maintenance && mock.maintenance.active;
-        if (maintBanner) {
-            if (isMaintActive) {
-                maintBanner.classList.remove('ds-hidden');
-                if (maintMsg) maintMsg.textContent = mock.maintenance.message || 'Hệ thống đang bảo trì nâng cấp.';
-            } else {
-                maintBanner.classList.add('ds-hidden');
+        try {
+            const maintRes = await authFetch('/admin/notifications/maintenance-status');
+            if (maintRes.ok) {
+                const status = await maintRes.json();
+                if (maintBanner) {
+                    if (status.active) {
+                        maintBanner.classList.remove('ds-hidden');
+                        if (maintMsg) maintMsg.textContent = status.message || 'Hệ thống đang bảo trì nâng cấp.';
+                    } else {
+                        maintBanner.classList.add('ds-hidden');
+                    }
+                }
             }
+        } catch (e) {
+            console.error('Failed to load maintenance status', e);
         }
 
-        // Hide maintenance toggle wrap on load by default
+        // Hide maintenance toggle wrap on load by default in the form
         const maintToggleWrap = document.getElementById('notifMaintToggleWrap');
         if (maintToggleWrap) maintToggleWrap.classList.add('ds-hidden');
         const maintToggle = document.getElementById('notifMaintToggle');
         if (maintToggle) {
             maintToggle.setAttribute('aria-pressed', 'false');
-            maintToggle.classList.add('ds-toggle-inactive');
+            maintToggle.className = 'ds-toggle ds-toggle-system ds-toggle-inactive';
         }
 
         const body = document.getElementById('notifHistoryBody');
-        const history = mock.notifications || [];
-        if (history.length === 0) {
-            body.innerHTML = '<tr><td colspan="5" class="ds-empty-state">Chưa có thông báo nào.</td></tr>';
-            const pag = document.getElementById('notifPagination');
-            if (pag) pag.innerHTML = '';
-            return;
-        }
+        if (!body) return;
 
-        const total = history.length;
-        const totalPg = Math.max(Math.ceil(total / notifPageSize), 1);
-        if (notifPage >= totalPg) notifPage = totalPg - 1;
-        const slice = history.slice(notifPage * notifPageSize, notifPage * notifPageSize + notifPageSize);
+        // Apply filters
+        const keyword = (document.getElementById('notifSearch')?.value || '').trim();
+        const typeFilter = document.getElementById('notifTypeFilter')?.value || '';
 
-        body.innerHTML = slice.map((n, idx) => {
-            let typeLabel = 'Thông tin';
-            let typeBadge = 'ds-badge-info';
-            if (n.type === 'warning') {
-                typeLabel = 'Cảnh báo';
-                typeBadge = 'ds-badge-warning';
-            } else if (n.type === 'maintenance') {
-                typeLabel = 'Bảo trì';
-                typeBadge = 'ds-badge-danger';
-            } else if (n.type === 'policy') {
-                typeLabel = 'Chính sách';
-                typeBadge = 'ds-badge-muted';
+        const params = new URLSearchParams();
+        params.append('page', notifPage);
+        params.append('size', notifPageSize);
+        if (keyword) params.append('search', keyword);
+        if (typeFilter) params.append('type', typeFilter);
+
+        try {
+            const response = await authFetch('/notifications?' + params.toString());
+            if (!response.ok) {
+                body.innerHTML = '<tr><td colspan="6" class="ds-empty-state">Không thể tải danh sách thông báo.</td></tr>';
+                return;
             }
-            return `
-                <tr>
-                    <td class="ds-table-center">${sttNumber(notifPage, notifPageSize, idx)}</td>
-                    <td class="ds-table-center">${formatDateTime(n.timestamp)}</td>
-                    <td><strong>${escapeHtml(n.title)}</strong><br><small class="muted">${escapeHtml(n.content)}</small></td>
-                    <td class="ds-table-center"><span class="ds-badge ${typeBadge}">${typeLabel}</span></td>
-                    <td>${escapeHtml(n.author)}</td>
-                </tr>
-            `;
-        }).join('');
+            const data = await response.json();
+            const list = data.content || [];
+            const total = data.totalElements || 0;
+            const totalPg = data.totalPages || 1;
 
-        mountPagination('notifPagination', {
-            page: notifPage,
-            totalPages: totalPg,
-            totalElements: total,
-            pageSize: notifPageSize
-        }, {
-            onPage: (p) => { notifPage = p; loadNotificationsView(); },
-            onSize: (s) => { notifPageSize = s; notifPage = 0; loadNotificationsView(); }
-        });
+            if (list.length === 0) {
+                body.innerHTML = '<tr><td colspan="6" class="ds-empty-state">Chưa có thông báo nào phù hợp.</td></tr>';
+                const pag = document.getElementById('notifPagination');
+                if (pag) pag.innerHTML = '';
+                return;
+            }
+
+            body.innerHTML = list.map((n, idx) => {
+                let typeLabel = 'Thông tin';
+                let typeBadge = 'ds-badge-info';
+                if (n.type === 'warning') {
+                    typeLabel = 'Cảnh báo';
+                    typeBadge = 'ds-badge-warning';
+                } else if (n.type === 'maintenance') {
+                    typeLabel = 'Bảo trì';
+                    typeBadge = 'ds-badge-danger';
+                } else if (n.type === 'policy') {
+                    typeLabel = 'Chính sách';
+                    typeBadge = 'ds-badge-muted';
+                }
+                return `
+                    <tr>
+                        <td class="ds-table-center">${sttNumber(notifPage, notifPageSize, idx)}</td>
+                        <td class="ds-table-center">${formatDateTime(n.timestamp)}</td>
+                        <td><strong>${escapeHtml(n.title)}</strong><br><small class="muted" style="font-size:12px; display:block; margin-top:2px;">${escapeHtml(n.content)}</small></td>
+                        <td class="ds-table-center"><span class="ds-badge ${typeBadge}">${typeLabel}</span></td>
+                        <td>${escapeHtml(n.author)}</td>
+                        <td class="ds-table-center">
+                            ${tableActionsDelete(`AdminConsole.deleteNotification(${n.id})`, 'Xóa thông báo')}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            mountPagination('notifPagination', {
+                page: notifPage,
+                totalPages: totalPg,
+                totalElements: total,
+                pageSize: notifPageSize
+            }, {
+                onPage: (p) => { notifPage = p; loadNotificationsView(); },
+                onSize: (s) => { notifPageSize = s; notifPage = 0; loadNotificationsView(); }
+            });
+        } catch (err) {
+            body.innerHTML = '<tr><td colspan="6" class="ds-empty-state">Lỗi kết nối khi tải danh sách thông báo.</td></tr>';
+        }
     }
 
-    window.AdminConsole.pushNotification = function () {
+    window.AdminConsole.pushNotification = async function () {
         const title = document.getElementById('notifTitle').value.trim();
         const type = document.getElementById('notifType').value;
         const content = document.getElementById('notifContent').value.trim();
@@ -1283,138 +1989,620 @@
             showToast('Vui lòng nhập tiêu đề và nội dung thông báo.', true);
             return;
         }
-        
+
         const isMaint = (type === 'maintenance');
         const maintToggle = document.getElementById('notifMaintToggle');
         const shouldMaint = isMaint && maintToggle && (maintToggle.getAttribute('aria-pressed') === 'true');
 
-        if (shouldMaint) {
-            mock.maintenance = mock.maintenance || {};
-            mock.maintenance.active = true;
-            mock.maintenance.message = content;
-        }
-
-        mock.notifications = mock.notifications || [];
-        mock.notifications.unshift({
-            timestamp: new Date().toISOString(),
+        const payload = {
             title: title,
-            type: type,
             content: content,
-            author: readCurrentUser()?.fullName || 'Admin'
-        });
-        saveMock();
-        
-        document.getElementById('notifTitle').value = '';
-        document.getElementById('notifContent').value = '';
-        
-        showToast(shouldMaint ? 'Đã phát thông báo & kích hoạt bảo trì hệ thống.' : 'Đã phát thông báo thành công tới toàn bộ người dùng.');
-        loadNotificationsView();
+            type: type,
+            activateMaintenance: shouldMaint
+        };
+
+        try {
+            const response = await authFetch('/admin/notifications', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                document.getElementById('notifTitle').value = '';
+                document.getElementById('notifContent').value = '';
+                AdminConsole.closeCreateNotification();
+                showToast(shouldMaint ? 'Đã phát thông báo & kích hoạt bảo trì hệ thống.' : 'Đã phát thông báo thành công tới toàn bộ người dùng.');
+                await loadNotificationsView();
+            } else {
+                showToast(data.message || 'Không thể phát thông báo.', true);
+            }
+        } catch (e) {
+            showToast('Lỗi kết nối khi phát thông báo.', true);
+        }
     };
 
-    window.AdminConsole.disableMaintenance = function () {
-        mock.maintenance = mock.maintenance || {};
-        mock.maintenance.active = false;
-        saveMock();
-        showToast('Đã tắt chế độ bảo trì hệ thống.');
-        loadNotificationsView();
+    window.AdminConsole.deleteNotification = async function (id) {
+        if (!confirm('Bạn có chắc chắn muốn xóa thông báo này?')) {
+            return;
+        }
+        try {
+            const response = await authFetch('/admin/notifications/' + id, {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                showToast('Đã xóa thông báo thành công.');
+                await loadNotificationsView();
+            } else {
+                showToast(data.message || 'Không thể xóa thông báo.', true);
+            }
+        } catch (e) {
+            showToast('Lỗi kết nối khi xóa thông báo.', true);
+        }
+    };
+
+    window.AdminConsole.disableMaintenance = async function () {
+        try {
+            const response = await authFetch('/admin/notifications/toggle-maintenance', {
+                method: 'POST',
+                body: JSON.stringify({ active: false })
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                showToast('Đã tắt chế độ bảo trì hệ thống.');
+                await loadNotificationsView();
+            } else {
+                showToast(data.message || 'Không thể tắt chế độ bảo trì.', true);
+            }
+        } catch (e) {
+            showToast('Lỗi kết nối khi tắt chế độ bảo trì.', true);
+        }
     };
 
     /* ---------- Mock: Commissions ---------- */
-    function loadCommissionsForm() {
-        const c = mock.commissions;
-        document.getElementById('commBasePercent').value = c.basePercent;
-        document.getElementById('commFlatBuyer').value = c.flatBuyerFee;
-        document.getElementById('commWithdrawPercent').value = c.withdrawalPercent;
-        document.getElementById('commMinWithdrawFee').value = c.minWithdrawFee;
-        document.getElementById('commMinWithdrawLimit').value = c.minWithdrawLimit || 50000;
-        document.getElementById('commMaxWithdrawLimit').value = c.maxWithdrawLimit || 50000000;
-        document.getElementById('commAutoWithdrawLimit').value = c.autoWithdrawLimit || 5000000;
-        document.getElementById('commMinDepositLimit').value = c.minDepositLimit || 10000;
+    async function loadCommissionsForm() {
+        try {
+            const response = await authFetch('/admin/system-config');
+            if (!response.ok) {
+                showToast('Không thể tải cấu hình phí từ máy chủ.', true);
+                return;
+            }
+            const data = await response.json();
+            const c = data.commissions;
+            
+            // Sync local mock data
+            mock.systemConfig = data.systemConfig;
+            mock.commissions = c;
+            saveMock();
+            
+            document.getElementById('commBasePercent').value = c.basePercent;
+            document.getElementById('commWithdrawPercent').value = c.withdrawalPercent;
+            document.getElementById('commSellerUpgradeFee').value = formatNumberWithDots(c.sellerUpgradeFee);
+            document.getElementById('commProductFeaturedFee').value = formatNumberWithDots(c.productFeaturedFee);
+            document.getElementById('commMinWithdrawLimit').value = formatNumberWithDots(c.minWithdrawLimit);
+            document.getElementById('commMaxWithdrawLimit').value = formatNumberWithDots(c.maxWithdrawLimit);
+            document.getElementById('commMinDepositLimit').value = formatNumberWithDots(c.minDepositLimit);
+            document.getElementById('commMaxDepositLimit').value = formatNumberWithDots(c.maxDepositLimit);
+        } catch (error) {
+            showToast('Lỗi kết nối khi tải cấu hình.', true);
+        }
     }
 
-    window.AdminConsole.saveCommissions = function () {
-        mock.commissions = {
+    window.AdminConsole.saveCommissions = async function () {
+        const payload = {
             basePercent: Number(document.getElementById('commBasePercent').value),
-            flatBuyerFee: Number(document.getElementById('commFlatBuyer').value),
             withdrawalPercent: Number(document.getElementById('commWithdrawPercent').value),
-            minWithdrawFee: Number(document.getElementById('commMinWithdrawFee').value),
-            minWithdrawLimit: Number(document.getElementById('commMinWithdrawLimit').value),
-            maxWithdrawLimit: Number(document.getElementById('commMaxWithdrawLimit').value),
-            autoWithdrawLimit: Number(document.getElementById('commAutoWithdrawLimit').value),
-            minDepositLimit: Number(document.getElementById('commMinDepositLimit').value)
+            sellerUpgradeFee: stripDots(document.getElementById('commSellerUpgradeFee').value),
+            productFeaturedFee: stripDots(document.getElementById('commProductFeaturedFee').value),
+            minWithdrawLimit: stripDots(document.getElementById('commMinWithdrawLimit').value),
+            maxWithdrawLimit: stripDots(document.getElementById('commMaxWithdrawLimit').value),
+            minDepositLimit: stripDots(document.getElementById('commMinDepositLimit').value),
+            maxDepositLimit: stripDots(document.getElementById('commMaxDepositLimit').value)
         };
-        saveMock();
-        showToast('Đã lưu biểu phí và hạn mức hệ thống.');
+        try {
+            const response = await authFetch('/admin/system-config/commissions', {
+                method: 'PUT',
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                mock.commissions = payload;
+                saveMock();
+                showToast(data.message || 'Đã lưu biểu phí và hạn mức hệ thống.');
+            } else {
+                showToast(data.message || 'Không thể lưu cấu hình.', true);
+            }
+        } catch (error) {
+            showToast('Lỗi kết nối khi lưu cấu hình.', true);
+        }
     };
 
     /* ---------- Mock: Permissions ---------- */
-    async function loadPermissionsView() {
-        let staffList = users.filter(u => u.role === 'Staff');
-        try {
-            const response = await authFetch(`${ENDPOINT}/users?size=50&role=Staff`);
-            const data = await response.json();
-            if (response.ok && data.content?.length) staffList = data.content;
-        } catch (_) { /* giữ cache */ }
-        const selectBox = document.getElementById('staffPermSelect');
-        if (!staffList.length) {
-            selectBox.innerHTML = '<option value="">-- Không có nhân viên nào --</option>';
-            document.getElementById('permPanel').innerHTML = '<p class="ds-caption">Vui lòng tạo tài khoản nhân viên trước.</p>';
-            return;
+    let staffListCache = [];
+
+    function populatePermDropdown(filteredPermissions) {
+        const permMultiselectList = document.getElementById('permMultiselectList');
+        if (!permMultiselectList) return;
+
+        // Get currently checked permission IDs
+        const checked = Array.from(document.querySelectorAll('input[name="filterPermCheckbox"]:checked')).map(cb => cb.value);
+
+        if (filteredPermissions.length > 0) {
+            permMultiselectList.innerHTML = filteredPermissions.map(p => {
+                const isChecked = checked.includes(p.id) ? 'checked' : '';
+                return `
+                    <label class="perm-multiselect-item ds-dropdown-option" data-search="${escapeHtml(p.label.toLowerCase())} ${escapeHtml(p.desc.toLowerCase())}" style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0; padding: 8px 12px;" onclick="event.stopPropagation()">
+                        <input type="checkbox" name="filterPermCheckbox" value="${p.id}" ${isChecked} style="cursor: pointer; width: 14px; height: 14px; margin: 0;" onchange="window.AdminConsole.updateSelectedPermsCount()">
+                        <span style="font-size: 13px; color: var(--ds-text);">
+                            <strong>${escapeHtml(p.label)}</strong>
+                        </span>
+                    </label>
+                `;
+            }).join('');
+        } else {
+            permMultiselectList.innerHTML = `
+                <div style="padding: 10px; color: var(--ds-text-muted); font-size: 12.5px; text-align: center; font-style: italic;">
+                    Không có quyền nào.
+                </div>
+            `;
         }
-        if (!selectedStaffId || !staffList.find(s => s.id === selectedStaffId)) {
-            selectedStaffId = staffList[0].id;
-        }
-        selectBox.innerHTML = staffList.map(s => `
-            <option value="${s.id}" ${s.id === selectedStaffId ? 'selected' : ''}>
-                ${escapeHtml(s.fullName)} (${escapeHtml(s.email)})
-            </option>
-        `).join('');
-        renderPermissionCheckboxes(staffList);
+        window.AdminConsole.updateSelectedPermsCount();
     }
 
-    window.AdminConsole.selectStaffPerm = function (id) {
-        selectedStaffId = Number(id);
+    function populateStaffDropdown(staffList) {
+        const multiselectList = document.getElementById('multiselectList');
+        if (!multiselectList) return;
+
+        // Get currently checked staff IDs
+        const checked = Array.from(document.querySelectorAll('input[name="assignStaffCheckbox"]:checked')).map(cb => cb.value);
+
+        if (staffList.length > 0) {
+            multiselectList.innerHTML = staffList.map(s => {
+                const isChecked = checked.includes(String(s.id)) ? 'checked' : '';
+                return `
+                    <label class="multiselect-item ds-dropdown-option" data-search="${escapeHtml(s.fullName.toLowerCase())} ${escapeHtml(s.email.toLowerCase())}" style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0; padding: 8px 12px;" onclick="event.stopPropagation()">
+                        <input type="checkbox" name="assignStaffCheckbox" value="${s.id}" ${isChecked} style="cursor: pointer; width: 14px; height: 14px; margin: 0;" onchange="window.AdminConsole.updateSelectedStaffCount()">
+                        <span style="font-size: 13px; color: var(--ds-text);">
+                            <strong>${escapeHtml(s.fullName)}</strong>
+                        </span>
+                    </label>
+                `;
+            }).join('');
+        } else {
+            multiselectList.innerHTML = `
+                <div style="padding: 10px; color: var(--ds-text-muted); font-size: 12.5px; text-align: center; font-style: italic;">
+                    Không có nhân viên nào.
+                </div>
+            `;
+        }
+        window.AdminConsole.updateSelectedStaffCount();
+    }
+
+    async function loadPermissionsView() {
+        let staffList = staffListCache;
+        if (!staffList.length) {
+            staffList = users.filter(u => normalizeRole(u.role) === 'Staff');
+            try {
+                const response = await authFetch(`${ENDPOINT}/users?size=50&role=Staff`);
+                const data = await response.json();
+                if (response.ok && data.content?.length) {
+                    staffList = data.content;
+                    staffListCache = data.content;
+                }
+            } catch (_) { /* giữ cache */ }
+        }
+
+        // Get filtered permissions list based on selected group
+        const filteredPermissions = selectedGroupId === 'ALL'
+            ? ALL_PERMISSIONS
+            : ALL_PERMISSIONS.filter(p => p.group === selectedGroupId);
+
+        // Populate group select dropdown (#permGroupFilter)
+        const permGroupFilter = document.getElementById('permGroupFilter');
+        if (permGroupFilter) {
+            permGroupFilter.value = selectedGroupId;
+        }
+
+        // Populate permissions select checklist dropdown
+        populatePermDropdown(filteredPermissions);
+
+        // Build mock.permissions if undefined
+        if (!mock.permissions) {
+            mock.permissions = {};
+        }
+
+        // Filter the staff according to search criteria
+        let displayedStaff = [];
+        if (!isSearchActive) {
+            if (selectedGroupId === 'ALL') {
+                displayedStaff = staffList.filter(s => {
+                    const userPerms = mock.permissions[s.id] || [];
+                    const groups = new Set();
+                    userPerms.forEach(pid => {
+                        const p = ALL_PERMISSIONS.find(ap => ap.id === pid);
+                        if (p) groups.add(p.group);
+                    });
+                    return groups.has('Kiểm duyệt') && groups.has('Tài chính') && groups.has('Vận hành');
+                });
+            } else {
+                const groupPerms = ALL_PERMISSIONS.filter(p => p.group === selectedGroupId).map(p => p.id);
+                displayedStaff = staffList.filter(s => {
+                    const userPerms = mock.permissions[s.id] || [];
+                    return groupPerms.every(pid => userPerms.includes(pid));
+                });
+            }
+        } else {
+            if (activeFilterPermIds.length > 0) {
+                // Filter staff who have ALL checked permissions (AND logic)
+                displayedStaff = staffList.filter(s => {
+                    const userPerms = mock.permissions[s.id] || [];
+                    return activeFilterPermIds.every(pid => userPerms.includes(pid));
+                });
+            } else if (activeFilterGroupId !== 'ALL') {
+                // Filter staff who have ALL permissions in the selected group (AND logic)
+                const groupPerms = ALL_PERMISSIONS.filter(p => p.group === activeFilterGroupId).map(p => p.id);
+                displayedStaff = staffList.filter(s => {
+                    const userPerms = mock.permissions[s.id] || [];
+                    return groupPerms.every(pid => userPerms.includes(pid));
+                });
+            } else {
+                // Filter staff who have permissions in all groups (ALL group selected, no details checked)
+                displayedStaff = staffList.filter(s => {
+                    const userPerms = mock.permissions[s.id] || [];
+                    const groups = new Set();
+                    userPerms.forEach(pid => {
+                        const p = ALL_PERMISSIONS.find(ap => ap.id === pid);
+                        if (p) groups.add(p.group);
+                    });
+                    return groups.has('Kiểm duyệt') && groups.has('Tài chính') && groups.has('Vận hành');
+                });
+            }
+        }
+
+        // Calculate pagination metadata
+        permissionsTotalElements = displayedStaff.length;
+        permissionsTotalPages = Math.ceil(permissionsTotalElements / permissionsPageSize) || 1;
+        if (permissionsPage >= permissionsTotalPages) {
+            permissionsPage = 0;
+        }
+
+        const startIndex = permissionsPage * permissionsPageSize;
+        const paginatedStaff = displayedStaff.slice(startIndex, startIndex + permissionsPageSize);
+
+        // Render assigned staff in table
+        const assignedStaffBody = document.getElementById('assignedStaffTableBody');
+        if (assignedStaffBody) {
+            if (paginatedStaff.length > 0) {
+                assignedStaffBody.innerHTML = paginatedStaff.map((s, index) => {
+                    const rowNum = startIndex + index + 1;
+                    return `
+                        <tr>
+                            <td class="ds-table-center">${rowNum}</td>
+                            <td class="ds-table-center">${s.id}</td>
+                            <td>
+                                <div class="ds-entity">
+                                    <span class="ds-avatar ds-avatar-sm ds-avatar-primary">${escapeHtml(s.fullName.charAt(0).toUpperCase())}</span>
+                                    <div>
+                                        <div class="ds-entity-title">${escapeHtml(s.fullName)}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>${escapeHtml(s.email)}</td>
+                            <td class="ds-table-center">
+                                <div class="ds-table-actions">
+                                    ${tableActionsDelete(`window.AdminConsole.removeStaffPermissions(${s.id})`, 'Thu hồi quyền')}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                assignedStaffBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="ds-empty-state" style="text-align: center; padding: 24px; color: var(--ds-text-muted); font-size: 13px;">
+                            Không tìm thấy nhân viên nào phù hợp bộ lọc.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Render pagination controls
+        mountPagination('permissionsPagination', {
+            page: permissionsPage,
+            totalPages: permissionsTotalPages,
+            totalElements: permissionsTotalElements,
+            pageSize: permissionsPageSize
+        }, {
+            onPage: (p) => {
+                permissionsPage = p;
+                loadPermissionsView();
+            },
+            onSize: (s) => {
+                permissionsPageSize = s;
+                permissionsPage = 0;
+                loadPermissionsView();
+            }
+        });
+
+        // Render staff list inside custom dropdown
+        populateStaffDropdown(staffList);
+    }
+
+    window.AdminConsole.changePermGroup = function (groupId) {
+        selectedGroupId = groupId;
+        permissionsPage = 0;
+        
+        // Repopulate without preserving checked items to reset filter
+        const filteredPermissions = selectedGroupId === 'ALL'
+            ? ALL_PERMISSIONS
+            : ALL_PERMISSIONS.filter(p => p.group === selectedGroupId);
+
+        const permMultiselectList = document.getElementById('permMultiselectList');
+        if (permMultiselectList) {
+            if (filteredPermissions.length > 0) {
+                permMultiselectList.innerHTML = filteredPermissions.map(p => `
+                    <label class="perm-multiselect-item ds-dropdown-option" data-search="${escapeHtml(p.label.toLowerCase())} ${escapeHtml(p.desc.toLowerCase())}" style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0; padding: 8px 12px;" onclick="event.stopPropagation()">
+                        <input type="checkbox" name="filterPermCheckbox" value="${p.id}" style="cursor: pointer; width: 14px; height: 14px; margin: 0;" onchange="window.AdminConsole.updateSelectedPermsCount()">
+                        <span style="font-size: 13px; color: var(--ds-text);">
+                            <strong>${escapeHtml(p.label)}</strong>
+                        </span>
+                    </label>
+                `).join('');
+            } else {
+                permMultiselectList.innerHTML = `
+                    <div style="padding: 10px; color: var(--ds-text-muted); font-size: 12.5px; text-align: center; font-style: italic;">
+                        Không có quyền nào.
+                    </div>
+                `;
+            }
+        }
+
+        const permSelectAll = document.getElementById('permSelectAllCheckbox');
+        if (permSelectAll) permSelectAll.checked = false;
+
+        const permSearch = document.getElementById('permMultiselectSearch');
+        if (permSearch) permSearch.value = '';
+
+        window.AdminConsole.updateSelectedPermsCount();
+
+        // Clear permission description box since no permission is active
+        const descBox = document.getElementById('selectedPermDescBox');
+        if (descBox) {
+            descBox.style.display = 'none';
+            descBox.innerHTML = '';
+        }
+    };
+
+    window.AdminConsole.togglePermMultiselectDropdown = function (event) {
+        if (event) event.stopPropagation();
+        // Close employee dropdown
+        const empDropdown = document.getElementById('multiselectDropdown');
+        if (empDropdown) empDropdown.classList.add('ds-hidden');
+
+        const dropdown = document.getElementById('permMultiselectDropdown');
+        if (dropdown) {
+            dropdown.classList.toggle('ds-hidden');
+            const searchInput = document.getElementById('permMultiselectSearch');
+            if (searchInput) {
+                searchInput.value = '';
+                window.AdminConsole.filterPermMultiselectList('');
+            }
+        }
+    };
+
+    window.AdminConsole.filterPermMultiselectList = function (query) {
+        const q = query.toLowerCase().trim();
+        const items = document.querySelectorAll('.perm-multiselect-item');
+        items.forEach(item => {
+            const searchText = item.getAttribute('data-search') || '';
+            const isMatch = searchText.includes(q);
+            item.style.display = isMatch ? 'flex' : 'none';
+        });
+        const selectAll = document.getElementById('permSelectAllCheckbox');
+        if (selectAll) selectAll.checked = false;
+    };
+
+    window.AdminConsole.togglePermSelectAll = function (checked) {
+        const items = document.querySelectorAll('.perm-multiselect-item');
+        items.forEach(item => {
+            if (item.style.display !== 'none') {
+                const cb = item.querySelector('input[name="filterPermCheckbox"]');
+                if (cb) cb.checked = checked;
+            }
+        });
+        window.AdminConsole.updateSelectedPermsCount();
+    };
+
+    window.AdminConsole.updateSelectedPermsCount = function () {
+        const checked = document.querySelectorAll('input[name="filterPermCheckbox"]:checked');
+        const count = checked.length;
+        const triggerText = document.getElementById('permMultiselectTriggerText');
+        if (triggerText) {
+            if (count > 0) {
+                triggerText.textContent = `Đã chọn: ${count} quyền`;
+                triggerText.style.color = 'var(--ds-text)';
+            } else {
+                triggerText.textContent = '-- Chọn quyền --';
+                triggerText.style.color = 'var(--ds-text-muted)';
+            }
+        }
+
+        // Also update description box dynamically
+        const descBox = document.getElementById('selectedPermDescBox');
+        if (descBox) {
+            if (count > 0) {
+                descBox.style.display = 'block';
+                const descHtml = Array.from(checked).map(cb => {
+                    const pInfo = ALL_PERMISSIONS.find(ap => ap.id === cb.value);
+                    if (!pInfo) return '';
+                    return `<div><strong>${escapeHtml(pInfo.label)}:</strong> ${escapeHtml(pInfo.desc)}</div>`;
+                }).filter(html => html !== '').join('<hr style="margin: 6px 0; border: none; border-top: 1px dashed rgba(0,0,0,0.1);" />');
+
+                descBox.innerHTML = `<strong>Mô tả các quyền đã chọn:</strong><div style="margin-top: 6px; display: flex; flex-direction: column; gap: 4px;">${descHtml}</div>`;
+            } else {
+                descBox.style.display = 'none';
+                descBox.innerHTML = '';
+            }
+        }
+    };
+
+    window.AdminConsole.toggleMultiselectDropdown = function (event) {
+        if (event) event.stopPropagation();
+        // Close permissions dropdown
+        const permDropdown = document.getElementById('permMultiselectDropdown');
+        if (permDropdown) permDropdown.classList.add('ds-hidden');
+
+        const dropdown = document.getElementById('multiselectDropdown');
+        if (dropdown) {
+            dropdown.classList.toggle('ds-hidden');
+            const searchInput = document.getElementById('multiselectSearch');
+            if (searchInput) {
+                searchInput.value = '';
+                window.AdminConsole.filterMultiselectList('');
+            }
+        }
+    };
+
+    window.AdminConsole.filterMultiselectList = function (query) {
+        const q = query.toLowerCase().trim();
+        const items = document.querySelectorAll('.multiselect-item');
+        items.forEach(item => {
+            const searchText = item.getAttribute('data-search') || '';
+            const isMatch = searchText.includes(q);
+            item.style.display = isMatch ? 'flex' : 'none';
+        });
+        const selectAll = document.getElementById('selectAllCheckbox');
+        if (selectAll) selectAll.checked = false;
+    };
+
+    window.AdminConsole.toggleSelectAll = function (checked) {
+        const items = document.querySelectorAll('.multiselect-item');
+        items.forEach(item => {
+            if (item.style.display !== 'none') {
+                const cb = item.querySelector('input[name="assignStaffCheckbox"]');
+                if (cb) cb.checked = checked;
+            }
+        });
+        window.AdminConsole.updateSelectedStaffCount();
+    };
+
+    window.AdminConsole.updateSelectedStaffCount = function () {
+        const checked = document.querySelectorAll('input[name="assignStaffCheckbox"]:checked');
+        const count = checked.length;
+        const triggerText = document.getElementById('multiselectTriggerText');
+        if (triggerText) {
+            if (count > 0) {
+                triggerText.textContent = `Đã chọn: ${count} nhân viên`;
+                triggerText.style.color = 'var(--ds-text)';
+            } else {
+                triggerText.textContent = '-- Chọn nhân viên --';
+                triggerText.style.color = 'var(--ds-text-muted)';
+            }
+        }
+    };
+
+    window.AdminConsole.addStaffToPermission = function () {
+        const checkedPerms = Array.from(document.querySelectorAll('input[name="filterPermCheckbox"]:checked')).map(cb => cb.value);
+        if (checkedPerms.length === 0) {
+            showToast('Vui lòng chọn ít nhất một quyền cụ thể để gán.', true);
+            return;
+        }
+        const checkboxes = document.querySelectorAll('input[name="assignStaffCheckbox"]:checked');
+        if (checkboxes.length === 0) {
+            showToast('Vui lòng chọn ít nhất một nhân viên để gán quyền.', true);
+            return;
+        }
+
+        if (!mock.permissions) {
+            mock.permissions = {};
+        }
+
+        checkboxes.forEach(cb => {
+            const staffId = Number(cb.value);
+            if (!mock.permissions[staffId]) {
+                mock.permissions[staffId] = [];
+            }
+            checkedPerms.forEach(pid => {
+                if (!mock.permissions[staffId].includes(pid)) {
+                    mock.permissions[staffId].push(pid);
+                }
+            });
+        });
+
+        saveMock();
+        showToast(`Đã gán thành công ${checkedPerms.length} quyền cho ${checkboxes.length} nhân viên.`);
+
+        // Hide staff dropdown
+        const dropdown = document.getElementById('multiselectDropdown');
+        if (dropdown) dropdown.classList.add('ds-hidden');
+
+        // Clear staff dropdown checkboxes
+        const staffCbs = document.querySelectorAll('input[name="assignStaffCheckbox"]');
+        staffCbs.forEach(cb => cb.checked = false);
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        if (selectAllCheckbox) selectAllCheckbox.checked = false;
+        window.AdminConsole.updateSelectedStaffCount();
+
         loadPermissionsView();
     };
 
-    function renderPermissionCheckboxes(staffList) {
-        const staff = (staffList || users).find(u => u.id === selectedStaffId);
-        const granted = mock.permissions[selectedStaffId] || [];
-        const groups = [...new Set(ALL_PERMISSIONS.map(p => p.group))];
-        const panel = document.getElementById('permPanel');
-        panel.innerHTML = `
-            <div class="view-header" style="margin-bottom:12px">
-                <div>
-                    <h3 class="ds-heading-md" style="margin:0">${escapeHtml(staff?.fullName || '')}</h3>
-                    <p class="ds-caption">${escapeHtml(staff?.email || '')}</p>
-                </div>
-                <button type="button" class="ds-btn ds-btn-primary" onclick="AdminConsole.savePermissions()"><i class="fa fa-save"></i> Lưu quyền</button>
-            </div>
-            ${groups.map(g => `
-                <div class="perm-group">
-                    <div class="perm-group-title">${escapeHtml(g)}</div>
-                    <div class="perm-checkboxes">
-                        ${ALL_PERMISSIONS.filter(p => p.group === g).map(p => `
-                            <label class="perm-label-checkbox">
-                                <input type="checkbox" value="${p.id}" ${granted.includes(p.id) ? 'checked' : ''}>
-                                ${escapeHtml(p.label)}
-                            </label>
-                        `).join('')}
-                    </div>
-                </div>
-            `).join('')}
-        `;
-    }
+    window.AdminConsole.removeStaffPermissions = function (staffId) {
+        if (!mock.permissions || !mock.permissions[staffId]) return;
 
-    window.AdminConsole.savePermissions = function () {
-        if (!selectedStaffId) {
-            showToast('Chọn nhân viên trước.', true);
+        let permsToRevoke = [];
+        if (isSearchActive) {
+            if (activeFilterPermIds.length > 0) {
+                permsToRevoke = activeFilterPermIds;
+            } else if (activeFilterGroupId !== 'ALL') {
+                permsToRevoke = ALL_PERMISSIONS.filter(p => p.group === activeFilterGroupId).map(p => p.id);
+            } else {
+                const groups = ['Kiểm duyệt', 'Tài chính', 'Vận hành'];
+                permsToRevoke = mock.permissions[staffId].filter(pid => {
+                    const p = ALL_PERMISSIONS.find(ap => ap.id === pid);
+                    return p && groups.includes(p.group);
+                });
+            }
+        } else {
+            if (selectedGroupId === 'ALL') {
+                const groups = ['Kiểm duyệt', 'Tài chính', 'Vận hành'];
+                permsToRevoke = mock.permissions[staffId].filter(pid => {
+                    const p = ALL_PERMISSIONS.find(ap => ap.id === pid);
+                    return p && groups.includes(p.group);
+                });
+            } else {
+                permsToRevoke = ALL_PERMISSIONS.filter(p => p.group === selectedGroupId).map(p => p.id);
+            }
+        }
+
+        if (permsToRevoke.length === 0) {
+            showToast('Không tìm thấy quyền phù hợp để thu hồi.', true);
             return;
         }
-        const checked = [...document.querySelectorAll('#permPanel input[type=checkbox]:checked')].map(el => el.value);
-        mock.permissions[selectedStaffId] = checked;
-        saveMock();
-        showToast('Đã lưu phân quyền nhân viên (dữ liệu mẫu).');
+
+        const permNames = permsToRevoke.map(pid => {
+            const p = ALL_PERMISSIONS.find(ap => ap.id === pid);
+            return p ? p.label : pid;
+        }).join(', ');
+
+        if (confirm(`Bạn có chắc chắn muốn thu hồi các quyền sau của nhân viên: ${permNames}?`)) {
+            mock.permissions[staffId] = mock.permissions[staffId].filter(id => !permsToRevoke.includes(id));
+            saveMock();
+            showToast('Đã thu hồi quyền thành công.');
+            loadPermissionsView();
+        }
+    };
+
+    window.AdminConsole.searchStaffByPermissions = function () {
+        isSearchActive = true;
+        permissionsPage = 0;
+
+        const checkedPerms = Array.from(document.querySelectorAll('input[name="filterPermCheckbox"]:checked')).map(cb => cb.value);
+        activeFilterPermIds = checkedPerms;
+        activeFilterGroupId = selectedGroupId;
+
+        loadPermissionsView();
+        showToast('Đã cập nhật danh sách tìm kiếm.');
     };
 
     /* ---------- Helpers ---------- */
@@ -1450,18 +2638,41 @@
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
     }
 
+    function formatNumberWithDots(val) {
+        if (val === null || val === undefined || val === '') return '';
+        const digits = String(val).replace(/\D/g, '');
+        if (!digits) return '';
+        return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    function stripDots(val) {
+        if (!val) return 0;
+        return Number(String(val).replace(/\./g, ''));
+    }
+
     function formatDateTime(iso) {
         try { return new Date(iso).toLocaleString('vi-VN'); } catch { return iso; }
     }
 
     function showToast(message, isError = false) {
         const container = document.getElementById('toastContainer');
-        if (!container) return;
+        if (!container) return null;
         const toast = document.createElement('div');
-        toast.className = `ds-toast ds-toast-${isError ? 'error' : 'success'}`;
+        
+        let type = 'success';
+        let title = 'Thành công';
+        if (isError === true) {
+            type = 'error';
+            title = 'Thất bại';
+        } else if (isError === 'info') {
+            type = 'info';
+            title = 'Thông báo';
+        }
+        
+        toast.className = `ds-toast ds-toast-${type}`;
         toast.innerHTML = `
             <div>
-                <p class="ds-toast-title">${isError ? 'Thất bại' : 'Thành công'}</p>
+                <p class="ds-toast-title">${title}</p>
                 <p class="ds-toast-message">${escapeHtml(message)}</p>
             </div>
             <button class="ds-toast-close" onclick="this.parentElement.remove()">×</button>
@@ -1470,6 +2681,7 @@
         setTimeout(() => {
             if (toast.parentElement) toast.remove();
         }, 3000);
+        return toast;
     }
 
     function readCurrentUser() {

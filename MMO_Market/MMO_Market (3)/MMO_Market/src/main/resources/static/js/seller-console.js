@@ -846,36 +846,173 @@ async function initWithdrawals() {
             }).join('');
         }
 
+        // Load withdrawal configuration dynamically
+        let minLimit = 50000;
+        let maxLimit = 50000000;
+        let feePercent = 1.5;
+        let minFee = 10000;
+        let require2FA = true;
+
+        try {
+            const configRes = await sellerFetch('/withdrawals/config');
+            if (configRes.ok) {
+                const configData = await configRes.json();
+                minLimit = configData.minWithdrawalLimit || minLimit;
+                maxLimit = configData.maxWithdrawalLimit || maxLimit;
+                feePercent = configData.withdrawalFeePercent || feePercent;
+                minFee = configData.minWithdrawFee || minFee;
+                require2FA = configData.requireWithdraw2FA !== undefined ? configData.requireWithdraw2FA : require2FA;
+            }
+        } catch (e) {
+            console.error("Failed to load withdrawal config", e);
+        }
+
+        // Update subtitle and input hint dynamically
+        const subtitleEl = document.querySelector('.seller-card__subtitle');
+        if (subtitleEl) {
+            subtitleEl.textContent = `Rút tiền về tài khoản ngân hàng — tối thiểu ${formatVND(minLimit)}`;
+        }
+        
+        const hintEl = document.querySelector('.profile-edit-form__hint');
+        if (hintEl) {
+            hintEl.textContent = `Hạn mức: ${formatVND(minLimit)} - ${formatVND(maxLimit)} · Phí: ${feePercent}% (tối thiểu ${formatVND(minFee)})`;
+        }
+
+        const inputEl = document.getElementById('withdrawAmount');
+        if (inputEl) {
+            inputEl.min = minLimit;
+            inputEl.value = minLimit;
+
+            // Live fee feedback
+            let feeInfoEl = document.getElementById('withdrawalFeeInfo');
+            if (!feeInfoEl) {
+                feeInfoEl = document.createElement('div');
+                feeInfoEl.id = 'withdrawalFeeInfo';
+                feeInfoEl.style.marginTop = '12px';
+                feeInfoEl.style.fontSize = '14px';
+                feeInfoEl.style.color = '#475569';
+                feeInfoEl.style.background = '#f8fafc';
+                feeInfoEl.style.padding = '12px';
+                feeInfoEl.style.borderRadius = '8px';
+                feeInfoEl.style.border = '1px solid #e2e8f0';
+                inputEl.parentNode.appendChild(feeInfoEl);
+            }
+
+            const updateFeeDisplay = () => {
+                const val = parseInt(inputEl.value) || 0;
+                if (val <= 0) {
+                    feeInfoEl.innerHTML = '';
+                    return;
+                }
+                let fee = Math.floor(val * (feePercent / 100));
+                if (fee < minFee) {
+                    fee = minFee;
+                }
+                const total = val + fee;
+                feeInfoEl.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                        <span>Số tiền yêu cầu rút:</span>
+                        <strong>${formatVND(val)}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                        <span>Phí dịch vụ rút tiền:</span>
+                        <span style="color:#ef4444; font-weight:500;">${formatVND(fee)}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; border-top:1px dashed #cbd5e1; padding-top:6px; font-weight:600; color: #1e293b;">
+                        <span>Tổng số tiền trừ vào ví:</span>
+                        <span style="color:#2563eb;">${formatVND(total)}</span>
+                    </div>
+                `;
+            };
+
+            inputEl.addEventListener('input', updateFeeDisplay);
+            updateFeeDisplay(); // Initial trigger
+        }
+
         // Handle Request Withdrawal Button
         const withdrawBtn = document.querySelector('.profile-button--primary');
         if (withdrawBtn) {
             withdrawBtn.addEventListener('click', async () => {
-                const amountText = prompt('Nhập số tiền muốn rút (Tối thiểu 50,000 VNĐ):');
-                if (amountText === null) return;
+                let amount = minLimit;
+                if (inputEl) {
+                    amount = parseInt(inputEl.value) || 0;
+                } else {
+                    const amountText = prompt(`Nhập số tiền muốn rút (Hạn mức: ${formatVND(minLimit)} - ${formatVND(maxLimit)}):`);
+                    if (amountText === null) return;
+                    amount = parseInt(amountText.replace(/,/g, '')) || 0;
+                }
 
-                const amount = parseInt(amountText.replace(/,/g, ''));
-                if (isNaN(amount) || amount < 50000) {
-                    showWarningToast('Số tiền rút không hợp lệ hoặc nhỏ hơn 50,000 VNĐ.');
+                if (isNaN(amount) || amount < minLimit) {
+                    showToast(`Số tiền rút tối thiểu là ${formatVND(minLimit)}.`, 'error');
+                    return;
+                }
+                if (amount > maxLimit) {
+                    showToast(`Số tiền rút tối đa là ${formatVND(maxLimit)}.`, 'error');
                     return;
                 }
 
-                if (dashData.balanceVnd < amount) {
-                    showWarningToast('Số dư ví khả dụng của bạn không đủ.');
+                let fee = Math.floor(amount * (feePercent / 100));
+                if (fee < minFee) {
+                    fee = minFee;
+                }
+                const totalDeducted = amount + fee;
+
+                if (dashData.balanceVnd < totalDeducted) {
+                    showToast(`Số dư ví khả dụng không đủ (cần ${formatVND(totalDeducted)} bao gồm cả phí dịch vụ).`, 'error');
                     return;
                 }
 
-                try {
-                    const postRes = await sellerFetch('/withdrawals', {
-                        method: 'POST',
-                        body: JSON.stringify({ amountVnd: amount })
-                    });
-                    const postData = await postRes.json();
-                    if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
+                if (require2FA) {
+                    const confirmOtpSend = confirm(`Yêu cầu rút tiền này bắt buộc xác thực 2FA qua email. Bấm OK để gửi mã OTP về email: ${dashData.email}.`);
+                    if (!confirmOtpSend) return;
 
-                    showToast(postData.message || 'Đã tạo yêu cầu rút tiền!');
-                    window.location.reload(); // Refresh screen
-                } catch (err) {
-                    showToast(err.message, 'error');
+                    try {
+                        // Request OTP
+                        const otpRes = await sellerFetch('/withdrawals/send-otp', { method: 'POST' });
+                        const otpData = await otpRes.json();
+                        if (!otpRes.ok) throw new Error(otpData.message || 'Không thể gửi mã OTP.');
+
+                        showToast(otpData.message || 'Mã OTP đã được gửi về email của bạn.');
+
+                        const otpText = prompt('Vui lòng nhập mã OTP 6 chữ số được gửi tới email của bạn để hoàn tất:');
+                        if (otpText === null) return;
+                        const otp = otpText.trim();
+                        if (!otp) {
+                            showToast('Bạn chưa nhập mã OTP.', 'error');
+                            return;
+                        }
+
+                        // Submit with OTP
+                        const postRes = await sellerFetch('/withdrawals', {
+                            method: 'POST',
+                            body: JSON.stringify({ amountVnd: amount, otp: otp })
+                        });
+                        const postData = await postRes.json();
+                        if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
+
+                        showToast(postData.message || 'Đã tạo yêu cầu rút tiền thành công!');
+                        setTimeout(() => window.location.reload(), 1500);
+
+                    } catch (err) {
+                        showToast(err.message, 'error');
+                    }
+                } else {
+                    const confirmNo2fa = confirm(`Xác nhận tạo yêu cầu rút tiền ${formatVND(amount)}? Phí rút là ${formatVND(fee)}. Tổng số tiền trừ khỏi ví: ${formatVND(totalDeducted)}.`);
+                    if (!confirmNo2fa) return;
+
+                    try {
+                        const postRes = await sellerFetch('/withdrawals', {
+                            method: 'POST',
+                            body: JSON.stringify({ amountVnd: amount })
+                        });
+                        const postData = await postRes.json();
+                        if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
+
+                        showToast(postData.message || 'Đã tạo yêu cầu rút tiền thành công!');
+                        setTimeout(() => window.location.reload(), 1500);
+                    } catch (err) {
+                        showToast(err.message, 'error');
+                    }
                 }
             });
         }

@@ -6,25 +6,14 @@
   <component name="ChangeListManager">
     <list default="true" id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/docs/EXPORT_REPORT.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/docs/ICON_GUIDELINE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/docs/UI_GUIDELINE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/docs/UX_UI_SYNC_GUIDELINE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/examples/buttons-example.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/examples/buttons-icons-catalog.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/examples/filter-search-sort-example.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/examples/forms-example.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/examples/icons-example.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/examples/pagination-example.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/examples/table-example.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/examples/toast-example.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/examples/toggle-example.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/examples/ux-ui-sync-proposal-example.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sql_scripts/migration/20250532_Thêm tk admin.sql" beforeDir="false" afterPath="$PROJECT_DIR$/sql_scripts/migration/20250601_001_them_tk_admin.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/service/AuthenticationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/AuthenticationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/admin/users.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/admin/users.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/service/AdminUserManagementServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/service/AdminUserManagementServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/admin/users.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/admin/users.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controller/AuditLogController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/AuditLogController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controller/SellerController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/SellerController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/security/JwtTokenProvider.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/security/JwtTokenProvider.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/service/AdminUserManagementService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/AdminUserManagementService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/service/AuditLogService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/AuditLogService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/service/EmailService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/EmailService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/toast.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/toast.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/admin-console.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/admin-console.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -559,6 +548,15 @@
       <workItem from="1781503474757" duration="113000" />
       <workItem from="1781533780802" duration="463000" />
       <workItem from="1781534531153" duration="1036000" />
+      <workItem from="1781604036429" duration="1306000" />
+      <workItem from="1781688853059" duration="2760000" />
+      <workItem from="1781703264691" duration="1749000" />
+      <workItem from="1781765337608" duration="4312000" />
+      <workItem from="1781791584336" duration="5807000" />
+      <workItem from="1781848920812" duration="5284000" />
+      <workItem from="1781858198969" duration="4544000" />
+      <workItem from="1781876585091" duration="3142000" />
+      <workItem from="1781944815275" duration="3426000" />
     </task>
     <servers />
   </component>

@@ -30,11 +30,14 @@ class AdminUserManagementServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private jakarta.servlet.http.HttpServletRequest request;
+
     private service.AdminUserManagementService service;
 
     @BeforeEach
     void setUp() {
-        service = new service.AdminUserManagementService(userRepository, auditLogRepository, authenticationRepository, new ObjectMapper(), passwordEncoder);
+        service = new service.AdminUserManagementService(userRepository, auditLogRepository, authenticationRepository, new ObjectMapper(), passwordEncoder, request);
     }
 
     @Test

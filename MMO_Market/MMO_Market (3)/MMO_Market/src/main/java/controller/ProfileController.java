@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import service.UserService;
 
+import org.springframework.web.bind.annotation.PostMapping;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/v1/profile")
 public class ProfileController {
@@ -31,5 +34,12 @@ public class ProfileController {
             @AuthenticationPrincipal Long userId,
             @Valid @RequestBody UpdateProfileRequest request) {
         return userService.updateMyProfile(userId, request);
+    }
+
+    @PostMapping("/register-shop")
+    public ProfileResponse registerShop(
+            @AuthenticationPrincipal Long userId,
+            @RequestBody Map<String, String> request) {
+        return userService.registerShop(userId, request);
     }
 }

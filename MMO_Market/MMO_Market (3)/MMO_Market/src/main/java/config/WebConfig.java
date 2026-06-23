@@ -1,18 +1,30 @@
 package config;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import security.MaintenanceInterceptor;
 import java.io.File;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
-    // Disabled explicit redirect to let Spring Boot auto-serve static/index.html as Welcome Page
+
+    private final MaintenanceInterceptor maintenanceInterceptor;
+
+    public WebConfig(MaintenanceInterceptor maintenanceInterceptor) {
+        this.maintenanceInterceptor = maintenanceInterceptor;
+    }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         String uploadPath = new File("uploads").getAbsolutePath();
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:" + uploadPath + "/");
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(maintenanceInterceptor);
     }
 }

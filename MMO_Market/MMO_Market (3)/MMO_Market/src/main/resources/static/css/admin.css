@@ -1,9 +1,12 @@
 /* Admin console — extends MMO Market design system (see docs/design-system/docs/UX_UI_SYNC_GUIDELINE.md) */
 
+*:not(.fa):not(.fab):not(.fas):not(.far):not([class*="fa-"]) {
+    font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important;
+}
+
 body {
     background: var(--ds-bg);
     color: var(--ds-text);
-    font-family: var(--ds-font-family);
 }
 
 .admin-shell {

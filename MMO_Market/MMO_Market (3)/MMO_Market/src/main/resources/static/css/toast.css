@@ -51,7 +51,6 @@
     background: #fef2f2;
     color: #991b1b;
 }
-
 .ds-toast-error .fa {
     color: #ef4444;
 }
@@ -77,8 +76,6 @@
 .ds-toast-info .fa {
     color: #3b82f6;
 }
-
-/* ── Typography ── */
 .ds-toast-title {
     margin: 0 0 2px 0;
     font-size: 14px;

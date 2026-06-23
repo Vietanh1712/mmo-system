@@ -40,4 +40,5 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     // Lấy tất cả sản phẩm đang active (dùng fallback khi chưa có giao dịch)
     List<Product> findAllByIsDeleteFalse();
+    long countByIsDeleteFalse();
 }

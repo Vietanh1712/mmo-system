@@ -182,7 +182,7 @@
                 </div>
                 <div class="stats-grid-4">
                     <div class="stat-card-modern"><span class="stat-card-label">Hoa hồng</span><div class="stat-card-value ds-money" id="revCommissions">₫0</div></div>
-                    <div class="stat-card-modern blue"><span class="stat-card-label">Phí người mua</span><div class="stat-card-value ds-money" id="revBuyerFees">₫0</div></div>
+                    <div class="stat-card-modern blue"><span class="stat-card-label">Phí dịch vụ Seller</span><div class="stat-card-value ds-money" id="revBuyerFees">₫0</div></div>
                     <div class="stat-card-modern green"><span class="stat-card-label">Phí rút tiền</span><div class="stat-card-value ds-money" id="revWithdrawalFees">₫0</div></div>
                     <div class="stat-card-modern yellow"><span class="stat-card-label">Doanh thu ròng</span><div class="stat-card-value ds-money" id="revNetTotal">₫0</div></div>
                 </div>
@@ -267,10 +267,12 @@
                             <div class="ds-form-field">
                                 <label class="ds-label" for="accountFormEmail">Email <span class="ds-required">*</span></label>
                                 <input id="accountFormEmail" class="ds-input" type="email" required autocomplete="off" placeholder="name@mmomarket.com">
+                                <small id="accountFormEmail-error" class="ds-validation"></small>
                             </div>
                             <div class="ds-form-field" id="accountFormPasswordWrap">
                                 <label class="ds-label" for="accountFormPassword">Mật khẩu <span class="ds-required" id="accountFormPasswordRequired">*</span></label>
                                 <input id="accountFormPassword" class="ds-input" type="password" minlength="6" autocomplete="new-password" placeholder="Tối thiểu 6 ký tự">
+                                <small id="accountFormPassword-error" class="ds-validation"></small>
                             </div>
                         </div>
 
@@ -279,18 +281,22 @@
                             <div class="ds-form-field">
                                 <label class="ds-label" for="accountFormFullName">Họ và tên <span class="ds-required">*</span></label>
                                 <input id="accountFormFullName" class="ds-input" type="text" minlength="3" required placeholder="Nguyễn Văn A">
+                                <small id="accountFormFullName-error" class="ds-validation"></small>
                             </div>
                             <div class="ds-form-field">
                                 <label class="ds-label" for="accountFormPhone">Số điện thoại</label>
                                 <input id="accountFormPhone" class="ds-input" type="tel" placeholder="09xx xxx xxx">
+                                <small id="accountFormPhone-error" class="ds-validation"></small>
                             </div>
                             <div class="ds-form-field">
                                 <label class="ds-label" for="accountFormNationalId">Số CCCD</label>
                                 <input id="accountFormNationalId" class="ds-input" type="text" inputmode="numeric" maxlength="12" placeholder="001234567890">
+                                <small id="accountFormNationalId-error" class="ds-validation"></small>
                             </div>
                             <div class="ds-form-field">
                                 <label class="ds-label" for="accountFormBirthDate">Ngày sinh</label>
                                 <input id="accountFormBirthDate" class="ds-input" type="date">
+                                <small id="accountFormBirthDate-error" class="ds-validation"></small>
                             </div>
                             <div class="ds-form-field">
                                 <label class="ds-label">Giới tính</label>
@@ -302,6 +308,7 @@
                             <div class="ds-form-field" style="grid-column: 1 / -1;">
                                 <label class="ds-label" for="accountFormAddress">Địa chỉ</label>
                                 <input id="accountFormAddress" class="ds-input" type="text" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành">
+                                <small id="accountFormAddress-error" class="ds-validation"></small>
                             </div>
                         </div>
 
@@ -342,6 +349,7 @@
                         <div class="ds-form-field"><label class="ds-label" for="cfgSessionTimeout">Thời gian phiên (phút)</label><input id="cfgSessionTimeout" class="ds-input" type="number" min="5"></div>
                         <div class="ds-form-field"><label class="ds-label" for="cfgOtpTimeout">Thời gian OTP (phút)</label><input id="cfgOtpTimeout" class="ds-input" type="number" min="1"></div>
                         <div class="ds-form-field"><label class="ds-label" for="cfgMaxLoginRetries">Số lần đăng nhập sai tối đa</label><input id="cfgMaxLoginRetries" class="ds-input" type="number"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="cfgLockDurationMins">Thời gian khóa tài khoản (phút)</label><input id="cfgLockDurationMins" class="ds-input" type="number" min="1"></div>
                         <div class="ds-form-field"><label class="ds-label" for="cfgEscrowHoldHours">Thời gian giam tiền Escrow (giờ)</label><input id="cfgEscrowHoldHours" class="ds-input" type="number" min="1"></div>
                     </div>
                     
@@ -382,13 +390,13 @@
                 <div class="ds-card" style="padding: 24px; max-width: 900px;">
                     <div class="ds-form-grid">
                         <div class="ds-form-field"><label class="ds-label" for="commBasePercent">Hoa hồng C2C (%)</label><input id="commBasePercent" class="ds-input" type="number" step="0.1"></div>
-                        <div class="ds-form-field"><label class="ds-label" for="commFlatBuyer">Phí cố định người mua (VNĐ)</label><input id="commFlatBuyer" class="ds-input" type="number"></div>
                         <div class="ds-form-field"><label class="ds-label" for="commWithdrawPercent">Phí rút tiền (%)</label><input id="commWithdrawPercent" class="ds-input" type="number" step="0.1"></div>
-                        <div class="ds-form-field"><label class="ds-label" for="commMinWithdrawFee">Phí rút tối thiểu (VNĐ)</label><input id="commMinWithdrawFee" class="ds-input" type="number"></div>
-                        <div class="ds-form-field"><label class="ds-label" for="commMinWithdrawLimit">Hạn mức rút tối thiểu (VNĐ)</label><input id="commMinWithdrawLimit" class="ds-input" type="number"></div>
-                        <div class="ds-form-field"><label class="ds-label" for="commMaxWithdrawLimit">Hạn mức rút tối đa (VNĐ)</label><input id="commMaxWithdrawLimit" class="ds-input" type="number"></div>
-                        <div class="ds-form-field"><label class="ds-label" for="commMinDepositLimit">Hạn mức nạp tối thiểu (VNĐ)</label><input id="commMinDepositLimit" class="ds-input" type="number"></div>
-                        <div class="ds-form-field"><label class="ds-label" for="commAutoWithdrawLimit">Hạn mức tự động rút (VNĐ)</label><input id="commAutoWithdrawLimit" class="ds-input" type="number"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="commSellerUpgradeFee">Phí nâng cấp tài khoản Seller (VNĐ)</label><input id="commSellerUpgradeFee" class="ds-input" type="text"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="commProductFeaturedFee">Phí đẩy tin nổi bật sản phẩm (VNĐ)</label><input id="commProductFeaturedFee" class="ds-input" type="text"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="commMinWithdrawLimit">Hạn mức rút tối thiểu (VNĐ)</label><input id="commMinWithdrawLimit" class="ds-input" type="text"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="commMaxWithdrawLimit">Hạn mức rút tối đa (VNĐ)</label><input id="commMaxWithdrawLimit" class="ds-input" type="text"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="commMinDepositLimit">Hạn mức nạp tối thiểu (VNĐ)</label><input id="commMinDepositLimit" class="ds-input" type="text"></div>
+                        <div class="ds-form-field"><label class="ds-label" for="commMaxDepositLimit">Hạn mức nạp tối đa (VNĐ)</label><input id="commMaxDepositLimit" class="ds-input" type="text"></div>
                     </div>
                 </div>
             </div>
@@ -400,6 +408,7 @@
                         <h2 class="ds-heading-lg">Quản lý Thông báo &amp; Bảo trì</h2>
                         <p class="ds-caption">Soạn thảo, phát thông báo và quản lý trạng thái bảo trì hệ thống.</p>
                     </div>
+                    <button type="button" class="ds-btn ds-btn-primary" onclick="AdminConsole.openCreateNotification()"><i class="fa fa-bullhorn"></i> Soạn thông báo</button>
                 </div>
 
                 <!-- Active Maintenance Alert Banner -->
@@ -414,64 +423,43 @@
                     <button type="button" class="ds-btn ds-btn-sm" style="background: var(--ds-danger); color: white; border: none; padding: 6px 12px;" onclick="AdminConsole.disableMaintenance()">Tắt bảo trì ngay</button>
                 </div>
                 
-                <div class="ds-two-column">
-                    <div class="ds-card" style="padding: 24px;">
-                        <h3 class="ds-heading-md" style="margin-bottom: 20px;">Soạn thông báo mới</h3>
-                        <div class="ds-stack-sm">
-                            <div class="ds-form-field">
-                                <label class="ds-label" for="notifTitle">Tiêu đề thông báo</label>
-                                <input id="notifTitle" class="ds-input" type="text" placeholder="Ví dụ: Hệ thống bảo trì, Cập nhật chính sách...">
-                            </div>
-                            <div class="ds-form-field">
-                                <label class="ds-label" for="notifType">Loại thông báo</label>
-                                <select id="notifType" class="ds-input">
-                                    <option value="info">Thông tin chung (Info)</option>
-                                    <option value="warning">Cảnh báo (Warning)</option>
-                                    <option value="maintenance">Bảo trì hệ thống (Maintenance)</option>
-                                    <option value="policy">Chính sách (Policy)</option>
-                                </select>
-                            </div>
-                            <div class="ds-form-field">
-                                <label class="ds-label" for="notifContent">Nội dung</label>
-                                <textarea id="notifContent" class="ds-input" rows="5" style="height:auto;" placeholder="Nhập nội dung thông báo..."></textarea>
-                            </div>
-                            <!-- Conditional Maintenance Mode Toggle -->
-                            <div class="ds-form-field ds-hidden" id="notifMaintToggleWrap" style="margin-top: 12px;">
-                                <div style="display:flex; align-items:center; gap:12px; padding: 12px; background: rgba(239, 68, 68, 0.05); border: 1px dashed var(--ds-danger); border-radius: var(--ds-radius-sm);">
-                                    <button type="button" id="notifMaintToggle" class="ds-toggle ds-toggle-system ds-toggle-inactive" aria-pressed="false">
-                                        <span class="ds-toggle-track"><span class="ds-toggle-knob"></span></span>
-                                    </button>
-                                    <span class="ds-label" style="margin:0; font-weight: bold; color: var(--ds-danger);">Đồng thời kích hoạt chế độ bảo trì hệ thống</span>
-                                </div>
-                            </div>
-                            <div class="ds-form-actions" style="justify-content: flex-end; margin-top: 16px;">
-                                <button type="button" class="ds-btn ds-btn-primary" onclick="AdminConsole.pushNotification()"><i class="fa fa-paper-plane"></i> Phát thông báo ngay</button>
-                            </div>
+                <div class="admin-card admin-list-card">
+                    <div class="ds-filter-panel">
+                        <h2 class="ds-card-title">Bộ lọc thông báo</h2>
+                        <div class="ds-filter-grid">
+                            <input id="notifSearch" class="ds-input" type="search" placeholder="Tìm tiêu đề, nội dung...">
+                            <select id="notifTypeFilter" class="ds-input" aria-label="Loại thông báo">
+                                <option value="">Tất cả phân loại</option>
+                                <option value="info">Thông tin chung (Info)</option>
+                                <option value="warning">Cảnh báo bảo mật (Warning)</option>
+                                <option value="maintenance">Lịch bảo trì (Maintenance)</option>
+                                <option value="policy">Chính sách &amp; Điều khoản (Policy)</option>
+                            </select>
+                        </div>
+                        <div class="ds-filter-actions">
+                            <button type="button" class="ds-btn ds-btn-secondary" id="notifResetFilter">Làm mới bộ lọc</button>
+                            <button type="button" class="ds-btn ds-btn-primary" id="notifSearchBtn">Tìm kiếm</button>
                         </div>
                     </div>
                     
-                    <div class="admin-card admin-list-card">
-                        <div class="ds-filter-panel">
-                            <h2 class="ds-card-title">Lịch sử phát thông báo</h2>
-                        </div>
-                        <div class="ds-table-wrap">
-                            <table class="ds-table">
-                                <thead>
-                                <tr>
-                                    <th class="ds-table-center">STT</th>
-                                    <th class="ds-table-center">Thời gian</th>
-                                    <th>Tiêu đề &amp; Nội dung</th>
-                                    <th class="ds-table-center">Loại</th>
-                                    <th>Người phát</th>
-                                </tr>
-                                </thead>
-                                <tbody id="notifHistoryBody">
-                                    <tr><td colspan="5" class="ds-empty-state">Chưa có thông báo nào.</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div id="notifPagination"></div>
+                    <div class="ds-table-wrap">
+                        <table class="ds-table">
+                            <thead>
+                            <tr>
+                                <th class="ds-table-center">STT</th>
+                                <th class="ds-table-center">Thời gian</th>
+                                <th>Tiêu đề &amp; Nội dung</th>
+                                <th class="ds-table-center">Loại</th>
+                                <th>Người phát</th>
+                                <th class="ds-table-center" style="width: 100px;">Thao tác</th>
+                            </tr>
+                            </thead>
+                            <tbody id="notifHistoryBody">
+                                <tr><td colspan="6" class="ds-empty-state">Chưa có thông báo nào.</td></tr>
+                            </tbody>
+                        </table>
                     </div>
+                    <div id="notifPagination"></div>
                 </div>
             </div>
 
@@ -531,19 +519,106 @@
                 <div class="view-header">
                     <div>
                         <h2 class="ds-heading-lg">Quản lý &amp; phân quyền nhân viên</h2>
-                        <p class="ds-caption">Gán quyền cho từng nhân viên (lưu demo).</p>
+                        <p class="ds-caption">Cấu hình vai trò, gán và thu hồi quyền hạn của nhân viên hệ thống.</p>
                     </div>
                 </div>
-                <div class="ds-card" style="padding: 24px; max-width: 900px;">
-                    <div class="ds-form-field" style="margin-bottom: 24px;">
-                        <label class="ds-label" for="staffPermSelect">Chọn nhân viên</label>
-                        <select id="staffPermSelect" class="ds-input" onchange="AdminConsole.selectStaffPerm(this.value)">
-                            <option value="">-- Đang tải --</option>
-                        </select>
+                
+                <div class="admin-card admin-list-card">
+                    <div class="ds-filter-panel">
+                        <h2 class="ds-card-title">Bộ lọc quyền &amp; Gán nhân viên</h2>
+                        <div class="ds-filter-grid" style="gap: 16px;">
+                            <!-- Dropdown 1: Nhóm quyền -->
+                            <select id="permGroupFilter" class="ds-input" onchange="AdminConsole.changePermGroup(this.value)" aria-label="Nhóm quyền">
+                                <option value="ALL">Tất cả nhóm quyền</option>
+                                <option value="Kiểm duyệt">Nhóm: Kiểm duyệt</option>
+                                <option value="Tài chính">Nhóm: Tài chính</option>
+                                <option value="Vận hành">Nhóm: Vận hành</option>
+                            </select>
+                            
+                            <!-- Dropdown 2: Custom Searchable Multiselect Dropdown for Permissions -->
+                            <div class="ds-dropdown" style="width: 100%; min-width: 0;">
+                                <div id="permMultiselectTrigger" class="ds-dropdown-toggle" onclick="AdminConsole.togglePermMultiselectDropdown(event)" style="cursor: pointer; user-select: none;">
+                                    <span id="permMultiselectTriggerText" style="color: var(--ds-text-muted);">-- Chọn quyền --</span>
+                                    <i class="fa fa-caret-down"></i>
+                                </div>
+                                
+                                <div id="permMultiselectDropdown" class="ds-dropdown-panel ds-hidden" style="max-height: 250px; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+                                    <!-- Search input inside dropdown -->
+                                    <div style="position: relative; margin: 0;" onclick="event.stopPropagation()">
+                                        <i class="fa fa-search" style="position: absolute; left: 10px; top: 10px; color: var(--ds-text-muted); font-size: 12px;"></i>
+                                        <input type="text" id="permMultiselectSearch" class="ds-input" style="padding-left: 28px; width: 100%; height: 32px; box-sizing: border-box; font-size: 12.5px;" placeholder="Tìm nhanh..." oninput="AdminConsole.filterPermMultiselectList(this.value)">
+                                    </div>
+                                    <!-- Select All checkbox -->
+                                    <label class="ds-dropdown-option" style="display: flex; align-items: center; gap: 8px; font-weight: bold; border-bottom: 1px solid var(--ds-border); padding-bottom: 6px; cursor: pointer; font-size: 12.5px; margin: 0;" onclick="event.stopPropagation()">
+                                        <input type="checkbox" id="permSelectAllCheckbox" onchange="AdminConsole.togglePermSelectAll(this.checked)" style="cursor: pointer; width: 14px; height: 14px; margin: 0;">
+                                        Chọn tất cả hiển thị
+                                    </label>
+                                    <!-- Checkbox list -->
+                                    <div id="permMultiselectList" style="display: flex; flex-direction: column; gap: 4px;">
+                                        <!-- Populated by JS -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Custom Searchable Multiselect Dropdown -->
+                            <div class="ds-dropdown" style="width: 100%; min-width: 0;">
+                                <div id="multiselectTrigger" class="ds-dropdown-toggle" onclick="AdminConsole.toggleMultiselectDropdown(event)" style="cursor: pointer; user-select: none;">
+                                    <span id="multiselectTriggerText" style="color: var(--ds-text-muted);">-- Chọn nhân viên --</span>
+                                    <i class="fa fa-caret-down"></i>
+                                </div>
+                                
+                                <div id="multiselectDropdown" class="ds-dropdown-panel ds-hidden" style="max-height: 250px; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+                                    <!-- Search input inside dropdown -->
+                                    <div style="position: relative; margin: 0;" onclick="event.stopPropagation()">
+                                        <i class="fa fa-search" style="position: absolute; left: 10px; top: 10px; color: var(--ds-text-muted); font-size: 12px;"></i>
+                                        <input type="text" id="multiselectSearch" class="ds-input" style="padding-left: 28px; width: 100%; height: 32px; box-sizing: border-box; font-size: 12.5px;" placeholder="Tìm nhanh..." oninput="AdminConsole.filterMultiselectList(this.value)">
+                                    </div>
+                                    <!-- Select All checkbox -->
+                                    <label class="ds-dropdown-option" style="display: flex; align-items: center; gap: 8px; font-weight: bold; border-bottom: 1px solid var(--ds-border); padding-bottom: 6px; cursor: pointer; font-size: 12.5px; margin: 0;" onclick="event.stopPropagation()">
+                                        <input type="checkbox" id="selectAllCheckbox" onchange="AdminConsole.toggleSelectAll(this.checked)" style="cursor: pointer; width: 14px; height: 14px; margin: 0;">
+                                        Chọn tất cả hiển thị
+                                    </label>
+                                    <!-- Checkbox list -->
+                                    <div id="multiselectList" style="display: flex; flex-direction: column; gap: 4px;">
+                                        <!-- Populated by JS -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Description of the selected permission -->
+                        <div id="selectedPermDescBox" style="margin-top: 12px; padding: 10px 14px; background: rgba(37, 99, 235, 0.05); border-left: 3px solid var(--ds-primary); border-radius: var(--ds-radius-sm); font-size: 13px; color: var(--ds-text-subtle); line-height: 1.45;">
+                            <!-- Populated by JS -->
+                        </div>
+                        
+                        <div class="ds-filter-actions" style="margin-top: 12px; display: flex; gap: 10px;">
+                            <button type="button" class="ds-btn ds-btn-primary" onclick="AdminConsole.addStaffToPermission()">
+                                <i class="fa fa-plus"></i> Gán quyền cho nhân viên đã chọn
+                            </button>
+                            <button type="button" class="ds-btn ds-btn-secondary" onclick="AdminConsole.searchStaffByPermissions()">
+                                <i class="fa fa-search"></i> Tìm kiếm nhân viên
+                            </button>
+                        </div>
                     </div>
-                    <div class="permissions-panel" id="permPanel">
-                        <p class="ds-caption">Vui lòng chọn nhân viên ở trên.</p>
+                    
+                    <!-- Table: Assigned staff -->
+                    <div class="ds-table-wrap">
+                        <table class="ds-table">
+                            <thead>
+                                <tr>
+                                    <th class="ds-table-center" style="width: 80px;">STT</th>
+                                    <th class="ds-table-center" style="width: 100px;">Mã NV</th>
+                                    <th>Họ và tên</th>
+                                    <th>Email</th>
+                                    <th class="ds-table-center" style="width: 150px;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="assignedStaffTableBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
                     </div>
+                    <div id="permissionsPagination"></div>
                 </div>
             </div>
 
@@ -553,22 +628,118 @@
 
 <!-- Log detail modal -->
 <div id="logDetailModal" class="ds-modal-backdrop ds-hidden" role="dialog" aria-modal="true">
-    <div class="ds-modal" style="max-width: 600px;">
-        <div class="ds-modal-header">
-            <h3 class="ds-heading-md">Chi tiết nhật ký hoạt động</h3>
+    <div class="ds-modal" style="max-width: 700px; width: 100%;">
+        <div class="ds-modal-header ds-cluster-between" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 class="ds-heading-md" style="margin: 0; font-weight: 700;">Chi tiết nhật ký hoạt động</h3>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 12px; color: var(--ds-text-muted);">
+                    <span id="logDetId" style="font-weight: 600;">ID: #--</span>
+                    <span>•</span>
+                    <span id="logDetTime">--/--/---- --:--</span>
+                </div>
+            </div>
+            <button type="button" class="ds-btn ds-btn-text" style="font-size: 20px; padding: 4px; border: none; background: transparent; cursor: pointer; color: var(--ds-text-subtle);" onclick="AdminConsole.closeLogDetail()">
+                <i class="fa fa-times"></i>
+            </button>
         </div>
-        <div class="ds-modal-body ds-stack-sm">
-            <div><strong>Thời gian:</strong> <span id="logDetTime"></span></div>
-            <div><strong>Nhân viên thực hiện:</strong> <span id="logDetOperator" style="font-weight: 600;"></span></div>
-            <div><strong>Hành động:</strong> <span id="logDetAction" class="ds-badge"></span></div>
-            <div style="margin-bottom: 12px;"><strong>Mô tả:</strong> <span id="logDetDesc" class="muted"></span></div>
-            <div style="border-top: 1px solid var(--ds-border); padding-top: 16px; margin-top: 12px;">
-                <strong style="display: block; margin-bottom: 8px;">Chi tiết thay đổi dữ liệu:</strong>
+        <div class="ds-modal-body ds-stack-md" style="padding: 20px;">
+            <!-- Box thông tin chung -->
+            <div style="background: var(--ds-surface-muted); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-md); padding: 16px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                    <div>
+                        <span class="ds-caption" style="color: var(--ds-text-muted); display: block; margin-bottom: 4px;">Nhân viên thực hiện</span>
+                        <span style="font-weight: 600; color: var(--ds-text); display: flex; align-items: center; gap: 6px;">
+                            <i class="fa fa-user-circle-o" style="color: var(--ds-primary);"></i>
+                            <span id="logDetOperator">--</span>
+                        </span>
+                    </div>
+                    <div>
+                        <span class="ds-caption" style="color: var(--ds-text-muted); display: block; margin-bottom: 4px;">Địa chỉ IP kết nối</span>
+                        <span style="font-weight: 600; color: var(--ds-text); display: flex; align-items: center; gap: 6px;">
+                            <i class="fa fa-desktop" style="color: var(--ds-text-subtle);"></i>
+                            <span id="logDetIp" style="font-family: monospace;">--</span>
+                        </span>
+                    </div>
+                    <div>
+                        <span class="ds-caption" style="color: var(--ds-text-muted); display: block; margin-bottom: 4px;">Hành động nghiệp vụ</span>
+                        <span style="display: flex; align-items: center; gap: 6px; font-weight: 600; color: var(--ds-text);">
+                            <span id="logDetAction" class="ds-badge">--</span>
+                        </span>
+                    </div>
+                    <div>
+                        <span class="ds-caption" style="color: var(--ds-text-muted); display: block; margin-bottom: 4px;">Phân loại tác vụ</span>
+                        <span id="logDetCategory" style="font-weight: 600; color: var(--ds-text);">--</span>
+                    </div>
+                    <div>
+                        <span class="ds-caption" style="color: var(--ds-text-muted); display: block; margin-bottom: 4px;">Mức độ ảnh hưởng</span>
+                        <span id="logDetSeverity" class="ds-badge">--</span>
+                    </div>
+                    <div>
+                        <span class="ds-caption" style="color: var(--ds-text-muted); display: block; margin-bottom: 4px;">Đối tượng tác động</span>
+                        <span id="logDetTargetValue" style="font-weight: 700; color: var(--ds-primary);">--</span>
+                    </div>
+                </div>
+                
+                <div style="border-top: 1px solid var(--ds-border); margin-top: 12px; padding-top: 12px;">
+                    <span class="ds-caption" style="color: var(--ds-text-muted); display: block; margin-bottom: 4px;">Mô tả hoạt động</span>
+                    <span id="logDetDesc" style="color: var(--ds-text); font-weight: 500; font-size: 13.5px;">--</span>
+                </div>
+            </div>
+            
+            <!-- Chi tiết thay đổi -->
+            <div style="margin-top: 8px;">
+                <h4 style="margin: 0 0 10px; font-size: 14px; font-weight: 700; color: var(--ds-text);">
+                    Chi tiết thay đổi dữ liệu
+                </h4>
                 <div id="logDetDiffWrap"></div>
             </div>
         </div>
         <div class="ds-modal-footer">
-            <button type="button" class="ds-btn ds-btn-outline" onclick="AdminConsole.closeLogDetail()">Đóng</button>
+            <button type="button" class="ds-btn ds-btn-outline" style="min-width: 100px;" onclick="AdminConsole.closeLogDetail()">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<!-- Create announcement modal -->
+<div id="createNotifModal" class="ds-modal-backdrop ds-hidden" role="dialog" aria-modal="true">
+    <div class="ds-modal" style="max-width: 600px; width: 100%;">
+        <div class="ds-modal-header ds-cluster-between" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 class="ds-heading-md" style="margin: 0; font-weight: 700;">Soạn thông báo mới</h3>
+            <button type="button" class="ds-btn ds-btn-text" style="font-size: 20px; padding: 4px; border: none; background: transparent; cursor: pointer; color: var(--ds-text-subtle);" onclick="AdminConsole.closeCreateNotification()">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+        <div class="ds-modal-body ds-stack-sm" style="padding: 20px;">
+            <div class="ds-form-field">
+                <label class="ds-label" for="notifTitle">Tiêu đề thông báo</label>
+                <input id="notifTitle" class="ds-input" type="text" placeholder="Ví dụ: Hệ thống bảo trì, Cập nhật chính sách...">
+            </div>
+            <div class="ds-form-field">
+                <label class="ds-label" for="notifType">Loại thông báo</label>
+                <select id="notifType" class="ds-input">
+                    <option value="info">Thông tin chung (Info)</option>
+                    <option value="warning">Cảnh báo (Warning)</option>
+                    <option value="maintenance">Bảo trì hệ thống (Maintenance)</option>
+                    <option value="policy">Chính sách (Policy)</option>
+                </select>
+            </div>
+            <div class="ds-form-field">
+                <label class="ds-label" for="notifContent">Nội dung</label>
+                <textarea id="notifContent" class="ds-input" rows="5" style="height:auto;" placeholder="Nhập nội dung thông báo..."></textarea>
+            </div>
+            <!-- Conditional Maintenance Mode Toggle -->
+            <div class="ds-form-field ds-hidden" id="notifMaintToggleWrap" style="margin-top: 12px;">
+                <div style="display:flex; align-items:center; gap:12px; padding: 12px; background: rgba(239, 68, 68, 0.05); border: 1px dashed var(--ds-danger); border-radius: var(--ds-radius-sm);">
+                    <button type="button" id="notifMaintToggle" class="ds-toggle ds-toggle-system ds-toggle-inactive" aria-pressed="false">
+                        <span class="ds-toggle-track"><span class="ds-toggle-knob"></span></span>
+                    </button>
+                    <span class="ds-label" style="margin:0; font-weight: bold; color: var(--ds-danger);">Đồng thời kích hoạt chế độ bảo trì hệ thống</span>
+                </div>
+            </div>
+        </div>
+        <div class="ds-modal-footer">
+            <button type="button" class="ds-btn ds-btn-outline" style="min-width: 100px;" onclick="AdminConsole.closeCreateNotification()">Hủy</button>
+            <button type="button" class="ds-btn ds-btn-primary" style="min-width: 120px;" onclick="AdminConsole.pushNotification()"><i class="fa fa-paper-plane"></i> Phát thông báo</button>
         </div>
     </div>
 </div>
