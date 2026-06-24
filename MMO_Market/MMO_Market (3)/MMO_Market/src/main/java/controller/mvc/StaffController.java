@@ -3,10 +3,7 @@ package controller.mvc;
 import controller.dto.ComplaintDTO;
 import controller.dto.StaffDashboardDTO;
 import dal.*;
-import model.Complaint;
-import model.ShopFlag;
-import model.Transaction;
-import model.Withdrawal;
+import model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -45,6 +42,8 @@ public class StaffController {
 
     @Autowired
     private ComplaintService complaintService;
+
+
 
 
     @ModelAttribute
@@ -195,15 +194,417 @@ public class StaffController {
         return "redirect:/staff/complaints/detail?id=" + id;
     }
 
+
     @GetMapping("/kyc")
-    public String kyc() {
+    public String kyc(
+
+            @RequestParam(defaultValue = "0") int page,
+
+            @RequestParam(required = false) String keyword,
+
+            @RequestParam(required = false) String status,
+
+            @RequestParam(required = false) String typeKyc,
+
+            Model model
+    ) {
+
+
+        if(keyword != null){
+            keyword = keyword.trim();
+
+            if(keyword.isEmpty()){
+                keyword = null;
+            }
+        }
+
+
+        if(status != null && status.isEmpty()){
+            status = null;
+        }
+
+
+        if(typeKyc != null && typeKyc.isEmpty()){
+            typeKyc = null;
+        }
+
+
+
+        Pageable pageable =
+                PageRequest.of(
+                        page,
+                        4,
+                        Sort.by("id").ascending()
+                );
+
+
+
+        Page<KYCRequest> result;
+
+
+
+    /*
+       filter:
+       id + name + status + type
+    */
+
+
+        if(keyword != null
+                && status != null
+                && typeKyc != null){
+
+
+            try{
+
+                Long id =
+                        Long.parseLong(keyword);
+
+
+                result =
+                        kycRequestRepository
+                                .findByIdAndStatusAndTypeKyc(
+                                        id,
+                                        status,
+                                        typeKyc,
+                                        pageable
+                                );
+
+
+            }catch(Exception e){
+
+
+                result =
+                        kycRequestRepository
+                                .findByFullNameContainingIgnoreCaseAndStatusAndTypeKyc(
+                                        keyword,
+                                        status,
+                                        typeKyc,
+                                        pageable
+                                );
+            }
+
+
+
+        }
+
+        else if(keyword != null && status != null){
+
+
+            try{
+
+                Long id =
+                        Long.parseLong(keyword);
+
+
+                result =
+                        kycRequestRepository
+                                .findByIdAndStatus(
+                                        id,
+                                        status,
+                                        pageable);
+
+
+            }catch(Exception e){
+
+                result =
+                        kycRequestRepository
+                                .findByFullNameContainingIgnoreCaseAndStatus(
+                                        keyword,
+                                        status,
+                                        pageable);
+            }
+
+        }
+
+
+        else if(keyword != null && typeKyc != null){
+
+
+            try{
+
+                Long id =
+                        Long.parseLong(keyword);
+
+
+                result =
+                        kycRequestRepository
+                                .findByIdAndTypeKyc(
+                                        id,
+                                        typeKyc,
+                                        pageable);
+
+
+            }catch(Exception e){
+
+                result =
+                        kycRequestRepository
+                                .findByFullNameContainingIgnoreCaseAndTypeKyc(
+                                        keyword,
+                                        typeKyc,
+                                        pageable);
+            }
+
+        }
+
+
+
+        else if(status != null && typeKyc != null){
+
+
+            result =
+                    kycRequestRepository
+                            .findByStatusAndTypeKyc(
+                                    status,
+                                    typeKyc,
+                                    pageable);
+
+        }
+
+
+        else if(keyword != null){
+
+
+            try{
+
+                Long id =
+                        Long.parseLong(keyword);
+
+
+                result =
+                        kycRequestRepository
+                                .findById(id,pageable);
+
+
+            }catch(Exception e){
+
+
+                result =
+                        kycRequestRepository
+                                .findByFullNameContainingIgnoreCase(
+                                        keyword,
+                                        pageable);
+
+            }
+
+        }
+
+
+
+        else if(status != null){
+
+
+            result =
+                    kycRequestRepository
+                            .findByStatus(
+                                    status,
+                                    pageable);
+
+        }
+
+
+
+        else if(typeKyc != null){
+
+
+            result =
+                    kycRequestRepository
+                            .findByTypeKyc(
+                                    typeKyc,
+                                    pageable);
+
+        }
+
+
+
+        else{
+
+
+            result =
+                    kycRequestRepository
+                            .findAll(pageable);
+
+        }
+
+
+
+        model.addAttribute(
+                "kycs",
+                result.getContent()
+        );
+
+
+        model.addAttribute(
+                "currentPage",
+                page
+        );
+
+
+        model.addAttribute(
+                "totalPages",
+                result.getTotalPages()
+        );
+
+
+
+        model.addAttribute(
+                "keyword",
+                keyword
+        );
+
+
+        model.addAttribute(
+                "selectedStatus",
+                status
+        );
+
+
+        model.addAttribute(
+                "selectedTypeKyc",
+                typeKyc
+        );
+
+
+
+        // combobox lấy database
+
+
+        model.addAttribute(
+                "statuses",
+                kycRequestRepository
+                        .findAll()
+                        .stream()
+                        .map(KYCRequest::getStatus)
+                        .distinct()
+                        .toList()
+        );
+
+
+        model.addAttribute(
+                "types",
+                kycRequestRepository
+                        .findAll()
+                        .stream()
+                        .map(KYCRequest::getTypeKyc)
+                        .distinct()
+                        .toList()
+        );
+
+
+
+        model.addAttribute(
+                "totalKyc",
+                kycRequestRepository.count()
+        );
+
+
+        model.addAttribute(
+                "pendingKyc",
+                kycRequestRepository.countByStatus("Pending")
+        );
+
+
+        model.addAttribute(
+                "approvedKyc",
+                kycRequestRepository.countByStatus("Approved")
+        );
+
+
+        model.addAttribute(
+                "rejectedKyc",
+                kycRequestRepository.countByStatus("Rejected")
+        );
+
+
+
         return "staff/kyc";
     }
 
     @GetMapping("/kyc/detail")
-    public String kycDetail() {
+    public String kycDetail(
+            @RequestParam Long id,
+            Model model
+    ) {
+
+        KYCRequest kyc =
+                kycRequestRepository.findById(id)
+                        .orElse(null);
+
+        if (kyc == null) {
+            return "redirect:/staff/kyc";
+        }
+
+        model.addAttribute(
+                "kyc",
+                kyc
+        );
+
         return "staff/kyc-detail";
     }
+
+    @PostMapping("/kyc/approve")
+    public String approveKyc(
+            @RequestParam Long id,
+            RedirectAttributes redirectAttributes
+    ) {
+
+        KYCRequest kyc =
+                kycRequestRepository
+                        .findById(id)
+                        .orElse(null);
+
+        if (kyc != null) {
+
+            kyc.setStatus("Approved");
+
+            kyc.setReviewedAt(
+                    LocalDateTime.now()
+            );
+
+            kycRequestRepository.save(kyc);
+
+            redirectAttributes.addFlashAttribute(
+                    "success",
+                    "Phê duyệt hồ sơ thành công"
+            );
+        }
+
+        return "redirect:/staff/kyc/detail?id=" + id;
+    }
+
+
+    @PostMapping("/kyc/reject")
+    public String rejectKyc(
+            @RequestParam Long id,
+            @RequestParam String reason,
+            RedirectAttributes redirectAttributes
+    ) {
+
+        KYCRequest kyc =
+                kycRequestRepository
+                        .findById(id)
+                        .orElse(null);
+
+        if (kyc != null) {
+
+            kyc.setStatus("Rejected");
+
+            kyc.setRejectionReason(reason);
+
+            kyc.setReviewedAt(
+                    LocalDateTime.now()
+            );
+
+            kycRequestRepository.save(kyc);
+
+            redirectAttributes.addFlashAttribute(
+                    "success",
+                    "Đã từ chối hồ sơ KYC"
+            );
+        }
+
+        return "redirect:/staff/kyc/detail?id=" + id;
+    }
+
 
     @GetMapping("/transactions")
     public String transactions(
@@ -333,8 +734,22 @@ public class StaffController {
         }
 
 
+        System.out.println(
+                "Result size = "
+                        + transactionPage.getContent().size()
+        );
+
+
         System.out.println("FROM = " + from);
         System.out.println("TO = " + to);
+
+        transactionPage.getContent().forEach(t -> {
+            System.out.println(
+                    "ID = " + t.getId()
+                            + " CREATED = "
+                            + t.getCreatedAt()
+            );
+        });
 
 
         model.addAttribute(

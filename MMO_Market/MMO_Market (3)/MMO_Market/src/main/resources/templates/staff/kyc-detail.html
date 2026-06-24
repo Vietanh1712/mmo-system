@@ -15,15 +15,15 @@
                 <nav class="staff-breadcrumb">
                     <a href="/staff/kyc">Định danh KYC</a>
                     <span>/</span>
-                    <span>#KYC-1198</span>
+                    <span th:text="'#KYC-' + ${kyc.id}"></span>
                 </nav>
 
                 <div class="staff-page-header">
                     <div>
                         <h1 class="ds-page-title">Phê duyệt / từ chối hồ sơ định danh</h1>
-                        <p class="ds-page-subtitle">Hồ sơ #KYC-1198 — Phạm Hoa</p>
+                        <p class="ds-page-subtitle"  th:text="'Hồ sơ #KYC-' + ${kyc.id} + ' — ' + ${kyc.fullName}"></p>
                     </div>
-                    <span class="ds-badge ds-badge-warning">Chờ duyệt</span>
+                    <span class="ds-badge" th:text="${kyc.status}"></span>
                 </div>
 
                 <div class="staff-detail-grid">
@@ -35,27 +35,36 @@
                             <dl class="staff-info-list">
                                 <div class="staff-info-row">
                                     <dt>Họ tên</dt>
-                                    <dd>Phạm Thị Hoa</dd>
+                                    <dd th:text="${kyc.fullName}"></dd>
                                 </div>
                                 <div class="staff-info-row">
                                     <dt>Email</dt>
-                                    <dd>hoa.pham@mmo.com</dd>
+                                    <dd th:text="${kyc.user.email}"></dd>
                                 </div>
                                 <div class="staff-info-row">
                                     <dt>Số điện thoại</dt>
-                                    <dd>0912345678</dd>
+                                    <dd th:text="${kyc.user.phone}"></dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Trạng thái</dt>
+                                    <dd th:text="${kyc.getStatus()}"></dd>
                                 </div>
                                 <div class="staff-info-row">
                                     <dt>Loại giấy tờ</dt>
-                                    <dd>CCCD</dd>
+                                    <dd th:text="${kyc.typeKyc}"></dd>
                                 </div>
                                 <div class="staff-info-row">
                                     <dt>Số giấy tờ</dt>
-                                    <dd>079098******</dd>
+                                    <dd th:text="${kyc.citizenId}"></dd>
                                 </div>
                                 <div class="staff-info-row">
                                     <dt>Ngày gửi</dt>
-                                    <dd>05/06/2026 07:45</dd>
+                                    <dd th:text="${#temporals.format(kyc.createdAt,
+                                     'dd/MM/yyyy HH:mm')}"></dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Lý do</dt>
+                                    <dd th:text="${kyc.getRejectionReason()}"></dd>
                                 </div>
                             </dl>
                         </div>
@@ -97,19 +106,55 @@
                     </div>
 
                     <div class="ds-card staff-action-card">
+                        <form id="kycForm" method="post">
                         <div class="ds-card-header">
                             <h2 class="ds-card-title">Quyết định duyệt</h2>
                         </div>
-                        <div class="ds-alert ds-alert-warning">Kiểm tra ảnh rõ nét, thông tin khớp trước khi phê duyệt.</div>
+
+                            <div th:if="${success}"
+                                 class="ds-alert ds-alert-success"
+                                 th:text="${success}">
+                            </div>
+
+                            <div th:if="${error}"
+                                 class="ds-alert ds-alert-danger"
+                                 th:text="${error}">
+                            </div>
+
                         <div class="ds-form-field">
                             <label class="ds-label" for="kycNote">Ghi chú (bắt buộc khi từ chối)</label>
-                            <textarea class="ds-textarea" id="kycNote" placeholder="Lý do từ chối hoặc ghi chú nội bộ..."></textarea>
+                            <textarea class="ds-textarea" id="kycNote" name="reason"  placeholder="Lý do từ chối hoặc ghi chú nội bộ..."></textarea>
                         </div>
                         <div class="ds-cluster">
-                            <button class="ds-btn ds-btn-success" type="button" data-staff-action="approve" data-staff-label="Đã phê duyệt hồ sơ KYC">Phê duyệt</button>
-                            <button class="ds-btn ds-btn-danger" type="button" data-staff-action="reject" data-staff-label="Đã từ chối hồ sơ KYC">Từ chối</button>
+                            <form th:action="@{/staff/kyc/approve}"
+                                  method="post">
+
+                                <input type="hidden"
+                                       name="id"
+                                       th:value="${kyc.id}">
+
+                                <button class="ds-btn ds-btn-success"
+                                        type="submit" formaction="/staff/kyc/approve">
+                                    Phê duyệt
+                                </button>
+
+                            </form>
+                                <input type="hidden"
+                                       name="id"
+                                       th:value="${kyc.id}">
+
+                                <input type="hidden"
+                                       id="rejectReasonInput"
+                                       name="reason">
+
+                                <button class="ds-btn ds-btn-danger"
+                                        type="submit"
+                                        formaction="/staff/kyc/reject">
+                                    Từ chối
+                                </button>
                         </div>
                         <a class="ds-btn ds-btn-outline" href="/staff/kyc">Quay lại danh sách</a>
+                        </form>
                     </div>
                 </div>
             </section>
