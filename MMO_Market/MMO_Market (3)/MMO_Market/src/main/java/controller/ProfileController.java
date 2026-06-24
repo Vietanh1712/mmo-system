@@ -16,9 +16,11 @@ import service.UserService;
 public class ProfileController {
 
     private final UserService userService;
+    private final service.AuthenticationService authenticationService;
 
-    public ProfileController(UserService userService) {
+    public ProfileController(UserService userService, service.AuthenticationService authenticationService) {
         this.userService = userService;
+        this.authenticationService = authenticationService;
     }
 
     @GetMapping
@@ -31,5 +33,83 @@ public class ProfileController {
             @AuthenticationPrincipal Long userId,
             @Valid @RequestBody UpdateProfileRequest request) {
         return userService.updateMyProfile(userId, request);
+    }
+
+    @PutMapping("/password")
+    public org.springframework.http.ResponseEntity<?> changePassword(
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody controller.dto.ChangePasswordRequest request) {
+        try {
+            userService.changePassword(userId, request.getCurrentPassword(), request.getNewPassword());
+            return org.springframework.http.ResponseEntity.ok(new Object() {
+                public final boolean success = true;
+                public final String message = "Đổi mật khẩu thành công";
+            });
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            return org.springframework.http.ResponseEntity.status(e.getStatusCode())
+                    .body(new Object() {
+                        public final boolean success = false;
+                        public final String message = e.getReason();
+                    });
+        } catch (Exception e) {
+            return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Object() {
+                        public final boolean success = false;
+                        public final String message = "Lỗi hệ thống: " + e.getMessage();
+                    });
+        }
+    }
+
+    @org.springframework.web.bind.annotation.PostMapping("/2fa/send-otp")
+    public org.springframework.http.ResponseEntity<?> send2faOtp(@AuthenticationPrincipal Long userId) {
+        try {
+            authenticationService.send2faOtp(userId);
+            return org.springframework.http.ResponseEntity.ok(new Object() {
+                public final boolean success = true;
+                public final String message = "Mã OTP đã được gửi về email của bạn";
+            });
+        } catch (Exception e) {
+            return org.springframework.http.ResponseEntity.badRequest()
+                    .body(new Object() {
+                        public final boolean success = false;
+                        public final String message = e.getMessage();
+                    });
+        }
+    }
+
+    @org.springframework.web.bind.annotation.PostMapping("/2fa/enable")
+    public org.springframework.http.ResponseEntity<?> enable2fa(
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody controller.dto.TwoFactorRequest request) {
+        try {
+            authenticationService.enable2fa(userId, request.getOtp());
+            return org.springframework.http.ResponseEntity.ok(new Object() {
+                public final boolean success = true;
+                public final String message = "Đã bật bảo mật 2 lớp thành công";
+            });
+        } catch (Exception e) {
+            return org.springframework.http.ResponseEntity.badRequest()
+                    .body(new Object() {
+                        public final boolean success = false;
+                        public final String message = e.getMessage();
+                    });
+        }
+    }
+
+    @org.springframework.web.bind.annotation.PostMapping("/2fa/disable")
+    public org.springframework.http.ResponseEntity<?> disable2fa(@AuthenticationPrincipal Long userId) {
+        try {
+            authenticationService.disable2fa(userId);
+            return org.springframework.http.ResponseEntity.ok(new Object() {
+                public final boolean success = true;
+                public final String message = "Đã tắt bảo mật 2 lớp";
+            });
+        } catch (Exception e) {
+            return org.springframework.http.ResponseEntity.badRequest()
+                    .body(new Object() {
+                        public final boolean success = false;
+                        public final String message = e.getMessage();
+                    });
+        }
     }
 }

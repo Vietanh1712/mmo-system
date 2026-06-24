@@ -39,12 +39,43 @@
                     <dd id="profileFullName">-</dd>
                 </div>
                 <div class="profile-details__row">
+                    <dt>Ngày sinh</dt>
+                    <dd id="profileDateOfBirth">-</dd>
+                </div>
+                <div class="profile-details__row">
+                    <dt>Giới tính</dt>
+                    <dd id="profileGender">-</dd>
+                </div>
+                <div class="profile-details__row">
                     <dt>Email</dt>
-                    <dd id="profileEmail">-</dd>
+                    <dd style="display: flex; align-items: center; gap: 8px;">
+                        <span id="profileEmail" data-masked="true">-</span>
+                        <button type="button" class="toggle-visibility-btn" style="background: none; border: none; cursor: pointer; color: #64748b;" aria-label="Hiện">
+                            <i class="fa fa-eye-slash"></i>
+                        </button>
+                    </dd>
                 </div>
                 <div class="profile-details__row">
                     <dt>Số điện thoại</dt>
-                    <dd id="profilePhone">-</dd>
+                    <dd style="display: flex; align-items: center; gap: 8px;">
+                        <span id="profilePhone" data-masked="true">-</span>
+                        <button type="button" class="toggle-visibility-btn" style="background: none; border: none; cursor: pointer; color: #64748b;" aria-label="Hiện">
+                            <i class="fa fa-eye-slash"></i>
+                        </button>
+                    </dd>
+                </div>
+                <div class="profile-details__row">
+                    <dt>Số CCCD/CMND</dt>
+                    <dd style="display: flex; align-items: center; gap: 8px;">
+                        <span id="profileNationalId" data-masked="true">-</span>
+                        <button type="button" class="toggle-visibility-btn" style="background: none; border: none; cursor: pointer; color: #64748b;" aria-label="Hiện">
+                            <i class="fa fa-eye-slash"></i>
+                        </button>
+                    </dd>
+                </div>
+                <div class="profile-details__row">
+                    <dt>Địa chỉ</dt>
+                    <dd id="profileAddress">-</dd>
                 </div>
                 <div class="profile-details__row">
                     <dt>Vai trò</dt>
@@ -73,7 +104,7 @@
                     <p class="ds-caption">Email, vai trò và số dư ví chỉ được hệ thống cập nhật.</p>
                 </div>
 
-                <div class="ds-form-grid">
+                <div style="display: flex; flex-direction: column; gap: 16px;">
                     <div class="ds-form-field">
                         <label class="ds-label" for="profileFullNameInput">Họ và tên</label>
                         <input class="ds-input" id="profileFullNameInput" name="fullName" type="text" maxlength="255" autocomplete="name">
@@ -81,10 +112,51 @@
                     </div>
 
                     <div class="ds-form-field">
+                        <label class="ds-label">Giới tính</label>
+                        <div style="display: flex; gap: 24px; align-items: center; min-height: 40px;">
+                            <label class="ds-radio"><input type="radio" name="gender" value="Nam"> Nam</label>
+                            <label class="ds-radio"><input type="radio" name="gender" value="Nữ"> Nữ</label>
+                            <label class="ds-radio"><input type="radio" name="gender" value="Khác"> Khác</label>
+                        </div>
+                        <small class="ds-error-text" id="profileGenderError"></small>
+                    </div>
+
+                    <div class="ds-form-field">
+                        <label class="ds-label" for="profileEmailInput">Email</label>
+                        <input class="ds-input ds-input-readonly" id="profileEmailInput" name="email" type="email" readonly style="background-color: #f1f5f9; color: #64748b; cursor: not-allowed;">
+                    </div>
+
+                    <div class="ds-form-field">
                         <label class="ds-label" for="profilePhoneInput">Số điện thoại</label>
                         <input class="ds-input" id="profilePhoneInput" name="phone" type="tel" maxlength="10" autocomplete="tel">
                         <small class="ds-caption">Để trống hoặc nhập 10 chữ số, bắt đầu bằng số 0.</small>
                         <small class="ds-error-text" id="profilePhoneError"></small>
+                    </div>
+
+                    <div class="ds-form-field">
+                        <label class="ds-label" for="profileNationalIdInput">Số CCCD/CMND</label>
+                        <input class="ds-input" id="profileNationalIdInput" name="nationalId" type="text" maxlength="20">
+                        <small class="ds-error-text" id="profileNationalIdError"></small>
+                    </div>
+
+                    <div class="ds-form-field">
+                        <label class="ds-label" for="profileDateOfBirthDisplay">Ngày sinh</label>
+                        <div class="ds-datepicker" data-ds-datepicker>
+                            <input id="profileDateOfBirthInput" name="dateOfBirth" type="hidden" data-ds-date-value>
+                            <div class="ds-datepicker-field">
+                                <input class="ds-datepicker-input" id="profileDateOfBirthDisplay" type="text" placeholder="dd/mm/yyyy" data-ds-date-display>
+                                <button class="ds-datepicker-button" type="button" data-ds-date-toggle aria-label="Chọn ngày sinh">
+                                    <i class="fa fa-calendar" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <small class="ds-error-text" id="profileDateOfBirthError"></small>
+                    </div>
+
+                    <div class="ds-form-field">
+                        <label class="ds-label" for="profileAddressInput">Địa chỉ</label>
+                        <input class="ds-input" id="profileAddressInput" name="address" type="text" maxlength="500" autocomplete="street-address">
+                        <small class="ds-error-text" id="profileAddressError"></small>
                     </div>
                 </div>
 
@@ -108,6 +180,7 @@
 
     <script th:src="@{/js/auth.js}"></script>
     <script th:src="@{/js/account-sidebar.js}"></script>
+    <script th:src="@{/js/datepicker.js}"></script>
     <script th:src="@{/js/profile.js}"></script>
 </body>
 </html>

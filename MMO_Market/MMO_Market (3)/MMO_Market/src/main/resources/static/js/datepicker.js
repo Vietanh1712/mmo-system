@@ -1,5 +1,6 @@
 // EduBridge exported datepicker for MMO_System.
 // No framework dependency. Display value: dd/mm/yyyy. Submitted hidden value: yyyy-MM-dd.
+// Supports single date or date range (data-ds-daterange="true")
 (function initDsDatePicker() {
     const months = [
         'January', 'February', 'March', 'April', 'May', 'June',
@@ -8,9 +9,16 @@
     const shortMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const weekdays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
+    window.initDsDatePickers = initAll;
     document.addEventListener('DOMContentLoaded', initAll);
 
     function initAll() {
+        document.querySelectorAll('.ds-datepicker-panel').forEach(panel => {
+            if (panel._dsAnchor && !panel._dsAnchor.isConnected) {
+                panel.remove();
+            }
+        });
+
         document.querySelectorAll('[data-ds-datepicker]').forEach(root => {
             if (root.dataset.dsReady === 'true') {
                 return;
@@ -25,52 +33,122 @@
             }
 
             root.dataset.dsReady = 'true';
+            const isRange = root.dataset.dsDaterange === 'true';
 
-            const initial = parseDate(hidden.value || display.value);
+            let initialStart = null;
+            let initialEnd = null;
+
+            if (isRange) {
+                const parts = (hidden.value || '').split(',');
+                initialStart = parseDate(parts[0]);
+                initialEnd = parts.length > 1 ? parseDate(parts[1]) : null;
+            } else {
+                initialStart = parseDate(hidden.value || display.value);
+            }
+
             const state = {
                 mode: 'days',
-                selected: initial,
-                cursor: initial || new Date()
+                isRange: isRange,
+                selected: initialStart,
+                selectedEnd: initialEnd,
+                cursor: initialStart || new Date(),
+                rangeStep: 0
             };
 
-            if (initial) {
-                hidden.value = toIso(initial);
-                display.value = toDisplay(initial);
+            if (isRange) {
+                if (initialStart) {
+                    hidden.value = toIso(initialStart) + (initialEnd ? ',' + toIso(initialEnd) : '');
+                    display.value = toDisplay(initialStart) + (initialEnd ? ' - ' + toDisplay(initialEnd) : '');
+                }
+            } else {
+                if (initialStart) {
+                    hidden.value = toIso(initialStart);
+                    display.value = toDisplay(initialStart);
+                }
             }
 
             const panel = document.createElement('div');
             panel.className = 'ds-datepicker-panel';
             panel.hidden = true;
-            root.appendChild(panel);
+            panel.style.zIndex = '10020';
+            panel._dsAnchor = root;
+            document.body.appendChild(panel);
+
+            const redraw = () => {
+                render(panel, state, selectDate);
+            };
 
             const selectDate = date => {
-                state.selected = stripTime(date);
-                state.cursor = stripTime(date);
-                hidden.value = toIso(state.selected);
-                display.value = toDisplay(state.selected);
-                hidden.dispatchEvent(new Event('change', { bubbles: true }));
-                display.dispatchEvent(new Event('change', { bubbles: true }));
-                panel.hidden = true;
+                const stripped = stripTime(date);
+                if (state.isRange) {
+                    if (state.rangeStep === 0 || !state.selected) {
+                        state.selected = stripped;
+                        state.selectedEnd = null;
+                        state.rangeStep = 1;
+                        state.cursor = stripped;
+                        display.value = toDisplay(state.selected) + ' - ';
+                        redraw(); // Re-render to show first selected date
+                    } else {
+                        if (stripped < state.selected) {
+                            state.selectedEnd = state.selected;
+                            state.selected = stripped;
+                        } else {
+                            state.selectedEnd = stripped;
+                        }
+                        state.rangeStep = 0;
+                        state.cursor = stripped;
+                        hidden.value = toIso(state.selected) + ',' + toIso(state.selectedEnd);
+                        display.value = toDisplay(state.selected) + ' - ' + toDisplay(state.selectedEnd);
+                        hidden.dispatchEvent(new Event('change', { bubbles: true }));
+                        display.dispatchEvent(new Event('change', { bubbles: true }));
+                        panel.hidden = true;
+                    }
+                } else {
+                    state.selected = stripped;
+                    state.cursor = stripped;
+                    hidden.value = toIso(state.selected);
+                    display.value = toDisplay(state.selected);
+                    hidden.dispatchEvent(new Event('change', { bubbles: true }));
+                    display.dispatchEvent(new Event('change', { bubbles: true }));
+                    panel.hidden = true;
+                }
             };
 
             const open = () => {
                 closeAll(panel);
                 state.mode = 'days';
+                if (state.isRange) {
+                    state.rangeStep = 0;
+                }
                 render(panel, state, selectDate);
                 panel.hidden = false;
+                positionPanel(panel, root);
             };
 
-            display.addEventListener('input', () => {
-                display.value = formatTyped(display.value);
-            });
+            if (!isRange) {
+                display.addEventListener('input', () => {
+                    display.value = formatTyped(display.value);
+                });
 
-            display.addEventListener('blur', () => {
-                syncTyped(display, hidden, state);
-            });
+                display.addEventListener('blur', () => {
+                    syncTyped(display, hidden, state);
+                });
 
-            display.addEventListener('change', () => {
-                syncTyped(display, hidden, state);
-            });
+                display.addEventListener('change', () => {
+                    syncTyped(display, hidden, state);
+                });
+            } else {
+                // For range, simple blur fallback
+                display.addEventListener('blur', () => {
+                    const val = display.value.trim();
+                    if (!val) {
+                        state.selected = null;
+                        state.selectedEnd = null;
+                        hidden.value = '';
+                        hidden.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                });
+            }
 
             display.addEventListener('click', open);
             toggle.addEventListener('click', event => {
@@ -126,11 +204,28 @@
             const date = new Date(start);
             date.setDate(start.getDate() + index);
             const isCurrentMonth = date.getMonth() === month;
-            const isSelected = state.selected && sameDate(date, state.selected);
+            
+            let isSelectedStart = false;
+            let isSelectedEnd = false;
+            let inRange = false;
+
+            if (state.isRange) {
+                isSelectedStart = state.selected && sameDate(date, state.selected);
+                isSelectedEnd = state.selectedEnd && sameDate(date, state.selectedEnd);
+                if (state.selected && state.selectedEnd && date > state.selected && date < state.selectedEnd) {
+                    inRange = true;
+                }
+            } else {
+                isSelectedStart = state.selected && sameDate(date, state.selected);
+            }
+
+            const isSelected = isSelectedStart || isSelectedEnd;
+
             const classes = [
                 'ds-datepicker-cell',
                 isCurrentMonth ? '' : 'ds-datepicker-cell-muted',
-                isSelected ? 'ds-datepicker-cell-selected' : ''
+                isSelected ? 'ds-datepicker-cell-selected' : '',
+                inRange ? 'ds-datepicker-cell-in-range' : ''
             ].filter(Boolean).join(' ');
 
             cells.push(`<button type="button" class="${classes}" data-date="${toIso(date)}">${date.getDate()}</button>`);
@@ -170,7 +265,10 @@
     }
 
     function wire(panel, state, selectDate) {
-        const redraw = () => render(panel, state, selectDate);
+        const redraw = () => {
+            render(panel, state, selectDate);
+            positionPanel(panel, panel._dsAnchor);
+        };
 
         panel.querySelector('[data-switch-month]')?.addEventListener('click', () => {
             state.mode = 'months';
@@ -219,18 +317,30 @@
             });
         });
 
-        panel.querySelector('[data-today]')?.addEventListener('click', () => selectDate(new Date()));
+        panel.querySelector('[data-today]')?.addEventListener('click', () => {
+            const today = new Date();
+            state.cursor = today;
+            if (state.mode !== 'days') {
+                state.mode = 'days';
+                redraw();
+            } else {
+                selectDate(today);
+            }
+        });
 
         panel.querySelector('[data-clear]')?.addEventListener('click', () => {
-            const root = panel.closest('[data-ds-datepicker]');
+            const root = panel._dsAnchor;
             const display = root?.querySelector('[data-ds-date-display]');
             const hidden = root?.querySelector('[data-ds-date-value]');
             state.selected = null;
+            state.selectedEnd = null;
+            state.rangeStep = 0;
             if (display) display.value = '';
             if (hidden) {
                 hidden.value = '';
                 hidden.dispatchEvent(new Event('change', { bubbles: true }));
             }
+            redraw();
             panel.hidden = true;
         });
     }
@@ -332,10 +442,43 @@
         });
     }
 
+    function positionPanel(panel, root) {
+        if (!panel || panel.hidden || !root?.isConnected) return;
+
+        const margin = 8;
+        const gap = 4;
+        const anchor = root.getBoundingClientRect();
+        const width = Math.min(360, window.innerWidth - margin * 2);
+        panel.style.width = `${width}px`;
+
+        const panelHeight = panel.offsetHeight;
+        const virtualHeight = Math.max(panelHeight, 360);
+        const spaceBelow = window.innerHeight - anchor.bottom - margin;
+        const spaceAbove = anchor.top - margin;
+        const openAbove = spaceBelow < virtualHeight + gap && spaceAbove > spaceBelow;
+        const top = openAbove
+            ? Math.max(margin, anchor.top - panelHeight - gap)
+            : Math.min(window.innerHeight - panelHeight - margin, anchor.bottom + gap);
+        const left = Math.min(
+            Math.max(margin, anchor.left),
+            Math.max(margin, window.innerWidth - width - margin)
+        );
+
+        panel.style.top = `${Math.max(margin, top) + window.scrollY}px`;
+        panel.style.left = `${left + window.scrollX}px`;
+    }
+
+    function repositionOpenPanels() {
+        document.querySelectorAll('.ds-datepicker-panel:not([hidden])').forEach(panel => {
+            positionPanel(panel, panel._dsAnchor);
+        });
+    }
+
     document.addEventListener('click', event => {
-        if (!event.target.closest('[data-ds-datepicker]')) {
+        if (!event.target.closest('[data-ds-datepicker]') && !event.target.closest('.ds-datepicker-panel')) {
             closeAll();
         }
     });
+    window.addEventListener('resize', repositionOpenPanels);
+    window.addEventListener('scroll', repositionOpenPanels, true);
 })();
-

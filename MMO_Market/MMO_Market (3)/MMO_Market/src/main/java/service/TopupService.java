@@ -23,6 +23,9 @@ public class TopupService {
     @Autowired
     private TopupTransactionRepository topupTransactionRepository;
 
+    @Autowired
+    private WalletService walletService;
+
     private static final Pattern TRANSFER_CONTENT_PATTERN = Pattern.compile("MMO[\\s-]*TOPUP[\\s-]*(\\d+)", Pattern.CASE_INSENSITIVE);
 
     @Transactional
@@ -93,6 +96,9 @@ public class TopupService {
                 .status("Success")
                 .build();
         topupTransactionRepository.save(transaction);
+
+        // 7. Record to Wallet Ledger
+        walletService.recordTransaction(user, "TOPUP", amount, "SUCCESS", "Nạp tiền qua SePay", "SEPAY-" + sepayCode, user.getBalanceVnd());
 
         log.info("Successfully topped up {} VND for User ID {} ({}). New balance: {}", 
                 amount, user.getId(), user.getEmail(), user.getBalanceVnd());

@@ -9,6 +9,10 @@
     padding: 24px;
 }
 
+.kyc-form {
+    overflow: visible;
+}
+
 .kyc-hero {
     display: flex;
     align-items: flex-start;
@@ -163,6 +167,41 @@
 
 .kyc-upload-box input {
     display: none;
+}
+
+.kyc-upload-box.has-preview {
+    border-style: solid;
+    border-color: var(--ds-primary);
+    position: relative;
+    overflow: hidden;
+}
+
+.kyc-upload-box.has-preview::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.7);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.kyc-upload-box.has-preview:hover::before {
+    opacity: 1;
+}
+
+.kyc-upload-box.has-preview > span,
+.kyc-upload-box.has-preview > strong,
+.kyc-upload-box.has-preview > small {
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.kyc-upload-box.has-preview:hover > span,
+.kyc-upload-box.has-preview:hover > strong,
+.kyc-upload-box.has-preview:hover > small {
+    opacity: 1;
 }
 
 .kyc-upload-box__icon {

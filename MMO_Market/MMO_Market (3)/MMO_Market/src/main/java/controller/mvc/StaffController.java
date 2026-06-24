@@ -66,4 +66,9 @@ public class StaffController {
     public String chat() {
         return "staff/chat";
     }
+
+    @GetMapping("/shop-registrations")
+    public String shopRegistrations() {
+        return "staff/shop-registrations";
+    }
 }

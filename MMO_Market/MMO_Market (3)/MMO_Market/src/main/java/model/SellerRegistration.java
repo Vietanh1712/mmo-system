@@ -25,6 +25,15 @@ public class SellerRegistration {
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String description;
 
+    @Column(columnDefinition = "NVARCHAR(100)")
+    private String category;
+
+    @Column(name = "support_email")
+    private String supportEmail;
+
+    @Column(name = "support_phone", length = 20)
+    private String supportPhone;
+
     @Column
     private String contract;
 
@@ -33,6 +42,9 @@ public class SellerRegistration {
 
     @Column(length = 20)
     private String status = "Pending"; // Pending, Approved, Rejected
+
+    @Column(name = "rejection_reason", columnDefinition = "NVARCHAR(MAX)")
+    private String rejectionReason;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

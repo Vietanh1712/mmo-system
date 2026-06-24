@@ -1,4 +1,4 @@
-const WALLET_MOCK_TRANSACTIONS_KEY = 'mmoMarketWalletTransactionsMock';
+(function () {
 
 let accountSidebar = null;
 let walletTransactions = [];
@@ -6,7 +6,7 @@ let currentPage = 1;
 let pageSize = 5;
 let appliedFilters = createEmptyFilters();
 
-document.addEventListener('DOMContentLoaded', initializeTransactionsPage);
+registerAccountPage('/js/account-transactions.js', initializeTransactionsPage);
 
 function initializeTransactionsPage() {
     accountSidebar = new AccountSidebar();
@@ -35,138 +35,20 @@ async function loadTransactionsPage() {
 
         const profile = await response.json();
         accountSidebar.render(profile);
-        walletTransactions = readWalletTransactions();
+        
+        // Fetch from backend
+        const txnsRes = await authFetch('/v1/wallet/transactions?page=0&size=1000');
+        if (!txnsRes.ok) throw new Error('Không thể tải lịch sử giao dịch.');
+        const txnsData = await txnsRes.json();
+        
+        walletTransactions = txnsData.content || [];
+        
         renderSummary(walletTransactions);
         renderTransactions();
-        showTransactionsMessage('Lịch sử giao dịch hiện dùng dữ liệu mock frontend.', 'info');
+        document.getElementById('transactionsMessage').hidden = true;
     } catch (error) {
         showTransactionsMessage(error.message || 'Không thể tải lịch sử giao dịch.', 'danger');
     }
-}
-
-function getUserSpecificKey(baseKey) {
-    try {
-        const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
-        if (userStr) {
-            const user = JSON.parse(userStr);
-            if (user && user.email) {
-                return `${baseKey}_${user.email}`;
-            }
-        }
-    } catch (e) {
-        console.error('Lỗi khi lấy user-specific key:', e);
-    }
-    return baseKey;
-}
-
-function readWalletTransactions() {
-    const key = getUserSpecificKey(WALLET_MOCK_TRANSACTIONS_KEY);
-    try {
-        const saved = sessionStorage.getItem(key);
-        if (saved !== null) {
-            return JSON.parse(saved);
-        }
-    } catch {
-        // fallback to seeded data below
-    }
-
-    let isDemo = false;
-    try {
-        const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
-        if (userStr) {
-            const user = JSON.parse(userStr);
-            if (user && user.email) {
-                const demoEmails = ['customer01@gmail.com', 'customer02@gmail.com', 'customer03@gmail.com', 'customer04@gmail.com', 'customer05@gmail.com'];
-                if (demoEmails.includes(user.email.toLowerCase())) {
-                    isDemo = true;
-                }
-            }
-        }
-    } catch (e) {
-        // ignore
-    }
-
-    const seeded = isDemo ? createSeedTransactions() : [];
-    sessionStorage.setItem(key, JSON.stringify(seeded));
-    return seeded;
-}
-
-function createSeedTransactions() {
-    const now = new Date();
-    return [
-        {
-            code: 'MMO-TOPUP-DEMO-001',
-            type: 'TOPUP',
-            amount: 100000,
-            status: 'SUCCESS',
-            description: 'Nạp tiền demo qua chuyển khoản',
-            createdAt: formatDateTime(addDays(now, -1))
-        },
-        {
-            code: 'MMO-PAY-DEMO-002',
-            type: 'PAYMENT',
-            amount: -45000,
-            status: 'SUCCESS',
-            description: 'Thanh toán đơn hàng demo',
-            createdAt: formatDateTime(addDays(now, -2))
-        },
-        {
-            code: 'MMO-TOPUP-DEMO-003',
-            type: 'TOPUP',
-            amount: 200000,
-            status: 'PENDING',
-            description: 'Yêu cầu nạp tiền đang chờ thanh toán',
-            createdAt: formatDateTime(now)
-        },
-        {
-            code: 'MMO-REFUND-DEMO-004',
-            type: 'REFUND',
-            amount: 25000,
-            status: 'SUCCESS',
-            description: 'Hoàn tiền đơn hàng demo',
-            createdAt: formatDateTime(addDays(now, -3))
-        },
-        {
-            code: 'MMO-ESCROW-DEMO-005',
-            type: 'ESCROW',
-            amount: -75000,
-            status: 'PENDING',
-            description: 'Tiền đang giữ escrow',
-            createdAt: formatDateTime(addDays(now, -4))
-        },
-        {
-            code: 'MMO-TOPUP-DEMO-006',
-            type: 'TOPUP',
-            amount: 500000,
-            status: 'FAILED',
-            description: 'Yêu cầu nạp tiền thất bại',
-            createdAt: formatDateTime(addDays(now, -5))
-        },
-        {
-            code: 'MMO-PAY-DEMO-007',
-            type: 'PAYMENT',
-            amount: -120000,
-            status: 'SUCCESS',
-            description: 'Thanh toán đơn hàng sản phẩm số',
-            createdAt: formatDateTime(addDays(now, -6))
-        },
-        {
-            code: 'MMO-TOPUP-DEMO-008',
-            type: 'TOPUP',
-            amount: 300000,
-            status: 'SUCCESS',
-            description: 'Nạp tiền tự động demo',
-            createdAt: formatDateTime(addDays(now, -7))
-        },
-        {
-            code: 'MMO-WITHDRAW-DEMO-009',
-            type: 'WITHDRAWAL',
-            amount: -150000,
-            status: 'PENDING',
-            description: 'Yêu cầu rút tiền demo',
-            createdAt: formatDateTime(addDays(now, -8))
-        }
-    ];
 }
 
 function renderSummary(transactions) {
@@ -259,8 +141,7 @@ function resetFilters() {
     document.getElementById('transactionsSearchInput').value = '';
     document.getElementById('transactionsTypeFilter').value = '';
     document.getElementById('transactionsStatusFilter').value = '';
-    clearDatePicker('transactionsFromDate', 'transactionsFromDateDisplay');
-    clearDatePicker('transactionsToDate', 'transactionsToDateDisplay');
+    clearDatePicker('transactionsDateRange', 'transactionsDateRangeDisplay');
     appliedFilters = createEmptyFilters();
     currentPage = 1;
     renderTransactions();
@@ -274,12 +155,14 @@ function handleFilterSubmit(event) {
 }
 
 function readCurrentFilters() {
+    const dateRange = document.getElementById('transactionsDateRange').value || '';
+    const dates = dateRange.split(',');
     return {
         keyword: document.getElementById('transactionsSearchInput').value.trim().toLowerCase(),
         type: document.getElementById('transactionsTypeFilter').value,
         status: document.getElementById('transactionsStatusFilter').value,
-        fromDate: document.getElementById('transactionsFromDate').value,
-        toDate: document.getElementById('transactionsToDate').value
+        fromDate: dates[0] || '',
+        toDate: dates.length > 1 ? dates[1] : ''
     };
 }
 
@@ -452,3 +335,12 @@ function escapeHtml(value) {
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#039;');
 }
+
+function registerAccountPage(scriptPath, initializer) {
+    window.AccountPageInitializers = window.AccountPageInitializers || {};
+    window.AccountPageInitializers[scriptPath] = initializer;
+    if (document.currentScript?.dataset.accountPartial !== 'true') {
+        document.addEventListener('DOMContentLoaded', initializer);
+    }
+}
+})();

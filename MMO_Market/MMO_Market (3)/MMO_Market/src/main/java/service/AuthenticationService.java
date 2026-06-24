@@ -279,6 +279,67 @@ public class AuthenticationService {
     }
 
     /**
+     * Gửi mã OTP để bật 2FA
+     */
+    @Transactional
+    public void send2faOtp(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+        
+        String otp = generateOtp();
+        EmailVerification emailVerification = EmailVerification.builder()
+                .userId(user.getId())
+                .verificationCode(otp)
+                .expiryDate(LocalDateTime.now().plusMinutes(5))
+                .isUsed(false)
+                .build();
+        emailVerificationRepository.save(emailVerification);
+        
+        emailService.sendOtpEmail(user.getEmail(), otp);
+        log.info("Đã gửi OTP kích hoạt 2FA cho user: {}", user.getEmail());
+    }
+
+    /**
+     * Bật 2FA
+     */
+    @Transactional
+    public void enable2fa(Long userId, String otp) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+        
+        Optional<EmailVerification> otpOptional = emailVerificationRepository
+                .findByUserIdAndVerificationCodeAndIsUsedFalse(userId, otp);
+                
+        if (otpOptional.isEmpty()) {
+            throw new RuntimeException("Mã OTP không hợp lệ hoặc đã được sử dụng.");
+        }
+        
+        EmailVerification emailVerification = otpOptional.get();
+        if (emailVerification.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Mã OTP đã hết hạn.");
+        }
+        
+        emailVerification.setIsUsed(true);
+        emailVerificationRepository.save(emailVerification);
+        
+        user.setIs2faEnabled(true);
+        userRepository.save(user);
+        log.info("Đã bật 2FA cho user: {}", user.getEmail());
+    }
+
+    /**
+     * Tắt 2FA (Không cần OTP)
+     */
+    @Transactional
+    public void disable2fa(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+        user.setIs2faEnabled(false);
+        userRepository.save(user);
+        log.info("Đã tắt 2FA cho user: {}", user.getEmail());
+    }
+
+    /**
      * Đăng nhập người dùng
      */
     @Transactional
@@ -302,6 +363,26 @@ public class AuthenticationService {
             return LoginResponse.builder().message("Vui lòng xác thực email (OTP) trước khi đăng nhập").build();
         }
 
+        if (Boolean.TRUE.equals(user.getIs2faEnabled())) {
+            // Gửi OTP và yêu cầu 2FA
+            String otp = generateOtp();
+            EmailVerification emailVerification = EmailVerification.builder()
+                    .userId(user.getId())
+                    .verificationCode(otp)
+                    .expiryDate(LocalDateTime.now().plusMinutes(5))
+                    .isUsed(false)
+                    .build();
+            emailVerificationRepository.save(emailVerification);
+            
+            emailService.sendOtpEmail(user.getEmail(), otp);
+            log.info("Yêu cầu 2FA cho user: {}", user.getEmail());
+            
+            return LoginResponse.builder()
+                    .requires2FA(true)
+                    .message("Vui lòng nhập mã OTP để tiếp tục")
+                    .build();
+        }
+
         revokeAllUserTokens(user.getId());
 
         String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getEmail());
@@ -319,6 +400,73 @@ public class AuthenticationService {
         authenticationRepository.save(auth);
 
         log.info("Đăng nhập thành công: {}", user.getEmail());
+
+        return LoginResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .userId(user.getId())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .role(user.getRole())
+                .balanceVnd(user.getBalanceVnd())
+                .message("Đăng nhập thành công")
+                .build();
+    }
+
+    /**
+     * Đăng nhập người dùng (bước 2FA)
+     */
+    @Transactional
+    public LoginResponse login2fa(Login2faRequest request) {
+        Optional<User> userOptional = userRepository.findByEmailAndIsDeleteFalse(request.getEmail());
+
+        if (userOptional.isEmpty() || !passwordEncoder.matches(request.getPassword(), userOptional.get().getPassword())) {
+            return LoginResponse.builder().message("Email hoặc mật khẩu không chính xác").build();
+        }
+
+        User user = userOptional.get();
+
+        if (Boolean.TRUE.equals(user.getIsLocked())) {
+            return LoginResponse.builder().message("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.").build();
+        }
+
+        if (!user.getIsVerified()) {
+            return LoginResponse.builder().message("Vui lòng xác thực email (OTP) trước khi đăng nhập").build();
+        }
+
+        Optional<EmailVerification> otpOptional = emailVerificationRepository
+                .findByUserIdAndVerificationCodeAndIsUsedFalse(user.getId(), request.getOtp());
+
+        if (otpOptional.isEmpty()) {
+            return LoginResponse.builder().message("Mã OTP không hợp lệ hoặc đã được sử dụng").build();
+        }
+
+        EmailVerification emailVerification = otpOptional.get();
+
+        if (emailVerification.getExpiryDate().isBefore(LocalDateTime.now())) {
+            return LoginResponse.builder().message("Mã OTP đã hết hạn").build();
+        }
+
+        emailVerification.setIsUsed(true);
+        emailVerificationRepository.save(emailVerification);
+
+        revokeAllUserTokens(user.getId());
+
+        String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getEmail());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId(), user.getEmail());
+        LocalDateTime refreshTokenExpiryDate = jwtTokenProvider.getExpiryDateFromToken(refreshToken);
+
+        Authentication auth = Authentication.builder()
+                .userId(user.getId())
+                .provider("System")
+                .refreshToken(refreshToken)
+                .refreshTokenExpiryDate(refreshTokenExpiryDate)
+                .isRevoked(false)
+                .isDelete(false)
+                .build();
+        authenticationRepository.save(auth);
+
+        log.info("Đăng nhập 2FA thành công: {}", user.getEmail());
 
         return LoginResponse.builder()
                 .accessToken(accessToken)

@@ -90,4 +90,42 @@ public class TransactionController {
             return ResponseEntity.internalServerError().body(Map.of("message", "Lỗi hệ thống khi thực hiện thanh toán: " + e.getMessage()));
         }
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyOrders(@AuthenticationPrincipal Long userId) {
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "Vui lòng đăng nhập để xem đơn hàng."));
+        }
+
+        try {
+            java.util.List<Transaction> transactions = transactionService.getMyOrders(userId);
+            java.util.List<controller.dto.OrderDto> orders = transactions.stream().map(t -> {
+                String status = t.getStatus() != null ? t.getStatus().toUpperCase() : "PENDING";
+                String paymentStatus = "PAID";
+                if ("REFUNDED".equals(status)) {
+                    paymentStatus = "REFUNDED";
+                } else if ("CANCELLED".equals(status)) {
+                    paymentStatus = "FAILED";
+                }
+                
+                return controller.dto.OrderDto.builder()
+                        .orderCode("MMO-ORD-" + t.getId())
+                        .productId(t.getProduct() != null ? t.getProduct().getId() : 0L)
+                        .productName(t.getProduct() != null ? t.getProduct().getName() : "Sản phẩm đã xóa")
+                        .variantLabel(t.getVariant() != null ? t.getVariant().getVariantName() : "")
+                        .sellerName(t.getSeller() != null ? t.getSeller().getFullName() : "Người bán")
+                        .amount(t.getAmountVnd())
+                        .status(status)
+                        .paymentStatus(paymentStatus)
+                        .createdAt(t.getCreatedAt() != null ? java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy").format(t.getCreatedAt()) : "")
+                        .escrowReleaseDate(t.getEscrowReleaseDate() != null ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy").format(t.getEscrowReleaseDate()) : "")
+                        .isReviewed(false)
+                        .build();
+            }).toList();
+
+            return ResponseEntity.ok(orders);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("message", "Lỗi khi lấy danh sách đơn hàng: " + e.getMessage()));
+        }
+    }
 }

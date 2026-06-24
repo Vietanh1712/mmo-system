@@ -14,5 +14,6 @@ public class LoginResponse {
     private String fullName;
     private String role;
     private Long balanceVnd; // Thêm trường balanceVnd
+    private Boolean requires2FA;
     private String message;
 }

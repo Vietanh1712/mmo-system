@@ -15,15 +15,15 @@
                 <nav class="staff-breadcrumb">
                     <a href="/staff/kyc">Định danh KYC</a>
                     <span>/</span>
-                    <span>#KYC-1198</span>
+                    <span id="kycRequestCodeDisplay">#KYC-...</span>
                 </nav>
 
                 <div class="staff-page-header">
                     <div>
                         <h1 class="ds-page-title">Phê duyệt / từ chối hồ sơ định danh</h1>
-                        <p class="ds-page-subtitle">Hồ sơ #KYC-1198 — Phạm Hoa</p>
+                        <p class="ds-page-subtitle">Chi tiết hồ sơ KYC</p>
                     </div>
-                    <span class="ds-badge ds-badge-warning">Chờ duyệt</span>
+                    <span class="ds-badge ds-badge-warning" id="kycStatusBadge">Đang tải</span>
                 </div>
 
                 <div class="staff-detail-grid">
@@ -34,28 +34,16 @@
                             </div>
                             <dl class="staff-info-list">
                                 <div class="staff-info-row">
-                                    <dt>Họ tên</dt>
-                                    <dd>Phạm Thị Hoa</dd>
-                                </div>
-                                <div class="staff-info-row">
-                                    <dt>Email</dt>
-                                    <dd>hoa.pham@mmo.com</dd>
-                                </div>
-                                <div class="staff-info-row">
-                                    <dt>Số điện thoại</dt>
-                                    <dd>0912345678</dd>
-                                </div>
-                                <div class="staff-info-row">
                                     <dt>Loại giấy tờ</dt>
-                                    <dd>CCCD</dd>
+                                    <dd id="kycIdType">-</dd>
                                 </div>
                                 <div class="staff-info-row">
                                     <dt>Số giấy tờ</dt>
-                                    <dd>079098******</dd>
+                                    <dd id="kycIdNumber">-</dd>
                                 </div>
                                 <div class="staff-info-row">
                                     <dt>Ngày gửi</dt>
-                                    <dd>05/06/2026 07:45</dd>
+                                    <dd id="kycCreatedAt">-</dd>
                                 </div>
                             </dl>
                         </div>
@@ -67,16 +55,14 @@
                             <div class="ds-cluster">
                                 <div class="staff-doc-preview" style="flex:1">
                                     <div>
-                                        <i class="fa fa-id-card" style="font-size:32px;margin-bottom:8px"></i>
-                                        <p>Mặt trước CCCD</p>
-                                        <span class="ds-caption">Demo preview — chưa có file thật</span>
+                                        <p>Mặt trước giấy tờ</p>
+                                        <img id="frontImage" src="" style="max-width:100%; max-height:300px; display:block; margin-top:10px;" alt="Mặt trước"/>
                                     </div>
                                 </div>
                                 <div class="staff-doc-preview" style="flex:1">
                                     <div>
-                                        <i class="fa fa-id-card" style="font-size:32px;margin-bottom:8px"></i>
-                                        <p>Mặt sau CCCD</p>
-                                        <span class="ds-caption">Demo preview — chưa có file thật</span>
+                                        <p>Mặt sau giấy tờ</p>
+                                        <img id="backImage" src="" style="max-width:100%; max-height:300px; display:block; margin-top:10px;" alt="Mặt sau"/>
                                     </div>
                                 </div>
                             </div>
@@ -88,9 +74,8 @@
                             </div>
                             <div class="staff-doc-preview">
                                 <div>
-                                    <i class="fa fa-user" style="font-size:32px;margin-bottom:8px"></i>
                                     <p>Selfie xác minh</p>
-                                    <span class="ds-caption">Demo preview — chưa có file thật</span>
+                                    <img id="selfieImage" src="" style="max-width:100%; max-height:300px; display:block; margin-top:10px;" alt="Selfie"/>
                                 </div>
                             </div>
                         </div>
@@ -106,8 +91,8 @@
                             <textarea class="ds-textarea" id="kycNote" placeholder="Lý do từ chối hoặc ghi chú nội bộ..."></textarea>
                         </div>
                         <div class="ds-cluster">
-                            <button class="ds-btn ds-btn-success" type="button" data-staff-action="approve" data-staff-label="Đã phê duyệt hồ sơ KYC">Phê duyệt</button>
-                            <button class="ds-btn ds-btn-danger" type="button" data-staff-action="reject" data-staff-label="Đã từ chối hồ sơ KYC">Từ chối</button>
+                            <button class="ds-btn ds-btn-success" type="button" onclick="reviewKyc('APPROVED')">Phê duyệt</button>
+                            <button class="ds-btn ds-btn-danger" type="button" onclick="reviewKyc('REJECTED')">Từ chối</button>
                         </div>
                         <a class="ds-btn ds-btn-outline" href="/staff/kyc">Quay lại danh sách</a>
                     </div>
@@ -119,6 +104,6 @@
 
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 <script th:src="@{/js/auth.js}"></script>
-<script th:src="@{/js/staff-ui.js}"></script>
+<script th:src="@{/js/staff-kyc-detail.js}"></script>
 </body>
 </html>

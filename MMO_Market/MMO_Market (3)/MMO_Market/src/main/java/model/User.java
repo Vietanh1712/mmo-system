@@ -59,6 +59,9 @@ public class User {
     @Column(name = "isLocked")
     private Boolean isLocked; // Default: false
 
+    @Column(name = "is_2fa_enabled")
+    private Boolean is2faEnabled; // Default: false
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -87,6 +90,9 @@ public class User {
         }
         if (isDelete == null) {
             isDelete = false;
+        }
+        if (is2faEnabled == null) {
+            is2faEnabled = false;
         }
         if (shopStatus == null) {
             shopStatus = "Pending";

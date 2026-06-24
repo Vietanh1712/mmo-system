@@ -15,8 +15,8 @@
     <header th:replace="fragments/header :: header"></header>
 
     <main class="profile-page ds-page">
-        <div class="ds-container orders-layout-container">
-            <div class="profile-layout ds-two-column orders-layout">
+        <div class="ds-container">
+            <div class="profile-layout ds-two-column">
                 <aside th:replace="~{fragments/account-sidebar :: accountSidebar('orders')}"></aside>
 
                 <section class="orders-page ds-page-shell">
@@ -34,8 +34,7 @@
                         </a>
                     </section>
 
-                    <div class="ds-alert ds-alert-info" id="ordersMessage">
-                        Đang tải danh sách đơn hàng...
+                    <div class="ds-alert ds-alert-info" id="ordersMessage" hidden>
                     </div>
 
                     <section class="orders-stat-grid" aria-label="Tổng quan đơn hàng">
@@ -107,25 +106,13 @@
                             </div>
 
                             <div class="orders-filter-bottom">
-                                <div class="ds-form-field">
-                                    <label class="ds-label" for="ordersFromDateDisplay">Từ ngày</label>
-                                    <div class="ds-datepicker" data-ds-datepicker>
-                                        <input id="ordersFromDate" type="hidden" data-ds-date-value>
+                                <div class="ds-form-field" style="flex: 1;">
+                                    <label class="ds-label" for="ordersDateRangeDisplay">Khoảng thời gian</label>
+                                    <div class="ds-datepicker" data-ds-datepicker data-ds-daterange="true">
+                                        <input id="ordersDateRange" type="hidden" data-ds-date-value>
                                         <div class="ds-datepicker-field">
-                                            <input class="ds-datepicker-input" id="ordersFromDateDisplay" type="text" placeholder="dd/mm/yyyy" data-ds-date-display>
-                                            <button class="ds-datepicker-button" type="button" data-ds-date-toggle aria-label="Chọn từ ngày">
-                                                <i class="fa fa-calendar" aria-hidden="true"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="ds-form-field">
-                                    <label class="ds-label" for="ordersToDateDisplay">Đến ngày</label>
-                                    <div class="ds-datepicker" data-ds-datepicker>
-                                        <input id="ordersToDate" type="hidden" data-ds-date-value>
-                                        <div class="ds-datepicker-field">
-                                            <input class="ds-datepicker-input" id="ordersToDateDisplay" type="text" placeholder="dd/mm/yyyy" data-ds-date-display>
-                                            <button class="ds-datepicker-button" type="button" data-ds-date-toggle aria-label="Chọn đến ngày">
+                                            <input class="ds-datepicker-input" id="ordersDateRangeDisplay" type="text" placeholder="dd/mm/yyyy - dd/mm/yyyy" data-ds-date-display>
+                                            <button class="ds-datepicker-button" type="button" data-ds-date-toggle aria-label="Chọn khoảng ngày">
                                                 <i class="fa fa-calendar" aria-hidden="true"></i>
                                             </button>
                                         </div>
@@ -161,15 +148,12 @@
                                 <table class="ds-table">
                                     <thead>
                                         <tr>
-                                            <th class="ds-table-center">STT</th>
                                             <th>Mã đơn</th>
                                             <th>Sản phẩm</th>
-                                            <th>Người bán</th>
                                             <th>Số tiền</th>
                                             <th class="ds-table-center">Trạng thái</th>
                                             <th class="ds-table-center">Thanh toán</th>
                                             <th>Ngày mua</th>
-                                            <th class="ds-table-center">Đánh giá</th>
                                             <th class="ds-table-center">Thao tác</th>
                                         </tr>
                                     </thead>

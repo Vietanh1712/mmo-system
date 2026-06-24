@@ -1,15 +1,39 @@
 let currentProfile = null;
-let accountSidebar = null;
+var accountSidebar = null;
 let profileMessageTimer = null;
 
-document.addEventListener('DOMContentLoaded', initializeProfilePage);
+registerAccountPage('/js/profile.js', initializeProfilePage);
 
 function initializeProfilePage() {
     accountSidebar = new AccountSidebar();
     document.getElementById('editProfileButton').addEventListener('click', openEditMode);
     document.getElementById('cancelEditButton').addEventListener('click', closeEditMode);
     document.getElementById('profileEditForm').addEventListener('submit', saveProfile);
+    
+    document.querySelectorAll('.toggle-visibility-btn').forEach(btn => {
+        btn.addEventListener('click', toggleFieldVisibility);
+    });
+
     loadProfile();
+}
+
+function toggleFieldVisibility(event) {
+    const btn = event.currentTarget;
+    const icon = btn.querySelector('i');
+    const dd = btn.closest('dd');
+    const span = dd.querySelector('span[data-masked]');
+    
+    if (span.dataset.masked === 'true') {
+        span.textContent = span.dataset.fullValue;
+        span.dataset.masked = 'false';
+        icon.className = 'fa fa-eye';
+        btn.setAttribute('aria-label', 'Ẩn');
+    } else {
+        span.textContent = span.dataset.maskedValue;
+        span.dataset.masked = 'true';
+        icon.className = 'fa fa-eye-slash';
+        btn.setAttribute('aria-label', 'Hiện');
+    }
 }
 
 async function loadProfile() {
@@ -57,7 +81,36 @@ function openEditMode(event) {
     }
 
     document.getElementById('profileFullNameInput').value = currentProfile.fullName || '';
+    document.getElementById('profileEmailInput').value = currentProfile.email || '';
     document.getElementById('profilePhoneInput').value = currentProfile.phone || '';
+    document.getElementById('profileNationalIdInput').value = currentProfile.nationalId || '';
+    
+    const genderValue = currentProfile.gender || '';
+    const genderRadio = document.querySelector(`input[name="gender"][value="${genderValue}"]`);
+    if (genderRadio) {
+        genderRadio.checked = true;
+    } else {
+        document.querySelectorAll('input[name="gender"]').forEach(r => r.checked = false);
+    }
+    
+    const dob = currentProfile.dateOfBirth || '';
+    let dobDisplay = '';
+    if (dob) {
+        const parts = dob.split('-');
+        if (parts.length === 3) {
+            dobDisplay = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        } else {
+            dobDisplay = dob;
+        }
+    }
+    document.getElementById('profileDateOfBirthInput').value = dob;
+    
+    const dobDisplayInput = document.getElementById('profileDateOfBirthDisplay');
+    if (dobDisplayInput) {
+        dobDisplayInput.value = dobDisplay;
+    }
+
+    document.getElementById('profileAddressInput').value = currentProfile.address || '';
     clearFormErrors();
 
     document.getElementById('profileDetails').hidden = true;
@@ -79,7 +132,12 @@ async function saveProfile(event) {
 
     const fullName = document.getElementById('profileFullNameInput').value.trim();
     const phone = document.getElementById('profilePhoneInput').value.trim();
-    if (!validateProfile(fullName, phone)) {
+    const dateOfBirth = document.getElementById('profileDateOfBirthInput').value.trim();
+    const address = document.getElementById('profileAddressInput').value.trim();
+    const gender = document.querySelector('input[name="gender"]:checked')?.value || '';
+    const nationalId = document.getElementById('profileNationalIdInput').value.trim();
+    
+    if (!validateProfile(fullName, phone, address, nationalId)) {
         return;
     }
 
@@ -90,7 +148,7 @@ async function saveProfile(event) {
     try {
         const response = await authFetch('/v1/profile', {
             method: 'PUT',
-            body: JSON.stringify({ fullName, phone })
+            body: JSON.stringify({ fullName, phone, dateOfBirth, address, gender, nationalId })
         });
         const responseBody = await readResponseBody(response);
 
@@ -111,7 +169,7 @@ async function saveProfile(event) {
     }
 }
 
-function validateProfile(fullName, phone) {
+function validateProfile(fullName, phone, address, nationalId) {
     clearFormErrors();
     let valid = true;
 
@@ -131,12 +189,24 @@ function validateProfile(fullName, phone) {
         valid = false;
     }
 
+    if (address && address.length > 500) {
+        document.getElementById('profileAddressError').textContent = 'Địa chỉ không được vượt quá 500 ký tự.';
+        valid = false;
+    }
+
+    if (nationalId && nationalId.length > 20) {
+        document.getElementById('profileNationalIdError').textContent = 'Số CCCD/CMND không được vượt quá 20 ký tự.';
+        valid = false;
+    }
+
     return valid;
 }
 
 function clearFormErrors() {
     document.getElementById('profileFullNameError').textContent = '';
     document.getElementById('profilePhoneError').textContent = '';
+    document.getElementById('profileDateOfBirthError').textContent = '';
+    document.getElementById('profileAddressError').textContent = '';
     document.getElementById('profileFormMessage').hidden = true;
 }
 
@@ -218,14 +288,83 @@ function renderProfile(profile) {
 
     document.getElementById('profileAvatar').textContent = fullName.charAt(0).toUpperCase();
     document.getElementById('profileFullName').textContent = fullName;
-    document.getElementById('profileEmail').textContent = profile.email || '-';
-    document.getElementById('profilePhone').textContent = profile.phone || '-';
+    document.getElementById('profileGender').textContent = profile.gender || '-';
+    
+    renderMaskedField('profileEmail', profile.email, maskEmail);
+    renderMaskedField('profilePhone', profile.phone, maskString);
+    renderMaskedField('profileNationalId', profile.nationalId, maskString);
+    
+    if (profile.dateOfBirth) {
+        const parts = profile.dateOfBirth.split('-');
+        document.getElementById('profileDateOfBirth').textContent = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : profile.dateOfBirth;
+    } else {
+        document.getElementById('profileDateOfBirth').textContent = '-';
+    }
+    document.getElementById('profileAddress').textContent = profile.address || '-';
+
     document.getElementById('profileRole').textContent = role;
     document.getElementById('profileShopStatusRow').hidden = !isSeller;
     document.getElementById('profileShopStatus').textContent = profile.shopStatus || '-';
     document.getElementById('profileBalance').textContent = balance;
 
     accountSidebar.render(profile);
+}
+
+function renderMaskedField(elementId, value, maskFn) {
+    const span = document.getElementById(elementId);
+    if (!span) return;
+    
+    if (!value) {
+        span.textContent = '-';
+        span.dataset.fullValue = '';
+        span.dataset.maskedValue = '';
+        return;
+    }
+
+    const masked = maskFn(value);
+    span.dataset.fullValue = value;
+    span.dataset.maskedValue = masked;
+    
+    if (span.dataset.masked === 'true') {
+        span.textContent = masked;
+    } else {
+        span.textContent = value;
+    }
+}
+
+function maskEmail(email) {
+    if (!email) return '-';
+    const parts = email.split('@');
+    if (parts.length !== 2) return maskString(email);
+    
+    const name = parts[0];
+    const domain = parts[1];
+    
+    if (name.length <= 3) {
+        return '***@' + domain;
+    }
+    
+    return name.substring(0, 3) + '***@' + domain;
+}
+
+function maskString(str) {
+    if (!str) return '-';
+    str = String(str);
+    if (str.length <= 4) return '***';
+    return '*'.repeat(str.length - 4) + str.slice(-4);
+}
+
+function registerAccountPage(scriptPath, initializer) {
+    window.AccountPageInitializers = window.AccountPageInitializers || {};
+    window.AccountPageInitializers[scriptPath] = initializer;
+
+    if (!document.currentScript || !document.currentScript.dataset.accountPartial) {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializer);
+        } else {
+            initializer();
+        }
+    }
 }
 
 function formatProfileBalance(balanceVnd) {

@@ -1,6 +1,6 @@
+(function () {
 const TOPUP_MIN_AMOUNT = 10000;
 const TOPUP_MAX_AMOUNT = 50000000;
-const WALLET_MOCK_TRANSACTIONS_KEY = 'mmoMarketWalletTransactionsMock';
 
 let topupProfile = null;
 let accountSidebar = null;
@@ -13,7 +13,7 @@ let sepayConfig = {
 let pollingInterval = null;
 let initialBalance = 0;
 
-document.addEventListener('DOMContentLoaded', initializeTopupPage);
+registerAccountPage('/js/account-topup.js', initializeTopupPage);
 
 function initializeTopupPage() {
     accountSidebar = new AccountSidebar();
@@ -147,27 +147,11 @@ function startBalancePolling(topupAmount) {
                     topupProfile.balanceVnd = currentBalance;
                     document.getElementById('topupBalance').textContent = formatMoney(currentBalance);
 
-                    const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
-                    if (userStr) {
-                        try {
-                            const user = JSON.parse(userStr);
-                            user.balanceVnd = currentBalance;
-                            sessionStorage.setItem('userInfo', JSON.stringify(user));
-                            sessionStorage.setItem('user', JSON.stringify(user));
-                            localStorage.setItem('userInfo', JSON.stringify(user));
-                            localStorage.setItem('user', JSON.stringify(user));
-                        } catch (e) {
-                            console.error('Error saving balance:', e);
-                        }
-                    }
-
                     const badge = document.querySelector('.topup-instruction .ds-badge');
                     if (badge) {
                         badge.textContent = 'Thành công';
                         badge.className = 'ds-badge ds-badge-success';
                     }
-
-                    appendMockTopupTransaction(addedAmount);
 
                     showTopupMessage(`Nạp tiền thành công! Bạn đã được cộng +${formatMoney(addedAmount)} vào tài khoản.`, 'success');
                 }
@@ -227,154 +211,6 @@ function createTransferContent() {
     return `MMO-TOPUP-${userPart}`;
 }
 
-function getUserSpecificKey(baseKey) {
-    try {
-        const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
-        if (userStr) {
-            const user = JSON.parse(userStr);
-            if (user && user.email) {
-                return `${baseKey}_${user.email}`;
-            }
-        }
-    } catch (e) {
-        console.error('Lỗi khi lấy user-specific key:', e);
-    }
-    return baseKey;
-}
-
-function addDays(date, days) {
-    const next = new Date(date);
-    next.setDate(next.getDate() + days);
-    return next;
-}
-
-function formatDateTime(date) {
-    return date.toLocaleString('vi-VN');
-}
-
-function createSeedTransactions() {
-    const now = new Date();
-    return [
-        {
-            code: 'MMO-TOPUP-DEMO-001',
-            type: 'TOPUP',
-            amount: 100000,
-            status: 'SUCCESS',
-            description: 'Nạp tiền demo qua chuyển khoản',
-            createdAt: formatDateTime(addDays(now, -1))
-        },
-        {
-            code: 'MMO-PAY-DEMO-002',
-            type: 'PAYMENT',
-            amount: -45000,
-            status: 'SUCCESS',
-            description: 'Thanh toán đơn hàng demo',
-            createdAt: formatDateTime(addDays(now, -2))
-        },
-        {
-            code: 'MMO-TOPUP-DEMO-003',
-            type: 'TOPUP',
-            amount: 200000,
-            status: 'PENDING',
-            description: 'Yêu cầu nạp tiền đang chờ thanh toán',
-            createdAt: formatDateTime(now)
-        },
-        {
-            code: 'MMO-REFUND-DEMO-004',
-            type: 'REFUND',
-            amount: 25000,
-            status: 'SUCCESS',
-            description: 'Hoàn tiền đơn hàng demo',
-            createdAt: formatDateTime(addDays(now, -3))
-        },
-        {
-            code: 'MMO-ESCROW-DEMO-005',
-            type: 'ESCROW',
-            amount: -75000,
-            status: 'PENDING',
-            description: 'Tiền đang giữ escrow',
-            createdAt: formatDateTime(addDays(now, -4))
-        },
-        {
-            code: 'MMO-TOPUP-DEMO-006',
-            type: 'TOPUP',
-            amount: 500000,
-            status: 'FAILED',
-            description: 'Yêu cầu nạp tiền thất bại',
-            createdAt: formatDateTime(addDays(now, -5))
-        },
-        {
-            code: 'MMO-PAY-DEMO-007',
-            type: 'PAYMENT',
-            amount: -120000,
-            status: 'SUCCESS',
-            description: 'Thanh toán đơn hàng sản phẩm số',
-            createdAt: formatDateTime(addDays(now, -6))
-        },
-        {
-            code: 'MMO-TOPUP-DEMO-008',
-            type: 'TOPUP',
-            amount: 300000,
-            status: 'SUCCESS',
-            description: 'Nạp tiền tự động demo',
-            createdAt: formatDateTime(addDays(now, -7))
-        },
-        {
-            code: 'MMO-WITHDRAW-DEMO-009',
-            type: 'WITHDRAWAL',
-            amount: -150000,
-            status: 'PENDING',
-            description: 'Yêu cầu rút tiền demo',
-            createdAt: formatDateTime(addDays(now, -8))
-        }
-    ];
-}
-
-function appendMockTopupTransaction(amount) {
-    const key = getUserSpecificKey(WALLET_MOCK_TRANSACTIONS_KEY);
-    const transactions = readMockTransactions();
-    transactions.unshift({
-        code: currentTransferContent.replaceAll(' ', '-'),
-        type: 'TOPUP',
-        amount,
-        status: 'SUCCESS',
-        createdAt: new Date().toLocaleString('vi-VN')
-    });
-    sessionStorage.setItem(key, JSON.stringify(transactions.slice(0, 20)));
-}
-
-function readMockTransactions() {
-    const key = getUserSpecificKey(WALLET_MOCK_TRANSACTIONS_KEY);
-    try {
-        const saved = sessionStorage.getItem(key);
-        if (saved !== null) {
-            return JSON.parse(saved);
-        }
-    } catch {
-        // fallback
-    }
-
-    let isDemo = false;
-    try {
-        const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
-        if (userStr) {
-            const user = JSON.parse(userStr);
-            if (user && user.email) {
-                const demoEmails = ['customer01@gmail.com', 'customer02@gmail.com', 'customer03@gmail.com', 'customer04@gmail.com', 'customer05@gmail.com'];
-                if (demoEmails.includes(user.email.toLowerCase())) {
-                    isDemo = true;
-                }
-            }
-        }
-    } catch (e) {
-        // ignore
-    }
-
-    const seeded = isDemo ? createSeedTransactions() : [];
-    sessionStorage.setItem(key, JSON.stringify(seeded));
-    return seeded;
-}
-
 async function copyTransferContent() {
     if (!currentTransferContent) {
         showTopupMessage('Chưa có nội dung chuyển khoản để copy.', 'warning');
@@ -428,3 +264,12 @@ function showTopupMessage(message, type) {
     messageElement.classList.remove('ds-alert-info', 'ds-alert-warning', 'ds-alert-danger', 'ds-alert-success');
     messageElement.classList.add(`ds-alert-${type}`);
 }
+
+function registerAccountPage(scriptPath, initializer) {
+    window.AccountPageInitializers = window.AccountPageInitializers || {};
+    window.AccountPageInitializers[scriptPath] = initializer;
+    if (document.currentScript?.dataset.accountPartial !== 'true') {
+        document.addEventListener('DOMContentLoaded', initializer);
+    }
+}
+})();

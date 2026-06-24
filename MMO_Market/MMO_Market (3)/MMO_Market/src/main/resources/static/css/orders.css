@@ -2,14 +2,6 @@
     min-width: 0;
 }
 
-.orders-layout-container {
-    max-width: 1680px;
-}
-
-.orders-layout {
-    grid-template-columns: 260px minmax(1280px, 1fr);
-}
-
 .orders-hero,
 .orders-table-content {
     padding: 24px;
@@ -116,7 +108,7 @@
 }
 
 .orders-table-card .ds-table {
-    min-width: 1280px;
+    min-width: 1040px;
 }
 
 .orders-filter-grid .ds-form-field,
@@ -195,10 +187,6 @@
 }
 
 @media (max-width: 1200px) {
-    .orders-layout {
-        grid-template-columns: 1fr;
-    }
-
     .orders-filter-grid,
     .orders-filter-bottom {
         grid-template-columns: repeat(2, minmax(0, 1fr));

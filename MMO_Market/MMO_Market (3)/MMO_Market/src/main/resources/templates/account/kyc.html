@@ -97,12 +97,49 @@
                                 <dd id="kycRejectReason">-</dd>
                             </div>
                         </dl>
+
+                        <div class="kyc-submitted-data" id="kycSubmittedData" hidden>
+                            <h3 class="ds-heading-sm" style="margin-top: 24px; margin-bottom: 16px; padding-top: 20px; border-top: 1px solid var(--ds-border);">Chi tiết hồ sơ đã gửi</h3>
+                            <dl class="kyc-meta" style="margin-top: 0; padding-top: 0; border-top: none;">
+                                <div>
+                                    <dt>Họ và tên</dt>
+                                    <dd id="kycViewFullName">-</dd>
+                                </div>
+                                <div>
+                                    <dt>Số CCCD/CMND</dt>
+                                    <dd id="kycViewDocumentNumber">-</dd>
+                                </div>
+                                <div>
+                                    <dt>Ngày sinh</dt>
+                                    <dd id="kycViewDateOfBirth">-</dd>
+                                </div>
+                                <div>
+                                    <dt>Địa chỉ</dt>
+                                    <dd id="kycViewAddress">-</dd>
+                                </div>
+                            </dl>
+                            
+                            <div class="kyc-upload-grid" style="margin-top: 20px;">
+                                <div class="kyc-view-image-box">
+                                    <strong>Ảnh mặt trước</strong>
+                                    <img id="kycViewFrontImage" src="" alt="Mặt trước" style="width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: var(--ds-radius-lg); margin-top: 8px; border: 1px solid var(--ds-border);">
+                                </div>
+                                <div class="kyc-view-image-box">
+                                    <strong>Ảnh mặt sau</strong>
+                                    <img id="kycViewBackImage" src="" alt="Mặt sau" style="width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: var(--ds-radius-lg); margin-top: 8px; border: 1px solid var(--ds-border);">
+                                </div>
+                                <div class="kyc-view-image-box">
+                                    <strong>Ảnh chân dung</strong>
+                                    <img id="kycViewSelfieImage" src="" alt="Chân dung" style="width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: var(--ds-radius-lg); margin-top: 8px; border: 1px solid var(--ds-border);">
+                                </div>
+                            </div>
+                        </div>
                     </section>
 
                     <form class="kyc-form ds-card" id="kycForm" hidden novalidate>
                         <div class="kyc-form__header">
                             <h2 class="ds-heading-md" id="kycFormTitle">Gửi yêu cầu định danh</h2>
-                            <p class="ds-caption">Thông tin này hiện được xử lý mock ở frontend, chưa gọi backend KYC thật.</p>
+                            <p class="ds-caption">Vui lòng cung cấp chính xác thông tin như trên giấy tờ định danh.</p>
                         </div>
 
                         <div class="ds-form-grid">
@@ -121,16 +158,16 @@
                                 <div class="ds-datepicker" data-ds-datepicker>
                                     <input id="kycDateOfBirth" type="hidden" data-ds-date-value>
                                     <div class="ds-datepicker-field">
-                                    <input class="ds-datepicker-input" id="kycDateOfBirthDisplay" type="text" placeholder="dd/mm/yyyy" data-ds-date-display>
-                                    <button class="ds-datepicker-button" type="button" data-ds-date-toggle aria-label="Chọn ngày sinh">
-                                        <i class="fa fa-calendar" aria-hidden="true"></i>
-                                    </button>
+                                        <input class="ds-datepicker-input" id="kycDateOfBirthDisplay" type="text" placeholder="dd/mm/yyyy" data-ds-date-display>
+                                        <button class="ds-datepicker-button" type="button" data-ds-date-toggle aria-label="Chọn ngày sinh">
+                                            <i class="fa fa-calendar" aria-hidden="true"></i>
+                                        </button>
                                     </div>
                                 </div>
                                 <small class="ds-error-text" id="kycDateOfBirthError"></small>
                             </div>
                             <div class="ds-form-field">
-                                <label class="ds-label" for="kycDocumentType">Loại giấy tờ</label>
+                                <label class="ds-label" for="kycDocumentTypeInput">Loại giấy tờ</label>
                                 <select class="ds-select" id="kycDocumentTypeInput">
                                     <option value="">Chọn loại giấy tờ</option>
                                     <option value="CCCD">CCCD</option>

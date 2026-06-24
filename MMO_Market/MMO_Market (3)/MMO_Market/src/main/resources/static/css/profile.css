@@ -169,6 +169,7 @@
 
 .profile-card {
     padding: 28px;
+    overflow: visible;
 }
 
 .profile-card__header {

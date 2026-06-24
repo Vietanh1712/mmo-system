@@ -41,16 +41,23 @@
 }
 
 .ds-dropdown-panel {
-    position: absolute;
-    top: calc(100% + 4px);
+    position: fixed;
+    top: 0;
     left: 0;
-    z-index: 40;
-    width: 100%;
-    overflow: hidden;
+    z-index: 10010;
+    width: 220px;
+    max-width: calc(100vw - 32px);
+    max-height: min(360px, calc(100vh - 32px));
+    overflow-x: hidden;
+    overflow-y: auto;
     border: 1px solid var(--ds-border-strong);
     border-radius: var(--ds-radius-sm);
     background: #ffffff;
     box-shadow: var(--ds-shadow-md);
+}
+
+.ds-dropdown-panel[hidden] {
+    display: none;
 }
 
 .ds-dropdown-search {

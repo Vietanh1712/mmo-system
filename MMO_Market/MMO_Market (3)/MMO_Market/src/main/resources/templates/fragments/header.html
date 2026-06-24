@@ -19,7 +19,7 @@
             </form>
         </div>
 
-        <div class="header__auth" id="headerAuthArea">
+        <div class="header__auth" id="headerAuthArea" style="visibility: hidden;">
             <a th:href="@{/login}" class="auth-btn btn-login">Đăng nhập</a>
             <a th:href="@{/register}" class="auth-btn btn-register">Đăng ký</a>
         </div>
@@ -41,10 +41,13 @@
         <div class="dropdown-item" onclick="checkAuthAndRedirect('/wallet/topup')">
             <i class="fa fa-credit-card"></i> Nạp tiền
         </div>
-        <div class="dropdown-item" id="adminWorkbenchDropdownItem" style="display: none;" onclick="window.location.href='/admin/users'">
+        <div class="dropdown-item" id="adminWorkbenchDropdownItem" style="display: none;" onclick="navigateHeaderRoute('/admin/users')">
             <i class="fa fa-briefcase"></i> Công việc
         </div>
-        <div class="dropdown-item" id="sellerDashboardDropdownItem" style="display: none;" onclick="window.location.href='/seller/dashboard'">
+        <div class="dropdown-item" id="staffWorkDropdownItem" style="display: none;" onclick="navigateHeaderRoute('/staff/dashboard')">
+            <i class="fa fa-briefcase"></i> Công việc
+        </div>
+        <div class="dropdown-item" id="sellerDashboardDropdownItem" style="display: none;" onclick="navigateHeaderRoute('/seller/dashboard')">
             <i class="fa fa-dashboard"></i> Seller Dashboard
         </div>
         <div class="dropdown-divider"></div>
@@ -55,11 +58,11 @@
 
     <nav class="nav">
         <ul class="nav__list" id="mainNavList">
-            <li class="nav__item" onclick="window.location.href='/'">Trang chủ</li>
-            <li class="nav__item" onclick="window.location.href='/products'">Sản phẩm</li>
+            <li class="nav__item" onclick="navigateHeaderRoute('/')">Trang chủ</li>
+            <li class="nav__item" onclick="navigateHeaderRoute('/products')">Sản phẩm</li>
             <li class="nav__item" onclick="checkAuthAndRedirect('/wallet/topup')">Nạp tiền</li>
-            <li class="nav__item" onclick="window.location.href='/support'">Hỗ trợ</li>
-            <li class="nav__item" onclick="window.location.href='/support#faq'">Câu hỏi thường gặp</li>
+            <li class="nav__item" onclick="navigateHeaderRoute('/support')">Hỗ trợ</li>
+            <li class="nav__item" onclick="navigateHeaderRoute('/support#faq')">Câu hỏi thường gặp</li>
         </ul>
     </nav>
 
@@ -67,7 +70,7 @@
         const SESSION_TIMEOUT_MS = 15 * 60 * 1000;
         const HEADER_STORAGE_KEYS = ['accessToken', 'refreshToken', 'loginTimestamp', 'userInfo', 'user'];
 
-        document.addEventListener('DOMContentLoaded', () => {
+        function initializeHeaderFromCache() {
             if (!sessionStorage.getItem('accessToken') && localStorage.getItem('accessToken')) {
                 HEADER_STORAGE_KEYS.forEach(key => {
                     const value = localStorage.getItem(key);
@@ -118,10 +121,15 @@
                     const initial = fullName.charAt(0).toUpperCase();
                     const currentRole = parseHeaderRole(user.role);
                     const adminWorkbenchItem = document.getElementById('adminWorkbenchDropdownItem');
+                    const staffWorkItem = document.getElementById('staffWorkDropdownItem');
                     const sellerDropdownItem = document.getElementById('sellerDashboardDropdownItem');
 
                     if (currentRole === 'Admin' && adminWorkbenchItem) {
                         adminWorkbenchItem.style.display = 'flex';
+                    }
+
+                    if (currentRole === 'Staff' && staffWorkItem) {
+                        staffWorkItem.style.display = 'flex';
                     }
 
                     if (headerIsSellerRole(user.role) && sellerDropdownItem) {
@@ -164,8 +172,14 @@
                     refreshHeaderNotifBadge();
                 } catch (error) {
                     console.error("Lỗi khi parse thông tin user:", error);
-                    sessionStorage.clear();
-                    window.location.reload();
+                    sessionStorage.removeItem('userInfo');
+                    sessionStorage.removeItem('user');
+                    localStorage.removeItem('userInfo');
+                    localStorage.removeItem('user');
+                    authArea.innerHTML = `
+                        <a href="/login" class="auth-btn btn-login">Đăng nhập</a>
+                        <a href="/register" class="auth-btn btn-register">Đăng ký</a>
+                    `;
                 }
             } else if (authArea && !authArea.querySelector('.btn-login')) {
                 authArea.innerHTML = `
@@ -174,8 +188,13 @@
                 `;
             }
 
+            if (authArea) {
+                authArea.style.visibility = 'visible';
+            }
             highlightMainNav();
-        });
+        }
+
+        initializeHeaderFromCache();
 
         window.addEventListener('click', () => {
             const dropdown = document.getElementById('userDropdown');
@@ -189,8 +208,26 @@
             if (!token || token === "null" || token === "undefined") {
                 window.location.href = '/login';
             } else {
-                window.location.href = url;
+                navigateHeaderRoute(url);
             }
+        }
+
+        function navigateHeaderRoute(target) {
+            const url = new URL(target, window.location.href);
+            const currentUrl = new URL(window.location.href);
+            const isCurrentRoute = url.pathname === currentUrl.pathname &&
+                url.search === currentUrl.search &&
+                url.hash === currentUrl.hash;
+
+            document.getElementById('userDropdown')?.classList.remove('active');
+            if (isCurrentRoute) {
+                return;
+            }
+
+            if (window.AccountNavigation?.navigate(url.href)) {
+                return;
+            }
+            window.location.href = url.href;
         }
 
         function parseHeaderRole(roleValue) {

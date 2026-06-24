@@ -25,6 +25,9 @@ public class TransactionService {
     @Autowired
     private TransactionRepository transactionRepository;
 
+    @Autowired
+    private WalletService walletService;
+
     /**
      * Thực hiện mua sản phẩm và trừ tiền từ số dư của người mua, bọc trong Transaction.
      */
@@ -75,7 +78,18 @@ public class TransactionService {
                 .status("Held")
                 .escrowReleaseDate(LocalDateTime.now().plusDays(3))
                 .build();
+        transaction = transactionRepository.save(transaction);
 
-        return transactionRepository.save(transaction);
+        // Record to Wallet Ledger (Customer paid)
+        walletService.recordTransaction(customer, "PAYMENT", -price, "SUCCESS", "Thanh toán đơn hàng " + product.getName(), "MMO-ORD-" + transaction.getId(), customer.getBalanceVnd());
+
+        return transaction;
+    }
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public java.util.List<Transaction> getMyOrders(Long userId) {
+        User customer = userRepository.findByIdAndIsDeleteFalse(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Người mua không tồn tại."));
+        return transactionRepository.findByCustomerAndIsDeleteFalseOrderByCreatedAtDesc(customer);
     }
 }

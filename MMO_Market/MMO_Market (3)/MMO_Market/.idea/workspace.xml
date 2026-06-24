@@ -6,25 +6,101 @@
   <component name="ChangeListManager">
     <list default="true" id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/docs/EXPORT_REPORT.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/docs/ICON_GUIDELINE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/docs/UI_GUIDELINE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/docs/UX_UI_SYNC_GUIDELINE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/examples/buttons-example.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/examples/buttons-icons-catalog.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/examples/filter-search-sort-example.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/examples/forms-example.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/examples/icons-example.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/examples/pagination-example.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/examples/table-example.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/examples/toast-example.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/examples/toggle-example.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/design-system/examples/ux-ui-sync-proposal-example.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sql_scripts/migration/20250532_Thêm tk admin.sql" beforeDir="false" afterPath="$PROJECT_DIR$/sql_scripts/migration/20250601_001_them_tk_admin.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/admin/2026-06-04-user-profile-fields.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/changes/admin/2026-06-04-user-profile-fields.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/design-system/docs/EXPORT_REPORT.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/design-system/export-report.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/design-system/docs/ICON_GUIDELINE.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/design-system/icon-guideline.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/design-system/docs/UI_GUIDELINE.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/design-system/ui-guideline.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/design-system/docs/UX_UI_SYNC_GUIDELINE.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/design-system/ux-ui-sync-guideline.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/design-system/examples/date-picker-comparison-example.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/design-system/examples/date-picker-comparison-example.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/design-system/examples/filter-search-sort-example.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/design-system/examples/filter-search-sort-example.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/markdown/ALL_FIXES_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/markdown/Agents.md" beforeDir="false" afterPath="$PROJECT_DIR$/AGENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/markdown/COMPILATION_ERROR_FIXED.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/archive/2026-06-fixes/compilation-error-fixed.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/markdown/DATABASE.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/database/schema-reference.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/markdown/DELIVERABLES_SUMMARY.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/archive/2026-06-search/deliverables-summary.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/markdown/JAVA_ERROR_FIXED_FINAL.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/archive/2026-06-fixes/java-error-fixed-final.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/markdown/QUICK_START_GUIDE.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/runbooks/local-development.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/markdown/SEARCH_FUNCTIONALITY_DEPLOYMENT.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/archive/2026-06-search/search-functionality-deployment.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/markdown/SEARCH_RESULTS_IMPLEMENTATION.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/archive/2026-06-search/search-results-implementation.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/markdown/Spec.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/archive/legacy-agent-spec.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/markdown/Specification.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/specifications/business-specification.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/markdown/VISUAL_REFERENCE_GUIDE.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/archive/2026-06-search/visual-reference-guide.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/lines-and-columns/build/index.d.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/lines-and-columns/build/index.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/tailwindcss/lib/cli/build/deps.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/tailwindcss/lib/cli/build/index.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/tailwindcss/lib/cli/build/plugin.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/tailwindcss/lib/cli/build/utils.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/tailwindcss/lib/cli/build/watching.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/tailwindcss/src/cli/build/deps.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/tailwindcss/src/cli/build/index.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/tailwindcss/src/cli/build/plugin.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/tailwindcss/src/cli/build/utils.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/tailwindcss/src/cli/build/watching.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/migration/20250531_add_isLocked_to_users.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/migration/20250601_001_them_tk_admin.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/migration/20260604_001_admin_user_profile_columns.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/migration/20260604_002_INSERT_TestProducts.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/migration/20260604_003_RESTORE_Categories_Fresh.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/migration/20260604_004_UPDATE_Categories_Hierarchical.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/migration/20260611_AddDigitalAssets.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/migration/20260611_UpdateDigitalAssets_v2.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/migration/20260615_001_more KYCRequest__more KYCDocuments_staff.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/migration/20260616_001_add_shop_followers.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/migration/FIX_Categories_Vietnamese_UTF8.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/migration/SEED_Products_Fresh.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/migration/SEED_SellerMockData.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/AuthController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controller/ProfileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/ProfileController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controller/TransactionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/TransactionController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controller/dto/LoginResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/dto/LoginResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controller/dto/ProfileResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/dto/ProfileResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controller/dto/UpdateProfileRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/dto/UpdateProfileRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controller/mvc/StaffController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/mvc/StaffController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/dal/DBContext.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/dal/DBContext.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/model/SellerRegistration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/SellerRegistration.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/model/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/security/JwtAuthenticationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/security/JwtAuthenticationFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/security/SecurityConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/service/AuthenticationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/AuthenticationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/admin/users.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/admin/users.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/service/AdminUserManagementServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/service/AdminUserManagementServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/templates/admin/users.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/admin/users.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/service/TopupService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/TopupService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/service/TransactionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/TransactionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/datepicker.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/datepicker.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/filters.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/filters.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/kyc.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/kyc.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/orders.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/orders.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/pagination.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/pagination.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/profile.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/profile.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/account-kyc.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/account-kyc.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/account-notifications.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/account-notifications.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/account-orders.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/account-orders.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/account-register-shop.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/account-register-shop.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/account-security.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/account-security.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/account-sidebar.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/account-sidebar.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/account-topup.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/account-topup.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/account-transactions.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/account-transactions.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/account-wallet.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/account-wallet.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/auth.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/auth.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/datepicker.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/datepicker.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/profile.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/profile.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/account/kyc.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/account/kyc.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/account/orders.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/account/orders.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/account/register-shop.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/account/register-shop.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/account/security.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/account/security.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/account/topup.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/account/topup.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/account/transactions.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/account/transactions.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/auth/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/auth/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/account-sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/account-sidebar.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/design-system-styles.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/design-system-styles.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/header.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/header.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/profile/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/profile/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/staff/kyc-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/staff/kyc-detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/staff/kyc.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/staff/kyc.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/static/js/auth.js" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/js/auth.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/auth/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/auth/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/fragments/header.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/fragments/header.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -342,6 +418,9 @@
       <entry key="W1" value="46.78183805056435" />
     </decayedShown>
   </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="Security Analysis" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 8
 }</component>
@@ -391,7 +470,7 @@
     &quot;Spring Boot.MMOMarketApplication.executor&quot;: &quot;Debug&quot;,
     &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;NhatVL&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;AnhTV&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/SU26/SWP/mmo-system/MMO_Market/MMO_Market (3)/MMO_Market&quot;,
@@ -508,8 +587,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.24374.151" />
-        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-IU-261.24374.151" />
+        <option value="bundled-jdk-9823dce3aa75-fbdcb00ec9e3-intellij.indexing.shared.core-IU-251.26094.121" />
+        <option value="bundled-js-predefined-d6986cc7102b-b26f3e71634d-JavaScript-IU-251.26094.121" />
       </set>
     </attachedChunks>
   </component>
@@ -559,6 +638,12 @@
       <workItem from="1781503474757" duration="113000" />
       <workItem from="1781533780802" duration="463000" />
       <workItem from="1781534531153" duration="1036000" />
+      <workItem from="1781765500744" duration="9076000" />
+      <workItem from="1781793327536" duration="6311000" />
+      <workItem from="1782197329652" duration="7553000" />
+      <workItem from="1782285041240" duration="10372000" />
+      <workItem from="1782296196782" duration="801000" />
+      <workItem from="1782315351054" duration="1606000" />
     </task>
     <servers />
   </component>

@@ -241,39 +241,6 @@ window.resolvePostLoginRedirect = resolvePostLoginRedirect;
 
 document.addEventListener('DOMContentLoaded', applyAuthenticatedRedirect);
 
-function setupStaffAvatarMenu() {
-    const dropdown = document.getElementById('userDropdown');
-    if (!dropdown || document.getElementById('staffWorkDropdownItem')) return;
-
-    const token = sessionStorage.getItem('accessToken');
-    const userString = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
-    if (!token || token === 'null' || token === 'undefined' || !userString) return;
-
-    try {
-        const user = JSON.parse(userString);
-        if (normalizeRole(user.role) !== 'Staff') return;
-
-        const staffItem = document.createElement('div');
-        staffItem.id = 'staffWorkDropdownItem';
-        staffItem.className = 'dropdown-item';
-        staffItem.innerHTML = '<i class="fa fa-briefcase"></i> Công việc';
-        staffItem.addEventListener('click', () => {
-            window.location.href = '/staff/dashboard';
-        });
-
-        const divider = dropdown.querySelector('.dropdown-divider');
-        if (divider) {
-            dropdown.insertBefore(staffItem, divider);
-        } else {
-            dropdown.appendChild(staffItem);
-        }
-    } catch (error) {
-        console.error('Lỗi khi thiết lập menu staff:', error);
-    }
-}
-
-document.addEventListener('DOMContentLoaded', setupStaffAvatarMenu);
-
 function togglePassword(inputId, icon) {
     const input = document.getElementById(inputId);
     if (input.type === "password") {
@@ -544,6 +511,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    let is2faStep = false;
+    const otpGroup = document.getElementById('otpGroup');
+    const otpInput = document.getElementById('loginOtp');
+
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         alertBox.style.display = 'none';
@@ -551,6 +522,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let isValid = true;
         const email = emailInput.value.trim();
         const password = passwordInput.value;
+        const otp = otpInput ? otpInput.value.trim() : '';
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (email === '') {
@@ -566,18 +538,43 @@ document.addEventListener('DOMContentLoaded', function() {
             isValid = false;
         }
 
+        if (is2faStep) {
+            if (!/^\d{6}$/.test(otp)) {
+                showFieldError('loginOtp', 'Mã OTP phải gồm 6 chữ số.');
+                isValid = false;
+            } else {
+                clearFieldError('loginOtp');
+            }
+        }
+
         if (!isValid) return;
 
         btnLogin.disabled = true;
         btnLogin.innerHTML = '<span>Đang đăng nhập...</span>';
 
-        fetch('/api/auth/login', {
+        const url = is2faStep ? '/api/auth/login-2fa' : '/api/auth/login';
+        const bodyData = { email, password };
+        if (is2faStep) bodyData.otp = otp;
+
+        fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify(bodyData)
         })
             .then(response => response.json().then(data => ({ status: response.status, body: data })))
             .then(res => {
+                if (res.status === 200 && res.body.requires2FA) {
+                    showLoginAlert(res.body.message || 'Tài khoản yêu cầu xác minh 2 bước.', 'info');
+                    is2faStep = true;
+                    otpGroup.hidden = false;
+                    document.getElementById('email').parentElement.hidden = true;
+                    document.getElementById('password').parentElement.hidden = true;
+                    otpInput.focus();
+                    btnLogin.disabled = false;
+                    btnLogin.innerHTML = '<span>Xác minh</span>';
+                    return;
+                }
+
                 if (res.status === 200 && res.body.accessToken) {
                     showLoginAlert('Đăng nhập thành công!', 'success');
 
@@ -612,7 +609,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     showLoginAlert(res.body.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.', 'error');
                     btnLogin.disabled = false;
-                    btnLogin.innerHTML = '<span>Đăng nhập</span>';
+                    btnLogin.innerHTML = is2faStep ? '<span>Xác minh</span>' : '<span>Đăng nhập</span>';
                 }
             })
             .catch(error => {

@@ -154,6 +154,10 @@ public class AuthController {
             log.info("Nhận yêu cầu đăng nhập email: {}", request.getEmail());
             LoginResponse response = authenticationService.login(request);
 
+            if (response.getRequires2FA() != null && response.getRequires2FA()) {
+                return ResponseEntity.ok(response);
+            }
+
             if (response.getAccessToken() != null) {
                 return ResponseEntity.ok(response);
             } else {
@@ -161,6 +165,27 @@ public class AuthController {
             }
         } catch (Exception e) {
             log.error("Lỗi không mong muốn khi đăng nhập: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Object() {
+                        public final String message = "Lỗi hệ thống: " + e.getMessage();
+                    });
+        }
+    }
+
+    @PostMapping("/api/auth/login-2fa")
+    @ResponseBody
+    public ResponseEntity<?> login2fa(@Valid @RequestBody Login2faRequest request) {
+        try {
+            log.info("Nhận yêu cầu đăng nhập 2FA email: {}", request.getEmail());
+            LoginResponse response = authenticationService.login2fa(request);
+
+            if (response.getAccessToken() != null) {
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+        } catch (Exception e) {
+            log.error("Lỗi không mong muốn khi đăng nhập 2FA: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new Object() {
                         public final String message = "Lỗi hệ thống: " + e.getMessage();

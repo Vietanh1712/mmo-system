@@ -1,3 +1,5 @@
+(function () {
+
 const ACCOUNT_ORDERS_MOCK_KEY = 'mmoMarketMyOrdersMock';
 
 let accountSidebar = null;
@@ -6,12 +8,17 @@ let currentPage = 1;
 let pageSize = 5;
 let appliedFilters = createEmptyFilters();
 
-document.addEventListener('DOMContentLoaded', initializeOrdersPage);
+// THAY ĐỔI QUAN TRỌNG: Gọi registerAccountPage ĐÚNG CÁCH.
+registerAccountPage('/js/account-orders.js', initializeOrdersPage);
 
 function initializeOrdersPage() {
-    accountSidebar = new AccountSidebar();
-    bindOrderEvents();
-    loadOrdersPage();
+    try {
+        accountSidebar = new AccountSidebar();
+        bindOrderEvents();
+        loadOrdersPage();
+    } catch (e) {
+        alert("Lỗi khởi tạo JS: " + e.message);
+    }
 }
 
 function bindOrderEvents() {
@@ -21,12 +28,6 @@ function bindOrderEvents() {
 }
 
 async function loadOrdersPage() {
-    const token = sessionStorage.getItem('accessToken');
-    if (!token || token === 'null' || token === 'undefined') {
-        window.location.href = '/login';
-        return;
-    }
-
     try {
         const response = await authFetch('/v1/profile');
         if (!response.ok) {
@@ -35,106 +36,49 @@ async function loadOrdersPage() {
 
         const profile = await response.json();
         accountSidebar.render(profile);
-        myOrders = readOrders();
+        
+        // GỌI THẬT ĐẾN BACKEND (đã sửa API)
+        const ordersResp = await authFetch('/transactions/me');
+        if (!ordersResp.ok) {
+            let errorText = 'Không thể tải danh sách đơn hàng.';
+            try {
+                const errJson = await ordersResp.json();
+                if (errJson && errJson.message) errorText = errJson.message;
+            } catch(e) {}
+            throw new Error(errorText);
+        }
+        
+        myOrders = await ordersResp.json();
+        
         renderSummary(myOrders);
         renderOrders();
-        showOrdersMessage('Danh sách đơn hàng hiện dùng dữ liệu mock frontend.', 'info');
+        
+        const msgEl = document.getElementById('ordersMessage');
+        if (msgEl) {
+            msgEl.hidden = true;
+            msgEl.classList.add('ds-hidden');
+        }
     } catch (error) {
+        console.error(error);
+        alert("Lỗi tải trang đơn hàng: " + error.message);
         showOrdersMessage(error.message || 'Không thể tải danh sách đơn hàng.', 'danger');
     }
 }
 
-function getUserSpecificKey(baseKey) {
-    try {
-        const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
-        if (userStr) {
-            const user = JSON.parse(userStr);
-            if (user && user.email) {
-                return `${baseKey}_${user.email}`;
-            }
-        }
-    } catch (e) {
-        console.error('Lỗi khi lấy user-specific key:', e);
-    }
-    return baseKey;
-}
-
-function readOrders() {
-    const key = getUserSpecificKey(ACCOUNT_ORDERS_MOCK_KEY);
-    try {
-        const saved = sessionStorage.getItem(key);
-        if (saved !== null) {
-            return JSON.parse(saved);
-        }
-    } catch {
-        // fallback to seeded data below
-    }
-
-    let isDemo = false;
-    try {
-        const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
-        if (userStr) {
-            const user = JSON.parse(userStr);
-            if (user && user.email) {
-                const demoEmails = ['customer01@gmail.com', 'customer02@gmail.com', 'customer03@gmail.com', 'customer04@gmail.com', 'customer05@gmail.com'];
-                if (demoEmails.includes(user.email.toLowerCase())) {
-                    isDemo = true;
-                }
-            }
-        }
-    } catch (e) {
-        // ignore
-    }
-
-    const seeded = isDemo ? createSeedOrders() : [];
-    sessionStorage.setItem(key, JSON.stringify(seeded));
-    return seeded;
-}
-
-function createSeedOrders() {
-    const now = new Date();
-    return [
-        createOrder('MMO-ORD-1001', 7, 'Tài khoản Canva Pro 1 năm', 'Digital Store VN', 129000, 'COMPLETED', 'PAID', addDays(now, -1), '12 Tháng (1 Năm)'),
-        createOrder('MMO-ORD-1002', 3, 'Gói proxy dân cư 5GB', 'ProxyHub', 240000, 'DELIVERED', 'PAID', addDays(now, -2), '5GB'),
-        createOrder('MMO-ORD-1003', 13, 'Template landing page MMO', 'Design Market', 99000, 'PAID', 'PAID', addDays(now, -3), '1 Thiết kế'),
-        createOrder('MMO-ORD-1004', 1, 'Tài khoản Netflix Premium', 'Account247', 75000, 'DISPUTED', 'PAID', addDays(now, -4), '1 Tháng'),
-        createOrder('MMO-ORD-1005', 9, 'Tool automation social', 'ToolBox Seller', 450000, 'PENDING', 'PENDING', addDays(now, -5), 'Vĩnh viễn'),
-        createOrder('MMO-ORD-1006', 5, 'Key Windows 11 Pro', 'Key Mall', 180000, 'REFUNDED', 'REFUNDED', addDays(now, -6), 'Vĩnh viễn'),
-        createOrder('MMO-ORD-1007', 13, 'Khóa học chạy quảng cáo cơ bản', 'Ads Academy', 299000, 'COMPLETED', 'PAID', addDays(now, -7), 'Trọn đời'),
-        createOrder('MMO-ORD-1008', 4, 'Tài khoản Spotify Family', 'Sub Store', 65000, 'CANCELLED', 'FAILED', addDays(now, -8), '12 Tháng (1 Năm)'),
-        createOrder('MMO-ORD-1009', 8, 'Data email marketing B2B', 'DataX', 350000, 'DELIVERED', 'PAID', addDays(now, -9), '1 Danh sách')
-    ];
-}
-
-function createOrder(orderCode, productId, productName, sellerName, amount, status, paymentStatus, createdDate, variantLabel = '') {
-    return {
-        orderCode,
-        productId,
-        productName,
-        variantLabel,
-        sellerName,
-        amount,
-        status,
-        paymentStatus,
-        createdAt: formatDateTime(createdDate),
-        escrowReleaseDate: formatDate(addDays(createdDate, 3)),
-        isReviewed: false
-    };
-}
-
 function renderSummary(orders) {
-    const summary = orders.reduce((result, order) => {
-        result.total += 1;
-        if (order.status === 'COMPLETED') result.completed += 1;
-        if (['PENDING', 'PAID', 'DELIVERED'].includes(order.status)) result.processing += 1;
-        if (order.status === 'DISPUTED') result.disputed += 1;
-        return result;
-    }, { total: 0, completed: 0, processing: 0, disputed: 0 });
+    const completedCount = orders.filter(order => order.status === 'COMPLETED' || order.status === 'DELIVERED').length;
+    const processingCount = orders.filter(order => order.status === 'PENDING' || order.status === 'PAID').length;
+    const disputedCount = orders.filter(order => order.status === 'DISPUTED' || order.status === 'CANCELLED').length;
 
-    document.getElementById('ordersTotalCount').textContent = `${summary.total} đơn`;
-    document.getElementById('ordersCompletedCount').textContent = `${summary.completed} đơn`;
-    document.getElementById('ordersProcessingCount').textContent = `${summary.processing} đơn`;
-    document.getElementById('ordersDisputedCount').textContent = `${summary.disputed} đơn`;
+    const totalCountEl = document.getElementById('ordersTotalCount');
+    const completedCountEl = document.getElementById('ordersCompletedCount');
+    const processingCountEl = document.getElementById('ordersProcessingCount');
+    const disputedCountEl = document.getElementById('ordersDisputedCount');
+
+    if (totalCountEl) totalCountEl.textContent = `${orders.length} đơn`;
+    if (completedCountEl) completedCountEl.textContent = `${completedCount} đơn`;
+    if (processingCountEl) processingCountEl.textContent = `${processingCount} đơn`;
+    if (disputedCountEl) disputedCountEl.textContent = `${disputedCount} đơn`;
 }
 
 function renderOrders() {
@@ -159,39 +103,39 @@ function renderOrders() {
         return;
     }
 
-    emptyState.hidden = true;
     tableWrap.hidden = false;
-    pagination.hidden = false;
+    emptyState.hidden = true;
+    pagination.hidden = totalPages <= 1;
     summary.textContent = `Hiển thị ${startIndex + 1}-${startIndex + pagedOrders.length}/${filtered.length} đơn hàng.`;
-    tableBody.innerHTML = pagedOrders.map((order, index) => {
-        let ratingCell;
-        if (order.isReviewed) {
-            ratingCell = `<span style="color: var(--ds-success, #16a34a); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px;"><i class="fa fa-check-circle"></i> Đã đánh giá</span>`;
-        } else if (['COMPLETED', 'PAID', 'DELIVERED'].includes(order.status)) {
-            ratingCell = `<a href="/account/orders/${encodeURIComponent(order.orderCode)}/feedback" class="ds-btn ds-btn-outline" style="min-height: 28px; padding: 0 10px; font-size: 11px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px;"><i class="fa fa-star" style="color: #fbbf24;" aria-hidden="true"></i> Đánh giá</a>`;
-        } else {
-            ratingCell = `<span style="color: var(--ds-text-subtle);">—</span>`;
-        }
 
+    tableBody.innerHTML = pagedOrders.map(order => {
+        const orderDate = parseVietnameseDateTime(order.createdAt);
         return `
             <tr>
-                <td class="ds-table-center">${startIndex + index + 1}</td>
-                <td><span class="orders-code">${escapeHtml(order.orderCode)}</span></td>
+                <td>${escapeHtml(order.orderCode)}</td>
                 <td>
-                    <div class="orders-product">
-                        <div class="orders-product-title">${escapeHtml(order.productName)}${order.variantLabel ? ` (${escapeHtml(order.variantLabel)})` : ''}</div>
-                        <div class="orders-product-subtitle">Escrow đến: ${escapeHtml(order.escrowReleaseDate)}</div>
+                    <div class="ds-flex ds-align-center ds-gap-sm">
+                        <span>${escapeHtml(order.productName)}</span>
+                    </div>
+                    <div class="ds-text-sm ds-text-muted ds-mt-sm">
+                        ${escapeHtml(order.sellerName)}
                     </div>
                 </td>
-                <td>${escapeHtml(order.sellerName)}</td>
-                <td><span class="orders-amount">${formatMoney(order.amount)}</span></td>
-                <td class="ds-table-center"><span class="ds-badge ${getOrderStatusBadgeClass(order.status)}">${formatOrderStatus(order.status)}</span></td>
-                <td class="ds-table-center"><span class="ds-badge ${getPaymentBadgeClass(order.paymentStatus)}">${formatPaymentStatus(order.paymentStatus)}</span></td>
-                <td>${escapeHtml(order.createdAt)}</td>
-                <td class="ds-table-center">${ratingCell}</td>
+                <td class="ds-text-right">${formatMoney(order.amountVnd)}</td>
                 <td>
-                    <div class="ds-table-actions">
-                        <button class="ds-icon-btn ds-icon-btn-view" type="button" data-order-code="${escapeHtml(order.orderCode)}" aria-label="Xem chi tiết đơn hàng">
+                    <span class="ds-badge ${getOrderStatusBadgeClass(order.status)}">
+                        ${formatOrderStatus(order.status)}
+                    </span>
+                </td>
+                <td>
+                    <span class="ds-badge ${getPaymentBadgeClass(order.paymentStatus)}">
+                        ${formatPaymentStatus(order.paymentStatus)}
+                    </span>
+                </td>
+                <td>${orderDate ? formatDateTime(orderDate) : escapeHtml(order.createdAt)}</td>
+                <td>
+                    <div class="ds-flex ds-gap-sm">
+                        <button type="button" class="ds-btn ds-btn-icon ds-btn-sm" data-order-code="${escapeHtml(order.orderCode)}" title="Xem chi tiết">
                             <svg class="ds-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                 <path d="M2.25 12C3.73 8.12 7.49 5.25 12 5.25C16.51 5.25 20.27 8.12 21.75 12C20.27 15.88 16.51 18.75 12 18.75C7.49 18.75 3.73 15.88 2.25 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 <path d="M12 15.25C13.79 15.25 15.25 13.79 15.25 12C15.25 10.21 13.79 8.75 12 8.75C10.21 8.75 8.75 10.21 8.75 12C8.75 13.79 10.21 15.25 12 15.25Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -242,12 +186,14 @@ function handleFilterSubmit(event) {
 }
 
 function readCurrentFilters() {
+    const dateRange = readDateRangeFilter();
+
     return {
         keyword: document.getElementById('ordersSearchInput').value.trim().toLowerCase(),
         status: document.getElementById('ordersStatusFilter').value,
         paymentStatus: document.getElementById('ordersPaymentFilter').value,
-        fromDate: document.getElementById('ordersFromDate').value,
-        toDate: document.getElementById('ordersToDate').value
+        fromDate: dateRange.fromDate,
+        toDate: dateRange.toDate
     };
 }
 
@@ -255,11 +201,16 @@ function resetFilters() {
     document.getElementById('ordersSearchInput').value = '';
     document.getElementById('ordersStatusFilter').value = '';
     document.getElementById('ordersPaymentFilter').value = '';
-    clearDatePicker('ordersFromDate', 'ordersFromDateDisplay');
-    clearDatePicker('ordersToDate', 'ordersToDateDisplay');
+    clearDatePicker('ordersDateRange', 'ordersDateRangeDisplay');
     appliedFilters = createEmptyFilters();
     currentPage = 1;
     renderOrders();
+}
+
+function readDateRangeFilter() {
+    const range = document.getElementById('ordersDateRange')?.value || '';
+    const [fromDate = '', toDate = ''] = range.split(',');
+    return { fromDate, toDate };
 }
 
 function createEmptyFilters() {
@@ -322,8 +273,10 @@ function createPageButton(label, page, disabled, active = false) {
 }
 
 function clearDatePicker(hiddenId, displayId) {
-    document.getElementById(hiddenId).value = '';
-    document.getElementById(displayId).value = '';
+    const hidden = document.getElementById(hiddenId);
+    const display = document.getElementById(displayId);
+    if (hidden) hidden.value = '';
+    if (display) display.value = '';
 }
 
 function parseIsoDate(value) {
@@ -403,6 +356,8 @@ function showOrdersMessage(message, type) {
     const messageElement = document.getElementById('ordersMessage');
     messageElement.textContent = message;
     messageElement.hidden = false;
+    messageElement.style.display = '';
+    messageElement.classList.remove('ds-hidden');
     messageElement.classList.remove('ds-alert-info', 'ds-alert-warning', 'ds-alert-danger', 'ds-alert-success');
     messageElement.classList.add(`ds-alert-${type}`);
 }
@@ -415,3 +370,17 @@ function escapeHtml(value) {
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#039;');
 }
+
+function registerAccountPage(scriptPath, initializer) {
+    window.AccountPageInitializers = window.AccountPageInitializers || {};
+    window.AccountPageInitializers[scriptPath] = initializer;
+    if (document.currentScript?.dataset.accountPartial !== 'true') {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializer);
+        } else {
+            initializer();
+        }
+    }
+}
+
+})();

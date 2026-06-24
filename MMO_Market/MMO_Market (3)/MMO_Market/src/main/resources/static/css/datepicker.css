@@ -147,6 +147,13 @@
     color: #ffffff;
 }
 
+.ds-datepicker-cell-in-range {
+    background: #eff6ff; /* light blue */
+    border-radius: 0;
+    width: 100%;
+    color: var(--ds-primary);
+}
+
 .ds-datepicker-months,
 .ds-datepicker-years {
     display: grid;

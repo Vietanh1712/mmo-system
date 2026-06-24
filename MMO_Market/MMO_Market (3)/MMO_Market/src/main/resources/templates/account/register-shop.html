@@ -65,11 +65,14 @@
                         <div>
                             <h2 class="ds-heading-md" id="shopSummaryTitle">Yêu cầu đang chờ xét duyệt</h2>
                             <p class="ds-caption" id="shopSummaryDescription">Staff sẽ phản hồi yêu cầu trong vòng 1-3 ngày làm việc.</p>
+                            <div class="ds-alert ds-alert-danger" id="shopRejectionReasonAlert" style="margin-top: 1rem;" hidden>
+                                <strong>Lý do từ chối:</strong> <span id="shopRejectionReasonText"></span>
+                            </div>
                         </div>
                         <div class="shop-registration__summary-actions">
                             <button class="ds-btn ds-btn-outline" id="shopEditRequestButton" type="button">Chỉnh sửa yêu cầu</button>
                             <a class="ds-btn ds-btn-primary" id="openSellerPortalButton" th:href="@{/seller/dashboard}" hidden>
-                                Vào Seller Portal
+                                Vào Seller Dashboard
                             </a>
                         </div>
                     </div>

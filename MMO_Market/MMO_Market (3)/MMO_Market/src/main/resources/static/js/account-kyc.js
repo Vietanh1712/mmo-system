@@ -1,11 +1,11 @@
-const KYC_STORAGE_KEY = 'mmoMarketKycMock';
+(function () {
 const DEFAULT_KYC_STATE = { status: 'NOT_SUBMITTED' };
 
 let accountSidebar = null;
 let currentProfile = null;
 let currentKyc = DEFAULT_KYC_STATE;
 
-document.addEventListener('DOMContentLoaded', initializeKycPage);
+registerAccountPage('/js/account-kyc.js', initializeKycPage);
 
 function initializeKycPage() {
     accountSidebar = new AccountSidebar();
@@ -38,7 +38,7 @@ async function loadKycPage() {
 
         currentProfile = await response.json();
         accountSidebar.render(currentProfile);
-        currentKyc = readKycState();
+        currentKyc = await fetchKycState();
         renderKycState();
 
         if (isKycFormMode()) {
@@ -49,17 +49,27 @@ async function loadKycPage() {
     }
 }
 
-function readKycState() {
+async function fetchKycState() {
     try {
-        return JSON.parse(sessionStorage.getItem(KYC_STORAGE_KEY)) || DEFAULT_KYC_STATE;
+        const res = await authFetch('/v1/kyc/me');
+        if (!res.ok) return DEFAULT_KYC_STATE;
+        const data = await res.json();
+        if (data && data.length > 0) {
+            const latest = data[0];
+            return {
+                id: latest.id,
+                status: latest.status,
+                requestCode: latest.requestCode,
+                submittedAt: new Date(latest.createdAt).toLocaleString('vi-VN'),
+                documentType: latest.idType,
+                rejectReason: latest.rejectionReason,
+                documentNumber: latest.idNumber
+            };
+        }
+        return DEFAULT_KYC_STATE;
     } catch {
         return DEFAULT_KYC_STATE;
     }
-}
-
-function saveKycState(nextState) {
-    currentKyc = nextState;
-    sessionStorage.setItem(KYC_STORAGE_KEY, JSON.stringify(nextState));
 }
 
 function renderKycState() {
@@ -94,6 +104,47 @@ function renderKycMeta() {
     rejectRow.hidden = currentKyc.status !== 'REJECTED';
     document.getElementById('kycRejectReason').textContent =
         currentKyc.rejectReason || 'Ảnh giấy tờ chưa rõ. Vui lòng gửi lại hồ sơ.';
+
+    const submittedData = document.getElementById('kycSubmittedData');
+    if (submittedData) {
+        if (currentKyc.status === 'PENDING' || currentKyc.status === 'APPROVED' || currentKyc.status === 'REJECTED') {
+            submittedData.hidden = false;
+            document.getElementById('kycViewFullName').textContent = currentProfile?.fullName || '-';
+            document.getElementById('kycViewDocumentNumber').textContent = currentKyc.documentNumber || '-';
+            
+            const dob = currentProfile?.dateOfBirth;
+            let dobDisplay = '-';
+            if (dob) {
+                const parts = dob.split('-');
+                if (parts.length === 3) dobDisplay = `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            document.getElementById('kycViewDateOfBirth').textContent = dobDisplay;
+            document.getElementById('kycViewAddress').textContent = currentProfile?.address || '-';
+            
+            fetchAndSetImage(`/v1/kyc/${currentKyc.id}/documents/front`, 'kycViewFrontImage');
+            fetchAndSetImage(`/v1/kyc/${currentKyc.id}/documents/back`, 'kycViewBackImage');
+            fetchAndSetImage(`/v1/kyc/${currentKyc.id}/documents/selfie`, 'kycViewSelfieImage');
+        } else {
+            submittedData.hidden = true;
+        }
+    }
+}
+
+async function fetchAndSetImage(url, imgId) {
+    const img = document.getElementById(imgId);
+    if (!img) return;
+    try {
+        const response = await authFetch(url);
+        if (response.ok) {
+            const blob = await response.blob();
+            const objectUrl = URL.createObjectURL(blob);
+            img.src = objectUrl;
+        } else {
+            img.alt = 'Không thể tải ảnh';
+        }
+    } catch (e) {
+        img.alt = 'Lỗi kết nối';
+    }
 }
 
 function renderKycPrimaryAction() {
@@ -102,9 +153,7 @@ function renderKycPrimaryAction() {
     action.className = 'ds-btn ds-btn-primary';
 
     if (currentKyc.status === 'APPROVED') {
-        action.textContent = 'Đi tới ví';
-        action.href = '/wallet';
-        action.className = 'ds-btn ds-btn-outline';
+        action.hidden = true;
         return;
     }
 
@@ -190,39 +239,80 @@ function closeKycFormMode(event) {
 }
 
 function prefillKycForm() {
-    document.getElementById('kycFullName').value = currentKyc.fullName || currentProfile?.fullName || '';
+    document.getElementById('kycFullName').value = currentProfile?.fullName || '';
     document.getElementById('kycDocumentNumber').value = currentKyc.documentNumber || '';
-    document.getElementById('kycDateOfBirth').value = currentKyc.dateOfBirth || '';
+    
+    // Format YYYY-MM-DD to DD/MM/YYYY
+    const dob = currentProfile?.dateOfBirth;
+    let dobDisplay = '';
+    if (dob) {
+        const parts = dob.split('-');
+        if (parts.length === 3) {
+            dobDisplay = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        } else {
+            dobDisplay = dob;
+        }
+    }
+    const dobInput = document.getElementById('kycDateOfBirth');
+    if (dobInput) {
+        dobInput.value = dob || '';
+    }
+    const dobDisplayInput = document.getElementById('kycDateOfBirthDisplay');
+    if (dobDisplayInput) {
+        dobDisplayInput.value = dobDisplay;
+    }
+
     document.getElementById('kycDocumentTypeInput').value = currentKyc.documentType || '';
-    document.getElementById('kycAddress').value = currentKyc.address || '';
+    document.getElementById('kycAddress').value = currentProfile?.address || '';
     document.getElementById('kycConfirm').checked = false;
 }
 
-function submitKycForm(event) {
+async function submitKycForm(event) {
     event.preventDefault();
 
     if (!validateKycForm()) {
         return;
     }
 
-    const submittedAt = new Intl.DateTimeFormat('vi-VN', {
-        dateStyle: 'short',
-        timeStyle: 'short'
-    }).format(new Date());
+    const formData = new FormData();
+    formData.append('fullName', document.getElementById('kycFullName').value.trim());
+    formData.append('idNumber', document.getElementById('kycDocumentNumber').value.trim());
+    formData.append('dateOfBirth', document.getElementById('kycDateOfBirth').value.trim());
+    formData.append('idType', document.getElementById('kycDocumentTypeInput').value);
+    formData.append('address', document.getElementById('kycAddress').value.trim());
+    formData.append('frontImage', document.getElementById('kycFrontFile').files[0]);
+    formData.append('backImage', document.getElementById('kycBackFile').files[0]);
+    formData.append('selfieImage', document.getElementById('kycSelfieFile').files[0]);
 
-    saveKycState({
-        status: 'PENDING',
-        requestCode: currentKyc.requestCode || `KYC-${Date.now().toString().slice(-6)}`,
-        submittedAt,
-        fullName: document.getElementById('kycFullName').value.trim(),
-        documentNumber: document.getElementById('kycDocumentNumber').value.trim(),
-        dateOfBirth: document.getElementById('kycDateOfBirth').value,
-        documentType: document.getElementById('kycDocumentTypeInput').value,
-        address: document.getElementById('kycAddress').value.trim()
-    });
+    const submitBtn = document.getElementById('kycSubmitButton');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Đang xử lý...';
+    submitBtn.disabled = true;
 
-    closeKycFormMode();
-    renderKycState();
+    try {
+        const response = await fetch('/api/v1/kyc', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${sessionStorage.getItem('accessToken')}`
+            },
+            body: formData
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.message || 'Lỗi gửi yêu cầu KYC');
+        }
+
+        closeKycFormMode();
+        currentKyc = await fetchKycState();
+        renderKycState();
+        showKycMessage('Đã gửi yêu cầu định danh thành công!', 'success');
+    } catch (error) {
+        showKycFormMessage(error.message);
+    } finally {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    }
 }
 
 function validateKycForm() {
@@ -231,13 +321,13 @@ function validateKycForm() {
 
     const fullName = document.getElementById('kycFullName').value.trim();
     const documentNumber = document.getElementById('kycDocumentNumber').value.trim();
-    const dateOfBirth = document.getElementById('kycDateOfBirth').value;
+    const dateOfBirth = document.getElementById('kycDateOfBirth').value.trim();
     const documentType = document.getElementById('kycDocumentTypeInput').value;
     const address = document.getElementById('kycAddress').value.trim();
     const confirmed = document.getElementById('kycConfirm').checked;
 
-    if (fullName.length < 3) {
-        setText('kycFullNameError', 'Họ và tên phải có ít nhất 3 ký tự.');
+    if (!fullName) {
+        setText('kycFullNameError', 'Họ tên không được để trống.');
         valid = false;
     }
 
@@ -247,7 +337,7 @@ function validateKycForm() {
     }
 
     if (!dateOfBirth) {
-        setText('kycDateOfBirthError', 'Vui lòng chọn ngày sinh.');
+        setText('kycDateOfBirthError', 'Ngày sinh không được để trống.');
         valid = false;
     }
 
@@ -256,8 +346,8 @@ function validateKycForm() {
         valid = false;
     }
 
-    if (address.length < 10) {
-        setText('kycAddressError', 'Địa chỉ thường trú phải có ít nhất 10 ký tự.');
+    if (!address) {
+        setText('kycAddressError', 'Địa chỉ không được để trống.');
         valid = false;
     }
 
@@ -314,10 +404,29 @@ function showKycMessage(message, type) {
 }
 
 function bindFileNamePreview(inputId, targetName) {
-    document.getElementById(inputId).addEventListener('change', event => {
+    const input = document.getElementById(inputId);
+    input.addEventListener('change', event => {
         const file = event.target.files[0];
         const label = document.querySelector(`[data-kyc-file-name="${targetName}"]`);
         label.textContent = file ? file.name : 'PNG, JPG hoặc PDF';
+
+        const box = input.closest('.kyc-upload-box');
+        if (box._previewUrl) {
+            URL.revokeObjectURL(box._previewUrl);
+            box._previewUrl = null;
+        }
+
+        if (file && file.type.startsWith('image/')) {
+            const url = URL.createObjectURL(file);
+            box._previewUrl = url;
+            box.style.backgroundImage = `url('${url}')`;
+            box.style.backgroundSize = 'cover';
+            box.style.backgroundPosition = 'center';
+            box.classList.add('has-preview');
+        } else {
+            box.style.backgroundImage = 'none';
+            box.classList.remove('has-preview');
+        }
     });
 }
 
@@ -375,5 +484,15 @@ function setKycModeInUrl(mode) {
 }
 
 function setText(id, value) {
-    document.getElementById(id).textContent = value;
+    const el = document.getElementById(id);
+    if(el) { el.textContent = value; }
 }
+
+function registerAccountPage(scriptPath, initializer) {
+    window.AccountPageInitializers = window.AccountPageInitializers || {};
+    window.AccountPageInitializers[scriptPath] = initializer;
+    if (document.currentScript?.dataset.accountPartial !== 'true') {
+        document.addEventListener('DOMContentLoaded', initializer);
+    }
+}
+})();

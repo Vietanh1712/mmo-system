@@ -1,3 +1,4 @@
+(function () {
 const ACCOUNT_NOTIFICATIONS_MOCK_KEY = 'mmoMarketNotificationsMock';
 
 let accountSidebar = null;
@@ -6,7 +7,7 @@ let currentPage = 1;
 let pageSize = 5;
 let appliedFilters = createEmptyFilters();
 
-document.addEventListener('DOMContentLoaded', initializeNotificationsPage);
+registerAccountPage('/js/account-notifications.js', initializeNotificationsPage);
 
 function initializeNotificationsPage() {
     accountSidebar = new AccountSidebar();
@@ -448,3 +449,12 @@ function escapeHtml(value) {
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#039;');
 }
+
+function registerAccountPage(scriptPath, initializer) {
+    window.AccountPageInitializers = window.AccountPageInitializers || {};
+    window.AccountPageInitializers[scriptPath] = initializer;
+    if (document.currentScript?.dataset.accountPartial !== 'true') {
+        document.addEventListener('DOMContentLoaded', initializer);
+    }
+}
+})();

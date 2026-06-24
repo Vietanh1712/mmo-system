@@ -4,12 +4,25 @@ const SECURITY_DEFAULT_STATE = {
     lastPasswordChangedAt: null
 };
 
-let accountSidebar = null;
+var accountSidebar = null;
 let securityState = SECURITY_DEFAULT_STATE;
 let securityMessageTimer = null;
 let pendingTwoFactorAction = null;
 
-document.addEventListener('DOMContentLoaded', initializeSecurityPage);
+function registerAccountPage(scriptPath, initializer) {
+    window.AccountPageInitializers = window.AccountPageInitializers || {};
+    window.AccountPageInitializers[scriptPath] = initializer;
+
+    if (!document.currentScript || !document.currentScript.dataset.accountPartial) {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializer);
+        } else {
+            initializer();
+        }
+    }
+}
+
+registerAccountPage('/js/account-security.js', initializeSecurityPage);
 
 function initializeSecurityPage() {
     accountSidebar = new AccountSidebar();
@@ -23,9 +36,6 @@ function bindSecurityEvents() {
     document.getElementById('twoFactorCancelButton').addEventListener('click', closeTwoFactorModal);
     document.getElementById('twoFactorConfirmButton').addEventListener('click', confirmTwoFactorChange);
 
-    document.querySelectorAll('[data-toggle-password]').forEach(button => {
-        button.addEventListener('click', () => togglePasswordVisibility(button));
-    });
 }
 
 async function loadSecurityPage() {
@@ -43,7 +53,13 @@ async function loadSecurityPage() {
 
         const profile = await response.json();
         accountSidebar.render(profile);
-        securityState = readSecurityState();
+        
+        securityState = {
+            ...securityState,
+            twoFactorEnabled: profile.is2faEnabled === true,
+            kycStatus: profile.kycStatus
+        };
+        
         renderSecurityState();
         focusModeFromUrl();
     } catch (error) {
@@ -96,12 +112,12 @@ function renderSecurityState() {
     document.getElementById('passwordStatusText').textContent = securityState.lastPasswordChangedAt
         ? `Đổi gần nhất: ${securityState.lastPasswordChangedAt}`
         : 'Đã thiết lập';
-    document.getElementById('securityKycStatusText').textContent = getMockKycStatusText();
+    document.getElementById('securityKycStatusText').textContent = getKycStatusText(securityState.kycStatus);
     document.getElementById('currentSessionText').textContent = getCurrentSessionText();
     showSecurityMessage(getSecuritySummaryMessage(), securityState.twoFactorEnabled ? 'success' : 'warning');
 }
 
-function submitChangePassword(event) {
+async function submitChangePassword(event) {
     event.preventDefault();
 
     const currentPassword = document.getElementById('currentPassword').value;
@@ -114,22 +130,37 @@ function submitChangePassword(event) {
 
     const button = document.getElementById('changePasswordButton');
     button.disabled = true;
+    const originalText = button.textContent;
     button.textContent = 'Đang lưu...';
 
-    window.setTimeout(() => {
-        const changedAt = new Intl.DateTimeFormat('vi-VN', {
-            dateStyle: 'short',
-            timeStyle: 'short'
-        }).format(new Date());
+    try {
+        const response = await authFetch('/v1/profile/password', {
+            method: 'PUT',
+            body: JSON.stringify({ currentPassword, newPassword })
+        });
 
-        saveSecurityState({ ...securityState, lastPasswordChangedAt: changedAt });
-        document.getElementById('changePasswordForm').reset();
-        clearPasswordErrors();
-        renderSecurityState();
-        showSecurityMessage('Đổi mật khẩu thành công. Đây là xử lý mock frontend, chưa gọi API backend.', 'success');
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            const changedAt = new Intl.DateTimeFormat('vi-VN', {
+                dateStyle: 'short',
+                timeStyle: 'short'
+            }).format(new Date());
+
+            saveSecurityState({ ...securityState, lastPasswordChangedAt: changedAt });
+            document.getElementById('changePasswordForm').reset();
+            clearPasswordErrors();
+            renderSecurityState();
+            showPasswordFormMessage(data.message || 'Đổi mật khẩu thành công.', 'success');
+        } else {
+            showPasswordFormMessage(data.message || 'Lỗi đổi mật khẩu.');
+        }
+    } catch (error) {
+        showPasswordFormMessage('Không thể kết nối đến máy chủ.');
+    } finally {
         button.disabled = false;
-        button.textContent = 'Đổi mật khẩu';
-    }, 500);
+        button.textContent = originalText || 'Đổi mật khẩu';
+    }
 }
 
 function validatePasswordForm(currentPassword, newPassword, confirmPassword) {
@@ -169,20 +200,35 @@ function clearPasswordErrors() {
     document.getElementById('passwordFormMessage').hidden = true;
 }
 
-function showPasswordFormMessage(message) {
+function showPasswordFormMessage(message, type = 'danger') {
     const formMessage = document.getElementById('passwordFormMessage');
     formMessage.textContent = message;
+    formMessage.className = `profile-message ds-alert ds-alert-${type}`;
     formMessage.hidden = false;
 }
 
-function requestTwoFactorChange() {
+async function requestTwoFactorChange() {
     pendingTwoFactorAction = securityState.twoFactorEnabled ? 'disable' : 'enable';
     const isDisable = pendingTwoFactorAction === 'disable';
+
+    if (!isDisable) {
+        // Calling API to send OTP
+        try {
+            const response = await authFetch('/v1/profile/2fa/send-otp', { method: 'POST' });
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message || 'Lỗi gửi OTP');
+            }
+        } catch (error) {
+            showSecurityMessage(error.message || 'Không thể gửi mã OTP.', 'danger');
+            return;
+        }
+    }
 
     document.getElementById('twoFactorModalTitle').textContent = isDisable ? 'Tắt 2FA' : 'Kích hoạt 2FA';
     document.getElementById('twoFactorModalDescription').textContent = isDisable
         ? 'Tắt 2FA sẽ làm tài khoản kém an toàn hơn. Bạn có chắc muốn tiếp tục?'
-        : 'Nhập mã OTP 6 số để xác nhận kích hoạt bảo mật 2 lớp.';
+        : 'Mã OTP đã được gửi về email của bạn. Nhập mã OTP 6 số để xác nhận kích hoạt bảo mật 2 lớp.';
     document.getElementById('twoFactorConfirmButton').textContent = isDisable ? 'Tắt 2FA' : 'Xác nhận';
     document.getElementById('twoFactorConfirmButton').className = isDisable ? 'ds-btn ds-btn-danger' : 'ds-btn ds-btn-primary';
     document.getElementById('twoFactorOtpField').hidden = isDisable;
@@ -191,20 +237,44 @@ function requestTwoFactorChange() {
     document.getElementById('twoFactorModal').hidden = false;
 }
 
-function confirmTwoFactorChange() {
-    if (pendingTwoFactorAction === 'enable') {
+async function confirmTwoFactorChange() {
+    const isDisable = pendingTwoFactorAction === 'disable';
+    let requestBody = null;
+
+    if (!isDisable) {
         const otp = document.getElementById('twoFactorOtp').value.trim();
         if (!/^\d{6}$/.test(otp)) {
             setText('twoFactorOtpError', 'Mã OTP phải gồm 6 chữ số.');
             return;
         }
+        requestBody = JSON.stringify({ otp: otp });
     }
 
-    const enabled = pendingTwoFactorAction === 'enable';
-    saveSecurityState({ ...securityState, twoFactorEnabled: enabled });
-    closeTwoFactorModal();
-    renderSecurityState();
-    showSecurityMessage(enabled ? 'Đã kích hoạt 2FA thành công.' : 'Đã tắt 2FA.', enabled ? 'success' : 'warning');
+    const button = document.getElementById('twoFactorConfirmButton');
+    button.disabled = true;
+
+    try {
+        const endpoint = isDisable ? '/v1/profile/2fa/disable' : '/v1/profile/2fa/enable';
+        const response = await authFetch(endpoint, {
+            method: 'POST',
+            body: requestBody
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            securityState = { ...securityState, twoFactorEnabled: !isDisable };
+            closeTwoFactorModal();
+            renderSecurityState();
+            showSecurityMessage(data.message || (isDisable ? 'Đã tắt 2FA.' : 'Đã kích hoạt 2FA thành công.'), isDisable ? 'warning' : 'success');
+        } else {
+            setText('twoFactorOtpError', data.message || 'Lỗi thao tác.');
+        }
+    } catch (error) {
+        setText('twoFactorOtpError', 'Không thể kết nối đến máy chủ.');
+    } finally {
+        button.disabled = false;
+    }
 }
 
 function closeTwoFactorModal() {
@@ -231,16 +301,10 @@ function focusModeFromUrl() {
     }
 }
 
-function getMockKycStatusText() {
-    try {
-        const kyc = JSON.parse(sessionStorage.getItem('mmoMarketKycMock'));
-        if (kyc?.status === 'APPROVED') return 'Đã xác minh';
-        if (kyc?.status === 'PENDING') return 'Đang chờ duyệt';
-        if (kyc?.status === 'REJECTED') return 'Bị từ chối';
-    } catch {
-        // Ignore malformed mock data.
-    }
-
+function getKycStatusText(status) {
+    if (status === 'APPROVED') return 'Đã xác minh';
+    if (status === 'PENDING') return 'Đang chờ duyệt';
+    if (status === 'REJECTED') return 'Bị từ chối';
     return 'Chưa định danh';
 }
 

@@ -12,6 +12,10 @@
     font-size: 13px;
 }
 
+.ds-pagination[hidden] {
+    display: none !important;
+}
+
 .ds-pagination-pages {
     display: flex;
     align-items: center;

@@ -111,25 +111,13 @@
                             </div>
 
                             <div class="transactions-filter-bottom">
-                                <div class="ds-form-field">
-                                    <label class="ds-label" for="transactionsFromDateDisplay">Từ ngày</label>
-                                    <div class="ds-datepicker" data-ds-datepicker>
-                                        <input id="transactionsFromDate" type="hidden" data-ds-date-value>
+                                <div class="ds-form-field" style="flex: 1;">
+                                    <label class="ds-label" for="transactionsDateRangeDisplay">Khoảng thời gian</label>
+                                    <div class="ds-datepicker" data-ds-datepicker data-ds-daterange="true">
+                                        <input id="transactionsDateRange" type="hidden" data-ds-date-value>
                                         <div class="ds-datepicker-field">
-                                            <input class="ds-datepicker-input" id="transactionsFromDateDisplay" type="text" placeholder="dd/mm/yyyy" data-ds-date-display>
-                                            <button class="ds-datepicker-button" type="button" data-ds-date-toggle aria-label="Chọn từ ngày">
-                                                <i class="fa fa-calendar" aria-hidden="true"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="ds-form-field">
-                                    <label class="ds-label" for="transactionsToDateDisplay">Đến ngày</label>
-                                    <div class="ds-datepicker" data-ds-datepicker>
-                                        <input id="transactionsToDate" type="hidden" data-ds-date-value>
-                                        <div class="ds-datepicker-field">
-                                            <input class="ds-datepicker-input" id="transactionsToDateDisplay" type="text" placeholder="dd/mm/yyyy" data-ds-date-display>
-                                            <button class="ds-datepicker-button" type="button" data-ds-date-toggle aria-label="Chọn đến ngày">
+                                            <input class="ds-datepicker-input" id="transactionsDateRangeDisplay" type="text" placeholder="dd/mm/yyyy - dd/mm/yyyy" data-ds-date-display>
+                                            <button class="ds-datepicker-button" type="button" data-ds-date-toggle aria-label="Chọn khoảng ngày">
                                                 <i class="fa fa-calendar" aria-hidden="true"></i>
                                             </button>
                                         </div>

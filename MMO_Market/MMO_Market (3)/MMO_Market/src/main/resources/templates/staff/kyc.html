@@ -42,22 +42,15 @@
                     <div class="ds-filter-panel">
                         <h2 class="ds-card-title">Bộ lọc KYC</h2>
                         <div class="ds-filter-grid">
-                            <input class="ds-input" type="search" placeholder="Tìm tên, email, mã hồ sơ...">
-                            <select class="ds-input">
-                                <option value="">Trạng thái</option>
-                                <option>Chờ duyệt</option>
-                                <option>Đã duyệt</option>
-                                <option>Từ chối</option>
-                            </select>
-                            <select class="ds-input">
-                                <option value="">Loại giấy tờ</option>
-                                <option>CCCD</option>
-                                <option>Hộ chiếu</option>
+                            <select class="ds-input" id="kycStatusFilter">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="PENDING">Chờ duyệt</option>
+                                <option value="APPROVED">Đã duyệt</option>
+                                <option value="REJECTED">Từ chối</option>
                             </select>
                         </div>
                         <div class="ds-filter-actions">
-                            <button class="ds-btn ds-btn-secondary" type="button">Làm mới</button>
-                            <button class="ds-btn ds-btn-primary" type="button">Tìm kiếm</button>
+                            <button class="ds-btn ds-btn-primary" type="button" id="kycSearchBtn">Tìm kiếm</button>
                         </div>
                     </div>
                 </div>
@@ -68,79 +61,25 @@
                             <thead>
                             <tr>
                                 <th>Mã hồ sơ</th>
-                                <th>Người dùng</th>
+                                <th>Số giấy tờ</th>
                                 <th>Loại giấy tờ</th>
                                 <th class="ds-table-center">Trạng thái</th>
                                 <th>Ngày gửi</th>
                                 <th class="ds-table-center">Thao tác</th>
                             </tr>
                             </thead>
-                            <tbody>
-                            <tr>
-                                <td>#KYC-1198</td>
-                                <td>
-                                    <div class="ds-entity">
-                                        <span class="ds-avatar ds-avatar-sm ds-avatar-primary">PH</span>
-                                        <div>
-                                            <div class="ds-entity-title">Phạm Hoa</div>
-                                            <div class="ds-entity-subtitle">hoa.pham@mmo.com</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>CCCD</td>
-                                <td class="ds-table-center"><span class="ds-badge ds-badge-warning">Chờ duyệt</span></td>
-                                <td>05/06/2026</td>
-                                <td class="ds-table-center">
-                                    <a class="ds-btn ds-btn-outline" href="/staff/kyc/detail">Xem hồ sơ</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>#KYC-1195</td>
-                                <td>
-                                    <div class="ds-entity">
-                                        <span class="ds-avatar ds-avatar-sm">DK</span>
-                                        <div>
-                                            <div class="ds-entity-title">Đỗ Khánh</div>
-                                            <div class="ds-entity-subtitle">khanh.do@mmo.com</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>Hộ chiếu</td>
-                                <td class="ds-table-center"><span class="ds-badge ds-badge-warning">Chờ duyệt</span></td>
-                                <td>04/06/2026</td>
-                                <td class="ds-table-center">
-                                    <a class="ds-btn ds-btn-outline" href="/staff/kyc/detail">Xem hồ sơ</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>#KYC-1180</td>
-                                <td>
-                                    <div class="ds-entity">
-                                        <span class="ds-avatar ds-avatar-sm ds-avatar-success">VT</span>
-                                        <div>
-                                            <div class="ds-entity-title">Vũ Thảo</div>
-                                            <div class="ds-entity-subtitle">thao.vu@mmo.com</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>CCCD</td>
-                                <td class="ds-table-center"><span class="ds-badge ds-badge-success">Đã duyệt</span></td>
-                                <td>02/06/2026</td>
-                                <td class="ds-table-center">
-                                    <a class="ds-btn ds-btn-outline" href="/staff/kyc/detail">Xem hồ sơ</a>
-                                </td>
-                            </tr>
+                            <tbody id="kycTableBody">
+                                <!-- JS will populate this -->
+                                <tr><td colspan="6" class="ds-table-center">Đang tải dữ liệu...</td></tr>
                             </tbody>
                         </table>
                     </div>
                     <div class="ds-pagination">
-                        <div class="ds-pagination-pages">
-                            <span class="ds-page-link ds-page-link-active">1</span>
-                            <span class="ds-page-link">2</span>
-                            <span class="ds-page-link">›</span>
+                        <div class="ds-pagination-pages" id="kycPaginationPages">
+                            <!-- JS Pagination -->
                         </div>
-                        <div class="ds-pagination-meta">
-                            <span>Tổng số: 452 bản ghi</span>
+                        <div class="ds-pagination-meta" id="kycPaginationMeta">
+                            <!-- JS Meta -->
                         </div>
                     </div>
                 </div>
@@ -151,6 +90,6 @@
 
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 <script th:src="@{/js/auth.js}"></script>
-<script th:src="@{/js/staff-ui.js}"></script>
+<script th:src="@{/js/staff-kyc.js}"></script>
 </body>
 </html>
