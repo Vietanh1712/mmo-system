@@ -189,7 +189,7 @@
                 <div class="admin-card admin-list-card">
                     <div class="ds-filter-panel">
                         <h2 class="ds-card-title">Bộ lọc giao dịch</h2>
-                        <div class="ds-filter-grid">
+                        <div class="ds-filter-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
                             <input id="revKeywordFilter" class="ds-input" type="text" placeholder="Tìm mã GD, Email...">
                             <select id="revTypeFilter" class="ds-input" aria-label="Loại giao dịch">
                                 <option value="">Tất cả loại giao dịch</option>
@@ -197,11 +197,8 @@
                                 <option value="Withdrawal">Rút tiền</option>
                                 <option value="C2C_Purchase">Mua hàng</option>
                             </select>
-                            <select id="revTimeFilter" class="ds-input" aria-label="Khoảng thời gian">
-                                <option value="today">Hôm nay</option>
-                                <option value="7days" selected>7 ngày qua</option>
-                                <option value="30days">30 ngày qua</option>
-                            </select>
+                            <input id="revStartDate" class="ds-input" type="date" aria-label="Từ ngày" placeholder="Từ ngày">
+                            <input id="revEndDate" class="ds-input" type="date" aria-label="Đến ngày" placeholder="Đến ngày">
                         </div>
                         <div class="ds-filter-actions">
                             <button type="button" class="ds-btn ds-btn-secondary" id="revenueResetFilter">Làm mới bộ lọc</button>
@@ -322,6 +319,14 @@
                                     </button>
                                     <span id="accountFormStatusLabel">Bật để cho phép đăng nhập</span>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Quyền hạn (Chỉ hiển thị khi xem/sửa tài khoản nhân viên) -->
+                        <div id="accountFormPermissionsWrap" style="display:none; margin-bottom:24px; padding-top:20px; border-top:1px solid var(--ds-border);">
+                            <h3 class="ds-heading-md" style="margin-bottom:16px;">Quyền hạn hệ thống</h3>
+                            <div id="accountFormPermissionsList" style="display:flex; flex-wrap:wrap; gap:8px;">
+                                <!-- Các badge quyền sẽ được hiển thị ở đây -->
                             </div>
                         </div>
 

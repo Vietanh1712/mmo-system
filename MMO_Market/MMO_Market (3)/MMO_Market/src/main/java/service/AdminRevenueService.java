@@ -157,10 +157,10 @@ public class AdminRevenueService {
     }
 
     @Transactional(readOnly = true)
-    public Map<String, Object> getCashflowTransactions(Long operatorId, String keyword, String type, String time, int page, int size) {
+    public Map<String, Object> getCashflowTransactions(Long operatorId, String keyword, String type, String startDate, String endDate, int page, int size) {
         requireAdmin(operatorId);
         
-        List<CashflowTransactionDto> allCashflow = getFilteredCashflowList(keyword, type, time);
+        List<CashflowTransactionDto> allCashflow = getFilteredCashflowList(keyword, type, startDate, endDate);
 
         int safePage = Math.max(page, 0);
         int safeSize = Math.max(size, 1);
@@ -177,10 +177,10 @@ public class AdminRevenueService {
     }
 
     @Transactional(readOnly = true)
-    public byte[] exportRevenueCsv(Long operatorId, String keyword, String type, String time) {
+    public byte[] exportRevenueCsv(Long operatorId, String keyword, String type, String startDate, String endDate) {
         requireAdmin(operatorId);
 
-        List<CashflowTransactionDto> transactions = getFilteredCashflowList(keyword, type, time);
+        List<CashflowTransactionDto> transactions = getFilteredCashflowList(keyword, type, startDate, endDate);
         
         StringBuilder csv = new StringBuilder();
         // Byte Order Mark (BOM) for Excel UTF-8 support
@@ -205,7 +205,7 @@ public class AdminRevenueService {
         return csv.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
     }
 
-    private List<CashflowTransactionDto> getFilteredCashflowList(String keyword, String type, String time) {
+    private List<CashflowTransactionDto> getFilteredCashflowList(String keyword, String type, String startDate, String endDate) {
         double withdrawalPercent = systemConfigurationRepository.findByConfigKey("WITHDRAWAL_FEE_PERCENT")
                 .map(c -> {
                     try { return Double.parseDouble(c.getConfigValue()); }
@@ -286,22 +286,36 @@ public class AdminRevenueService {
         // Áp dụng bộ lọc
         String kw = keyword != null ? keyword.trim().toLowerCase(Locale.ROOT) : "";
         String tp = type != null ? type.trim() : "";
-        String tm = time != null ? time.trim() : "";
+        
+        LocalDate parsedStart = null;
+        LocalDate parsedEnd = null;
+        try {
+            if (startDate != null && !startDate.isBlank()) {
+                parsedStart = LocalDate.parse(startDate.trim());
+            }
+            if (endDate != null && !endDate.isBlank()) {
+                parsedEnd = LocalDate.parse(endDate.trim());
+            }
+        } catch (Exception ignored) {
+            // Bỏ qua lỗi định dạng ngày không hợp lệ, không áp dụng lọc ngày bị lỗi
+        }
+
+        final LocalDate finalStart = parsedStart;
+        final LocalDate finalEnd = parsedEnd;
 
         return allCashflow.stream()
                 .filter(tx -> kw.isEmpty() || tx.getId().toLowerCase(Locale.ROOT).contains(kw) || tx.getEmail().toLowerCase(Locale.ROOT).contains(kw))
                 .filter(tx -> tp.isEmpty() || tx.getType().equalsIgnoreCase(tp))
                 .filter(tx -> {
-                    if (tm.isEmpty()) return true;
-                    LocalDateTime limit = LocalDateTime.now();
-                    if ("today".equalsIgnoreCase(tm)) {
-                        limit = LocalDate.now().atStartOfDay();
-                    } else if ("7days".equalsIgnoreCase(tm)) {
-                        limit = LocalDate.now().minusDays(7).atStartOfDay();
-                    } else if ("30days".equalsIgnoreCase(tm)) {
-                        limit = LocalDate.now().minusDays(30).atStartOfDay();
+                    if (tx.getTimestamp() == null) return false;
+                    LocalDate txDate = tx.getTimestamp().toLocalDate();
+                    if (finalStart != null && txDate.isBefore(finalStart)) {
+                        return false;
                     }
-                    return tx.getTimestamp().isAfter(limit);
+                    if (finalEnd != null && txDate.isAfter(finalEnd)) {
+                        return false;
+                    }
+                    return true;
                 })
                 .sorted(Comparator.comparing(CashflowTransactionDto::getTimestamp).reversed())
                 .collect(Collectors.toList());

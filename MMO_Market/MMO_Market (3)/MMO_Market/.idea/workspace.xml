@@ -6,7 +6,19 @@
   <component name="ChangeListManager">
     <list default="true" id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_scripts/migration/20260618_001_create_permissions_and_user_permissions.sql" beforeDir="false" afterPath="$PROJECT_DIR$/sql_scripts/migration/20260618_001_create_permissions_and_user_permissions.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controller/AdminRevenueController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controller/AdminRevenueController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/dal/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/dal/UserRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/security/JwtAuthenticationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/security/JwtAuthenticationFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/security/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/service/AdminRevenueService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/service/AdminRevenueService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/staff.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/staff.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/admin-console.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/admin-console.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/staff-ui.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/staff-ui.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/templates/admin/users.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/admin/users.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/fragments/staff-sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/fragments/staff-sidebar.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/service/AdminRevenueServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/service/AdminRevenueServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/templates/admin/users.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/templates/admin/users.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -553,7 +565,8 @@
       <workItem from="1782056144352" duration="2000" />
       <workItem from="1782194611389" duration="116000" />
       <workItem from="1782195097819" duration="310000" />
-      <workItem from="1782204741234" duration="3896000" />
+      <workItem from="1782204741234" duration="4619000" />
+      <workItem from="1782328123507" duration="3283000" />
     </task>
     <servers />
   </component>

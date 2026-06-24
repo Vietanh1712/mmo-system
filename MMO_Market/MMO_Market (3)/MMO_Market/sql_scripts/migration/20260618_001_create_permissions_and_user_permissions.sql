@@ -49,11 +49,9 @@ BEGIN
         INSERT INTO Permissions (name, group_name, description) VALUES ('APPROVE_WITHDRAWALS', N'Tài chính', N'Xem và duyệt các yêu cầu rút tiền');
     IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'RESOLVE_COMPLAINTS')
         INSERT INTO Permissions (name, group_name, description) VALUES ('RESOLVE_COMPLAINTS', N'Tranh chấp', N'Giải quyết các khiếu nại và tranh chấp đơn hàng');
-    IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'VIEW_REVENUE')
-        INSERT INTO Permissions (name, group_name, description) VALUES ('VIEW_REVENUE', N'Báo cáo', N'Xem doanh thu, dòng tiền và cấu hình phí hệ thống');
     IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'MANAGE_SYSTEM_CONFIG')
         INSERT INTO Permissions (name, group_name, description) VALUES ('MANAGE_SYSTEM_CONFIG', N'Hệ thống', N'Quản lý các cấu hình tham số hệ thống');
     
-    PRINT 'Đã seed 8 permissions hệ thống';
+    PRINT 'Đã seed 7 permissions hệ thống';
 END
 GO

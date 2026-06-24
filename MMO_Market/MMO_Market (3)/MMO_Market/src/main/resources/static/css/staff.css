@@ -61,6 +61,18 @@
     color: #9a3412;
 }
 
+.staff-sidebar__link.is-disabled {
+    color: var(--ds-text-muted, #94a3b8) !important;
+    opacity: 0.65;
+    cursor: not-allowed !important;
+    background: transparent !important;
+}
+
+.staff-sidebar__link.is-disabled .staff-sidebar__badge {
+    background: #f1f5f9 !important;
+    color: #94a3b8 !important;
+}
+
 .staff-sidebar__link i {
     width: 18px;
     text-align: center;
