@@ -39,6 +39,9 @@ public class Chat {
     @Column(name = "isDelete")
     private Boolean isDelete = false;
 
+    @Column(name = "isRead")
+    private Boolean isRead = false;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
@@ -49,6 +52,9 @@ public class Chat {
         }
         if (isDelete == null) {
             isDelete = false;
+        }
+        if (isRead == null) {
+            isRead = false;
         }
     }
 }
