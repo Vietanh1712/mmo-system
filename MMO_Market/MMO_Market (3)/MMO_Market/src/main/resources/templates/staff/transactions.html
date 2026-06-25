@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Quản lý giao dịch')}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('transactions')}"></aside>
+
+            <section class="ds-section">
+                <div class="staff-page-header">
+                    <div>
+                        <h1 class="ds-page-title">Quản lý giao dịch</h1>
+                        <p class="ds-page-subtitle">Theo dõi toàn bộ giao dịch nạp tiền, mua hàng, hoàn tiền và chuyển khoản trên hệ thống.</p>
+                    </div>
+                </div>
+
+                <div class="staff-stat-grid">
+                    <div class="ds-card staff-stat-card">
+                        <p class="staff-stat-card__label">Tổng giao dịch</p>
+                        <p class="staff-stat-card__value">2.847</p>
+                        <p class="staff-stat-card__hint">30 ngày gần nhất</p>
+                    </div>
+                    <div class="ds-card staff-stat-card">
+                        <p class="staff-stat-card__label">Thành công</p>
+                        <p class="staff-stat-card__value">2.691</p>
+                    </div>
+                    <div class="ds-card staff-stat-card">
+                        <p class="staff-stat-card__label">Đang xử lý</p>
+                        <p class="staff-stat-card__value">84</p>
+                    </div>
+                    <div class="ds-card staff-stat-card">
+                        <p class="staff-stat-card__label">Thất bại / hủy</p>
+                        <p class="staff-stat-card__value">72</p>
+                    </div>
+                </div>
+
+                <div class="ds-card">
+                    <div class="ds-filter-panel">
+                        <h2 class="ds-card-title">Bộ lọc giao dịch</h2>
+                        <div class="ds-filter-grid">
+                            <input class="ds-input" type="search" placeholder="Tìm mã GD, email, mã đơn...">
+                            <select class="ds-input">
+                                <option value="">Loại giao dịch</option>
+                                <option>Nạp tiền</option>
+                                <option>Mua hàng</option>
+                                <option>Hoàn tiền</option>
+                                <option>Rút tiền</option>
+                                <option>Chuyển ví</option>
+                            </select>
+                            <select class="ds-input">
+                                <option value="">Trạng thái</option>
+                                <option>Thành công</option>
+                                <option>Đang xử lý</option>
+                                <option>Thất bại</option>
+                                <option>Đã hủy</option>
+                            </select>
+                        </div>
+                        <div class="ds-filter-grid" style="grid-template-columns:repeat(2,minmax(220px,1fr));max-width:520px">
+                            <input class="ds-input" type="text" placeholder="Từ ngày (dd/mm/yyyy)">
+                            <input class="ds-input" type="text" placeholder="Đến ngày (dd/mm/yyyy)">
+                        </div>
+                        <div class="ds-filter-actions">
+                            <button class="ds-btn ds-btn-secondary" type="button">Làm mới bộ lọc</button>
+                            <button class="ds-btn ds-btn-primary" type="button">Tìm kiếm</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ds-card">
+                    <div class="ds-table-wrap">
+                        <table class="ds-table">
+                            <thead>
+                            <tr>
+                                <th>Mã GD</th>
+                                <th>Loại</th>
+                                <th>Người dùng</th>
+                                <th>Đối tượng liên quan</th>
+                                <th>Số tiền</th>
+                                <th class="ds-table-center">Trạng thái</th>
+                                <th>Thời gian</th>
+                                <th class="ds-table-center">Thao tác</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>#TXN-99281</td>
+                                <td><span class="ds-badge ds-badge-info">Mua hàng</span></td>
+                                <td>
+                                    <div class="ds-entity">
+                                        <span class="ds-avatar ds-avatar-sm ds-avatar-primary">NA</span>
+                                        <div>
+                                            <div class="ds-entity-title">Nguyễn An</div>
+                                            <div class="ds-entity-subtitle">buyer@mmo.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>Đơn #ORD-9921</td>
+                                <td class="ds-money">350.000 đ</td>
+                                <td class="ds-table-center"><span class="ds-badge ds-badge-success">Thành công</span></td>
+                                <td>05/06/2026 09:12</td>
+                                <td class="ds-table-center">
+                                    <a class="ds-icon-btn ds-icon-btn-view" href="/staff/transactions/detail" aria-label="Xem chi tiết">
+                                        <svg class="ds-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <path d="M2.25 12C3.73 8.12 7.49 5.25 12 5.25C16.51 5.25 20.27 8.12 21.75 12C20.27 15.88 16.51 18.75 12 18.75C7.49 18.75 3.73 15.88 2.25 12Z" stroke="currentColor" stroke-width="2"/>
+                                            <path d="M12 15.25C13.79 15.25 15.25 13.79 15.25 12C15.25 10.21 13.79 8.75 12 8.75C10.21 8.75 8.75 10.21 8.75 12C8.75 13.79 10.21 15.25 12 15.25Z" stroke="currentColor" stroke-width="2"/>
+                                        </svg>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#TXN-99275</td>
+                                <td><span class="ds-badge ds-badge-muted">Nạp tiền</span></td>
+                                <td>
+                                    <div class="ds-entity">
+                                        <span class="ds-avatar ds-avatar-sm">TH</span>
+                                        <div>
+                                            <div class="ds-entity-title">Trần Hùng</div>
+                                            <div class="ds-entity-subtitle">hung.tran@mmo.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>Ví người dùng</td>
+                                <td class="ds-money">1.000.000 đ</td>
+                                <td class="ds-table-center"><span class="ds-badge ds-badge-success">Thành công</span></td>
+                                <td>05/06/2026 08:40</td>
+                                <td class="ds-table-center">
+                                    <a class="ds-icon-btn ds-icon-btn-view" href="/staff/transactions/detail" aria-label="Xem chi tiết">
+                                        <svg class="ds-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <path d="M2.25 12C3.73 8.12 7.49 5.25 12 5.25C16.51 5.25 20.27 8.12 21.75 12C20.27 15.88 16.51 18.75 12 18.75C7.49 18.75 3.73 15.88 2.25 12Z" stroke="currentColor" stroke-width="2"/>
+                                            <path d="M12 15.25C13.79 15.25 15.25 13.79 15.25 12C15.25 10.21 13.79 8.75 12 8.75C10.21 8.75 8.75 10.21 8.75 12C8.75 13.79 10.21 15.25 12 15.25Z" stroke="currentColor" stroke-width="2"/>
+                                        </svg>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#TXN-99260</td>
+                                <td><span class="ds-badge ds-badge-warning">Hoàn tiền</span></td>
+                                <td>
+                                    <div class="ds-entity">
+                                        <span class="ds-avatar ds-avatar-sm ds-avatar-success">LM</span>
+                                        <div>
+                                            <div class="ds-entity-title">Lê Mai</div>
+                                            <div class="ds-entity-subtitle">mai.le@mmo.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>Khiếu nại #CMP-3295</td>
+                                <td class="ds-money">280.000 đ</td>
+                                <td class="ds-table-center"><span class="ds-badge ds-badge-warning">Đang xử lý</span></td>
+                                <td>04/06/2026 16:22</td>
+                                <td class="ds-table-center">
+                                    <a class="ds-icon-btn ds-icon-btn-view" href="/staff/transactions/detail" aria-label="Xem chi tiết">
+                                        <svg class="ds-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <path d="M2.25 12C3.73 8.12 7.49 5.25 12 5.25C16.51 5.25 20.27 8.12 21.75 12C20.27 15.88 16.51 18.75 12 18.75C7.49 18.75 3.73 15.88 2.25 12Z" stroke="currentColor" stroke-width="2"/>
+                                            <path d="M12 15.25C13.79 15.25 15.25 13.79 15.25 12C15.25 10.21 13.79 8.75 12 8.75C10.21 8.75 8.75 10.21 8.75 12C8.75 13.79 10.21 15.25 12 15.25Z" stroke="currentColor" stroke-width="2"/>
+                                        </svg>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#TXN-99241</td>
+                                <td><span class="ds-badge ds-badge-info">Mua hàng</span></td>
+                                <td>
+                                    <div class="ds-entity">
+                                        <span class="ds-avatar ds-avatar-sm">DK</span>
+                                        <div>
+                                            <div class="ds-entity-title">Đỗ Khánh</div>
+                                            <div class="ds-entity-subtitle">khanh.do@mmo.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>Đơn #ORD-9908</td>
+                                <td class="ds-money">120.000 đ</td>
+                                <td class="ds-table-center"><span class="ds-badge ds-badge-danger">Thất bại</span></td>
+                                <td>04/06/2026 11:05</td>
+                                <td class="ds-table-center">
+                                    <a class="ds-icon-btn ds-icon-btn-view" href="/staff/transactions/detail" aria-label="Xem chi tiết">
+                                        <svg class="ds-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <path d="M2.25 12C3.73 8.12 7.49 5.25 12 5.25C16.51 5.25 20.27 8.12 21.75 12C20.27 15.88 16.51 18.75 12 18.75C7.49 18.75 3.73 15.88 2.25 12Z" stroke="currentColor" stroke-width="2"/>
+                                            <path d="M12 15.25C13.79 15.25 15.25 13.79 15.25 12C15.25 10.21 13.79 8.75 12 8.75C10.21 8.75 8.75 10.21 8.75 12C8.75 13.79 10.21 15.25 12 15.25Z" stroke="currentColor" stroke-width="2"/>
+                                        </svg>
+                                    </a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="ds-pagination">
+                        <div class="ds-pagination-pages">
+                            <span class="ds-page-link ds-page-link-disabled">‹</span>
+                            <span class="ds-page-link ds-page-link-active">1</span>
+                            <span class="ds-page-link">2</span>
+                            <span class="ds-page-link">3</span>
+                            <span class="ds-page-link">›</span>
+                        </div>
+                        <div class="ds-pagination-meta">
+                            <span>Tổng số: 2.847 bản ghi</span>
+                            <select class="ds-page-size">
+                                <option>10</option>
+                                <option selected>20</option>
+                                <option>50</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/auth.js}"></script>
+<script th:src="@{/js/staff-ui.js}"></script>
+</body>
+</html>

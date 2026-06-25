@@ -21,6 +21,11 @@ public class ProfilePageController {
         return "account/security";
     }
 
+    @GetMapping("/account/register-shop")
+    public String showRegisterShopPage() {
+        return "account/register-shop";
+    }
+
     @GetMapping("/wallet")
     public String showWalletPage() {
         return "account/wallet";
@@ -44,6 +49,11 @@ public class ProfilePageController {
     @GetMapping("/account/orders/{orderCode}")
     public String showOrderDetailPage() {
         return "account/order-detail";
+    }
+
+    @GetMapping("/account/orders/{orderCode}/feedback")
+    public String showLeaveFeedbackPage() {
+        return "account/leave-feedback";
     }
 
     @GetMapping("/account/notifications")

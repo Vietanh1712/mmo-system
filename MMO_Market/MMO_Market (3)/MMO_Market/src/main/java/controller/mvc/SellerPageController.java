@@ -19,6 +19,11 @@ public class SellerPageController {
         return "seller/shop-info";
     }
 
+    @GetMapping("/close-shop")
+    public String closeShop() {
+        return "seller/close-shop";
+    }
+
     @GetMapping("/products/new")
     public String productAdd() {
         return "seller/product-add";

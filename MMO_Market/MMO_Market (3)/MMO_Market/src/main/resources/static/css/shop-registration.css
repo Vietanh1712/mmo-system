@@ -1,0 +1,143 @@
+.shop-registration {
+    min-width: 0;
+    font-family: "Roboto", Arial, sans-serif;
+}
+
+.shop-registration__hero,
+.shop-registration__requirements,
+.shop-registration__summary,
+.shop-registration__form {
+    padding: 24px;
+}
+
+.shop-registration__hero {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.shop-registration__subtitle {
+    max-width: 680px;
+    margin-top: 6px;
+    color: var(--ds-text-muted);
+}
+
+.shop-registration__progress {
+    color: var(--ds-primary);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.shop-requirement-list {
+    display: grid;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.shop-requirement {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius-lg);
+    background: var(--ds-surface-muted);
+    padding: 14px;
+}
+
+.shop-requirement > i {
+    color: var(--ds-warning);
+    font-size: 22px;
+}
+
+.shop-requirement--done > i {
+    color: var(--ds-success);
+}
+
+.shop-requirement strong,
+.shop-requirement span {
+    display: block;
+}
+
+.shop-requirement strong {
+    color: var(--ds-text);
+    font-size: 13px;
+}
+
+.shop-requirement span {
+    margin-top: 3px;
+    color: var(--ds-text-muted);
+    font-size: 12px;
+}
+
+.shop-registration__meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin: 20px 0 0;
+    padding-top: 20px;
+    border-top: 1px solid var(--ds-border);
+}
+
+.shop-registration__meta dt {
+    color: var(--ds-text-muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.shop-registration__meta dd {
+    margin: 5px 0 0;
+    color: var(--ds-text);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.shop-registration__form-header {
+    margin-bottom: 20px;
+}
+
+.shop-registration__full {
+    margin-top: 16px;
+}
+
+.shop-registration__confirm {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 20px;
+    color: var(--ds-text);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.shop-registration__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+.shop-registration__summary-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+@media (max-width: 768px) {
+    .shop-registration__hero {
+        flex-direction: column;
+    }
+
+    .shop-requirement {
+        grid-template-columns: 36px minmax(0, 1fr);
+    }
+
+    .shop-requirement .ds-btn {
+        grid-column: 1 / -1;
+    }
+
+    .shop-registration__meta {
+        grid-template-columns: 1fr;
+    }
+}

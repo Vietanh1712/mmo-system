@@ -102,6 +102,7 @@ body {
 
 .admin-view.active {
     display: block;
+    min-width: 0;
     animation: admin-fade-in 0.25s ease;
 }
 

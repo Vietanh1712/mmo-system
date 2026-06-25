@@ -1,7 +1,10 @@
 package model;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
@@ -38,6 +41,7 @@ public class Transaction {
     private Long commissionVnd;
 
     @Column(length = 20)
+    @Builder.Default
     private String status = "Pending"; // Pending, Held, Completed, Refunded, Cancelled, Disputed
 
     @Column(name = "escrow_release_date")
@@ -46,7 +50,8 @@ public class Transaction {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "isDelete")
+    @Column(name = "isDelete", nullable = false)
+    @Builder.Default
     private Boolean isDelete = false;
 
     @PrePersist

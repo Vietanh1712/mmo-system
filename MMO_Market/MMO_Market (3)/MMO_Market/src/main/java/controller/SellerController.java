@@ -53,8 +53,16 @@ public class SellerController {
     }
 
     private User getSeller(Long userId) {
-        return userRepository.findByIdAndIsDeleteFalse(userId)
+        if (userId == null) {
+            throw new IllegalArgumentException("Phiên đăng nhập không hợp lệ.");
+        }
+        User user = userRepository.findByIdAndIsDeleteFalse(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông tin tài khoản người bán."));
+        String role = String.valueOf(user.getRole()).toLowerCase(Locale.ROOT);
+        if (!role.contains("seller")) {
+            throw new IllegalArgumentException("Tài khoản không có quyền truy cập Seller Portal.");
+        }
+        return user;
     }
 
     // 1. Dashboard API

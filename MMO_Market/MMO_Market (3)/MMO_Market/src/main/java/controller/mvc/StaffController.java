@@ -32,6 +32,16 @@ public class StaffController {
         return "staff/kyc-detail";
     }
 
+    @GetMapping("/transactions")
+    public String transactions() {
+        return "staff/transactions";
+    }
+
+    @GetMapping("/transactions/detail")
+    public String transactionDetail() {
+        return "staff/transaction-detail";
+    }
+
     @GetMapping("/withdrawals")
     public String withdrawals() {
         return "staff/withdrawals";

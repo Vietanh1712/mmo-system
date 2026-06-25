@@ -24,6 +24,12 @@
                 <span class="staff-sidebar__badge">18</span>
             </a>
             <a class="staff-sidebar__link"
+               th:classappend="${active == 'transactions'} ? ' is-active' : ''"
+               href="/staff/transactions">
+                <i class="fa fa-exchange"></i> Giao dịch
+                <span class="staff-sidebar__badge">84</span>
+            </a>
+            <a class="staff-sidebar__link"
                th:classappend="${active == 'withdrawals'} ? ' is-active' : ''"
                href="/staff/withdrawals">
                 <i class="fa fa-money"></i> Rút tiền

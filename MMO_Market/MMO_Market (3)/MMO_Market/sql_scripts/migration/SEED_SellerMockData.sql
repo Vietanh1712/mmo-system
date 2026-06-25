@@ -254,17 +254,7 @@ VALUES
 
 PRINT '✓ Seeded Complaint Chats';
 
--- 9. Seed 5 Reviews for products
-
-INSERT INTO Reviews (product_id, user_id, rating, comment, created_at, isDelete)
-VALUES 
-(@P1, @CustomerId, 5, N'Tài khoản xem mượt, hỗ trợ 4K cực nét. Rất uy tín!', DATEADD(DAY, -6, GETDATE()), 0),
-(@P2, @CustomerId, 4, N'Spotify nghe tốt nhưng lúc đầu hơi khó kích hoạt. Chủ shop nhiệt tình.', DATEADD(DAY, -4, GETDATE()), 0),
-(@P3, @CustomerId, 5, N'Canva nâng cấp rất nhanh chỉ mất 2 phút. Cảm ơn shop.', DATEADD(DAY, -2, GETDATE()), 0),
-(@P4, @CustomerId, 1, N'ChatGPT Plus bị khóa khá nhanh. Cần xem lại bảo hành.', DATEADD(DAY, -1, GETDATE()), 0),
-(@P5, @CustomerId, 5, N'Tool Facebook hoạt động cực tốt, nuôi clone rất hiệu quả.', DATEADD(HOUR, -3, GETDATE()), 0);
-
-PRINT '✓ Seeded 5 Reviews';
+-- 9. Seed 5 Reviews for products (Bắt đầu sạch để chạy thực tế)
 
 -- 10. Seed 5 Shop Flags (Warnings)
 

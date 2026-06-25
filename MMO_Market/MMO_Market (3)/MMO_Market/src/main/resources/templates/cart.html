@@ -7,6 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/search-results.css}">
+    <link rel="stylesheet" th:href="@{/css/toast.css}">
     <style>
         .cart-page {
             max-width: 1200px;
@@ -376,96 +378,6 @@
             gap: 18px;
         }
 
-        .recommend-card {
-            background: #fff;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            box-shadow: var(--shadow-light);
-            overflow: hidden;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .recommend-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-hover);
-            border-color: var(--brand-primary);
-        }
-
-        .recommend-card__cover {
-            position: relative;
-            height: 132px;
-            background: #f8fafc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 44px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .recommend-card__badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #10b981;
-            color: #fff;
-            border-radius: 5px;
-            padding: 4px 7px;
-            font-size: 10px;
-            font-weight: 900;
-        }
-
-        .recommend-card__body {
-            padding: 14px;
-        }
-
-        .recommend-card__category {
-            color: var(--brand-accent);
-            font-size: 11px;
-            font-weight: 800;
-            text-transform: uppercase;
-            margin-bottom: 7px;
-        }
-
-        .recommend-card__name {
-            min-height: 42px;
-            margin: 0 0 14px;
-            color: var(--brand-dark);
-            font-size: 14px;
-            line-height: 1.45;
-            font-weight: 800;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .recommend-card__bottom {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .recommend-card__price {
-            color: var(--danger);
-            font-size: 17px;
-            font-weight: 900;
-        }
-
-        .recommend-card__cart {
-            width: 38px;
-            height: 38px;
-            border-radius: 8px;
-            border: 1.5px solid var(--brand-primary);
-            color: var(--brand-accent);
-            background: #fff;
-            cursor: pointer;
-        }
-
-        .recommend-card__cart:hover {
-            background: #fff7f3;
-            border-color: var(--brand-accent);
-        }
 
         @media (max-width: 1024px) {
             .cart-shell {
@@ -592,48 +504,8 @@
 <script>
     let cart = [];
 
-    const RECOMMENDATIONS = [
-        {
-            productId: 6,
-            productName: 'Youtube Premium Không Quảng Cáo 6 Tháng',
-            categoryName: 'Premium Subscription',
-            sellerName: 'RedPremium',
-            price: 120000,
-            icon: 'fa-youtube-play',
-            iconColor: '#FF0000',
-            isReady: true
-        },
-        {
-            productId: 8,
-            productName: 'Combo 10 Gmail Việt Cổ 2018 - 2020',
-            categoryName: 'Email',
-            sellerName: 'MailMaster',
-            price: 35000,
-            icon: 'fa-envelope',
-            iconColor: '#ea4335',
-            isReady: true
-        },
-        {
-            productId: 7,
-            productName: 'Gói Tài Khoản Canva Pro Thiết Kế 1 Năm',
-            categoryName: 'Design Tool',
-            sellerName: 'DesignHub',
-            price: 180000,
-            icon: 'fa-paint-brush',
-            iconColor: '#00c4cc',
-            isReady: false
-        },
-        {
-            productId: 10,
-            productName: 'Tài khoản NordVPN Premium 1 Năm',
-            categoryName: 'Security',
-            sellerName: 'SecureNet',
-            price: 350000,
-            icon: 'fa-shield',
-            iconColor: '#4682b4',
-            isReady: true
-        }
-    ];
+    let allCatalogProducts = [];
+    let renderedRecommendations = [];
 
     document.addEventListener('DOMContentLoaded', () => {
         const token = sessionStorage.getItem('accessToken');
@@ -645,8 +517,52 @@
         cart = normalizeCart(JSON.parse(localStorage.getItem('mmoCart') || '[]'));
         saveCart();
         renderCart();
-        renderRecommendations();
+        loadRecommendations();
     });
+
+    async function loadRecommendations() {
+        try {
+            const res = await fetch('/api/search/products?size=100');
+            if (res.ok) {
+                const data = await res.json();
+                allCatalogProducts = data.content || [];
+            }
+        } catch (err) {
+            console.warn("Failed to fetch catalog for recommendations", err);
+        }
+        renderRecommendations();
+    }
+
+    function getProductIconAndColor(productName) {
+        const nameLower = (productName || '').toLowerCase();
+        if (nameLower.includes('netflix')) {
+            return { icon: 'fa-play-circle', color: '#E50914' };
+        } else if (nameLower.includes('chatgpt') || nameLower.includes('gpt')) {
+            return { icon: 'fa-comments', color: '#10a37f' };
+        } else if (nameLower.includes('spotify')) {
+            return { icon: 'fa-music', color: '#1DB954' };
+        } else if (nameLower.includes('windows') || nameLower.includes('win')) {
+            return { icon: 'fa-windows', color: '#0078d4' };
+        } else if (nameLower.includes('youtube')) {
+            return { icon: 'fa-youtube-play', color: '#FF0000' };
+        } else if (nameLower.includes('canva')) {
+            return { icon: 'fa-paint-brush', color: '#00c4cc' };
+        } else if (nameLower.includes('gmail')) {
+            return { icon: 'fa-envelope', color: '#ea4335' };
+        } else if (nameLower.includes('facebook') || nameLower.includes('fb')) {
+            return { icon: 'fa-facebook-square', color: '#1877F2' };
+        } else if (nameLower.includes('vpn') || nameLower.includes('nordvpn')) {
+            return { icon: 'fa-shield', color: '#4682b4' };
+        } else if (nameLower.includes('tiktok')) {
+            return { icon: 'fa-video-camera', color: '#010101' };
+        } else if (nameLower.includes('wallet') || nameLower.includes('crypto') || nameLower.includes('trust')) {
+            return { icon: 'fa-btc', color: '#f7931a' };
+        } else if (nameLower.includes('logo') || nameLower.includes('thiết kế') || nameLower.includes('design') || nameLower.includes('banner')) {
+            return { icon: 'fa-paint-brush', color: '#7c3aed' };
+        } else {
+            return { icon: 'fa-cube', color: '#94a3b8' };
+        }
+    }
 
     function normalizeCart(items) {
         return items.map(item => ({
@@ -764,6 +680,7 @@
         cart.splice(index, 1);
         saveCart();
         renderCart();
+        renderRecommendations();
     }
 
     function checkoutCart() {
@@ -776,31 +693,175 @@
         window.location.href = `/checkout?mode=cart`;
     }
 
+    function getKeywordsFromProductName(name) {
+        if (!name) return [];
+        const nameLower = name.toLowerCase();
+        // replace punctuation with spaces
+        const cleanName = nameLower.replace(/[.,()\-+/\[\]:]/g, ' ');
+        const words = cleanName.split(/\s+/);
+        const stopWords = new Set([
+            'tài', 'khoản', 'của', 'gói', 'cho', 'giá', 'siêu', 'rẻ', 'bán', 'chính', 'chủ', 
+            'bản', 'quyền', 'dịch', 'vụ', 'mua', 'tháng', 'năm', 'ngày', 'thiết', 'bị', 
+            'xem', 'riêng', 'suốt', 'thời', 'gian', 'sử', 'dụng', 'bảo', 'hành', 'đổi', 
+            'các', 'những', 'để', 'và', 'kèm', 'trực', 'tiếp', 'hỗ', 'trợ', 'qua', 'link', 
+            'family', 'nhanh', 'chóng', 'độc', 'quyền', 'vĩnh', 'viễn', 'combo'
+        ]);
+        return words.filter(w => w.length >= 3 && !stopWords.has(w));
+    }
+
     function renderRecommendations() {
         const grid = document.getElementById('recommendationGrid');
-        grid.innerHTML = RECOMMENDATIONS.map(item => `
-            <article class="recommend-card">
-                <div class="recommend-card__cover">
-                    ${item.isReady ? '<span class="recommend-card__badge">HÀNG CÓ SẴN</span>' : ''}
-                    <i class="fa ${item.icon}" style="color: ${item.iconColor}"></i>
-                </div>
-                <div class="recommend-card__body">
-                    <div class="recommend-card__category">${item.categoryName}</div>
-                    <h3 class="recommend-card__name">${item.productName}</h3>
-                    <div class="recommend-card__bottom">
-                        <div class="recommend-card__price">${formatVND(item.price)}</div>
-                        <button class="recommend-card__cart" type="button" title="Thêm vào giỏ hàng" onclick="addRecommendationToCart(${item.productId})">
-                            <i class="fa fa-shopping-cart"></i>
-                        </button>
+        if (!grid) return;
+
+        // 1. Get current cart product IDs
+        const cartProductIds = cart.map(item => Number(item.productId));
+
+        // 2. Identify keywords & categories from cart
+        const cartKeywords = [];
+        const cartCategories = [];
+        const cartNames = [];
+
+        cart.forEach(item => {
+            cartNames.push(item.productName.toLowerCase());
+            
+            // Try to find matching catalog product to extract official categoryName
+            const catalogProd = allCatalogProducts.find(p => Number(p.productId) === Number(item.productId));
+            if (catalogProd && catalogProd.categoryName) {
+                cartCategories.push(catalogProd.categoryName.toLowerCase());
+            }
+
+            // Extract name-based keywords dynamically
+            const kws = getKeywordsFromProductName(item.productName);
+            kws.forEach(kw => {
+                if (!cartKeywords.includes(kw)) {
+                    cartKeywords.push(kw);
+                }
+            });
+        });
+
+        // 3. Filter and score products
+        let candidates = allCatalogProducts.filter(p => !cartProductIds.includes(Number(p.productId)));
+
+        // Map candidate to include a relevance score
+        candidates = candidates.map(p => {
+            let score = 0;
+            const candidateNameLower = (p.productName || '').toLowerCase();
+            
+            // Same category (loại sản phẩm)
+            if (p.categoryName && cartCategories.includes(p.categoryName.toLowerCase())) {
+                score += 15;
+            }
+
+            // Similar product name
+            if (cartNames.some(n => candidateNameLower.includes(n) || n.includes(candidateNameLower))) {
+                score += 20;
+            }
+
+            // Keyword match (cùng keyword)
+            const candKws = getKeywordsFromProductName(p.productName);
+            candKws.forEach(kw => {
+                if (cartKeywords.includes(kw)) {
+                    score += 5;
+                }
+            });
+
+            // Stock boost: slightly prioritize available items
+            if (Number(p.stock || 0) > 0) {
+                score += 3;
+            }
+
+            return { product: p, score };
+        });
+
+        // Sort by score descending, then by salesCount descending
+        candidates.sort((a, b) => {
+            if (b.score !== a.score) return b.score - a.score;
+            return (b.product.salesCount || 0) - (a.product.salesCount || 0);
+        });
+
+        // Take top 4
+        let selectedCandidates = candidates.slice(0, 4).map(c => c.product);
+
+        // If not enough candidates, fill with best products
+        if (selectedCandidates.length < 4) {
+            const remaining = allCatalogProducts.filter(p => 
+                !cartProductIds.includes(Number(p.productId)) && 
+                !selectedCandidates.some(s => Number(s.productId) === Number(p.productId))
+            );
+            remaining.sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0));
+            selectedCandidates = selectedCandidates.concat(remaining.slice(0, 4 - selectedCandidates.length));
+        }
+
+        window.renderedRecommendations = selectedCandidates;
+
+        if (selectedCandidates.length === 0) {
+            grid.innerHTML = '<p style="color: var(--text-muted); text-align: center; grid-column: 1/-1;">Chưa có gợi ý phù hợp.</p>';
+            return;
+        }
+
+        grid.innerHTML = selectedCandidates.map(product => {
+            const starsCount = Math.floor(product.averageRating || 0);
+            let starHtml = '';
+            for (let i = 0; i < 5; i++) {
+                if (i < starsCount) {
+                    starHtml += '<i class="fa fa-star"></i>';
+                } else {
+                    starHtml += '<i class="fa fa-star-o"></i>';
+                }
+            }
+
+            const verifiedBadge = product.sellerIsVerified ? '<i class="fa fa-check-circle tick-xanh" title="Đã xác minh"></i>' : '';
+            const iconInfo = getProductIconAndColor(product.productName);
+            const stock = Number(product.stock || 0);
+            const isOutOfStock = stock <= 0;
+            const stockClass = isOutOfStock ? 'stock stock--out' : 'stock';
+            
+            // "CÓ SẴN" badge if in stock
+            const badgeHtml = !isOutOfStock ? '<span class="tag-badge tag-instant">CÓ SẴN</span>' : '';
+
+            const buyButtonHtml = isOutOfStock
+                ? `<button class="btn-buy btn-buy--preorder" type="button" onclick="event.stopPropagation(); preOrderRecommendation(${product.productId})"><i class="fa fa-clock-o"></i> Đặt trước</button>`
+                : `<button class="btn-buy" type="button" onclick="event.stopPropagation(); buyRecommendation(${product.productId})">Mua ngay</button>`;
+            const cartButtonHtml = isOutOfStock
+                ? `<button class="btn-cart btn-cart--disabled" type="button" title="Sản phẩm hết hàng, vui lòng đặt trước" onclick="event.stopPropagation(); preOrderRecommendation(${product.productId})"><i class="fa fa-shopping-cart"></i></button>`
+                : `<button class="btn-cart" type="button" title="Thêm vào giỏ hàng" onclick="event.stopPropagation(); addRecommendationToCart(${product.productId})"><i class="fa fa-shopping-cart"></i></button>`;
+
+            return `
+                <div class="product-card" onclick="window.location.href='/products/${product.productId}'">
+                    <div class="product-card__image-container">
+                        <i class="fa ${iconInfo.icon} product-card__img-icon" style="color: ${iconInfo.color};"></i>
+                        ${badgeHtml}
+                    </div>
+                    <div class="product-info">
+                        <div class="category-rating">
+                            <span class="category-badge">${product.categoryName || 'Sản phẩm số'}</span>
+                            <span class="rating-stars">${starHtml}</span>
+                        </div>
+                        <h4 class="product-title">${product.productName}</h4>
+                        <div class="seller-badge">
+                            <i class="fa fa-university"></i>
+                            <span>Cửa hàng: <strong>${product.sellerName || 'VipStore'}</strong></span>
+                            ${verifiedBadge}
+                        </div>
+                        <div class="price-stock">
+                            <div class="price">${formatVND(product.price)}</div>
+                            <div class="${stockClass}">Kho: <strong>${stock}</strong></div>
+                        </div>
+                        <div class="product-actions">
+                            ${buyButtonHtml}
+                            ${cartButtonHtml}
+                        </div>
                     </div>
                 </div>
-            </article>
-        `).join('');
+            `;
+        }).join('');
     }
 
     function addRecommendationToCart(productId) {
-        const product = RECOMMENDATIONS.find(item => item.productId === productId);
+        const product = window.renderedRecommendations.find(item => item.productId === productId);
         if (!product) return;
+
+        const iconInfo = getProductIconAndColor(product.productName);
 
         const existing = cart.find(item => item.productId === product.productId && item.duration === 1);
         if (existing) {
@@ -810,18 +871,57 @@
                 productId: product.productId,
                 duration: 1,
                 productName: product.productName,
-                sellerName: product.sellerName,
+                sellerName: product.sellerName || 'VipStore',
                 price: product.price,
-                icon: product.icon,
-                iconColor: product.iconColor,
-                quantity: 1
+                icon: iconInfo.icon,
+                iconColor: iconInfo.color,
+                quantity: 1,
+                selected: true
             });
         }
 
         saveCart();
         renderCart();
-        alert('Đã thêm sản phẩm vào giỏ hàng thành công!');
-        if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
+        renderRecommendations();
+        showSuccessToast('Đã thêm sản phẩm vào giỏ hàng thành công!');
+    }
+
+    function buyRecommendation(productId) {
+        addRecommendationToCart(productId);
+        window.location.href = `/checkout?mode=cart`;
+    }
+
+    function preOrderRecommendation(productId) {
+        window.location.href = `/pre-order-request?productId=${productId}`;
+    }
+
+    function showSuccessToast(message) {
+        let container = document.querySelector('.ds-toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'ds-toast-container';
+            document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.className = 'ds-toast ds-toast-success';
+        toast.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fa fa-check-circle" style="font-size: 18px; color: #22c55e;"></i>
+                <div>
+                    <h4 class="ds-toast-title">Thành công</h4>
+                    <p class="ds-toast-message">${message}</p>
+                </div>
+            </div>
+            <button class="ds-toast-close" onclick="this.parentElement.remove()">&times;</button>
+        `;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                toast.remove();
+            }, 500);
+        }, 3000);
     }
 </script>
 </body>

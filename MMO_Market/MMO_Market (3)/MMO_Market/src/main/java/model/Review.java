@@ -1,7 +1,10 @@
 package model;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
@@ -32,7 +35,8 @@ public class Review {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "isDelete")
+    @Column(name = "isDelete", nullable = false)
+    @Builder.Default
     private Boolean isDelete = false;
 
     @PrePersist

@@ -5,7 +5,7 @@
 //              for the Seller dashboard pages.
 // ==============================================================================
 
-const SELLER_API_BASE = 'http://localhost:8080/api/seller';
+const SELLER_API_BASE = '/api/seller';
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Guard check for authentication

@@ -22,7 +22,7 @@ public class Product {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(500)")
     private String name;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
