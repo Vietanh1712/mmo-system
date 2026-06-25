@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -8,57 +8,59 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/home.css}">
     <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
     <link rel="stylesheet" th:href="@{/css/seller.css}">
 </head>
 <body>
     <header th:replace="fragments/header :: header"></header>
 
-    <main class="seller-page">
-        <div class="seller-layout">
+    <main class="ds-container-fluid admin-shell" style="max-width: 1500px; margin: 0 auto;">
+        <div class="admin-layout ds-two-column">
             <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('shop-flags')}"></aside>
 
-            <section class="seller-card">
-                <div class="seller-card__header">
-                    <div class="seller-card__header-main">
-                        <div class="seller-card__icon"><i class="fa fa-flag"></i></div>
-                        <div>
-                            <h1 class="seller-card__title">Cờ cảnh báo Shop</h1>
-                            <p class="seller-card__subtitle">Theo dõi cảnh báo vi phạm từ Staff — ShopFlags</p>
-                        </div>
+            <section class="admin-workspace ds-page-shell" style="padding-right: 120px;">
+                <div class="view-header">
+                    <div>
+                        <h2>Cờ cảnh báo Shop</h2>
+                        <p>Theo dõi cảnh báo vi phạm từ Staff — ShopFlags</p>
+                    </div>
+                    <span class="ds-badge ds-badge-warning">Shop Flags</span>
+                </div>
+
+                <div class="stats-grid-4">
+                    <div class="stat-card-modern blue">
+                        <span class="stat-card-label">Tổng cờ cảnh báo</span>
+                        <div class="stat-card-value" id="totalFlags">0</div>
+                        <div class="stat-card-trend">Tất cả mức độ</div>
+                    </div>
+                    <div class="stat-card-modern blue">
+                        <span class="stat-card-label">Mức Warning</span>
+                        <div class="stat-card-value" id="warningCount">0</div>
+                        <div class="stat-card-trend">Cần cải thiện</div>
+                    </div>
+                    <div class="stat-card-modern red">
+                        <span class="stat-card-label">Mức Critical</span>
+                        <div class="stat-card-value" id="criticalCount">0</div>
+                        <div class="stat-card-trend">Nguy cơ bị khóa</div>
+                    </div>
+                    <div class="stat-card-modern blue">
+                        <span class="stat-card-label">Liên quan khiếu nại</span>
+                        <div class="stat-card-value" id="flagWithComplaint">0</div>
+                        <div class="stat-card-trend">Gắn Complaint ID</div>
                     </div>
                 </div>
 
-                <!-- Dynamic stat cards -->
-                <div class="stat-grid">
-                    <div class="stat-card">
-                        <p class="stat-card__label">Tổng cờ cảnh báo</p>
-                        <p class="stat-card__value" id="totalFlags">0</p>
-                        <p class="stat-card__hint">Tất cả mức độ</p>
+                <div class="admin-card">
+                    <div class="card-header-flex">
+                        <h3>Danh sách cờ cảnh báo</h3>
                     </div>
-                    <div class="stat-card">
-                        <p class="stat-card__label">Mức Warning</p>
-                        <p class="stat-card__value" id="warningCount">0</p>
-                        <p class="stat-card__hint">Cần cải thiện</p>
-                    </div>
-                    <div class="stat-card">
-                        <p class="stat-card__label">Mức Critical</p>
-                        <p class="stat-card__value" id="criticalCount">0</p>
-                        <p class="stat-card__hint">Nguy cơ bị khóa</p>
-                    </div>
-                    <div class="stat-card">
-                        <p class="stat-card__label">Liên quan khiếu nại</p>
-                        <p class="stat-card__value" id="flagWithComplaint">0</p>
-                        <p class="stat-card__hint">Gắn Complaint ID</p>
-                    </div>
-                </div>
-
-                <div class="seller-section">
-                    <h2 class="seller-section__title">Danh sách cờ cảnh báo</h2>
-
-                    <!-- Dynamic flag cards will be rendered here -->
-                    <div class="flag-list" id="flagListContainer">
-                        <div style="text-align:center; padding: 30px; color: var(--seller-muted);">
-                            <i class="fa fa-spinner fa-spin"></i> Đang tải dữ liệu...
+                    <div style="padding: 16px 24px;">
+                        <!-- Dynamic flag cards will be rendered here -->
+                        <div class="flag-list" id="flagListContainer">
+                            <div style="text-align:center; padding: 30px; color: var(--ds-text-muted);">
+                                <i class="fa fa-spinner fa-spin"></i> Đang tải dữ liệu...
+                            </div>
                         </div>
                     </div>
                 </div>

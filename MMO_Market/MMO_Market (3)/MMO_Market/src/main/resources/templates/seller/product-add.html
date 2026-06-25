@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/home.css}">
     <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
     <link rel="stylesheet" th:href="@{/css/seller.css}">
     <style>
         .product-type-selector {
@@ -221,19 +223,17 @@
 <body>
     <header th:replace="fragments/header :: header"></header>
 
-    <main class="seller-page">
-        <div class="seller-layout">
+    <main class="ds-container-fluid admin-shell" style="max-width: 1500px; margin: 0 auto;">
+        <div class="admin-layout ds-two-column">
             <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('product-add')}"></aside>
 
-            <section class="seller-card">
-                <div class="seller-card__header">
-                    <div class="seller-card__header-main">
-                        <div class="seller-card__icon"><i class="fa fa-plus-square-o"></i></div>
-                        <div>
-                            <h1 class="seller-card__title">Đăng bán sản phẩm mới</h1>
-                            <p class="seller-card__subtitle">Nhập thông tin cơ bản của sản phẩm, sau đó thêm biến thể và tồn kho</p>
-                        </div>
+            <section class="admin-workspace ds-page-shell" style="padding-right: 120px;">
+                <div class="view-header">
+                    <div>
+                        <h2>Đăng bán sản phẩm mới</h2>
+                        <p>Nhập thông tin cơ bản của sản phẩm, sau đó thêm biến thể và tồn kho</p>
                     </div>
+                    <span class="ds-badge ds-badge-info">Sản phẩm mới</span>
                 </div>
 
                 <form class="profile-edit-form seller-form-panel" id="productForm" novalidate>
@@ -300,6 +300,13 @@
                     </div>
 
                     <div class="profile-edit-form__group">
+                        <label for="userGuide">Hướng dẫn sử dụng sản phẩm</label>
+                        <textarea id="userGuide" placeholder="Hướng dẫn sử dụng chi tiết (VD: Đăng nhập vào thiết bị, tránh thay đổi mật khẩu...)"
+                                  style="min-height: 100px; padding: 11px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
+                        <small class="profile-edit-form__hint">Hướng dẫn người mua cách sử dụng sản phẩm sau khi thanh toán thành công</small>
+                    </div>
+
+                    <div class="profile-edit-form__group">
                         <label for="productImage">Hình ảnh sản phẩm</label>
                         <div class="file-input-wrapper">
                             <input id="productImage" type="file" accept="image/*">
@@ -332,6 +339,7 @@
             const category = document.getElementById('category').value;
             const productType = document.querySelector('input[name="productType"]:checked').value;
             const description = document.getElementById('description').value.trim();
+            const userGuide = document.getElementById('userGuide').value.trim();
 
             if (!productName) {
                 showWarningToast('Vui lòng nhập tên sản phẩm');
@@ -351,7 +359,8 @@
                 name: productName,
                 categoryId: category,
                 productType: productType,
-                description: description
+                description: description,
+                userGuide: userGuide
             }));
 
             window.location.href = '/seller/variants/new';

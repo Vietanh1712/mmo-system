@@ -144,12 +144,16 @@
                     const fullName = user.fullName || 'Người dùng';
                     const initial = fullName.charAt(0).toUpperCase();
                     const currentRole = parseHeaderRole(user.role);
-
                     const isSystemRole = currentRole === 'Admin' || currentRole === 'Staff';
-                    if (isSystemRole) {
+                    const currentPath = window.location.pathname.toLowerCase();
+                    const isSellerConsole = currentPath.startsWith('/seller');
+
+                    if (isSystemRole || isSellerConsole) {
                         document.body.classList.add('is-system-user');
+                    }
+
+                    if (isSystemRole) {
                         const forbiddenPaths = ['/cart', '/checkout', '/wallet/topup', '/wallet/transactions', '/pre-orders', '/account/orders'];
-                        const currentPath = window.location.pathname.toLowerCase();
                         if (forbiddenPaths.some(path => currentPath === path || currentPath.startsWith(path + '/'))) {
                             alert('Quản trị viên và nhân viên không có quyền truy cập chức năng này.');
                             window.location.replace('/');

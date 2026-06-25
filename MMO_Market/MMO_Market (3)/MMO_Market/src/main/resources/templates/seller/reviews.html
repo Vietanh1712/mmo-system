@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -8,69 +8,53 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/home.css}">
     <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
     <link rel="stylesheet" th:href="@{/css/seller.css}">
-    <style>
-        .stat-card.clickable {
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .stat-card.clickable:hover {
-            transform: translateY(-2px);
-            border-color: var(--seller-primary-strong);
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
-        }
-        .stat-card.clickable.active {
-            border-color: var(--seller-primary-strong);
-            background-color: var(--ds-primary-soft, #eff6ff);
-        }
-    </style>
 </head>
 <body>
     <header th:replace="fragments/header :: header"></header>
 
-    <main class="seller-page">
-        <div class="seller-layout">
+    <main class="ds-container-fluid admin-shell" style="max-width: 1500px; margin: 0 auto;">
+        <div class="admin-layout ds-two-column">
             <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('reviews')}"></aside>
 
-            <section class="seller-card">
-                <div class="seller-card__header">
-                    <div class="seller-card__header-main">
-                        <div class="seller-card__icon"><i class="fa fa-star"></i></div>
-                        <div>
-                            <h1 class="seller-card__title">Quản lý đánh giá</h1>
-                            <p class="seller-card__subtitle">Đọc đánh giá từ khách hàng về sản phẩm của bạn</p>
-                        </div>
+            <section class="admin-workspace ds-page-shell" style="padding-right: 120px;">
+                <div class="view-header">
+                    <div>
+                        <h2>Quản lý đánh giá</h2>
+                        <p>Đọc đánh giá từ khách hàng về sản phẩm của bạn</p>
+                    </div>
+                    <span class="ds-badge ds-badge-info">Reviews</span>
+                </div>
+
+                <div class="stats-grid-4">
+                    <div class="stat-card-modern blue">
+                        <span class="stat-card-label">Điểm trung bình shop</span>
+                        <div class="stat-card-value" id="avgRating">—</div>
+                        <div class="stat-card-trend">Trung bình đánh giá</div>
+                    </div>
+                    <div class="stat-card-modern blue" id="cardTotalReviews" style="cursor:pointer;">
+                        <span class="stat-card-label">Tổng đánh giá</span>
+                        <div class="stat-card-value" id="totalReviews">0</div>
+                        <div class="stat-card-trend">Từ tất cả sản phẩm</div>
+                    </div>
+                    <div class="stat-card-modern green" id="cardFiveStars" style="cursor:pointer;">
+                        <span class="stat-card-label">5 sao</span>
+                        <div class="stat-card-value" id="fiveStarCount">0</div>
+                        <div class="stat-card-trend">Đánh giá xuất sắc</div>
+                    </div>
+                    <div class="stat-card-modern red" id="cardLowStars" style="cursor:pointer;">
+                        <span class="stat-card-label">1–2 sao</span>
+                        <div class="stat-card-value" id="lowStarCount">0</div>
+                        <div class="stat-card-trend">Cần theo dõi</div>
                     </div>
                 </div>
 
-                <!-- Stats will be populated dynamically -->
-                <div class="stat-grid">
-                    <div class="stat-card">
-                        <p class="stat-card__label">Điểm trung bình shop</p>
-                        <p class="stat-card__value" id="avgRating">—</p>
-                        <p class="stat-card__hint">Trung bình đánh giá</p>
-                    </div>
-                    <div class="stat-card clickable active" id="cardTotalReviews">
-                        <p class="stat-card__label">Tổng đánh giá</p>
-                        <p class="stat-card__value" id="totalReviews">0</p>
-                        <p class="stat-card__hint">Từ tất cả sản phẩm</p>
-                    </div>
-                    <div class="stat-card clickable" id="cardFiveStars">
-                        <p class="stat-card__label">5 sao</p>
-                        <p class="stat-card__value" id="fiveStarCount">0</p>
-                        <p class="stat-card__hint">Đánh giá xuất sắc</p>
-                    </div>
-                    <div class="stat-card clickable" id="cardLowStars">
-                        <p class="stat-card__label">1–2 sao</p>
-                        <p class="stat-card__value" id="lowStarCount">0</p>
-                        <p class="stat-card__hint">Cần theo dõi</p>
-                    </div>
-                </div>
-
-                <div class="seller-section">
-                    <div class="seller-filter-bar">
-                        <h2 class="seller-section__title" style="margin: 0; flex-grow: 1;">Danh sách đánh giá</h2>
-                        <select id="ratingFilter">
+                <div class="admin-card">
+                    <div class="card-header-flex ds-cluster-between">
+                        <h3>Danh sách đánh giá</h3>
+                        <select id="ratingFilter" class="ds-select" style="min-width: 200px; padding: 6px 10px; font-size: 13px;">
                             <option value="all">Tất cả đánh giá</option>
                             <option value="5">5 sao ★★★★★</option>
                             <option value="4">4 sao ★★★★</option>
@@ -80,9 +64,8 @@
                             <option value="low">1-2 sao (Cần theo dõi)</option>
                         </select>
                     </div>
-
-                    <div class="seller-table-wrap">
-                        <table class="seller-table">
+                    <div class="table-wrap">
+                        <table class="admin-table">
                             <thead>
                                 <tr>
                                     <th>Mã</th>

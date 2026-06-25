@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -8,53 +8,63 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/home.css}">
     <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
     <link rel="stylesheet" th:href="@{/css/seller.css}">
 </head>
 <body>
     <header th:replace="fragments/header :: header"></header>
 
-    <main class="seller-page">
-        <div class="seller-layout">
+    <main class="ds-container-fluid admin-shell" style="max-width: 1500px; margin: 0 auto;">
+        <div class="admin-layout ds-two-column">
             <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('complaints')}"></aside>
 
-            <section class="seller-card">
-                <div class="seller-card__header">
-                    <div class="seller-card__header-main">
-                        <div class="seller-card__icon"><i class="fa fa-comments"></i></div>
-                        <div>
-                            <h1 class="seller-card__title">Phản hồi khiếu nại</h1>
-                            <p class="seller-card__subtitle">Đang tải thông tin...</p>
-                        </div>
+            <section class="admin-workspace ds-page-shell" style="padding-right: 120px;">
+                <div class="view-header">
+                    <div>
+                        <h2>Phản hồi khiếu nại</h2>
+                        <p id="complaintSubtitle">Đang tải thông tin...</p>
                     </div>
-                    <span class="badge pending"><i class="fa fa-spinner fa-spin"></i> Đang tải</span>
+                    <span class="ds-badge ds-badge-warning" id="complaintStatusBadge"><i class="fa fa-spinner fa-spin"></i> Đang tải</span>
                 </div>
 
-                <!-- Detail info: populated by JS -->
-                <dl class="seller-info-grid">
-                    <dt>Khách hàng</dt><dd>—</dd>
-                    <dt>Mã đơn hàng</dt><dd>—</dd>
-                    <dt>Sản phẩm</dt><dd>—</dd>
-                    <dt>Đơn giá</dt><dd>—</dd>
-                    <dt>Nội dung khiếu nại</dt><dd>—</dd>
-                    <dt>Ảnh minh chứng</dt><dd>—</dd>
-                    <dt>Hướng giải quyết</dt><dd>—</dd>
-                </dl>
+                <div class="admin-card">
+                    <div class="card-header-flex">
+                        <h3>Thông tin khiếu nại</h3>
+                    </div>
+                    <div style="padding: 20px 24px;">
+                        <!-- Detail info: populated by JS -->
+                        <dl class="seller-info-grid">
+                            <dt>Khách hàng</dt><dd>—</dd>
+                            <dt>Mã đơn hàng</dt><dd>—</dd>
+                            <dt>Sản phẩm</dt><dd>—</dd>
+                            <dt>Đơn giá</dt><dd>—</dd>
+                            <dt>Nội dung khiếu nại</dt><dd>—</dd>
+                            <dt>Ảnh minh chứng</dt><dd>—</dd>
+                            <dt>Hướng giải quyết</dt><dd>—</dd>
+                        </dl>
+                    </div>
+                </div>
 
-                <div class="seller-section">
-                    <h2 class="seller-section__title">Kênh trao đổi (ComplaintChats)</h2>
-                    <div class="chat-panel">
-                        <!-- Chat history: populated by JS -->
-                        <div class="chat-messages">
-                            <div style="text-align:center; padding: 20px; color: var(--seller-muted);">
-                                <i class="fa fa-spinner fa-spin"></i> Đang tải lịch sử tin nhắn...
+                <div class="admin-card">
+                    <div class="card-header-flex">
+                        <h3>Kênh trao đổi (ComplaintChats)</h3>
+                    </div>
+                    <div style="padding: 20px 24px;">
+                        <div class="chat-panel">
+                            <!-- Chat history: populated by JS -->
+                            <div class="chat-messages">
+                                <div style="text-align:center; padding: 20px; color: var(--ds-text-muted);">
+                                    <i class="fa fa-spinner fa-spin"></i> Đang tải lịch sử tin nhắn...
+                                </div>
                             </div>
-                        </div>
-                        <div class="chat-compose">
-                            <label for="sellerReply" style="display:block;margin-bottom:8px;font-weight:600;font-size:14px;">Phản hồi của Seller</label>
-                            <textarea id="sellerReply" placeholder="Nhập giải trình, bằng chứng hoặc đề xuất xử lý..."></textarea>
-                            <div class="profile-actions" style="margin-top:12px;">
-                                <button class="profile-button profile-button--primary" type="button">Gửi phản hồi</button>
-                                <a class="profile-button profile-button--secondary" th:href="@{/seller/complaints}">Quay lại danh sách khiếu nại</a>
+                            <div class="chat-compose" style="margin-top: 16px;">
+                                <label for="sellerReply" style="display:block;margin-bottom:8px;font-weight:600;font-size:14px;">Phản hồi của Seller</label>
+                                <textarea id="sellerReply" class="ds-textarea" placeholder="Nhập giải trình, bằng chứng hoặc đề xuất xử lý..." style="width:100%;min-height:100px;"></textarea>
+                                <div style="margin-top:12px; display:flex; gap:8px;">
+                                    <button class="ds-btn ds-btn-primary" type="button">Gửi phản hồi</button>
+                                    <a class="ds-btn ds-btn-outline" th:href="@{/seller/complaints}">Quay lại danh sách</a>
+                                </div>
                             </div>
                         </div>
                     </div>

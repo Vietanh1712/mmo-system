@@ -7,16 +7,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/home.css}">
-    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
     <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
     <link rel="stylesheet" th:href="@{/css/seller.css}">
     <link rel="stylesheet" th:href="@{/css/shop-settings.css}">
 </head>
 <body>
 <header th:replace="fragments/header :: header"></header>
 
-<main class="seller-page shop-settings-page ds-page">
-    <div class="seller-layout">
+<main class="ds-container-fluid admin-shell" style="max-width: 1500px; margin: 0 auto;">
+    <div class="admin-layout ds-two-column">
         <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('close-shop')}"></aside>
 
         <section class="shop-settings ds-page-shell">
