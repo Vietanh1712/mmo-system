@@ -22,6 +22,16 @@ public class StaffController {
         return "staff/complaint-detail";
     }
 
+    @GetMapping("/support-tickets")
+    public String supportTickets() {
+        return "staff/support-tickets";
+    }
+
+    @GetMapping("/support-tickets/detail")
+    public String supportTicketDetail() {
+        return "staff/support-ticket-detail";
+    }
+
     @GetMapping("/kyc")
     public String kyc() {
         return "staff/kyc";

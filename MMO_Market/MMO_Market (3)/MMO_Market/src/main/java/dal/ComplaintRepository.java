@@ -12,6 +12,8 @@ import java.util.List;
 @Repository
 public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     List<Complaint> findBySellerAndIsDeleteFalseOrderByCreatedAtDesc(User seller);
+    List<Complaint> findByCustomerAndIsDeleteFalseOrderByCreatedAtDesc(User customer);
+    List<Complaint> findByIsDeleteFalseOrderByCreatedAtDesc();
 
     @Query("SELECT COUNT(c) FROM Complaint c WHERE c.seller = :seller AND c.status = 'Open' AND c.isDelete = false")
     long countOpenComplaintsBySeller(@Param("seller") User seller);

@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý kho - MMO Market</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/home.css}">
     <link rel="stylesheet" th:href="@{/css/profile.css}">
@@ -79,7 +79,7 @@
             font-size: 16px;
             font-weight: 600;
             color: var(--seller-ink);
-            font-family: "Inter", sans-serif;
+            font-family: "Roboto", sans-serif;
         }
 
         .modal-close {
@@ -156,7 +156,7 @@
             cursor: pointer;
             font-size: 12px;
             font-weight: 600;
-            font-family: "Inter", sans-serif;
+            font-family: "Roboto", sans-serif;
             transition: all 0.2s;
         }
 
@@ -182,7 +182,7 @@
             color: var(--seller-muted);
             border-bottom: 2px solid transparent;
             transition: all 0.2s;
-            font-family: "Inter", sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 13px;
         }
 
@@ -217,7 +217,7 @@
             border-radius: 8px;
             font: inherit;
             font-weight: 600;
-            font-family: "Inter", sans-serif;
+            font-family: "Roboto", sans-serif;
             cursor: pointer;
             transition: all 0.2s ease;
             text-decoration: none;
@@ -254,6 +254,24 @@
         .profile-button--secondary:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+
+        /* Asset list table styles */
+        .asset-list-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 13px;
+        }
+        .asset-list-table th, .asset-list-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--seller-border);
+        }
+        .asset-list-table th {
+            font-weight: 600;
+            background: #f8fafc;
+            color: var(--seller-ink);
         }
     </style>
 </head>
@@ -469,126 +487,14 @@
     <script th:src="@{/js/auth.js}"></script>
     <script th:src="@{/js/seller-console.js}"></script>
     <script>
-        // Sample asset data structure
-        const assetDatabase = {
-            1: {
-                productName: 'Netflix Premium',
-                productType: 'ACCOUNT',
-                assets: [
-                    { id: 1, username: 'netflix_user_01@gmail.com', password: 'NetflixSecure@2026', notes: 'Tài khoản mới 100%', status: 'available' },
-                    { id: 2, username: 'netflix_user_02@gmail.com', password: 'NetflixPass2026!', notes: 'Gói Premium 4K', status: 'available' },
-                    { id: 3, username: 'netflix_user_03@gmail.com', password: 'Nf2026@Premium', notes: 'Màn hình riêng', status: 'sold' },
-                ]
-            },
-            2: {
-                productName: 'Spotify Family',
-                productType: 'ACCOUNT',
-                assets: [
-                    { id: 1, username: 'spotify_family01@gmail.com', password: 'Sp0tify@2026', notes: 'Gói gia đình 6 slot', status: 'available' },
-                    { id: 2, username: 'spotify_family02@gmail.com', password: 'Sp0tify!2026', notes: 'Còn 5 slot trống', status: 'available' },
-                ]
-            },
-            3: {
-                productName: 'Tool Auto Nuôi Clone Facebook Pro',
-                productType: 'KEY',
-                assets: [
-                    { id: 1, keyCode: 'TOOL-A1B2-C3D4-E5F6', notes: 'Key 1 tháng — chưa kích hoạt', status: 'available' },
-                    { id: 2, keyCode: 'TOOL-G7H8-I9J0-K1L2', notes: 'Key 1 tháng — chưa kích hoạt', status: 'available' },
-                    { id: 3, keyCode: 'TOOL-M3N4-O5P6-Q7R8', notes: 'Key 1 tháng — còn mới', status: 'sold' },
-                ]
-            },
-            4: {
-                productName: 'Garena VCoin Card 100K',
-                productType: 'GAME_CARD',
-                assets: []
-            },
-            5: {
-                productName: 'Canva Pro',
-                productType: 'ACCOUNT',
-                assets: [
-                    { id: 1, username: 'canva_pro_01@gmail.com', password: 'Canva@2026', notes: 'Tài khoản mới', status: 'available' },
-                ]
-            }
-        };
-
-        function viewAssets(productId) {
-            const data = assetDatabase[productId];
-            if (!data) return;
-
-            const modal = document.getElementById('assetModal');
-            const body = document.getElementById('assetModalBody');
-
-            let html = '';
-
-            if (data.assets.length === 0) {
-                html = '<div class="empty-state"><i class="fa fa-inbox"></i><p>Không có tài sản nào trong kho.</p></div>';
-            } else {
-                html = '<table class="asset-list-table"><thead><tr>';
-
-                if (data.productType === 'ACCOUNT') {
-                    html += '<th style="width: 20px;">STT</th><th>Tài khoản</th><th>Mật khẩu</th><th>Ghi chú</th><th>Trạng thái</th></tr></thead><tbody>';
-                    data.assets.forEach((asset, index) => {
-                        html += `
-                            <tr>
-                                <td>${index + 1}</td>
-                                <td><code>${asset.username}</code></td>
-                                <td><code>••••••</code> <small>(ẩn)</small></td>
-                                <td>${asset.notes}</td>
-                                <td><span class="asset-status ${asset.status === 'sold' ? 'sold' : ''}">${asset.status === 'sold' ? 'Đã bán' : 'Còn hàng'}</span></td>
-                            </tr>
-                        `;
-                    });
-                } else if (data.productType === 'KEY') {
-                    html += '<th style="width: 20px;">STT</th><th>Mã Key</th><th>Ghi chú</th><th>Trạng thái</th></tr></thead><tbody>';
-                    data.assets.forEach((asset, index) => {
-                        html += `
-                            <tr>
-                                <td>${index + 1}</td>
-                                <td><code>${asset.keyCode}</code></td>
-                                <td>${asset.notes}</td>
-                                <td><span class="asset-status ${asset.status === 'sold' ? 'sold' : ''}">${asset.status === 'sold' ? 'Đã bán' : 'Còn hàng'}</span></td>
-                            </tr>
-                        `;
-                    });
-                } else if (data.productType === 'GAME_CARD') {
-                    html += '<th style="width: 20px;">STT</th><th>Mã Thẻ</th><th>PIN</th><th>Ghi chú</th><th>Trạng thái</th></tr></thead><tbody>';
-                    data.assets.forEach((asset, index) => {
-                        html += `
-                            <tr>
-                                <td>${index + 1}</td>
-                                <td><code>${asset.cardCode || 'N/A'}</code></td>
-                                <td><code>••••</code></td>
-                                <td>${asset.notes}</td>
-                                <td><span class="asset-status ${asset.status === 'sold' ? 'sold' : ''}">${asset.status === 'sold' ? 'Đã bán' : 'Còn hàng'}</span></td>
-                            </tr>
-                        `;
-                    });
-                }
-
-                html += '</tbody></table>';
-            }
-
-            body.innerHTML = html;
-            modal.classList.add('active');
-        }
-
-        function closeAssetModal() {
-            document.getElementById('assetModal').classList.remove('active');
-        }
-
-        // Tab filtering
-        document.querySelectorAll('.inventory-tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                document.querySelectorAll('.inventory-tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-                // In a real app, filter the table here
-            });
-        });
-
         // Close modal on outside click
         document.getElementById('assetModal').addEventListener('click', function(e) {
             if (e.target === this) {
-                closeAssetModal();
+                if (typeof window.closeAssetModal === 'function') {
+                    window.closeAssetModal();
+                } else {
+                    document.getElementById('assetModal').classList.remove('active');
+                }
             }
         });
     </script>

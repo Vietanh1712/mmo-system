@@ -37,111 +37,39 @@ async function loadNotificationsPage() {
 
         const profile = await response.json();
         accountSidebar.render(profile);
-        notifications = readNotifications();
-        renderSummary();
-        renderNotifications();
-        showNotificationsMessage('Thông báo hiện dùng dữ liệu mock frontend.', 'info');
+        
+        await fetchAndRenderNotifications();
     } catch (error) {
         showNotificationsMessage(error.message || 'Không thể tải thông báo.', 'danger');
     }
 }
 
-function readNotifications() {
-    let personal = [];
+async function fetchAndRenderNotifications() {
     try {
-        const saved = JSON.parse(sessionStorage.getItem(ACCOUNT_NOTIFICATIONS_MOCK_KEY));
-        if (Array.isArray(saved) && saved.length) {
-            personal = saved;
-        } else {
-            personal = createSeedNotifications();
-            saveNotifications(personal);
-        }
-    } catch {
-        personal = createSeedNotifications();
-        saveNotifications(personal);
-    }
-
-    // Load public broadcast notifications
-    let broadcasts = [];
-    try {
-        const stored = sessionStorage.getItem('mmo_admin_mock');
-        const mockData = stored ? JSON.parse(stored) : {};
-        broadcasts = mockData.notifications || [];
-    } catch (e) {
-        broadcasts = [];
-    }
-
-    const readTimestamps = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
-    const mappedBroadcasts = broadcasts.map(item => {
-        let type = 'SYSTEM';
-        let severity = 'INFO';
-        if (item.type === 'warning') {
-            type = 'SECURITY';
-            severity = 'WARNING';
-        } else if (item.type === 'maintenance') {
-            type = 'SYSTEM';
-            severity = 'DANGER';
-        } else if (item.type === 'policy') {
-            type = 'SYSTEM';
-            severity = 'INFO';
+        const response = await authFetch('/v1/notifications');
+        if (!response.ok) {
+            throw new Error('Không thể tải thông báo từ hệ thống.');
         }
 
-        const isUnread = !readTimestamps.includes(item.timestamp);
-        return {
-            id: `SYS-${item.timestamp}`,
-            type: type,
-            title: item.title,
-            message: item.content,
-            status: isUnread ? 'UNREAD' : 'READ',
-            severity: severity,
-            createdAt: formatDateTime(new Date(item.timestamp)),
-            targetUrl: '/account/notifications',
-            isBroadcast: true,
-            originalTimestamp: item.timestamp
-        };
-    });
+        const data = await response.json();
+        const readTimestamps = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
+        
+        notifications = data.map(item => {
+            if (item.isBroadcast) {
+                const isUnread = !readTimestamps.includes(item.originalTimestamp);
+                item.status = isUnread ? 'UNREAD' : 'READ';
+            }
+            return item;
+        });
 
-    const combined = [...personal, ...mappedBroadcasts];
-    combined.sort((a, b) => {
-        const da = parseVietnameseDateTime(a.createdAt) || new Date(0);
-        const db = parseVietnameseDateTime(b.createdAt) || new Date(0);
-        return db - da;
-    });
-
-    return combined;
+        renderSummary();
+        renderNotifications();
+    } catch (error) {
+        showNotificationsMessage(error.message || 'Lỗi khi đồng bộ danh sách thông báo.', 'danger');
+    }
 }
 
-function createSeedNotifications() {
-    const now = new Date();
-    return [
-        createNotification('NTF-001', 'ORDER', 'Đơn hàng đã hoàn tất', 'Đơn MMO-ORD-1001 đã hoàn tất. Bạn có thể xem lại chi tiết đơn hàng.', 'UNREAD', 'SUCCESS', addDays(now, -1), '/account/orders/MMO-ORD-1001'),
-        createNotification('NTF-002', 'WALLET', 'Nạp tiền đang xử lý', 'Yêu cầu nạp tiền của bạn đang chờ xác nhận thanh toán.', 'UNREAD', 'WARNING', addDays(now, -1), '/wallet/transactions'),
-        createNotification('NTF-003', 'KYC', 'Hồ sơ KYC cần bổ sung', 'Vui lòng kiểm tra lại thông tin giấy tờ định danh trước khi gửi lại.', 'READ', 'WARNING', addDays(now, -2), '/account/kyc'),
-        createNotification('NTF-004', 'SECURITY', 'Đổi mật khẩu thành công', 'Tài khoản của bạn vừa cập nhật mật khẩu đăng nhập.', 'READ', 'SUCCESS', addDays(now, -3), '/account/security'),
-        createNotification('NTF-005', 'ORDER', 'Đơn hàng đang tranh chấp', 'Đơn MMO-ORD-1004 đang ở trạng thái tranh chấp, vui lòng theo dõi phản hồi.', 'UNREAD', 'DANGER', addDays(now, -4), '/account/orders/MMO-ORD-1004'),
-        createNotification('NTF-006', 'SYSTEM', 'Chào mừng đến MMO Market', 'Hãy hoàn tất hồ sơ cá nhân để sử dụng tài khoản hiệu quả hơn.', 'READ', 'INFO', addDays(now, -5), '/profile'),
-        createNotification('NTF-007', 'COMPLAINT', 'Khiếu nại có phản hồi mới', 'Staff đã cập nhật phản hồi cho yêu cầu hỗ trợ của bạn.', 'READ', 'INFO', addDays(now, -6), '#'),
-        createNotification('NTF-008', 'WALLET', 'Hoàn tiền thành công', 'Một giao dịch hoàn tiền đã được ghi nhận vào ví của bạn.', 'READ', 'SUCCESS', addDays(now, -7), '/wallet/transactions')
-    ];
-}
 
-function createNotification(id, type, title, message, status, severity, createdDate, targetUrl) {
-    return {
-        id,
-        type,
-        title,
-        message,
-        status,
-        severity,
-        createdAt: formatDateTime(createdDate),
-        targetUrl
-    };
-}
-
-function saveNotifications(nextNotifications) {
-    const personalOnly = nextNotifications.filter(n => !n.isBroadcast);
-    sessionStorage.setItem(ACCOUNT_NOTIFICATIONS_MOCK_KEY, JSON.stringify(personalOnly));
-}
 
 function renderSummary() {
     const summary = notifications.reduce((result, item) => {
@@ -190,7 +118,6 @@ function renderNotifications() {
                     <span class="ds-badge ${getTypeBadgeClass(notification.type)}">${formatNotificationType(notification.type)}</span>
                     <span class="ds-badge ${notification.status === 'UNREAD' ? 'ds-badge-info' : 'ds-badge-muted'}">${formatReadStatus(notification.status)}</span>
                 </div>
-                <p class="notification-item__message">${escapeHtml(notification.message)}</p>
                 <span class="notification-item__time">${escapeHtml(notification.createdAt)}</span>
             </div>
             <div class="notification-item__actions">
@@ -208,36 +135,114 @@ function bindNotificationItemActions() {
     });
 }
 
-function openNotification(notificationId) {
+async function openNotification(notificationId) {
     const notification = notifications.find(item => item.id === notificationId);
     if (!notification) return;
 
-    notification.status = 'READ';
-    
     if (notification.isBroadcast) {
         const readTimestamps = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
         if (!readTimestamps.includes(notification.originalTimestamp)) {
             readTimestamps.push(notification.originalTimestamp);
             localStorage.setItem('mmoReadNotifs', JSON.stringify(readTimestamps));
         }
-        if (typeof window.refreshHeaderNotifBadge === 'function') {
-            window.refreshHeaderNotifBadge();
+    } else {
+        try {
+            const response = await authFetch(`/v1/notifications/${notificationId}/read`, {
+                method: 'POST'
+            });
+            if (!response.ok) {
+                console.error('Không thể đánh dấu đã đọc thông báo này trên hệ thống.');
+            }
+        } catch (e) {
+            console.error('Lỗi khi gọi API đánh dấu đã đọc:', e);
         }
     }
-    
-    saveNotifications(notifications);
-    renderSummary();
 
-    if (notification.targetUrl && notification.targetUrl !== '#') {
-        window.location.href = notification.targetUrl;
+    notification.status = 'READ';
+    
+    if (typeof window.refreshHeaderNotifBadge === 'function') {
+        window.refreshHeaderNotifBadge();
+    }
+    
+    renderSummary();
+    showNotifDetailModal(notification);
+    renderNotifications();
+    showNotificationsMessage('Đã đọc thông báo chi tiết.', 'success');
+}
+
+function showNotifDetailModal(notification) {
+    const modal = document.getElementById('notifDetailModal');
+    if (!modal) return;
+
+    // Title & Message
+    document.getElementById('modalNotifTitle').textContent = notification.title;
+    document.getElementById('modalNotifContent').textContent = notification.message;
+    
+    // Author
+    const authorName = notification.isBroadcast ? 'Ban Quản Trị' : 'Hệ thống tự động';
+    document.getElementById('modalNotifAuthor').innerHTML = `<i class="fa fa-user-circle-o" aria-hidden="true" style="margin-right: 4px;"></i>${authorName}`;
+    
+    // Date
+    document.getElementById('modalNotifDate').innerHTML = `<i class="fa fa-calendar-o" aria-hidden="true" style="margin-right: 4px;"></i>${notification.createdAt}`;
+
+    // Type Badge
+    const badge = document.getElementById('modalNotifBadge');
+    if (badge) {
+        badge.className = 'ds-badge ' + getTypeBadgeClass(notification.type);
+        badge.textContent = formatNotificationType(notification.type);
+    }
+
+    // Status Badge
+    const statusBadge = document.getElementById('modalNotifStatusBadge');
+    if (statusBadge) {
+        if (notification.status === 'UNREAD') {
+            statusBadge.className = 'ds-badge ds-badge-info';
+            statusBadge.innerHTML = `<i class="fa fa-bell-o" aria-hidden="true" style="margin-right: 4px;"></i>Chưa đọc`;
+        } else {
+            statusBadge.className = 'ds-badge ds-badge-success';
+            statusBadge.innerHTML = `<i class="fa fa-check-circle" aria-hidden="true" style="margin-right: 4px;"></i>Đã đọc`;
+        }
+    }
+
+    // Type-specific background styling
+    const contentContainer = document.getElementById('modalNotifContentContainer');
+    if (contentContainer) {
+        const notifType = (notification.type || '').toLowerCase();
+        contentContainer.className = `modal-detail-container modal-detail-container--${notifType}`;
+    }
+
+    // Target URL Link CTA Button
+    const linkBtn = document.getElementById('modalNotifLinkBtn');
+    if (linkBtn) {
+        if (notification.targetUrl && notification.targetUrl !== '#' && notification.targetUrl !== '/account/notifications') {
+            linkBtn.href = notification.targetUrl;
+            linkBtn.style.display = 'inline-flex';
+        } else {
+            linkBtn.style.display = 'none';
+        }
+    }
+
+    modal.style.display = 'grid';
+}
+
+window.closeNotifModal = function() {
+    const modal = document.getElementById('notifDetailModal');
+    if (modal) modal.style.display = 'none';
+};
+
+async function markAllAsRead() {
+    try {
+        const response = await authFetch('/v1/notifications/mark-all-read', {
+            method: 'POST'
+        });
+        if (!response.ok) {
+            throw new Error('Không thể đánh dấu tất cả đã đọc trên hệ thống.');
+        }
+    } catch (error) {
+        showNotificationsMessage(error.message || 'Lỗi khi đánh dấu tất cả đã đọc.', 'danger');
         return;
     }
 
-    renderNotifications();
-    showNotificationsMessage('Thông báo này chưa có màn chi tiết riêng.', 'warning');
-}
-
-function markAllAsRead() {
     const readTimestamps = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
     notifications = notifications.map(item => {
         if (item.isBroadcast) {
@@ -249,7 +254,6 @@ function markAllAsRead() {
     });
     localStorage.setItem('mmoReadNotifs', JSON.stringify(readTimestamps));
 
-    saveNotifications(notifications);
     if (typeof window.refreshHeaderNotifBadge === 'function') {
         window.refreshHeaderNotifBadge();
     }

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Chi tiết Ticket Hỗ Trợ')}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('support-tickets')}"></aside>
+
+            <section class="ds-section">
+                <nav class="staff-breadcrumb">
+                    <a href="/staff/support-tickets">Ticket Hỗ Trợ</a>
+                    <span>/</span>
+                    <span id="breadcrumb-ticket-id">#ST-0</span>
+                </nav>
+
+                <div class="staff-page-header">
+                    <div>
+                        <h1 class="ds-page-title">Chi tiết &amp; Xử lý Ticket</h1>
+                        <p class="ds-page-subtitle" id="header-ticket-subtitle">Mã Ticket #ST-0</p>
+                    </div>
+                    <span class="ds-badge ds-badge-warning" id="header-status-badge">Mới</span>
+                </div>
+
+                <div class="staff-detail-grid">
+                    <div class="ds-stack-md">
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Thông tin yêu cầu</h2>
+                            </div>
+                            <dl class="staff-info-list">
+                                <div class="staff-info-row">
+                                    <dt>Mã Ticket</dt>
+                                    <dd id="detail-id">#ST-0</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Người gửi</dt>
+                                    <dd id="detail-sender">N/A</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Danh mục</dt>
+                                    <dd id="detail-category">N/A</dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Tiêu đề</dt>
+                                    <dd id="detail-title" style="font-weight: 600;"></dd>
+                                </div>
+                                <div class="staff-info-row">
+                                    <dt>Ngày tạo</dt>
+                                    <dd id="detail-date">N/A</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Nội dung chi tiết</h2>
+                            </div>
+                            <p class="ds-body" id="detail-description" style="white-space: pre-wrap; line-height: 1.6; color: #334155;"></p>
+                        </div>
+
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Lịch sử xử lý</h2>
+                            </div>
+                            <div class="staff-timeline" id="detail-timeline">
+                                <div class="staff-timeline__item">
+                                    <span class="staff-timeline__dot"></span>
+                                    <div class="staff-timeline__content">
+                                        <strong>Khởi tạo yêu cầu</strong>
+                                        <p class="ds-caption" id="detail-timeline-time">N/A</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ds-card staff-action-card">
+                        <div class="ds-card-header">
+                            <h2 class="ds-card-title">Phản hồi &amp; Cập nhật</h2>
+                        </div>
+                        <div class="ds-alert ds-alert-info">Phản hồi của bạn sẽ hiển thị trực tiếp cho người dùng tại trang Hỗ Trợ.</div>
+                        
+                        <div class="ds-form-field">
+                            <label class="ds-label" for="ticketStatus">Trạng thái xử lý</label>
+                            <select class="ds-input" id="ticketStatus">
+                                <option value="Open">Mới (Open)</option>
+                                <option value="Processing">Đang xử lý</option>
+                                <option value="Replied">Đã phản hồi (Replied)</option>
+                                <option value="Resolved">Đã giải quyết</option>
+                                <option value="Closed">Đã đóng</option>
+                            </select>
+                        </div>
+                        
+                        <div class="ds-form-field">
+                            <label class="ds-label" for="ticketResolution">Nội dung phản hồi trực tiếp</label>
+                            <textarea class="ds-textarea" id="ticketResolution" rows="6" placeholder="Nhập câu trả lời, hướng dẫn xử lý hoặc ghi chú cho người dùng..."></textarea>
+                        </div>
+                        
+                        <div class="ds-cluster">
+                            <button class="ds-btn ds-btn-primary" type="button" onclick="submitStaffAction()">Cập nhật &amp; Gửi phản hồi</button>
+                            <a class="ds-btn ds-btn-outline" href="/staff/support-tickets">Quay lại danh sách</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/auth.js}"></script>
+<script th:src="@{/js/staff-ui.js}"></script>
+<script th:src="@{/js/staff-support-ticket-detail.js}"></script>
+</body>
+</html>

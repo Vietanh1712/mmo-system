@@ -13,12 +13,184 @@ function initializeOrderDetailPage() {
 
 function bindOrderDetailEvents() {
     document.getElementById('orderViewProductButton').addEventListener('click', () => {
-        showOrderDetailMessage('Màn chi tiết sản phẩm sẽ được triển khai ở luồng mua sắm.', 'warning');
+        if (currentOrder && currentOrder.productId) {
+            window.location.href = `/products/${currentOrder.productId}`;
+        } else {
+            window.location.href = '/products/1';
+        }
     });
 
     document.getElementById('orderComplaintButton').addEventListener('click', () => {
-        showOrderDetailMessage('Luồng khiếu nại sẽ được triển khai ở bước Complaint.', 'warning');
+        openComplaintModal();
     });
+
+    const complaintForm = document.getElementById('complaintForm');
+    if (complaintForm) {
+        complaintForm.addEventListener('submit', handleComplaintSubmit);
+    }
+}
+
+function openComplaintModal() {
+    if (!currentOrder) return;
+
+    // Reset form fields
+    document.getElementById('complaintDescription').value = '';
+    document.getElementById('complaintEvidence').value = '';
+    const fileInput = document.getElementById('complaintEvidenceFile');
+    if (fileInput) fileInput.value = '';
+    const statusText = document.getElementById('uploadStatusText');
+    if (statusText) statusText.textContent = '';
+
+    document.getElementById('complaintModal').classList.add('active');
+}
+
+window.closeComplaintModal = function () {
+    document.getElementById('complaintModal').classList.remove('active');
+}
+
+async function handleComplaintSubmit(e) {
+    e.preventDefault();
+    if (!currentOrder) return;
+
+    const token = sessionStorage.getItem('accessToken');
+    if (!token) {
+        showOrderDetailMessage('Vui lòng đăng nhập trước khi gửi khiếu nại.', 'danger');
+        closeComplaintModal();
+        return;
+    }
+
+    const description = document.getElementById('complaintDescription').value.trim();
+    let evidence = '';
+
+    if (!description) {
+        showWarningToast('Vui lòng nhập chi tiết lý do khiếu nại.');
+        return;
+    }
+
+    const fileInput = document.getElementById('complaintEvidenceFile');
+    const statusText = document.getElementById('uploadStatusText');
+    if (fileInput && fileInput.files.length > 0) {
+        if (statusText) statusText.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tải lên ảnh/video bằng chứng...';
+        const file = fileInput.files[0];
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const uploadRes = await fetch('/api/upload', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+            const uploadData = await uploadRes.json();
+            if (!uploadRes.ok) {
+                throw new Error(uploadData.message || 'Lỗi tải lên ảnh bằng chứng.');
+            }
+            evidence = uploadData.url;
+            if (statusText) statusText.innerHTML = '<span style="color: #16a34a;"><i class="fa fa-check-circle"></i> Đã tải lên bằng chứng thành công.</span>';
+        } catch (uploadErr) {
+            showErrorToast(uploadErr.message || 'Không thể tải lên file bằng chứng.');
+            if (statusText) statusText.innerHTML = '<span style="color: #ef4444;"><i class="fa fa-times-circle"></i> Lỗi tải lên.</span>';
+            return;
+        }
+    }
+
+    // Default mock fallback transactionId to 1 if not created via real checkout
+    const transactionId = currentOrder.transactionId || 1;
+
+    const btnSubmit = e.target.querySelector('button[type="submit"]');
+    const oldBtnHtml = btnSubmit.innerHTML;
+    btnSubmit.setAttribute('disabled', 'true');
+    btnSubmit.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang gửi...';
+
+    try {
+        const response = await fetch('/api/complaints', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                transactionId: Number(transactionId),
+                description: description,
+                evidence: evidence || null
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Lỗi gửi khiếu nại từ hệ thống.');
+        }
+
+        // 1. Update order status in frontend local mock orders store
+        currentOrder.status = 'DISPUTED';
+        const orders = readOrders();
+        const foundIdx = orders.findIndex(o => o.orderCode === currentOrder.orderCode);
+        if (foundIdx !== -1) {
+            orders[foundIdx].status = 'DISPUTED';
+            saveOrders(orders);
+        }
+
+        // 2. Synchronize to Global Complaints Mock for Staff Console support
+        syncToStaffComplaints(data, description, evidence);
+
+        // 3. Close modal and re-render UI
+        closeComplaintModal();
+        renderOrderDetail(currentOrder);
+        showOrderDetailMessage('Đã gửi khiếu nại đơn hàng thành công. Tiền thanh toán đã được đóng băng.', 'success');
+        showSuccessToast('Đã gửi khiếu nại đơn hàng thành công. Tiền thanh toán đã được đóng băng.');
+
+    } catch (err) {
+        showErrorToast(err.message || 'Lỗi khi gửi khiếu nại.');
+    } finally {
+        btnSubmit.removeAttribute('disabled');
+        btnSubmit.innerHTML = oldBtnHtml;
+    }
+}
+
+function saveOrders(orders) {
+    const key = getUserSpecificKey(ACCOUNT_ORDERS_MOCK_KEY);
+    const serialized = JSON.stringify(orders);
+    // Ghi vào cả hai storage để đồng bộ qua tab
+    localStorage.setItem(key, serialized);
+    sessionStorage.setItem(key, serialized);
+}
+
+function getCurrentUser() {
+    try {
+        const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
+        return userStr ? JSON.parse(userStr) : null;
+    } catch {
+        return null;
+    }
+}
+
+function syncToStaffComplaints(backendData, description, evidence) {
+    const key = 'mmoMarketComplaintsMockGlobal';
+    let list = [];
+    try {
+        list = JSON.parse(sessionStorage.getItem(key)) || [];
+    } catch (e) { }
+
+    const currentUser = getCurrentUser() || { fullName: 'Nguyễn An', email: 'buyer@mmo.com' };
+
+    const newMock = {
+        id: backendData.id ? `CMP-${backendData.id}` : `CMP-${Math.floor(1000 + Math.random() * 9000)}`,
+        senderName: currentUser.fullName || currentUser.email.split('@')[0],
+        senderEmail: currentUser.email,
+        target: `${currentOrder.sellerName} / ${currentOrder.productName}`,
+        category: 'Sản phẩm',
+        amount: currentOrder.amount,
+        status: 'New',
+        createdAt: new Date().toLocaleString('vi-VN'),
+        evidence: evidence || 'Không có',
+        detail: description
+    };
+
+    list.unshift(newMock);
+    sessionStorage.setItem(key, JSON.stringify(list));
 }
 
 async function loadOrderDetailPage() {
@@ -75,9 +247,12 @@ function getUserSpecificKey(baseKey) {
 function readOrders() {
     const key = getUserSpecificKey(ACCOUNT_ORDERS_MOCK_KEY);
     try {
-        const saved = sessionStorage.getItem(key);
+        // Ưu tiên đọc localStorage (persist qua tab/session), fallback sessionStorage
+        const saved = localStorage.getItem(key) || sessionStorage.getItem(key);
         if (saved !== null) {
-            return JSON.parse(saved);
+            const parsed = JSON.parse(saved);
+            sessionStorage.setItem(key, saved); // sync
+            return parsed;
         }
     } catch {
         // fallback below
@@ -100,6 +275,7 @@ function readOrders() {
     }
 
     const seeded = isDemo ? createSeedOrders() : [];
+    localStorage.setItem(key, JSON.stringify(seeded));
     sessionStorage.setItem(key, JSON.stringify(seeded));
     return seeded;
 }
@@ -159,6 +335,11 @@ function renderOrderDetail(order) {
     document.getElementById('orderPaymentAmount').textContent = formatMoney(order.amount);
     document.getElementById('orderActionHint').textContent = getActionHint(order);
 
+    const viewProductBtn = document.getElementById('orderViewProductButton');
+    if (viewProductBtn) {
+        viewProductBtn.innerHTML = '<i class="fa fa-eye" aria-hidden="true"></i> Xem sản phẩm';
+    }
+
     const feedbackBtn = document.getElementById('orderFeedbackButton');
     if (feedbackBtn) {
         if (order.isReviewed) {
@@ -174,9 +355,29 @@ function renderOrderDetail(order) {
             feedbackBtn.style.opacity = '1';
             feedbackBtn.className = 'ds-btn ds-btn-primary';
             feedbackBtn.href = `/account/orders/${order.orderCode}/feedback`;
-            feedbackBtn.innerHTML = 'Đánh giá sản phẩm';
+            feedbackBtn.innerHTML = '<i class="fa fa-star" aria-hidden="true"></i> Đánh giá sản phẩm';
         } else {
             feedbackBtn.style.display = 'none';
+        }
+    }
+
+    const complaintBtn = document.getElementById('orderComplaintButton');
+    if (complaintBtn) {
+        if (order.status === 'DISPUTED') {
+            complaintBtn.setAttribute('disabled', 'true');
+            complaintBtn.style.opacity = '0.6';
+            complaintBtn.style.pointerEvents = 'none';
+            complaintBtn.className = 'ds-btn ds-btn-danger';
+            complaintBtn.innerHTML = '<i class="fa fa-shield"></i> Đang tranh chấp';
+        } else if (['CANCELLED', 'REFUNDED'].includes(order.status)) {
+            complaintBtn.style.display = 'none';
+        } else {
+            complaintBtn.removeAttribute('disabled');
+            complaintBtn.style.opacity = '1';
+            complaintBtn.style.pointerEvents = 'auto';
+            complaintBtn.style.display = 'inline-flex';
+            complaintBtn.className = 'ds-btn ds-btn-danger';
+            complaintBtn.innerHTML = '<i class="fa fa-gavel"></i> Khiếu nại';
         }
     }
 
@@ -217,22 +418,22 @@ function createAccessInfo(order) {
     if (order.status === 'PENDING') return 'Đơn hàng đang chờ xử lý, thông tin nhận hàng chưa sẵn sàng.';
     if (order.status === 'CANCELLED') return 'Đơn hàng đã hủy, không có thông tin nhận hàng.';
     if (order.status === 'DISPUTED') return 'Thông tin nhận hàng đang được giữ để xử lý tranh chấp.';
-    
+
     // Check if credentials exist in the order object
     let creds = order.credentials;
-    
+
     // If not in order object but name indicates account, auto-generate mock credentials dynamically so that all existing account orders show them!
     if (!creds) {
         const lowerName = order.productName.toLowerCase();
-        const isAccount = lowerName.includes('tài khoản') || 
-                          lowerName.includes('premium') || 
-                          lowerName.includes('spotify') || 
-                          lowerName.includes('netflix') || 
-                          lowerName.includes('canva') || 
-                          lowerName.includes('chatgpt') || 
-                          lowerName.includes('gmail') || 
-                          lowerName.includes('vpn') || 
-                          lowerName.includes('key');
+        const isAccount = lowerName.includes('tài khoản') ||
+            lowerName.includes('premium') ||
+            lowerName.includes('spotify') ||
+            lowerName.includes('netflix') ||
+            lowerName.includes('canva') ||
+            lowerName.includes('chatgpt') ||
+            lowerName.includes('gmail') ||
+            lowerName.includes('vpn') ||
+            lowerName.includes('key');
         if (isAccount) {
             // Generate deterministic mock credentials based on orderCode
             const hash = order.orderCode.replace(/[^0-9]/g, '') || '1234';
@@ -250,7 +451,7 @@ function createAccessInfo(order) {
             }
         }
     }
-    
+
     if (creds) {
         const isKeyOnly = creds.password === '(Product Key)';
         return `
@@ -283,7 +484,7 @@ function createAccessInfo(order) {
             </div>
         `;
     }
-    
+
     return 'Thông tin nhận hàng sẽ được hiển thị tại đây khi sản phẩm được giao thành công.';
 }
 
@@ -365,7 +566,7 @@ function showOrderDetailMessage(message, type) {
     messageElement.classList.add(`ds-alert-${type}`);
 }
 
-window.copyToClipboard = async function(text, label) {
+window.copyToClipboard = async function (text, label) {
     try {
         await navigator.clipboard.writeText(text);
         showOrderDetailMessage(`Đã copy ${label} vào bộ nhớ tạm thành công.`, 'success');
@@ -373,3 +574,30 @@ window.copyToClipboard = async function(text, label) {
         showOrderDetailMessage('Không thể copy tự động. Vui lòng chọn và sao chép thủ công.', 'warning');
     }
 };
+
+function showSuccessToast(message) {
+    let container = document.querySelector('.ds-toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'ds-toast-container';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = 'ds-toast ds-toast-success';
+    toast.innerHTML = `
+        <div class="ds-toast-icon"><i class="fa fa-check-circle"></i></div>
+        <div class="ds-toast-content">
+            <h4 class="ds-toast-title">Thành công</h4>
+            <p class="ds-toast-message">${message}</p>
+        </div>
+        <button class="ds-toast-close" onclick="this.parentElement.remove()">&times;</button>
+    `;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.5s ease';
+        setTimeout(() => {
+            toast.remove();
+        }, 500);
+    }, 3200);
+}

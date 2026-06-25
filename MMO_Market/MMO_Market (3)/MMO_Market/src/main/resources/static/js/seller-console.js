@@ -251,51 +251,126 @@ async function initInventory() {
         if (!res.ok) throw new Error('Không thể tải danh sách kho hàng.');
         const products = await res.json();
 
-        if (products.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Bạn chưa đăng sản phẩm nào.</td></tr>';
-            return;
+        let activeTab = 'all';
+
+        function renderProducts() {
+            // Apply filtering criteria
+            let filteredProducts = products;
+            if (activeTab === 'low-stock') {
+                filteredProducts = products.filter(p => p.totalStock <= 5);
+            } else if (activeTab === 'inactive') {
+                filteredProducts = products.filter(p => p.status !== 'Active');
+            }
+
+            const emptyState = document.getElementById('emptyState');
+
+            if (filteredProducts.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 40px; color: var(--seller-muted);"><i class="fa fa-inbox" style="font-size: 24px; display: block; margin-bottom: 8px;"></i> Không tìm thấy sản phẩm nào.</td></tr>`;
+                if (emptyState) emptyState.style.display = 'none';
+            } else {
+                if (emptyState) emptyState.style.display = 'none';
+                
+                tbody.innerHTML = filteredProducts.map(p => {
+                    const statusClass = p.status === 'Active' ? 'ok' : 'locked';
+                    
+                    // Map product type to icon and Vietnamese label
+                    let typeLabel = 'Tài khoản';
+                    let iconClass = 'fa-user-circle';
+                    let typeBg = '#f0f7ff';
+                    let typeColor = '#1e40af';
+                    
+                    if (p.productType === 'KEY') {
+                        typeLabel = 'Mã Key';
+                        iconClass = 'fa-key';
+                        typeBg = '#fef3c7';
+                        typeColor = '#92400e';
+                    } else if (p.productType === 'GAME_CARD') {
+                        typeLabel = 'Thẻ Game';
+                        iconClass = 'fa-credit-card';
+                        typeBg = '#fee2e2';
+                        typeColor = '#991b1b';
+                    }
+
+                    // Low stock highlight (stock <= 5)
+                    const stockDisplay = p.totalStock <= 5 
+                        ? `<span style="color: #f59e0b; font-weight: 600;">${p.totalStock}</span>`
+                        : p.totalStock;
+
+                    let statusBadgeHtml = `<span class="badge ${statusClass}">${p.status}</span>`;
+                    if (p.totalStock === 0 && p.status === 'Active') {
+                        statusBadgeHtml = `<span class="badge locked"><i class="fa fa-lock"></i> Hết hàng</span>`;
+                    } else if (p.status !== 'Active') {
+                        statusBadgeHtml = `<span class="badge locked"><i class="fa fa-pause"></i> Inactive</span>`;
+                    }
+
+                    // Fallback product image
+                    const imgUrl = p.image || 'https://via.placeholder.com/50x50/f1f5f9/94a3b8?text=MMO';
+
+                    return `
+                        <tr>
+                            <td>
+                                <img src="${imgUrl}" class="product-image" alt="${p.name}">
+                            </td>
+                            <td>
+                                <div class="product-cell">
+                                    <div>
+                                        <strong>${p.name}</strong>
+                                        <div class="muted">ID #${p.id}</div>
+                                        <span class="asset-badge"><i class="fa fa-database"></i> ${p.unusedAssetsCount || 0} tài sản</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>${p.categoryName}</td>
+                            <td>
+                                <span style="background: ${typeBg}; color: ${typeColor}; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">
+                                    <i class="fa ${iconClass}"></i> ${typeLabel}
+                                </span>
+                            </td>
+                            <td class="text-right">${p.variantCount}</td>
+                            <td class="text-right">${stockDisplay}</td>
+                            <td>${statusBadgeHtml}</td>
+                            <td class="text-right">
+                                <div class="row-actions" style="justify-content: flex-end; gap: 8px;">
+                                    <button class="view-assets-btn" onclick="viewAssets(${p.id})"><i class="fa fa-eye"></i> Xem</button>
+                                    <a class="icon-button" href="/seller/products/edit?id=${p.id}" title="Sửa sản phẩm"><i class="fa fa-pencil"></i></a>
+                                    <button class="icon-button danger btn-delete-product" data-id="${p.id}" title="Xóa sản phẩm"><i class="fa fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                // Re-attach delete handlers
+                tbody.querySelectorAll('.btn-delete-product').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const id = btn.dataset.id;
+                        if (!confirm('Bạn có chắc chắn muốn xóa sản phẩm này cùng toàn bộ biến thể của nó không?')) return;
+                        try {
+                            const delRes = await sellerFetch(`/products/${id}`, { method: 'DELETE' });
+                            if (!delRes.ok) throw new Error('Không thể xóa sản phẩm.');
+                            showToast('Đã xóa sản phẩm thành công!');
+                            initInventory(); // Reload from server
+                        } catch (err) {
+                            showToast(err.message, 'error');
+                        }
+                    });
+                });
+            }
         }
 
-        tbody.innerHTML = products.map(p => {
-            const statusClass = p.status === 'Active' ? 'ok' : 'locked';
-            return `
-                <tr>
-                    <td>
-                        <div class="product-cell">
-                            <div class="product-thumb"><i class="fa fa-shopping-bag"></i></div>
-                            <div>
-                                <strong>${p.name}</strong>
-                                <div class="muted">ID #${p.id}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td>${p.categoryName}</td>
-                    <td>${p.variantCount}</td>
-                    <td class="text-right">${p.totalStock}</td>
-                    <td><span class="badge ${statusClass}">${p.status}</span></td>
-                    <td class="text-right">
-                        <div class="row-actions">
-                            <a class="icon-button" href="/seller/products/edit?id=${p.id}" title="Sửa sản phẩm"><i class="fa fa-pencil"></i></a>
-                            <button class="icon-button danger btn-delete-product" data-id="${p.id}" title="Xóa sản phẩm"><i class="fa fa-trash"></i></button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+        // Initialize display
+        renderProducts();
 
-        // Attach delete handlers
-        tbody.querySelectorAll('.btn-delete-product').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const id = btn.dataset.id;
-                if (!confirm('Bạn có chắc chắn muốn xóa sản phẩm này cùng toàn bộ biến thể của nó không?')) return;
-                try {
-                    const delRes = await sellerFetch(`/products/${id}`, { method: 'DELETE' });
-                    if (!delRes.ok) throw new Error('Không thể xóa sản phẩm.');
-                    showToast('Đã xóa sản phẩm thành công!');
-                    initInventory(); // Reload
-                } catch (err) {
-                    showToast(err.message, 'error');
-                }
+        // Bind filter tabs click handlers
+        document.querySelectorAll('.inventory-tab').forEach(tab => {
+            const newTab = tab.cloneNode(true);
+            tab.parentNode.replaceChild(newTab, tab);
+
+            newTab.addEventListener('click', function() {
+                document.querySelectorAll('.inventory-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                activeTab = this.dataset.tab;
+                renderProducts();
             });
         });
 
@@ -303,6 +378,117 @@ async function initInventory() {
         showToast(err.message, 'error');
     }
 }
+
+async function viewAssets(productId) {
+    const modal = document.getElementById('assetModal');
+    const body = document.getElementById('assetModalBody');
+    if (!modal || !body) return;
+
+    body.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="fa fa-spinner fa-spin" style="font-size: 24px; color: var(--seller-primary-strong);"></i> Đang tải...</div>';
+    modal.classList.add('active');
+
+    try {
+        // Fetch product info to get its variants
+        const prodRes = await sellerFetch(`/products/${productId}`);
+        if (!prodRes.ok) throw new Error('Không thể tải thông tin sản phẩm.');
+        const product = await prodRes.json();
+
+        const variants = product.variants || [];
+        if (variants.length === 0) {
+            body.innerHTML = '<div class="empty-state"><i class="fa fa-inbox"></i><p>Sản phẩm này chưa có biến thể nào.</p></div>';
+            return;
+        }
+
+        // Fetch assets for all variants in parallel
+        const assetsPromises = variants.map(async (v) => {
+            try {
+                const assetsRes = await sellerFetch(`/variants/${v.id}/assets`);
+                if (assetsRes.ok) {
+                    const assets = await assetsRes.json();
+                    return { variantName: v.variantName, assets };
+                }
+            } catch (err) {
+                console.error(err);
+            }
+            return { variantName: v.variantName, assets: [] };
+        });
+
+        const variantsWithAssets = await Promise.all(assetsPromises);
+        const totalAssetsCount = variantsWithAssets.reduce((sum, item) => sum + item.assets.length, 0);
+
+        if (totalAssetsCount === 0) {
+            body.innerHTML = '<div class="empty-state"><i class="fa fa-inbox"></i><p>Không có tài sản nào trong kho cho sản phẩm này.</p></div>';
+            return;
+        }
+
+        const pType = product.productType || 'ACCOUNT';
+        let html = '';
+
+        for (const item of variantsWithAssets) {
+            if (item.assets.length === 0) continue;
+
+            html += `<h4 style="margin: 16px 0 8px 0; font-size: 14px; font-weight: 600; color: var(--seller-ink);">Biến thể: ${item.variantName}</h4>`;
+            html += '<table class="asset-list-table"><thead><tr>';
+
+            if (pType === 'ACCOUNT') {
+                html += '<th style="width: 40px;">STT</th><th>Tài khoản</th><th>Mật khẩu</th><th>Ghi chú</th><th>Trạng thái</th></tr></thead><tbody>';
+                item.assets.forEach((asset, index) => {
+                    html += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td><code>${asset.accountUsername || ''}</code></td>
+                            <td><code>••••••</code> <small>(ẩn)</small></td>
+                            <td>${asset.notes || ''}</td>
+                            <td><span class="asset-status ${asset.isUsed ? 'sold' : ''}">${asset.isUsed ? 'Đã bán' : 'Còn hàng'}</span></td>
+                        </tr>
+                    `;
+                });
+            } else if (pType === 'KEY') {
+                html += '<th style="width: 40px;">STT</th><th>Mã Key</th><th>Ghi chú</th><th>Trạng thái</th></tr></thead><tbody>';
+                item.assets.forEach((asset, index) => {
+                    html += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td><code>${asset.keyCode || ''}</code></td>
+                            <td>${asset.notes || ''}</td>
+                            <td><span class="asset-status ${asset.isUsed ? 'sold' : ''}">${asset.isUsed ? 'Đã bán' : 'Còn hàng'}</span></td>
+                        </tr>
+                    `;
+                });
+            } else if (pType === 'GAME_CARD') {
+                html += '<th style="width: 40px;">STT</th><th>Mã Thẻ</th><th>PIN</th><th>Ghi chú</th><th>Trạng thái</th></tr></thead><tbody>';
+                item.assets.forEach((asset, index) => {
+                    html += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td><code>${asset.cardCode || 'N/A'}</code></td>
+                            <td><code>••••</code></td>
+                            <td>${asset.notes || ''}</td>
+                            <td><span class="asset-status ${asset.isUsed ? 'sold' : ''}">${asset.isUsed ? 'Đã bán' : 'Còn hàng'}</span></td>
+                        </tr>
+                    `;
+                });
+            }
+
+            html += '</tbody></table>';
+        }
+
+        body.innerHTML = html;
+
+    } catch (err) {
+        body.innerHTML = `<div class="empty-state" style="color:var(--seller-danger);"><i class="fa fa-exclamation-triangle"></i><p>Lỗi: ${err.message}</p></div>`;
+    }
+}
+
+function closeAssetModal() {
+    const modal = document.getElementById('assetModal');
+    if (modal) modal.classList.remove('active');
+}
+
+// Expose functions globally for onclick attributes in dynamically rendered elements
+window.viewAssets = viewAssets;
+window.closeAssetModal = closeAssetModal;
+
 
 // ==============================================================================
 // 5. PRODUCT ADD
@@ -660,36 +846,173 @@ async function initWithdrawals() {
             }).join('');
         }
 
+        // Load withdrawal configuration dynamically
+        let minLimit = 50000;
+        let maxLimit = 50000000;
+        let feePercent = 1.5;
+        let minFee = 10000;
+        let require2FA = true;
+
+        try {
+            const configRes = await sellerFetch('/withdrawals/config');
+            if (configRes.ok) {
+                const configData = await configRes.json();
+                minLimit = configData.minWithdrawalLimit || minLimit;
+                maxLimit = configData.maxWithdrawalLimit || maxLimit;
+                feePercent = configData.withdrawalFeePercent || feePercent;
+                minFee = configData.minWithdrawFee || minFee;
+                require2FA = configData.requireWithdraw2FA !== undefined ? configData.requireWithdraw2FA : require2FA;
+            }
+        } catch (e) {
+            console.error("Failed to load withdrawal config", e);
+        }
+
+        // Update subtitle and input hint dynamically
+        const subtitleEl = document.querySelector('.seller-card__subtitle');
+        if (subtitleEl) {
+            subtitleEl.textContent = `Rút tiền về tài khoản ngân hàng — tối thiểu ${formatVND(minLimit)}`;
+        }
+        
+        const hintEl = document.querySelector('.profile-edit-form__hint');
+        if (hintEl) {
+            hintEl.textContent = `Hạn mức: ${formatVND(minLimit)} - ${formatVND(maxLimit)} · Phí: ${feePercent}% (tối thiểu ${formatVND(minFee)})`;
+        }
+
+        const inputEl = document.getElementById('withdrawAmount');
+        if (inputEl) {
+            inputEl.min = minLimit;
+            inputEl.value = minLimit;
+
+            // Live fee feedback
+            let feeInfoEl = document.getElementById('withdrawalFeeInfo');
+            if (!feeInfoEl) {
+                feeInfoEl = document.createElement('div');
+                feeInfoEl.id = 'withdrawalFeeInfo';
+                feeInfoEl.style.marginTop = '12px';
+                feeInfoEl.style.fontSize = '14px';
+                feeInfoEl.style.color = '#475569';
+                feeInfoEl.style.background = '#f8fafc';
+                feeInfoEl.style.padding = '12px';
+                feeInfoEl.style.borderRadius = '8px';
+                feeInfoEl.style.border = '1px solid #e2e8f0';
+                inputEl.parentNode.appendChild(feeInfoEl);
+            }
+
+            const updateFeeDisplay = () => {
+                const val = parseInt(inputEl.value) || 0;
+                if (val <= 0) {
+                    feeInfoEl.innerHTML = '';
+                    return;
+                }
+                let fee = Math.floor(val * (feePercent / 100));
+                if (fee < minFee) {
+                    fee = minFee;
+                }
+                const total = val + fee;
+                feeInfoEl.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                        <span>Số tiền yêu cầu rút:</span>
+                        <strong>${formatVND(val)}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                        <span>Phí dịch vụ rút tiền:</span>
+                        <span style="color:#ef4444; font-weight:500;">${formatVND(fee)}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; border-top:1px dashed #cbd5e1; padding-top:6px; font-weight:600; color: #1e293b;">
+                        <span>Tổng số tiền trừ vào ví:</span>
+                        <span style="color:#2563eb;">${formatVND(total)}</span>
+                    </div>
+                `;
+            };
+
+            inputEl.addEventListener('input', updateFeeDisplay);
+            updateFeeDisplay(); // Initial trigger
+        }
+
         // Handle Request Withdrawal Button
         const withdrawBtn = document.querySelector('.profile-button--primary');
         if (withdrawBtn) {
             withdrawBtn.addEventListener('click', async () => {
-                const amountText = prompt('Nhập số tiền muốn rút (Tối thiểu 50,000 VNĐ):');
-                if (amountText === null) return;
+                let amount = minLimit;
+                if (inputEl) {
+                    amount = parseInt(inputEl.value) || 0;
+                } else {
+                    const amountText = prompt(`Nhập số tiền muốn rút (Hạn mức: ${formatVND(minLimit)} - ${formatVND(maxLimit)}):`);
+                    if (amountText === null) return;
+                    amount = parseInt(amountText.replace(/,/g, '')) || 0;
+                }
 
-                const amount = parseInt(amountText.replace(/,/g, ''));
-                if (isNaN(amount) || amount < 50000) {
-                    alert('Số tiền rút không hợp lệ hoặc nhỏ hơn 50,000 VNĐ.');
+                if (isNaN(amount) || amount < minLimit) {
+                    showToast(`Số tiền rút tối thiểu là ${formatVND(minLimit)}.`, 'error');
+                    return;
+                }
+                if (amount > maxLimit) {
+                    showToast(`Số tiền rút tối đa là ${formatVND(maxLimit)}.`, 'error');
                     return;
                 }
 
-                if (dashData.balanceVnd < amount) {
-                    alert('Số dư ví khả dụng của bạn không đủ.');
+                let fee = Math.floor(amount * (feePercent / 100));
+                if (fee < minFee) {
+                    fee = minFee;
+                }
+                const totalDeducted = amount + fee;
+
+                if (dashData.balanceVnd < totalDeducted) {
+                    showToast(`Số dư ví khả dụng không đủ (cần ${formatVND(totalDeducted)} bao gồm cả phí dịch vụ).`, 'error');
                     return;
                 }
 
-                try {
-                    const postRes = await sellerFetch('/withdrawals', {
-                        method: 'POST',
-                        body: JSON.stringify({ amountVnd: amount })
-                    });
-                    const postData = await postRes.json();
-                    if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
+                if (require2FA) {
+                    const confirmOtpSend = confirm(`Yêu cầu rút tiền này bắt buộc xác thực 2FA qua email. Bấm OK để gửi mã OTP về email: ${dashData.email}.`);
+                    if (!confirmOtpSend) return;
 
-                    showToast(postData.message || 'Đã tạo yêu cầu rút tiền!');
-                    window.location.reload(); // Refresh screen
-                } catch (err) {
-                    showToast(err.message, 'error');
+                    try {
+                        // Request OTP
+                        const otpRes = await sellerFetch('/withdrawals/send-otp', { method: 'POST' });
+                        const otpData = await otpRes.json();
+                        if (!otpRes.ok) throw new Error(otpData.message || 'Không thể gửi mã OTP.');
+
+                        showToast(otpData.message || 'Mã OTP đã được gửi về email của bạn.');
+
+                        const otpText = prompt('Vui lòng nhập mã OTP 6 chữ số được gửi tới email của bạn để hoàn tất:');
+                        if (otpText === null) return;
+                        const otp = otpText.trim();
+                        if (!otp) {
+                            showToast('Bạn chưa nhập mã OTP.', 'error');
+                            return;
+                        }
+
+                        // Submit with OTP
+                        const postRes = await sellerFetch('/withdrawals', {
+                            method: 'POST',
+                            body: JSON.stringify({ amountVnd: amount, otp: otp })
+                        });
+                        const postData = await postRes.json();
+                        if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
+
+                        showToast(postData.message || 'Đã tạo yêu cầu rút tiền thành công!');
+                        setTimeout(() => window.location.reload(), 1500);
+
+                    } catch (err) {
+                        showToast(err.message, 'error');
+                    }
+                } else {
+                    const confirmNo2fa = confirm(`Xác nhận tạo yêu cầu rút tiền ${formatVND(amount)}? Phí rút là ${formatVND(fee)}. Tổng số tiền trừ khỏi ví: ${formatVND(totalDeducted)}.`);
+                    if (!confirmNo2fa) return;
+
+                    try {
+                        const postRes = await sellerFetch('/withdrawals', {
+                            method: 'POST',
+                            body: JSON.stringify({ amountVnd: amount })
+                        });
+                        const postData = await postRes.json();
+                        if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
+
+                        showToast(postData.message || 'Đã tạo yêu cầu rút tiền thành công!');
+                        setTimeout(() => window.location.reload(), 1500);
+                    } catch (err) {
+                        showToast(err.message, 'error');
+                    }
                 }
             });
         }
@@ -854,22 +1177,105 @@ async function initReviews() {
         if (fiveEl) fiveEl.textContent = fiveStars;
         if (lowEl) lowEl.textContent = lowStars;
 
-        tbody.innerHTML = reviews.map(r => {
-            let stars = '';
-            for (let i = 1; i <= 5; i++) {
-                stars += i <= r.rating ? '<i class="fa fa-star"></i>' : '<i class="fa fa-star-o"></i>';
+        const ratingFilter = document.getElementById('ratingFilter');
+        const cardTotal = document.getElementById('cardTotalReviews');
+        const cardFive = document.getElementById('cardFiveStars');
+        const cardLow = document.getElementById('cardLowStars');
+
+        function updateActiveStatCard(activeId) {
+            [cardTotal, cardFive, cardLow].forEach(card => {
+                if (card) card.classList.remove('active');
+            });
+            const activeCard = document.getElementById(activeId);
+            if (activeCard) activeCard.classList.add('active');
+        }
+
+        function renderReviewsList(filteredList) {
+            if (filteredList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 30px; color: var(--seller-muted);">Không có đánh giá nào phù hợp bộ lọc.</td></tr>';
+                return;
             }
-            return `
-                <tr>
-                    <td>#RV-${r.id}</td>
-                    <td>${r.productName}</td>
-                    <td>${r.customerName}</td>
-                    <td><span class="review-stars">${stars}</span></td>
-                    <td>${r.comment ? (r.comment.length > 50 ? r.comment.substring(0, 50) + '...' : r.comment) : '<span class="muted">Không có bình luận</span>'}</td>
-                    <td>${r.createdAt.substring(0, 10)}</td>
-                </tr>
-            `;
-        }).join('');
+
+            tbody.innerHTML = filteredList.map(r => {
+                let stars = '';
+                for (let i = 1; i <= 5; i++) {
+                    stars += i <= r.rating ? '<i class="fa fa-star"></i>' : '<i class="fa fa-star-o"></i>';
+                }
+                return `
+                    <tr>
+                        <td>#RV-${r.id}</td>
+                        <td>${r.productName}</td>
+                        <td>${r.customerName}</td>
+                        <td><span class="review-stars">${stars}</span></td>
+                        <td>${r.comment ? (r.comment.length > 50 ? r.comment.substring(0, 50) + '...' : r.comment) : '<span class="muted">Không có bình luận</span>'}</td>
+                        <td>${r.createdAt.substring(0, 10)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function applyFilter(filterVal) {
+            let filtered = reviews;
+            if (filterVal === '5') {
+                filtered = reviews.filter(r => r.rating === 5);
+            } else if (filterVal === '4') {
+                filtered = reviews.filter(r => r.rating === 4);
+            } else if (filterVal === '3') {
+                filtered = reviews.filter(r => r.rating === 3);
+            } else if (filterVal === '2') {
+                filtered = reviews.filter(r => r.rating === 2);
+            } else if (filterVal === '1') {
+                filtered = reviews.filter(r => r.rating === 1);
+            } else if (filterVal === 'low') {
+                filtered = reviews.filter(r => r.rating <= 2);
+            }
+            renderReviewsList(filtered);
+        }
+
+        // Initialize display
+        renderReviewsList(reviews);
+
+        // Bind filter select change listener
+        if (ratingFilter) {
+            ratingFilter.addEventListener('change', function() {
+                const val = this.value;
+                applyFilter(val);
+                if (val === 'all') {
+                    updateActiveStatCard('cardTotalReviews');
+                } else if (val === '5') {
+                    updateActiveStatCard('cardFiveStars');
+                } else if (val === 'low') {
+                    updateActiveStatCard('cardLowStars');
+                } else {
+                    updateActiveStatCard('');
+                }
+            });
+        }
+
+        // Bind stat cards click events to filter
+        if (cardTotal) {
+            cardTotal.addEventListener('click', () => {
+                if (ratingFilter) ratingFilter.value = 'all';
+                updateActiveStatCard('cardTotalReviews');
+                applyFilter('all');
+            });
+        }
+
+        if (cardFive) {
+            cardFive.addEventListener('click', () => {
+                if (ratingFilter) ratingFilter.value = '5';
+                updateActiveStatCard('cardFiveStars');
+                applyFilter('5');
+            });
+        }
+
+        if (cardLow) {
+            cardLow.addEventListener('click', () => {
+                if (ratingFilter) ratingFilter.value = 'low';
+                updateActiveStatCard('cardLowStars');
+                applyFilter('low');
+            });
+        }
 
     } catch (err) {
         showToast(err.message, 'error');

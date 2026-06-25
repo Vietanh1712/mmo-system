@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thêm biến thể & tài sản số - MMO Market</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/home.css}">
     <link rel="stylesheet" th:href="@{/css/profile.css}">
@@ -54,7 +54,7 @@
             border-radius: 4px;
             cursor: pointer;
             transition: all 0.2s;
-            font-family: "Inter", sans-serif;
+            font-family: "Roboto", sans-serif;
         }
 
         .asset-row-actions button:hover {
@@ -141,7 +141,7 @@
             border-radius: 8px;
             font: inherit;
             font-weight: 600;
-            font-family: "Inter", sans-serif;
+            font-family: "Roboto", sans-serif;
             cursor: pointer;
             transition: all 0.2s ease;
             text-decoration: none;
@@ -374,7 +374,7 @@
                 const notes = document.getElementById('assetNotes').value.trim();
 
                 if (!username || !password) {
-                    alert('Vui lòng nhập tài khoản và mật khẩu');
+                    showWarningToast('Vui lòng nhập tài khoản và mật khẩu');
                     return;
                 }
 
@@ -384,13 +384,13 @@
                 const notes = document.getElementById('assetNotes2').value.trim();
 
                 if (!keyCode) {
-                    alert('Vui lòng nhập mã key');
+                    showWarningToast('Vui lòng nhập mã key');
                     return;
                 }
 
                 // Check for duplicate key
                 if (assets.some(a => a.keyCode === keyCode)) {
-                    alert('Mã key này đã được nhập. Mỗi key phải là duy nhất!');
+                    showWarningToast('Mã key này đã được nhập. Mỗi key phải là duy nhất!');
                     return;
                 }
 
@@ -401,13 +401,13 @@
                 const notes = document.getElementById('assetNotes3').value.trim();
 
                 if (!cardCode || !cardPin) {
-                    alert('Vui lòng nhập mã thẻ và PIN');
+                    showWarningToast('Vui lòng nhập mã thẻ và PIN');
                     return;
                 }
 
                 // Check for duplicate card
                 if (assets.some(a => a.cardCode === cardCode)) {
-                    alert('Mã thẻ này đã được nhập!');
+                    showWarningToast('Mã thẻ này đã được nhập!');
                     return;
                 }
 
@@ -513,12 +513,12 @@
             const status = document.getElementById('status').value;
 
             if (!variantName || !priceVnd) {
-                alert('Vui lòng nhập tên biến thể và giá bán');
+                showWarningToast('Vui lòng nhập tên biến thể và giá bán');
                 return;
             }
 
             if (assets.length === 0) {
-                alert('Bạn phải nhập ít nhất 1 tài sản trước khi lưu');
+                showWarningToast('Bạn phải nhập ít nhất 1 tài sản trước khi lưu');
                 return;
             }
 
@@ -534,7 +534,7 @@
             sessionStorage.setItem('variantData', JSON.stringify(variantData));
 
             // In a real app, you would send this to the backend
-            alert('Đã tạo biến thể với ' + assets.length + ' tài sản. Hệ thống sẽ lưu thông tin này.');
+            showSuccessToast('Đã tạo biến thể với ' + assets.length + ' tài sản. Hệ thống sẽ lưu thông tin này.');
             window.location.href = '/seller/inventory';
         }
     </script>

@@ -228,6 +228,20 @@
             loadSellerProfile();
             loadCategories();
             fetchShopProducts();
+
+            // Add automatic change listeners for immediate filtering
+            const filterForm = document.getElementById('filter-form');
+            if (filterForm) {
+                // Listen to changes on select & checkboxes
+                filterForm.querySelectorAll('select, input[type="checkbox"]').forEach(el => {
+                    el.addEventListener('change', () => applyFilters());
+                });
+                // Listen to slider when user releases it (change event)
+                const slider = document.getElementById('price-slider');
+                if (slider) {
+                    slider.addEventListener('change', () => applyFilters());
+                }
+            }
         });
 
         // Redirect to chat with current seller
@@ -309,18 +323,14 @@
                     updateFollowButtonUI(isSellerFollowing);
                     document.getElementById('shop-stat-followers').innerText = data.followerCount || 0;
                     
-                    if (typeof showSuccessToast === 'function') {
-                        showSuccessToast(data.message);
-                    } else {
-                        alert(data.message);
-                    }
+                    showSuccessToast(data.message);
                 } else {
                     const errorData = await response.json();
-                    alert(errorData.message || "Không thể thực hiện thao tác theo dõi.");
+                    showErrorToast(errorData.message || "Không thể thực hiện thao tác theo dõi.");
                 }
             } catch (err) {
                 console.error("Error toggling follow status:", err);
-                alert("Đã xảy ra lỗi hệ thống, vui lòng thử lại sau.");
+                showErrorToast("Đã xảy ra lỗi hệ thống, vui lòng thử lại sau.");
             }
         }
 
@@ -412,6 +422,12 @@
 
             const sortParts = currentSort.split(',');
             params.append('sort', sortParts[0] + ',' + (sortParts[1] || 'desc'));
+
+            // Append ratings to API parameters
+            const ratingChecks = document.querySelectorAll('input[name="rating-filter"]:checked');
+            ratingChecks.forEach(cb => {
+                params.append('rating', cb.value);
+            });
 
             try {
                 const response = await fetch(`/api/search/products?${params.toString()}`);
@@ -687,11 +703,11 @@
         function addToCart(productId) {
             const product = (window.currentRenderedProducts || []).find(item => item.productId === productId);
             if (!product) {
-                alert('Không tìm thấy thông tin sản phẩm để thêm vào giỏ hàng.');
+                showWarningToast('Không tìm thấy thông tin sản phẩm để thêm vào giỏ hàng.');
                 return;
             }
             if (Number(product.stock || 0) <= 0) {
-                alert('Sản phẩm đã hết hàng, vui lòng đặt trước.');
+                showWarningToast('Sản phẩm đã hết hàng, vui lòng đặt trước.');
                 preOrderProduct(productId);
                 return;
             }
@@ -705,25 +721,21 @@
                 iconColor: getProductIconAndColor(product.productName).color,
                 quantity: 1
             };
-            let cart = JSON.parse(localStorage.getItem('mmoCart') || '[]');
+            const cartKey = typeof window.getCartStorageKey === 'function' ? window.getCartStorageKey() : 'mmoCart';
+            let cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
             const existing = cart.find(item => item.productId === cartItem.productId && item.duration === cartItem.duration);
             if (existing) {
                 existing.quantity += 1;
             } else {
                 cart.push(cartItem);
             }
-            localStorage.setItem('mmoCart', JSON.stringify(cart));
+            localStorage.setItem(cartKey, JSON.stringify(cart));
 
             if (typeof window.refreshHeaderCartBadge === 'function') {
                 window.refreshHeaderCartBadge();
             }
 
-            // Show custom toast notification if available (imported from root system)
-            if (typeof showSuccessToast === 'function') {
-                showSuccessToast('Đã thêm sản phẩm vào giỏ hàng thành công!');
-            } else {
-                alert('Đã thêm sản phẩm vào giỏ hàng thành công!');
-            }
+            showSuccessToast('Đã thêm sản phẩm vào giỏ hàng thành công!');
         }
 
         // Preorder redirection
@@ -737,29 +749,7 @@
         }
     </script>
 
-    <!-- Include Toast container element for compatibility -->
-    <div id="toast-wrapper" class="ds-toast-container"></div>
-    <script>
-        // Fallback custom toast element rendering
-        function showSuccessToast(message) {
-            const wrapper = document.getElementById('toast-wrapper');
-            if (!wrapper) return;
-            const toast = document.createElement('div');
-            toast.className = 'ds-toast ds-toast--success';
-            toast.innerHTML = `
-                <div class="ds-toast__body">
-                    <i class="fa fa-check-circle ds-toast__icon"></i>
-                    <span class="ds-toast__msg">${message}</span>
-                </div>
-                <button type="button" class="ds-toast__close" onclick="this.parentElement.remove()"><i class="fa fa-times"></i></button>
-            `;
-            wrapper.appendChild(toast);
-            setTimeout(() => {
-                toast.classList.add('ds-toast--fadeout');
-                setTimeout(() => toast.remove(), 400);
-            }, 3000);
-        }
-    </script>
+
 </body>
 
 </html>

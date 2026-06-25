@@ -183,7 +183,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             if (preorderProduct.stock > 0 && preorderProduct.productId) {
-                alert('Sản phẩm này còn hàng, vui lòng mua trực tiếp thay vì đặt trước.');
+                showWarningToast('Sản phẩm này còn hàng, vui lòng mua trực tiếp thay vì đặt trước.');
                 window.location.href = `/products/${preorderProduct.productId}`;
                 return;
             }
@@ -212,7 +212,7 @@
 
             const token = getAccessToken();
             if (!token) {
-                alert('Vui lòng đăng nhập để gửi yêu cầu đặt trước.');
+                showWarningToast('Vui lòng đăng nhập để gửi yêu cầu đặt trước.');
                 window.location.href = '/login';
                 return;
             }
@@ -222,12 +222,12 @@
             const notes = document.getElementById('notesInput').value.trim();
 
             if (!preorderProduct.productId) {
-                alert('Thiếu thông tin sản phẩm để gửi yêu cầu đặt trước.');
+                showWarningToast('Thiếu thông tin sản phẩm để gửi yêu cầu đặt trước.');
                 return;
             }
 
             if (quantity < 1 || expectedPriceVnd < 1) {
-                alert('Vui lòng nhập số lượng hợp lệ.');
+                showWarningToast('Vui lòng nhập số lượng hợp lệ.');
                 return;
             }
 
@@ -275,7 +275,7 @@
                 // Show toast notification
                 showPreOrderSuccess(`Đặt trước thành công sản phẩm "${preorderProduct.productName}"!`);
             } catch (err) {
-                alert(err.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+                showErrorToast(err.message || 'Có lỗi xảy ra, vui lòng thử lại.');
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fa fa-paper-plane"></i> Gửi yêu cầu đặt trước';
             }

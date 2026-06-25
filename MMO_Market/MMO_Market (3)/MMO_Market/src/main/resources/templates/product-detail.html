@@ -40,7 +40,7 @@
             <div class="pdp-card hero-product-block">
                 <!-- Left Visual Area -->
                 <div class="hero-product__visual">
-                    <span class="hero-product__badge" id="heroBadge">Bán chạy</span>
+
                     <!-- Netflix Red Icon -->
                     <i class="fa fa-play-circle product-card__img-icon" style="color: #E50914;"></i>
                 </div>
@@ -782,10 +782,7 @@ stock: 50,
                     stockStatusText.className = 'status-instock';
                     stockStatusText.innerHTML = '<i class="fa fa-check-circle"></i> Còn hàng';
                 }
-                if (heroBadge) {
-                    heroBadge.classList.remove('is-outofstock');
-                    heroBadge.innerText = 'Bán chạy';
-                }
+
             }
 
             // Populate variant buttons dynamically
@@ -991,6 +988,32 @@ stock: 50,
 
                         const reviewDate = review.createdAt ? new Date(review.createdAt).toLocaleDateString('vi-VN') : '12/06/2026';
 
+                        let mediaHtml = '';
+                        if (review.mediaUrl) {
+                            const urls = review.mediaUrl.split(',').map(u => u.trim()).filter(Boolean);
+                            if (urls.length > 0) {
+                                mediaHtml += `<div class="review-media-gallery" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">`;
+                                urls.forEach(url => {
+                                    const lowerUrl = url.toLowerCase();
+                                    const isVideo = lowerUrl.endsWith('.mp4') || lowerUrl.endsWith('.webm') || lowerUrl.endsWith('.ogg') || lowerUrl.endsWith('.mov') || lowerUrl.endsWith('.quicktime');
+                                    if (isVideo) {
+                                        mediaHtml += `
+                                            <div class="review-media-item" style="position: relative; width: 120px; height: 120px; border-radius: 6px; overflow: hidden; background-color: #000;">
+                                                <video src="${url}" controls style="width: 100%; height: 100%; object-fit: cover;"></video>
+                                            </div>
+                                        `;
+                                    } else {
+                                        mediaHtml += `
+                                            <div class="review-media-item" style="position: relative; width: 120px; height: 120px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border-color);">
+                                                <img src="${url}" alt="Review attachment" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;" onclick="window.open('${url}', '_blank')">
+                                            </div>
+                                        `;
+                                    }
+                                });
+                                mediaHtml += `</div>`;
+                            }
+                        }
+
                         const reviewHtml = `
                             <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
@@ -1003,6 +1026,7 @@ stock: 50,
                                     ${starHtml}
                                 </div>
                                 <p style="font-size: 13.5px; line-height: 1.5; margin-bottom: 0;">${escapeHtml(review.comment || 'Không có bình luận.')}</p>
+                                ${mediaHtml}
                             </div>
                         `;
                         container.innerHTML += reviewHtml;
@@ -1141,7 +1165,7 @@ stock: 50,
                     card.innerHTML = `
                         <div class="product-card__image-container">
                             <i class="fa ${iconInfo.icon} product-card__img-icon" style="color:${iconInfo.color};"></i>
-                            <span class="product-card__badge-ads">Bán chạy</span>
+
                         </div>
                         <div class="product-card__body">
                             <div class="product-card__stock">Tồn: ${stockText}</div>
@@ -1230,6 +1254,18 @@ stock: 50,
                     });
                 });
             });
+
+            // Add automatic change listeners for immediate filtering on sidebar
+            const sidebarFilterForm = document.getElementById('sidebar-filter-form');
+            if (sidebarFilterForm) {
+                sidebarFilterForm.querySelectorAll('select, input[type="checkbox"]').forEach(el => {
+                    el.addEventListener('change', () => applySidebarFilters(new Event('submit')));
+                });
+                const slider = document.getElementById('price-slider');
+                if (slider) {
+                    slider.addEventListener('change', () => applySidebarFilters(new Event('submit')));
+                }
+            }
         });
 
         // Format Currency Helper
@@ -1292,7 +1328,7 @@ stock: 50,
             }
             const token = sessionStorage.getItem("accessToken");
             if (!token) {
-                alert("Vui lòng đăng nhập để thực hiện mua hàng!");
+                showWarningToast("Vui lòng đăng nhập để thực hiện mua hàng!");
                 window.location.href = "/login";
             } else {
                 // Redirect to checkout with full product details as URL params
@@ -1314,7 +1350,7 @@ stock: 50,
         function openPreOrderRequest() {
             const token = sessionStorage.getItem("accessToken");
             if (!token) {
-                alert("Vui lòng đăng nhập để gửi yêu cầu đặt trước!");
+                showWarningToast("Vui lòng đăng nhập để gửi yêu cầu đặt trước!");
                 window.location.href = "/login";
                 return;
             }
@@ -1334,7 +1370,7 @@ stock: 50,
         // Add to Cart Button Handler
         function addToCart() {
             if (!productHasStock) {
-                alert('Sản phẩm đã hết hàng, vui lòng đặt trước.');
+                showWarningToast('Sản phẩm đã hết hàng, vui lòng đặt trước.');
                 openPreOrderRequest();
                 return;
             }
@@ -1402,7 +1438,7 @@ stock: 50,
         // Chat Shop Handler
         function chatShop() {
             if (selectedProduct && selectedProduct.sellerId) {
-                window.location.href = `/messages?sellerId=${selectedProduct.sellerId}`;
+                window.location.href = `/messages?sellerId=${selectedProduct.sellerId}&productId=${selectedProduct.id}`;
             } else {
                 window.location.href = `/messages?sellerId=35`;
             }

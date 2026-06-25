@@ -12,4 +12,6 @@ import lombok.NoArgsConstructor;
 public class ReviewRequestDTO {
     private Integer rating;
     private String comment;
+    private String mediaUrl;
+    private Long transactionId;
 }

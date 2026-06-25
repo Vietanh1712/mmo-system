@@ -863,3 +863,43 @@ a {
     font-size: 14px;
 }
 
+/* ==================================================
+   INTRO BOX - GIỚI THIỆU MMO MARKET
+   ================================================== */
+.intro-box-wrapper {
+    max-width: 1200px;
+    margin: 0 auto 60px;
+    padding: 0 40px;
+}
+
+.intro-box {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 30px 35px;
+    font-size: 14px;
+    color: #334155;
+    line-height: 1.7;
+}
+
+.intro-box h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 12px;
+}
+
+.intro-box p {
+    margin: 0 0 10px;
+}
+
+.intro-box ul {
+    margin: 0 0 10px;
+    padding-left: 20px;
+}
+
+.intro-box ul li {
+    margin-bottom: 6px;
+}
+
+

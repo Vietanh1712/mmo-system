@@ -76,6 +76,7 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/account/orders"),
                                 new AntPathRequestMatcher("/account/orders/**"),
                                 new AntPathRequestMatcher("/account/notifications"),
+                                new AntPathRequestMatcher("/account/tickets"),
                                 new AntPathRequestMatcher("/notifications"),
                                 new AntPathRequestMatcher("/admin/users"),
                                 // Trang Kết quả Tìm kiếm - công khai theo spec (không cần đăng nhập)
@@ -104,7 +105,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 new AntPathRequestMatcher("/css/**"),
                                 new AntPathRequestMatcher("/js/**"),
-                                new AntPathRequestMatcher("/images/**")
+                                new AntPathRequestMatcher("/images/**"),
+                                new AntPathRequestMatcher("/uploads/**")
                         ).permitAll()
 
                         // Protected endpoints

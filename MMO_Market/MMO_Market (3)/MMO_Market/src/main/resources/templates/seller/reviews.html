@@ -1,14 +1,29 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý đánh giá - MMO Market</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/home.css}">
     <link rel="stylesheet" th:href="@{/css/profile.css}">
     <link rel="stylesheet" th:href="@{/css/seller.css}">
+    <style>
+        .stat-card.clickable {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .stat-card.clickable:hover {
+            transform: translateY(-2px);
+            border-color: var(--seller-primary-strong);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+        }
+        .stat-card.clickable.active {
+            border-color: var(--seller-primary-strong);
+            background-color: var(--ds-primary-soft, #eff6ff);
+        }
+    </style>
 </head>
 <body>
     <header th:replace="fragments/header :: header"></header>
@@ -35,17 +50,17 @@
                         <p class="stat-card__value" id="avgRating">—</p>
                         <p class="stat-card__hint">Trung bình đánh giá</p>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card clickable active" id="cardTotalReviews">
                         <p class="stat-card__label">Tổng đánh giá</p>
                         <p class="stat-card__value" id="totalReviews">0</p>
                         <p class="stat-card__hint">Từ tất cả sản phẩm</p>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card clickable" id="cardFiveStars">
                         <p class="stat-card__label">5 sao</p>
                         <p class="stat-card__value" id="fiveStarCount">0</p>
                         <p class="stat-card__hint">Đánh giá xuất sắc</p>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card clickable" id="cardLowStars">
                         <p class="stat-card__label">1–2 sao</p>
                         <p class="stat-card__value" id="lowStarCount">0</p>
                         <p class="stat-card__hint">Cần theo dõi</p>
@@ -53,7 +68,18 @@
                 </div>
 
                 <div class="seller-section">
-                    <h2 class="seller-section__title">Danh sách đánh giá</h2>
+                    <div class="seller-filter-bar">
+                        <h2 class="seller-section__title" style="margin: 0; flex-grow: 1;">Danh sách đánh giá</h2>
+                        <select id="ratingFilter">
+                            <option value="all">Tất cả đánh giá</option>
+                            <option value="5">5 sao ★★★★★</option>
+                            <option value="4">4 sao ★★★★</option>
+                            <option value="3">3 sao ★★★</option>
+                            <option value="2">2 sao ★★</option>
+                            <option value="1">1 sao ★</option>
+                            <option value="low">1-2 sao (Cần theo dõi)</option>
+                        </select>
+                    </div>
 
                     <div class="seller-table-wrap">
                         <table class="seller-table">

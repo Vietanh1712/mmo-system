@@ -39,6 +39,16 @@ public class Complaint {
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String resolution;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "resolved_by")
+    private User resolvedBy;
+
+    @Column(name = "resolved_at")
+    private LocalDateTime resolvedAt;
+
+    @Column(name = "decision_type", length = 50)
+    private String decisionType;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

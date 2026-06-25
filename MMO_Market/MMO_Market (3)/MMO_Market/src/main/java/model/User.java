@@ -53,6 +53,14 @@ public class User {
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String permissions;
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "UserPermissions",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "permission_id")
+    )
+    private java.util.Set<Permission> userPermissions;
+
     @Column(name = "isVerified")
     private Boolean isVerified; // Default: false
 
@@ -61,6 +69,12 @@ public class User {
 
     @Column(name = "is_2fa_enabled")
     private Boolean is2faEnabled; // Default: false
+
+    @Column(name = "failed_attempts")
+    private Integer failedAttempts; // Default: 0
+
+    @Column(name = "lock_time")
+    private LocalDateTime lockTime;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -93,6 +107,9 @@ public class User {
         }
         if (is2faEnabled == null) {
             is2faEnabled = false;
+        }
+        if (failedAttempts == null) {
+            failedAttempts = 0;
         }
         if (shopStatus == null) {
             shopStatus = "Pending";

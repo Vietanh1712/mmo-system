@@ -77,6 +77,7 @@ public class ProductSpecification {
             if (ratings != null && !ratings.isEmpty()) {
                 int minRating = ratings.stream().mapToInt(Integer::intValue).min().orElse(0);
                 if (minRating > 0) {
+                    // Average rating subquery
                     Subquery<Double> avgRatingSubquery = query.subquery(Double.class);
                     Root<model.Review> reviewRoot = avgRatingSubquery.from(model.Review.class);
                     avgRatingSubquery.select(criteriaBuilder.avg(reviewRoot.get("rating")));
@@ -85,12 +86,7 @@ public class ProductSpecification {
                         criteriaBuilder.equal(reviewRoot.get("isDelete"), false)
                     );
                     
-                    Expression<Double> coalesceAvgRating = criteriaBuilder.coalesce(
-                        avgRatingSubquery,
-                        5.0
-                    );
-                    
-                    predicates.add(criteriaBuilder.greaterThanOrEqualTo(coalesceAvgRating, (double) minRating));
+                    predicates.add(criteriaBuilder.greaterThanOrEqualTo(avgRatingSubquery, (double) minRating));
                 }
             }
 

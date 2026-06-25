@@ -185,22 +185,47 @@ async function submitShopRegistration(event) {
     submitBtn.disabled = true;
 
     try {
-        const response = await authFetch('/v1/shop-registrations', {
+        const response = await authFetch('/api/v1/profile/register-shop', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-
         const result = await response.json();
+        
         if (response.ok) {
-            shopRegistrationState = result;
+            // Đăng ký thành công và đã được trừ tiền
+            shopRegistrationState = {
+                status: 'APPROVED',
+                code: `SHOP-${Date.now().toString().slice(-6)}`,
+                submittedAt: new Date().toLocaleDateString('vi-VN'),
+                ...data
+            };
+            
+            // Cập nhật lại số dư ví hiển thị ở sidebar và session
+            if (result.balanceVnd !== undefined) {
+                const sidebarBalance = document.getElementById('sidebarBalance');
+                if (sidebarBalance) {
+                    sidebarBalance.textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(result.balanceVnd);
+                }
+                // Cập nhật user info lưu trong session
+                const user = JSON.parse(sessionStorage.getItem('userInfo') || sessionStorage.getItem('user') || '{}');
+                user.balanceVnd = result.balanceVnd;
+                user.role = result.role;
+                user.shopStatus = result.shopStatus;
+                sessionStorage.setItem('userInfo', JSON.stringify(user));
+                
+                // Cập nhật lại sidebar
+                if (shopAccountSidebar) {
+                    shopAccountSidebar.render(result);
+                }
+            }
+
             renderShopRegistrationState();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
-            showShopFormMessage(result.description || 'Có lỗi xảy ra khi gửi yêu cầu.');
+            showShopFormMessage(result.message || 'Không thể gửi yêu cầu đăng ký shop.');
         }
     } catch (error) {
-        showShopFormMessage('Lỗi kết nối máy chủ.');
+        showShopFormMessage('Lỗi kết nối khi gửi yêu cầu đăng ký shop.');
     } finally {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;

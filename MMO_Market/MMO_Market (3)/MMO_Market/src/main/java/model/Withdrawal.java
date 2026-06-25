@@ -32,6 +32,19 @@ public class Withdrawal {
     @Column(name = "proof_file")
     private String proofFile;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reviewed_by")
+    private User reviewedBy;
+
+    @Column(name = "reviewed_at")
+    private LocalDateTime reviewedAt;
+
+    @Column(name = "rejection_reason", columnDefinition = "NVARCHAR(MAX)")
+    private String rejectionReason;
+
+    @Column(name = "fee_vnd")
+    private Long feeVnd = 0L;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

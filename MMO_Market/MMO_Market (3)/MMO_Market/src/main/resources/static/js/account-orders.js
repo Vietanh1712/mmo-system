@@ -65,6 +65,92 @@ async function loadOrdersPage() {
     }
 }
 
+
+function getUserSpecificKey(baseKey) {
+    try {
+        const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            if (user && user.email) {
+                return `${baseKey}_${user.email}`;
+            }
+        }
+    } catch (e) {
+        console.error('Lỗi khi lấy user-specific key:', e);
+    }
+    return baseKey;
+}
+
+function readOrders() {
+    const key = getUserSpecificKey(ACCOUNT_ORDERS_MOCK_KEY);
+    try {
+        // Ưu tiên đọc localStorage (persist qua tab/session), fallback sang sessionStorage
+        const saved = localStorage.getItem(key) || sessionStorage.getItem(key);
+        if (saved !== null) {
+            const parsed = JSON.parse(saved);
+            // Sync lên sessionStorage để các thư viện khác đọc được
+            sessionStorage.setItem(key, saved);
+            return parsed;
+        }
+    } catch {
+        // fallback to seeded data below
+    }
+
+    let isDemo = false;
+    try {
+        const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            if (user && user.email) {
+                const demoEmails = ['customer01@gmail.com', 'customer02@gmail.com', 'customer03@gmail.com', 'customer04@gmail.com', 'customer05@gmail.com'];
+                if (demoEmails.includes(user.email.toLowerCase())) {
+                    isDemo = true;
+                }
+            }
+        }
+    } catch (e) {
+        // ignore
+    }
+
+    const seeded = isDemo ? createSeedOrders() : [];
+    // Seed vào cả hai storage
+    localStorage.setItem(key, JSON.stringify(seeded));
+    sessionStorage.setItem(key, JSON.stringify(seeded));
+    return seeded;
+}
+
+function createSeedOrders() {
+    const now = new Date();
+    return [
+        createOrder('MMO-ORD-1001', 7, 'Tài khoản Canva Pro 1 năm', 'Digital Store VN', 129000, 'COMPLETED', 'PAID', addDays(now, -1), '12 Tháng (1 Năm)'),
+        createOrder('MMO-ORD-1002', 3, 'Gói proxy dân cư 5GB', 'ProxyHub', 240000, 'DELIVERED', 'PAID', addDays(now, -2), '5GB'),
+        createOrder('MMO-ORD-1003', 13, 'Template landing page MMO', 'Design Market', 99000, 'PAID', 'PAID', addDays(now, -3), '1 Thiết kế'),
+        createOrder('MMO-ORD-1004', 1, 'Tài khoản Netflix Premium', 'Account247', 75000, 'DISPUTED', 'PAID', addDays(now, -4), '1 Tháng'),
+        createOrder('MMO-ORD-1005', 9, 'Tool automation social', 'ToolBox Seller', 450000, 'PENDING', 'PENDING', addDays(now, -5), 'Vĩnh viễn'),
+        createOrder('MMO-ORD-1006', 5, 'Key Windows 11 Pro', 'Key Mall', 180000, 'REFUNDED', 'REFUNDED', addDays(now, -6), 'Vĩnh viễn'),
+        createOrder('MMO-ORD-1007', 13, 'Khóa học chạy quảng cáo cơ bản', 'Ads Academy', 299000, 'COMPLETED', 'PAID', addDays(now, -7), 'Trọn đời'),
+        createOrder('MMO-ORD-1008', 4, 'Tài khoản Spotify Family', 'Sub Store', 65000, 'CANCELLED', 'FAILED', addDays(now, -8), '12 Tháng (1 Năm)'),
+        createOrder('MMO-ORD-1009', 8, 'Data email marketing B2B', 'DataX', 350000, 'DELIVERED', 'PAID', addDays(now, -9), '1 Danh sách')
+    ];
+}
+
+function createOrder(orderCode, productId, productName, sellerName, amount, status, paymentStatus, createdDate, variantLabel = '') {
+    return {
+        orderCode,
+        productId,
+        productName,
+        variantLabel,
+        sellerName,
+        amount,
+        status,
+        paymentStatus,
+        createdAt: formatDateTime(createdDate),
+        escrowReleaseDate: formatDate(addDays(createdDate, 3)),
+        isReviewed: false
+    };
+}
+
+
 function renderSummary(orders) {
     const completedCount = orders.filter(order => order.status === 'COMPLETED' || order.status === 'DELIVERED').length;
     const processingCount = orders.filter(order => order.status === 'PENDING' || order.status === 'PAID').length;

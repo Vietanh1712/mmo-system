@@ -718,7 +718,7 @@
             if (checkoutMode === 'cart') {
                 checkoutItems = loadCartCheckoutItems();
                 if (checkoutItems.length === 0) {
-                    alert('Giỏ hàng của bạn đang trống hoặc chưa chọn sản phẩm nào.');
+                    showWarningToast('Giỏ hàng của bạn đang trống hoặc chưa chọn sản phẩm nào.');
                     window.location.href = '/cart';
                     return;
                 }
@@ -811,7 +811,7 @@
             // 3. Check Session Storage user info & Balance
             const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
             if (!userStr) {
-                alert("Vui lòng đăng nhập trước khi thực hiện thanh toán!");
+                showWarningToast("Vui lòng đăng nhập trước khi thực hiện thanh toán!");
                 window.location.href = "/login";
                 return;
             }
@@ -884,7 +884,7 @@
 
             const token = sessionStorage.getItem("accessToken");
             if (!token) {
-                alert("Vui lòng đăng nhập trước khi thực hiện mua hàng!");
+                showWarningToast("Vui lòng đăng nhập trước khi thực hiện mua hàng!");
                 window.location.href = "/login";
                 return;
             }
@@ -918,14 +918,15 @@
                 sessionStorage.setItem('userInfo', JSON.stringify(currentUser));
                 sessionStorage.setItem('user', JSON.stringify(currentUser));
 
-                // Save order and transaction in sessionStorage under user-specific keys (for UI compatibility)
+                // Save order and transaction in localStorage (persist qua nhiều tab) dưới user-specific keys
                 const userEmail = currentUser.email || '';
                 const ordersKey = userEmail ? `mmoMarketMyOrdersMock_${userEmail}` : `mmoMarketMyOrdersMock`;
                 const transactionsKey = userEmail ? `mmoMarketWalletTransactionsMock_${userEmail}` : `mmoMarketWalletTransactionsMock`;
 
                 let orders = [];
                 try {
-                    const savedOrders = sessionStorage.getItem(ordersKey);
+                    // Ưu tiên đọc localStorage, fallback sang sessionStorage
+                    const savedOrders = localStorage.getItem(ordersKey) || sessionStorage.getItem(ordersKey);
                     if (savedOrders !== null) {
                         orders = JSON.parse(savedOrders);
                     }
@@ -944,14 +945,18 @@
                     createdAt: now.toLocaleString('vi-VN'),
                     escrowReleaseDate: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
                     credentials: data.credentials,
-                    isReviewed: false
+                    isReviewed: false,
+                    transactionId: data.transactionId
                 };
                 orders.unshift(newOrder);
+                // Lưu vào cả localStorage và sessionStorage để đảm bảo đồng bộ
+                localStorage.setItem(ordersKey, JSON.stringify(orders));
                 sessionStorage.setItem(ordersKey, JSON.stringify(orders));
 
                 let txns = [];
                 try {
-                    const savedTxns = sessionStorage.getItem(transactionsKey);
+                    // Ưu tiên đọc localStorage, fallback sang sessionStorage
+                    const savedTxns = localStorage.getItem(transactionsKey) || sessionStorage.getItem(transactionsKey);
                     if (savedTxns !== null) {
                         txns = JSON.parse(savedTxns);
                     }
@@ -966,6 +971,8 @@
                     createdAt: now.toLocaleString('vi-VN')
                 };
                 txns.unshift(newTxn);
+                // Lưu vào cả localStorage và sessionStorage
+                localStorage.setItem(transactionsKey, JSON.stringify(txns));
                 sessionStorage.setItem(transactionsKey, JSON.stringify(txns));
 
                 if (checkoutMode === 'cart') {
@@ -1003,7 +1010,7 @@
                 modal.classList.add('active');
 
             } catch (err) {
-                alert(err.message || 'Có lỗi xảy ra khi thực hiện thanh toán.');
+                showErrorToast(err.message || 'Có lỗi xảy ra khi thực hiện thanh toán.');
                 btnPay.removeAttribute('disabled');
                 btnPay.innerHTML = '<i class="fa fa-lock"></i> Xác nhận thanh toán';
             }
@@ -1050,7 +1057,8 @@
             }
 
             try {
-                const cart = JSON.parse(localStorage.getItem('mmoCart') || '[]');
+                const cartKey = typeof window.getCartStorageKey === 'function' ? window.getCartStorageKey() : 'mmoCart';
+                const cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
                 return cart
                     .filter(item => item.selected !== false)
                     .map(item => ({
@@ -1090,10 +1098,11 @@
 
         function clearPurchasedCartItems() {
             try {
-                const cart = JSON.parse(localStorage.getItem('mmoCart') || '[]');
+                const cartKey = typeof window.getCartStorageKey === 'function' ? window.getCartStorageKey() : 'mmoCart';
+                const cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
                 const purchasedKeys = new Set(checkoutItems.map(item => `${Number(item.productId)}:${Number(item.duration || 1)}`));
                 const remaining = cart.filter(item => !item.selected || !purchasedKeys.has(`${Number(item.productId)}:${Number(item.duration || 1)}`));
-                localStorage.setItem('mmoCart', JSON.stringify(remaining));
+                localStorage.setItem(cartKey, JSON.stringify(remaining));
                 if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
             } catch (error) {
                 console.error('Không thể cập nhật giỏ hàng sau thanh toán:', error);

@@ -2,6 +2,16 @@
     min-width: 0;
 }
 
+
+.orders-layout-container {
+    max-width: 1680px;
+}
+
+.orders-layout {
+    grid-template-columns: 260px minmax(0, 1fr);
+}
+
+
 .orders-hero,
 .orders-table-content {
     padding: 24px;

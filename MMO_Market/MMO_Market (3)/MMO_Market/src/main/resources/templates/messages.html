@@ -91,11 +91,20 @@
                     <div id="chat-dropdown" class="chat-dropdown" style="display: none;">
                         <a href="#" onclick="clearHistory(event)"><i class="fa fa-trash"></i> Xóa lịch sử chat</a>
                         <a href="#" id="toggle-block-btn" onclick="toggleBlockContact(event)"><i class="fa fa-ban"></i> Chặn liên hệ</a>
-                        <a href="#" onclick="searchMessages(event)"><i class="fa fa-search"></i> Tìm tin nhắn</a>
-                        <a href="#" onclick="toggleMuteNotifications(event)"><i class="fa fa-bell-slash"></i> Tắt thông báo</a>
+                        <a href="#" onclick="toggleSearchMessages(event)"><i class="fa fa-search"></i> Tìm tin nhắn</a>
+                        <a href="#" id="toggle-mute-btn" onclick="toggleMuteNotifications(event)"><i class="fa fa-bell-slash"></i> Tắt thông báo</a>
                     </div>
                 </div>
             </header>
+
+            <!-- Inline Search Bar inside current conversation -->
+            <div id="message-search-container" style="display: none; padding: 10px 16px; background: #f1f5f9; border-bottom: 1px solid var(--border-color); align-items: center; gap: 8px;">
+                <i class="fa fa-search" style="color: #64748b; font-size: 14px;"></i>
+                <input type="text" id="message-search-input" placeholder="Tìm tin nhắn trong cuộc trò chuyện..." style="flex: 1; border: none; background: transparent; outline: none; font-size: 13.5px; font-family: inherit;" oninput="performMessageSearch(this.value)">
+                <button type="button" onclick="closeMessageSearch()" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 16px; padding: 4px; display: inline-flex;" title="Đóng tìm kiếm">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
 
             <div class="messages-main__body" id="messages-main-body">
                 <div class="messages-date-badge">TODAY</div>
@@ -180,7 +189,8 @@
                 online: true,
                 product: 'Tài khoản Netflix Premium 4K UHD 1 Tháng',
                 price: '65.000 VNĐ',
-                isBlocked: false
+                isBlocked: false,
+                isMuted: false
             },
             2: {
                 sellerId: 2,
@@ -189,7 +199,8 @@
                 online: true,
                 product: 'Netflix Premium 4K Gói 1 Năm',
                 price: '650.000 VNĐ',
-                isBlocked: false
+                isBlocked: false,
+                isMuted: false
             },
             3: {
                 sellerId: null,
@@ -198,7 +209,8 @@
                 online: false,
                 product: 'Hỗ trợ kỹ thuật — Ticket #1024',
                 price: '—',
-                isBlocked: false
+                isBlocked: false,
+                isMuted: false
             }
         };
 
@@ -215,31 +227,170 @@
             ],
             3: [
                 { sender: 'CS', name: 'MMO Market Support', time: 'T2', text: '<strong>[Hệ thống]</strong> Yêu cầu hỗ trợ <em>Ticket #1024</em> đã được tạo thành công.', type: 'system' },
-                { sender: 'CS', name: 'MMO Market Support', time: 'T2', text: '<strong>[localhost]</strong>: Hệ thống hỗ trợ phản hồi tự động.<br>Dưới đây là mã CSS tùy chỉnh để định dạng thẻ trạng thái của bạn:<br><div style="background: #e2e8f0; border-left: 4px solid #f97316; padding: 10px; margin-top: 5px; font-family: monospace; border-radius: 4px; color: #0f172a;">.status-badge {<br>&nbsp;&nbsp;background-color: #f97316;<br>&nbsp;&nbsp;color: white;<br>&nbsp;&nbsp;padding: 4px 8px;<br>&nbsp;&nbsp;border-radius: 9999px;<br>}</div>', type: 'in' },
-                { sender: 'CS', name: 'MMO Market Support', time: 'T2', text: '<strong>[localhost say]</strong>: Cảm ơn bạn đã liên hệ bộ phận CSKH. Sau đây là thẻ giao diện hỗ trợ kỹ thuật được dựng bằng CSS trực tiếp từ localhost của chúng tôi:', type: 'in' },
-                { sender: 'CS', name: 'MMO Market Support', time: 'T2', text: '<div style="margin: 10px 0; padding: 14px; background: linear-gradient(135deg, #eff6ff, #dbeafe); border-left: 5px solid #2563eb; border-radius: 10px; color: #1e3a8a; font-weight: 500; font-family: sans-serif; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);"><h4 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 700; color: #1d4ed8; display: flex; align-items: center; gap: 8px;"><i class="fa fa-info-circle"></i> Kết nối thiết lập CSS thành công</h4>Hệ thống đã nhận diện cấu hình CSS cục bộ từ localhost. Trạng thái kết nối của bạn được đánh giá là hoạt động tốt. Bạn có thể sử dụng đầy đủ các chức năng hỗ trợ trực tuyến.</div>', type: 'in' },
                 { sender: 'CS', name: 'MMO Market Support', time: 'T2', text: 'Ticket #1024 đã được xử lý xong.', type: 'in' }
             ]
         };
 
         let currentSelectedChatId = 1;
         let pendingAttachment = null;
+        let activeChatList = []; // list from backend
+        let chatPollInterval = null;
+        let urlContextProduct = null;
 
-        function selectChat(id) {
-            currentSelectedChatId = id;
-            document.querySelectorAll('.messages-chat-item').forEach(el => {
-                el.classList.toggle('is-active', parseInt(el.getAttribute('data-chat-id')) === id);
-                const badge = el.querySelector('.messages-chat-item__badge');
-                if (badge && parseInt(el.getAttribute('data-chat-id')) === id) badge.remove();
+        // Initialize chat page
+        async function initChats() {
+            const token = sessionStorage.getItem('accessToken');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            // Load context product if productId query parameter exists
+            const urlParams = new URLSearchParams(window.location.search);
+            const productIdParam = urlParams.get('productId');
+            if (productIdParam) {
+                try {
+                    const prodRes = await fetch(`/api/search/products/${productIdParam}`);
+                    if (prodRes.ok) {
+                        const prod = await prodRes.json();
+                        urlContextProduct = {
+                            id: prod.id || productIdParam,
+                            name: prod.name,
+                            price: prod.price,
+                            sellerId: prod.sellerId,
+                            stock: prod.stock !== undefined ? prod.stock : 0
+                        };
+                    }
+                } catch (err) {
+                    console.error('Cannot load context product details:', err);
+                }
+            }
+
+            try {
+                const res = await authFetch('/v1/chats');
+                if (res.ok) {
+                    activeChatList = await res.json();
+                }
+            } catch (err) {
+                console.error('Cannot load chat contacts from backend:', err);
+            }
+
+            renderSidebarChats();
+            selectInitialChat();
+            startChatPolling();
+        }
+
+        function renderSidebarChats() {
+            const listContainer = document.getElementById('messages-chat-list');
+            if (!listContainer) return;
+            listContainer.innerHTML = '';
+
+            const renderedIds = new Set();
+            
+            // 1. Render active chats from DB
+            activeChatList.forEach(c => {
+                renderedIds.add(c.contactId);
+                const isActive = c.contactId === currentSelectedChatId;
+                const timeStr = c.latestTime ? formatChatTime(new Date(c.latestTime)) : '';
+                
+                const li = document.createElement('li');
+                li.className = `messages-chat-item ${isActive ? 'is-active' : ''}`;
+                li.setAttribute('data-chat-id', c.contactId);
+                li.onclick = () => selectChat(c.contactId);
+                li.innerHTML = `
+                    <div class="messages-chat-item__avatar-wrap">
+                        <div class="messages-chat-item__avatar">${c.avatar}</div>
+                        <span class="messages-chat-item__status"></span>
+                    </div>
+                    <div class="messages-chat-item__body">
+                        <div class="messages-chat-item__top">
+                            <span class="messages-chat-item__name">${c.name}</span>
+                            <span class="messages-chat-item__time">${timeStr}</span>
+                        </div>
+                        <div class="messages-chat-item__preview">
+                            <span>${c.latestMessage || ''}</span>
+                        </div>
+                    </div>
+                `;
+                listContainer.appendChild(li);
             });
 
-            const chat = CHAT_DATA[id];
-            if (!chat) return;
+            // 2. Fallback: render remaining mock contacts
+            Object.keys(CHAT_DATA).forEach(key => {
+                const id = parseInt(key);
+                const mockContact = CHAT_DATA[id];
+                const contactId = mockContact.sellerId ? mockContact.sellerId : 35; // Support Fallback ID
+                
+                if (!renderedIds.has(contactId)) {
+                    renderedIds.add(contactId);
+                    const isActive = contactId === currentSelectedChatId;
+                    
+                    const li = document.createElement('li');
+                    li.className = `messages-chat-item ${isActive ? 'is-active' : ''}`;
+                    li.setAttribute('data-chat-id', contactId);
+                    li.onclick = () => selectChat(contactId);
+                    li.innerHTML = `
+                        <div class="messages-chat-item__avatar-wrap">
+                            <div class="messages-chat-item__avatar">${mockContact.avatar}</div>
+                            <span class="messages-chat-item__status ${mockContact.online ? '' : 'messages-chat-item__status--offline'}"></span>
+                        </div>
+                        <div class="messages-chat-item__body">
+                            <div class="messages-chat-item__top">
+                                <span class="messages-chat-item__name">${mockContact.name}</span>
+                                <span class="messages-chat-item__time">Hôm qua</span>
+                            </div>
+                            <div class="messages-chat-item__preview">
+                                <span>Nhấp để bắt đầu trò chuyện...</span>
+                            </div>
+                        </div>
+                    `;
+                    listContainer.appendChild(li);
+                }
+            });
+        }
+
+        async function selectChat(id) {
+            currentSelectedChatId = id;
+            document.querySelectorAll('.messages-chat-item').forEach(el => {
+                const itemId = parseInt(el.getAttribute('data-chat-id'));
+                el.classList.toggle('is-active', itemId === id);
+            });
+
+            let chat = activeChatList.find(c => c.contactId === id);
+            if (!chat) {
+                const mockKey = Object.keys(CHAT_DATA).find(k => 
+                    CHAT_DATA[k].sellerId === id || (CHAT_DATA[k].sellerId === null && id === 35)
+                );
+                if (mockKey) {
+                    const mock = CHAT_DATA[mockKey];
+                    chat = {
+                        contactId: id,
+                        name: mock.name,
+                        avatar: mock.avatar,
+                        online: mock.online,
+                        product: mock.product,
+                        price: mock.price,
+                        isBlocked: mock.isBlocked,
+                        isMuted: mock.isMuted
+                    };
+                } else {
+                    chat = {
+                        contactId: id,
+                        name: `User #${id}`,
+                        avatar: 'US',
+                        online: false,
+                        product: 'Tin nhắn trực tuyến',
+                        price: '—',
+                        isBlocked: false,
+                        isMuted: false
+                    };
+                }
+            }
 
             document.getElementById('chat-header-name').textContent = chat.name;
             document.getElementById('chat-header-avatar').textContent = chat.avatar;
-            document.getElementById('context-product-name').textContent = chat.product;
-            document.getElementById('context-product-price').textContent = chat.price;
+            document.getElementById('context-product-name').textContent = chat.product || 'Tin nhắn trực tuyến';
+            document.getElementById('context-product-price').textContent = chat.price || '—';
 
             const statusEl = document.getElementById('chat-header-status');
             if (chat.online) {
@@ -250,43 +401,88 @@
                 statusEl.style.color = '#94a3b8';
             }
 
-            // Render message history
-            renderMessageHistory(id);
+            // Load history
+            await loadChatHistory(id);
 
-            // Update block/unblock UI state
-            updateChatUIState();
+            // Update block/mute controls UI
+            updateChatUIState(chat);
+            
+            // Close search bar when changing contact
+            closeMessageSearch();
         }
 
-        function renderMessageHistory(id) {
+        async function loadChatHistory(id) {
+            try {
+                const res = await authFetch(`/v1/chats/${id}`);
+                if (res.ok) {
+                    const dbMessages = await res.json();
+                    if (dbMessages && dbMessages.length > 0) {
+                        renderMessages(dbMessages);
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.error('Cannot load messages from database:', err);
+            }
+
+            // Fallback to mock history
+            const mockKey = Object.keys(CHAT_DATA).find(k => 
+                CHAT_DATA[k].sellerId === id || (CHAT_DATA[k].sellerId === null && id === 35)
+            );
+            const history = MESSAGES_HISTORY[mockKey || 1] || [];
+            
+            const formatted = history.map((m, index) => ({
+                id: index,
+                senderId: m.type === 'out' ? 0 : id,
+                message: m.text,
+                createdAt: new Date().toISOString(),
+                type: m.type
+            }));
+            
+            renderMessages(formatted);
+        }
+
+        function renderMessages(messages) {
             const body = document.getElementById('messages-main-body');
+            if (!body) return;
             body.innerHTML = '';
 
-            // 1. Re-add date badge
+            // 1. Add date badge
             const dateBadge = document.createElement('div');
             dateBadge.className = 'messages-date-badge';
             dateBadge.textContent = 'TODAY';
             body.appendChild(dateBadge);
 
-            // 2. Re-add context card
-            const chat = CHAT_DATA[id];
-            if (chat) {
+            // 2. Add context card (conditional on urlContextProduct matching the selected contact)
+            if (urlContextProduct && urlContextProduct.sellerId === currentSelectedChatId) {
                 const contextCard = document.createElement('article');
                 contextCard.className = 'messages-context-card';
                 contextCard.onclick = () => {
-                    if (chat.sellerId) {
-                        window.location.href = `/shop/${chat.sellerId}`;
-                    } else {
-                        alert('Đây là tài khoản hỗ trợ chính thức của hệ thống MMO Market.');
-                    }
+                    window.location.href = `/products/${urlContextProduct.id}`;
                 };
+                
+                let formattedPrice = '—';
+                try {
+                    formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
+                        .format(urlContextProduct.price)
+                        .replace('₫', 'VNĐ');
+                } catch (e) {
+                    formattedPrice = urlContextProduct.price + ' VNĐ';
+                }
+
+                const isOutOfStock = (urlContextProduct.stock === undefined || urlContextProduct.stock <= 0);
+                const stockBadge = isOutOfStock 
+                    ? `<span class="messages-context-card__stock" style="color: #ef4444; background: #fef2f2;">HẾT HÀNG</span>`
+                    : `<span class="messages-context-card__stock">CÒN HÀNG</span>`;
+
                 contextCard.innerHTML = `
                     <div class="messages-context-card__thumb"><i class="fa fa-play-circle"></i></div>
                     <div class="messages-context-card__info">
-                        <div class="messages-context-card__label">ITEM OF DISCUSSION</div>
-                        <div class="messages-context-card__name">${chat.product}</div>
+                        <div class="messages-context-card__label">SẢN PHẨM ĐANG HỎI</div>
+                        <div class="messages-context-card__name">${urlContextProduct.name}</div>
                         <div class="messages-context-card__meta">
-                            <span class="messages-context-card__price">${chat.price}</span>
-                            <span class="messages-context-card__stock">IN STOCK</span>
+                            <span class="messages-context-card__price">${formattedPrice}</span>
+                            ${stockBadge}
                         </div>
                     </div>
                     <i class="fa fa-chevron-right messages-context-card__chevron"></i>
@@ -294,52 +490,69 @@
                 body.appendChild(contextCard);
             }
 
-            // 3. Render message history from MESSAGES_HISTORY
-            const history = MESSAGES_HISTORY[id] || [];
-            history.forEach(msg => {
+            // 3. Render message history
+            messages.forEach(msg => {
                 const row = document.createElement('div');
-                if (msg.type === 'in') {
-                    row.className = 'msg-row msg-row--left';
-                    row.innerHTML = `
-                        <div class="msg-row__avatar">${chat.avatar}</div>
-                        <div class="msg-bubble-wrap">
-                            <div class="msg-bubble msg-bubble--in">${msg.text}</div>
-                            <span class="msg-meta">${msg.time}</span>
-                        </div>
-                    `;
-                } else if (msg.type === 'out') {
+                const timeStr = msg.createdAt ? formatChatTime(new Date(msg.createdAt)) : '';
+                
+                if (msg.type === 'in' || msg.type === 'system') {
+                    if (msg.type === 'system') {
+                        row.className = 'msg-row msg-row--left';
+                        row.style.maxWidth = '100%';
+                        row.style.width = '100%';
+                        row.style.justifyContent = 'center';
+                        row.style.margin = '8px 0';
+                        row.innerHTML = `
+                            <div style="font-size: 12px; background: #e2e8f0; color: #475569; padding: 6px 14px; border-radius: 6px; border: 1px solid #cbd5e1; display: inline-block;">
+                                ${msg.message}
+                            </div>
+                        `;
+                    } else {
+                        row.className = 'msg-row msg-row--left';
+                        row.innerHTML = `
+                            <div class="msg-row__avatar">${chat ? chat.avatar : 'US'}</div>
+                            <div class="msg-bubble-wrap">
+                                <div class="msg-bubble msg-bubble--in">${msg.message}</div>
+                                <span class="msg-meta">${timeStr}</span>
+                            </div>
+                        `;
+                    }
+                } else {
                     row.className = 'msg-row msg-row--right';
                     row.innerHTML = `
                         <div class="msg-bubble-wrap">
-                            <div class="msg-bubble msg-bubble--out">${msg.text}</div>
-                            <span class="msg-meta">${msg.time} <i class="fa fa-check"></i><i class="fa fa-check"></i></span>
-                        </div>
-                    `;
-                } else if (msg.type === 'system') {
-                    row.className = 'msg-row msg-row--left';
-                    row.style.maxWidth = '100%';
-                    row.style.width = '100%';
-                    row.style.justifyContent = 'center';
-                    row.style.margin = '8px 0';
-                    row.innerHTML = `
-                        <div style="font-size: 12px; background: #e2e8f0; color: #475569; padding: 6px 14px; border-radius: 6px; border: 1px solid #cbd5e1; display: inline-block;">
-                            ${msg.text}
+                            <div class="msg-bubble msg-bubble--out">${msg.message}</div>
+                            <span class="msg-meta">${timeStr} <i class="fa fa-check"></i><i class="fa fa-check"></i></span>
                         </div>
                     `;
                 }
                 body.appendChild(row);
             });
 
-            // Scroll to bottom
             body.scrollTop = body.scrollHeight;
         }
 
+        function formatChatTime(date) {
+            try {
+                return date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
+            } catch (e) {
+                return '';
+            }
+        }
+
         function goToCurrentShop() {
-            const chat = CHAT_DATA[currentSelectedChatId];
-            if (chat && chat.sellerId) {
-                window.location.href = `/shop/${chat.sellerId}`;
+            let chat = activeChatList.find(c => c.contactId === currentSelectedChatId);
+            if (!chat) {
+                const mockKey = Object.keys(CHAT_DATA).find(k => 
+                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 35)
+                );
+                if (mockKey) chat = CHAT_DATA[mockKey];
+            }
+
+            if (chat && (chat.sellerId || chat.contactId)) {
+                window.location.href = `/shop/${chat.sellerId || chat.contactId}`;
             } else {
-                alert('Đây là tài khoản hỗ trợ chính thức của hệ thống MMO Market.');
+                showAlert('Đây là tài khoản hỗ trợ chính thức của hệ thống MMO Market.');
             }
         }
 
@@ -347,39 +560,33 @@
             const term = q.trim().toLowerCase();
             document.querySelectorAll('.messages-chat-item').forEach(item => {
                 const name = item.querySelector('.messages-chat-item__name').textContent.toLowerCase();
-                const preview = item.querySelector('.messages-chat-item__preview span').textContent.toLowerCase();
+                const preview = item.querySelector('.messages-chat-item__preview').textContent.toLowerCase();
                 item.style.display = (!term || name.includes(term) || preview.includes(term)) ? '' : 'none';
             });
         }
 
-        function sendMessage() {
+        async function sendMessage() {
             const input = document.getElementById('message-input');
             const text = input.value.trim();
             if (!text && !pendingAttachment) return;
 
-            const chat = CHAT_DATA[currentSelectedChatId];
+            let chat = activeChatList.find(c => c.contactId === currentSelectedChatId);
+            if (!chat) {
+                const mockKey = Object.keys(CHAT_DATA).find(k => 
+                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 35)
+                );
+                if (mockKey) chat = CHAT_DATA[mockKey];
+            }
+
             if (chat && chat.isBlocked) {
-                alert('Không thể gửi tin nhắn do cuộc trò chuyện này đã bị chặn.');
+                showAlert('Không thể gửi tin nhắn do cuộc trò chuyện này đã bị chặn.');
                 return;
             }
 
-            const now = new Date();
-            const time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-
-            if (!MESSAGES_HISTORY[currentSelectedChatId]) {
-                MESSAGES_HISTORY[currentSelectedChatId] = [];
-            }
-
-            let sentSomething = false;
-
-            // 1. Send pending attachment first if any
+            let messageText = text;
             if (pendingAttachment) {
-                let messageText = '';
-                let previewLabel = '';
-                
                 if (pendingAttachment.type === 'image') {
                     messageText = `<img src="${pendingAttachment.dataUrl}" style="max-width: 200px; max-height: 150px; border-radius: 8px; cursor: pointer; display: block; margin-top: 5px;" onclick="window.open(this.src)" alt="Image">`;
-                    previewLabel = '[Hình ảnh]';
                 } else {
                     const fileSizeFormatted = pendingAttachment.size > 1024 * 1024 
                         ? (pendingAttachment.size / (1024 * 1024)).toFixed(1) + ' MB' 
@@ -396,39 +603,26 @@
                             </a>
                         </div>
                     `;
-                    previewLabel = '[Tệp tin]';
                 }
-
-                MESSAGES_HISTORY[currentSelectedChatId].push({
-                    sender: 'user',
-                    name: 'You',
-                    time: time,
-                    text: messageText,
-                    type: 'out'
-                });
-
-                updateSidebarPreview(previewLabel, time);
-                cancelAttachment(); // Clears pendingAttachment and hides container
-                sentSomething = true;
             }
 
-            // 2. Send text message if any
-            if (text) {
-                MESSAGES_HISTORY[currentSelectedChatId].push({
-                    sender: 'user',
-                    name: 'You',
-                    time: time,
-                    text: text,
-                    type: 'out'
+            try {
+                const res = await authFetch(`/v1/chats/${currentSelectedChatId}`, {
+                    method: 'POST',
+                    body: JSON.stringify({ message: messageText })
                 });
 
-                updateSidebarPreview(text, time);
-                input.value = '';
-                sentSomething = true;
-            }
-
-            if (sentSomething) {
-                renderMessageHistory(currentSelectedChatId);
+                if (res.ok) {
+                    input.value = '';
+                    cancelAttachment();
+                    await loadChatHistory(currentSelectedChatId);
+                } else {
+                    const errData = await res.json();
+                    showAlert(errData.message || 'Gửi tin nhắn thất bại.');
+                }
+            } catch (err) {
+                console.error('Error sending message:', err);
+                showAlert('Không thể kết nối đến máy chủ.');
             }
         }
 
@@ -436,11 +630,12 @@
         function toggleDropdown(event) {
             event.stopPropagation();
             const dropdown = document.getElementById('chat-dropdown');
-            const show = dropdown.style.display === 'none';
-            dropdown.style.display = show ? 'block' : 'none';
+            if (dropdown) {
+                const show = dropdown.style.display === 'none';
+                dropdown.style.display = show ? 'block' : 'none';
+            }
         }
 
-        // Close dropdown when clicking outside
         window.addEventListener('click', () => {
             const dropdown = document.getElementById('chat-dropdown');
             if (dropdown) dropdown.style.display = 'none';
@@ -448,39 +643,101 @@
 
         function clearHistory(e) {
             e.preventDefault();
-            if (confirm('Bạn có chắc chắn muốn xóa toàn bộ lịch sử tin nhắn với liên hệ này?')) {
-                MESSAGES_HISTORY[currentSelectedChatId] = [];
-                renderMessageHistory(currentSelectedChatId);
-                alert('Đã xóa lịch sử tin nhắn thành công!');
-            }
+            showConfirm('Bạn có chắc chắn muốn xóa toàn bộ lịch sử tin nhắn với liên hệ này?', async (confirmed) => {
+                if (confirmed) {
+                    try {
+                        const res = await authFetch(`/v1/chats/${currentSelectedChatId}/history`, {
+                            method: 'DELETE'
+                        });
+                        if (res.ok) {
+                            const mockKey = Object.keys(CHAT_DATA).find(k => 
+                                CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 35)
+                            );
+                            if (mockKey) {
+                                MESSAGES_HISTORY[mockKey] = [];
+                            }
+                            await loadChatHistory(currentSelectedChatId);
+                            showAlert('Đã xóa lịch sử tin nhắn thành công!');
+                        } else {
+                            showAlert('Không thể xóa lịch sử tin nhắn trên máy chủ.');
+                        }
+                    } catch (err) {
+                        console.error('Error clearing history:', err);
+                        showAlert('Lỗi khi gửi yêu cầu xóa lịch sử.');
+                    }
+                }
+            });
         }
 
-        // Block & Unblock toggle contact
-        function toggleBlockContact(e) {
+        async function toggleBlockContact(e) {
             e.preventDefault();
-            const chat = CHAT_DATA[currentSelectedChatId];
+            
+            let chat = activeChatList.find(c => c.contactId === currentSelectedChatId);
+            if (!chat) {
+                const mockKey = Object.keys(CHAT_DATA).find(k => 
+                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 35)
+                );
+                if (mockKey) chat = CHAT_DATA[mockKey];
+            }
             if (!chat) return;
 
-            if (chat.isBlocked) {
-                if (confirm(`Bạn có chắc chắn muốn mở chặn liên hệ ${chat.name}?`)) {
-                    chat.isBlocked = false;
-                    alert(`Đã mở chặn liên hệ ${chat.name}. Bạn có thể tiếp tục trò chuyện.`);
-                    updateChatUIState();
+            const isBlocked = chat.isBlocked;
+            const actionText = isBlocked ? 'mở chặn' : 'chặn';
+            
+            showConfirm(`Bạn có chắc chắn muốn ${actionText} liên hệ ${chat.name}?`, async (confirmed) => {
+                if (confirmed) {
+                    try {
+                        const endpoint = isBlocked ? `/v1/chats/${currentSelectedChatId}/unblock` : `/v1/chats/${currentSelectedChatId}/block`;
+                        const res = await authFetch(endpoint, { method: 'POST' });
+                        if (res.ok) {
+                            chat.isBlocked = !isBlocked;
+                            updateChatUIState(chat);
+                            showAlert(`Đã ${actionText} liên hệ ${chat.name} thành công.`);
+                        } else {
+                            showAlert(`Không thể thực hiện ${actionText} trên máy chủ.`);
+                        }
+                    } catch (err) {
+                        console.error('Error toggling block:', err);
+                        showAlert(`Lỗi khi ${actionText} liên hệ.`);
+                    }
                 }
-            } else {
-                if (confirm(`Bạn có chắc chắn muốn chặn liên hệ ${chat.name}?`)) {
-                    chat.isBlocked = true;
-                    alert(`Đã chặn liên hệ ${chat.name}. Bạn sẽ không nhận được tin nhắn từ họ nữa.`);
-                    updateChatUIState();
+            });
+        }
+
+        async function toggleMuteNotifications(e) {
+            e.preventDefault();
+            
+            let chat = activeChatList.find(c => c.contactId === currentSelectedChatId);
+            if (!chat) {
+                const mockKey = Object.keys(CHAT_DATA).find(k => 
+                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 35)
+                );
+                if (mockKey) chat = CHAT_DATA[mockKey];
+            }
+            if (!chat) return;
+
+            const isMuted = chat.isMuted;
+            const actionText = isMuted ? 'bật' : 'tắt';
+            
+            try {
+                const endpoint = isMuted ? `/v1/chats/${currentSelectedChatId}/unmute` : `/v1/chats/${currentSelectedChatId}/mute`;
+                const res = await authFetch(endpoint, { method: 'POST' });
+                if (res.ok) {
+                    chat.isMuted = !isMuted;
+                    updateChatUIState(chat);
+                    showAlert(`Đã ${actionText} thông báo cho cuộc trò chuyện với ${chat.name}.`);
+                } else {
+                    showAlert(`Không thể ${actionText} thông báo.`);
                 }
+            } catch (err) {
+                console.error('Error toggling mute:', err);
+                showAlert(`Lỗi khi ${actionText} thông báo.`);
             }
         }
 
-        function updateChatUIState() {
-            const chat = CHAT_DATA[currentSelectedChatId];
+        function updateChatUIState(chat) {
             if (!chat) return;
 
-            // Update block button text and icon in dropdown
             const toggleBlockBtn = document.getElementById('toggle-block-btn');
             if (toggleBlockBtn) {
                 if (chat.isBlocked) {
@@ -490,7 +747,15 @@
                 }
             }
 
-            // Update inputs and footer controls
+            const toggleMuteBtn = document.getElementById('toggle-mute-btn');
+            if (toggleMuteBtn) {
+                if (chat.isMuted) {
+                    toggleMuteBtn.innerHTML = '<i class="fa fa-bell"></i> Bật thông báo';
+                } else {
+                    toggleMuteBtn.innerHTML = '<i class="fa fa-bell-slash"></i> Tắt thông báo';
+                }
+            }
+
             const input = document.getElementById('message-input');
             const sendBtn = document.querySelector('.messages-input-row__send');
             const attachBtn = document.querySelector('.messages-input-row__attach');
@@ -498,11 +763,11 @@
             
             let banner = document.getElementById('chat-blocked-banner');
 
-            if (chat.isBlocked) {
+            if (chat.isBlocked || chat.isBlockedByContact) {
                 if (input) {
                     input.disabled = true;
                     input.value = '';
-                    input.placeholder = "Bạn đã chặn liên hệ này.";
+                    input.placeholder = chat.isBlocked ? "Bạn đã chặn liên hệ này." : "Liên hệ này đã chặn bạn.";
                 }
                 if (sendBtn) {
                     sendBtn.disabled = true;
@@ -519,7 +784,6 @@
                     emojiBtn.style.opacity = '0.5';
                 }
 
-                // Add warning banner inside chat footer if not exist
                 if (!banner) {
                     banner = document.createElement('div');
                     banner.id = 'chat-blocked-banner';
@@ -532,12 +796,17 @@
                     banner.style.textAlign = 'center';
                     banner.style.marginBottom = '10px';
                     banner.style.fontFamily = 'inherit';
-                    banner.innerHTML = `Bạn đã chặn liên hệ này. <a href="#" onclick="toggleBlockContact(event)" style="color: #b91c1c; font-weight: 700; text-decoration: underline; margin-left: 5px;">Mở chặn</a> để tiếp tục gửi tin nhắn.`;
                     
                     const footer = document.querySelector('.messages-main__footer');
                     if (footer) {
                         footer.insertBefore(banner, footer.firstChild);
                     }
+                }
+                
+                if (chat.isBlocked) {
+                    banner.innerHTML = `Bạn đã chặn liên hệ này. <a href="#" onclick="toggleBlockContact(event)" style="color: #b91c1c; font-weight: 700; text-decoration: underline; margin-left: 5px;">Mở chặn</a> để tiếp tục gửi tin nhắn.`;
+                } else {
+                    banner.innerHTML = `Bạn đã bị liên hệ này chặn. Không thể gửi tin nhắn.`;
                 }
             } else {
                 if (input) {
@@ -565,44 +834,60 @@
             }
         }
 
-        // Search message keywords in chat
-        function searchMessages(e) {
-            e.preventDefault();
-            const term = prompt('Nhập từ khóa cần tìm kiếm trong cuộc trò chuyện:');
-            if (term && term.trim()) {
-                const kw = term.trim().toLowerCase();
-                const bubbles = document.querySelectorAll('.msg-bubble');
-                let foundCount = 0;
-                bubbles.forEach(b => {
-                    const text = b.textContent.toLowerCase();
-                    if (text.includes(kw)) {
-                        b.style.border = '2px solid var(--brand-accent)';
-                        foundCount++;
-                        b.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    } else {
-                        b.style.border = '';
-                    }
-                });
-                if (foundCount > 0) {
-                    alert(`Đã tìm thấy ${foundCount} tin nhắn khớp với từ khóa.`);
-                } else {
-                    alert('Không tìm thấy tin nhắn nào khớp.');
-                }
+        // Inline Search message keywords in chat
+        function toggleSearchMessages(e) {
+            if (e) e.preventDefault();
+            const container = document.getElementById('message-search-container');
+            const input = document.getElementById('message-search-input');
+            const isHidden = container.style.display === 'none';
+            
+            container.style.display = isHidden ? 'flex' : 'none';
+            if (isHidden) {
+                input.value = '';
+                input.focus();
+                clearMessageHighlights();
+            } else {
+                clearMessageHighlights();
             }
         }
 
-        // Mute / Unmute notifications simulation
-        function toggleMuteNotifications(e) {
-            e.preventDefault();
-            const chat = CHAT_DATA[currentSelectedChatId];
-            chat.isMuted = !chat.isMuted;
-            const actionEl = e.currentTarget;
-            if (chat.isMuted) {
-                actionEl.innerHTML = '<i class="fa fa-bell"></i> Bật thông báo';
-                alert(`Đã tắt thông báo cho cuộc trò chuyện với ${chat.name}`);
-            } else {
-                actionEl.innerHTML = '<i class="fa fa-bell-slash"></i> Tắt thông báo';
-                alert(`Đã bật thông báo cho cuộc trò chuyện với ${chat.name}`);
+        function closeMessageSearch() {
+            const container = document.getElementById('message-search-container');
+            if (container) container.style.display = 'none';
+            clearMessageHighlights();
+        }
+
+        function clearMessageHighlights() {
+            const bubbles = document.querySelectorAll('.msg-bubble');
+            bubbles.forEach(b => {
+                b.style.border = '';
+                b.style.background = '';
+            });
+        }
+
+        function performMessageSearch(term) {
+            clearMessageHighlights();
+            if (!term || !term.trim()) return;
+
+            const kw = term.trim().toLowerCase();
+            const bubbles = document.querySelectorAll('.msg-bubble');
+            let firstMatch = null;
+            let foundCount = 0;
+
+            bubbles.forEach(b => {
+                const text = b.textContent.toLowerCase();
+                if (text.includes(kw)) {
+                    b.style.border = '2px solid var(--brand-accent, #f97316)';
+                    b.style.background = '#fef3c7'; // yellow highlight background
+                    foundCount++;
+                    if (!firstMatch) {
+                        firstMatch = b;
+                    }
+                }
+            });
+
+            if (firstMatch) {
+                firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
 
@@ -610,9 +895,16 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            const chat = CHAT_DATA[currentSelectedChatId];
+            let chat = activeChatList.find(c => c.contactId === currentSelectedChatId);
+            if (!chat) {
+                const mockKey = Object.keys(CHAT_DATA).find(k => 
+                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 35)
+                );
+                if (mockKey) chat = CHAT_DATA[mockKey];
+            }
+
             if (chat && chat.isBlocked) {
-                alert('Không thể gửi tin nhắn do cuộc trò chuyện này đã bị chặn.');
+                showAlert('Không thể gửi tin nhắn do cuộc trò chuyện này đã bị chặn.');
                 return;
             }
 
@@ -634,9 +926,16 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            const chat = CHAT_DATA[currentSelectedChatId];
+            let chat = activeChatList.find(c => c.contactId === currentSelectedChatId);
+            if (!chat) {
+                const mockKey = Object.keys(CHAT_DATA).find(k => 
+                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 35)
+                );
+                if (mockKey) chat = CHAT_DATA[mockKey];
+            }
+
             if (chat && chat.isBlocked) {
-                alert('Không thể gửi tin nhắn do cuộc trò chuyện này đã bị chặn.');
+                showAlert('Không thể gửi tin nhắn do cuộc trò chuyện này đã bị chặn.');
                 return;
             }
 
@@ -686,37 +985,76 @@
             if (container) container.style.display = 'none';
         }
 
-        function updateSidebarPreview(text, time) {
-            const activeItem = document.querySelector('.messages-chat-item.is-active');
-            if (activeItem) {
-                const previewSpan = activeItem.querySelector('.messages-chat-item__preview span');
-                if (previewSpan) {
-                    previewSpan.textContent = text;
-                }
-                const timeSpan = activeItem.querySelector('.messages-chat-item__time');
-                if (timeSpan) {
-                    timeSpan.textContent = time;
-                }
-            }
-        }
-
-        // On DOMContentLoaded, check if sellerId is passed in URL
-        document.addEventListener('DOMContentLoaded', () => {
+        function selectInitialChat() {
             const urlParams = new URLSearchParams(window.location.search);
             const sellerIdParam = urlParams.get('sellerId');
             if (sellerIdParam) {
                 const sId = parseInt(sellerIdParam);
-                const foundKey = Object.keys(CHAT_DATA).find(key => CHAT_DATA[key].sellerId === sId);
-                if (foundKey) {
-                    selectChat(parseInt(foundKey));
+                selectChat(sId);
+            } else {
+                if (activeChatList.length > 0) {
+                    selectChat(activeChatList[0].contactId);
                 } else {
                     selectChat(1);
                 }
-            } else {
-                selectChat(1);
             }
-        });
+        }
+
+        function startChatPolling() {
+            if (chatPollInterval) clearInterval(chatPollInterval);
+            
+            chatPollInterval = setInterval(async () => {
+                if (currentSelectedChatId) {
+                    await loadChatHistory(currentSelectedChatId);
+                }
+            }, 4000);
+        }
+
+        // Custom Confirm Dialogue Modals
+        let customConfirmCallback = null;
+
+        function showConfirm(message, callback) {
+            document.getElementById('custom-confirm-title').innerHTML = '<i class="fa fa-question-circle" style="color: var(--brand-accent, #f97316);"></i> Xác nhận';
+            document.getElementById('custom-confirm-message').textContent = message;
+            document.getElementById('custom-confirm-cancel').style.display = 'inline-block';
+            document.getElementById('custom-confirm-submit').textContent = 'Đồng ý';
+            document.getElementById('custom-confirm-modal').style.display = 'flex';
+            customConfirmCallback = callback;
+        }
+
+        function showAlert(message, callback = null) {
+            document.getElementById('custom-confirm-title').innerHTML = '<i class="fa fa-info-circle" style="color: #10b981;"></i> Thông báo';
+            document.getElementById('custom-confirm-message').textContent = message;
+            document.getElementById('custom-confirm-cancel').style.display = 'none';
+            document.getElementById('custom-confirm-submit').textContent = 'OK';
+            document.getElementById('custom-confirm-modal').style.display = 'flex';
+            customConfirmCallback = callback;
+        }
+
+        function onCustomConfirmResult(result) {
+            document.getElementById('custom-confirm-modal').style.display = 'none';
+            if (customConfirmCallback) {
+                customConfirmCallback(result);
+                customConfirmCallback = null;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initChats);
     </script>
+
+    <!-- Custom Dialog Modal -->
+    <div id="custom-confirm-modal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center;">
+        <div style="background: #ffffff; border-radius: 16px; padding: 24px; width: 90%; max-width: 400px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); text-align: left; font-family: sans-serif; border: 1px solid #e2e8f0;">
+            <h3 id="custom-confirm-title" style="margin: 0 0 10px 0; font-size: 16px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                <i class="fa fa-info-circle" style="color: var(--brand-accent, #f97316);"></i> Confirm
+            </h3>
+            <p id="custom-confirm-message" style="margin: 0 0 20px 0; font-size: 13.5px; color: #475569; line-height: 1.5;"></p>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" id="custom-confirm-cancel" style="padding: 8px 16px; font-size: 13px; font-weight: 600; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; color: #334155; cursor: pointer;" onclick="onCustomConfirmResult(false)">Hủy</button>
+                <button type="button" id="custom-confirm-submit" style="padding: 8px 16px; font-size: 13px; font-weight: 600; border-radius: 8px; border: none; background: var(--brand-dark, #0f172a); color: #ffffff; cursor: pointer;" onclick="onCustomConfirmResult(true)">Xác nhận</button>
+            </div>
+        </div>
+    </div>
     
 </body>
 

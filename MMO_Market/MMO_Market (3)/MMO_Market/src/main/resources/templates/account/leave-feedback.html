@@ -64,12 +64,12 @@
                     <span class="experience-card__char-counter" id="charCounter">0 / 300 ký tự (khuyên dùng)</span>
                 </div>
 
-                <!-- Vùng tải ảnh (Image Upload Area) -->
+                <!-- Vùng tải ảnh và video (Image/Video Upload Area) -->
                 <div class="upload-area" id="dropzone" onclick="triggerFileInput()">
                     <i class="fa fa-camera upload-area__icon" aria-hidden="true"></i>
-                    <p class="upload-area__text">Kéo thả ảnh vào đây, hoặc <span>chọn file từ máy tính</span></p>
-                    <p class="upload-area__note">Định dạng hỗ trợ: JPG, PNG, GIF (Tối đa 5MB)</p>
-                    <input type="file" id="imageInput" multiple accept="image/png, image/jpeg, image/gif" style="display: none;" onchange="handleFileSelect(event)">
+                    <p class="upload-area__text">Kéo thả ảnh hoặc video vào đây, hoặc <span>chọn file từ máy tính</span></p>
+                    <p class="upload-area__note">Định dạng hỗ trợ: JPG, PNG, GIF, MP4, WEBM, MOV (Tối đa 50MB)</p>
+                    <input type="file" id="imageInput" multiple accept="image/*,video/*" style="display: none;" onchange="handleFileSelect(event)">
                 </div>
 
                 <!-- Preview container -->
@@ -118,6 +118,7 @@
         let isAnonymous = false;
         let orderCode = '';
         let productId = 1;
+        let transactionId = null; // ID giao dịch cụ thể để cho phép review nhiều đơn cùng sản phẩm
 
         document.addEventListener('DOMContentLoaded', () => {
             // Extract orderCode from path: /account/orders/{orderCode}/feedback
@@ -165,7 +166,8 @@
             let orders = [];
             try {
                 const key = getUserSpecificKey(ACCOUNT_ORDERS_MOCK_KEY);
-                const saved = sessionStorage.getItem(key);
+                // Ưu tiên đọc từ localStorage (persist qua nhiều tab)
+                const saved = localStorage.getItem(key) || sessionStorage.getItem(key);
                 if (saved) {
                     orders = JSON.parse(saved);
                 }
@@ -179,11 +181,13 @@
 
             if (currentOrder) {
                 productId = currentOrder.productId || 1;
+                transactionId = currentOrder.transactionId || null; // Lấy transactionId từ đơn hàng
                 productNameEl.textContent = currentOrder.productName;
                 sellerNameEl.textContent = currentOrder.sellerName;
             } else {
                 // Default if not found in mock list
                 productId = 1;
+                transactionId = null;
                 productNameEl.textContent = `Tài khoản Netflix Premium UltraHD 4K (#${code})`;
                 sellerNameEl.textContent = 'NetflixVN Store';
             }
@@ -295,16 +299,26 @@
         }
 
         function processFiles(files) {
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-            const maxSize = 5 * 1024 * 1024; // 5MB
+            const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
+            const maxImageSize = 10 * 1024 * 1024; // 10MB
+            const maxVideoSize = 50 * 1024 * 1024; // 50MB
 
             files.forEach(file => {
-                if (!allowedTypes.includes(file.type)) {
-                    alert(`Định dạng tệp "${file.name}" không hợp lệ. Chỉ hỗ trợ JPG, PNG, GIF.`);
+                const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+                const isImage = allowedImageTypes.includes(file.type) || ['.png', '.jpg', '.jpeg', '.gif'].includes(extension);
+                const isVideo = allowedVideoTypes.includes(file.type) || ['.mp4', '.webm', '.avi', '.mov'].includes(extension);
+
+                if (!isImage && !isVideo) {
+                    showWarningToast(`Định dạng tệp "${file.name}" không hợp lệ. Chỉ hỗ trợ JPG, PNG, GIF, MP4, WEBM, MOV.`);
                     return;
                 }
-                if (file.size > maxSize) {
-                    alert(`Kích thước tệp "${file.name}" vượt quá 5MB.`);
+                if (isImage && file.size > maxImageSize) {
+                    showWarningToast(`Kích thước ảnh "${file.name}" vượt quá 10MB.`);
+                    return;
+                }
+                if (isVideo && file.size > maxVideoSize) {
+                    showWarningToast(`Kích thước video "${file.name}" vượt quá 50MB.`);
                     return;
                 }
 
@@ -316,33 +330,46 @@
 
         function renderPreview(file) {
             const container = document.getElementById('previewContainer');
-            const reader = new FileReader();
-
-            reader.onload = (e) => {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'upload-preview-item';
-                
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                img.alt = file.name;
-                
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.className = 'upload-preview-item__remove';
-                removeBtn.innerHTML = '<i class="fa fa-times" aria-hidden="true"></i>';
-                removeBtn.title = 'Xóa ảnh';
-                removeBtn.onclick = () => {
-                    // Remove from files array
-                    uploadedFiles = uploadedFiles.filter(f => f !== file);
-                    wrapper.remove();
-                };
-
-                wrapper.appendChild(img);
-                wrapper.appendChild(removeBtn);
-                container.appendChild(wrapper);
+            const objectUrl = URL.createObjectURL(file);
+            
+            const wrapper = document.createElement('div');
+            wrapper.className = 'upload-preview-item';
+            
+            const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+            const isVideo = file.type.startsWith('video/') || ['.mp4', '.webm', '.avi', '.mov'].includes(extension);
+            
+            let mediaElement;
+            if (isVideo) {
+                mediaElement = document.createElement('video');
+                mediaElement.src = objectUrl;
+                mediaElement.controls = true;
+                mediaElement.style.width = '100%';
+                mediaElement.style.height = '100%';
+                mediaElement.style.objectFit = 'cover';
+            } else {
+                mediaElement = document.createElement('img');
+                mediaElement.src = objectUrl;
+                mediaElement.alt = file.name;
+                mediaElement.style.width = '100%';
+                mediaElement.style.height = '100%';
+                mediaElement.style.objectFit = 'cover';
+            }
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'upload-preview-item__remove';
+            removeBtn.innerHTML = '<i class="fa fa-times" aria-hidden="true"></i>';
+            removeBtn.title = 'Xóa tệp';
+            removeBtn.onclick = () => {
+                // Remove from files array
+                uploadedFiles = uploadedFiles.filter(f => f !== file);
+                URL.revokeObjectURL(objectUrl);
+                wrapper.remove();
             };
 
-            reader.readAsDataURL(file);
+            wrapper.appendChild(mediaElement);
+            wrapper.appendChild(removeBtn);
+            container.appendChild(wrapper);
         }
 
         // --- 4. Anonymous Toggle Switch ---
@@ -362,33 +389,63 @@
 
         async function submitFeedback() {
             if (selectedScore === 0) {
-                alert('Vui lòng chọn số sao để đánh giá sản phẩm.');
+                showWarningToast('Vui lòng chọn số sao để đánh giá sản phẩm.');
                 return;
             }
 
             const comment = document.getElementById('reviewComment').value.trim();
             if (!comment) {
-                alert('Vui lòng nhập nội dung chia sẻ trải nghiệm mua hàng.');
+                showWarningToast('Vui lòng nhập nội dung chia sẻ trải nghiệm mua hàng.');
                 return;
             }
 
+            const submitBtn = document.querySelector('.feedback-actions .ds-btn-primary');
+            const originalBtnHtml = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang gửi...';
+
             try {
-                // Gọi API thực tế lưu đánh giá sản phẩm
+                // 1. Upload files first
+                const urls = [];
+                const token = sessionStorage.getItem('accessToken');
+                
+                for (const file of uploadedFiles) {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    
+                    const uploadRes = await fetch('/api/upload', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: formData
+                    });
+                    const uploadData = await uploadRes.json();
+                    if (!uploadRes.ok) {
+                        throw new Error(uploadData.message || 'Lỗi tải lên tệp đính kèm.');
+                    }
+                    urls.push(uploadData.url);
+                }
+                
+                const mediaUrl = urls.join(',');
+
+                // 2. Submit feedback (kiêm transactionId để backend cho phép review nhiều đơn cùng sản phẩm)
                 const res = await authFetch(`/search/products/${productId}/reviews`, {
                     method: 'POST',
                     body: JSON.stringify({
                         rating: selectedScore,
-                        comment: comment
+                        comment: comment,
+                        mediaUrl: mediaUrl,
+                        transactionId: transactionId || null
                     })
                 });
 
                 if (res.ok) {
-                    // Cập nhật trạng thái đã đánh giá vào mock storage
+                    // Cập nhật trạng thái đã đánh giá vào mock storage (localStorage)
                     let orders = [];
-                    const userEmail = sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')).email : '';
-                    const key = userEmail ? `mmoMarketMyOrdersMock_${userEmail}` : `mmoMarketMyOrdersMock`;
+                    const key = getUserSpecificKey(ACCOUNT_ORDERS_MOCK_KEY);
                     try {
-                        const saved = sessionStorage.getItem(key);
+                        const saved = localStorage.getItem(key) || sessionStorage.getItem(key);
                         if (saved) {
                             orders = JSON.parse(saved);
                         }
@@ -399,7 +456,8 @@
                     const currentOrderIndex = orders.findIndex(o => o.orderCode === orderCode);
                     if (currentOrderIndex >= 0) {
                         orders[currentOrderIndex].isReviewed = true;
-                        sessionStorage.setItem(key, JSON.stringify(orders));
+                        localStorage.setItem(key, JSON.stringify(orders));
+                        sessionStorage.setItem(key, JSON.stringify(orders)); // Sync cả hai
                     }
 
                     // Show Success Modal
@@ -407,11 +465,14 @@
                     modal.style.display = 'flex';
                 } else {
                     const errorResponse = await res.json();
-                    alert(errorResponse.message || 'Gửi đánh giá thất bại. Vui lòng thử lại sau.');
+                    showErrorToast(errorResponse.message || 'Gửi đánh giá thất bại. Vui lòng thử lại sau.');
                 }
             } catch (err) {
                 console.error('Lỗi khi gửi đánh giá:', err);
-                alert('Có lỗi xảy ra trong quá trình kết nối đến máy chủ.');
+                showErrorToast(err.message || 'Có lỗi xảy ra trong quá trình kết nối đến máy chủ.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
             }
         }
 

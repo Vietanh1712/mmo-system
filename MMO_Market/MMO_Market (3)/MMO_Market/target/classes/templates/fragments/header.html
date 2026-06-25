@@ -3,6 +3,9 @@
 <body>
 
 <header class="header" th:fragment="header">
+    <!-- Global Toast CSS + JS (loaded once for all pages) -->
+    <link rel="stylesheet" th:href="@{/css/toast.css}">
+    <script th:src="@{/js/toast.js}"></script>
     <div class="header__top">
         <a href="/" class="header__logo">
             <i class="fa fa-diamond"></i>
@@ -52,7 +55,7 @@
         </div>
         <div class="dropdown-divider"></div>
         <div class="dropdown-item" onclick="if(typeof logout === 'function') logout(); else { sessionStorage.clear(); localStorage.removeItem('accessToken'); localStorage.removeItem('refreshToken'); localStorage.removeItem('loginTimestamp'); localStorage.removeItem('userInfo'); localStorage.removeItem('user'); window.location.href='/login'; }">
-            <i class="fa fa-sign-out-alt"></i> Đăng xuất
+            <i class="fa fa-sign-out"></i> Đăng xuất
         </div>
     </div>
 
@@ -70,7 +73,7 @@
         const SESSION_TIMEOUT_MS = 15 * 60 * 1000;
         const HEADER_STORAGE_KEYS = ['accessToken', 'refreshToken', 'loginTimestamp', 'userInfo', 'user'];
 
-        function initializeHeaderFromCache() {
+        function initHeader() {
             if (!sessionStorage.getItem('accessToken') && localStorage.getItem('accessToken')) {
                 HEADER_STORAGE_KEYS.forEach(key => {
                     const value = localStorage.getItem(key);
@@ -194,7 +197,11 @@
             highlightMainNav();
         }
 
-        initializeHeaderFromCache();
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initHeader);
+        } else {
+            initHeader();
+        }
 
         window.addEventListener('click', () => {
             const dropdown = document.getElementById('userDropdown');
@@ -279,11 +286,32 @@
             });
         }
 
+        function getCartStorageKey() {
+            try {
+                const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user") || localStorage.getItem("userInfo") || localStorage.getItem("user");
+                if (userString && userString !== "null" && userString !== "undefined") {
+                    const user = JSON.parse(userString);
+                    if (user) {
+                        let role = 'Customer';
+                        if (user.role) {
+                            role = parseHeaderRole(user.role);
+                        }
+                        const id = user.id || user.email || 'unknown';
+                        return `mmoCart_${role}_${id}`;
+                    }
+                }
+            } catch (error) {
+                console.error("Error determining cart key:", error);
+            }
+            return 'mmoCart_guest';
+        }
+        window.getCartStorageKey = getCartStorageKey;
+
         function refreshHeaderCartBadge() {
             const badge = document.getElementById('headerCartCount');
             if (!badge) return;
             try {
-                const cart = JSON.parse(localStorage.getItem('mmoCart') || '[]');
+                const cart = JSON.parse(localStorage.getItem(getCartStorageKey()) || '[]');
                 const count = cart.reduce((sum, item) => sum + Number(item.quantity || 1), 0);
                 badge.innerText = count > 99 ? '99+' : String(count);
                 badge.style.display = count > 0 ? 'inline-flex' : 'none';
@@ -293,16 +321,45 @@
             }
         }
 
-        function refreshHeaderNotifBadge() {
+        async function refreshHeaderNotifBadge() {
             const badge = document.getElementById('headerNotifCount');
             if (!badge) return;
+            const token = sessionStorage.getItem("accessToken");
+            if (!token || token === "null" || token === "undefined") {
+                badge.innerText = '0';
+                badge.style.display = 'none';
+                return;
+            }
             try {
-                const mockData = JSON.parse(sessionStorage.getItem('mmo_admin_mock') || '{}');
-                const history = mockData.notifications || [];
-                const readIds = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
-                const unreadCount = history.filter(n => !readIds.includes(n.timestamp)).length;
-                badge.innerText = unreadCount > 99 ? '99+' : String(unreadCount);
-                badge.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
+                let list = null;
+                if (typeof authFetch === 'function') {
+                    const response = await authFetch('/v1/notifications');
+                    if (response.ok) {
+                        list = await response.json();
+                    }
+                } else {
+                    const response = await fetch('/api/v1/notifications', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (response.ok) {
+                        list = await response.json();
+                    }
+                }
+
+                if (list) {
+                    const readIds = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
+                    const unreadCount = list.filter(n => {
+                        if (n.isBroadcast) {
+                            return !readIds.includes(n.originalTimestamp);
+                        }
+                        return n.status === 'UNREAD';
+                    }).length;
+                    badge.innerText = unreadCount > 99 ? '99+' : String(unreadCount);
+                    badge.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
+                } else {
+                    badge.innerText = '0';
+                    badge.style.display = 'none';
+                }
             } catch (error) {
                 badge.innerText = '0';
                 badge.style.display = 'none';
@@ -312,10 +369,6 @@
         window.refreshHeaderCartBadge = refreshHeaderCartBadge;
         window.refreshHeaderNotifBadge = refreshHeaderNotifBadge;
         window.addEventListener('storage', () => {
-            refreshHeaderCartBadge();
-            refreshHeaderNotifBadge();
-        });
-        document.addEventListener('DOMContentLoaded', () => {
             refreshHeaderCartBadge();
             refreshHeaderNotifBadge();
         });

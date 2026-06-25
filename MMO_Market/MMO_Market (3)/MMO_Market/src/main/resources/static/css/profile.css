@@ -167,6 +167,40 @@
     color: var(--ds-text-subtle);
 }
 
+.account-sidebar__divider,
+.seller-sidebar__divider,
+.staff-sidebar__divider {
+    height: 1px;
+    margin: 8px 10px;
+    background: var(--ds-border);
+}
+
+.account-sidebar__menu-link--logout,
+.seller-sidebar__menu-link--logout,
+.staff-sidebar__link--logout {
+    color: #ef4444;
+    cursor: pointer;
+}
+
+.account-sidebar__menu-link--logout i,
+.seller-sidebar__menu-link--logout i,
+.staff-sidebar__link--logout i {
+    color: #ef4444;
+}
+
+.account-sidebar__menu-link--logout:hover,
+.seller-sidebar__menu-link--logout:hover,
+.staff-sidebar__link--logout:hover {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.account-sidebar__menu-link--logout:hover i,
+.seller-sidebar__menu-link--logout:hover i,
+.staff-sidebar__link--logout:hover i {
+    color: #dc2626;
+}
+
 .profile-card {
     padding: 28px;
     overflow: visible;

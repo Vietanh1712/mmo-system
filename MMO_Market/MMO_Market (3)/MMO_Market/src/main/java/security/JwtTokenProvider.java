@@ -1,8 +1,10 @@
 package security;
 
+import dal.SystemConfigurationRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +17,9 @@ import java.util.Date;
 @Component
 @Slf4j
 public class JwtTokenProvider {
+
+    @Autowired
+    private SystemConfigurationRepository systemConfigurationRepository;
 
     @Value("${app.jwtSecret:MMOMarketSystemSecretKeyForJWTTokenGenerationAndValidation2026}")
     private String jwtSecret;
@@ -37,12 +42,26 @@ public class JwtTokenProvider {
      */
     public String generateAccessToken(Long userId, String email) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
+        long expirationTime = jwtExpirationMs;
+        
+        if (systemConfigurationRepository != null) {
+            expirationTime = systemConfigurationRepository.findByConfigKey("SESSION_TIMEOUT_MINS")
+                    .map(c -> {
+                        try {
+                            return Long.parseLong(c.getConfigValue()) * 60 * 1000L;
+                        } catch (NumberFormatException e) {
+                            return jwtExpirationMs;
+                        }
+                    }).orElse(jwtExpirationMs);
+        }
+        
+        Date expiryDate = new Date(now.getTime() + expirationTime);
 
         return Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("email", email)
                 .claim("type", "access")
+
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
