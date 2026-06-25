@@ -6,6 +6,27 @@
     <!-- Global Toast CSS + JS (loaded once for all pages) -->
     <link rel="stylesheet" th:href="@{/css/toast.css}">
     <script th:src="@{/js/toast.js}"></script>
+    <style>
+        body.is-system-user .product-card__cart-btn,
+        body.is-system-user #headerCartButton,
+        body.is-system-user #buyActionButton,
+        body.is-system-user #cartActionButton,
+        body.is-system-user .btn-pdp-buy,
+        body.is-system-user .btn-pdp-cart,
+        body.is-system-user #cartDropdownItem,
+        body.is-system-user #preordersDropdownItem,
+        body.is-system-user #transactionsDropdownItem,
+        body.is-system-user #topupDropdownItem,
+        body.is-system-user #topupNavItem,
+        body.is-system-user .support-contact-grid,
+        body.is-system-user #contact-title,
+        body.is-system-user #contact-title + p,
+        body.is-system-user [data-sidebar-visibility="buyer-only"],
+        body.is-system-user .account-sidebar__wallet,
+        body.is-system-user .account-sidebar__role-slot {
+            display: none !important;
+        }
+    </style>
     <div class="header__top">
         <a href="/" class="header__logo">
             <i class="fa fa-diamond"></i>
@@ -32,13 +53,13 @@
         <div class="dropdown-item" onclick="checkAuthAndRedirect('/profile')">
             <i class="fa fa-user"></i> Thông tin cá nhân
         </div>
-        <div class="dropdown-item" onclick="checkAuthAndRedirect('/wallet/transactions')">
+        <div class="dropdown-item" id="transactionsDropdownItem" onclick="checkAuthAndRedirect('/wallet/transactions')">
             <i class="fa fa-history"></i> Lịch sử giao dịch
         </div>
-        <div class="dropdown-item" onclick="checkAuthAndRedirect('/pre-orders')">
+        <div class="dropdown-item" id="preordersDropdownItem" onclick="checkAuthAndRedirect('/pre-orders')">
             <i class="fa fa-hourglass-half"></i> Đơn đặt trước
         </div>
-        <div class="dropdown-item" onclick="checkAuthAndRedirect('/cart')">
+        <div class="dropdown-item" id="cartDropdownItem" onclick="checkAuthAndRedirect('/cart')">
             <i class="fa fa-shopping-cart"></i> Giỏ hàng của tôi
         </div>
         <div class="dropdown-item" id="topupDropdownItem" onclick="checkAuthAndRedirect('/wallet/topup')">
@@ -123,6 +144,19 @@
                     const fullName = user.fullName || 'Người dùng';
                     const initial = fullName.charAt(0).toUpperCase();
                     const currentRole = parseHeaderRole(user.role);
+
+                    const isSystemRole = currentRole === 'Admin' || currentRole === 'Staff';
+                    if (isSystemRole) {
+                        document.body.classList.add('is-system-user');
+                        const forbiddenPaths = ['/cart', '/checkout', '/wallet/topup', '/wallet/transactions', '/pre-orders', '/account/orders'];
+                        const currentPath = window.location.pathname.toLowerCase();
+                        if (forbiddenPaths.some(path => currentPath === path || currentPath.startsWith(path + '/'))) {
+                            alert('Quản trị viên và nhân viên không có quyền truy cập chức năng này.');
+                            window.location.replace('/');
+                            return;
+                        }
+                    }
+
                     const adminWorkbenchItem = document.getElementById('adminWorkbenchDropdownItem');
                     const staffWorkItem = document.getElementById('staffWorkDropdownItem');
                     const sellerDropdownItem = document.getElementById('sellerDashboardDropdownItem');
@@ -151,6 +185,8 @@
                         ? formatCurrency(userBalance)
                         : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(userBalance);
 
+                    const balanceText = isSystemRole ? (currentRole === 'Admin' ? 'Quản trị viên' : 'Nhân viên') : balance;
+
                     authArea.innerHTML = `
                         <div class="header__account-actions">
                             <button class="header-cart-button" type="button" id="headerNotifButton" title="Thông báo" aria-label="Thông báo" onclick="checkAuthAndRedirect('/account/notifications')">
@@ -164,7 +200,7 @@
                             <div class="user-profile" id="userProfileToggle" style="cursor: pointer;">
                                 <div class="user-profile__info">
                                     <p class="user-profile__name">${fullName}</p>
-                                    <p class="user-profile__balance">${balance}</p>
+                                    <p class="user-profile__balance">${balanceText}</p>
                                 </div>
                                 <div class="user-profile__avatar">${initial}</div>
                             </div>

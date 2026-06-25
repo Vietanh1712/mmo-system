@@ -1,5 +1,6 @@
 package controller.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -16,7 +17,8 @@ public class OrderDto {
     private String paymentStatus;
     private String createdAt;
     private String escrowReleaseDate;
-    private boolean isReviewed;
+    @JsonProperty("isReviewed")
+    private Boolean isReviewed;
     private Integer reviewRating;
     private String reviewComment;
     private Long transactionId;

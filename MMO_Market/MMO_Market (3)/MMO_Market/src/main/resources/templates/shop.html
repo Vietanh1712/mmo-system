@@ -212,7 +212,7 @@
     <script th:src="@{/js/auth.js}"></script>
     <script th:inline="javascript">
         /* Thymeleaf injection of sellerId */
-        const SELLER_ID = /*[[${sellerId}]]*/ 35;
+        const SELLER_ID = /*[[${sellerId}]]*/ 2;
 
         let currentKeyword = '';
         let currentCategoryId = '';
@@ -433,14 +433,13 @@
                 const response = await fetch(`/api/search/products?${params.toString()}`);
                 if (response.ok) {
                     const data = await response.json();
-                    if (data && data.content && data.content.length > 0) {
-                        isUsingFallbackMock = false;
-                        renderShopProducts(data.content);
-                        renderShopPagination(data.totalPages, data.number);
-                        updateActiveFiltersRow();
-                    } else {
-                        loadFallbackShopMock();
-                    }
+                    isUsingFallbackMock = false;
+                    const content = (data && data.content) ? data.content : [];
+                    renderShopProducts(content);
+                    const totalPages = data ? data.totalPages : 0;
+                    const pageNumber = data ? data.number : 0;
+                    renderShopPagination(totalPages, pageNumber);
+                    updateActiveFiltersRow();
                 } else {
                     loadFallbackShopMock();
                 }

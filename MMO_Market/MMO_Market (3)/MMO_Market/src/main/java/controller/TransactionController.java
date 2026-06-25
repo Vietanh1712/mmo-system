@@ -80,9 +80,9 @@ public class TransactionController {
                 }
             }
 
-            // Sinh mã giao dịch và mã đơn hàng (mock format)
+            // Sinh mã giao dịch và mã đơn hàng (khớp với DTO và API)
             String transactionCode = "TXN" + (10000000 + (long) (Math.random() * 90000000));
-            String orderCode = "MMO-ORD-" + (1000 + (int) (Math.random() * 9000));
+            String orderCode = "MMO-ORD-" + transaction.getId();
 
             PurchaseResponse response = PurchaseResponse.builder()
                     .transactionCode(transactionCode)

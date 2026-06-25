@@ -577,18 +577,19 @@
                 const response = await fetch(`/api/search/products?${params.toString()}`);
                 if (response.ok) {
                     const data = await response.json();
-                    if (data && data.content && data.content.length > 0) {
-                        isUsingMock = false;
-                        renderProducts(data.content);
-                        renderPagination(data.totalPages, data.number);
-                        updateResultSummary(data.totalElements, data.number * 12 + 1, Math.min((data.number + 1) * 12, data.totalElements));
-                    } else {
-                        loadInteractiveMock();
-                    }
+                    isUsingMock = false;
+                    const content = (data && data.content) ? data.content : [];
+                    renderProducts(content);
+                    const totalPages = data ? data.totalPages : 0;
+                    const pageNumber = data ? data.number : 0;
+                    const totalElements = data ? data.totalElements : 0;
+                    renderPagination(totalPages, pageNumber);
+                    updateResultSummary(totalElements, totalElements > 0 ? pageNumber * 12 + 1 : 0, Math.min((pageNumber + 1) * 12, totalElements));
                 } else {
                     loadInteractiveMock();
                 }
             } catch (err) {
+                console.error("API error, fallback to mock data", err);
                 loadInteractiveMock();
             }
         }

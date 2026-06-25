@@ -4,7 +4,7 @@
 -- Mục đích: Sửa user_id thành Nullable và bổ sung cột is_global
 -- =============================================================================
 
-USE MMO_System_Schema;
+USE MMO_Market_Schema;
 GO
 
 -- Sửa cột user_id thành Nullable trong bảng Notifications

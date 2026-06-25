@@ -319,7 +319,7 @@
             Object.keys(CHAT_DATA).forEach(key => {
                 const id = parseInt(key);
                 const mockContact = CHAT_DATA[id];
-                const contactId = mockContact.sellerId ? mockContact.sellerId : 35; // Support Fallback ID
+                const contactId = mockContact.sellerId ? mockContact.sellerId : 14; // Support Fallback ID
                 
                 if (!renderedIds.has(contactId)) {
                     renderedIds.add(contactId);
@@ -359,7 +359,7 @@
             let chat = activeChatList.find(c => c.contactId === id);
             if (!chat) {
                 const mockKey = Object.keys(CHAT_DATA).find(k => 
-                    CHAT_DATA[k].sellerId === id || (CHAT_DATA[k].sellerId === null && id === 35)
+                    CHAT_DATA[k].sellerId === id || (CHAT_DATA[k].sellerId === null && id === 14)
                 );
                 if (mockKey) {
                     const mock = CHAT_DATA[mockKey];
@@ -427,7 +427,7 @@
 
             // Fallback to mock history
             const mockKey = Object.keys(CHAT_DATA).find(k => 
-                CHAT_DATA[k].sellerId === id || (CHAT_DATA[k].sellerId === null && id === 35)
+                CHAT_DATA[k].sellerId === id || (CHAT_DATA[k].sellerId === null && id === 14)
             );
             const history = MESSAGES_HISTORY[mockKey || 1] || [];
             
@@ -544,7 +544,7 @@
             let chat = activeChatList.find(c => c.contactId === currentSelectedChatId);
             if (!chat) {
                 const mockKey = Object.keys(CHAT_DATA).find(k => 
-                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 35)
+                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 14)
                 );
                 if (mockKey) chat = CHAT_DATA[mockKey];
             }
@@ -573,7 +573,7 @@
             let chat = activeChatList.find(c => c.contactId === currentSelectedChatId);
             if (!chat) {
                 const mockKey = Object.keys(CHAT_DATA).find(k => 
-                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 35)
+                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 14)
                 );
                 if (mockKey) chat = CHAT_DATA[mockKey];
             }
@@ -651,7 +651,7 @@
                         });
                         if (res.ok) {
                             const mockKey = Object.keys(CHAT_DATA).find(k => 
-                                CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 35)
+                                CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 14)
                             );
                             if (mockKey) {
                                 MESSAGES_HISTORY[mockKey] = [];
@@ -675,7 +675,7 @@
             let chat = activeChatList.find(c => c.contactId === currentSelectedChatId);
             if (!chat) {
                 const mockKey = Object.keys(CHAT_DATA).find(k => 
-                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 35)
+                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 14)
                 );
                 if (mockKey) chat = CHAT_DATA[mockKey];
             }
@@ -710,7 +710,7 @@
             let chat = activeChatList.find(c => c.contactId === currentSelectedChatId);
             if (!chat) {
                 const mockKey = Object.keys(CHAT_DATA).find(k => 
-                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 35)
+                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 14)
                 );
                 if (mockKey) chat = CHAT_DATA[mockKey];
             }
@@ -898,7 +898,7 @@
             let chat = activeChatList.find(c => c.contactId === currentSelectedChatId);
             if (!chat) {
                 const mockKey = Object.keys(CHAT_DATA).find(k => 
-                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 35)
+                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 14)
                 );
                 if (mockKey) chat = CHAT_DATA[mockKey];
             }
@@ -929,7 +929,7 @@
             let chat = activeChatList.find(c => c.contactId === currentSelectedChatId);
             if (!chat) {
                 const mockKey = Object.keys(CHAT_DATA).find(k => 
-                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 35)
+                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 14)
                 );
                 if (mockKey) chat = CHAT_DATA[mockKey];
             }

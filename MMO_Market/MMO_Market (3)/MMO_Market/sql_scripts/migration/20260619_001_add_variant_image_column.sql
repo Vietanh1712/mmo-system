@@ -4,7 +4,7 @@
 -- Description: Add image_url column to ProductVariants table.
 -- ==============================================================================
 
-USE MMO_System;
+USE MMO_Market_Schema;
 GO
 
 IF NOT EXISTS (

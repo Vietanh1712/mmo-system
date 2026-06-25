@@ -670,6 +670,7 @@ stock: 50,
                     reviewsCount: apiData.reviewsCount,
                     stock: apiData.stock,
                     description: apiData.description,
+                    guide: apiData.userGuide,
                     categoryName: apiData.categoryName,
                     variants: apiData.variants && apiData.variants.length > 0 ? apiData.variants.map(v => ({
                         duration: v.duration,
@@ -1456,7 +1457,7 @@ stock: 50,
             if (selectedProduct && selectedProduct.sellerId) {
                 window.location.href = `/shop/${selectedProduct.sellerId}`;
             } else {
-                window.location.href = `/shop/35`; // default fallback
+                window.location.href = `/shop/14`; // default fallback
             }
         }
 
@@ -1465,7 +1466,7 @@ stock: 50,
             if (selectedProduct && selectedProduct.sellerId) {
                 window.location.href = `/messages?sellerId=${selectedProduct.sellerId}&productId=${selectedProduct.id}`;
             } else {
-                window.location.href = `/messages?sellerId=35`;
+                window.location.href = `/messages?sellerId=14`;
             }
         }
     </script>

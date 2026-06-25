@@ -515,6 +515,7 @@ async function initProductAdd() {
                 e.preventDefault();
                 const name = document.getElementById('productName').value.trim();
                 const description = document.getElementById('description').value.trim();
+                const userGuide = document.getElementById('userGuide') ? document.getElementById('userGuide').value.trim() : '';
                 const categoryId = select.value;
 
                 if (!name) {
@@ -525,7 +526,7 @@ async function initProductAdd() {
                 try {
                     const postRes = await sellerFetch('/products', {
                         method: 'POST',
-                        body: JSON.stringify({ name, description, categoryId })
+                        body: JSON.stringify({ name, description, userGuide, categoryId })
                     });
                     const postData = await postRes.json();
                     if (!postRes.ok) throw new Error(postData.message || 'Đăng sản phẩm thất bại.');
@@ -576,6 +577,9 @@ async function initProductEdit() {
         document.querySelector('.seller-card__subtitle').textContent = `Sản phẩm #${p.id} — ${p.name}`;
         document.getElementById('productName').value = p.name || '';
         document.getElementById('description').value = p.description || '';
+        if (document.getElementById('userGuide')) {
+            document.getElementById('userGuide').value = p.userGuide || '';
+        }
         select.value = p.categoryId;
 
         // Activate variants new link
@@ -631,6 +635,7 @@ async function initProductEdit() {
                 const payload = {
                     name: document.getElementById('productName').value.trim(),
                     description: document.getElementById('description').value.trim(),
+                    userGuide: document.getElementById('userGuide') ? document.getElementById('userGuide').value.trim() : '',
                     categoryId: select.value
                 };
 

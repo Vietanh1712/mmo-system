@@ -277,6 +277,7 @@ public class SellerController {
             map.put("categoryName", p.getCategory().getName());
             map.put("description", p.getDescription());
             map.put("image", p.getImage());
+            map.put("userGuide", p.getUserGuide());
             map.put("variants", variantList);
 
             return ResponseEntity.ok(map);
@@ -292,6 +293,7 @@ public class SellerController {
             User seller = getSeller(userId);
             String name = (String) request.get("name");
             String description = (String) request.get("description");
+            String userGuide = (String) request.get("userGuide");
             Object catIdObj = request.get("categoryId");
             String productType = (String) request.get("productType");
             List<Map<String, Object>> variantsList = (List<Map<String, Object>>) request.get("variants");
@@ -312,6 +314,7 @@ public class SellerController {
             p.setCategory(category);
             p.setName(name);
             p.setDescription(description);
+            p.setUserGuide(userGuide);
             p.setIsDelete(false);
             String image = (String) request.get("image");
             p.setImage((image != null && !image.trim().isEmpty()) ? image : "https://via.placeholder.com/300x160/2563eb/ffffff?text=MMO+Market");
@@ -409,6 +412,7 @@ public class SellerController {
 
             String name = (String) request.get("name");
             String description = (String) request.get("description");
+            String userGuide = (String) request.get("userGuide");
             Object catIdObj = request.get("categoryId");
 
             if (name == null || name.trim().isEmpty() || catIdObj == null) {
@@ -421,6 +425,7 @@ public class SellerController {
 
             p.setName(name);
             p.setDescription(description);
+            p.setUserGuide(userGuide);
             p.setCategory(category);
             productRepository.save(p);
 

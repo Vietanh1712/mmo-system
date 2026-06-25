@@ -1,4 +1,4 @@
-USE MMO_System_Schema;
+USE MMO_Market_Schema;
 GO
 -- =============================================================================
 -- MIGRATION: Chuẩn hóa KYC V2 (Strict Mode)
@@ -109,7 +109,7 @@ END CATCH;
 GO
 
 
-USE MMO_System_Schema;
+USE MMO_Market_Schema;
 GO
 -- 1. Check Constraint
 SELECT name, definition FROM sys.check_constraints WHERE parent_object_id = OBJECT_ID('dbo.KYCRequests');

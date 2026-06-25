@@ -4,7 +4,7 @@
 -- Mục đích: Lưu trữ lịch sử duyệt rút tiền của Staff/Admin cùng lý do từ chối nếu có
 -- =============================================================================
 
-USE MMO_System_Schema;
+USE MMO_Market_Schema;
 GO
 
 -- Thêm cột reviewed_by vào Withdrawals

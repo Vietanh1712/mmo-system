@@ -6,7 +6,7 @@ import java.sql.DriverManager;
 public class DBContext {
     public Connection getConnection() throws Exception {
         // Cấu hình kết nối
-        String url = "jdbc:sqlserver://localhost:1433;databaseName=MMO_System;encrypt=true;trustServerCertificate=true";
+        String url = "jdbc:sqlserver://localhost:1433;databaseName=MMO_System_Schema;encrypt=true;trustServerCertificate=true";
         String user = "sa";
         String pass = "123";
 

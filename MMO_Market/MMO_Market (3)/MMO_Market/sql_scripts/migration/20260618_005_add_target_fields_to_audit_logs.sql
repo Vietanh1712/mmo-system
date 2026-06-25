@@ -4,7 +4,7 @@
 -- Mục đích: Hỗ trợ log chi tiết đối tượng chịu tác động từ hành động của Admin/Staff
 -- =============================================================================
 
-USE MMO_System_Schema;
+USE MMO_Market_Schema;
 GO
 
 -- Thêm cột target_user_id vào AuditLogs

@@ -3,7 +3,7 @@
 -- Author: Antigravity Agent
 -- Date: 2026-06-18
 
-USE MMO_System_Schema;
+USE MMO_Market_Schema;
 GO
 
 -- 1. Pre-check and drop full_name
