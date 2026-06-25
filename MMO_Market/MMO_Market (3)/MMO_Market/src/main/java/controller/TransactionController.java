@@ -21,6 +21,9 @@ public class TransactionController {
     @Autowired
     private dal.UserRepository userRepository;
 
+    @Autowired
+    private dal.ReviewRepository reviewRepository;
+
     @PostMapping("/purchase")
     public ResponseEntity<?> purchaseProduct(
             @AuthenticationPrincipal Long userId,
@@ -117,6 +120,7 @@ public class TransactionController {
                     paymentStatus = "FAILED";
                 }
                 
+                boolean isReviewed = reviewRepository.existsByTransactionIdAndIsDeleteFalse(t.getId());
                 return controller.dto.OrderDto.builder()
                         .orderCode("MMO-ORD-" + t.getId())
                         .productId(t.getProduct() != null ? t.getProduct().getId() : 0L)
@@ -128,7 +132,7 @@ public class TransactionController {
                         .paymentStatus(paymentStatus)
                         .createdAt(t.getCreatedAt() != null ? java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy").format(t.getCreatedAt()) : "")
                         .escrowReleaseDate(t.getEscrowReleaseDate() != null ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy").format(t.getEscrowReleaseDate()) : "")
-                        .isReviewed(false)
+                        .isReviewed(isReviewed)
                         .build();
             }).toList();
 
@@ -155,6 +159,7 @@ public class TransactionController {
                 paymentStatus = "FAILED";
             }
 
+            boolean isReviewed = reviewRepository.existsByTransactionIdAndIsDeleteFalse(t.getId());
             controller.dto.OrderDto orderDto = controller.dto.OrderDto.builder()
                     .orderCode("MMO-ORD-" + t.getId())
                     .transactionId(t.getId())
@@ -167,7 +172,7 @@ public class TransactionController {
                     .paymentStatus(paymentStatus)
                     .createdAt(t.getCreatedAt() != null ? java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy").format(t.getCreatedAt()) : "")
                     .escrowReleaseDate(t.getEscrowReleaseDate() != null ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy").format(t.getEscrowReleaseDate()) : "")
-                    .isReviewed(false)
+                    .isReviewed(isReviewed)
                     .build();
 
             // Lấy thông tin tài sản số (nếu có)

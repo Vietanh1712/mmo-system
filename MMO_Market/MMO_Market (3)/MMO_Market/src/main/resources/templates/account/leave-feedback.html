@@ -120,7 +120,7 @@
         let productId = 1;
         let transactionId = null; // ID giao dịch cụ thể để cho phép review nhiều đơn cùng sản phẩm
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             // Extract orderCode from path: /account/orders/{orderCode}/feedback
             const pathParts = window.location.pathname.split('/').filter(Boolean);
             const feedbackIndex = pathParts.indexOf('feedback');
@@ -137,8 +137,8 @@
                 breadcrumbLink.href = `/account/orders/${orderCode}`;
             }
 
-            // Load mock order detail
-            loadOrderInfo(orderCode);
+            // Load actual order detail
+            await loadOrderInfo(orderCode);
 
             // Bind rating star events
             initializeRatingStars();
@@ -147,49 +147,44 @@
             initializeDragAndDrop();
         });
 
-        function getUserSpecificKey(baseKey) {
-            try {
-                const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
-                if (userStr) {
-                    const user = JSON.parse(userStr);
-                    if (user && user.email) {
-                        return `${baseKey}_${user.email}`;
-                    }
-                }
-            } catch (e) {
-                console.error('Lỗi khi lấy user-specific key:', e);
-            }
-            return baseKey;
-        }
-
-        function loadOrderInfo(code) {
-            let orders = [];
-            try {
-                const key = getUserSpecificKey(ACCOUNT_ORDERS_MOCK_KEY);
-                // Ưu tiên đọc từ localStorage (persist qua nhiều tab)
-                const saved = localStorage.getItem(key) || sessionStorage.getItem(key);
-                if (saved) {
-                    orders = JSON.parse(saved);
-                }
-            } catch (e) {
-                console.error('Cannot parse orders mock data', e);
-            }
-
-            const currentOrder = orders.find(o => o.orderCode === code);
+        async function loadOrderInfo(code) {
             const productNameEl = document.getElementById('productName');
             const sellerNameEl = document.getElementById('sellerName');
 
-            if (currentOrder) {
-                productId = currentOrder.productId || 1;
-                transactionId = currentOrder.transactionId || null; // Lấy transactionId từ đơn hàng
-                productNameEl.textContent = currentOrder.productName;
-                sellerNameEl.textContent = currentOrder.sellerName;
-            } else {
-                // Default if not found in mock list
-                productId = 1;
-                transactionId = null;
-                productNameEl.textContent = `Tài khoản Netflix Premium UltraHD 4K (#${code})`;
-                sellerNameEl.textContent = 'NetflixVN Store';
+            const transactionIdMatch = code.match(/MMO-ORD-(\d+)/);
+            if (!transactionIdMatch) {
+                showErrorToast('Mã đơn hàng không hợp lệ.');
+                productNameEl.textContent = 'Mã đơn hàng không hợp lệ.';
+                return;
+            }
+
+            const txId = transactionIdMatch[1];
+            try {
+                const res = await authFetch(`/transactions/${txId}`);
+                if (!res.ok) {
+                    throw new Error('Không thể lấy chi tiết đơn hàng.');
+                }
+                const order = await res.json();
+                productId = order.productId;
+                transactionId = order.transactionId;
+                productNameEl.textContent = order.productName;
+                sellerNameEl.textContent = order.sellerName;
+
+                // Nếu đơn hàng này đã được đánh giá rồi, thông báo và không cho sửa đổi
+                if (order.isReviewed) {
+                    showWarningToast('Đơn hàng này đã được đánh giá.');
+                    const submitBtn = document.querySelector('.feedback-actions .ds-btn-primary');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.style.opacity = '0.5';
+                        submitBtn.style.pointerEvents = 'none';
+                        submitBtn.innerHTML = '<i class="fa fa-check-circle" style="color: #16a34a;"></i> Đã đánh giá';
+                    }
+                }
+            } catch (err) {
+                console.error('Lỗi khi tải thông tin đơn hàng:', err);
+                showErrorToast('Lỗi khi tải thông tin đơn hàng từ máy chủ.');
+                productNameEl.textContent = 'Không tìm thấy thông tin đơn hàng.';
             }
         }
 
