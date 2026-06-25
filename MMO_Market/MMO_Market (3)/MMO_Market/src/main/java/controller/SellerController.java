@@ -266,6 +266,7 @@ public class SellerController {
                 vMap.put("priceVnd", v.getPriceVnd());
                 vMap.put("stock", v.getStock());
                 vMap.put("status", v.getStatus());
+                vMap.put("imageUrl", v.getImageUrl());
                 return vMap;
             }).collect(Collectors.toList());
 
@@ -292,9 +293,14 @@ public class SellerController {
             String name = (String) request.get("name");
             String description = (String) request.get("description");
             Object catIdObj = request.get("categoryId");
+            String productType = (String) request.get("productType");
+            List<Map<String, Object>> variantsList = (List<Map<String, Object>>) request.get("variants");
 
             if (name == null || name.trim().isEmpty() || catIdObj == null) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Thông tin tên sản phẩm và danh mục không được để trống."));
+            }
+            if (variantsList == null || variantsList.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Sản phẩm phải có ít nhất 1 biến thể."));
             }
 
             Long categoryId = Long.valueOf(catIdObj.toString());
@@ -307,12 +313,85 @@ public class SellerController {
             p.setName(name);
             p.setDescription(description);
             p.setIsDelete(false);
-            p.setImage("https://via.placeholder.com/300x160/2563eb/ffffff?text=MMO+Market");
+            String image = (String) request.get("image");
+            p.setImage((image != null && !image.trim().isEmpty()) ? image : "https://via.placeholder.com/300x160/2563eb/ffffff?text=MMO+Market");
+            if (productType != null && !productType.trim().isEmpty()) {
+                p.setProductType(productType);
+            } else {
+                p.setProductType("ACCOUNT");
+            }
             Product saved = productRepository.save(p);
 
-            return ResponseEntity.ok(Map.of("id", saved.getId(), "message", "Đã tạo sản phẩm thành công!"));
+            // Save variants
+            for (Map<String, Object> vData : variantsList) {
+                ProductVariant pv = new ProductVariant();
+                pv.setProduct(saved);
+                pv.setVariantName((String) vData.get("variantName"));
+                
+                Object priceObj = vData.get("priceVnd");
+                if (priceObj == null) {
+                    return ResponseEntity.badRequest().body(Map.of("message", "Biến thể phải có giá bán."));
+                }
+                pv.setPriceVnd(Long.valueOf(priceObj.toString()));
+                
+                String imgUrl = (String) vData.get("imageUrl");
+                if (imgUrl == null || imgUrl.trim().isEmpty()) {
+                    return ResponseEntity.badRequest().body(Map.of("message", "Biến thể phải có ít nhất 1 hình ảnh minh họa."));
+                }
+                pv.setImageUrl(imgUrl);
+                
+                pv.setStock(0);
+                pv.setStatus("Active");
+                pv.setIsDelete(false);
+                productVariantRepository.save(pv);
+            }
+
+            return ResponseEntity.ok(Map.of("id", saved.getId(), "message", "Đã tạo sản phẩm và các biến thể thành công!"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    // 7.5 Image Upload POST
+    @PostMapping("/upload-image")
+    public ResponseEntity<?> uploadImage(@RequestBody Map<String, String> request) {
+        try {
+            String base64Image = request.get("image");
+            if (base64Image == null || !base64Image.contains(",")) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Hình ảnh không hợp lệ."));
+            }
+            String[] parts = base64Image.split(",");
+            String header = parts[0];
+            String data = parts[1];
+            String extension = "png";
+            if (header.contains("image/jpeg") || header.contains("image/jpg")) {
+                extension = "jpg";
+            } else if (header.contains("image/gif")) {
+                extension = "gif";
+            } else if (header.contains("image/webp")) {
+                extension = "webp";
+            }
+            
+            byte[] imageBytes = java.util.Base64.getDecoder().decode(data);
+            String filename = java.util.UUID.randomUUID().toString() + "." + extension;
+            
+            java.io.File uploadDir = new java.io.File("src/main/resources/static/uploads");
+            if (!uploadDir.exists()) {
+                uploadDir.mkdirs();
+            }
+            java.nio.file.Path path = java.nio.file.Paths.get("src/main/resources/static/uploads/" + filename);
+            java.nio.file.Files.write(path, imageBytes);
+            
+            java.io.File targetDir = new java.io.File("target/classes/static/uploads");
+            if (targetDir.exists()) {
+                java.nio.file.Path targetPath = java.nio.file.Paths.get("target/classes/static/uploads/" + filename);
+                java.nio.file.Files.write(targetPath, imageBytes);
+            }
+            
+            String fileUrl = "/uploads/" + filename;
+            return ResponseEntity.ok(Map.of("url", fileUrl));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Lỗi tải ảnh: " + e.getMessage()));
         }
     }
 
@@ -399,6 +478,7 @@ public class SellerController {
             map.put("priceVnd", v.getPriceVnd());
             map.put("stock", v.getStock());
             map.put("status", v.getStatus());
+            map.put("imageUrl", v.getImageUrl());
 
             return ResponseEntity.ok(map);
         } catch (Exception e) {
@@ -416,9 +496,13 @@ public class SellerController {
             Object priceObj = request.get("priceVnd");
             Object stockObj = request.get("stock");
             String status = (String) request.get("status");
+            String imageUrl = (String) request.get("imageUrl");
 
             if (prodIdObj == null || variantName == null || variantName.trim().isEmpty() || priceObj == null) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Thông tin tên biến thể và giá bán không được để trống."));
+            }
+            if (imageUrl == null || imageUrl.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Biến thể phải có ít nhất 1 hình ảnh minh họa."));
             }
 
             Long productId = Long.valueOf(prodIdObj.toString());
@@ -435,10 +519,11 @@ public class SellerController {
             v.setPriceVnd(Long.valueOf(priceObj.toString()));
             v.setStock(stockObj != null ? Integer.valueOf(stockObj.toString()) : 0);
             v.setStatus(status != null ? status : "Active");
+            v.setImageUrl(imageUrl);
             v.setIsDelete(false);
-            productVariantRepository.save(v);
+            ProductVariant saved = productVariantRepository.save(v);
 
-            return ResponseEntity.ok(Map.of("message", "Tạo biến thể thành công!"));
+            return ResponseEntity.ok(Map.of("id", saved.getId(), "message", "Tạo biến thể thành công!"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
@@ -460,6 +545,7 @@ public class SellerController {
             Object priceObj = request.get("priceVnd");
             Object stockObj = request.get("stock");
             String status = (String) request.get("status");
+            String imageUrl = (String) request.get("imageUrl");
 
             if (variantName == null || variantName.trim().isEmpty() || priceObj == null) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Tên biến thể và giá bán không được để trống."));
@@ -469,6 +555,9 @@ public class SellerController {
             v.setPriceVnd(Long.valueOf(priceObj.toString()));
             v.setStock(stockObj != null ? Integer.valueOf(stockObj.toString()) : 0);
             v.setStatus(status != null ? status : "Active");
+            if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+                v.setImageUrl(imageUrl);
+            }
             productVariantRepository.save(v);
 
             return ResponseEntity.ok(Map.of("message", "Cập nhật biến thể thành công!"));
@@ -491,6 +580,13 @@ public class SellerController {
 
             v.setIsDelete(true);
             productVariantRepository.save(v);
+
+            // Cascade delete digital assets
+            List<DigitalAsset> assets = digitalAssetRepository.findByVariantAndIsDeleteFalse(v);
+            for (DigitalAsset asset : assets) {
+                asset.setIsDelete(true);
+                digitalAssetRepository.save(asset);
+            }
 
             return ResponseEntity.ok(Map.of("message", "Xóa biến thể thành công."));
         } catch (Exception e) {
@@ -959,11 +1055,11 @@ public class SellerController {
                 } else if ("GAME_CARD".equals(assetType)) {
                     String cardCode = (String) assetData.get("cardCode");
                     String cardPin = (String) assetData.get("cardPin");
-                    if (cardCode == null || cardCode.trim().isEmpty() || cardPin == null || cardPin.trim().isEmpty()) {
-                        return ResponseEntity.badRequest().body(Map.of("message", "Thẻ GAME_CARD phải có mã thẻ và PIN."));
+                    if (cardCode == null || cardCode.trim().isEmpty()) {
+                        return ResponseEntity.badRequest().body(Map.of("message", "Thẻ nạp phải có mã thẻ."));
                     }
                     asset.setCardCode(cardCode);
-                    asset.setCardPin(cardPin);
+                    asset.setCardPin(cardPin != null ? cardPin : "");
                 } else {
                     return ResponseEntity.badRequest().body(Map.of("message", "Loại tài sản không hợp lệ."));
                 }
@@ -980,6 +1076,12 @@ public class SellerController {
 
                 savedAssets.add(digitalAssetRepository.save(asset));
             }
+
+            // Recalculate and update the variant stock!
+            List<DigitalAsset> activeAssets = digitalAssetRepository.findByVariantAndIsDeleteFalse(variant);
+            int availableStock = (int) activeAssets.stream().filter(a -> !a.getIsUsed()).count();
+            variant.setStock(availableStock);
+            productVariantRepository.save(variant);
 
             Map<String, Object> result = new HashMap<>();
             result.put("message", "Thêm " + savedAssets.size() + " tài sản thành công!");
@@ -1004,6 +1106,13 @@ public class SellerController {
 
             asset.setIsDelete(true);
             digitalAssetRepository.save(asset);
+
+            // Recalculate and update the variant stock!
+            ProductVariant variant = asset.getVariant();
+            List<DigitalAsset> activeAssets = digitalAssetRepository.findByVariantAndIsDeleteFalse(variant);
+            int availableStock = (int) activeAssets.stream().filter(a -> !a.getIsUsed()).count();
+            variant.setStock(availableStock);
+            productVariantRepository.save(variant);
 
             return ResponseEntity.ok(Map.of("message", "Xóa tài sản thành công!"));
         } catch (Exception e) {

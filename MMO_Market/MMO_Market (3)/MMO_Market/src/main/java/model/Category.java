@@ -43,7 +43,7 @@ public class Category {
     // AUDIT & STATUS
     // ========================================================
 
-    @Column(name = "is_delete", nullable = false)
+    @Column(name = "isDelete", nullable = false)
     private Boolean isDelete = false;
 
     @CreationTimestamp
