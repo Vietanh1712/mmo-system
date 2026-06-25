@@ -1,6 +1,9 @@
 -- Migration: 20260624_001_create_wallet_transactions
 -- Description: Create WalletTransactions table for storing all wallet balance history (ledger).
 
+USE MMO_System_Schema;
+GO
+
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[WalletTransactions]') AND type in (N'U'))
 BEGIN
     CREATE TABLE [dbo].[WalletTransactions] (

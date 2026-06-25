@@ -1,3 +1,7 @@
+
+USE MMO_System_Schema;
+GO
+
 ALTER TABLE KYCRequests
 ADD type_kyc NVARCHAR(50);
 

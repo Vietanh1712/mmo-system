@@ -3,6 +3,9 @@
 --          the same product multiple times if they have different purchase orders.
 -- Date: 2026-06-18
 
+USE MMO_System_Schema;
+GO
+
 IF NOT EXISTS (
     SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
     WHERE TABLE_NAME = 'Reviews' AND COLUMN_NAME = 'transaction_id'

@@ -1,3 +1,7 @@
+
+USE MMO_System_Schema;
+GO
+
 ALTER TABLE Transactions
 ADD payment_method NVARCHAR(50);
 

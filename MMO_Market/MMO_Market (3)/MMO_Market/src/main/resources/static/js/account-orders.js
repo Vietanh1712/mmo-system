@@ -402,6 +402,7 @@ function formatMoney(amount) {
 function formatOrderStatus(status) {
     const map = {
         PENDING: 'Chờ xử lý',
+        HELD: 'Tạm giữ',
         PAID: 'Đã thanh toán',
         DELIVERED: 'Đã giao',
         COMPLETED: 'Hoàn tất',
@@ -416,7 +417,7 @@ function getOrderStatusBadgeClass(status) {
     if (status === 'COMPLETED' || status === 'DELIVERED') return 'ds-badge-success';
     if (status === 'DISPUTED' || status === 'CANCELLED') return 'ds-badge-danger';
     if (status === 'PENDING' || status === 'PAID') return 'ds-badge-warning';
-    if (status === 'REFUNDED') return 'ds-badge-info';
+    if (status === 'HELD' || status === 'REFUNDED') return 'ds-badge-info';
     return 'ds-badge-muted';
 }
 

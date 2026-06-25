@@ -13,6 +13,21 @@
     <link rel="stylesheet" th:href="@{/css/topup.css}">
 </head>
 <body>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user");
+            if (userString) {
+                try {
+                    const user = JSON.parse(userString);
+                    const role = typeof parseHeaderRole === 'function' ? parseHeaderRole(user.role) : (user.role || 'Customer');
+                    if (role === 'Admin' || role === 'Staff') {
+                        alert("Quản trị viên và nhân viên không được phép nạp tiền.");
+                        window.location.href = "/";
+                    }
+                } catch(e){}
+            }
+        });
+    </script>
     <header th:replace="fragments/header :: header"></header>
 
     <main class="profile-page ds-page">

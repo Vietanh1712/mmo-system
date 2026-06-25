@@ -1189,6 +1189,31 @@ stock: 50,
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user");
+            if (userString) {
+                try {
+                    const user = JSON.parse(userString);
+                    const role = typeof parseHeaderRole === 'function' ? parseHeaderRole(user.role) : 'Customer';
+                    if (role === 'Admin' || role === 'Staff') {
+                        const style = document.createElement('style');
+                        style.innerHTML = `
+                            #buyActionButton, #cartActionButton, .btn-pdp-buy, .btn-pdp-cart {
+                                pointer-events: none !important;
+                                opacity: 0.5 !important;
+                                cursor: not-allowed !important;
+                            }
+                        `;
+                        document.head.appendChild(style);
+                        setTimeout(() => {
+                            const buyBtn = document.getElementById('buyActionButton');
+                            if (buyBtn) { buyBtn.onclick = () => alert("Quản trị viên và nhân viên không được phép mua hàng."); buyBtn.title = "Quản trị viên và nhân viên không được phép mua hàng"; }
+                            const cartBtn = document.getElementById('cartActionButton');
+                            if (cartBtn) { cartBtn.onclick = () => alert("Quản trị viên và nhân viên không được phép mua hàng."); cartBtn.title = "Quản trị viên và nhân viên không được phép mua hàng"; }
+                        }, 500); // wait for initProductDetails to replace innerHTML if any
+                    }
+                } catch(e){}
+            }
+
             initProductDetails();
             // Search bar is templated in header.html
 

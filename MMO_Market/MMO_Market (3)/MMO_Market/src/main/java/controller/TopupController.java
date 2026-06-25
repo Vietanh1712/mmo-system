@@ -30,9 +30,21 @@ public class TopupController {
     @Value("${sepay.bank.account-name:NGUYEN THI NGOC LINH}")
     private String bankAccountName;
 
+    @Autowired
+    private dal.UserRepository userRepository;
+
     @GetMapping("/config")
-    public ResponseEntity<?> getSepayConfig() {
+    public ResponseEntity<?> getSepayConfig(@org.springframework.security.core.annotation.AuthenticationPrincipal Long userId) {
         log.info("Fetching public SePay bank details configuration");
+        if (userId != null) {
+            model.User user = userRepository.findById(userId).orElse(null);
+            if (user != null && user.getRole() != null && (user.getRole().contains("Staff") || user.getRole().contains("Admin"))) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new Object() {
+                    public final boolean success = false;
+                    public final String message = "Nhân viên và quản trị viên không được phép nạp tiền.";
+                });
+            }
+        }
         return ResponseEntity.ok(new Object() {
             public final String bankId = TopupController.this.bankId;
             public final String accountNumber = TopupController.this.bankAccountNumber;

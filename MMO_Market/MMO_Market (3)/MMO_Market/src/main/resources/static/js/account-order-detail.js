@@ -96,8 +96,7 @@ async function handleComplaintSubmit(e) {
         }
     }
 
-    // Default mock fallback transactionId to 1 if not created via real checkout
-    const transactionId = currentOrder.transactionId || 1;
+    const transactionId = currentOrder.transactionId;
 
     const btnSubmit = e.target.querySelector('button[type="submit"]');
     const oldBtnHtml = btnSubmit.innerHTML;
@@ -124,17 +123,8 @@ async function handleComplaintSubmit(e) {
             throw new Error(data.message || 'Lỗi gửi khiếu nại từ hệ thống.');
         }
 
-        // 1. Update order status in frontend local mock orders store
+        // Cập nhật trạng thái
         currentOrder.status = 'DISPUTED';
-        const orders = readOrders();
-        const foundIdx = orders.findIndex(o => o.orderCode === currentOrder.orderCode);
-        if (foundIdx !== -1) {
-            orders[foundIdx].status = 'DISPUTED';
-            saveOrders(orders);
-        }
-
-        // 2. Synchronize to Global Complaints Mock for Staff Console support
-        syncToStaffComplaints(data, description, evidence);
 
         // 3. Close modal and re-render UI
         closeComplaintModal();
@@ -150,48 +140,7 @@ async function handleComplaintSubmit(e) {
     }
 }
 
-function saveOrders(orders) {
-    const key = getUserSpecificKey(ACCOUNT_ORDERS_MOCK_KEY);
-    const serialized = JSON.stringify(orders);
-    // Ghi vào cả hai storage để đồng bộ qua tab
-    localStorage.setItem(key, serialized);
-    sessionStorage.setItem(key, serialized);
-}
 
-function getCurrentUser() {
-    try {
-        const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
-        return userStr ? JSON.parse(userStr) : null;
-    } catch {
-        return null;
-    }
-}
-
-function syncToStaffComplaints(backendData, description, evidence) {
-    const key = 'mmoMarketComplaintsMockGlobal';
-    let list = [];
-    try {
-        list = JSON.parse(sessionStorage.getItem(key)) || [];
-    } catch (e) { }
-
-    const currentUser = getCurrentUser() || { fullName: 'Nguyễn An', email: 'buyer@mmo.com' };
-
-    const newMock = {
-        id: backendData.id ? `CMP-${backendData.id}` : `CMP-${Math.floor(1000 + Math.random() * 9000)}`,
-        senderName: currentUser.fullName || currentUser.email.split('@')[0],
-        senderEmail: currentUser.email,
-        target: `${currentOrder.sellerName} / ${currentOrder.productName}`,
-        category: 'Sản phẩm',
-        amount: currentOrder.amount,
-        status: 'New',
-        createdAt: new Date().toLocaleString('vi-VN'),
-        evidence: evidence || 'Không có',
-        detail: description
-    };
-
-    list.unshift(newMock);
-    sessionStorage.setItem(key, JSON.stringify(list));
-}
 
 async function loadOrderDetailPage() {
     const token = sessionStorage.getItem('accessToken');
@@ -210,7 +159,24 @@ async function loadOrderDetailPage() {
         accountSidebar.render(profile);
 
         const orderCode = getOrderCodeFromPath();
-        currentOrder = readOrders().find(order => order.orderCode === orderCode);
+        const transactionIdMatch = orderCode.match(/MMO-ORD-(\d+)/);
+        if (!transactionIdMatch) {
+            showNotFound(orderCode);
+            return;
+        }
+
+        const transactionId = transactionIdMatch[1];
+        
+        const txResponse = await authFetch(`/transactions/${transactionId}`);
+        if (!txResponse.ok) {
+            if (txResponse.status === 404 || txResponse.status === 403 || txResponse.status === 400) {
+                 showNotFound(orderCode);
+                 return;
+            }
+            throw new Error('Không thể lấy chi tiết đơn hàng.');
+        }
+
+        currentOrder = await txResponse.json();
 
         if (!currentOrder) {
             showNotFound(orderCode);
@@ -218,7 +184,6 @@ async function loadOrderDetailPage() {
         }
 
         renderOrderDetail(currentOrder);
-        showOrderDetailMessage('Chi tiết đơn hàng hiện dùng dữ liệu mock frontend.', 'info');
     } catch (error) {
         showOrderDetailMessage(error.message || 'Không thể tải chi tiết đơn hàng.', 'danger');
     }
@@ -229,93 +194,19 @@ function getOrderCodeFromPath() {
     return decodeURIComponent(parts[parts.length - 1] || '');
 }
 
-function getUserSpecificKey(baseKey) {
-    try {
-        const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
-        if (userStr) {
-            const user = JSON.parse(userStr);
-            if (user && user.email) {
-                return `${baseKey}_${user.email}`;
-            }
-        }
-    } catch (e) {
-        console.error('Lỗi khi lấy user-specific key:', e);
-    }
-    return baseKey;
-}
 
-function readOrders() {
-    const key = getUserSpecificKey(ACCOUNT_ORDERS_MOCK_KEY);
-    try {
-        // Ưu tiên đọc localStorage (persist qua tab/session), fallback sessionStorage
-        const saved = localStorage.getItem(key) || sessionStorage.getItem(key);
-        if (saved !== null) {
-            const parsed = JSON.parse(saved);
-            sessionStorage.setItem(key, saved); // sync
-            return parsed;
-        }
-    } catch {
-        // fallback below
-    }
-
-    let isDemo = false;
-    try {
-        const userStr = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
-        if (userStr) {
-            const user = JSON.parse(userStr);
-            if (user && user.email) {
-                const demoEmails = ['customer01@gmail.com', 'customer02@gmail.com', 'customer03@gmail.com', 'customer04@gmail.com', 'customer05@gmail.com'];
-                if (demoEmails.includes(user.email.toLowerCase())) {
-                    isDemo = true;
-                }
-            }
-        }
-    } catch (e) {
-        // ignore
-    }
-
-    const seeded = isDemo ? createSeedOrders() : [];
-    localStorage.setItem(key, JSON.stringify(seeded));
-    sessionStorage.setItem(key, JSON.stringify(seeded));
-    return seeded;
-}
-
-function createSeedOrders() {
-    const now = new Date();
-    return [
-        createOrder('MMO-ORD-1001', 7, 'Tài khoản Canva Pro 1 năm', 'Digital Store VN', 129000, 'COMPLETED', 'PAID', addDays(now, -1), '12 Tháng (1 Năm)'),
-        createOrder('MMO-ORD-1002', 3, 'Gói proxy dân cư 5GB', 'ProxyHub', 240000, 'DELIVERED', 'PAID', addDays(now, -2), '5GB'),
-        createOrder('MMO-ORD-1003', 13, 'Template landing page MMO', 'Design Market', 99000, 'PAID', 'PAID', addDays(now, -3), '1 Thiết kế'),
-        createOrder('MMO-ORD-1004', 1, 'Tài khoản Netflix Premium', 'Account247', 75000, 'DISPUTED', 'PAID', addDays(now, -4), '1 Tháng'),
-        createOrder('MMO-ORD-1005', 9, 'Tool automation social', 'ToolBox Seller', 450000, 'PENDING', 'PENDING', addDays(now, -5), 'Vĩnh viễn'),
-        createOrder('MMO-ORD-1006', 5, 'Key Windows 11 Pro', 'Key Mall', 180000, 'REFUNDED', 'REFUNDED', addDays(now, -6), 'Vĩnh viễn'),
-        createOrder('MMO-ORD-1007', 13, 'Khóa học chạy quảng cáo cơ bản', 'Ads Academy', 299000, 'COMPLETED', 'PAID', addDays(now, -7), 'Trọn đời'),
-        createOrder('MMO-ORD-1008', 4, 'Tài khoản Spotify Family', 'Sub Store', 65000, 'CANCELLED', 'FAILED', addDays(now, -8), '12 Tháng (1 Năm)'),
-        createOrder('MMO-ORD-1009', 8, 'Data email marketing B2B', 'DataX', 350000, 'DELIVERED', 'PAID', addDays(now, -9), '1 Danh sách')
-    ];
-}
-
-function createOrder(orderCode, productId, productName, sellerName, amount, status, paymentStatus, createdDate, variantLabel = '') {
-    return {
-        orderCode,
-        productId,
-        productName,
-        variantLabel,
-        sellerName,
-        amount,
-        status,
-        paymentStatus,
-        createdAt: formatDateTime(createdDate),
-        escrowReleaseDate: formatDate(addDays(createdDate, 3)),
-        isReviewed: false
-    };
-}
 
 function renderOrderDetail(order) {
     document.getElementById('orderDetailOverview').hidden = false;
     document.getElementById('orderDetailContent').hidden = false;
     document.getElementById('orderTimeline').hidden = false;
     document.getElementById('orderDetailEmpty').hidden = true;
+    
+    const msgEl = document.getElementById('orderDetailMessage');
+    if (msgEl) {
+        msgEl.hidden = true;
+        msgEl.classList.add('ds-hidden');
+    }
 
     const variantText = order.variantLabel ? ` (${order.variantLabel})` : '';
     document.getElementById('orderDetailCode').textContent = order.orderCode;
@@ -390,7 +281,7 @@ function showNotFound(orderCode) {
     document.getElementById('orderDetailContent').hidden = true;
     document.getElementById('orderTimeline').hidden = true;
     document.getElementById('orderDetailEmpty').hidden = false;
-    showOrderDetailMessage('Không tìm thấy đơn hàng trong dữ liệu mock frontend.', 'warning');
+    showOrderDetailMessage('Không tìm thấy đơn hàng này.', 'warning');
 }
 
 function renderTimeline(order) {
@@ -419,38 +310,7 @@ function createAccessInfo(order) {
     if (order.status === 'CANCELLED') return 'Đơn hàng đã hủy, không có thông tin nhận hàng.';
     if (order.status === 'DISPUTED') return 'Thông tin nhận hàng đang được giữ để xử lý tranh chấp.';
 
-    // Check if credentials exist in the order object
     let creds = order.credentials;
-
-    // If not in order object but name indicates account, auto-generate mock credentials dynamically so that all existing account orders show them!
-    if (!creds) {
-        const lowerName = order.productName.toLowerCase();
-        const isAccount = lowerName.includes('tài khoản') ||
-            lowerName.includes('premium') ||
-            lowerName.includes('spotify') ||
-            lowerName.includes('netflix') ||
-            lowerName.includes('canva') ||
-            lowerName.includes('chatgpt') ||
-            lowerName.includes('gmail') ||
-            lowerName.includes('vpn') ||
-            lowerName.includes('key');
-        if (isAccount) {
-            // Generate deterministic mock credentials based on orderCode
-            const hash = order.orderCode.replace(/[^0-9]/g, '') || '1234';
-            const cleanName = order.productName.replace(/[^a-zA-Z0-9]/g, '').substring(0, 8).toLowerCase();
-            if (lowerName.includes('key')) {
-                creds = {
-                    username: `KEY-${hash}-ABCD-EFGH-IJKL`,
-                    password: '(Product Key)'
-                };
-            } else {
-                creds = {
-                    username: `${cleanName}_${hash}@gmail.com`,
-                    password: `Pass_${hash}_Secure`
-                };
-            }
-        }
-    }
 
     if (creds) {
         const isKeyOnly = creds.password === '(Product Key)';
@@ -504,6 +364,7 @@ function setBadge(elementId, text, badgeClass) {
 function formatOrderStatus(status) {
     const map = {
         PENDING: 'Chờ xử lý',
+        HELD: 'Tạm giữ',
         PAID: 'Đã thanh toán',
         DELIVERED: 'Đã giao',
         COMPLETED: 'Hoàn tất',
@@ -518,7 +379,7 @@ function getOrderStatusBadgeClass(status) {
     if (status === 'COMPLETED' || status === 'DELIVERED') return 'ds-badge-success';
     if (status === 'DISPUTED' || status === 'CANCELLED') return 'ds-badge-danger';
     if (status === 'PENDING' || status === 'PAID') return 'ds-badge-warning';
-    if (status === 'REFUNDED') return 'ds-badge-info';
+    if (status === 'HELD' || status === 'REFUNDED') return 'ds-badge-info';
     return 'ds-badge-muted';
 }
 

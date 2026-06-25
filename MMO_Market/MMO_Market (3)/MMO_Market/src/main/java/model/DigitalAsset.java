@@ -22,6 +22,10 @@ public class DigitalAsset {
     @JoinColumn(name = "variant_id", nullable = false)
     private ProductVariant variant;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transaction_id")
+    private Transaction transaction;
+
     /**
      * Loại tài sản: ACCOUNT | KEY | GAME_CARD
      */

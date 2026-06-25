@@ -18,6 +18,9 @@ public class TransactionController {
     @Autowired
     private TransactionService transactionService;
 
+    @Autowired
+    private dal.UserRepository userRepository;
+
     @PostMapping("/purchase")
     public ResponseEntity<?> purchaseProduct(
             @AuthenticationPrincipal Long userId,
@@ -25,6 +28,11 @@ public class TransactionController {
 
         if (userId == null) {
             return ResponseEntity.status(401).body(Map.of("message", "Vui lòng đăng nhập trước khi thực hiện mua hàng."));
+        }
+
+        model.User user = userRepository.findById(userId).orElse(null);
+        if (user != null && user.getRole() != null && (user.getRole().contains("Staff") || user.getRole().contains("Admin"))) {
+            return ResponseEntity.status(403).body(Map.of("message", "Nhân viên và quản trị viên không được phép mua hàng."));
         }
 
         if (request.getProductId() == null || request.getVariantLabel() == null) {
@@ -127,6 +135,68 @@ public class TransactionController {
             return ResponseEntity.ok(orders);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(Map.of("message", "Lỗi khi lấy danh sách đơn hàng: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getTransactionDetail(@AuthenticationPrincipal Long userId, @PathVariable Long id) {
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "Vui lòng đăng nhập để xem đơn hàng."));
+        }
+
+        try {
+            Transaction t = transactionService.getTransactionDetail(id, userId);
+            
+            String status = t.getStatus() != null ? t.getStatus().toUpperCase() : "PENDING";
+            String paymentStatus = "PAID";
+            if ("REFUNDED".equals(status)) {
+                paymentStatus = "REFUNDED";
+            } else if ("CANCELLED".equals(status)) {
+                paymentStatus = "FAILED";
+            }
+
+            controller.dto.OrderDto orderDto = controller.dto.OrderDto.builder()
+                    .orderCode("MMO-ORD-" + t.getId())
+                    .transactionId(t.getId())
+                    .productId(t.getProduct() != null ? t.getProduct().getId() : 0L)
+                    .productName(t.getProduct() != null ? t.getProduct().getName() : "Sản phẩm đã xóa")
+                    .variantLabel(t.getVariant() != null ? t.getVariant().getVariantName() : "")
+                    .sellerName(t.getSeller() != null ? t.getSeller().getFullName() : "Người bán")
+                    .amount(t.getAmountVnd())
+                    .status(status)
+                    .paymentStatus(paymentStatus)
+                    .createdAt(t.getCreatedAt() != null ? java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy").format(t.getCreatedAt()) : "")
+                    .escrowReleaseDate(t.getEscrowReleaseDate() != null ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy").format(t.getEscrowReleaseDate()) : "")
+                    .isReviewed(false)
+                    .build();
+
+            // Lấy thông tin tài sản số (nếu có)
+            dal.DigitalAssetRepository assetRepo = org.springframework.web.context.support.WebApplicationContextUtils
+                .getRequiredWebApplicationContext(
+                    ((org.springframework.web.context.request.ServletRequestAttributes) 
+                    org.springframework.web.context.request.RequestContextHolder.getRequestAttributes())
+                    .getRequest().getServletContext()
+                ).getBean(dal.DigitalAssetRepository.class);
+            
+            java.util.Optional<model.DigitalAsset> assetOpt = assetRepo.findByTransactionAndIsDeleteFalse(t);
+            if (assetOpt.isPresent()) {
+                model.DigitalAsset asset = assetOpt.get();
+                java.util.Map<String, String> creds = new java.util.HashMap<>();
+                if ("KEY".equalsIgnoreCase(asset.getAssetType()) || "GAME_CARD".equalsIgnoreCase(asset.getAssetType())) {
+                    creds.put("username", asset.getKeyCode() != null ? asset.getKeyCode() : asset.getCardCode());
+                    creds.put("password", "(Product Key)");
+                } else {
+                    creds.put("username", asset.getAccountUsername());
+                    creds.put("password", asset.getAccountPassword());
+                }
+                orderDto.setCredentials(creds);
+            }
+
+            return ResponseEntity.ok(orderDto);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("message", "Lỗi khi lấy chi tiết đơn hàng: " + e.getMessage()));
         }
     }
 }

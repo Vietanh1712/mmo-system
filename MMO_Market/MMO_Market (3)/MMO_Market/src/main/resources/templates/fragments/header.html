@@ -41,7 +41,7 @@
         <div class="dropdown-item" onclick="checkAuthAndRedirect('/cart')">
             <i class="fa fa-shopping-cart"></i> Giỏ hàng của tôi
         </div>
-        <div class="dropdown-item" onclick="checkAuthAndRedirect('/wallet/topup')">
+        <div class="dropdown-item" id="topupDropdownItem" onclick="checkAuthAndRedirect('/wallet/topup')">
             <i class="fa fa-credit-card"></i> Nạp tiền
         </div>
         <div class="dropdown-item" id="adminWorkbenchDropdownItem" style="display: none;" onclick="navigateHeaderRoute('/admin/users')">
@@ -63,7 +63,7 @@
         <ul class="nav__list" id="mainNavList">
             <li class="nav__item" onclick="navigateHeaderRoute('/')">Trang chủ</li>
             <li class="nav__item" onclick="navigateHeaderRoute('/products')">Sản phẩm</li>
-            <li class="nav__item" onclick="checkAuthAndRedirect('/wallet/topup')">Nạp tiền</li>
+            <li class="nav__item" id="topupNavItem" onclick="checkAuthAndRedirect('/wallet/topup')">Nạp tiền</li>
             <li class="nav__item" onclick="navigateHeaderRoute('/support')">Hỗ trợ</li>
             <li class="nav__item" onclick="navigateHeaderRoute('/support#faq')">Câu hỏi thường gặp</li>
         </ul>
@@ -126,6 +126,13 @@
                     const adminWorkbenchItem = document.getElementById('adminWorkbenchDropdownItem');
                     const staffWorkItem = document.getElementById('staffWorkDropdownItem');
                     const sellerDropdownItem = document.getElementById('sellerDashboardDropdownItem');
+                    const topupDropdownItem = document.getElementById('topupDropdownItem');
+                    const topupNavItem = document.getElementById('topupNavItem');
+
+                    if (currentRole === 'Admin' || currentRole === 'Staff') {
+                        if (topupDropdownItem) topupDropdownItem.style.display = 'none';
+                        if (topupNavItem) topupNavItem.style.display = 'none';
+                    }
 
                     if (currentRole === 'Admin' && adminWorkbenchItem) {
                         adminWorkbenchItem.style.display = 'flex';

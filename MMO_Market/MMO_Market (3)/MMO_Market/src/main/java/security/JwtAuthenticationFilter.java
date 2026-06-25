@@ -88,7 +88,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 roleName = "Customer";
                             }
 
-                            authorities.add(new SimpleGrantedAuthority("ROLE_" + roleName));
+                            authorities.add(new SimpleGrantedAuthority("ROLE_" + roleName.toUpperCase()));
 
                             // 2. Thêm các quyền hạn chi tiết (Permissions)
                             if (user.getUserPermissions() != null) {

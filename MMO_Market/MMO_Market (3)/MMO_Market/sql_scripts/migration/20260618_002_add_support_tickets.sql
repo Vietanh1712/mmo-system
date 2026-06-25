@@ -3,6 +3,8 @@
 -- Tên tệp: 20260618_001_add_support_tickets.sql
 -- Mô tả: Khởi tạo bảng SupportTickets phân tách với bảng Complaints
 -- ==============================================================================
+USE MMO_System_Schema;
+GO
 
 IF OBJECT_ID('SupportTickets', 'U') IS NOT NULL DROP TABLE SupportTickets;
 GO

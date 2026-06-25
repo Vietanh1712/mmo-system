@@ -29,6 +29,9 @@ public class TransactionService {
     private WalletService walletService;
 
     @Autowired
+    private dal.DigitalAssetRepository digitalAssetRepository;
+
+    @Autowired
     private dal.SystemConfigurationRepository systemConfigurationRepository;
 
     /**
@@ -105,6 +108,15 @@ public class TransactionService {
                 .build();
         transaction = transactionRepository.save(transaction);
 
+        // Gán DigitalAsset nếu có
+        java.util.List<model.DigitalAsset> availableAssets = digitalAssetRepository.findByVariantAndIsUsedFalseAndIsDeleteFalse(variant);
+        if (!availableAssets.isEmpty()) {
+            model.DigitalAsset assetToAssign = availableAssets.get(0);
+            assetToAssign.setIsUsed(true);
+            assetToAssign.setTransaction(transaction);
+            digitalAssetRepository.save(assetToAssign);
+        }
+
         // Record to Wallet Ledger (Customer paid)
         walletService.recordTransaction(customer, "PAYMENT", -price, "SUCCESS", "Thanh toán đơn hàng " + product.getName(), "MMO-ORD-" + transaction.getId(), customer.getBalanceVnd());
 
@@ -116,5 +128,17 @@ public class TransactionService {
         User customer = userRepository.findByIdAndIsDeleteFalse(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Người mua không tồn tại."));
         return transactionRepository.findByCustomerAndIsDeleteFalseOrderByCreatedAtDesc(customer);
+    }
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public Transaction getTransactionDetail(Long transactionId, Long userId) {
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng."));
+        
+        if (!transaction.getCustomer().getId().equals(userId)) {
+            throw new IllegalArgumentException("Bạn không có quyền xem đơn hàng này.");
+        }
+        
+        return transaction;
     }
 }
