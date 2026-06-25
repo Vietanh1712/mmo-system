@@ -24,6 +24,18 @@ class UserServiceTest {
     @Mock
     private dal.UserRepository userRepository;
 
+    @Mock
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
+    @Mock
+    private dal.KycRequestRepository kycRequestRepository;
+
+    @Mock
+    private dal.SellerRegistrationRepository sellerRegistrationRepository;
+
+    @Mock
+    private dal.SystemConfigurationRepository systemConfigurationRepository;
+
     @InjectMocks
     private service.UserService userService;
 
@@ -31,6 +43,8 @@ class UserServiceTest {
     void getMyProfileReturnsActiveUserProfile() {
         model.User user = createUser();
         when(userRepository.findByIdAndIsDeleteFalse(1L)).thenReturn(Optional.of(user));
+        when(kycRequestRepository.findByUser_IdAndIsDeleteFalseOrderByCreatedAtDesc(1L))
+                .thenReturn(java.util.Collections.emptyList());
 
         ProfileResponse response = userService.getMyProfile(1L);
 
@@ -50,6 +64,8 @@ class UserServiceTest {
 
         when(userRepository.findByIdAndIsDeleteFalse(1L)).thenReturn(Optional.of(user));
         when(userRepository.save(user)).thenReturn(user);
+        when(kycRequestRepository.findByUser_IdAndIsDeleteFalseOrderByCreatedAtDesc(1L))
+                .thenReturn(java.util.Collections.emptyList());
 
         ProfileResponse response = userService.updateMyProfile(1L, request);
 

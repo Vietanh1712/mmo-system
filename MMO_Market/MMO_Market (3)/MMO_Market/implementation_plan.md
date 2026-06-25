@@ -1,38 +1,39 @@
-# Fix Product Review Flow after Purchase
+# Fix Shop Follow Functionality
 
-Integrate the product review page (`leave-feedback.html`) with the backend API (`TransactionController`) so that real transaction details are resolved dynamically and duplicate reviews are prevented correctly.
+Fix the unique key constraint violation error on `ShopFollowers(follower_id, seller_id)` when a user tries to follow a seller whom they have previously unfollowed (where a soft-deleted record with `isDelete = 1` already exists in the database).
 
 ## User Review Required
 
 > [!NOTE]
-> This change will replace the mock `localStorage` based logic in the product review form with a live call to the database through `/api/transactions/{id}`. This will ensure that only valid purchases can be reviewed, and reviews will be correctly linked to their respective transaction records.
+> This change updates the follow/unfollow logic to look up any existing `ShopFollower` record (including soft-deleted ones). If a record is found, it will toggle the `isDelete` flag instead of attempting to insert a new row, which avoids triggering the database's unique constraint violation.
 
 ## Open Questions
 
-None. The schema and API paths are already in place and just need to be integrated.
+None. The database constraint behaves as expected, and the application logic simply needs to align with it.
 
 ## Proposed Changes
 
 ---
 
-### Backend Components
+### Repository Layer
 
-#### [MODIFY] [TransactionController.java](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20%283%29/MMO_Market/src/main/java/controller/TransactionController.java)
+#### [MODIFY] [ShopFollowerRepository.java](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20%283%29/MMO_Market/src/main/java/dal/ShopFollowerRepository.java)
 
-- Inject `ReviewRepository` using `@Autowired`.
-- Update `/api/transactions/me` (lines 104-139) to check the database for existing reviews using `reviewRepository.existsByTransactionIdAndIsDeleteFalse(t.getId())` and assign it to the `OrderDto.isReviewed` property.
-- Update `/api/transactions/{id}` (lines 142-201) to dynamically resolve and return the `isReviewed` property from the database instead of the hardcoded `false`.
+- Add a method to find an existing follow record regardless of the `isDelete` status:
+  ```java
+  @Query("SELECT sf FROM ShopFollower sf WHERE sf.follower.id = :followerId AND sf.seller.id = :sellerId")
+  Optional<ShopFollower> findByFollowerIdAndSellerId(@Param("followerId") Long followerId, @Param("sellerId") Long sellerId);
+  ```
 
 ---
 
-### Frontend Components
+### Controller Layer
 
-#### [MODIFY] [leave-feedback.html](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20%283%29/MMO_Market/src/main/resources/templates/account/leave-feedback.html)
+#### [MODIFY] [ProductSearchController.java](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20%283%29/MMO_Market/src/main/java/controller/ProductSearchController.java)
 
-- Change the `loadOrderInfo` function to `async`.
-- Inside `loadOrderInfo`, extract the `transactionId` from the `orderCode` parameter (using regex `/MMO-ORD-(\d+)/`).
-- Call the backend REST API at `/api/transactions/{transactionId}` using `authFetch` to load the actual product name, seller name, product ID, and `isReviewed` status.
-- If `isReviewed` is `true`, disable the submit button and show a warning message indicating that the transaction has already been reviewed.
+- In `toggleFollowSeller` method:
+  - Replace the call to `shopFollowerRepository.findByFollowerIdAndSellerIdAndIsDeleteFalse(activeUserId, sellerId)` with `shopFollowerRepository.findByFollowerIdAndSellerId(activeUserId, sellerId)`.
+  - Update logic: if the record exists, toggle its `isDelete` status (meaning if `isDelete` is `true`, set it to `false`, and vice versa). If it does not exist, build and save a new `ShopFollower` with `isDelete = false`.
 
 ## Verification Plan
 
@@ -40,12 +41,8 @@ None. The schema and API paths are already in place and just need to be integrat
 - None.
 
 ### Manual Verification
-1. Run the Spring Boot application.
-2. Log in as a customer who has completed transactions.
-3. Go to **Lịch sử mua hàng** (Order History) -> click an order details page.
-4. Verify that the **Đánh giá sản phẩm** button appears if the order is completed and not yet reviewed.
-5. Click **Đánh giá sản phẩm** to navigate to `/account/orders/{orderCode}/feedback`.
-6. Submit a review with a star rating and comment.
-7. Verify that the review is saved in the database under `Reviews` table and linked with the correct `transaction_id`.
-8. Return to the order details page and verify that the button has changed to **Đã đánh giá** and is disabled.
-9. Try to navigate back directly to the feedback page for that order, and verify that the submit button is disabled.
+1. Log in as a customer.
+2. Navigate to any shop page (e.g., `/shop/{sellerId}`).
+3. Click "Theo dõi" (Follow) and verify that the button changes to "Đang theo dõi" (Following) and the toast message says "Theo dõi cửa hàng thành công!".
+4. Click "Đang theo dõi" (Following) to unfollow. Verify that the button changes back to "Theo dõi" and the toast message says "Bỏ theo dõi cửa hàng thành công!".
+5. Click "Theo dõi" (Follow) again. Verify that the follow operation succeeds without throwing an error (no unique constraint violation).

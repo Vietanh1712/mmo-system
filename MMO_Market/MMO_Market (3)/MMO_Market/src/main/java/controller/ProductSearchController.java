@@ -343,14 +343,15 @@ public class ProductSearchController {
         }
 
         java.util.Optional<model.ShopFollower> existingFollowOpt = 
-                shopFollowerRepository.findByFollowerIdAndSellerIdAndIsDeleteFalse(activeUserId, sellerId);
+                shopFollowerRepository.findByFollowerIdAndSellerId(activeUserId, sellerId);
 
         boolean isFollowingNow;
         if (existingFollowOpt.isPresent()) {
             model.ShopFollower existing = existingFollowOpt.get();
-            existing.setIsDelete(true);
+            boolean newDeleteStatus = !Boolean.TRUE.equals(existing.getIsDelete());
+            existing.setIsDelete(newDeleteStatus);
             shopFollowerRepository.save(existing);
-            isFollowingNow = false;
+            isFollowingNow = !newDeleteStatus;
         } else {
             model.ShopFollower newFollow = model.ShopFollower.builder()
                     .follower(followerOpt.get())
