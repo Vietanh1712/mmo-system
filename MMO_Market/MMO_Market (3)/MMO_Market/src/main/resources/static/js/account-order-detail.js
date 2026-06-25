@@ -240,7 +240,7 @@ function renderOrderDetail(order) {
             feedbackBtn.style.opacity = '0.7';
             feedbackBtn.className = 'ds-btn ds-btn-outline';
             feedbackBtn.innerHTML = '<i class="fa fa-check-circle" style="color: #16a34a;"></i> Đã đánh giá';
-        } else if (['COMPLETED', 'PAID', 'DELIVERED'].includes(order.status)) {
+        } else if (['COMPLETED', 'PAID', 'DELIVERED', 'HELD'].includes(order.status)) {
             feedbackBtn.style.display = 'inline-flex';
             feedbackBtn.style.pointerEvents = 'auto';
             feedbackBtn.style.opacity = '1';
