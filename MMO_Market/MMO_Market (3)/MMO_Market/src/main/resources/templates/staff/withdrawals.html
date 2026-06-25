@@ -20,19 +20,19 @@
                 </div>
 
                 <div class="staff-stat-grid">
-                    <div class="ds-card staff-stat-card">
+                    <div class="ds-card staff-stat-card blue">
                         <p class="staff-stat-card__label">Tổng yêu cầu</p>
                         <p class="staff-stat-card__value" th:text="${totalWithdrawals}"></p>
                     </div>
-                    <div class="ds-card staff-stat-card">
+                    <div class="ds-card staff-stat-card yellow">
                         <p class="staff-stat-card__label">Chờ duyệt</p>
                         <p class="staff-stat-card__value" th:text="${pendingWithdrawals}"></p>
                     </div>
-                    <div class="ds-card staff-stat-card">
+                    <div class="ds-card staff-stat-card green">
                         <p class="staff-stat-card__label">Hoàn tất</p>
                         <p class="staff-stat-card__value" th:text="${completedWithdrawals}"></p>
                     </div>
-                    <div class="ds-card staff-stat-card">
+                    <div class="ds-card staff-stat-card red">
                         <p class="staff-stat-card__label">Từ chối</p>
                         <p class="staff-stat-card__value" th:text="${rejectedWithdrawals}"></p>
                     </div>

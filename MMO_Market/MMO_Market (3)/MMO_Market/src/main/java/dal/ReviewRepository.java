@@ -38,5 +38,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
      * Dùng để cho phép user đánh giá cùng sản phẩm nhiều lần nếu mua nhiều đơn khác nhau.
      */
     boolean existsByTransactionIdAndIsDeleteFalse(Long transactionId);
+
+    java.util.Optional<Review> findByTransactionIdAndIsDeleteFalse(Long transactionId);
 }
 

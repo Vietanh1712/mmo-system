@@ -60,11 +60,11 @@ body {
     align-items: center;
     gap: 12px;
     margin-bottom: 4px;
-    padding: 10px 14px;
+    padding: 12px;
     border: none;
-    border-radius: var(--ds-radius-sm);
+    border-radius: var(--ds-radius-md);
     background: transparent;
-    color: var(--ds-text-muted);
+    color: #334155;
     font-family: var(--ds-font-family);
     font-size: 14px;
     font-weight: 600;
@@ -74,19 +74,19 @@ body {
 }
 
 .sidebar-item i {
-    width: 20px;
+    width: 18px;
     font-size: 16px;
     text-align: center;
-    color: var(--ds-text-subtle);
+    color: var(--ds-text-muted);
 }
 
 .sidebar-item:hover {
     background: var(--ds-surface-muted);
-    color: var(--ds-text);
+    color: var(--ds-primary);
 }
 
 .sidebar-item:hover i {
-    color: var(--ds-text-muted);
+    color: var(--ds-primary);
 }
 
 .sidebar-item.active {

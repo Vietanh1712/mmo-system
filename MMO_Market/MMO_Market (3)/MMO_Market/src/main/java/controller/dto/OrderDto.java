@@ -17,6 +17,8 @@ public class OrderDto {
     private String createdAt;
     private String escrowReleaseDate;
     private boolean isReviewed;
+    private Integer reviewRating;
+    private String reviewComment;
     private Long transactionId;
     private java.util.Map<String, String> credentials;
 }

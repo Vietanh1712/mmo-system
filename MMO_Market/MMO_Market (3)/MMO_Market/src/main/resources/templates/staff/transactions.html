@@ -20,20 +20,20 @@
                 </div>
 
                 <div class="staff-stat-grid">
-                    <div class="ds-card staff-stat-card">
+                    <div class="ds-card staff-stat-card blue">
                         <p class="staff-stat-card__label">Tổng giao dịch</p>
                         <p class="staff-stat-card__value" th:text="${totalTransactions}"></p>
                         <p class="staff-stat-card__hint">30 ngày gần nhất</p>
                     </div>
-                    <div class="ds-card staff-stat-card">
+                    <div class="ds-card staff-stat-card green">
                         <p class="staff-stat-card__label">Thành công</p>
                         <p class="staff-stat-card__value" th:text="${completedTransactions}"></p>
                     </div>
-                    <div class="ds-card staff-stat-card">
+                    <div class="ds-card staff-stat-card yellow">
                         <p class="staff-stat-card__label">Đang xử lý</p>
                         <p class="staff-stat-card__value" th:text="${pendingTransactions}"></p>
                     </div>
-                    <div class="ds-card staff-stat-card">
+                    <div class="ds-card staff-stat-card red">
                         <p class="staff-stat-card__label">Thất bại / hủy</p>
                         <p class="staff-stat-card__value" th:text="${failTransactions}"></p>
                     </div>

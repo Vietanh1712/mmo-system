@@ -199,7 +199,7 @@ function resolvePostLoginRedirect(roleValue, redirectPathFromApi) {
     const role = normalizeRole(roleValue);
     let roleTarget = '/';
     if (role === 'Admin') {
-        roleTarget = '/admin/users';
+        roleTarget = '/';
     } else if (role === 'Staff') {
         roleTarget = '/';
     } else if (isSellerRole(role)) {
@@ -228,6 +228,8 @@ function applyAuthenticatedRedirect() {
         const target = resolvePostLoginRedirect(user.role, sessionStorage.getItem('redirectPath'));
 
         if (path === '/login' || path.endsWith('/login')) {
+            sessionStorage.removeItem('redirectPath');
+            localStorage.removeItem('redirectPath');
             window.location.replace(target);
         }
     } catch (error) {
@@ -455,8 +457,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
                                 const redirectUrl = getSafeReturnUrl()
                                     || resolvePostLoginRedirect(userInfo.role, res.body.redirectPath);
-                                sessionStorage.setItem('redirectPath', redirectUrl);
-                                localStorage.setItem('redirectPath', redirectUrl);
+                                sessionStorage.removeItem('redirectPath');
+                                localStorage.removeItem('redirectPath');
                                 window.location.replace(redirectUrl);
                             } else {
                                 showLoginAlert(res.body.message || 'Đăng nhập Google thất bại.', 'error');
@@ -603,8 +605,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     const redirectUrl = getSafeReturnUrl()
                         || resolvePostLoginRedirect(userInfo.role, res.body.redirectPath);
-                    sessionStorage.setItem('redirectPath', redirectUrl);
-                    localStorage.setItem('redirectPath', redirectUrl);
+                    sessionStorage.removeItem('redirectPath');
+                    localStorage.removeItem('redirectPath');
                     window.location.replace(redirectUrl);
                 } else {
                     showLoginAlert(res.body.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.', 'error');

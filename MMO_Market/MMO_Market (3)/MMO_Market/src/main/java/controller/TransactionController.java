@@ -120,9 +120,11 @@ public class TransactionController {
                     paymentStatus = "FAILED";
                 }
                 
-                boolean isReviewed = reviewRepository.existsByTransactionIdAndIsDeleteFalse(t.getId());
+                java.util.Optional<model.Review> reviewOpt = reviewRepository.findByTransactionIdAndIsDeleteFalse(t.getId());
+                boolean isReviewed = reviewOpt.isPresent();
                 return controller.dto.OrderDto.builder()
                         .orderCode("MMO-ORD-" + t.getId())
+                        .transactionId(t.getId())
                         .productId(t.getProduct() != null ? t.getProduct().getId() : 0L)
                         .productName(t.getProduct() != null ? t.getProduct().getName() : "Sản phẩm đã xóa")
                         .variantLabel(t.getVariant() != null ? t.getVariant().getVariantName() : "")
@@ -133,6 +135,8 @@ public class TransactionController {
                         .createdAt(t.getCreatedAt() != null ? java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy").format(t.getCreatedAt()) : "")
                         .escrowReleaseDate(t.getEscrowReleaseDate() != null ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy").format(t.getEscrowReleaseDate()) : "")
                         .isReviewed(isReviewed)
+                        .reviewRating(isReviewed ? reviewOpt.get().getRating() : null)
+                        .reviewComment(isReviewed ? reviewOpt.get().getComment() : null)
                         .build();
             }).toList();
 
@@ -159,7 +163,8 @@ public class TransactionController {
                 paymentStatus = "FAILED";
             }
 
-            boolean isReviewed = reviewRepository.existsByTransactionIdAndIsDeleteFalse(t.getId());
+            java.util.Optional<model.Review> reviewOpt = reviewRepository.findByTransactionIdAndIsDeleteFalse(t.getId());
+            boolean isReviewed = reviewOpt.isPresent();
             controller.dto.OrderDto orderDto = controller.dto.OrderDto.builder()
                     .orderCode("MMO-ORD-" + t.getId())
                     .transactionId(t.getId())
@@ -173,6 +178,8 @@ public class TransactionController {
                     .createdAt(t.getCreatedAt() != null ? java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy").format(t.getCreatedAt()) : "")
                     .escrowReleaseDate(t.getEscrowReleaseDate() != null ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy").format(t.getEscrowReleaseDate()) : "")
                     .isReviewed(isReviewed)
+                    .reviewRating(isReviewed ? reviewOpt.get().getRating() : null)
+                    .reviewComment(isReviewed ? reviewOpt.get().getComment() : null)
                     .build();
 
             // Lấy thông tin tài sản số (nếu có)

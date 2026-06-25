@@ -11,7 +11,7 @@
         </div>
     </div>
 
-    <div class="account-sidebar__wallet">
+    <div class="account-sidebar__wallet" data-sidebar-visibility="buyer-only">
         <div>
             <span class="account-sidebar__wallet-label">Số dư</span>
             <strong class="account-sidebar__balance" data-account-sidebar="balance">0 VNĐ</strong>
@@ -58,28 +58,32 @@
             </a>
         </div>
 
-        <p class="account-sidebar__group-title">Ví & giao dịch</p>
+        <p class="account-sidebar__group-title" data-sidebar-visibility="buyer-only">Ví & giao dịch</p>
         <a class="account-sidebar__menu-link"
+           data-sidebar-visibility="buyer-only"
            th:classappend="${activeMenu == 'wallet'} ? ' account-sidebar__menu-link--active' : ''"
            th:href="@{/wallet}">
             <i class="fa fa-credit-card" aria-hidden="true"></i>
             <span>Ví của tôi</span>
         </a>
         <a class="account-sidebar__menu-link"
+           data-sidebar-visibility="buyer-only"
            th:classappend="${activeMenu == 'topup'} ? ' account-sidebar__menu-link--active' : ''"
            th:href="@{/wallet/topup}">
             <i class="fa fa-plus-circle" aria-hidden="true"></i>
             <span>Nạp tiền</span>
         </a>
         <a class="account-sidebar__menu-link"
+           data-sidebar-visibility="buyer-only"
            th:classappend="${activeMenu == 'transactions'} ? ' account-sidebar__menu-link--active' : ''"
            th:href="@{/wallet/transactions}">
             <i class="fa fa-history" aria-hidden="true"></i>
             <span>Lịch sử giao dịch</span>
         </a>
 
-        <p class="account-sidebar__group-title">Mua hàng</p>
+        <p class="account-sidebar__group-title" data-sidebar-visibility="buyer-only">Mua hàng</p>
         <a class="account-sidebar__menu-link"
+           data-sidebar-visibility="buyer-only"
            th:classappend="${activeMenu == 'orders'} ? ' account-sidebar__menu-link--active' : ''"
            th:href="@{/account/orders}">
             <i class="fa fa-shopping-bag" aria-hidden="true"></i>
@@ -92,6 +96,7 @@
             <span>Thông báo</span>
         </a>
         <a class="account-sidebar__menu-link"
+           data-sidebar-visibility="buyer-only"
            th:classappend="${activeMenu == 'tickets'} ? ' account-sidebar__menu-link--active' : ''"
            th:href="@{/account/tickets}">
             <i class="fa fa-ticket" aria-hidden="true"></i>

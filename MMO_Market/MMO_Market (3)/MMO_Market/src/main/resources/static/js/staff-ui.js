@@ -39,7 +39,7 @@
     async function loadMyPermissions() {
         try {
             // authFetch tự động đính kèm Authorization header Bearer token
-            const res = await authFetch('/staff/my-permissions');
+            const res = await authFetch('/api/staff/my-permissions');
             if (res.ok) {
                 myPermissions = await res.json();
                 applyMenuPermissions();

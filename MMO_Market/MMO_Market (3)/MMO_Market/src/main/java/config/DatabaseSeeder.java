@@ -1,25 +1,33 @@
 package config;
 
 import dal.PermissionRepository;
+import dal.UserRepository;
 import model.Permission;
+import model.User;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class DatabaseSeeder implements CommandLineRunner {
 
     private final PermissionRepository permissionRepository;
+    private final UserRepository userRepository;
 
-    public DatabaseSeeder(PermissionRepository permissionRepository) {
+    public DatabaseSeeder(PermissionRepository permissionRepository, UserRepository userRepository) {
         this.permissionRepository = permissionRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
+    @Transactional
     public void run(String... args) throws Exception {
         seedPermissions();
+        seedStaffPermissions();
     }
 
     private void seedPermissions() {
@@ -57,5 +65,24 @@ public class DatabaseSeeder implements CommandLineRunner {
                 System.out.println("Seeded default permission: " + defaultPerm.getName());
             }
         }
+    }
+
+    private void seedStaffPermissions() {
+        userRepository.findByIdWithPermissions(14L).ifPresent(staff -> {
+            if (staff.getUserPermissions() == null || staff.getUserPermissions().isEmpty()) {
+                List<Permission> allPerms = permissionRepository.findAll();
+                if (staff.getUserPermissions() == null) {
+                    staff.setUserPermissions(new java.util.HashSet<>());
+                }
+                List<String> staffPermNames = Arrays.asList("APPROVE_KYC", "FLAG_SELLER", "APPROVE_WITHDRAWALS", "HANDLE_DISPUTES", "MANAGE_SUPPORT");
+                List<Permission> staffPerms = allPerms.stream()
+                        .filter(p -> staffPermNames.contains(p.getName()))
+                        .collect(Collectors.toList());
+                
+                staff.getUserPermissions().addAll(staffPerms);
+                userRepository.save(staff);
+                System.out.println("Seeded operational permissions for staff01@gmail.com (ID 14)");
+            }
+        });
     }
 }

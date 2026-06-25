@@ -1,14 +1,59 @@
 package controller.mvc;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import service.StaffDashboardService;
+import dal.ComplaintRepository;
+import dal.KycRequestRepository;
+import dal.TransactionRepository;
+import dal.WithdrawalRepository;
+import dal.ShopFlagRepository;
+import model.KycStatus;
 
 @Controller
 @RequestMapping("/staff")
 public class StaffController {
+
+    @Autowired
+    private ComplaintRepository complaintRepository;
+
+    @Autowired
+    private KycRequestRepository kycRequestRepository;
+
+    @Autowired
+    private TransactionRepository transactionRepository;
+
+    @Autowired
+    private WithdrawalRepository withdrawalRepository;
+
+    @Autowired
+    private ShopFlagRepository shopFlagRepository;
+
+    @Autowired
+    private StaffDashboardService staffDashboardService;
+
+    @ModelAttribute
+    public void addStaffSidebarCounts(Model model) {
+        long complaintCount = complaintRepository.countByStatusAndIsDeleteFalse("InProgress");
+        long pendingKycCount = kycRequestRepository.countByStatusAndIsDeleteFalse(KycStatus.PENDING);
+        long transactionCount = transactionRepository.countByIsDeleteFalse();
+        long withdrawalCount = withdrawalRepository.countByStatusAndIsDeleteFalse("Pending");
+        long flagCount = shopFlagRepository.countByIsDeleteFalse();
+
+        model.addAttribute("complaintCount", complaintCount);
+        model.addAttribute("pendingKycCount", pendingKycCount);
+        model.addAttribute("transactionCount", transactionCount);
+        model.addAttribute("withdrawalCount", withdrawalCount);
+        model.addAttribute("flagCount", flagCount);
+    }
+
     @GetMapping("/dashboard")
-    public String dashboard() {
+    public String dashboard(Model model) {
+        model.addAttribute("dashboard", staffDashboardService.getDashboardData());
         return "staff/dashboard";
     }
 

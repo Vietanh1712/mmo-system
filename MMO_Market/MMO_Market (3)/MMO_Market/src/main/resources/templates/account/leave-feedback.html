@@ -44,7 +44,7 @@
 
             <!-- 3. Card 2 - Điểm số đánh giá (Rating Card) -->
             <section class="feedback-card rating-card">
-                <h2 class="rating-card__title">Bạn đánh giá trải nghiệm mua hàng như thế nào?</h2>
+                <h2 class="rating-card__title" id="ratingCardTitle">Bạn đánh giá trải nghiệm mua hàng như thế nào?</h2>
                 <div class="rating-stars" role="radiogroup" aria-label="Rating score">
                     <i class="fa fa-star rating-star" role="radio" aria-checked="false" tabindex="0" data-score="1" aria-label="1 star"></i>
                     <i class="fa fa-star rating-star" role="radio" aria-checked="false" tabindex="0" data-score="2" aria-label="2 stars"></i>
@@ -57,7 +57,7 @@
 
             <!-- 4. Card 3 - Nội dung đánh giá & Hình ảnh (Share Experience Card) -->
             <section class="feedback-card experience-card">
-                <h2 class="experience-card__title">Chia sẻ trải nghiệm của bạn</h2>
+                <h2 class="experience-card__title" id="experienceCardTitle">Chia sẻ trải nghiệm của bạn</h2>
                 
                 <div class="experience-card__textarea-wrap">
                     <textarea class="experience-card__textarea" id="reviewComment" maxlength="1000" placeholder="Bạn hài lòng hay không hài lòng ở điểm nào? Dịch vụ và giao nhận sản phẩm như thế nào?..." oninput="updateCharCount()"></textarea>
@@ -179,6 +179,46 @@
                         submitBtn.style.opacity = '0.5';
                         submitBtn.style.pointerEvents = 'none';
                         submitBtn.innerHTML = '<i class="fa fa-check-circle" style="color: #16a34a;"></i> Đã đánh giá';
+                    }
+
+                    // Hiển thị nội dung đã đánh giá và khóa tương tác
+                    selectedScore = order.reviewRating || 5;
+                    updateStarsDisplay();
+                    const scoreTexts = { 1: 'RẤT TỆ', 2: 'TỆ', 3: 'BÌNH THƯỜNG', 4: 'TỐT', 5: 'RẤT TỐT' };
+                    const subtext = document.getElementById('ratingSubtext');
+                    if (subtext) {
+                        subtext.textContent = scoreTexts[selectedScore] || 'ĐÃ ĐÁNH GIÁ';
+                        subtext.style.color = 'var(--ds-text)';
+                    }
+                    
+                    const ratingTitle = document.getElementById('ratingCardTitle');
+                    if (ratingTitle) ratingTitle.textContent = 'Đánh giá của bạn về trải nghiệm mua hàng';
+                    
+                    const starsContainer = document.querySelector('.rating-stars');
+                    if (starsContainer) {
+                        starsContainer.style.pointerEvents = 'none';
+                    }
+
+                    const commentTextarea = document.getElementById('reviewComment');
+                    if (commentTextarea) {
+                        commentTextarea.value = order.reviewComment || '';
+                        commentTextarea.disabled = true;
+                        commentTextarea.placeholder = 'Bạn đã gửi đánh giá cho đơn hàng này.';
+                    }
+                    updateCharCount();
+
+                    const expTitle = document.getElementById('experienceCardTitle');
+                    if (expTitle) expTitle.textContent = 'Nội dung đánh giá của bạn';
+
+                    const dropzone = document.getElementById('dropzone');
+                    if (dropzone) {
+                        dropzone.style.display = 'none';
+                    }
+
+                    const anonymousToggle = document.getElementById('anonymousToggle');
+                    if (anonymousToggle) {
+                        anonymousToggle.style.pointerEvents = 'none';
+                        anonymousToggle.style.opacity = '0.5';
                     }
                 }
             } catch (err) {

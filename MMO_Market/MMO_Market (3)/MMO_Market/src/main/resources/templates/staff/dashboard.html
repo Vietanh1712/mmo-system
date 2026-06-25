@@ -21,22 +21,22 @@
                 </div>
 
                 <div class="staff-stat-grid">
-                    <div class="ds-card staff-stat-card">
+                    <div class="ds-card staff-stat-card yellow">
                         <p class="staff-stat-card__label">Khiếu nại đang mở</p>
                         <p class="staff-stat-card__value" th:text="${dashboard.openComplaints}"></p>
                         <p class="staff-stat-card__hint">12 ưu tiên cao</p>
                     </div>
-                    <div class="ds-card staff-stat-card">
+                    <div class="ds-card staff-stat-card yellow">
                         <p class="staff-stat-card__label">Hồ sơ KYC chờ duyệt</p>
                         <p class="staff-stat-card__value" th:text="${dashboard.pendingKyc}"></p>
                         <p class="staff-stat-card__hint">5 hồ sơ quá 24h</p>
                     </div>
-                    <div class="ds-card staff-stat-card">
+                    <div class="ds-card staff-stat-card blue">
                         <p class="staff-stat-card__label">Yêu cầu rút tiền</p>
                         <p class="staff-stat-card__value" th:text="${dashboard.pendingWithdrawals}"></p>
                         <p class="staff-stat-card__hint">Tổng 245.800.000 đ</p>
                     </div>
-                    <div class="ds-card staff-stat-card">
+                    <div class="ds-card staff-stat-card red">
                         <p class="staff-stat-card__label">Cờ cảnh báo shop</p>
                         <p class="staff-stat-card__value" th:text="${dashboard.shopFlags}"></p>
                         <p class="staff-stat-card__hint">2 mức nghiêm trọng</p>

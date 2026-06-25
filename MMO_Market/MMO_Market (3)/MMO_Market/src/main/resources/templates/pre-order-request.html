@@ -15,10 +15,6 @@
 
 <body>
     <header th:replace="~{fragments/header :: header}"></header>
-    <div class="preorder-toast" id="preOrderToast" role="status" aria-live="polite">
-        <i class="fa fa-check-circle"></i>
-        <span id="preOrderToastText">Gửi yêu cầu đặt trước thành công.</span>
-    </div>
 
     <main class="preorder-shell">
         <div class="preorder-breadcrumb">
@@ -273,7 +269,7 @@
                 }
 
                 // Show toast notification
-                showPreOrderSuccess(`Đặt trước thành công sản phẩm "${preorderProduct.productName}"!`);
+                showSuccessToast(`Đặt trước thành công sản phẩm "${preorderProduct.productName}"!`);
             } catch (err) {
                 showErrorToast(err.message || 'Có lỗi xảy ra, vui lòng thử lại.');
                 submitBtn.disabled = false;
@@ -287,17 +283,6 @@
                 return;
             }
             window.location.href = '/products';
-        }
-
-        function showPreOrderSuccess(message) {
-            const toast = document.getElementById('preOrderToast');
-            const toastText = document.getElementById('preOrderToastText');
-            if (!toast || !toastText) return;
-            toastText.innerText = message;
-            toast.classList.add('active');
-            window.setTimeout(() => {
-                toast.classList.remove('active');
-            }, 4200);
         }
     </script>
 </body>
