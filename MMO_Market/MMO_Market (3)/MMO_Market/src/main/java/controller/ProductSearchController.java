@@ -151,6 +151,7 @@ public class ProductSearchController {
                             .reviewsCount(reviewsCount != null ? reviewsCount : 0L)
                             .salesCount(salesCount != null ? salesCount : 0L)
                             .variants(variantDTOs)
+                            .userGuide(product.getUserGuide())
                             .build();
 
                     return ResponseEntity.ok(detail);

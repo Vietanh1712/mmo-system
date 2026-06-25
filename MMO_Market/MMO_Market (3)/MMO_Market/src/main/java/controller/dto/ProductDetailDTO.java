@@ -29,6 +29,7 @@ public class ProductDetailDTO {
     private Double averageRating;
     private Long reviewsCount;
     private Long salesCount;
+    private String userGuide;
 
     private List<VariantDTO> variants;
 

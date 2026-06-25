@@ -209,7 +209,7 @@ async function submitTicketForm(e) {
 }
 
 function openLiveChat() {
-    window.location.href = '/messages?sellerId=35';
+    window.location.href = '/messages?sellerId=14';
 }
 
 // Mở FAQ khi vào từ menu "Câu hỏi thường gặp"

@@ -22,7 +22,7 @@ Tạo database development và áp dụng migration trong `sql_scripts/` theo đ
 Khuyến nghị cấu hình qua environment variables:
 
 ```powershell
-$env:SPRING_DATASOURCE_URL='jdbc:sqlserver://localhost:1433;databaseName=MMO_System;trustServerCertificate=true'
+$env:SPRING_DATASOURCE_URL='jdbc:sqlserver://localhost:1433;databaseName=MMO_System_Schema;trustServerCertificate=true'
 $env:SPRING_DATASOURCE_USERNAME='sa'
 $env:SPRING_DATASOURCE_PASSWORD='<local-password>'
 $env:APP_JWTSECRET='<development-secret>'

@@ -3,7 +3,7 @@
 --          the same product multiple times if they have different purchase orders.
 -- Date: 2026-06-18
 
-USE MMO_System_Schema;
+USE MMO_Market_Schema;
 GO
 
 IF NOT EXISTS (

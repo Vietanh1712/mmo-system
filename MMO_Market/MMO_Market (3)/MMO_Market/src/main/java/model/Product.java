@@ -47,6 +47,9 @@ public class Product {
     @Column(name = "isDelete", nullable = false)
     private Boolean isDelete = false;
 
+    @Column(name = "user_guide", columnDefinition = "NVARCHAR(MAX)")
+    private String userGuide;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id", nullable = false)
     private User seller;

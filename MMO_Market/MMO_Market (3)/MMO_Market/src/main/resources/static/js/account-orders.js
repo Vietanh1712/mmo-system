@@ -207,7 +207,7 @@ function renderOrders() {
                         ${escapeHtml(order.sellerName)}
                     </div>
                 </td>
-                <td class="ds-text-right">${formatMoney(order.amountVnd)}</td>
+                <td class="ds-text-right">${formatMoney(order.amount)}</td>
                 <td>
                     <span class="ds-badge ${getOrderStatusBadgeClass(order.status)}">
                         ${formatOrderStatus(order.status)}
