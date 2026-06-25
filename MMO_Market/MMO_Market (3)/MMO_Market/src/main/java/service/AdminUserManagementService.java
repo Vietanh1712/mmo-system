@@ -56,10 +56,19 @@ public class AdminUserManagementService {
         }
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("X-Real-IP");
+        }
+        if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getHeader("Proxy-Client-IP");
         }
         if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_CLIENT_IP");
+        }
+        if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
         }
         if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getRemoteAddr();
@@ -196,8 +205,8 @@ public class AdminUserManagementService {
         User saved = userRepository.save(staff);
         Map<String, Object> diff = new HashMap<>();
         diff.put("role", "none -> Staff");
-        audit(operator, "CREATE_STAFF", String.format("%s (%d) đã tạo tài khoản Staff %s (%d)",
-                displayName(operator), operator.getId(), saved.getEmail(), saved.getId()), diff);
+        audit(operator, "CREATE_STAFF", String.format("Đã tạo tài khoản Staff %s (%d)",
+                saved.getEmail(), saved.getId()), diff);
         return toResponse(saved);
     }
 
@@ -248,8 +257,8 @@ public class AdminUserManagementService {
             diff.put("active", oldActive + " -> " + request.getActive());
         }
 
-        audit(operator, "UPDATE_STAFF", String.format("%s (%d) đã cập nhật tài khoản Staff %s (%d)",
-                displayName(operator), operator.getId(), saved.getEmail(), saved.getId()), diff);
+        audit(operator, "UPDATE_STAFF", String.format("Đã cập nhật tài khoản Staff %s (%d)",
+                saved.getEmail(), saved.getId()), diff);
         return toResponse(saved);
     }
 
@@ -270,8 +279,8 @@ public class AdminUserManagementService {
         Map<String, Object> diff = new HashMap<>();
         diff.put("isDelete", "false -> true");
         
-        audit(operator, "SOFT_DELETE_USER", String.format("%s (%d) đã xóa mềm tài khoản %s (%d)",
-                displayName(operator), operator.getId(), target.getEmail(), target.getId()), diff);
+        audit(operator, "SOFT_DELETE_USER", String.format("Đã xóa mềm tài khoản %s (%d)",
+                target.getEmail(), target.getId()), diff);
         return AdminActionResponse.builder()
                 .success(true)
                 .message("Da xoa tai khoan khoi he thong.")
@@ -292,8 +301,8 @@ public class AdminUserManagementService {
         Map<String, Object> diff = new HashMap<>();
         diff.put("isDelete", "false -> true");
         
-        audit(operator, "DELETE_STAFF", String.format("%s (%d) đã xóa mềm tài khoản Staff %s (%d)",
-                displayName(operator), operator.getId(), staff.getEmail(), staff.getId()), diff);
+        audit(operator, "DELETE_STAFF", String.format("Đã xóa mềm tài khoản Staff %s (%d)",
+                staff.getEmail(), staff.getId()), diff);
         return AdminActionResponse.builder()
                 .success(true)
                 .message("Da xoa tai khoan Staff.")

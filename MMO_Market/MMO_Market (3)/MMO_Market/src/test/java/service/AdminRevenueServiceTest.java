@@ -167,11 +167,56 @@ class AdminRevenueServiceTest {
         when(systemConfigurationRepository.findByConfigKey("WITHDRAWAL_FEE_PERCENT")).thenReturn(Optional.empty());
         when(systemConfigurationRepository.findByConfigKey("MIN_WITHDRAW_FEE_VND")).thenReturn(Optional.empty());
 
-        Map<String, Object> result = service.getCashflowTransactions(1L, "", "", "", 0, 10);
+        Map<String, Object> result = service.getCashflowTransactions(1L, "", "", "", "", 0, 10);
 
         assertNotNull(result);
         List<?> content = (List<?>) result.get("content");
         assertEquals(3, content.size());
         assertEquals(3, result.get("totalElements"));
+    }
+
+    @Test
+    void getCashflowTransactionsFiltersByDateRange() {
+        User admin = User.builder()
+                .id(1L)
+                .email("admin@mmo.com")
+                .role("{\"role\": \"Admin\"}")
+                .isLocked(false)
+                .isDelete(false)
+                .build();
+
+        when(userRepository.findByIdAndIsDeleteFalse(1L)).thenReturn(Optional.of(admin));
+
+        LocalDateTime now = LocalDateTime.of(2026, 6, 25, 12, 0, 0);
+
+        TopupTransaction topup1 = TopupTransaction.builder()
+                .id(10L)
+                .userId(3L)
+                .amountVnd(100000L)
+                .status("Completed")
+                .createdAt(now.minusDays(5)) // 2026-06-20
+                .isDelete(false)
+                .build();
+
+        TopupTransaction topup2 = TopupTransaction.builder()
+                .id(11L)
+                .userId(3L)
+                .amountVnd(200000L)
+                .status("Completed")
+                .createdAt(now) // 2026-06-25
+                .isDelete(false)
+                .build();
+
+        when(topupTransactionRepository.findAllByIsDeleteFalse()).thenReturn(List.of(topup1, topup2));
+        when(userRepository.findAllById(any())).thenReturn(Collections.emptyList());
+        when(withdrawalRepository.findAllWithSellerByIsDeleteFalse()).thenReturn(Collections.emptyList());
+        when(transactionRepository.findAllWithCustomerByIsDeleteFalse()).thenReturn(Collections.emptyList());
+
+        // Lọc trong khoảng 2026-06-21 đến 2026-06-26 -> chỉ có topup2
+        Map<String, Object> result = service.getCashflowTransactions(1L, "", "", "2026-06-21", "2026-06-26", 0, 10);
+
+        assertNotNull(result);
+        List<?> content = (List<?>) result.get("content");
+        assertEquals(1, content.size());
     }
 }

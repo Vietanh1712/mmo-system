@@ -3,6 +3,9 @@ package security;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dal.UserRepository;
+import model.User;
+import model.Permission;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,6 +36,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ObjectMapper objectMapper;
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -45,25 +50,50 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String email = jwtTokenProvider.getEmailFromToken(jwt);
 
                 if (userId != null && email != null) {
-                    Optional<User> userOpt = userRepository.findByIdAndIsDeleteFalse(userId);
+                    Optional<User> userOpt = userRepository.findByIdWithPermissions(userId);
+
                     if (userOpt.isPresent()) {
                         User user = userOpt.get();
-                        
+
                         if (Boolean.TRUE.equals(user.getIsLocked())) {
                             log.warn("Tài khoản đang bị khóa: {}", email);
                         } else {
-                            List<GrantedAuthority> authorities = new ArrayList<>();
-                            String roleJson = user.getRole();
-                            if (roleJson != null && !roleJson.isBlank()) {
+                            List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+
+                            // 1. Thêm vai trò (Role)
+                            String roleName = "Customer";
+                            String rawRole = user.getRole();
+                            if (rawRole != null && !rawRole.isBlank()) {
                                 try {
-                                    ObjectMapper mapper = new ObjectMapper();
-                                    JsonNode root = mapper.readTree(roleJson);
-                                    if (root.has("role")) {
-                                        String role = root.get("role").asText();
-                                        authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
+                                    JsonNode node = objectMapper.readTree(rawRole);
+                                    JsonNode roleNode = node.get("role");
+                                    if (roleNode != null && !roleNode.asText().isBlank()) {
+                                        roleName = roleNode.asText();
+                                    } else {
+                                        roleName = rawRole.replace("\"", "").trim();
                                     }
                                 } catch (Exception e) {
-                                    log.error("Lỗi parse JSON role cho user: {}", email, e);
+                                    roleName = rawRole.replace("\"", "").trim();
+                                }
+                            }
+
+                            // Chuẩn hóa tên vai trò
+                            if (roleName.toLowerCase().contains("admin")) {
+                                roleName = "Admin";
+                            } else if (roleName.toLowerCase().contains("staff")) {
+                                roleName = "Staff";
+                            } else if (roleName.toLowerCase().contains("seller")) {
+                                roleName = "Seller";
+                            } else {
+                                roleName = "Customer";
+                            }
+
+                            authorities.add(new SimpleGrantedAuthority("ROLE_" + roleName));
+
+                            // 2. Thêm các quyền hạn chi tiết (Permissions)
+                            if (user.getUserPermissions() != null) {
+                                for (Permission permission : user.getUserPermissions()) {
+                                    authorities.add(new SimpleGrantedAuthority(permission.getName()));
                                 }
                             }
 

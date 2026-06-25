@@ -12,11 +12,8 @@
 
     const ALL_PERMISSIONS = [
         { id: 'APPROVE_KYC', label: 'Duyệt hồ sơ định danh KYC', group: 'Kiểm duyệt', desc: 'Cho phép xem, duyệt hoặc từ chối thông tin định danh cá nhân của người dùng.' },
-        { id: 'AUDIT_USERS', label: 'Tra cứu & Kiểm tra tài khoản', group: 'Kiểm duyệt', desc: 'Cho phép kiểm tra thông tin tài khoản, ví số dư, địa chỉ IP và lịch sử hoạt động.' },
-        { id: 'MANAGE_SHOPS', label: 'Kiểm duyệt sản phẩm & Cửa hàng', group: 'Kiểm duyệt', desc: 'Cho phép phê duyệt mở cửa hàng của người bán, cấm hoạt động (ban) hoặc kiểm duyệt các sản phẩm số.' },
         { id: 'FLAG_SELLER', label: 'Cắm cờ & Đánh gạch Seller', group: 'Kiểm duyệt', desc: 'Cho phép gắn cờ vi phạm (gạch phạt) đối với người bán vi phạm chính sách.' },
         { id: 'APPROVE_WITHDRAWALS', label: 'Phê duyệt yêu cầu rút tiền', group: 'Tài chính', desc: 'Cho phép duyệt lệnh chuyển tiền/rút tiền của Seller từ ví hệ thống về tài khoản ngân hàng.' },
-        { id: 'VIEW_REVENUE', label: 'Xem báo cáo doanh thu sàn', group: 'Tài chính', desc: 'Cho phép xem thống kê phí giao dịch C2C, phí rút tiền, dòng tiền nạp và doanh thu ròng của hệ thống.' },
         { id: 'HANDLE_DISPUTES', label: 'Phân xử tranh chấp & Hoàn tiền', group: 'Vận hành', desc: 'Cho phép làm trung gian giải quyết khiếu nại giữa người mua và người bán, hoàn trả hoặc giải ngân tiền Escrow.' },
         { id: 'MANAGE_SUPPORT', label: 'Tiếp nhận & Hỗ trợ khách hàng', group: 'Vận hành', desc: 'Cho phép tiếp nhận, phản hồi và hỗ trợ giải đáp các thắc mắc (ticketing/live chat) của khách hàng.' }
     ];
@@ -38,7 +35,7 @@
         ],
         permissions: {
             2: ['APPROVE_KYC', 'REVIEW_SUSPICIOUS', 'AUDIT_ACCOUNTS', 'HANDLE_DISPUTES', 'MANAGE_REQUESTS'],
-            3: ['APPROVE_WITHDRAWALS', 'MANAGE_ESCROW', 'VIEW_REVENUE_REPORTS', 'HANDLE_DISPUTES', 'MANAGE_REQUESTS']
+            3: ['APPROVE_WITHDRAWALS', 'MANAGE_ESCROW', 'HANDLE_DISPUTES', 'MANAGE_REQUESTS']
         },
         systemConfig: {
             appName: 'MMO Market System',
@@ -133,7 +130,9 @@
         Fund_Withdraw: 'Duyệt rút tiền',
         Lock_User: 'Khóa tài khoản',
         Config_Update: 'Cập nhật cấu hình',
-        Maintenance_Toggle: 'Bảo trì hệ thống'
+        Maintenance_Toggle: 'Bảo trì hệ thống',
+        Notification_Create: 'Tạo thông báo',
+        Notification_Delete: 'Xóa thông báo'
     };
 
     const TX_TYPE_LABELS = {
@@ -145,7 +144,8 @@
     const TX_STATUS_LABELS = {
         Completed: 'Hoàn tất',
         Pending: 'Đang chờ',
-        Failed: 'Thất bại'
+        Failed: 'Thất bại',
+        Held: 'Tạm giữ'
     };
 
     const ICON_VIEW = `<svg class="ds-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2.25 12C3.73 8.12 7.49 5.25 12 5.25C16.51 5.25 20.27 8.12 21.75 12C20.27 15.88 16.51 18.75 12 18.75C7.49 18.75 3.73 15.88 2.25 12Z" stroke="currentColor" stroke-width="2"/><path d="M12 15.25C13.79 15.25 15.25 13.79 15.25 12C15.25 10.21 13.79 8.75 12 8.75C10.21 8.75 8.75 10.21 8.75 12C8.75 13.79 10.21 15.25 12 15.25Z" stroke="currentColor" stroke-width="2"/></svg>`;
@@ -251,10 +251,12 @@
             renderRevenueView();
         });
         document.getElementById('revenueResetFilter')?.addEventListener('click', () => {
-            const f = document.getElementById('revTimeFilter');
+            const startDate = document.getElementById('revStartDate');
+            const endDate = document.getElementById('revEndDate');
             const k = document.getElementById('revKeywordFilter');
             const t = document.getElementById('revTypeFilter');
-            if (f) f.value = '7days';
+            if (startDate) startDate.value = '';
+            if (endDate) endDate.value = '';
             if (k) k.value = '';
             if (t) t.value = '';
             revPage = 0;
@@ -673,16 +675,21 @@
         const daysOfWeek = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
         const dateKeys = [];
         
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            labels.push(daysOfWeek[d.getDay()]);
-            const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        const d = new Date();
+        const day = d.getDay();
+        // Số ngày cần lùi từ hôm nay để về Thứ 2 tuần trước
+        const daysToSubtract = day === 0 ? 13 : day + 6;
+        
+        for (let i = 0; i < 7; i++) {
+            const temp = new Date();
+            temp.setDate(d.getDate() - daysToSubtract + i);
+            labels.push(daysOfWeek[temp.getDay()]);
+            const key = temp.getFullYear() + '-' + String(temp.getMonth() + 1).padStart(2, '0') + '-' + String(temp.getDate()).padStart(2, '0');
             dateKeys.push(key);
         }
 
         try {
-            const listRes = await authFetch('/admin/revenue/transactions?time=7days&size=100');
+            const listRes = await authFetch(`/admin/revenue/transactions?startDate=${dateKeys[0]}&endDate=${dateKeys[6]}&size=1000`);
             if (listRes.ok) {
                 const listData = await listRes.json();
                 const txs = listData.content || [];
@@ -711,7 +718,7 @@
             const peak = Math.max(...feesByDay);
             const peakIdx = feesByDay.indexOf(peak);
             summary.innerHTML = `
-                <span class="ds-caption">Tổng tuần: <strong class="ds-money">${formatVnd(total)}</strong></span>
+                <span class="ds-caption">Tổng tuần trước: <strong class="ds-money">${formatVnd(total)}</strong></span>
                 <span class="ds-caption">Cao nhất: <strong class="ds-money">${formatVnd(peak)}</strong> (${labels[peakIdx]})</span>
                 <span class="ds-caption">Trung bình/ngày: <strong class="ds-money">${formatVnd(Math.round(total / feesByDay.length))}</strong></span>
             `;
@@ -1040,6 +1047,10 @@
         if (pwdInput) pwdInput.required = true;
         const pwdReq = document.getElementById('accountFormPasswordRequired');
         if (pwdReq) pwdReq.style.display = '';
+        
+        const permWrap = document.getElementById('accountFormPermissionsWrap');
+        if (permWrap) permWrap.style.display = 'none';
+        
         syncAccountFormProfile();
     }
 
@@ -1110,6 +1121,33 @@
 
         const submitBtn = document.getElementById('accountFormSubmitBtn');
         const actionsBar = document.querySelector('.account-form-actions');
+        
+        // Render staff permissions list
+        const permWrap = document.getElementById('accountFormPermissionsWrap');
+        if (permWrap) {
+            if (isStaff) {
+                permWrap.style.display = '';
+                const permListEl = document.getElementById('accountFormPermissionsList');
+                if (permListEl) {
+                    if (!mock.permissions) mock.permissions = {};
+                    const userPerms = mock.permissions[user.id] || [];
+                    if (userPerms.length > 0) {
+                        permListEl.innerHTML = userPerms.map(pid => {
+                            const p = ALL_PERMISSIONS.find(ap => ap.id === pid);
+                            if (p) {
+                                return `<span class="ds-badge ds-badge-warning" style="margin-right: 8px; margin-bottom: 8px;" title="${escapeHtml(p.desc)}"><i class="fa fa-shield" style="margin-right: 4px;"></i>${escapeHtml(p.label)}</span>`;
+                            }
+                            return '';
+                        }).filter(Boolean).join('');
+                    } else {
+                        permListEl.innerHTML = '<span class="ds-text-muted" style="font-size: 13px; font-style: italic;">Chưa được cấp quyền nào</span>';
+                    }
+                }
+            } else {
+                permWrap.style.display = 'none';
+            }
+        }
+
         if (isStaff) {
             document.getElementById('accountFormEmail').disabled = true;
             document.getElementById('accountFormPasswordWrap').style.display = '';
@@ -1434,6 +1472,10 @@
             categoryText = 'Bảo trì hệ thống';
             severityText = 'Cao';
             severityClass = 'ds-badge-danger';
+        } else if (log.action === 'Notification_Create' || log.action === 'Notification_Delete') {
+            categoryText = 'Thông báo hệ thống';
+            severityText = 'Thấp';
+            severityClass = 'ds-badge-success';
         }
         
         if (categoryEl) categoryEl.textContent = categoryText;
@@ -1473,6 +1515,8 @@
             valText = 'Cấu hình hệ thống';
         } else if (log.action === 'Maintenance_Toggle') {
             valText = 'Bảo trì hệ thống';
+        } else if (log.action === 'Notification_Create' || log.action === 'Notification_Delete') {
+            valText = 'Thông báo';
         }
 
         if (targetValue) {
@@ -1531,52 +1575,132 @@
         }
 
         const keyMap = {
-            'sessionTimeout': 'Thời gian phiên làm việc (phút)',
-            'otpTimeout': 'Thời hạn mã OTP (phút)',
+            'sessionTimeout': 'Thời gian phiên làm việc',
+            'otpTimeout': 'Thời hạn mã OTP',
             'maxLoginRetries': 'Số lần thử đăng nhập tối đa',
-            'lockDurationMins': 'Thời gian khóa tài khoản (phút)',
-            'escrowHoldHours': 'Thời gian giam tiền bảo lãnh Escrow (giờ)',
-            'allowGoogleLogin': 'Cho phép đăng nhập bằng Google',
+            'lockDurationMins': 'Thời gian khóa tài khoản tạm thời',
+            'escrowHoldHours': 'Thời gian giam tiền bảo lãnh Escrow',
+            'allowGoogleLogin': 'Đăng nhập bằng Google',
             'allowRegister': 'Cho phép đăng ký tài khoản mới',
-            'requireWithdraw2FA': 'Yêu cầu OTP khi rút tiền',
-            'basePercent': 'Phí hoa hồng C2C cơ bản (%)',
-            'flatBuyerFee': 'Phí giao dịch cố định người mua (VNĐ)',
-            'withdrawalPercent': 'Phí rút tiền (%)',
-            'minWithdrawFee': 'Phí rút tiền tối thiểu (VNĐ)',
-            'minWithdrawLimit': 'Hạn mức rút tiền tối thiểu / lần (VNĐ)',
-            'maxWithdrawLimit': 'Hạn mức rút tiền tối đa / lần (VNĐ)',
-            'autoWithdrawLimit': 'Hạn mức duyệt rút tiền tự động (VNĐ)',
-            'minDepositLimit': 'Hạn mức nạp tiền tối thiểu (VNĐ)',
+            'requireWithdraw2FA': 'Yêu cầu xác thực 2 bước (2FA) khi rút tiền',
+            'basePercent': 'Phí hoa hồng C2C cơ bản',
+            'flatBuyerFee': 'Phí giao dịch cố định người mua',
+            'withdrawalPercent': 'Phí rút tiền',
+            'minWithdrawFee': 'Phí rút tiền tối thiểu',
+            'minWithdrawLimit': 'Hạn mức rút tiền tối thiểu / lần',
+            'maxWithdrawLimit': 'Hạn mức rút tiền tối đa / lần',
+            'autoWithdrawLimit': 'Hạn mức duyệt rút tiền tự động',
+            'minDepositLimit': 'Hạn mức nạp tiền tối thiểu',
+            'maxDepositLimit': 'Hạn mức nạp tiền tối đa',
             'isLocked': 'Trạng thái khóa tài khoản',
             'kycStatus': 'Trạng thái xác thực KYC',
             'status': 'Trạng thái giao dịch / yêu cầu',
             'role': 'Vai trò người dùng',
-            'scheduled': 'Trạng thái lên lịch bảo trì'
+            'scheduled': 'Trạng thái lên lịch bảo trì',
+            'active': 'Trạng thái hoạt động',
+            'isDelete': 'Trạng thái xóa',
+            'shopStatus': 'Trạng thái cửa hàng (Shop)',
+            'fullName': 'Họ và tên',
+            'phone': 'Số điện thoại',
+            'address': 'Địa chỉ',
+            'nationalId': 'Số CCCD',
+            'dateOfBirth': 'Ngày sinh',
+            'title': 'Tiêu đề thông báo',
+            'type': 'Loại thông báo',
+            'content': 'Nội dung thông báo'
         };
 
         function translateVal(val, key) {
+            if (val === null || val === undefined || String(val).trim() === '' || String(val).trim() === '—' || String(val).trim() === 'none') {
+                return 'Trống / Không có';
+            }
             const str = String(val).trim();
-            if (str === 'true') {
-                if (key && (key.startsWith('allow') || key.startsWith('require'))) return 'Bật (Cho phép)';
-                return 'Có / Bật';
+            const lowerStr = str.toLowerCase();
+
+            // 1. Vai trò người dùng
+            if (key === 'role') {
+                if (lowerStr.includes('admin')) return 'Quản trị viên';
+                if (lowerStr.includes('staff')) return 'Nhân viên';
+                if (lowerStr.includes('seller')) return 'Người bán';
+                if (lowerStr.includes('customer')) return 'Khách hàng';
+                return str;
             }
-            if (str === 'false') {
-                if (key && (key.startsWith('allow') || key.startsWith('require'))) return 'Tắt (Chặn)';
-                return 'Không / Tắt';
+
+            // 2. Trạng thái khóa tài khoản
+            if (key === 'isLocked') {
+                if (lowerStr === 'true') return 'Đã khóa';
+                if (lowerStr === 'false') return 'Đang hoạt động (Không khóa)';
             }
-            if (str === 'pending') return 'Đang chờ duyệt (pending)';
-            if (str === 'verified') return 'Đã xác thực (verified)';
-            if (str === 'completed') return 'Hoàn thành (completed)';
-            
-            if (!isNaN(str) && str !== '') {
+
+            // 3. Trạng thái xóa
+            if (key === 'isDelete') {
+                if (lowerStr === 'true') return 'Đã xóa';
+                if (lowerStr === 'false') return 'Hoạt động (Chưa xóa)';
+            }
+
+            // 4. Trạng thái hoạt động
+            if (key === 'active') {
+                if (lowerStr === 'true') return 'Đang hoạt động';
+                if (lowerStr === 'false') return 'Tạm dừng';
+            }
+
+            // 5. KYC Status
+            if (key === 'kycStatus') {
+                if (lowerStr === 'pending') return 'Đang chờ duyệt';
+                if (lowerStr === 'verified') return 'Đã xác thực';
+                if (lowerStr === 'rejected') return 'Đã từ chối';
+            }
+
+            // 6. Trạng thái yêu cầu
+            if (key === 'status') {
+                if (lowerStr === 'pending') return 'Đang chờ';
+                if (lowerStr === 'completed') return 'Đã hoàn thành';
+                if (lowerStr === 'failed') return 'Thất bại';
+                if (lowerStr === 'held') return 'Tạm giữ';
+            }
+
+            // 7. Trạng thái cửa hàng
+            if (key === 'shopStatus') {
+                if (lowerStr === 'pending') return 'Chờ duyệt';
+                if (lowerStr === 'active') return 'Đang hoạt động';
+                if (lowerStr === 'banned') return 'Đã bị khóa';
+            }
+
+            // 8. Đơn vị thời gian
+            if (key === 'sessionTimeout' || key === 'otpTimeout' || key === 'lockDurationMins') {
+                return str + ' phút';
+            }
+            if (key === 'escrowHoldHours') {
+                return str + ' giờ';
+            }
+
+            // 9. Phần trăm
+            if (key === 'basePercent' || key === 'withdrawalPercent') {
+                return str + '%';
+            }
+
+            // 10. Đơn vị tiền tệ VNĐ
+            if (key && (key.toLowerCase().includes('fee') || key.toLowerCase().includes('limit') || key.toLowerCase().includes('vnd') || key.toLowerCase().includes('balance'))) {
                 const num = Number(str);
-                if (key && (key.toLowerCase().includes('fee') || key.toLowerCase().includes('limit') || key.toLowerCase().includes('withdrawal') || key.toLowerCase().includes('deposit') || key === 'minWithdrawal')) {
+                if (!isNaN(num)) {
                     return formatVnd(num);
                 }
-                if (key && key.toLowerCase().includes('percent')) {
-                    return num + '%';
-                }
             }
+
+            // 11. Các giá trị Đúng/Sai Boolean
+            if (lowerStr === 'true') {
+                if (key && (key.startsWith('allow') || key.startsWith('require') || key.endsWith('2FA'))) {
+                    return 'Bật (Cho phép)';
+                }
+                return 'Bật';
+            }
+            if (lowerStr === 'false') {
+                if (key && (key.startsWith('allow') || key.startsWith('require') || key.endsWith('2FA'))) {
+                    return 'Tắt (Chặn)';
+                }
+                return 'Tắt';
+            }
+
             return val;
         }
 
@@ -1645,7 +1769,8 @@
 
     /* ---------- Mock: Revenue ---------- */
     async function renderRevenueView() {
-        const filter = document.getElementById('revTimeFilter')?.value || '7days';
+        const startDate = document.getElementById('revStartDate')?.value || '';
+        const endDate = document.getElementById('revEndDate')?.value || '';
         const typeFilter = document.getElementById('revTypeFilter')?.value || '';
         const keyword = (document.getElementById('revKeywordFilter')?.value || '').trim();
 
@@ -1665,7 +1790,8 @@
             const params = new URLSearchParams({
                 keyword: keyword,
                 type: typeFilter,
-                time: filter,
+                startDate: startDate,
+                endDate: endDate,
                 page: String(revPage),
                 size: String(revPageSize)
             });
@@ -1721,13 +1847,15 @@
         if (type === 'revenue') {
             const loadingToast = showToast('Đang xuất báo cáo doanh thu...', 'info');
             try {
-                const filter = document.getElementById('revTimeFilter')?.value || '7days';
+                const startDate = document.getElementById('revStartDate')?.value || '';
+                const endDate = document.getElementById('revEndDate')?.value || '';
                 const typeFilter = document.getElementById('revTypeFilter')?.value || '';
                 const keyword = (document.getElementById('revKeywordFilter')?.value || '').trim();
                 const params = new URLSearchParams({
                     keyword: keyword,
                     type: typeFilter,
-                    time: filter
+                    startDate: startDate,
+                    endDate: endDate
                 });
                 const response = await authFetch(`/admin/revenue/export?${params.toString()}`);
                 if (loadingToast) loadingToast.remove();
@@ -2192,6 +2320,17 @@
             } catch (_) { /* giữ cache */ }
         }
 
+        // Tải các quyền đã gán từ Backend thật
+        try {
+            const response = await authFetch('/admin/staff-permissions/all-assigned');
+            if (response.ok) {
+                mock.permissions = await response.json();
+                saveMock();
+            }
+        } catch (e) {
+            console.error('Không thể tải danh sách quyền đã gán:', e);
+        }
+
         // Get filtered permissions list based on selected group
         const filteredPermissions = selectedGroupId === 'ALL'
             ? ALL_PERMISSIONS
@@ -2502,7 +2641,7 @@
         }
     };
 
-    window.AdminConsole.addStaffToPermission = function () {
+    window.AdminConsole.addStaffToPermission = async function () {
         const checkedPerms = Array.from(document.querySelectorAll('input[name="filterPermCheckbox"]:checked')).map(cb => cb.value);
         if (checkedPerms.length === 0) {
             showToast('Vui lòng chọn ít nhất một quyền cụ thể để gán.', true);
@@ -2514,40 +2653,41 @@
             return;
         }
 
-        if (!mock.permissions) {
-            mock.permissions = {};
-        }
+        const staffIds = Array.from(checkboxes).map(cb => Number(cb.value));
 
-        checkboxes.forEach(cb => {
-            const staffId = Number(cb.value);
-            if (!mock.permissions[staffId]) {
-                mock.permissions[staffId] = [];
-            }
-            checkedPerms.forEach(pid => {
-                if (!mock.permissions[staffId].includes(pid)) {
-                    mock.permissions[staffId].push(pid);
-                }
+        try {
+            const response = await authFetch('/admin/staff-permissions/assign', {
+                method: 'POST',
+                body: JSON.stringify({
+                    userIds: staffIds,
+                    permissionNames: checkedPerms
+                })
             });
-        });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                showToast(`Đã gán thành công ${checkedPerms.length} quyền cho ${checkboxes.length} nhân viên.`);
+                
+                // Clear staff dropdown checkboxes
+                const staffCbs = document.querySelectorAll('input[name="assignStaffCheckbox"]');
+                staffCbs.forEach(cb => cb.checked = false);
+                const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+                if (selectAllCheckbox) selectAllCheckbox.checked = false;
+                window.AdminConsole.updateSelectedStaffCount();
 
-        saveMock();
-        showToast(`Đã gán thành công ${checkedPerms.length} quyền cho ${checkboxes.length} nhân viên.`);
+                // Close dropdown
+                const dropdown = document.getElementById('multiselectDropdown');
+                if (dropdown) dropdown.classList.add('ds-hidden');
 
-        // Hide staff dropdown
-        const dropdown = document.getElementById('multiselectDropdown');
-        if (dropdown) dropdown.classList.add('ds-hidden');
-
-        // Clear staff dropdown checkboxes
-        const staffCbs = document.querySelectorAll('input[name="assignStaffCheckbox"]');
-        staffCbs.forEach(cb => cb.checked = false);
-        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-        if (selectAllCheckbox) selectAllCheckbox.checked = false;
-        window.AdminConsole.updateSelectedStaffCount();
-
-        loadPermissionsView();
+                await loadPermissionsView();
+            } else {
+                showToast(data.message || 'Không thể gán quyền.', true);
+            }
+        } catch (err) {
+            showToast('Lỗi kết nối máy chủ.', true);
+        }
     };
 
-    window.AdminConsole.removeStaffPermissions = function (staffId) {
+    window.AdminConsole.removeStaffPermissions = async function (staffId) {
         if (!mock.permissions || !mock.permissions[staffId]) return;
 
         let permsToRevoke = [];
@@ -2586,10 +2726,24 @@
         }).join(', ');
 
         if (confirm(`Bạn có chắc chắn muốn thu hồi các quyền sau của nhân viên: ${permNames}?`)) {
-            mock.permissions[staffId] = mock.permissions[staffId].filter(id => !permsToRevoke.includes(id));
-            saveMock();
-            showToast('Đã thu hồi quyền thành công.');
-            loadPermissionsView();
+            try {
+                const response = await authFetch('/admin/staff-permissions/revoke', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        userId: staffId,
+                        permissionNames: permsToRevoke
+                    })
+                });
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    showToast('Đã thu hồi quyền thành công.');
+                    await loadPermissionsView();
+                } else {
+                    showToast(data.message || 'Không thể thu hồi quyền.', true);
+                }
+            } catch (err) {
+                showToast('Lỗi kết nối máy chủ.', true);
+            }
         }
     };
 
