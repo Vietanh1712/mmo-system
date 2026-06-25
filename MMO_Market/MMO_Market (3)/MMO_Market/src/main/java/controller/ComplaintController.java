@@ -157,7 +157,7 @@ public class ComplaintController {
         }
 
         try {
-            List<Complaint> complaints = complaintService.getAllComplaints();
+            List<Complaint> complaints = complaintService.getAllComplaintsForStaff();
             List<Map<String, Object>> response = complaints.stream()
                     .map(this::mapComplaintToDto)
                     .collect(Collectors.toList());

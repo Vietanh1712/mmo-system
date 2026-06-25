@@ -54,6 +54,9 @@ public class Transaction {
     @Builder.Default
     private Boolean isDelete = false;
 
+    @Column(name = "payment_method")
+    private String paymentMethod;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {

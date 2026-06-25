@@ -127,28 +127,8 @@
         });
     }
 
-    function bindChatCompose() {
-        const form = document.getElementById('staffChatForm');
-        if (!form) return;
-
-        form.addEventListener('submit', function (event) {
-            event.preventDefault();
-            const input = document.getElementById('staffChatInput');
-            const messages = document.getElementById('staffChatMessages');
-            if (!input || !messages || !input.value.trim()) return;
-
-            const bubble = document.createElement('div');
-            bubble.className = 'staff-chat-bubble staff-chat-bubble--staff';
-            bubble.textContent = input.value.trim();
-            messages.appendChild(bubble);
-            messages.scrollTop = messages.scrollHeight;
-            input.value = '';
-        });
-    }
-
     document.addEventListener('DOMContentLoaded', function () {
         loadMyPermissions();
         bindActionButtons();
-        bindChatCompose();
     });
 })();

@@ -20,4 +20,5 @@ public interface KycRequestRepository extends JpaRepository<KycRequest, Long> {
     Page<KycRequest> findByStatusAndIsDeleteFalse(KycStatus status, Pageable pageable);
     boolean existsByRequestCode(String requestCode);
     boolean existsByActiveUserId(Long activeUserId);
+    long countByStatusAndIsDeleteFalse(KycStatus status);
 }

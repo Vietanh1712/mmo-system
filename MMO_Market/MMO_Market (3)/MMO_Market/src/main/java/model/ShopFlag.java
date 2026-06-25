@@ -33,6 +33,9 @@ public class ShopFlag {
     @Column(name = "flag_level", length = 20)
     private String flagLevel = "Warning"; // Warning, Suspension, Ban
 
+    @Column(name = "status", length = 20)
+    private String status = "Effect";
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -46,6 +49,9 @@ public class ShopFlag {
         }
         if (flagLevel == null) {
             flagLevel = "Warning";
+        }
+        if(status == null){
+            status = "Effect";
         }
         if (isDelete == null) {
             isDelete = false;

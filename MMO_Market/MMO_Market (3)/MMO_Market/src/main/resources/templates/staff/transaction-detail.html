@@ -15,15 +15,20 @@
                 <nav class="staff-breadcrumb">
                     <a href="/staff/transactions">Giao dịch</a>
                     <span>/</span>
-                    <span>#TXN-99281</span>
+                    <span th:text="'#TXN-' + ${transaction.id}"></span>
                 </nav>
 
                 <div class="staff-page-header">
                     <div>
                         <h1 class="ds-page-title">Chi tiết giao dịch</h1>
-                        <p class="ds-page-subtitle">Mã giao dịch #TXN-99281 — Mua hàng</p>
+                        <p class="ds-page-subtitle">
+                            Mã giao dịch
+                            <span th:text="'#TXN-' + ${transaction.id}"></span>
+                            —
+                            <span th:text="${transaction.product.productType}"></span>
+                        </p>
                     </div>
-                    <span class="ds-badge ds-badge-success">Thành công</span>
+                    <span class="ds-badge" th:text="${transaction.status}"></span>
                 </div>
 
                 <div class="staff-detail-grid">
@@ -35,36 +40,36 @@
                             <dl class="staff-info-list">
                                 <div class="staff-info-row">
                                     <dt>Mã giao dịch</dt>
-                                    <dd>#TXN-99281</dd>
+                                    <dd th:text="'#TXN-' + ${transaction.id}"></dd>
                                 </div>
                                 <div class="staff-info-row">
                                     <dt>Loại giao dịch</dt>
-                                    <dd><span class="ds-badge ds-badge-info">Mua hàng</span></dd>
+                                    <dd><span class="ds-badge ds-badge-info" th:text="${transaction.product.productType}"></span></dd>
                                 </div>
                                 <div class="staff-info-row">
                                     <dt>Số tiền</dt>
-                                    <dd class="ds-money">350.000 đ</dd>
+                                    <dd class="ds-money" th:text="${#numbers.formatInteger(transaction.amountVnd,0,'COMMA')} + ' đ'"></dd>
                                 </div>
                                 <div class="staff-info-row">
                                     <dt>Phí giao dịch</dt>
-                                    <dd class="ds-money">0 đ</dd>
+                                    <dd class="ds-money" th:text="${#numbers.formatInteger(transaction.commissionVnd,0,'COMMA')} + ' đ'"></dd>
                                 </div>
                                 <div class="staff-info-row">
                                     <dt>Phương thức thanh toán</dt>
-                                    <dd>Ví MMO Market</dd>
+                                    <dd th:text="${transaction.paymentMethod}"></dd>
                                 </div>
                                 <div class="staff-info-row">
                                     <dt>Thời gian tạo</dt>
-                                    <dd>05/06/2026 09:12:34</dd>
+                                    <dd th:text="${#temporals.format(transaction.createdAt,'dd/MM/yyyy HH:mm:ss')}"></dd>
                                 </div>
                                 <div class="staff-info-row">
                                     <dt>Thời gian hoàn tất</dt>
-                                    <dd>05/06/2026 09:12:41</dd>
+                                    <dd th:text="${#temporals.format(transaction.escrowReleaseDate,'dd/MM/yyyy HH:mm:ss')}"></dd>
                                 </div>
-                                <div class="staff-info-row">
-                                    <dt>Mã tham chiếu</dt>
-                                    <dd>REF-20260605-99281</dd>
-                                </div>
+<!--                                <div class="staff-info-row">-->
+<!--                                    <dt>Mã tham chiếu</dt>-->
+<!--                                    <dd>REF-20260605-99281</dd>-->
+<!--                                </div>-->
                             </dl>
                         </div>
 
@@ -75,28 +80,40 @@
                             <dl class="staff-info-list">
                                 <div class="staff-info-row">
                                     <dt>Người mua</dt>
-                                    <dd>Nguyễn An — buyer@mmo.com</dd>
+                                    <dd>
+                                        <span th:text="${transaction.customer.fullName}"></span>
+                                        —
+                                        <span th:text="${transaction.customer.email}"></span>
+                                    </dd>
                                 </div>
                                 <div class="staff-info-row">
                                     <dt>Seller / Shop</dt>
-                                    <dd>GameHub Pro — seller.gamehub@mmo.com</dd>
+                                    <dd>
+                                        <span th:text="${transaction.seller.fullName}"></span>
+                                        —
+                                        <span th:text="${transaction.seller.email}"></span>
+                                    </dd>
                                 </div>
-                                <div class="staff-info-row">
-                                    <dt>Mã đơn hàng</dt>
-                                    <dd><a href="#">#ORD-9921</a></dd>
-                                </div>
+<!--                                <div class="staff-info-row">-->
+<!--                                    <dt>Mã đơn hàng</dt>-->
+<!--                                    <dd><a href="#">#ORD-9921</a></dd>-->
+<!--                                </div>-->
                                 <div class="staff-info-row">
                                     <dt>Sản phẩm</dt>
-                                    <dd>Gmail Premium — 1 tài khoản</dd>
+                                    <dd>
+                                        <span th:text="${transaction.product.name}"></span>
+                                        -
+                                        <span th:text="${transaction.variant.variantName}"></span>
+                                    </dd>
                                 </div>
-                                <div class="staff-info-row">
-                                    <dt>Số dư trước GD</dt>
-                                    <dd class="ds-money">1.250.000 đ</dd>
-                                </div>
-                                <div class="staff-info-row">
-                                    <dt>Số dư sau GD</dt>
-                                    <dd class="ds-money">900.000 đ</dd>
-                                </div>
+<!--                                <div class="staff-info-row">-->
+<!--                                    <dt>Số dư trước GD</dt>-->
+<!--                                    <dd class="ds-money">1.250.000 đ</dd>-->
+<!--                                </div>-->
+<!--                                <div class="staff-info-row">-->
+<!--                                    <dt>Số dư sau GD</dt>-->
+<!--                                    <dd class="ds-money">900.000 đ</dd>-->
+<!--                                </div>-->
                             </dl>
                         </div>
 
@@ -139,29 +156,28 @@
                             <dl class="staff-info-list">
                                 <div class="staff-info-row">
                                     <dt>Trạng thái đơn</dt>
-                                    <dd><span class="ds-badge ds-badge-success">Đã giao</span></dd>
+                                    <dd><span class="ds-badge ds-badge-success"  th:text="${transaction.status}"></span></dd>
                                 </div>
                                 <div class="staff-info-row">
                                     <dt>Giữ tiền bảo lãnh</dt>
-                                    <dd>72 giờ (còn 58 giờ)</dd>
+                                    <dd th:text="${remainingHours}"></dd>
                                 </div>
                             </dl>
                         </div>
 
                         <div class="ds-card staff-action-card">
-                            <div class="ds-card-header">
-                                <h2 class="ds-card-title">Ghi chú nội bộ (Staff)</h2>
-                            </div>
-                            <div class="ds-alert ds-alert-info">Giao diện demo — chưa kết nối backend.</div>
-                            <div class="ds-form-field">
-                                <label class="ds-label" for="txnNote">Ghi chú xử lý</label>
-                                <textarea class="ds-textarea" id="txnNote" placeholder="Ghi chú đối soát, tra soát, liên hệ user..."></textarea>
-                            </div>
-                            <div class="ds-cluster">
-                                <button class="ds-btn ds-btn-primary" type="button" data-staff-action="save" data-staff-label="Đã lưu ghi chú giao dịch">Lưu ghi chú</button>
-                            </div>
+<!--                            <div class="ds-card-header">-->
+<!--                                <h2 class="ds-card-title">Ghi chú nội bộ (Staff)</h2>-->
+<!--                            </div>-->
+<!--                            <div class="ds-form-field">-->
+<!--                                <label class="ds-label" for="txnNote">Ghi chú xử lý</label>-->
+<!--                                <textarea class="ds-textarea" id="txnNote" placeholder="Ghi chú đối soát, tra soát, liên hệ user..."></textarea>-->
+<!--                            </div>-->
+<!--                            <div class="ds-cluster">-->
+<!--                                <button class="ds-btn ds-btn-primary" type="button" data-staff-action="save" data-staff-label="Đã lưu ghi chú giao dịch">Lưu ghi chú</button>-->
+<!--                            </div>-->
                             <div class="ds-stack-sm ds-mt-md">
-                                <a class="ds-btn ds-btn-outline" href="/staff/complaints/detail">Xem khiếu nại liên quan</a>
+                                <a class="ds-btn ds-btn-outline" th:if="${complaint != null}" th:href="@{/staff/complaints/detail(id=${complaint.id})}">Xem khiếu nại liên quan</a>
                                 <a class="ds-btn ds-btn-outline" href="/staff/transactions">Quay lại danh sách</a>
                             </div>
                         </div>
