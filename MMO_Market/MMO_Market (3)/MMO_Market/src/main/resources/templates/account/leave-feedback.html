@@ -436,25 +436,6 @@
                 });
 
                 if (res.ok) {
-                    // Cập nhật trạng thái đã đánh giá vào mock storage (localStorage)
-                    let orders = [];
-                    const key = getUserSpecificKey(ACCOUNT_ORDERS_MOCK_KEY);
-                    try {
-                        const saved = localStorage.getItem(key) || sessionStorage.getItem(key);
-                        if (saved) {
-                            orders = JSON.parse(saved);
-                        }
-                    } catch (e) {
-                        console.error('Không đọc được orders', e);
-                    }
-
-                    const currentOrderIndex = orders.findIndex(o => o.orderCode === orderCode);
-                    if (currentOrderIndex >= 0) {
-                        orders[currentOrderIndex].isReviewed = true;
-                        localStorage.setItem(key, JSON.stringify(orders));
-                        sessionStorage.setItem(key, JSON.stringify(orders)); // Sync cả hai
-                    }
-
                     // Show Success Modal
                     const modal = document.getElementById('successModal');
                     modal.style.display = 'flex';
