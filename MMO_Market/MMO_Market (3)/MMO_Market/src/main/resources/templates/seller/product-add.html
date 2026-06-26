@@ -370,6 +370,18 @@
                         </select>
                     </div>
 
+                    <div class="profile-edit-form__group">
+                        <label>Ảnh đại diện sản phẩm <span style="color: #ef4444;">*</span></label>
+                        <div class="file-input-wrapper" style="margin-top: 4px;">
+                            <input type="file" id="productImage" accept="image/*" required>
+                            <label for="productImage" class="file-input-label">
+                                <i class="fa fa-cloud-upload"></i> Nhấp hoặc kéo thả ảnh vào đây để tải lên
+                            </label>
+                        </div>
+                        <img id="imagePreview" class="image-preview" src="" alt="Preview">
+                        <small class="profile-edit-form__hint">Kích thước khuyến nghị: 600x600px. Tối đa 2MB.</small>
+                    </div>
+
                     <!-- Section 2: Product Type Selection -->
                     <div class="form-section-title">Loại sản phẩm <span style="color: #ef4444;">*</span></div>
                     <p class="profile-edit-form__hint">Chọn loại sản phẩm để xác định các thông tin kho cần nhập</p>
@@ -396,6 +408,14 @@
                             <label for="typeGameCard">
                                 <div class="product-type-icon"><i class="fa fa-credit-card"></i></div>
                                 <div class="product-type-name">Thẻ nạp</div>
+                            </label>
+                        </div>
+
+                        <div class="product-type-option">
+                            <input type="radio" id="typeService" name="productType" value="SERVICE">
+                            <label for="typeService">
+                                <div class="product-type-icon"><i class="fa fa-wrench"></i></div>
+                                <div class="product-type-name">Dịch vụ</div>
                             </label>
                         </div>
                     </div>

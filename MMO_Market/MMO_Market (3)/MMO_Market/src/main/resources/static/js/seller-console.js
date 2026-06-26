@@ -393,6 +393,8 @@ async function initProductAdd() {
                     const reader = new FileReader();
                     reader.onload = async function(event) {
                         const base64Data = event.target.result;
+                        preview.src = base64Data;
+                        preview.classList.add('active');
                         try {
                             const uploadRes = await sellerFetch('/upload-image', {
                                 method: 'POST',
@@ -400,8 +402,6 @@ async function initProductAdd() {
                             });
                             const uploadData = await uploadRes.json();
                             if (uploadRes.ok) {
-                                preview.src = uploadData.url;
-                                preview.classList.add('active');
                                 div.dataset.imageUrl = uploadData.url; // Store url here
                             } else {
                                 showToast(uploadData.message || 'Lỗi tải ảnh', 'error');
@@ -462,7 +462,31 @@ async function initProductAdd() {
                     });
                 }
 
-                const mainProductImageUrl = variants.length > 0 ? variants[0].imageUrl : '';
+                let mainProductImageUrl = variants.length > 0 ? variants[0].imageUrl : '';
+                
+                const productImageInput = document.getElementById('productImage');
+                if (productImageInput && productImageInput.files.length > 0) {
+                    try {
+                        const file = productImageInput.files[0];
+                        const base64Data = await new Promise((resolve) => {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => resolve(ev.target.result);
+                            reader.readAsDataURL(file);
+                        });
+                        const uploadRes = await sellerFetch('/upload-image', {
+                            method: 'POST',
+                            body: JSON.stringify({ image: base64Data })
+                        });
+                        if (uploadRes.ok) {
+                            const uploadData = await uploadRes.json();
+                            mainProductImageUrl = uploadData.url;
+                        } else {
+                            showToast('Không thể tải lên ảnh sản phẩm, dùng ảnh biến thể thay thế.', 'error');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
+                }
 
                 try {
                     const postRes = await sellerFetch('/products', {
@@ -718,15 +742,17 @@ async function initVariantForm() {
 
                 // Check assets: must have at least 1 asset if creating new variant
                 const newAssets = assets.filter(a => !a.id);
-                if (!isEdit && assets.length === 0) {
-                    showToast('Bạn phải nhập ít nhất 1 tài sản trước khi lưu.', 'error');
-                    return;
+                if (productType !== 'SERVICE') {
+                    if (!isEdit && assets.length === 0) {
+                        showToast('Bạn phải nhập ít nhất 1 tài sản trước khi lưu.', 'error');
+                        return;
+                    }
                 }
 
                 const payload = {
                     variantName: variantName,
                     priceVnd: priceVnd,
-                    stock: assets.length,
+                    stock: productType === 'SERVICE' ? 99999 : assets.length,
                     status: status,
                     productId: currentProdId
                 };
