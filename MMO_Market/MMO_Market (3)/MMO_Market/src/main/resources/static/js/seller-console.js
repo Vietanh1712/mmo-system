@@ -502,37 +502,177 @@ async function initProductAdd() {
         const res = await sellerFetch('/categories');
         if (res.ok) {
             const categories = await res.json();
-            select.innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            select.innerHTML = '<option value="">-- Chọn danh mục --</option>' + 
+                               categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        }
+
+
+        // Setup Variants UI
+        let variantCount = 0;
+        const variantsContainer = document.getElementById('variantsContainer');
+        const btnAddVariant = document.getElementById('btnAddVariant');
+
+        const addVariantCard = () => {
+            variantCount++;
+            const currentIdx = variantCount;
+            const div = document.createElement('div');
+            div.className = 'variant-card';
+            div.dataset.index = currentIdx;
+            div.innerHTML = `
+                <div class="variant-card__header">
+                    <span>Biến thể #${currentIdx}</span>
+                    <button type="button" class="variant-card__delete"><i class="fa fa-trash"></i> Xóa</button>
+                </div>
+                <div class="variant-card__grid">
+                    <div class="profile-edit-form__group" style="margin-bottom: 0;">
+                        <label>Tên biến thể <span style="color: #ef4444;">*</span></label>
+                        <input type="text" class="variant-name-input" placeholder="VD: Gói 1 tháng" required autocomplete="off">
+                    </div>
+                    <div class="profile-edit-form__group" style="margin-bottom: 0;">
+                        <label>Giá bán (VND) <span style="color: #ef4444;">*</span></label>
+                        <input type="number" class="variant-price-input" placeholder="VD: 50000" min="0" required autocomplete="off">
+                    </div>
+                </div>
+                <div class="profile-edit-form__group" style="margin-bottom: 0;">
+                    <label>Hình ảnh minh họa <span style="color: #ef4444;">*</span></label>
+                    <div class="variant-img-upload">
+                        <img class="variant-img-preview" alt="Xem trước ảnh">
+                        <div class="variant-img-btn">
+                            <input type="file" class="variant-file-input" accept="image/*" required>
+                            <label class="variant-img-label">
+                                <i class="fa fa-image"></i> Chọn ảnh
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Delete action
+            div.querySelector('.variant-card__delete').addEventListener('click', () => {
+                div.remove();
+            });
+
+            // Image upload action
+            const fileInput = div.querySelector('.variant-file-input');
+            const preview = div.querySelector('.variant-img-preview');
+            fileInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = async function(event) {
+                        const base64Data = event.target.result;
+                        preview.src = base64Data;
+                        preview.classList.add('active');
+                        try {
+                            const uploadRes = await sellerFetch('/upload-image', {
+                                method: 'POST',
+                                body: JSON.stringify({ image: base64Data })
+                            });
+                            const uploadData = await uploadRes.json();
+                            if (uploadRes.ok) {
+                                div.dataset.imageUrl = uploadData.url; // Store url here
+                            } else {
+                                showToast(uploadData.message || 'Lỗi tải ảnh', 'error');
+                            }
+                        } catch (err) {
+                            showToast('Lỗi kết nối tải ảnh', 'error');
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            variantsContainer.appendChild(div);
+        };
+
+        if (btnAddVariant) {
+            btnAddVariant.addEventListener('click', addVariantCard);
+        }
+
+        // Add 1 default variant card
+        if (variantsContainer) {
+            addVariantCard();
         }
 
         const form = document.querySelector('.profile-edit-form');
-        const nextBtn = form.querySelector('.profile-button--primary');
-        if (nextBtn) {
-            // Replace link with post submit action
-            nextBtn.outerHTML = `<button type="submit" class="profile-button profile-button--primary">Đăng sản phẩm &amp; Tiếp tục</button>`;
-            
+        if (form) {
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const name = document.getElementById('productName').value.trim();
                 const description = document.getElementById('description').value.trim();
-                const userGuide = document.getElementById('userGuide') ? document.getElementById('userGuide').value.trim() : '';
                 const categoryId = select.value;
+                const typeEl = document.querySelector('input[name="productType"]:checked');
+                const productType = typeEl ? typeEl.value : null;
 
-                if (!name) {
-                    showToast('Vui lòng nhập tên sản phẩm.', 'error');
-                    return;
+                if (!name) return showToast('Vui lòng nhập tên sản phẩm.', 'error');
+                if (!categoryId) return showToast('Vui lòng chọn danh mục.', 'error');
+                if (!productType) return showToast('Vui lòng chọn loại sản phẩm.', 'error');
+
+                const variantCards = variantsContainer.querySelectorAll('.variant-card');
+                if (variantCards.length === 0) {
+                    return showToast('Sản phẩm phải có ít nhất 1 biến thể.', 'error');
+                }
+
+                const variants = [];
+                for (let card of variantCards) {
+                    const varName = card.querySelector('.variant-name-input').value.trim();
+                    const varPrice = card.querySelector('.variant-price-input').value.trim();
+                    const varImgUrl = card.dataset.imageUrl;
+
+                    if (!varName) return showToast('Có biến thể chưa nhập tên.', 'error');
+                    if (!varPrice) return showToast('Có biến thể chưa nhập giá bán.', 'error');
+                    if (!varImgUrl) return showToast('Biến thể "' + varName + '" chưa có hình ảnh minh họa.', 'error');
+
+                    variants.push({
+                        variantName: varName,
+                        priceVnd: varPrice,
+                        imageUrl: varImgUrl
+                    });
+                }
+
+                let mainProductImageUrl = variants.length > 0 ? variants[0].imageUrl : '';
+                
+                const productImageInput = document.getElementById('productImage');
+                if (productImageInput && productImageInput.files.length > 0) {
+                    try {
+                        const file = productImageInput.files[0];
+                        const base64Data = await new Promise((resolve) => {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => resolve(ev.target.result);
+                            reader.readAsDataURL(file);
+                        });
+                        const uploadRes = await sellerFetch('/upload-image', {
+                            method: 'POST',
+                            body: JSON.stringify({ image: base64Data })
+                        });
+                        if (uploadRes.ok) {
+                            const uploadData = await uploadRes.json();
+                            mainProductImageUrl = uploadData.url;
+                        } else {
+                            showToast('Không thể tải lên ảnh sản phẩm, dùng ảnh biến thể thay thế.', 'error');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
                 }
 
                 try {
                     const postRes = await sellerFetch('/products', {
                         method: 'POST',
-                        body: JSON.stringify({ name, description, userGuide, categoryId })
+                        body: JSON.stringify({ 
+                            name, 
+                            description, 
+                            categoryId, 
+                            productType, 
+                            image: mainProductImageUrl,
+                            variants 
+                        })
                     });
                     const postData = await postRes.json();
                     if (!postRes.ok) throw new Error(postData.message || 'Đăng sản phẩm thất bại.');
-                    showToast('Tạo sản phẩm thành công. Đang chuyển đến thêm biến thể...');
+                    showToast('Tạo sản phẩm và biến thể thành công!');
                     setTimeout(() => {
-                        window.location.href = `/seller/variants/new?productId=${postData.id}`;
+                        window.location.href = `/seller/products/edit?id=${postData.id}`;
                     }, 1500);
                 } catch (err) {
                     showToast(err.message, 'error');
@@ -677,6 +817,7 @@ async function initVariantForm() {
 
     try {
         let currentProdId = productId;
+        let productType = 'ACCOUNT';
 
         if (isEdit) {
             // Load Variant Details
@@ -688,15 +829,64 @@ async function initVariantForm() {
             document.querySelector('.seller-card__subtitle').textContent = `Sản phẩm: ${v.productName}`;
             document.getElementById('variantName').value = v.variantName;
             document.getElementById('priceVnd').value = v.priceVnd;
-            document.getElementById('stock').value = v.stock;
             document.getElementById('status').value = v.status;
+
+            // Fetch Product type
+            const prodRes = await sellerFetch(`/products/${currentProdId}`);
+            if (prodRes.ok) {
+                const p = await prodRes.json();
+                productType = p.productType || 'ACCOUNT';
+            }
+
+            // Set global productType and refresh layout
+            window.productType = productType;
+            if (typeof updateProductDisplay === 'function') updateProductDisplay(productType);
+            if (typeof renderAssetFields === 'function') renderAssetFields(productType);
+
+            // Load existing assets
+            const assetsRes = await sellerFetch(`/variants/${variantId}/assets`);
+            if (assetsRes.ok) {
+                const existingAssets = await assetsRes.json();
+                assets = existingAssets.map(ea => {
+                    if (productType === 'ACCOUNT') {
+                        return {
+                            id: ea.id,
+                            type: 'ACCOUNT',
+                            username: ea.accountUsername,
+                            password: ea.accountPassword || '',
+                            notes: ea.notes || ''
+                        };
+                    } else if (productType === 'KEY') {
+                        return {
+                            id: ea.id,
+                            type: 'KEY',
+                            keyCode: ea.keyCode,
+                            notes: ea.notes || ''
+                        };
+                    } else if (productType === 'GAME_CARD') {
+                        return {
+                            id: ea.id,
+                            type: 'GAME_CARD',
+                            cardCode: ea.cardCode,
+                            notes: ea.notes || ''
+                        };
+                    }
+                }).filter(Boolean);
+                if (typeof updateAssetList === 'function') updateAssetList();
+            }
         } else {
             // Load Product Info to display
             const prodRes = await sellerFetch(`/products/${productId}`);
             if (prodRes.ok) {
                 const p = await prodRes.json();
                 document.querySelector('.seller-card__subtitle').textContent = `Sản phẩm: ${p.name}`;
+                productType = p.productType || 'ACCOUNT';
             }
+
+            // Set global productType and refresh layout
+            window.productType = productType;
+            if (typeof updateProductDisplay === 'function') updateProductDisplay(productType);
+            if (typeof renderAssetFields === 'function') renderAssetFields(productType);
         }
 
         // Back link update
@@ -710,19 +900,34 @@ async function initVariantForm() {
         const saveBtn = form.querySelector('.profile-button--primary');
         if (saveBtn) {
             saveBtn.removeAttribute('disabled');
-            saveBtn.addEventListener('click', async () => {
-                const payload = {
-                    variantName: document.getElementById('variantName').value.trim(),
-                    priceVnd: document.getElementById('priceVnd').value,
-                    stock: document.getElementById('stock').value,
-                    status: document.getElementById('status').value,
-                    productId: currentProdId
-                };
+            saveBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                
+                const variantName = document.getElementById('variantName').value.trim();
+                const priceVnd = document.getElementById('priceVnd').value;
+                const status = document.getElementById('status').value;
 
-                if (!payload.variantName || !payload.priceVnd) {
+                if (!variantName || !priceVnd) {
                     showToast('Vui lòng nhập tên biến thể và giá bán.', 'error');
                     return;
                 }
+
+                // Check assets: must have at least 1 asset if creating new variant
+                const newAssets = assets.filter(a => !a.id);
+                if (productType !== 'SERVICE') {
+                    if (!isEdit && assets.length === 0) {
+                        showToast('Bạn phải nhập ít nhất 1 tài sản trước khi lưu.', 'error');
+                        return;
+                    }
+                }
+
+                const payload = {
+                    variantName: variantName,
+                    priceVnd: priceVnd,
+                    stock: productType === 'SERVICE' ? 99999 : assets.length,
+                    status: status,
+                    productId: currentProdId
+                };
 
                 try {
                     const method = isEdit ? 'PUT' : 'POST';
@@ -735,7 +940,44 @@ async function initVariantForm() {
                     const actionData = await actionRes.json();
                     if (!actionRes.ok) throw new Error(actionData.message || 'Thao tác thất bại.');
 
-                    showToast(isEdit ? 'Đã cập nhật biến thể!' : 'Đã tạo biến thể thành công!');
+                    const savedVariantId = isEdit ? variantId : actionData.id;
+
+                    // Batch save any new assets
+                    if (newAssets.length > 0) {
+                        const mappedAssets = newAssets.map(a => {
+                            if (productType === 'ACCOUNT') {
+                                return {
+                                    accountUsername: a.username,
+                                    accountPassword: a.password,
+                                    notes: a.notes
+                                };
+                            } else if (productType === 'KEY') {
+                                return {
+                                    keyCode: a.keyCode,
+                                    notes: a.notes
+                                };
+                            } else if (productType === 'GAME_CARD') {
+                                return {
+                                    cardCode: a.cardCode,
+                                    cardPin: "",
+                                    notes: a.notes
+                                };
+                            }
+                        });
+
+                        const assetRes = await sellerFetch('/digital-assets', {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                variantId: savedVariantId,
+                                assetType: productType,
+                                assets: mappedAssets
+                            })
+                        });
+                        const assetData = await assetRes.json();
+                        if (!assetRes.ok) throw new Error(assetData.message || 'Lưu tài sản thất bại.');
+                    }
+
+                    showToast(isEdit ? 'Đã cập nhật biến thể & tài sản!' : 'Đã tạo biến thể & tài sản thành công!');
                     setTimeout(() => {
                         window.location.href = backUrl;
                     }, 1500);

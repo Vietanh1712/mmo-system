@@ -278,6 +278,7 @@ public class SellerController {
             map.put("description", p.getDescription());
             map.put("image", p.getImage());
             map.put("userGuide", p.getUserGuide());
+            map.put("productType", p.getProductType());
             map.put("variants", variantList);
 
             return ResponseEntity.ok(map);
@@ -378,18 +379,12 @@ public class SellerController {
             byte[] imageBytes = java.util.Base64.getDecoder().decode(data);
             String filename = java.util.UUID.randomUUID().toString() + "." + extension;
             
-            java.io.File uploadDir = new java.io.File("src/main/resources/static/uploads");
+            java.io.File uploadDir = new java.io.File("uploads");
             if (!uploadDir.exists()) {
                 uploadDir.mkdirs();
             }
-            java.nio.file.Path path = java.nio.file.Paths.get("src/main/resources/static/uploads/" + filename);
+            java.nio.file.Path path = java.nio.file.Paths.get("uploads/" + filename);
             java.nio.file.Files.write(path, imageBytes);
-            
-            java.io.File targetDir = new java.io.File("target/classes/static/uploads");
-            if (targetDir.exists()) {
-                java.nio.file.Path targetPath = java.nio.file.Paths.get("target/classes/static/uploads/" + filename);
-                java.nio.file.Files.write(targetPath, imageBytes);
-            }
             
             String fileUrl = "/uploads/" + filename;
             return ResponseEntity.ok(Map.of("url", fileUrl));
@@ -1083,10 +1078,12 @@ public class SellerController {
             }
 
             // Recalculate and update the variant stock!
-            List<DigitalAsset> activeAssets = digitalAssetRepository.findByVariantAndIsDeleteFalse(variant);
-            int availableStock = (int) activeAssets.stream().filter(a -> !a.getIsUsed()).count();
-            variant.setStock(availableStock);
-            productVariantRepository.save(variant);
+            if (!"SERVICE".equals(variant.getProduct().getProductType())) {
+                List<DigitalAsset> activeAssets = digitalAssetRepository.findByVariantAndIsDeleteFalse(variant);
+                int availableStock = (int) activeAssets.stream().filter(a -> !a.getIsUsed()).count();
+                variant.setStock(availableStock);
+                productVariantRepository.save(variant);
+            }
 
             Map<String, Object> result = new HashMap<>();
             result.put("message", "Thêm " + savedAssets.size() + " tài sản thành công!");
@@ -1114,10 +1111,12 @@ public class SellerController {
 
             // Recalculate and update the variant stock!
             ProductVariant variant = asset.getVariant();
-            List<DigitalAsset> activeAssets = digitalAssetRepository.findByVariantAndIsDeleteFalse(variant);
-            int availableStock = (int) activeAssets.stream().filter(a -> !a.getIsUsed()).count();
-            variant.setStock(availableStock);
-            productVariantRepository.save(variant);
+            if (!"SERVICE".equals(variant.getProduct().getProductType())) {
+                List<DigitalAsset> activeAssets = digitalAssetRepository.findByVariantAndIsDeleteFalse(variant);
+                int availableStock = (int) activeAssets.stream().filter(a -> !a.getIsUsed()).count();
+                variant.setStock(availableStock);
+                productVariantRepository.save(variant);
+            }
 
             return ResponseEntity.ok(Map.of("message", "Xóa tài sản thành công!"));
         } catch (Exception e) {
@@ -1140,7 +1139,7 @@ public class SellerController {
             String productType = (String) request.get("productType");
             String imageUrl = (String) request.get("productImageUrl");
 
-            if ("ACCOUNT".equals(productType) || "KEY".equals(productType) || "GAME_CARD".equals(productType)) {
+            if ("ACCOUNT".equals(productType) || "KEY".equals(productType) || "GAME_CARD".equals(productType) || "SERVICE".equals(productType)) {
                 p.setProductType(productType);
             }
 
