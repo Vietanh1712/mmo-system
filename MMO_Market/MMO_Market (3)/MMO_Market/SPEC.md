@@ -557,7 +557,7 @@ Một số Route quan trọng:
 | SystemConfigurations | Cấu hình động hệ thống | id | - | Administration | Yes | Yes (trg_HoldFundsEscrow) |
 | Withdrawals | Lệnh rút tiền | id | seller_id | Withdrawal | Yes | Yes |
 | SellerRegistrations | Lịch sử duyệt Shop | id | user_id | Shop Registration | Yes | Yes (trg_UpdateShopStatus) |
-| Wishlists | Lưu sản phẩm yêu thích | id | user_id, product_id | Wishlist | No (Missing Entity) | Yes (Table exists) |
+
 
 ## Appendix E – Role and Permission Matrix
 
@@ -577,7 +577,6 @@ Một số Route quan trọng:
 | Authentication | Login, Register | Yes | Yes | Yes | Yes | No (Read-only) | Implemented |
 | Purchase | Escrow Hold | Yes | Yes | Yes (Trigger) | Yes | No | Implemented |
 | Purchase | Escrow Release | N/A | No (No Cron) | N/A | N/A | No | Partially Implemented |
-| Wishlist | Add/Remove | Yes | No | Yes | N/A | No | Broken/Not Implemented |
 | Realtime Chat | WebSocket | No | No | No | N/A | No | Not Implemented |
 | Wallet | Balance Deduct | Yes | Yes | Yes | Yes | No | Implemented |
 
@@ -590,7 +589,7 @@ Một số Route quan trọng:
 
 ## Appendix H – Unverified and Pending Confirmation
 
-- **Wishlist**: Bảng Wishlists tồn tại trong Database, UI có đề cập, nhưng source code Backend không có bất kỳ Entity Wishlist.java hay Controller nào.
+
 - **Escrow Release**: Bảng Transactions có lưu escrow_release_date và có trigger chuyển status sang "Held". Tuy nhiên không tìm thấy @Scheduled job hoặc logic tự động chuyển tiền từ Held sang Available cho Seller sau 72 giờ. Cần xác nhận quy trình giải phóng quỹ.
 - **UserPermissions**: Bảng UserPermissions tồn tại trong DB nhưng code không có Entity UserPermission.java (có thể Hibernate @ManyToMany xử lý ẩn, cần chạy test runtime để xác minh hoàn toàn).
 
