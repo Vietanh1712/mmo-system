@@ -45,5 +45,5 @@ Giai đoạn: Đang phát triển hệ thống lõi (Core Development)
 
 ## 8. NGỮ CẢNH SPRINT HIỆN TẠI (CURRENT SPRINT CONTEXT)
 - **Sprint hoạt động**: Sprint 1
-- **Trọng tâm**: Phát triển lõi hệ thống - Luồng Mua hàng, Giam tiền Escrow và Xử lý tranh chấp.
-- **File đặc tả kích hoạt**: `.sdd/specs/feat-product-buying/SPEC.md`
+- **Trọng tâm**: Phát triển lõi hệ thống theo tiêu chuẩn EARS (Auth, Customer, Seller, Staff, Admin).
+- **File đặc tả kích hoạt**: Đọc toàn bộ mục lục tại `SPECS/INDEX.md` và các quyết định cốt lõi tại `SPECS/00_CONSTITUTION.md`.
