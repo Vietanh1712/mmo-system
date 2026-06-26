@@ -11,6 +11,7 @@ import model.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import service.UserStatusService;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,20 +24,24 @@ public class ChatController {
     private final ChatBlockRepository chatBlockRepository;
     private final ChatMuteRepository chatMuteRepository;
     private final UserRepository userRepository;
+    private final UserStatusService userStatusService;
 
     public ChatController(ChatRepository chatRepository,
                           ChatBlockRepository chatBlockRepository,
                           ChatMuteRepository chatMuteRepository,
-                          UserRepository userRepository) {
+                          UserRepository userRepository,
+                          UserStatusService userStatusService) {
         this.chatRepository = chatRepository;
         this.chatBlockRepository = chatBlockRepository;
         this.chatMuteRepository = chatMuteRepository;
         this.userRepository = userRepository;
+        this.userStatusService = userStatusService;
     }
 
     // 1. Get list of chat contacts (recent contacts) for current user
     @GetMapping
     public ResponseEntity<?> getChatContacts(@AuthenticationPrincipal Long userId) {
+        userStatusService.updateActiveTime(userId);
         Optional<User> currentUserOpt = userRepository.findById(userId);
         if (currentUserOpt.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "User not found"));
@@ -82,6 +87,7 @@ public class ChatController {
                     map.put("isBlocked", isBlocked);
                     map.put("isBlockedByContact", isBlockedByContact);
                     map.put("isMuted", isMuted);
+                    map.put("online", userStatusService.isOnline(contactId));
                     return map;
                 })
                 .sorted((m1, m2) -> {
@@ -97,6 +103,7 @@ public class ChatController {
     // 2. Get active chats between current user and contact
     @GetMapping("/{contactId}")
     public ResponseEntity<?> getChatHistory(@AuthenticationPrincipal Long userId, @PathVariable Long contactId) {
+        userStatusService.updateActiveTime(userId);
         Optional<User> currentUserOpt = userRepository.findById(userId);
         Optional<User> contactOpt = userRepository.findById(contactId);
         if (currentUserOpt.isEmpty() || contactOpt.isEmpty()) {
@@ -123,6 +130,7 @@ public class ChatController {
     public ResponseEntity<?> sendMessage(@AuthenticationPrincipal Long userId, 
                                          @PathVariable Long contactId, 
                                          @RequestBody Map<String, String> request) {
+        userStatusService.updateActiveTime(userId);
         Optional<User> senderOpt = userRepository.findById(userId);
         Optional<User> receiverOpt = userRepository.findById(contactId);
         if (senderOpt.isEmpty() || receiverOpt.isEmpty()) {
@@ -161,10 +169,10 @@ public class ChatController {
 
         Map<String, Object> response = new HashMap<>();
         response.put("id", saved.getId());
-        response.put("senderId", saved.getSender().getId());
-        response.put("receiverId", saved.getReceiver().getId());
+        response.put("senderId", userId);
+        response.put("receiverId", contactId);
         response.put("message", saved.getMessage());
-        response.put("createdAt", saved.getCreatedAt());
+        response.put("createdAt", saved.getCreatedAt() != null ? saved.getCreatedAt() : java.time.LocalDateTime.now());
         response.put("type", "out");
 
         return ResponseEntity.ok(response);

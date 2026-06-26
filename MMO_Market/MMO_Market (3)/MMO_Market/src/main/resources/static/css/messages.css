@@ -10,20 +10,21 @@
 }
 
 .messages-layout {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 320px minmax(0, 1fr);
+    display: flex;
     gap: 16px;
     max-width: 1200px;
     width: 100%;
     margin: 24px auto;
     padding: 0 40px 40px;
-    min-height: calc(100vh - 130px);
+    height: 680px;
+    min-height: 450px;
     box-sizing: border-box;
 }
 
 /* ============ SIDEBAR 30% ============ */
 .messages-sidebar {
+    width: 320px;
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
     background: var(--card-bg);
@@ -31,6 +32,7 @@
     border-radius: 12px;
     box-shadow: var(--shadow-light);
     overflow: hidden;
+    height: 100%;
 }
 
 .messages-sidebar__header {
@@ -78,6 +80,7 @@
 .messages-chat-list {
     flex: 1;
     overflow-y: auto;
+    min-height: 0;
     list-style: none;
     margin: 0;
     padding: 8px 0;
@@ -189,6 +192,7 @@
 
 /* ============ MAIN CHAT 70% ============ */
 .messages-main {
+    flex: 1;
     display: flex;
     flex-direction: column;
     min-width: 0;
@@ -197,6 +201,7 @@
     border-radius: 12px;
     box-shadow: var(--shadow-light);
     overflow: hidden;
+    height: 100%;
 }
 
 .messages-main__header {
@@ -272,6 +277,7 @@
 .messages-main__body {
     flex: 1;
     overflow-y: auto;
+    min-height: 0;
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -535,7 +541,8 @@
 /* Responsive */
 @media (max-width: 900px) {
     .messages-layout {
-        grid-template-columns: 1fr;
+        flex-direction: column;
+        height: auto;
         min-height: auto;
         padding: 0 20px 20px;
         margin: 12px auto;

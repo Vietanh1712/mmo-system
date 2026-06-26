@@ -300,7 +300,7 @@
                 li.innerHTML = `
                     <div class="messages-chat-item__avatar-wrap">
                         <div class="messages-chat-item__avatar">${c.avatar}</div>
-                        <span class="messages-chat-item__status"></span>
+                        <span class="messages-chat-item__status ${c.online ? '' : 'messages-chat-item__status--offline'}"></span>
                     </div>
                     <div class="messages-chat-item__body">
                         <div class="messages-chat-item__top">
@@ -446,6 +446,14 @@
             const body = document.getElementById('messages-main-body');
             if (!body) return;
             body.innerHTML = '';
+
+            let chat = activeChatList.find(c => c.contactId === currentSelectedChatId);
+            if (!chat) {
+                const mockKey = Object.keys(CHAT_DATA).find(k => 
+                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 14)
+                );
+                if (mockKey) chat = CHAT_DATA[mockKey];
+            }
 
             // 1. Add date badge
             const dateBadge = document.createElement('div');

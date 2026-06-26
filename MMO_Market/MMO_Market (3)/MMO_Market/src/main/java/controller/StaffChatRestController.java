@@ -7,6 +7,7 @@ import model.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import service.UserStatusService;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -17,10 +18,14 @@ public class StaffChatRestController {
 
     private final ChatRepository chatRepository;
     private final UserRepository userRepository;
+    private final UserStatusService userStatusService;
 
-    public StaffChatRestController(ChatRepository chatRepository, UserRepository userRepository) {
+    public StaffChatRestController(ChatRepository chatRepository, 
+                                  UserRepository userRepository,
+                                  UserStatusService userStatusService) {
         this.chatRepository = chatRepository;
         this.userRepository = userRepository;
+        this.userStatusService = userStatusService;
     }
 
     private User getStaff(Long userId) {
@@ -36,6 +41,7 @@ public class StaffChatRestController {
     public ResponseEntity<?> getConversations(@AuthenticationPrincipal Long userId) {
         try {
             User staff = getStaff(userId);
+            userStatusService.updateActiveTime(staff.getId());
             List<Chat> allChats = chatRepository.findRecentNormalChatsForUser(staff);
 
             // Group by other user to get the latest chat message
@@ -69,6 +75,7 @@ public class StaffChatRestController {
                 map.put("lastMessage", chat.getMessage());
                 map.put("lastMessageTime", chat.getCreatedAt().toString());
                 map.put("unreadCount", unreadCounts.getOrDefault(otherId, 0));
+                map.put("online", userStatusService.isOnline(otherId));
                 
                 // Determine user role badge
                 String roleBadge = "Customer";
@@ -91,6 +98,7 @@ public class StaffChatRestController {
     public ResponseEntity<?> searchUsers(@AuthenticationPrincipal Long userId, @RequestParam String keyword) {
         try {
             getStaff(userId);
+            userStatusService.updateActiveTime(userId);
             if (keyword == null || keyword.trim().isEmpty()) {
                 return ResponseEntity.ok(Collections.emptyList());
             }
@@ -101,6 +109,7 @@ public class StaffChatRestController {
                 map.put("userId", u.getId());
                 map.put("userName", u.getFullName());
                 map.put("userEmail", u.getEmail());
+                map.put("online", userStatusService.isOnline(u.getId()));
                 
                 String roleBadge = "Customer";
                 if (u.getRole() != null) {
@@ -122,6 +131,7 @@ public class StaffChatRestController {
     public ResponseEntity<?> getChatHistory(@AuthenticationPrincipal Long userId, @PathVariable Long targetUserId) {
         try {
             User staff = getStaff(userId);
+            userStatusService.updateActiveTime(staff.getId());
             User targetUser = userRepository.findByIdAndIsDeleteFalse(targetUserId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng."));
 
@@ -159,6 +169,7 @@ public class StaffChatRestController {
     public ResponseEntity<?> sendChatMessage(@AuthenticationPrincipal Long userId, @PathVariable Long targetUserId, @RequestBody Map<String, String> request) {
         try {
             User staff = getStaff(userId);
+            userStatusService.updateActiveTime(staff.getId());
             User targetUser = userRepository.findByIdAndIsDeleteFalse(targetUserId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng."));
 

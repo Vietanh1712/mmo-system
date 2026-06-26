@@ -1,11 +1,16 @@
 package controller.mvc;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import service.StaffDashboardService;
 import dal.ComplaintRepository;
 import dal.KycRequestRepository;
@@ -13,6 +18,17 @@ import dal.TransactionRepository;
 import dal.WithdrawalRepository;
 import dal.ShopFlagRepository;
 import model.KycStatus;
+import model.ShopFlag;
+import model.Transaction;
+import model.Withdrawal;
+import model.Complaint;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Duration;
+import java.util.List;
 
 @Controller
 @RequestMapping("/staff")
@@ -88,33 +104,231 @@ public class StaffController {
     }
 
     @GetMapping("/transactions")
-    public String transactions() {
+    public String transactions(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String fromDate,
+            @RequestParam(required = false) String toDate,
+            @RequestParam(defaultValue = "0") int page,
+            Model model) {
+
+        LocalDateTime from = null, to = null;
+        try { if (fromDate != null && !fromDate.isBlank()) from = LocalDate.parse(fromDate).atStartOfDay(); } catch (Exception ignored) {}
+        try { if (toDate   != null && !toDate.isBlank())   to   = LocalDate.parse(toDate).atTime(23, 59, 59); } catch (Exception ignored) {}
+
+        Long id = null;
+        String kw = (keyword != null && keyword.isBlank()) ? null : keyword;
+        if (kw != null) {
+            try { id = Long.parseLong(kw.replace("#TXN-", "").trim()); kw = null; } catch (Exception ignored) {}
+        }
+
+        String typeParam   = (type   != null && !type.isBlank())   ? type   : null;
+        String statusParam = (status != null && !status.isBlank()) ? status : null;
+
+        Pageable pageable = PageRequest.of(page, 20, Sort.by("createdAt").descending());
+        Page<Transaction> txPage = transactionRepository.searchTransactions(
+                kw, id, typeParam, statusParam, from, to, pageable);
+
+        model.addAttribute("transactions",         txPage.getContent());
+        model.addAttribute("currentPage",           page);
+        model.addAttribute("totalPages",            txPage.getTotalPages());
+        model.addAttribute("totalTransactions",     txPage.getTotalElements());
+        model.addAttribute("completedTransactions", transactionRepository.countByStatusAndIsDeleteFalse("Completed"));
+        model.addAttribute("pendingTransactions",   transactionRepository.countByStatusAndIsDeleteFalse("Pending"));
+        model.addAttribute("failTransactions",
+                transactionRepository.countByStatusAndIsDeleteFalse("Cancelled")
+              + transactionRepository.countByStatusAndIsDeleteFalse("Refunded"));
+        model.addAttribute("types",           transactionRepository.findAllTransactionTypes());
+        model.addAttribute("statuses",        transactionRepository.findAllStatus());
+        model.addAttribute("keyword",         keyword);
+        model.addAttribute("selectedType",    type);
+        model.addAttribute("selectedStatus",  status);
+        model.addAttribute("fromDate",        fromDate);
+        model.addAttribute("toDate",          toDate);
         return "staff/transactions";
     }
 
     @GetMapping("/transactions/detail")
-    public String transactionDetail() {
+    public String transactionDetail(@RequestParam Long id, Model model) {
+        Transaction transaction = transactionRepository.findDetailById(id);
+        if (transaction == null) {
+            return "redirect:/staff/transactions";
+        }
+        model.addAttribute("transaction", transaction);
+
+        String remainingHours = "";
+        if (transaction.getEscrowReleaseDate() != null) {
+            long hours = Duration.between(LocalDateTime.now(), transaction.getEscrowReleaseDate()).toHours();
+            if (hours < 0) {
+                remainingHours = "Đã giải ngân (quá hạn bảo lãnh)";
+            } else {
+                remainingHours = hours + " giờ";
+            }
+        } else {
+            remainingHours = "Không có thông tin bảo lãnh";
+        }
+        model.addAttribute("remainingHours", remainingHours);
+
+        Complaint complaint = complaintRepository.findByTransactionId(id);
+        model.addAttribute("complaint", complaint);
+
         return "staff/transaction-detail";
     }
 
     @GetMapping("/withdrawals")
-    public String withdrawals() {
+    public String withdrawals(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long minAmount,
+            @RequestParam(defaultValue = "0") int page,
+            Model model) {
+
+        String st = (status == null || status.isBlank() || status.equals("ALL")) ? null : status;
+        String kw = (keyword != null && keyword.isBlank()) ? null : keyword;
+
+        Pageable pageable = PageRequest.of(page, 20, Sort.by("createdAt").descending());
+        Page<Withdrawal> wPage = withdrawalRepository.searchWithdrawals(st, kw, minAmount, pageable);
+
+        model.addAttribute("withdrawals",          wPage.getContent());
+        model.addAttribute("currentPage",           page);
+        model.addAttribute("totalPages",            wPage.getTotalPages());
+        model.addAttribute("totalWithdrawals",      withdrawalRepository.count());
+        model.addAttribute("pendingWithdrawals",    withdrawalRepository.countByStatusAndIsDeleteFalse("Pending"));
+        model.addAttribute("completedWithdrawals",  withdrawalRepository.countByStatusAndIsDeleteFalse("Completed"));
+        model.addAttribute("rejectedWithdrawals",   withdrawalRepository.countByStatusAndIsDeleteFalse("Rejected"));
+        model.addAttribute("statuses",              withdrawalRepository.findAllStatus());
+        model.addAttribute("keyword",               keyword);
+        model.addAttribute("selectedStatus",        st);
+        model.addAttribute("minAmount",             minAmount);
         return "staff/withdrawals";
     }
 
     @GetMapping("/withdrawals/detail")
-    public String withdrawalDetail() {
+    public String withdrawalDetail(@RequestParam Long id, Model model) {
+        Withdrawal withdrawal = withdrawalRepository.findDetailById(id)
+                .orElseThrow(() -> new RuntimeException("Withdrawal request not found"));
+        model.addAttribute("withdrawal", withdrawal);
         return "staff/withdrawal-detail";
     }
 
+    @PostMapping("/withdrawals/update-status")
+    public String updateWithdrawalStatus(
+            @RequestParam Long id,
+            @RequestParam String status,
+            RedirectAttributes redirectAttributes
+    ) {
+        Withdrawal withdrawal = withdrawalRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Withdrawal request not found"));
+        withdrawal.setStatus(status);
+        withdrawalRepository.save(withdrawal);
+
+        redirectAttributes.addFlashAttribute(
+                "success",
+                "Cập nhật trạng thái thành công"
+        );
+        return "redirect:/staff/withdrawals/detail?id=" + id;
+    }
+
+    @PostMapping("/withdrawals/reject")
+    public String rejectWithdrawal(
+            @RequestParam Long id,
+            RedirectAttributes redirectAttributes
+    ) {
+        Withdrawal withdrawal = withdrawalRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Withdrawal request not found"));
+        withdrawal.setStatus("Rejected");
+        withdrawalRepository.save(withdrawal);
+
+        redirectAttributes.addFlashAttribute(
+                "warning",
+                "Đã từ chối rút tiền"
+        );
+        return "redirect:/staff/withdrawals/detail?id=" + id;
+    }
+
     @GetMapping("/flags")
-    public String flags() {
+    public String flags(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String level,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            Model model) {
+
+        String lv = (level  == null || level.isBlank()  || level.equals("ALL"))  ? null : level;
+        String st = (status == null || status.isBlank() || status.equals("ALL")) ? null : status;
+        String kw = (keyword != null && keyword.isBlank()) ? null : keyword;
+
+        Pageable pageable = PageRequest.of(page, 20, Sort.by("createdAt").descending());
+        Page<ShopFlag> fPage = shopFlagRepository.searchFlags(kw, lv, st, pageable);
+
+        model.addAttribute("flags",          fPage.getContent());
+        model.addAttribute("currentPage",    page);
+        model.addAttribute("totalPages",     fPage.getTotalPages());
+        model.addAttribute("totalFlags",     shopFlagRepository.countByIsDeleteFalse());
+        model.addAttribute("dangerFlags",    shopFlagRepository.countByFlagLevelAndIsDeleteFalse("Danger"));
+        model.addAttribute("warningFlags",   shopFlagRepository.countByFlagLevelAndIsDeleteFalse("Warning"));
+        model.addAttribute("criticalFlags",  shopFlagRepository.countByFlagLevelAndIsDeleteFalse("Critical"));
+        model.addAttribute("removedFlags",   shopFlagRepository.countByStatusAndIsDeleteFalse("Removed"));
+        model.addAttribute("activeFlags",    shopFlagRepository.countByStatusAndIsDeleteFalse("Active"));
+        model.addAttribute("levels",         List.of("Warning", "Critical", "Danger"));
+        model.addAttribute("statuses",       List.of("Active", "Removed"));
+        model.addAttribute("keyword",        keyword);
+        model.addAttribute("selectedLevel",  lv);
+        model.addAttribute("selectedStatus", st);
         return "staff/flags";
     }
 
     @GetMapping("/flags/detail")
-    public String flagDetail() {
+    public String flagDetail(@RequestParam Long id, Model model) {
+        ShopFlag flag = shopFlagRepository.findByIdAndIsDeleteFalse(id)
+                .orElse(null);
+        if (flag == null) {
+            return "redirect:/staff/flags";
+        }
+        model.addAttribute("flag", flag);
         return "staff/flag-detail";
+    }
+
+    @PostMapping("/flags/update")
+    public String updateFlag(
+            @RequestParam Long id,
+            @RequestParam String flagLevel,
+            @RequestParam String status,
+            @RequestParam String reason,
+            RedirectAttributes redirectAttributes
+    ) {
+        ShopFlag flag = shopFlagRepository.findByIdAndIsDeleteFalse(id)
+                .orElse(null);
+        if (flag != null) {
+            flag.setFlagLevel(flagLevel);
+            flag.setStatus(status);
+            flag.setReason(reason);
+            shopFlagRepository.save(flag);
+            redirectAttributes.addFlashAttribute(
+                    "success",
+                    "Cập nhật cờ thành công"
+            );
+        }
+        return "redirect:/staff/flags/detail?id=" + id;
+    }
+
+    @PostMapping("/flags/remove")
+    public String removeFlag(
+            @RequestParam Long id,
+            RedirectAttributes redirectAttributes
+    ) {
+        ShopFlag flag = shopFlagRepository.findByIdAndIsDeleteFalse(id)
+                .orElse(null);
+        if (flag != null) {
+            flag.setIsDelete(true);
+            shopFlagRepository.save(flag);
+            redirectAttributes.addFlashAttribute(
+                    "success",
+                    "Đã gỡ cờ thành công"
+            );
+        }
+        return "redirect:/staff/flags";
     }
 
     @GetMapping("/chat")

@@ -53,6 +53,9 @@
         <div class="dropdown-item" onclick="checkAuthAndRedirect('/profile')">
             <i class="fa fa-user"></i> Thông tin cá nhân
         </div>
+        <div class="dropdown-item" id="messagesDropdownItem" onclick="goToMessages()">
+            <i class="fa fa-envelope"></i> Tin nhắn
+        </div>
         <div class="dropdown-item" id="transactionsDropdownItem" onclick="checkAuthAndRedirect('/wallet/transactions')">
             <i class="fa fa-history"></i> Lịch sử giao dịch
         </div>
@@ -282,6 +285,25 @@
                 return;
             }
             window.location.href = url.href;
+        }
+
+        function goToMessages() {
+            const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user");
+            if (!userString) {
+                window.location.href = '/login';
+                return;
+            }
+            try {
+                const user = JSON.parse(userString);
+                const role = parseHeaderRole(user.role);
+                if (role === 'Admin' || role === 'Staff') {
+                    navigateHeaderRoute('/staff/chat');
+                } else {
+                    navigateHeaderRoute('/messages');
+                }
+            } catch (e) {
+                navigateHeaderRoute('/messages');
+            }
         }
 
         function parseHeaderRole(roleValue) {
