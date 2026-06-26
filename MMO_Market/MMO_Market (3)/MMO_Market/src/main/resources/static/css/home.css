@@ -207,6 +207,10 @@ a {
     border: 2px solid #fff;
 }
 
+.header-cart-button__badge--danger {
+    background: var(--danger, #ef4444) !important;
+}
+
 .auth-btn {
     padding: 8px 20px;
     border-radius: 6px;

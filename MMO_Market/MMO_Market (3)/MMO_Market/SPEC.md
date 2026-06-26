@@ -88,88 +88,24 @@ Quản trị viên hệ thống cấp cao nhất.
 
 ## 3. Functional Requirements
 
-### FR-01 Authentication
-- Đăng ký bằng email/password.
-- Đăng nhập (Email/Password hoặc Google OAuth2).
-- Xác thực email bằng mã (EmailVerification).
-- Khôi phục mật khẩu.
-- Đổi mật khẩu, quản lý đăng nhập 2 bước (2FA).
-- Cấp và quản lý access token, refresh token (Authentication).
+Chi tiết đặc tả của từng chức năng được tách riêng ra các tài liệu độc lập trong thư mục [features](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/docs/specifications/features/):
 
-### FR-02 User Profile
-- Xem thông tin hồ sơ cá nhân (email, họ tên, số điện thoại, trạng thái shop, số dư).
-- Cập nhật thông tin cá nhân.
-
-### FR-03 KYC
-- Gửi yêu cầu định danh (KycRequest) với tài liệu (CMND/CCCD, ảnh chụp).
-- Staff xem, duyệt hoặc từ chối KYC.
-
-### FR-04 Seller Registration
-- Gửi yêu cầu mở Shop (SellerRegistration).
-- Staff duyệt hoặc từ chối đơn đăng ký.
-- Khai báo thông tin ngân hàng (SellerBankInfo).
-
-### FR-05 Product Discovery & Shop Follow
-- Hiển thị sản phẩm nổi bật trên trang chủ.
-- Tìm kiếm sản phẩm theo keyword, lọc theo danh mục (Category), giá, rating.
-- Xem chi tiết sản phẩm.
-- Theo dõi gian hàng (ShopFollower) và bỏ theo dõi.
-
-### FR-06 Shop and Product Management
-- Chỉ Seller mới được tạo, sửa thông tin sản phẩm của mình.
-- Quản lý ProductVariant (phân loại giá, số lượng).
-- Quản lý Digital Asset (kho tài sản số gắn với Variant).
-- Xóa sản phẩm/variant (Soft delete).
-
-### FR-07 Wallet and Top-up
-- Xem số dư ví (Balance) bằng VNĐ.
-- Top-up (Nạp tiền) thông qua cổng SePay.
-- Xem lịch sử giao dịch nạp tiền (TopupTransaction) và biến động số dư (WalletTransaction).
-- Chống trùng lặp xử lý webhook từ SePay (Idempotency).
-
-### FR-08 Order and Purchase (Includes Pre-Order)
-- Khách hàng (Customer) chọn mua ProductVariant.
-- Hỗ trợ đặt hàng trước (PreOrder).
-- Hệ thống kiểm tra số dư ví, tình trạng tồn kho, và xác thực sở hữu.
-- Trừ tiền trong ví, giảm tồn kho.
-- Khởi tạo Transaction (đơn hàng) và giao tài sản số.
-- Thiết lập thời gian khóa quỹ (Escrow release date = thời gian tạo + 72 giờ).
-
-### FR-09 Withdrawal
-- Seller gửi yêu cầu rút tiền trong giới hạn số dư khả dụng (sau escrow).
-- Trừ số dư ví ngay khi yêu cầu được tạo.
-- Staff xem, duyệt/từ chối yêu cầu rút tiền.
-- Upload bằng chứng chuyển tiền khi duyệt hoàn tất.
-
-### FR-10 Complaint & Support Ticket
-- Customer tạo khiếu nại cho đơn hàng thuộc sở hữu.
-- Tạm dừng giải phóng quỹ (Escrow) nếu khiếu nại mở trong 72 giờ đầu.
-- Gửi yêu cầu hỗ trợ chung (SupportTicket).
-- Staff ra quyết định giải quyết (Customer thắng: hoàn tiền, Seller thắng: giải phóng tiền).
-
-### FR-11 Feedback, Review and Flag
-- Customer đánh giá (Review, Rating từ 1-5 sao) sản phẩm sau khi mua thành công.
-- Customer báo cáo (ShopFlag) gian hàng vi phạm.
-- Staff tiếp nhận và xử lý cờ báo cáo Shop.
-
-### FR-12 Chat
-- Gửi tin nhắn trực tiếp giữa các người dùng (Chat).
-- Tính năng chặn (ChatBlock) và tắt thông báo (ChatMute).
-- Trao đổi (Chat) giữa Customer, Seller và Staff.
-
-### FR-13 Notification
-- Tạo và phát thông báo cá nhân, thông báo hệ thống (Notification).
-- Quản lý trạng thái đọc thông báo (Read/Unread).
-
-### FR-14 Staff Management
-- Quản lý danh sách Staff.
-- Gán quyền hạn (Permission) cho Staff.
-
-### FR-15 Administration
-- Thống kê doanh thu (Revenue).
-- Cấu hình hệ thống động (SystemConfiguration).
-- Quản lý danh mục (Category).
-- Ghi nhận và xem nhật ký hoạt động (AuditLog).
+- [FR-01 Authentication](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/docs/specifications/features/fr-01-authentication.md)
+- [FR-02 User Profile](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/docs/specifications/features/fr-02-user-profile.md)
+- [FR-03 KYC](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/docs/specifications/features/fr-03-kyc.md)
+- [FR-04 Seller Registration](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/docs/specifications/features/fr-04-seller-registration.md)
+- [FR-05 Product Discovery & Shop Follow](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/docs/specifications/features/fr-05-product-discovery-shop-follow.md)
+- [FR-06 Shop and Product Management](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/docs/specifications/features/fr-06-shop-product-management.md)
+- [FR-07 Wallet and Top-up](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/docs/specifications/features/fr-07-wallet-topup.md)
+- [FR-08 Order and Purchase (Includes Pre-Order)](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/docs/specifications/features/fr-08-order-purchase.md)
+- [FR-09 Withdrawal](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/docs/specifications/features/fr-09-withdrawal.md)
+- [FR-10 Complaint & Support Ticket](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/docs/specifications/features/fr-10-complaint-support-ticket.md)
+- [FR-11 Feedback, Review and Flag](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/docs/specifications/features/fr-11-feedback-review-flag.md)
+- [FR-12 Chat](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/docs/specifications/features/fr-12-chat.md)
+- [FR-13 Notification](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/docs/specifications/features/fr-13-notification.md)
+- [FR-14 Staff Management](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/docs/specifications/features/fr-14-staff-management.md)
+- [FR-15 Administration](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/docs/specifications/features/fr-15-administration.md)
+- [FR-16 Pre-Order](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/docs/specifications/features/fr-16-pre-order.md)
 
 ---
 

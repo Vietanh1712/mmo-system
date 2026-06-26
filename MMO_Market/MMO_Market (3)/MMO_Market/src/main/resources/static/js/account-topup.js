@@ -153,6 +153,27 @@ function startBalancePolling(topupAmount) {
                         badge.className = 'ds-badge ds-badge-success';
                     }
 
+                    // Cập nhật số dư mới vào sessionStorage và localStorage
+                    ['userInfo', 'user'].forEach(key => {
+                        const userStr = sessionStorage.getItem(key) || localStorage.getItem(key);
+                        if (userStr) {
+                            try {
+                                const userData = JSON.parse(userStr);
+                                userData.balanceVnd = currentBalance;
+                                const serialized = JSON.stringify(userData);
+                                sessionStorage.setItem(key, serialized);
+                                localStorage.setItem(key, serialized);
+                            } catch (e) {
+                                console.error('Error updating storage user balance:', e);
+                            }
+                        }
+                    });
+
+                    // Gọi initHeader để vẽ lại header ngay lập tức
+                    if (typeof window.initHeader === 'function') {
+                        window.initHeader();
+                    }
+
                     showTopupMessage(`Nạp tiền thành công! Bạn đã được cộng +${formatMoney(addedAmount)} vào tài khoản.`, 'success');
                 }
             }

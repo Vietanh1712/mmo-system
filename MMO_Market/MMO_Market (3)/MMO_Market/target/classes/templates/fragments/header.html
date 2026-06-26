@@ -53,6 +53,9 @@
         <div class="dropdown-item" onclick="checkAuthAndRedirect('/profile')">
             <i class="fa fa-user"></i> Thông tin cá nhân
         </div>
+        <div class="dropdown-item" id="messagesDropdownItem" onclick="goToMessages()">
+            <i class="fa fa-envelope"></i> Tin nhắn
+        </div>
         <div class="dropdown-item" id="transactionsDropdownItem" onclick="checkAuthAndRedirect('/wallet/transactions')">
             <i class="fa fa-history"></i> Lịch sử giao dịch
         </div>
@@ -144,12 +147,16 @@
                     const fullName = user.fullName || 'Người dùng';
                     const initial = fullName.charAt(0).toUpperCase();
                     const currentRole = parseHeaderRole(user.role);
-
                     const isSystemRole = currentRole === 'Admin' || currentRole === 'Staff';
-                    if (isSystemRole) {
+                    const currentPath = window.location.pathname.toLowerCase();
+                    const isSellerConsole = currentPath.startsWith('/seller');
+
+                    if (isSystemRole || isSellerConsole) {
                         document.body.classList.add('is-system-user');
+                    }
+
+                    if (isSystemRole) {
                         const forbiddenPaths = ['/cart', '/checkout', '/wallet/topup', '/wallet/transactions', '/pre-orders', '/account/orders'];
-                        const currentPath = window.location.pathname.toLowerCase();
                         if (forbiddenPaths.some(path => currentPath === path || currentPath.startsWith(path + '/'))) {
                             alert('Quản trị viên và nhân viên không có quyền truy cập chức năng này.');
                             window.location.replace('/');
@@ -191,7 +198,7 @@
                         <div class="header__account-actions">
                             <button class="header-cart-button" type="button" id="headerNotifButton" title="Thông báo" aria-label="Thông báo" onclick="checkAuthAndRedirect('/account/notifications')">
                                 <i class="fa fa-bell"></i>
-                                <span class="header-cart-button__badge" id="headerNotifCount" style="display: none; background: var(--ds-danger);">0</span>
+                                <span class="header-cart-button__badge header-cart-button__badge--danger" id="headerNotifCount" style="display: none;">0</span>
                             </button>
                             <button class="header-cart-button" type="button" id="headerCartButton" title="Giỏ hàng của tôi" aria-label="Giỏ hàng của tôi" onclick="checkAuthAndRedirect('/cart')">
                                 <i class="fa fa-shopping-cart"></i>
@@ -278,6 +285,25 @@
                 return;
             }
             window.location.href = url.href;
+        }
+
+        function goToMessages() {
+            const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user");
+            if (!userString) {
+                window.location.href = '/login';
+                return;
+            }
+            try {
+                const user = JSON.parse(userString);
+                const role = parseHeaderRole(user.role);
+                if (role === 'Admin' || role === 'Staff') {
+                    navigateHeaderRoute('/staff/chat');
+                } else {
+                    navigateHeaderRoute('/messages');
+                }
+            } catch (e) {
+                navigateHeaderRoute('/messages');
+            }
         }
 
         function parseHeaderRole(roleValue) {
@@ -409,6 +435,7 @@
             }
         }
 
+        window.initHeader = initHeader;
         window.refreshHeaderCartBadge = refreshHeaderCartBadge;
         window.refreshHeaderNotifBadge = refreshHeaderNotifBadge;
         window.addEventListener('storage', () => {
