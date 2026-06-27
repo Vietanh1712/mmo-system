@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông tin cá nhân - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/features/home.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/customer/profile.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="profile-page ds-page">
+        <div class="ds-container">
+        <div class="profile-layout ds-two-column">
+            <aside th:replace="~{fragments/account-sidebar :: accountSidebar('profile')}"></aside>
+
+            <section class="profile-card ds-card">
+            <div class="profile-card__header ds-cluster-between">
+                <div class="profile-card__identity">
+                <div class="profile-card__avatar ds-avatar ds-avatar-lg" id="profileAvatar">?</div>
+                <div>
+                    <p class="ds-caption">Tài khoản của tôi</p>
+                    <h1 class="profile-card__title ds-heading-lg">Thông tin cá nhân</h1>
+                    <p class="profile-card__subtitle ds-body">Xem và cập nhật thông tin tài khoản hiện tại.</p>
+                </div>
+                </div>
+
+            </div>
+
+            <div class="profile-message ds-alert ds-alert-info" id="profileMessage">Đang tải thông tin...</div>
+
+            <dl class="profile-details" id="profileDetails" hidden>
+                <div class="profile-details__row">
+                    <dt>Họ và tên</dt>
+                    <dd id="profileFullName">-</dd>
+                </div>
+                <div class="profile-details__row">
+                    <dt>Ngày sinh</dt>
+                    <dd id="profileDateOfBirth">-</dd>
+                </div>
+                <div class="profile-details__row">
+                    <dt>Giới tính</dt>
+                    <dd id="profileGender">-</dd>
+                </div>
+                <div class="profile-details__row">
+                    <dt>Email</dt>
+                    <dd style="display: flex; align-items: center; gap: 8px;">
+                        <span id="profileEmail" data-masked="true">-</span>
+                        <button type="button" class="toggle-visibility-btn" style="background: none; border: none; cursor: pointer; color: #64748b;" aria-label="Hiện">
+                            <i class="fa fa-eye-slash"></i>
+                        </button>
+                    </dd>
+                </div>
+                <div class="profile-details__row">
+                    <dt>Số điện thoại</dt>
+                    <dd style="display: flex; align-items: center; gap: 8px;">
+                        <span id="profilePhone" data-masked="true">-</span>
+                        <button type="button" class="toggle-visibility-btn" style="background: none; border: none; cursor: pointer; color: #64748b;" aria-label="Hiện">
+                            <i class="fa fa-eye-slash"></i>
+                        </button>
+                    </dd>
+                </div>
+                <div class="profile-details__row">
+                    <dt>Số CCCD/CMND</dt>
+                    <dd style="display: flex; align-items: center; gap: 8px;">
+                        <span id="profileNationalId" data-masked="true">-</span>
+                        <button type="button" class="toggle-visibility-btn" style="background: none; border: none; cursor: pointer; color: #64748b;" aria-label="Hiện">
+                            <i class="fa fa-eye-slash"></i>
+                        </button>
+                    </dd>
+                </div>
+                <div class="profile-details__row">
+                    <dt>Địa chỉ</dt>
+                    <dd id="profileAddress">-</dd>
+                </div>
+                <div class="profile-details__row">
+                    <dt>Vai trò</dt>
+                    <dd><span class="ds-badge ds-badge-info" id="profileRole">-</span></dd>
+                </div>
+                <div class="profile-details__row" id="profileShopStatusRow" hidden>
+                    <dt>Trạng thái cửa hàng</dt>
+                    <dd><span class="ds-badge ds-badge-warning" id="profileShopStatus">-</span></dd>
+                </div>
+                <div class="profile-details__row">
+                    <dt>Số dư ví</dt>
+                    <dd class="ds-money" id="profileBalance">0 VNĐ</dd>
+                </div>
+            </dl>
+
+            <div class="profile-actions" id="profileActions" hidden>
+                <a class="ds-btn ds-btn-primary" id="editProfileButton" th:href="@{/profile(mode='edit')}">
+                    <i class="fa fa-pencil" aria-hidden="true"></i>
+                    Chỉnh sửa thông tin
+                </a>
+            </div>
+
+            <form class="profile-edit-form" id="profileEditForm" hidden novalidate>
+                <div class="profile-edit-form__header">
+                    <h2 class="ds-heading-md">Cập nhật hồ sơ</h2>
+                    <p class="ds-caption">Email, vai trò và số dư ví chỉ được hệ thống cập nhật.</p>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div class="ds-form-field">
+                        <label class="ds-label" for="profileFullNameInput">Họ và tên</label>
+                        <input class="ds-input" id="profileFullNameInput" name="fullName" type="text" maxlength="255" autocomplete="name">
+                        <small class="ds-error-text" id="profileFullNameError"></small>
+                    </div>
+
+                    <div class="ds-form-field">
+                        <label class="ds-label">Giới tính</label>
+                        <div style="display: flex; gap: 24px; align-items: center; min-height: 40px;">
+                            <label class="ds-radio"><input type="radio" name="gender" value="Nam"> Nam</label>
+                            <label class="ds-radio"><input type="radio" name="gender" value="Nữ"> Nữ</label>
+                            <label class="ds-radio"><input type="radio" name="gender" value="Khác"> Khác</label>
+                        </div>
+                        <small class="ds-error-text" id="profileGenderError"></small>
+                    </div>
+
+                    <div class="ds-form-field">
+                        <label class="ds-label" for="profileEmailInput">Email</label>
+                        <input class="ds-input ds-input-readonly" id="profileEmailInput" name="email" type="email" readonly style="background-color: #f1f5f9; color: #64748b; cursor: not-allowed;">
+                    </div>
+
+                    <div class="ds-form-field">
+                        <label class="ds-label" for="profilePhoneInput">Số điện thoại</label>
+                        <input class="ds-input" id="profilePhoneInput" name="phone" type="tel" maxlength="10" autocomplete="tel">
+                        <small class="ds-caption">Để trống hoặc nhập 10 chữ số, bắt đầu bằng số 0.</small>
+                        <small class="ds-error-text" id="profilePhoneError"></small>
+                    </div>
+
+                    <div class="ds-form-field">
+                        <label class="ds-label" for="profileNationalIdInput">Số CCCD/CMND</label>
+                        <input class="ds-input" id="profileNationalIdInput" name="nationalId" type="text" maxlength="20">
+                        <small class="ds-error-text" id="profileNationalIdError"></small>
+                    </div>
+
+                    <div class="ds-form-field">
+                        <label class="ds-label" for="profileDateOfBirthDisplay">Ngày sinh</label>
+                        <div class="ds-datepicker" data-ds-datepicker>
+                            <input id="profileDateOfBirthInput" name="dateOfBirth" type="hidden" data-ds-date-value>
+                            <div class="ds-datepicker-field">
+                                <input class="ds-datepicker-input" id="profileDateOfBirthDisplay" type="text" placeholder="dd/mm/yyyy" data-ds-date-display>
+                                <button class="ds-datepicker-button" type="button" data-ds-date-toggle aria-label="Chọn ngày sinh">
+                                    <i class="fa fa-calendar" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <small class="ds-error-text" id="profileDateOfBirthError"></small>
+                    </div>
+
+                    <div class="ds-form-field">
+                        <label class="ds-label" for="profileAddressInput">Địa chỉ</label>
+                        <input class="ds-input" id="profileAddressInput" name="address" type="text" maxlength="500" autocomplete="street-address">
+                        <small class="ds-error-text" id="profileAddressError"></small>
+                    </div>
+                </div>
+
+                <div class="profile-message ds-alert ds-alert-danger" id="profileFormMessage" hidden></div>
+
+                <div class="profile-actions">
+                    <button class="ds-btn ds-btn-primary" id="saveProfileButton" type="submit">
+                        Lưu thay đổi
+                    </button>
+                    <button class="ds-btn ds-btn-outline" id="cancelEditButton" type="button">
+                        Hủy
+                    </button>
+                </div>
+            </form>
+            </section>
+        </div>
+        </div>
+    </main>
+
+    <footer th:replace="fragments/footer :: footer"></footer>
+
+    <script th:src="@{/js/customer/auth.js}"></script>
+    <script th:src="@{/js/customer/account-sidebar.js}"></script>
+    <script th:src="@{/js/components/datepicker.js}"></script>
+    <script th:src="@{/js/customer/profile.js}"></script>
+</body>
+</html>

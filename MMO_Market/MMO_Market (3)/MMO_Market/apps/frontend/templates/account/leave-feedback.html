@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đánh giá sản phẩm - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/features/home.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/features/leave-feedback.css}">
+</head>
+
+<body class="feedback-page">
+
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="feedback-page-wrapper">
+        <div class="feedback-container">
+            
+            <!-- 1. Thanh điều hướng phụ (Breadcrumb) -->
+            <nav class="feedback-breadcrumb" aria-label="Breadcrumb">
+                <a href="/">Trang chủ</a>
+                <span class="separator">&gt;</span>
+                <a href="/account/orders">Lịch sử mua hàng</a>
+                <span class="separator">&gt;</span>
+                <a href="#" id="breadcrumbOrderLink">Đơn hàng #-----</a>
+                <span class="separator">&gt;</span>
+                <span class="current" aria-current="page">Đánh giá sản phẩm</span>
+            </nav>
+
+            <!-- 2. Card 1 - Thông tin sản phẩm (Product Info Card) -->
+            <section class="feedback-card product-info-card">
+                <div class="product-info-card__thumbnail">
+                    <i class="fa fa-shopping-bag" aria-hidden="true" id="productThumbnailIcon"></i>
+                    <img src="" alt="Sản phẩm" id="productThumbnailImg" style="display: none;">
+                </div>
+                <div class="product-info-card__details">
+                    <h1 class="product-info-card__title" id="productName">Đang tải sản phẩm...</h1>
+                    <p class="product-info-card__seller">Người bán: <span id="sellerName">-</span></p>
+                </div>
+            </section>
+
+            <!-- 3. Card 2 - Điểm số đánh giá (Rating Card) -->
+            <section class="feedback-card rating-card">
+                <h2 class="rating-card__title" id="ratingCardTitle">Bạn đánh giá trải nghiệm mua hàng như thế nào?</h2>
+                <div class="rating-stars" role="radiogroup" aria-label="Rating score">
+                    <i class="fa fa-star rating-star" role="radio" aria-checked="false" tabindex="0" data-score="1" aria-label="1 star"></i>
+                    <i class="fa fa-star rating-star" role="radio" aria-checked="false" tabindex="0" data-score="2" aria-label="2 stars"></i>
+                    <i class="fa fa-star rating-star" role="radio" aria-checked="false" tabindex="0" data-score="3" aria-label="3 stars"></i>
+                    <i class="fa fa-star rating-star" role="radio" aria-checked="false" tabindex="0" data-score="4" aria-label="4 stars"></i>
+                    <i class="fa fa-star rating-star" role="radio" aria-checked="false" tabindex="0" data-score="5" aria-label="5 stars"></i>
+                </div>
+                <p class="rating-card__sub" id="ratingSubtext">BẤM ĐỂ ĐÁNH GIÁ</p>
+            </section>
+
+            <!-- 4. Card 3 - Nội dung đánh giá & Hình ảnh (Share Experience Card) -->
+            <section class="feedback-card experience-card">
+                <h2 class="experience-card__title" id="experienceCardTitle">Chia sẻ trải nghiệm của bạn</h2>
+                
+                <div class="experience-card__textarea-wrap">
+                    <textarea class="experience-card__textarea" id="reviewComment" maxlength="1000" placeholder="Bạn hài lòng hay không hài lòng ở điểm nào? Dịch vụ và giao nhận sản phẩm như thế nào?..." oninput="updateCharCount()"></textarea>
+                    <span class="experience-card__char-counter" id="charCounter">0 / 300 ký tự (khuyên dùng)</span>
+                </div>
+
+                <!-- Vùng tải ảnh và video (Image/Video Upload Area) -->
+                <div class="upload-area" id="dropzone" onclick="triggerFileInput()">
+                    <i class="fa fa-camera upload-area__icon" aria-hidden="true"></i>
+                    <p class="upload-area__text">Kéo thả ảnh hoặc video vào đây, hoặc <span>chọn file từ máy tính</span></p>
+                    <p class="upload-area__note">Định dạng hỗ trợ: JPG, PNG, GIF, MP4, WEBM, MOV (Tối đa 50MB)</p>
+                    <input type="file" id="imageInput" multiple accept="image/*,video/*" style="display: none;" onchange="handleFileSelect(event)">
+                </div>
+
+                <!-- Preview container -->
+                <div class="upload-preview-container" id="previewContainer"></div>
+            </section>
+
+            <!-- 5. Card 4 - Tùy chọn ẩn danh (Anonymous Toggle Card) -->
+            <section class="feedback-card anonymous-card">
+                <div class="anonymous-card__left">
+                    <h2 class="anonymous-card__title">Đăng ẩn danh</h2>
+                    <p class="anonymous-card__desc">Tên của bạn sẽ không hiển thị công khai trên đánh giá sản phẩm.</p>
+                </div>
+                <button type="button" id="anonymousToggle" class="ds-toggle ds-toggle-inactive" aria-pressed="false" onclick="toggleAnonymous()">
+                    <span class="ds-toggle-track"><span class="ds-toggle-knob"></span></span>
+                </button>
+            </section>
+
+            <!-- 6. Thanh nút bấm hành động (Action Buttons) -->
+            <footer class="feedback-actions">
+                <button type="button" class="ds-btn ds-btn-outline" onclick="cancelFeedback()">Hủy bỏ</button>
+                <button type="button" class="ds-btn ds-btn-primary" onclick="submitFeedback()">Gửi đánh giá</button>
+            </footer>
+
+        </div>
+    </main>
+
+    <!-- Success Modal Overlay -->
+    <div class="feedback-success-overlay" id="successModal" style="display: none;">
+        <div class="feedback-success-card">
+            <div class="feedback-success-card__icon">
+                <i class="fa fa-check" aria-hidden="true"></i>
+            </div>
+            <h3 class="feedback-success-card__title">Đã gửi đánh giá thành công!</h3>
+            <p class="feedback-success-card__desc">Cảm ơn bạn đã chia sẻ trải nghiệm! Đánh giá của bạn sẽ giúp những người mua khác lựa chọn tốt hơn trên MMO Market.</p>
+            <button type="button" class="ds-btn ds-btn-primary feedback-success-card__btn" onclick="dismissSuccessModal()">Quay lại trang Đơn hàng</button>
+        </div>
+    </div>
+
+    <footer th:replace="fragments/footer :: footer"></footer>
+
+    <script th:src="@{/js/customer/auth.js}"></script>
+    <script>
+        const ACCOUNT_ORDERS_MOCK_KEY = 'mmoMarketMyOrdersMock';
+        let selectedScore = 0;
+        let uploadedFiles = [];
+        let isAnonymous = false;
+        let orderCode = '';
+        let productId = 1;
+        let transactionId = null; // ID giao dịch cụ thể để cho phép review nhiều đơn cùng sản phẩm
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Extract orderCode from path: /account/orders/{orderCode}/feedback
+            const pathParts = window.location.pathname.split('/').filter(Boolean);
+            const feedbackIndex = pathParts.indexOf('feedback');
+            if (feedbackIndex > 0) {
+                orderCode = decodeURIComponent(pathParts[feedbackIndex - 1]);
+            } else {
+                orderCode = 'MMO-ORD-1001'; // Fallback
+            }
+
+            // Set Breadcrumb & Link
+            const breadcrumbLink = document.getElementById('breadcrumbOrderLink');
+            if (breadcrumbLink) {
+                breadcrumbLink.textContent = `Đơn hàng #${orderCode}`;
+                breadcrumbLink.href = `/account/orders/${orderCode}`;
+            }
+
+            // Load actual order detail
+            await loadOrderInfo(orderCode);
+
+            // Bind rating star events
+            initializeRatingStars();
+
+            // Drag and drop events for upload zone
+            initializeDragAndDrop();
+        });
+
+        async function loadOrderInfo(code) {
+            const productNameEl = document.getElementById('productName');
+            const sellerNameEl = document.getElementById('sellerName');
+
+            const transactionIdMatch = code.match(/MMO-ORD-(\d+)/);
+            if (!transactionIdMatch) {
+                showErrorToast('Mã đơn hàng không hợp lệ.');
+                productNameEl.textContent = 'Mã đơn hàng không hợp lệ.';
+                return;
+            }
+
+            const txId = transactionIdMatch[1];
+            try {
+                const res = await authFetch(`/transactions/${txId}`);
+                if (!res.ok) {
+                    throw new Error('Không thể lấy chi tiết đơn hàng.');
+                }
+                const order = await res.json();
+                productId = order.productId;
+                transactionId = order.transactionId;
+                productNameEl.textContent = order.productName;
+                sellerNameEl.textContent = order.sellerName;
+
+                // Nếu đơn hàng này đã được đánh giá rồi, thông báo và không cho sửa đổi
+                if (order.isReviewed) {
+                    showWarningToast('Đơn hàng này đã được đánh giá.');
+                    const submitBtn = document.querySelector('.feedback-actions .ds-btn-primary');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.style.opacity = '0.5';
+                        submitBtn.style.pointerEvents = 'none';
+                        submitBtn.innerHTML = '<i class="fa fa-check-circle" style="color: #16a34a;"></i> Đã đánh giá';
+                    }
+
+                    // Hiển thị nội dung đã đánh giá và khóa tương tác
+                    selectedScore = order.reviewRating || 5;
+                    updateStarsDisplay();
+                    const scoreTexts = { 1: 'RẤT TỆ', 2: 'TỆ', 3: 'BÌNH THƯỜNG', 4: 'TỐT', 5: 'RẤT TỐT' };
+                    const subtext = document.getElementById('ratingSubtext');
+                    if (subtext) {
+                        subtext.textContent = scoreTexts[selectedScore] || 'ĐÃ ĐÁNH GIÁ';
+                        subtext.style.color = 'var(--ds-text)';
+                    }
+                    
+                    const ratingTitle = document.getElementById('ratingCardTitle');
+                    if (ratingTitle) ratingTitle.textContent = 'Đánh giá của bạn về trải nghiệm mua hàng';
+                    
+                    const starsContainer = document.querySelector('.rating-stars');
+                    if (starsContainer) {
+                        starsContainer.style.pointerEvents = 'none';
+                    }
+
+                    const commentTextarea = document.getElementById('reviewComment');
+                    if (commentTextarea) {
+                        commentTextarea.value = order.reviewComment || '';
+                        commentTextarea.disabled = true;
+                        commentTextarea.placeholder = 'Bạn đã gửi đánh giá cho đơn hàng này.';
+                    }
+                    updateCharCount();
+
+                    const expTitle = document.getElementById('experienceCardTitle');
+                    if (expTitle) expTitle.textContent = 'Nội dung đánh giá của bạn';
+
+                    const dropzone = document.getElementById('dropzone');
+                    if (dropzone) {
+                        dropzone.style.display = 'none';
+                    }
+
+                    const anonymousToggle = document.getElementById('anonymousToggle');
+                    if (anonymousToggle) {
+                        anonymousToggle.style.pointerEvents = 'none';
+                        anonymousToggle.style.opacity = '0.5';
+                    }
+                }
+            } catch (err) {
+                console.error('Lỗi khi tải thông tin đơn hàng:', err);
+                showErrorToast('Lỗi khi tải thông tin đơn hàng từ máy chủ.');
+                productNameEl.textContent = 'Không tìm thấy thông tin đơn hàng.';
+            }
+        }
+
+        // --- 1. Star Rating System ---
+        function initializeRatingStars() {
+            const stars = document.querySelectorAll('.rating-star');
+            const subtext = document.getElementById('ratingSubtext');
+
+            const scoreTexts = {
+                1: 'RẤT TỆ',
+                2: 'TỆ',
+                3: 'BÌNH THƯỜNG',
+                4: 'TỐT',
+                5: 'RẤT TỐT'
+            };
+
+            stars.forEach(star => {
+                // Click event
+                star.addEventListener('click', () => {
+                    selectedScore = parseInt(star.getAttribute('data-score'));
+                    updateStarsDisplay();
+                    subtext.textContent = scoreTexts[selectedScore] || 'BẤM ĐỂ ĐÁNH GIÁ';
+                    subtext.style.color = 'var(--ds-text)';
+                });
+
+                // Hover in
+                star.addEventListener('mouseover', () => {
+                    const hoverScore = parseInt(star.getAttribute('data-score'));
+                    stars.forEach(s => {
+                        const score = parseInt(s.getAttribute('data-score'));
+                        s.classList.toggle('is-hovered', score <= hoverScore);
+                    });
+                });
+
+                // Hover out
+                star.addEventListener('mouseout', () => {
+                    stars.forEach(s => s.classList.remove('is-hovered'));
+                });
+
+                // Keyboard support
+                star.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        star.click();
+                    }
+                });
+            });
+        }
+
+        function updateStarsDisplay() {
+            const stars = document.querySelectorAll('.rating-star');
+            stars.forEach(star => {
+                const score = parseInt(star.getAttribute('data-score'));
+                const isSelected = score <= selectedScore;
+                star.classList.toggle('is-selected', isSelected);
+                star.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+            });
+        }
+
+        // --- 2. Textarea Character Counter ---
+        function updateCharCount() {
+            const textarea = document.getElementById('reviewComment');
+            const counter = document.getElementById('charCounter');
+            const length = textarea.value.length;
+
+            if (length < 300) {
+                counter.textContent = `${length} / 300 ký tự (khuyên dùng)`;
+                counter.style.color = 'var(--ds-text-muted)';
+            } else {
+                counter.textContent = `${length} ký tự`;
+                counter.style.color = 'var(--ds-success)';
+            }
+        }
+
+        // --- 3. Image Upload area ---
+        function triggerFileInput() {
+            document.getElementById('imageInput').click();
+        }
+
+        function handleFileSelect(e) {
+            const files = Array.from(e.target.files);
+            processFiles(files);
+        }
+
+        function initializeDragAndDrop() {
+            const dropzone = document.getElementById('dropzone');
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropzone.classList.add('dragover');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropzone.classList.remove('dragover');
+                }, false);
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = Array.from(dt.files);
+                processFiles(files);
+            }, false);
+        }
+
+        function processFiles(files) {
+            const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
+            const maxImageSize = 10 * 1024 * 1024; // 10MB
+            const maxVideoSize = 50 * 1024 * 1024; // 50MB
+
+            files.forEach(file => {
+                const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+                const isImage = allowedImageTypes.includes(file.type) || ['.png', '.jpg', '.jpeg', '.gif'].includes(extension);
+                const isVideo = allowedVideoTypes.includes(file.type) || ['.mp4', '.webm', '.avi', '.mov'].includes(extension);
+
+                if (!isImage && !isVideo) {
+                    showWarningToast(`Định dạng tệp "${file.name}" không hợp lệ. Chỉ hỗ trợ JPG, PNG, GIF, MP4, WEBM, MOV.`);
+                    return;
+                }
+                if (isImage && file.size > maxImageSize) {
+                    showWarningToast(`Kích thước ảnh "${file.name}" vượt quá 10MB.`);
+                    return;
+                }
+                if (isVideo && file.size > maxVideoSize) {
+                    showWarningToast(`Kích thước video "${file.name}" vượt quá 50MB.`);
+                    return;
+                }
+
+                // Add to list
+                uploadedFiles.push(file);
+                renderPreview(file);
+            });
+        }
+
+        function renderPreview(file) {
+            const container = document.getElementById('previewContainer');
+            const objectUrl = URL.createObjectURL(file);
+            
+            const wrapper = document.createElement('div');
+            wrapper.className = 'upload-preview-item';
+            
+            const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+            const isVideo = file.type.startsWith('video/') || ['.mp4', '.webm', '.avi', '.mov'].includes(extension);
+            
+            let mediaElement;
+            if (isVideo) {
+                mediaElement = document.createElement('video');
+                mediaElement.src = objectUrl;
+                mediaElement.controls = true;
+                mediaElement.style.width = '100%';
+                mediaElement.style.height = '100%';
+                mediaElement.style.objectFit = 'cover';
+            } else {
+                mediaElement = document.createElement('img');
+                mediaElement.src = objectUrl;
+                mediaElement.alt = file.name;
+                mediaElement.style.width = '100%';
+                mediaElement.style.height = '100%';
+                mediaElement.style.objectFit = 'cover';
+            }
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'upload-preview-item__remove';
+            removeBtn.innerHTML = '<i class="fa fa-times" aria-hidden="true"></i>';
+            removeBtn.title = 'Xóa tệp';
+            removeBtn.onclick = () => {
+                // Remove from files array
+                uploadedFiles = uploadedFiles.filter(f => f !== file);
+                URL.revokeObjectURL(objectUrl);
+                wrapper.remove();
+            };
+
+            wrapper.appendChild(mediaElement);
+            wrapper.appendChild(removeBtn);
+            container.appendChild(wrapper);
+        }
+
+        // --- 4. Anonymous Toggle Switch ---
+        function toggleAnonymous() {
+            const toggle = document.getElementById('anonymousToggle');
+            isAnonymous = !isAnonymous;
+            toggle.classList.toggle('ds-toggle-inactive', !isAnonymous);
+            toggle.setAttribute('aria-pressed', isAnonymous ? 'true' : 'false');
+        }
+
+        // --- 5. Actions / Submission ---
+        function cancelFeedback() {
+            if (confirm('Bạn có chắc chắn muốn hủy bỏ? Những thông tin đánh giá đã nhập sẽ bị mất.')) {
+                window.location.href = `/account/orders/${orderCode}`;
+            }
+        }
+
+        async function submitFeedback() {
+            if (selectedScore === 0) {
+                showWarningToast('Vui lòng chọn số sao để đánh giá sản phẩm.');
+                return;
+            }
+
+            const comment = document.getElementById('reviewComment').value.trim();
+            if (!comment) {
+                showWarningToast('Vui lòng nhập nội dung chia sẻ trải nghiệm mua hàng.');
+                return;
+            }
+
+            const submitBtn = document.querySelector('.feedback-actions .ds-btn-primary');
+            const originalBtnHtml = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang gửi...';
+
+            try {
+                // 1. Upload files first
+                const urls = [];
+                const token = sessionStorage.getItem('accessToken');
+                
+                for (const file of uploadedFiles) {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    
+                    const uploadRes = await fetch('/api/upload', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: formData
+                    });
+                    const uploadData = await uploadRes.json();
+                    if (!uploadRes.ok) {
+                        throw new Error(uploadData.message || 'Lỗi tải lên tệp đính kèm.');
+                    }
+                    urls.push(uploadData.url);
+                }
+                
+                const mediaUrl = urls.join(',');
+
+                // 2. Submit feedback (kiêm transactionId để backend cho phép review nhiều đơn cùng sản phẩm)
+                const res = await authFetch(`/search/products/${productId}/reviews`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        rating: selectedScore,
+                        comment: comment,
+                        mediaUrl: mediaUrl,
+                        transactionId: transactionId || null
+                    })
+                });
+
+                if (res.ok) {
+                    // Show Success Modal
+                    const modal = document.getElementById('successModal');
+                    modal.style.display = 'flex';
+                } else {
+                    const errorResponse = await res.json();
+                    showErrorToast(errorResponse.message || 'Gửi đánh giá thất bại. Vui lòng thử lại sau.');
+                }
+            } catch (err) {
+                console.error('Lỗi khi gửi đánh giá:', err);
+                showErrorToast(err.message || 'Có lỗi xảy ra trong quá trình kết nối đến máy chủ.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
+            }
+        }
+
+        function dismissSuccessModal() {
+            // Redirect back to orders detail page
+            window.location.href = `/account/orders/${orderCode}`;
+        }
+    </script>
+</body>
+
+</html>
