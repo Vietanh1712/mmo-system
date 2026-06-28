@@ -1,0 +1,9 @@
+{
+  "name": "mmo-market-frontend",
+  "version": "1.0.0",
+  "description": "Frontend resources for MMO Market",
+  "private": true,
+  "dependencies": {
+    "bcryptjs": "^3.0.3"
+  }
+}

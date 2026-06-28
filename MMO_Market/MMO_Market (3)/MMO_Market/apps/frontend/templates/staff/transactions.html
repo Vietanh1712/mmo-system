@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Quản lý giao dịch')}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('transactions')}"></aside>
+
+            <section class="ds-section">
+                <div class="staff-page-header">
+                    <div>
+                        <h1 class="ds-page-title">Quản lý giao dịch</h1>
+                        <p class="ds-page-subtitle">Theo dõi toàn bộ giao dịch nạp tiền, mua hàng, hoàn tiền và chuyển khoản trên hệ thống.</p>
+                    </div>
+                </div>
+
+                <div class="staff-stat-grid">
+                    <div class="ds-card staff-stat-card blue">
+                        <p class="staff-stat-card__label">Tổng giao dịch</p>
+                        <p class="staff-stat-card__value" th:text="${totalTransactions}"></p>
+                        <p class="staff-stat-card__hint">30 ngày gần nhất</p>
+                    </div>
+                    <div class="ds-card staff-stat-card green">
+                        <p class="staff-stat-card__label">Thành công</p>
+                        <p class="staff-stat-card__value" th:text="${completedTransactions}"></p>
+                    </div>
+                    <div class="ds-card staff-stat-card yellow">
+                        <p class="staff-stat-card__label">Đang xử lý</p>
+                        <p class="staff-stat-card__value" th:text="${pendingTransactions}"></p>
+                    </div>
+                    <div class="ds-card staff-stat-card red">
+                        <p class="staff-stat-card__label">Thất bại / hủy</p>
+                        <p class="staff-stat-card__value" th:text="${failTransactions}"></p>
+                    </div>
+                </div>
+
+                <div class="ds-card">
+                    <form th:action="@{/staff/transactions}" method="get">
+                    <div class="ds-filter-panel">
+                        <h2 class="ds-card-title">Bộ lọc giao dịch</h2>
+                        <div class="ds-filter-grid">
+                            <input class="ds-input"
+                                   type="search"
+                                   name="keyword"
+                                   placeholder="Tìm mã GD, email, tên sản phẩm..."
+                                   th:value="${keyword}">
+
+                            <select class="ds-input" name="type">
+
+                                <option value="">Tất cả loại</option>
+
+                                <option
+                                        th:each="item : ${types}"
+                                        th:value="${item}"
+                                        th:text="${item}"
+                                        th:selected="${#strings.equalsIgnoreCase(item, selectedType)}"
+                                >
+                                </option>
+
+                            </select>
+
+                            <select class="ds-input" name="status">
+
+                                <option value="">Tất cả trạng thái</option>
+
+                                <option
+                                        th:each="item : ${statuses}"
+                                        th:value="${item}"
+                                        th:text="${item}"
+                                        th:selected="${item == selectedStatus}">
+                                </option>
+
+                            </select>
+
+                        </div>
+                        <div class="ds-filter-grid" style="grid-template-columns:repeat(2,minmax(220px,1fr));max-width:520px">
+                            <input class="ds-input"
+                                   type="date"
+                                   name="fromDate"
+                                   th:value="${fromDate}">
+
+                            <input class="ds-input"
+                                   type="date"
+                                   name="toDate"
+                                   th:value="${toDate}">
+
+                        </div>
+                        <div class="ds-filter-actions">
+
+                            <a th:href="@{/staff/transactions}"
+                               class="ds-btn ds-btn-secondary">
+                                Làm mới bộ lọc
+                            </a>
+
+                            <button class="ds-btn ds-btn-primary"
+                                    type="submit">
+                                Tìm kiếm
+                            </button>
+                        </div>
+                    </div>
+                    </form>
+                </div>
+
+                <div class="ds-card">
+                    <div class="ds-table-wrap">
+                        <table class="ds-table">
+                            <thead>
+                            <tr>
+                                <th>Mã GD</th>
+                                <th>Loại</th>
+                                <th>Người dùng</th>
+                                <th>Miêu tả sản phẩm</th>
+                                <th>Số tiền</th>
+                                <th class="ds-table-center">Trạng thái</th>
+                                <th>Thời gian tạo</th>
+                                <th>Thời gian giao dịch đến</th>
+                                <th class="ds-table-center">Thao tác</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="t : ${transactions}">
+                                <td th:text="'#TXN-'+${t.id}"></td>
+                                <td>
+                                    <span class="ds-badge ds-badge-info"
+                                         th:text="${t.product.productType}">
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="ds-entity">
+                                        <div>
+                                            <!--/*@thymesVar id="customer" type=""*/-->
+                                            <div class="ds-entity-title"
+                                                 th:text="${t.customer.fullName}">
+                                            </div>
+                                            <div class="ds-entity-subtitle"
+                                                 th:text="${t.customer.email}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td
+                                        th:text="${t.product.name}">
+                                </td>
+                                <td class="ds-money"
+                                    th:text="${#numbers.formatInteger(t.amountVnd,0,'COMMA')} + ' đ'">
+                                </td>
+                                <td class="ds-table-center">
+                                   <span class="ds-badge"
+                                       th:text="${t.status}">
+                                   </span>
+                                </td>
+                                <td
+                                        th:text="${#temporals.format(t.createdAt,'dd/MM/yyyy HH:mm')}">
+                                </td>
+                                <td
+                                        th:text="${#temporals.format(t.escrowReleaseDate,'dd/MM/yyyy HH:mm')}">
+                                </td>
+                                <td class="ds-table-center">
+                                    <a class="ds-icon-btn ds-icon-btn-view"
+                                       th:href="@{/staff/transactions/detail(id=${t.id})}">
+                                        Xem
+                                    </a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination">
+
+                        <!-- Previous -->
+                        <a
+                                th:if="${currentPage > 0}"
+                                th:href="@{/staff/transactions(
+            page=${currentPage - 1},
+            keyword=${keyword},
+            type=${selectedType},
+            status=${selectedStatus},
+            fromDate=${fromDate},
+            toDate=${toDate}
+       )}">
+                            ‹
+                        </a>
+
+                        <span>
+        Trang
+        <span th:text="${currentPage + 1}">
+            1
+        </span>
+        /
+        <span th:text="${totalPages}">
+            1
+        </span>
+    </span>
+
+                        <!-- Next -->
+                        <a
+                                th:if="${currentPage + 1 < totalPages}"
+                                th:href="@{/staff/transactions(
+            page=${currentPage + 1},
+            keyword=${keyword},
+            type=${selectedType},
+            status=${selectedStatus},
+            fromDate=${fromDate},
+            toDate=${toDate}
+       )}">
+                            ›
+                        </a>
+
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/customer/auth.js}"></script>
+<script th:src="@{/js/staff/staff-ui.js}"></script>
+</body>
+</html>
