@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<aside class="staff-sidebar" th:fragment="staffSidebar(active)">
+        <p class="staff-sidebar__title">Trung tâm Staff</p>
+        <p class="staff-sidebar__subtitle">Quản lý vận hành MMO Market</p>
+        <nav class="staff-sidebar__nav ds-stack-sm">
+            <a class="staff-sidebar__link"
+               th:classappend="${active == 'dashboard'} ? ' is-active' : ''"
+               href="/staff/dashboard">
+                <i class="fa fa-dashboard"></i> Tổng quan
+            </a>
+            <a class="staff-sidebar__link"
+               th:classappend="${active == 'complaints'} ? ' is-active' : ''"
+               href="/staff/complaints"
+               data-required-permission="HANDLE_DISPUTES">
+                <i class="fa fa-exclamation-circle"></i> Khiếu nại
+                <span class="staff-sidebar__badge" th:text="${complaintCount}"></span>
+            </a>
+            <a class="staff-sidebar__link"
+               th:classappend="${active == 'support-tickets'} ? ' is-active' : ''"
+               href="/staff/support-tickets">
+                <i class="fa fa-ticket"></i> Ticket Hỗ Trợ
+            </a>
+            <a class="staff-sidebar__link"
+               th:classappend="${active == 'kyc'} ? ' is-active' : ''"
+               href="/staff/kyc"
+               data-required-permission="APPROVE_KYC">
+                <i class="fa fa-id-card"></i> Định danh KYC
+                <span class="staff-sidebar__badge" th:text="${pendingKycCount}"></span>
+            </a>
+            <a class="staff-sidebar__link"
+               th:classappend="${active == 'transactions'} ? ' is-active' : ''"
+               href="/staff/transactions">
+                <i class="fa fa-exchange"></i> Giao dịch
+                <span class="staff-sidebar__badge" th:text="${transactionCount}"></span>
+            </a>
+            <a class="staff-sidebar__link"
+               th:classappend="${active == 'withdrawals'} ? ' is-active' : ''"
+               href="/staff/withdrawals"
+               data-required-permission="APPROVE_WITHDRAWALS">
+                <i class="fa fa-money"></i> Rút tiền
+                <span class="staff-sidebar__badge" th:text="${withdrawalCount}"></span>
+            </a>
+            <a class="staff-sidebar__link"
+               th:classappend="${active == 'flags'} ? ' is-active' : ''"
+               href="/staff/flags"
+               data-required-permission="FLAG_SELLER">
+                <i class="fa fa-flag"></i> Cờ cảnh báo
+                <span class="staff-sidebar__badge"  th:text="${flagCount}"></span>
+            </a>
+            <a class="staff-sidebar__link"
+               th:classappend="${active == 'chat'} ? ' is-active' : ''"
+               href="/staff/chat"
+               data-required-permission="MANAGE_SUPPORT">
+                <i class="fa fa-comments"></i> Chat người dùng
+            </a>
+            <div class="staff-sidebar__divider"></div>
+            <a class="staff-sidebar__link staff-sidebar__link--logout"
+               href="javascript:void(0)"
+               onclick="if(typeof logout === 'function') logout(); else { sessionStorage.clear(); localStorage.removeItem('accessToken'); localStorage.removeItem('refreshToken'); localStorage.removeItem('loginTimestamp'); localStorage.removeItem('userInfo'); localStorage.removeItem('user'); window.location.href='/login'; }">
+                <i class="fa fa-sign-out"></i> Đăng xuất
+            </a>
+        </nav>
+</aside>
+</body>
+</html>

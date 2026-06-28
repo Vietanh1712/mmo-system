@@ -1,0 +1,236 @@
+let currentComplaint = null;
+
+function formatMoney(amount) {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(amount) || 0);
+}
+
+function escapeHtml(value) {
+    return String(value || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+}
+
+function formatDateString(dateStr) {
+    try {
+        const d = new Date(dateStr);
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    } catch(e) {
+        return dateStr;
+    }
+}
+
+async function loadComplaintDetails() {
+    const id = sessionStorage.getItem('selectedComplaintId') || 'CMP-3310';
+    const numericId = id.replace('CMP-', '');
+    const token = sessionStorage.getItem('accessToken');
+    
+    if (token) {
+        try {
+            const res = await fetch(`/api/complaints/${numericId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (res.ok) {
+                const item = await res.json();
+                currentComplaint = {
+                    id: item.id ? `CMP-${item.id}` : 'CMP-UNKNOWN',
+                    senderName: item.customer ? item.customer.fullName : 'N/A',
+                    senderEmail: item.customer ? item.customer.email : 'N/A',
+                    target: item.transaction && item.transaction.productName ? item.transaction.productName : 'Sản phẩm',
+                    category: 'Sản phẩm',
+                    amount: item.transaction ? item.transaction.amountVnd : 0,
+                    status: item.status,
+                    createdAt: item.createdAt ? formatDateString(item.createdAt) : 'N/A',
+                    evidence: item.evidence || 'Không có',
+                    detail: item.description || '',
+                    resolution: item.resolution || ''
+                };
+            }
+        } catch (err) {
+            console.error('Error loading complaint detail from API:', err);
+        }
+    }
+
+    if (!currentComplaint) {
+        const key = 'mmoMarketComplaintsMockGlobal';
+        let list = [];
+        try {
+            list = JSON.parse(sessionStorage.getItem(key)) || [];
+        } catch(e) {}
+        currentComplaint = list.find(c => c.id === id);
+    }
+
+    if (!currentComplaint) {
+        showErrorToast('Không tìm thấy thông tin khiếu nại!');
+        window.location.href = '/staff/complaints';
+        return;
+    }
+
+    // Populate header & breadcrumbs
+    document.getElementById('breadcrumb-complaint-id').textContent = `#${currentComplaint.id}`;
+    document.getElementById('header-complaint-subtitle').textContent = `Mã khiếu nại #${currentComplaint.id} — ${currentComplaint.target}`;
+    
+    // Status badge
+    const badge = document.getElementById('header-status-badge');
+    let badgeClass = 'ds-badge-warning';
+    let statusText = 'Đang xử lý';
+    if (currentComplaint.status === 'New') {
+        badgeClass = 'ds-badge-info';
+        statusText = 'Mới';
+    } else if (currentComplaint.status === 'Resolved' || currentComplaint.status === 'Completed') {
+        badgeClass = 'ds-badge-success';
+        statusText = 'Đã giải quyết';
+    } else if (currentComplaint.status === 'Rejected') {
+        badgeClass = 'ds-badge-danger';
+        statusText = 'Từ chối';
+    }
+    badge.className = `ds-badge ${badgeClass}`;
+    badge.textContent = statusText;
+
+    // Populate table fields
+    document.getElementById('detail-id').textContent = `#${currentComplaint.id}`;
+    document.getElementById('detail-sender').textContent = `${currentComplaint.senderName} — ${currentComplaint.senderEmail}`;
+    document.getElementById('detail-target').textContent = currentComplaint.target;
+    document.getElementById('detail-category').textContent = currentComplaint.category;
+    document.getElementById('detail-amount').textContent = formatMoney(currentComplaint.amount);
+    document.getElementById('detail-date').textContent = currentComplaint.createdAt;
+
+    // Content
+    document.getElementById('detail-description').textContent = currentComplaint.detail;
+
+    // Evidence
+    const evContainer = document.getElementById('detail-evidence-container');
+    if (currentComplaint.evidence && currentComplaint.evidence !== 'Không có') {
+        evContainer.innerHTML = `
+            <a href="${escapeHtml(currentComplaint.evidence)}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 6px; font-weight: 600; text-decoration: none; font-size: 13px;">
+                <i class="fa fa-external-link"></i> Xem ảnh bằng chứng / Đính kèm
+            </a>
+        `;
+    } else {
+        evContainer.innerHTML = `<span class="ds-badge ds-badge-muted">Không có ảnh đính kèm</span>`;
+    }
+
+    // Form fields
+    document.getElementById('complaintStatus').value = currentComplaint.status;
+    document.getElementById('complaintResolution').value = currentComplaint.resolution || '';
+
+    // Timeline
+    renderTimeline();
+}
+
+function renderTimeline() {
+    const timeline = document.getElementById('detail-timeline');
+    let html = `
+        <div class="staff-timeline__item">
+            <span class="staff-timeline__dot" style="background-color: #0058be;"></span>
+            <div class="staff-timeline__content">
+                <strong>Tiếp nhận khiếu nại</strong>
+                <p class="ds-caption">Hệ thống — ${escapeHtml(currentComplaint.createdAt)}</p>
+            </div>
+        </div>
+    `;
+
+    if (currentComplaint.status === 'InProgress' || currentComplaint.status === 'Resolved' || currentComplaint.status === 'Rejected') {
+        html += `
+            <div class="staff-timeline__item">
+                <span class="staff-timeline__dot" style="background-color: #f59e0b;"></span>
+                <div class="staff-timeline__content">
+                    <strong>Nhân viên tiếp nhận &amp; Đang xử lý</strong>
+                    <p class="ds-caption">Nguyễn Văn Staff — ${escapeHtml(currentComplaint.createdAt)}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    if (currentComplaint.status === 'Resolved') {
+        html += `
+            <div class="staff-timeline__item">
+                <span class="staff-timeline__dot" style="background-color: #10b981;"></span>
+                <div class="staff-timeline__content">
+                    <strong>Đã giải quyết khiếu nại</strong>
+                    <p class="ds-caption">Nguyễn Văn Staff — Vừa xong</p>
+                    <p class="ds-body" style="font-size: 13px; font-style: italic; margin-top: 4px; padding-left: 8px; border-left: 2px solid #10b981;">
+                        Ghi chú: ${escapeHtml(currentComplaint.resolution || 'Đã hoàn tất hỗ trợ.')}
+                    </p>
+                </div>
+            </div>
+        `;
+    } else if (currentComplaint.status === 'Rejected') {
+        html += `
+            <div class="staff-timeline__item">
+                <span class="staff-timeline__dot" style="background-color: #ef4444;"></span>
+                <div class="staff-timeline__content">
+                    <strong>Từ chối hỗ trợ / khiếu nại</strong>
+                    <p class="ds-caption">Nguyễn Văn Staff — Vừa xong</p>
+                    <p class="ds-body" style="font-size: 13px; font-style: italic; margin-top: 4px; padding-left: 8px; border-left: 2px solid #ef4444;">
+                        Lý do: ${escapeHtml(currentComplaint.resolution || 'Khiếu nại không hợp lệ.')}
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+
+    timeline.innerHTML = html;
+}
+
+async function handleStaffAction(status) {
+    const resolution = document.getElementById('complaintResolution').value.trim();
+    if (!resolution && status === 'Rejected') {
+        showWarningToast('Vui lòng nhập lý do từ chối vào mục “Kết quả / ghi chú”!');
+        return;
+    }
+
+    const id = currentComplaint.id;
+    const numericId = id.replace('CMP-', '');
+    const token = sessionStorage.getItem('accessToken');
+    
+    if (token) {
+        try {
+            const res = await fetch(`/api/complaints/${numericId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    status: status,
+                    resolution: resolution || (status === 'Resolved' ? 'Đã xử lý & hoàn tất hỗ trợ.' : 'Khiếu nại không hợp lệ.')
+                })
+            });
+            
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.message || 'Lỗi từ hệ thống khi cập nhật khiếu nại.');
+            }
+        } catch (err) {
+            console.error(err);
+            showWarningToast('Lỗi cập nhật backend: ' + err.message + '. Hệ thống sẽ thực hiện cập nhật mock tạm thời.');
+        }
+    }
+
+    const key = 'mmoMarketComplaintsMockGlobal';
+    let list = [];
+    try {
+        list = JSON.parse(sessionStorage.getItem(key)) || [];
+    } catch(e) {}
+
+    const index = list.findIndex(c => c.id === currentComplaint.id);
+    if (index !== -1) {
+        list[index].status = status;
+        list[index].resolution = resolution || (status === 'Resolved' ? 'Đã xử lý & hoàn tất hỗ trợ.' : 'Khiếu nại không hợp lệ.');
+        sessionStorage.setItem(key, JSON.stringify(list));
+    }
+
+    showSuccessToast(`Đã cập nhật trạng thái khiếu nại sang: ${status === 'Resolved' ? 'Đã giải quyết' : 'Từ chối'}`);
+    window.location.href = '/staff/complaints';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadComplaintDetails();
+});
