@@ -5,6 +5,7 @@ import com.mmo.feature.auth.service.AuthenticationService;
 
 import com.mmo.shared.dto.ProfileResponse;
 import com.mmo.shared.dto.UpdateProfileRequest;
+import com.mmo.shared.dto.ShopRegistrationRequestDto;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.mmo.feature.auth.service.UserService;
 
 import org.springframework.web.bind.annotation.PostMapping;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/profile")
@@ -122,7 +122,7 @@ public class ProfileController {
     @PostMapping("/register-shop")
     public ProfileResponse registerShop(
             @AuthenticationPrincipal Long userId,
-            @RequestBody Map<String, String> request) {
+            @RequestBody ShopRegistrationRequestDto request) {
         return userService.registerShop(userId, request);
     }
 }

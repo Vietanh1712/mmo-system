@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.mmo.feature.support.service.SupportTicketService;
 
+import org.springframework.web.filter.CharacterEncodingFilter;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -55,6 +56,7 @@ class SupportTicketControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(supportTicketController)
+                .addFilter(new CharacterEncodingFilter("UTF-8", true))
                 .setCustomArgumentResolvers(new HandlerMethodArgumentResolver() {
                     @Override
                     public boolean supportsParameter(MethodParameter parameter) {
@@ -86,21 +88,21 @@ class SupportTicketControllerTest {
 
         SupportTicket ticket = new SupportTicket();
         ticket.setId(10L);
-        ticket.setCategory("Lá»—i náº¡p tiá»n");
-        ticket.setTitle("Náº¡p tiá»n lá»—i");
-        ticket.setDescription("MÃ´ táº£ lá»—i");
+        ticket.setCategory("Lỗi nạp tiền");
+        ticket.setTitle("Nạp tiền lỗi");
+        ticket.setDescription("Mô tả lỗi");
         ticket.setStatus("Pending");
         ticket.setUser(user);
 
-        when(supportTicketService.createTicket(1L, "Lá»—i náº¡p tiá»n", "Náº¡p tiá»n lá»—i", "MÃ´ táº£ lá»—i")).thenReturn(ticket);
+        when(supportTicketService.createTicket(1L, "Lỗi nạp tiền", "Nạp tiền lỗi", "Mô tả lỗi")).thenReturn(ticket);
 
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(1L, null, Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         Map<String, String> body = Map.of(
-                "category", "Lá»—i náº¡p tiá»n",
-                "title", "Náº¡p tiá»n lá»—i",
-                "description", "MÃ´ táº£ lá»—i"
+                "category", "Lỗi nạp tiền",
+                "title", "Nạp tiền lỗi",
+                "description", "Mô tả lỗi"
         );
 
         // Act & Assert
@@ -127,21 +129,21 @@ class SupportTicketControllerTest {
 
         SupportTicket ticket = new SupportTicket();
         ticket.setId(11L);
-        ticket.setCategory("GÃ³p Ã½");
-        ticket.setTitle("GÃ³p Ã½ UI");
-        ticket.setDescription("GÃ³p Ã½");
+        ticket.setCategory("Góp ý");
+        ticket.setTitle("Góp ý UI");
+        ticket.setDescription("Góp ý");
         ticket.setStatus("Pending");
         ticket.setUser(user);
 
-        when(supportTicketService.createTicket(2L, "GÃ³p Ã½", "GÃ³p Ã½ UI", "GÃ³p Ã½")).thenReturn(ticket);
+        when(supportTicketService.createTicket(2L, "Góp ý", "Góp ý UI", "Góp ý")).thenReturn(ticket);
 
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(2L, null, Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         Map<String, String> body = Map.of(
-                "category", "GÃ³p Ã½",
-                "title", "GÃ³p Ã½ UI",
-                "description", "GÃ³p Ã½"
+                "category", "Góp ý",
+                "title", "Góp ý UI",
+                "description", "Góp ý"
         );
 
         // Act & Assert
@@ -168,9 +170,9 @@ class SupportTicketControllerTest {
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         Map<String, String> body = Map.of(
-                "category", "Lá»—i náº¡p tiá»n",
-                "title", "Náº¡p tiá»n lá»—i",
-                "description", "MÃ´ táº£ lá»—i"
+                "category", "Lỗi nạp tiền",
+                "title", "Nạp tiền lỗi",
+                "description", "Mô tả lỗi"
         );
 
         // Act & Assert
@@ -178,7 +180,7 @@ class SupportTicketControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Chá»‰ tÃ i khoáº£n Customer hoáº·c Seller má»›i Ä‘Æ°á»£c phÃ©p táº¡o ticket há»— trá»£."));
+                .andExpect(jsonPath("$.message").value("Chỉ tài khoản Customer hoặc Seller mới được phép tạo ticket hỗ trợ."));
     }
 
     @Test
@@ -195,9 +197,9 @@ class SupportTicketControllerTest {
 
         SupportTicket ticket = new SupportTicket();
         ticket.setId(10L);
-        ticket.setCategory("Lá»—i náº¡p tiá»n");
-        ticket.setTitle("Náº¡p tiá»n lá»—i");
-        ticket.setDescription("MÃ´ táº£ lá»—i");
+        ticket.setCategory("Lỗi nạp tiền");
+        ticket.setTitle("Nạp tiền lỗi");
+        ticket.setDescription("Mô tả lỗi");
         ticket.setStatus("Pending");
         ticket.setUser(user);
 
@@ -230,7 +232,6 @@ class SupportTicketControllerTest {
         // Act & Assert
         mockMvc.perform(get("/api/support-tickets"))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Chá»‰ tÃ i khoáº£n Customer hoáº·c Seller má»›i cÃ³ lá»‹ch sá»­ ticket."));
+                .andExpect(jsonPath("$.message").value("Chỉ tài khoản Customer hoặc Seller mới có lịch sử ticket."));
     }
 }
-
