@@ -141,7 +141,7 @@ async function initSellerLayout() {
 // 2. DASHBOARD VIEW
 // ==============================================================================
 async function initDashboard() {
-    const statsGrid = document.querySelector('.stat-grid');
+    const statsGrid = document.querySelector('.stats-grid-4');
     if (!statsGrid) return;
 
     try {
@@ -150,7 +150,7 @@ async function initDashboard() {
         const data = await res.json();
 
         // Bind stats card values
-        const cards = statsGrid.querySelectorAll('.stat-card__value');
+        const cards = statsGrid.querySelectorAll('.stat-card-value');
         if (cards.length >= 4) {
             cards[0].textContent = formatVND(data.totalRevenue);
             cards[1].textContent = data.completedSales;
@@ -1039,13 +1039,23 @@ async function initTransactions() {
 // 9. WITHDRAWALS VIEW
 // ==============================================================
 async function initWithdrawals() {
-    const tbody = document.querySelector('.seller-table tbody');
+    const tbody = document.querySelector('.seller-table tbody') || document.querySelector('.admin-table tbody');
     if (!tbody) return;
 
     try {
         // Load bank info check
         const infoRes = await sellerFetch('/shop-info');
         const infoData = await infoRes.json();
+
+        // Populate bank select with actual seller bank info
+        const bankAccountSelect = document.getElementById('bankAccount');
+        if (bankAccountSelect) {
+            if (infoData.bankName && infoData.accountNumber) {
+                bankAccountSelect.innerHTML = `<option value="">${infoData.bankName} — ${infoData.accountNumber} — ${infoData.accountHolder ? infoData.accountHolder.toUpperCase() : ''}</option>`;
+            } else {
+                bankAccountSelect.innerHTML = `<option value="">(Chưa cấu hình thông tin ngân hàng nhận tiền)</option>`;
+            }
+        }
 
         // Check if bank info is set, if not warn
         if (!infoData.bankName || !infoData.accountNumber) {
@@ -1056,20 +1066,46 @@ async function initWithdrawals() {
             warningAlert.style.borderRadius = '8px';
             warningAlert.style.padding = '14px';
             warningAlert.innerHTML = '<i class="fa fa-warning"></i> Bạn chưa thiết lập thông tin Ngân hàng! Vui lòng cấu hình tại <a href="/seller/shop-info" style="color: inherit; text-decoration: underline;">Thông tin cửa hàng</a> trước khi làm lệnh rút.';
-            tbody.closest('.seller-card').insertBefore(warningAlert, tbody.closest('.seller-table-wrap'));
+            
+            const card = tbody.closest('.seller-card') || tbody.closest('.admin-card');
+            const wrap = tbody.closest('.seller-table-wrap') || tbody.closest('.table-wrap');
+            if (card && wrap) {
+                card.insertBefore(warningAlert, wrap);
+            }
         }
 
         // Load dashboard stats for balances
         const dashRes = await sellerFetch('/dashboard');
         const dashData = await dashRes.json();
 
-        const balanceEl = document.querySelector('.balance-highlight__value');
-        if (balanceEl) balanceEl.textContent = formatVND(dashData.balanceVnd);
-
         // Load withdrawals history
         const wRes = await sellerFetch('/withdrawals');
         if (!wRes.ok) throw new Error('Không thể tải lịch sử rút tiền.');
         const withdrawals = await wRes.json();
+
+        const pendingAmount = withdrawals.filter(w => w.status === 'Pending').reduce((sum, w) => sum + w.amountVnd, 0);
+        const pendingCount = withdrawals.filter(w => w.status === 'Pending').length;
+
+        // Support old layout balance and pending elements
+        const balanceEl = document.querySelector('.balance-highlight__value');
+        if (balanceEl) balanceEl.textContent = formatVND(dashData.balanceVnd);
+
+        const pendingValueEl = document.querySelector('.stat-card__value');
+        if (pendingValueEl) pendingValueEl.textContent = formatVND(pendingAmount);
+
+        const pendingHintEl = document.querySelector('.stat-card__hint');
+        if (pendingHintEl) pendingHintEl.textContent = `${pendingCount} lệnh Pending`;
+
+        // Support new layout balance and pending elements (if any)
+        const statCards = document.querySelectorAll('.stats-grid-4 .stat-card-value');
+        if (statCards.length >= 2) {
+            statCards[0].textContent = formatVND(dashData.balanceVnd);
+            statCards[1].textContent = formatVND(pendingAmount);
+        }
+        const trends = document.querySelectorAll('.stats-grid-4 .stat-card-trend');
+        if (trends.length >= 2) {
+            trends[1].textContent = `${pendingCount} lệnh Pending`;
+        }
 
         if (withdrawals.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Chưa có yêu cầu rút tiền nào.</td></tr>';
@@ -1115,7 +1151,7 @@ async function initWithdrawals() {
         }
 
         // Update subtitle and input hint dynamically
-        const subtitleEl = document.querySelector('.seller-card__subtitle');
+        const subtitleEl = document.querySelector('.view-header p') || document.querySelector('.seller-card__subtitle');
         if (subtitleEl) {
             subtitleEl.textContent = `Rút tiền về tài khoản ngân hàng — tối thiểu ${formatVND(minLimit)}`;
         }
@@ -1281,13 +1317,10 @@ async function initStatistics() {
         if (!res.ok) throw new Error('Không thể tải số liệu thống kê.');
         const stats = await res.json();
 
-        // Escrow balance display
-        const escrowEl = document.querySelector('.balance-highlight__value');
-        if (escrowEl) escrowEl.textContent = formatVND(stats.escrowBalance);
-
         // Stats card display
-        const statCards = document.querySelectorAll('.stat-card__value');
+        const statCards = document.querySelectorAll('.stats-grid-4 .stat-card-value');
         if (statCards.length >= 2) {
+            statCards[0].textContent = formatVND(stats.escrowBalance);
             statCards[1].textContent = stats.totalSalesCount + ' đơn';
         }
 
@@ -1541,6 +1574,27 @@ async function initComplaints() {
         if (!res.ok) throw new Error('Không thể tải danh sách khiếu nại.');
         const complaints = await res.json();
 
+        // Bind stats card values
+        const statCards = document.querySelectorAll('.stats-grid-4 .stat-card-value');
+        if (statCards.length >= 4) {
+            const openCount = complaints.filter(c => c.status === 'Open').length;
+            const inProgressCount = complaints.filter(c => c.status === 'In_Progress' || c.status === 'In_progress' || c.status === 'IN_PROGRESS').length;
+            const resolvedCount = complaints.filter(c => c.status === 'Resolved' || c.status === 'Closed').length;
+            
+            const heldCount = complaints.filter(c => c.status !== 'Resolved' && c.status !== 'Closed').length;
+            const heldAmount = complaints.filter(c => c.status !== 'Resolved' && c.status !== 'Closed').reduce((sum, c) => sum + c.amountVnd, 0);
+
+            statCards[0].textContent = openCount;
+            statCards[1].textContent = inProgressCount;
+            statCards[2].textContent = resolvedCount;
+            statCards[3].textContent = formatVND(heldAmount);
+            
+            const trends = document.querySelectorAll('.stats-grid-4 .stat-card-trend');
+            if (trends.length >= 4) {
+                trends[3].textContent = `${heldCount} giao dịch tranh chấp`;
+            }
+        }
+
         if (complaints.length === 0) {
             tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Không có khiếu nại nào chống lại shop của bạn.</td></tr>';
             return;
@@ -1549,7 +1603,7 @@ async function initComplaints() {
         tbody.innerHTML = complaints.map(c => {
             let badgeClass = 'open';
             if (c.status === 'Resolved' || c.status === 'Closed') badgeClass = 'resolved';
-            else if (c.status === 'In_Progress') badgeClass = 'pending';
+            else if (c.status === 'In_Progress' || c.status === 'In_progress' || c.status === 'IN_PROGRESS') badgeClass = 'pending';
 
             return `
                 <tr>

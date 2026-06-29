@@ -312,7 +312,9 @@ document.querySelectorAll('.account-sidebar').forEach(root => {
     async function initializeTargetPage(nextDocument) {
         const pageScriptPath = Array.from(nextDocument.querySelectorAll('script[src]'))
             .map(script => new URL(script.getAttribute('src'), window.location.origin).pathname)
-            .find(path => path === '/js/profile.js' || /^\/js\/account-(?!sidebar)[a-z-]+\.js$/.test(path));
+            .find(path => path === '/js/profile.js' ||
+                path === '/js/customer/profile.js' ||
+                /^\/js\/(?:customer\/)?account-(?!sidebar)[a-z-]+\.js$/.test(path));
 
         if (!pageScriptPath) {
             return;
@@ -322,7 +324,9 @@ document.querySelectorAll('.account-sidebar').forEach(root => {
             await loadScript(pageScriptPath, true);
         }
 
-        const initializer = window.AccountPageInitializers?.[pageScriptPath];
+        const legacyScriptPath = pageScriptPath.replace('/js/customer/', '/js/');
+        const initializer = window.AccountPageInitializers?.[pageScriptPath] ||
+            window.AccountPageInitializers?.[legacyScriptPath];
         if (typeof initializer !== 'function') {
             throw new Error(`Không tìm thấy initializer cho ${pageScriptPath}.`);
         }

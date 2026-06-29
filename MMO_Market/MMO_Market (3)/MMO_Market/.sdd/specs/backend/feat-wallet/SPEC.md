@@ -42,7 +42,7 @@ Ví tài chính là cốt lõi của MMO Market. Người mua nạp tiền vào 
 | ID | EARS Requirement |
 |:---|:---|
 | FR-WALL-04 | WHEN a Seller requests a withdrawal of `amount`, THE SYSTEM SHALL verify that `available_balance >= amount`. |
-| FR-WALL-05 | IF withdrawal request is valid and OTP is correct, THEN THE SYSTEM SHALL subtract `amount` from `available_balance` and add to `hold_balance`. |
+| FR-WALL-05 | IF withdrawal request is valid, THEN THE SYSTEM SHALL subtract `amount` from `available_balance` and add to `hold_balance` (No OTP required). |
 | FR-WALL-06 | WHEN a Staff rejects a withdrawal, THE SYSTEM SHALL subtract the amount from `hold_balance` and return to `available_balance`. |
 
 ---
@@ -120,8 +120,7 @@ CREATE TABLE Withdrawals (
 *   **Request Body:**
     ```json
     {
-      "amountVnd": 500000,
-      "otp": "456123"
+      "amountVnd": 500000
     }
     ```
 *   **Response (200 OK):**
@@ -139,7 +138,6 @@ CREATE TABLE Withdrawals (
 | HTTP Code | Error Code | Message | Lý do kích hoạt |
 |---|---|---|---|
 | 422 | INSUFFICIENT_BALANCE | "Số dư khả dụng không đủ" | Số tiền rút lớn hơn số dư ví khả dụng |
-| 400 | INVALID_OTP | "Mã xác thực OTP sai hoặc đã hết hạn" | Điền sai mã xác thực email khi rút tiền |
 
 ---
 
@@ -147,4 +145,4 @@ CREATE TABLE Withdrawals (
 | ID | Scenario | Given (Bối cảnh) | When (Hành động) | Then (Kết quả) |
 |---|---|---|---|---|
 | AC-WALL-01 | Nạp tiền tự động thành công | User gửi tiền với cú pháp "NAPTIEN 12" | Webhook SePay gọi API với mã giao dịch mới | Ví khả dụng của User ID 12 được cộng tiền và ghi transaction |
-| AC-WALL-02 | Rút tiền bị đóng băng | Seller có sẵn 1,000,000đ | Điền OTP đúng và tạo lệnh rút 300,000đ | khả dụng giảm còn 700,000đ, hold_balance tăng 300,000đ |
+| AC-WALL-02 | Rút tiền bị đóng băng | Seller có sẵn 1,000,000đ | Tạo lệnh rút 300,000đ | khả dụng giảm còn 700,000đ, hold_balance tăng 300,000đ |

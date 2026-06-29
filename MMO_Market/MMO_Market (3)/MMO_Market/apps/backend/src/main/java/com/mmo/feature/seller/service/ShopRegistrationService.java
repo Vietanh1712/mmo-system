@@ -9,7 +9,6 @@ import com.mmo.shared.dto.ShopRegistrationReviewDto;
 import com.mmo.shared.dal.KycRequestRepository;
 import com.mmo.shared.dal.SellerRegistrationRepository;
 import com.mmo.shared.dal.UserRepository;
-import com.mmo.shared.model.KycRequest;
 import com.mmo.shared.model.KycStatus;
 import com.mmo.shared.model.SellerRegistration;
 import com.mmo.shared.model.User;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,8 +37,10 @@ public class ShopRegistrationService {
                 .orElseThrow(() -> new IllegalArgumentException("Người dùng không tồn tại."));
 
         // Validate KYC Approved
-        Optional<KycRequest> activeKyc = kycRequestRepository.findByActiveUserId(userId);
-        if (activeKyc.isEmpty() || activeKyc.get().getStatus() != KycStatus.APPROVED) {
+        boolean hasApprovedKyc = kycRequestRepository.findByUser_IdAndIsDeleteFalseOrderByCreatedAtDesc(userId)
+                .stream()
+                .anyMatch(kycRequest -> kycRequest.getStatus() == KycStatus.APPROVED);
+        if (!hasApprovedKyc) {
             throw new IllegalStateException("Bạn phải hoàn tất xác minh danh tính (KYC) trước khi đăng ký Shop.");
         }
 
