@@ -6,6 +6,7 @@ import com.mmo.shared.model.KycRequest;
 
 import com.mmo.shared.dto.ProfileResponse;
 import com.mmo.shared.dto.UpdateProfileRequest;
+import com.mmo.shared.dto.ShopRegistrationRequestDto;
 import com.mmo.shared.dal.UserRepository;
 import com.mmo.shared.model.User;
 import org.springframework.http.HttpStatus;
@@ -19,7 +20,6 @@ import java.util.regex.Pattern;
 import com.mmo.shared.dal.SellerRegistrationRepository;
 import com.mmo.shared.dal.SystemConfigurationRepository;
 import com.mmo.shared.model.SellerRegistration;
-import java.util.Map;
 import java.time.LocalDateTime;
 
 @Service
@@ -142,12 +142,16 @@ public class UserService {
     }
 
     @Transactional
-    public ProfileResponse registerShop(Long userId, Map<String, String> requestData) {
+    public ProfileResponse registerShop(Long userId, ShopRegistrationRequestDto requestData) {
         User user = findActiveUser(userId);
         
         // 1. Kiểm tra trạng thái shop hiện tại
         if ("Approved".equals(user.getShopStatus()) || "Active".equals(user.getShopStatus())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tài khoản của bạn đã là tài khoản người bán.");
+        }
+
+        if (!hasApprovedKyc(user.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bạn cần hoàn tất xác minh danh tính (KYC) trước khi đăng ký Shop.");
         }
         
         // 2. Lấy cấu hình phí nâng cấp Seller
@@ -163,8 +167,11 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Số dư tài khoản không đủ để thực hiện đăng ký shop (Phí nâng cấp: " + String.format("%,d", upgradeFee) + " VNĐ).");
         }
         
-        String shopName = requestData.get("shopName");
-        String description = requestData.get("description");
+        String shopName = requestData.getShopName();
+        String description = requestData.getDescription();
+        String category = requestData.getCategory();
+        String supportEmail = requestData.getSupportEmail();
+        String supportPhone = requestData.getSupportPhone();
         if (shopName == null || shopName.trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tên cửa hàng không được để trống.");
         }
@@ -178,6 +185,9 @@ public class UserService {
                 .user(user)
                 .shopName(shopName.trim())
                 .description(description != null ? description.trim() : "")
+                .category(category != null ? category.trim() : "")
+                .supportEmail(supportEmail != null ? supportEmail.trim() : "")
+                .supportPhone(supportPhone != null ? supportPhone.trim() : "")
                 .status("Pending")
                 .isDelete(false)
                 .build();
@@ -198,7 +208,10 @@ public class UserService {
         String kycStatus = null;
         java.util.List<com.mmo.shared.model.KycRequest> kycRequests = kycRequestRepository.findByUser_IdAndIsDeleteFalseOrderByCreatedAtDesc(user.getId());
         if (!kycRequests.isEmpty()) {
-            kycStatus = kycRequests.get(0).getStatus().name();
+            kycStatus = kycRequests.stream()
+                    .anyMatch(kycRequest -> kycRequest.getStatus() == KycStatus.APPROVED)
+                    ? KycStatus.APPROVED.name()
+                    : kycRequests.get(0).getStatus().name();
         }
 
         return ProfileResponse.builder()
@@ -216,5 +229,11 @@ public class UserService {
                 .kycStatus(kycStatus)
                 .dateOfBirth(user.getDateOfBirth() != null ? user.getDateOfBirth().toString() : null)
                 .build();
+    }
+
+    private boolean hasApprovedKyc(Long userId) {
+        return kycRequestRepository.findByUser_IdAndIsDeleteFalseOrderByCreatedAtDesc(userId)
+                .stream()
+                .anyMatch(kycRequest -> kycRequest.getStatus() == KycStatus.APPROVED);
     }
 }

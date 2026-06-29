@@ -77,9 +77,7 @@ public class WithdrawalService {
                     catch (NumberFormatException e) { return 50000000L; }
                 }).orElse(50000000L);
 
-        boolean requireWithdraw2FA = systemConfigurationRepository.findByConfigKey("REQUIRE_WITHDRAW_2FA")
-                .map(c -> "true".equalsIgnoreCase(c.getConfigValue()) || "1".equals(c.getConfigValue()))
-                .orElse(true);
+        boolean requireWithdraw2FA = false; // Tắt yêu cầu OTP xác thực khi rút tiền
 
         // Validate amounts
         if (amount < minWithdrawalLimit) {
