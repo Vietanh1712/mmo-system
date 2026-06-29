@@ -650,6 +650,41 @@
     max-width: 100%;
 }
 
+
+.seller-product-form {
+    max-width: 940px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.seller-product-form .form-section-title:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+}
+
+.seller-product-form__actions {
+    padding-top: 20px;
+    border-top: 1px solid var(--ds-border);
+}
+
+.seller-product-form__actions .profile-button {
+    min-height: 42px;
+}
+
+.seller-product-form .product-type-selector {
+    margin-bottom: 20px;
+}
+
+.seller-product-form #btnAddVariant {
+    min-height: 44px;
+    background: var(--ds-surface-muted);
+}
+
+.seller-product-form #btnAddVariant:hover {
+    background: #e2e8f0;
+}
+
 .seller-info-grid {
     display: grid;
     grid-template-columns: 180px 1fr;
