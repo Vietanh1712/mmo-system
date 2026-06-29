@@ -8,34 +8,36 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/MMO_Market.iml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-complaint/SPEC.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-complaint/SPEC.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-seller/SPEC.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-seller/SPEC.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-wallet/SPEC.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-wallet/SPEC.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-wallet/UC-09-withdrawal.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-wallet/UC-09-withdrawal.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/auth/controller/ProfileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/auth/controller/ProfileController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/auth/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/auth/service/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/controller/ComplaintController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/controller/ComplaintController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/service/impl/ComplaintServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/service/impl/ComplaintServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/seller/controller/SellerController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/seller/controller/SellerController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/seller/service/ShopRegistrationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/seller/service/ShopRegistrationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/wallet/service/WalletService.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/wallet/service/WalletService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/wallet/service/WithdrawalService.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/wallet/service/WithdrawalService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/feature/admin/service/AdminUserManagementServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/feature/admin/service/AdminUserManagementServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/feature/support/controller/SupportTicketControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/feature/support/controller/SupportTicketControllerTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/css/features/notifications.css" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/css/features/notifications.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-register-shop.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-register-shop.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-sidebar.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-sidebar.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-transactions.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-transactions.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/seller/seller-console.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/seller/seller-console.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/account/notifications.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/account/notifications.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/seller/complaints.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/seller/complaints.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/seller/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/seller/dashboard.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/seller/inventory.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/seller/inventory.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/seller/transactions.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/seller/transactions.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/kyc/controller/api/StaffKycController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/kyc/controller/api/StaffKycController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/kyc/service/KycService.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/kyc/service/KycService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/KycRequestRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/KycRequestRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/css/components/badges.css" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/css/components/badges.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/css/components/design-system.css" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/css/components/design-system.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/css/components/forms.css" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/css/components/forms.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/css/components/layout.css" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/css/components/layout.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/css/components/tables.css" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/css/components/tables.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/css/staff/staff.css" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/css/staff/staff.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-complaint-detail.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-complaint-detail.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-complaints.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-complaints.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-kyc.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-kyc.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-support-ticket-detail.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-support-ticket-detail.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-support-tickets.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-support-tickets.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/complaint-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/complaint-detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/complaints.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/complaints.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/flag-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/flag-detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/flags.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/flags.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/kyc-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/kyc-detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/kyc.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/kyc.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/support-ticket-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/support-ticket-detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/support-tickets.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/support-tickets.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/transaction-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/transaction-detail.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/transactions.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/transactions.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/withdrawal-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/withdrawal-detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/withdrawals.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/withdrawals.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/architecture/DESIGN.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/architecture/DESIGN.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

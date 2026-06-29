@@ -72,7 +72,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     @Override
     public long getRefusedComplaints() {
         return complaintRepository
-                .countByStatusAndIsDeleteFalse("refuse");
+                .countByStatusAndIsDeleteFalse("Rejected");
     }
 
     private ComplaintDTO toDTO(Complaint c) {

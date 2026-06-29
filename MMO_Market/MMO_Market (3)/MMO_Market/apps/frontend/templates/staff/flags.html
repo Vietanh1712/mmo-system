@@ -158,46 +158,42 @@
                                 </td>
                             </tr>
                             </tbody>
-
                         </table>
                     </div>
-                    <div class="pagination">
+                    <div class="ds-pagination">
+                        <div class="ds-pagination-pages">
+                            <!-- lùi -->
+                            <a th:if="${currentPage > 0}"
+                               th:href="@{/staff/flags(page=${currentPage - 1}, keyword=${keyword}, level=${selectedLevel}, status=${selectedStatus})}"
+                               class="ds-page-link">‹</a>
+                            <span th:unless="${currentPage > 0}" class="ds-page-link ds-page-link-disabled">‹</span>
 
-                        <!-- lùi -->
-                        <a
-                                th:if="${currentPage > 0}"
-                                th:href="@{/staff/flags(
-            page=${currentPage - 1},
-            keyword=${keyword},
-            level=${selectedLevel},
-            status=${selectedStatus}
-       )}">
-                            ‹
-                        </a>
+                            <!-- các trang số -->
+                            <th:block th:if="${totalPages > 0}">
+                                <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                                    <a th:if="${i != currentPage}"
+                                       th:href="@{/staff/flags(page=${i}, keyword=${keyword}, level=${selectedLevel}, status=${selectedStatus})}"
+                                       th:text="${i + 1}"
+                                       class="ds-page-link">1</a>
+                                    <span th:if="${i == currentPage}"
+                                          th:text="${i + 1}"
+                                          class="ds-page-link ds-page-link-active">1</span>
+                                </th:block>
+                            </th:block>
+                            <th:block th:unless="${totalPages > 0}">
+                                <span class="ds-page-link ds-page-link-active">1</span>
+                            </th:block>
 
-
-                        <span>
-        Trang
-        <span th:text="${currentPage + 1}"></span>
-        /
-        <span th:text="${totalPages}"></span>
-    </span>
-
-
-                        <!-- tiến -->
-                        <a
-                                th:if="${currentPage + 1 < totalPages}"
-                                th:href="@{/staff/flags(
-            page=${currentPage + 1},
-            keyword=${keyword},
-            level=${selectedLevel},
-            status=${selectedStatus}
-       )}">
-                            ›
-                        </a>
-
+                            <!-- tiến -->
+                            <a th:if="${currentPage + 1 < totalPages}"
+                               th:href="@{/staff/flags(page=${currentPage + 1}, keyword=${keyword}, level=${selectedLevel}, status=${selectedStatus})}"
+                               class="ds-page-link">›</a>
+                            <span th:unless="${currentPage + 1 < totalPages}" class="ds-page-link ds-page-link-disabled">›</span>
+                        </div>
+                        <div class="ds-pagination-meta">
+                            <span th:text="'Tổng số: ' + ${totalFlags} + ' bản ghi'"></span>
+                        </div>
                     </div>
-
                 </div>
             </section>
         </div>

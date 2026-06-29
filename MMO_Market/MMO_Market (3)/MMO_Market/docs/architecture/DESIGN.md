@@ -141,9 +141,12 @@ Thiết kế loại bỏ các hiệu ứng bóng đổ phức tạp hoặc màu 
 
 ### Semantic & Status
 
-*   **Success Emerald** ({colors.semantic-success}): Trạng thái đơn hàng hoàn thành, giao dịch nạp tiền thành công, hoặc tài khoản đã duyệt KYC.
-*   **Warning Amber** ({colors.semantic-warning}): Trạng thái quỹ đang tạm giữ trong Escrow, lệnh rút tiền đang chờ xử lý.
-*   **Error Rose** ({colors.semantic-error}): Trạng thái khiếu nại tranh chấp, từ chối KYC hoặc hủy giao dịch.
+*   **Success Emerald** ({colors.semantic-success} / `.ds-badge-success`): Trạng thái đơn hàng/giao dịch hoàn thành (`Completed` -> `Đã hoàn tất`), giao dịch nạp tiền thành công, hoặc tài khoản đã duyệt KYC.
+*   **Warning Amber** ({colors.semantic-warning} / `.ds-badge-warning`): Trạng thái quỹ đang tạm giữ trong Escrow (`Held` -> `Tạm giữ bảo lãnh`), lệnh rút tiền đang chờ xử lý.
+*   **Error Rose** ({colors.semantic-error} / `.ds-badge-danger`): Trạng thái hoàn tiền (`Refunded` -> `Đã hoàn tiền`), từ chối KYC.
+*   **Info Blue** (`.ds-badge-info`): Giao dịch đang chờ xử lý (`Pending` -> `Chờ xử lý`).
+*   **Muted Gray** (`.ds-badge-muted`): Giao dịch đã hủy bỏ (`Cancelled` -> `Đã hủy`).
+*   **Escalated Purple** (`.ds-badge-purple`): Giao dịch đang tranh chấp khiếu nại (`Disputed` -> `Đang khiếu nại`).
 
 ---
 
@@ -193,3 +196,25 @@ Roboto là font chữ chính thức được áp dụng cho toàn bộ ứng d�
 - Giao diện tự động co giãn từ 1280px ở máy tính xuống 1 cột duy nhất dưới 768px (Mobile).
 - Thanh menu chính thu gọn thành menu hamburger trên điện thoại.
 - Các bảng lịch sử đơn hàng tự động cuộn ngang (overflow-x: auto) để tránh tràn layout.
+
+---
+
+## Staff Operations UI Specifications
+
+Phân hệ dành cho nhân viên quản trị (Staff) tuân thủ tính đồng bộ của ngôn ngữ thiết kế **Nexus Market** qua các quy chuẩn thành phần dưới đây:
+
+### 1. Quản lý Yêu cầu Hỗ trợ (Support Tickets)
+*   **Quy tắc Dòng thời gian (Timeline)**: Chấm lịch sử khởi tạo dùng màu Dark Slate (`#0f172a`) của thương hiệu làm mốc khởi đầu. Các chấm trung gian như trạng thái chờ xử lý dùng màu Amber (`#f59e0b`), trạng thái thành công/đã giải quyết dùng màu Emerald (`#10b981`), và trạng thái bị hủy/đóng dùng màu Steel Gray (`#64748b`).
+*   **Khoảng cách hiển thị**: Tất cả thông tin chi tiết ticket, nội dung phản hồi và dòng thời gian lịch sử phải được bọc trong container có padding `20px 24px` để chữ không bị lùi sát mép thẻ card.
+
+### 2. Cờ cảnh báo Cửa hàng (Flag Warnings)
+*   **Mức độ cảnh báo (Flag Levels)**: Phân cấp rõ nét thông qua màu sắc của nhãn trạng thái (Warning: màu vàng, Danger/Critical: màu đỏ semantic-error).
+*   **Thao tác nhanh**: Các tác vụ liên đới (ví dụ: Xem khiếu nại liên quan, Quay lại danh sách) được dàn hàng ngang (Flex Row, gap 8px), thu gọn văn bản nút và tích hợp icon FontAwesome tương ứng.
+
+### 3. Phê duyệt Rút tiền (Withdrawals)
+*   **Bố cục thông tin tài chính**: Trình bày rõ ràng số tiền đề xuất rút bên cạnh việc tra soát số dư khả dụng thực tế của Seller.
+*   **Cơ chế bám dính (Sticky Layout)**: Cột bên phải chứa khối Tóm tắt và Quyết định phê duyệt sử dụng lớp `.staff-sticky-column` với khoảng cách lệch đỉnh `top: 110px` để luôn hiển thị cố định ngay dưới thanh Header khi cuộn trang, tránh tình trạng các khối card bị trôi hoặc đè chồng lên nhau.
+
+### 4. Thành phần Phân trang (Pagination Footer)
+*   **Vị trí**: Thanh phân trang sử dụng lớp `.ds-pagination` được đặt bên trong thẻ `.ds-card` và ngay dưới `.ds-table-wrap` để đóng vai trò làm card footer có đường kẻ ngăn cách `border-top`.
+*   **Giao diện số**: Phân trang bằng các ô vuông số (`‹`, `1`, `2`, `3`, `›`) thay vì chữ mô tả thô. Trang hiện tại sử dụng lớp `.ds-page-link-active` (nền xanh nhạt `#dbeafe`, chữ xanh đậm `#1d4ed8`), đi kèm thống kê tổng số lượng bản ghi ở góc phải.

@@ -200,4 +200,26 @@ public class ComplaintController {
                     .body(Map.of("message", "Lỗi cập nhật khiếu nại: " + e.getMessage()));
         }
     }
+
+    @GetMapping("/stats")
+    public ResponseEntity<?> getComplaintStats(@AuthenticationPrincipal Long userId) {
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập."));
+        }
+        if (!isStaffOrAdmin(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền truy cập thông tin này."));
+        }
+
+        try {
+            Map<String, Long> stats = new HashMap<>();
+            stats.put("total", complaintService.getTotalComplaints());
+            stats.put("inProgress", complaintService.getInProgressComplaints());
+            stats.put("resolved", complaintService.getResolvedComplaints());
+            stats.put("rejected", complaintService.getRefusedComplaints());
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Lỗi lấy thống kê khiếu nại: " + e.getMessage()));
+        }
+    }
 }

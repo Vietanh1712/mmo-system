@@ -21,4 +21,5 @@ public interface KycRequestRepository extends JpaRepository<KycRequest, Long> {
     boolean existsByRequestCode(String requestCode);
     boolean existsByActiveUserId(Long activeUserId);
     long countByStatusAndIsDeleteFalse(KycStatus status);
+    long countByIsDeleteFalse();
 }

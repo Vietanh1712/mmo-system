@@ -89,4 +89,10 @@ public class StaffKycController {
             });
         }
     }
+
+    @GetMapping("/stats")
+    @PreAuthorize("hasAnyAuthority('ROLE_STAFF', 'ROLE_ADMIN')")
+    public ResponseEntity<java.util.Map<String, Long>> getKycStatistics() {
+        return ResponseEntity.ok(kycService.getKycStatistics());
+    }
 }

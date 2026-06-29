@@ -223,4 +223,14 @@ public class KycService {
         KycRequest updated = kycRequestRepository.save(request);
         return mapToDto(updated);
     }
+
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Long> getKycStatistics() {
+        java.util.Map<String, Long> stats = new java.util.HashMap<>();
+        stats.put("total", kycRequestRepository.countByIsDeleteFalse());
+        stats.put("pending", kycRequestRepository.countByStatusAndIsDeleteFalse(KycStatus.PENDING));
+        stats.put("approved", kycRequestRepository.countByStatusAndIsDeleteFalse(KycStatus.APPROVED));
+        stats.put("rejected", kycRequestRepository.countByStatusAndIsDeleteFalse(KycStatus.REJECTED));
+        return stats;
+    }
 }

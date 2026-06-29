@@ -65,16 +65,13 @@
                             </select>
 
                             <select class="ds-input" name="status">
-
                                 <option value="">Tất cả trạng thái</option>
-
-                                <option
-                                        th:each="item : ${statuses}"
-                                        th:value="${item}"
-                                        th:text="${item}"
-                                        th:selected="${item == selectedStatus}">
-                                </option>
-
+                                <option value="Pending" th:selected="${selectedStatus == 'Pending'}">Chờ xử lý</option>
+                                <option value="Held" th:selected="${selectedStatus == 'Held'}">Tạm giữ bảo lãnh</option>
+                                <option value="Completed" th:selected="${selectedStatus == 'Completed'}">Đã hoàn tất</option>
+                                <option value="Refunded" th:selected="${selectedStatus == 'Refunded'}">Đã hoàn tiền</option>
+                                <option value="Cancelled" th:selected="${selectedStatus == 'Cancelled'}">Đã hủy</option>
+                                <option value="Disputed" th:selected="${selectedStatus == 'Disputed'}">Đang khiếu nại</option>
                             </select>
 
                         </div>
@@ -149,11 +146,15 @@
                                 <td class="ds-money"
                                     th:text="${#numbers.formatInteger(t.amountVnd,0,'COMMA')} + ' đ'">
                                 </td>
-                                <td class="ds-table-center">
-                                   <span class="ds-badge"
-                                       th:text="${t.status}">
-                                   </span>
-                                </td>
+                                 <td class="ds-table-center">
+                                    <span th:if="${t.status == 'Pending'}" class="ds-badge ds-badge-info">Chờ xử lý</span>
+                                    <span th:if="${t.status == 'Held'}" class="ds-badge ds-badge-warning">Tạm giữ bảo lãnh</span>
+                                    <span th:if="${t.status == 'Completed'}" class="ds-badge ds-badge-success">Đã hoàn tất</span>
+                                    <span th:if="${t.status == 'Refunded'}" class="ds-badge ds-badge-danger">Đã hoàn tiền</span>
+                                    <span th:if="${t.status == 'Cancelled'}" class="ds-badge ds-badge-muted">Đã hủy</span>
+                                    <span th:if="${t.status == 'Disputed'}" class="ds-badge ds-badge-purple">Đang khiếu nại</span>
+                                    <span th:if="${t.status != 'Pending' && t.status != 'Held' && t.status != 'Completed' && t.status != 'Refunded' && t.status != 'Cancelled' && t.status != 'Disputed'}" class="ds-badge ds-badge-muted" th:text="${t.status}"></span>
+                                 </td>
                                 <td
                                         th:text="${#temporals.format(t.createdAt,'dd/MM/yyyy HH:mm')}">
                                 </td>
@@ -175,47 +176,39 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="pagination">
+                    <div class="ds-pagination">
+                        <div class="ds-pagination-pages">
+                            <!-- Previous -->
+                            <a th:if="${currentPage > 0}"
+                               th:href="@{/staff/transactions(page=${currentPage - 1}, keyword=${keyword}, type=${selectedType}, status=${selectedStatus}, fromDate=${fromDate}, toDate=${toDate})}"
+                               class="ds-page-link">‹</a>
+                            <span th:unless="${currentPage > 0}" class="ds-page-link ds-page-link-disabled">‹</span>
 
-                        <!-- Previous -->
-                        <a
-                                th:if="${currentPage > 0}"
-                                th:href="@{/staff/transactions(
-            page=${currentPage - 1},
-            keyword=${keyword},
-            type=${selectedType},
-            status=${selectedStatus},
-            fromDate=${fromDate},
-            toDate=${toDate}
-       )}">
-                            ‹
-                        </a>
+                            <!-- các trang số -->
+                            <th:block th:if="${totalPages > 0}">
+                                <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                                    <a th:if="${i != currentPage}"
+                                       th:href="@{/staff/transactions(page=${i}, keyword=${keyword}, type=${selectedType}, status=${selectedStatus}, fromDate=${fromDate}, toDate=${toDate})}"
+                                       th:text="${i + 1}"
+                                       class="ds-page-link">1</a>
+                                    <span th:if="${i == currentPage}"
+                                          th:text="${i + 1}"
+                                          class="ds-page-link ds-page-link-active">1</span>
+                                </th:block>
+                            </th:block>
+                            <th:block th:unless="${totalPages > 0}">
+                                <span class="ds-page-link ds-page-link-active">1</span>
+                            </th:block>
 
-                        <span>
-        Trang
-        <span th:text="${currentPage + 1}">
-            1
-        </span>
-        /
-        <span th:text="${totalPages}">
-            1
-        </span>
-    </span>
-
-                        <!-- Next -->
-                        <a
-                                th:if="${currentPage + 1 < totalPages}"
-                                th:href="@{/staff/transactions(
-            page=${currentPage + 1},
-            keyword=${keyword},
-            type=${selectedType},
-            status=${selectedStatus},
-            fromDate=${fromDate},
-            toDate=${toDate}
-       )}">
-                            ›
-                        </a>
-
+                            <!-- Next -->
+                            <a th:if="${currentPage + 1 < totalPages}"
+                               th:href="@{/staff/transactions(page=${currentPage + 1}, keyword=${keyword}, type=${selectedType}, status=${selectedStatus}, fromDate=${fromDate}, toDate=${toDate})}"
+                               class="ds-page-link">›</a>
+                            <span th:unless="${currentPage + 1 < totalPages}" class="ds-page-link ds-page-link-disabled">›</span>
+                        </div>
+                        <div class="ds-pagination-meta">
+                            <span th:text="'Tổng số: ' + ${totalTransactions} + ' bản ghi'"></span>
+                        </div>
                     </div>
                 </div>
             </section>

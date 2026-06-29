@@ -87,7 +87,7 @@ function renderTimeline() {
     const formattedDate = currentTicket.createdAt ? currentTicket.createdAt.substring(0, 16).replace('T', ' ') : 'N/A';
     let html = `
         <div class="staff-timeline__item">
-            <span class="staff-timeline__dot" style="background-color: #0058be;"></span>
+            <span class="staff-timeline__dot" style="background-color: #0f172a;"></span>
             <div class="staff-timeline__content">
                 <strong>Khởi tạo yêu cầu hỗ trợ</strong>
                 <p class="ds-caption">Người dùng gửi — ${escapeHtml(formattedDate)}</p>

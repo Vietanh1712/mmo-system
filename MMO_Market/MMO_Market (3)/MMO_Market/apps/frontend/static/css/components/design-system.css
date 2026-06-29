@@ -70,7 +70,7 @@
 .ds-card-header {
     border-bottom: 1px solid #dbeafe;
     background: #eff6ff99;
-    padding: 20px;
+    padding: 24px 32px;
 }
 
 .ds-card-title {

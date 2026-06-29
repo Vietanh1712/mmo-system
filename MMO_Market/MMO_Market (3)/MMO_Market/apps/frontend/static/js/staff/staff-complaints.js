@@ -62,44 +62,7 @@ function loadMockComplaints() {
 function initComplaints() {
     const key = 'mmoMarketComplaintsMockGlobal';
     if (!sessionStorage.getItem(key)) {
-        const initialList = [
-            {
-                id: 'CMP-3310',
-                senderName: 'Nguyễn An',
-                senderEmail: 'buyer@mmo.com',
-                target: 'Shop GameHub Pro / Sản phẩm Gmail Premium',
-                category: 'Sản phẩm',
-                amount: 350000,
-                status: 'InProgress',
-                createdAt: '05/06/2026 08:12',
-                evidence: 'https://imgur.com/error_gmail.jpg',
-                detail: 'Tôi mua tài khoản Gmail Premium nhưng nhận được tài khoản đã bị khóa sau 2 giờ sử dụng. Đã liên hệ shop nhưng không được phản hồi. Yêu cầu hoàn tiền hoặc cấp tài khoản thay thế.'
-            },
-            {
-                id: 'CMP-3308',
-                senderName: 'Trần Hùng',
-                senderEmail: 'hung.tran@mmo.com',
-                target: 'Đơn #ORD-9921',
-                category: 'Giao dịch',
-                amount: 240000,
-                status: 'New',
-                createdAt: '04/06/2026 14:30',
-                evidence: 'Không có',
-                detail: 'Giao dịch lỗi, tài khoản không tự động kích hoạt.'
-            },
-            {
-                id: 'CMP-3295',
-                senderName: 'Lê Mai',
-                senderEmail: 'mai.le@mmo.com',
-                target: 'Shop Digital Keys',
-                category: 'Shop',
-                amount: 150000,
-                status: 'Resolved',
-                createdAt: '03/06/2026 10:15',
-                evidence: 'https://imgur.com/evidence_chat.jpg',
-                detail: 'Người bán không phản hồi chat.'
-            }
-        ];
+        const initialList = [];
         sessionStorage.setItem(key, JSON.stringify(initialList));
     }
 }
@@ -221,7 +184,36 @@ function escapeHtml(value) {
         .replaceAll("'", '&#039;');
 }
 
+async function loadComplaintStats() {
+    const token = sessionStorage.getItem('accessToken');
+    if (!token) return;
+
+    try {
+        const res = await fetch('/api/complaints/stats', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        if (res.ok) {
+            const stats = await res.json();
+            const totalEl = document.getElementById('stat-total-complaints');
+            const inprogressEl = document.getElementById('stat-inprogress-complaints');
+            const resolvedEl = document.getElementById('stat-resolved-complaints');
+            const rejectedEl = document.getElementById('stat-rejected-complaints');
+
+            if (totalEl) totalEl.textContent = stats.total || 0;
+            if (inprogressEl) inprogressEl.textContent = stats.inProgress || 0;
+            if (resolvedEl) resolvedEl.textContent = stats.resolved || 0;
+            if (rejectedEl) rejectedEl.textContent = stats.rejected || 0;
+        }
+    } catch (err) {
+        console.error("Lỗi tải thống kê khiếu nại:", err);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     await loadStaffComplaintsFromApi();
+    await loadComplaintStats();
     renderStaffComplaints();
 });

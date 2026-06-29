@@ -32,78 +32,92 @@
                             <div class="ds-card-header">
                                 <h2 class="ds-card-title">Thông tin yêu cầu</h2>
                             </div>
-                            <dl class="staff-info-list">
-                                <div class="staff-info-row">
-                                    <dt>Mã Ticket</dt>
-                                    <dd id="detail-id">#ST-0</dd>
-                                </div>
-                                <div class="staff-info-row">
-                                    <dt>Người gửi</dt>
-                                    <dd id="detail-sender">N/A</dd>
-                                </div>
-                                <div class="staff-info-row">
-                                    <dt>Danh mục</dt>
-                                    <dd id="detail-category">N/A</dd>
-                                </div>
-                                <div class="staff-info-row">
-                                    <dt>Tiêu đề</dt>
-                                    <dd id="detail-title" style="font-weight: 600;"></dd>
-                                </div>
-                                <div class="staff-info-row">
-                                    <dt>Ngày tạo</dt>
-                                    <dd id="detail-date">N/A</dd>
-                                </div>
-                            </dl>
+                            <div style="padding: 20px 24px;">
+                                <dl class="staff-info-list">
+                                    <div class="staff-info-row">
+                                        <dt>Mã Ticket</dt>
+                                        <dd id="detail-id">#ST-0</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Người gửi</dt>
+                                        <dd id="detail-sender">N/A</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Danh mục</dt>
+                                        <dd id="detail-category">N/A</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Tiêu đề</dt>
+                                        <dd id="detail-title" style="font-weight: 600;"></dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Ngày tạo</dt>
+                                        <dd id="detail-date">N/A</dd>
+                                    </div>
+                                </dl>
+                            </div>
                         </div>
 
                         <div class="ds-card">
                             <div class="ds-card-header">
                                 <h2 class="ds-card-title">Nội dung chi tiết</h2>
                             </div>
-                            <p class="ds-body" id="detail-description" style="white-space: pre-wrap; line-height: 1.6; color: #334155;"></p>
+                            <div style="padding: 20px 24px;">
+                                <p class="ds-body" id="detail-description" style="white-space: pre-wrap; line-height: 1.6; color: #334155;"></p>
+                            </div>
                         </div>
 
                         <div class="ds-card">
                             <div class="ds-card-header">
                                 <h2 class="ds-card-title">Lịch sử xử lý</h2>
                             </div>
-                            <div class="staff-timeline" id="detail-timeline">
-                                <div class="staff-timeline__item">
-                                    <span class="staff-timeline__dot"></span>
-                                    <div class="staff-timeline__content">
-                                        <strong>Khởi tạo yêu cầu</strong>
-                                        <p class="ds-caption" id="detail-timeline-time">N/A</p>
+                            <div style="padding: 20px 24px;">
+                                <div class="staff-timeline" id="detail-timeline">
+                                    <div class="staff-timeline__item">
+                                        <span class="staff-timeline__dot"></span>
+                                        <div class="staff-timeline__content">
+                                            <strong>Khởi tạo yêu cầu</strong>
+                                            <p class="ds-caption" id="detail-timeline-time">N/A</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="ds-card staff-action-card">
+                    <div class="ds-card staff-action-card staff-sticky-column">
                         <div class="ds-card-header">
                             <h2 class="ds-card-title">Phản hồi &amp; Cập nhật</h2>
                         </div>
-                        <div class="ds-alert ds-alert-info">Phản hồi của bạn sẽ hiển thị trực tiếp cho người dùng tại trang Hỗ Trợ.</div>
-                        
-                        <div class="ds-form-field">
-                            <label class="ds-label" for="ticketStatus">Trạng thái xử lý</label>
-                            <select class="ds-input" id="ticketStatus">
-                                <option value="Open">Mới (Open)</option>
-                                <option value="Processing">Đang xử lý</option>
-                                <option value="Replied">Đã phản hồi (Replied)</option>
-                                <option value="Resolved">Đã giải quyết</option>
-                                <option value="Closed">Đã đóng</option>
-                            </select>
-                        </div>
-                        
-                        <div class="ds-form-field">
-                            <label class="ds-label" for="ticketResolution">Nội dung phản hồi trực tiếp</label>
-                            <textarea class="ds-textarea" id="ticketResolution" rows="6" placeholder="Nhập câu trả lời, hướng dẫn xử lý hoặc ghi chú cho người dùng..."></textarea>
-                        </div>
-                        
-                        <div class="ds-cluster">
-                            <button class="ds-btn ds-btn-primary" type="button" onclick="submitStaffAction()">Cập nhật &amp; Gửi phản hồi</button>
-                            <a class="ds-btn ds-btn-outline" href="/staff/support-tickets">Quay lại danh sách</a>
+                        <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px;">
+                            <div class="ds-alert ds-alert-info">Phản hồi của bạn sẽ hiển thị trực tiếp cho người dùng tại trang Hỗ Trợ.</div>
+                            
+                            <div class="ds-form-field">
+                                <label class="ds-label" for="ticketStatus">Trạng thái xử lý</label>
+                                <select class="ds-select" id="ticketStatus" style="background-color: #f8fafc; font-weight: 600;">
+                                    <option value="Open">Mới (Open)</option>
+                                    <option value="Processing">Đang xử lý</option>
+                                    <option value="Replied">Đã phản hồi (Replied)</option>
+                                    <option value="Resolved">Đã giải quyết</option>
+                                    <option value="Closed">Đã đóng</option>
+                                </select>
+                            </div>
+                            
+                            <div class="ds-form-field">
+                                <label class="ds-label" for="ticketResolution">Nội dung phản hồi trực tiếp</label>
+                                <textarea class="ds-textarea" id="ticketResolution" rows="6" placeholder="Nhập câu trả lời, hướng dẫn xử lý hoặc ghi chú cho người dùng..."></textarea>
+                            </div>
+                            
+                            <div class="ds-cluster" style="gap: 8px;">
+                                <button class="ds-btn ds-btn-primary" type="button" onclick="submitStaffAction()" style="flex: 1;">
+                                    <i class="fa fa-paper-plane"></i> Cập nhật &amp; Phản hồi
+                                </button>
+                            </div>
+                            <div style="border-top: 1px solid var(--ds-border); padding-top: 16px; margin-top: 4px;">
+                                <a class="ds-btn ds-btn-outline" href="/staff/support-tickets" style="width: 100%;">
+                                    <i class="fa fa-arrow-left"></i> Quay lại danh sách
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>

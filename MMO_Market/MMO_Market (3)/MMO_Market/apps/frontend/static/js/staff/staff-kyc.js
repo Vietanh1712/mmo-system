@@ -1,8 +1,32 @@
 document.addEventListener('DOMContentLoaded', () => {
     loadKycList();
+    loadKycStats();
     const searchBtn = document.getElementById('kycSearchBtn');
-    if (searchBtn) searchBtn.addEventListener('click', () => loadKycList());
+    if (searchBtn) searchBtn.addEventListener('click', () => {
+        loadKycList();
+        loadKycStats();
+    });
 });
+
+async function loadKycStats() {
+    try {
+        const response = await authFetch('/api/v1/staff/kyc/stats');
+        if (response.ok) {
+            const stats = await response.json();
+            const totalEl = document.getElementById('stat-total-kyc');
+            const pendingEl = document.getElementById('stat-pending-kyc');
+            const approvedEl = document.getElementById('stat-approved-kyc');
+            const rejectedEl = document.getElementById('stat-rejected-kyc');
+            
+            if (totalEl) totalEl.textContent = stats.total || 0;
+            if (pendingEl) pendingEl.textContent = stats.pending || 0;
+            if (approvedEl) approvedEl.textContent = stats.approved || 0;
+            if (rejectedEl) rejectedEl.textContent = stats.rejected || 0;
+        }
+    } catch (e) {
+        console.error("Lỗi tải thống kê KYC", e);
+    }
+}
 
 async function loadKycList(page = 0) {
     const statusSelect = document.getElementById('kycStatusFilter');

@@ -1,4 +1,6 @@
 let ticketsList = [];
+let currentPage = 0;
+const pageSize = 10;
 
 async function loadTickets() {
     try {
@@ -8,6 +10,7 @@ async function loadTickets() {
         }
         ticketsList = await res.json();
         updateStats();
+        currentPage = 0;
         renderTickets();
     } catch (e) {
         console.error(e);
@@ -55,10 +58,18 @@ function renderTickets() {
                 </td>
             </tr>
         `;
+        renderPagination(0, 0);
         return;
     }
 
-    tbody.innerHTML = filtered.map(item => {
+    const totalPages = Math.ceil(filtered.length / pageSize);
+    if (currentPage >= totalPages) {
+        currentPage = 0;
+    }
+
+    const pageItems = filtered.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
+
+    tbody.innerHTML = pageItems.map(item => {
         let badgeClass = 'ds-badge-warning';
         let statusText = 'Đang xử lý';
         if (item.status === 'Open') {
@@ -114,6 +125,71 @@ function renderTickets() {
             </tr>
         `;
     }).join('');
+
+    renderPagination(filtered.length, totalPages);
+}
+
+function renderPagination(totalElements, totalPages) {
+    const paginationPages = document.getElementById('ticketPaginationPages');
+    const paginationMeta = document.getElementById('ticketPaginationMeta');
+    
+    if (paginationMeta) {
+        paginationMeta.innerHTML = `<span>Tổng số: ${totalElements} bản ghi</span>`;
+    }
+    
+    if (paginationPages) {
+        paginationPages.innerHTML = '';
+        
+        // nút lùi
+        const prevSpan = document.createElement('span');
+        prevSpan.textContent = '‹';
+        if (currentPage > 0) {
+            prevSpan.className = 'ds-page-link';
+            prevSpan.style.cursor = 'pointer';
+            prevSpan.onclick = () => {
+                currentPage--;
+                renderTickets();
+            };
+        } else {
+            prevSpan.className = 'ds-page-link ds-page-link-disabled';
+        }
+        paginationPages.appendChild(prevSpan);
+
+        // các trang số
+        if (totalPages === 0) {
+            const pageSpan = document.createElement('span');
+            pageSpan.className = 'ds-page-link ds-page-link-active';
+            pageSpan.textContent = 1;
+            paginationPages.appendChild(pageSpan);
+        } else {
+            for (let i = 0; i < totalPages; i++) {
+                const span = document.createElement('span');
+                span.className = `ds-page-link ${i === currentPage ? 'ds-page-link-active' : ''}`;
+                span.style.cursor = 'pointer';
+                span.textContent = i + 1;
+                span.onclick = () => {
+                    currentPage = i;
+                    renderTickets();
+                };
+                paginationPages.appendChild(span);
+            }
+        }
+
+        // nút tiến
+        const nextSpan = document.createElement('span');
+        nextSpan.textContent = '›';
+        if (currentPage + 1 < totalPages) {
+            nextSpan.className = 'ds-page-link';
+            nextSpan.style.cursor = 'pointer';
+            nextSpan.onclick = () => {
+                currentPage++;
+                renderTickets();
+            };
+        } else {
+            nextSpan.className = 'ds-page-link ds-page-link-disabled';
+        }
+        paginationPages.appendChild(nextSpan);
+    }
 }
 
 function viewTicketDetail(id) {
@@ -122,6 +198,7 @@ function viewTicketDetail(id) {
 }
 
 function applyStaffFilters() {
+    currentPage = 0;
     renderTickets();
 }
 
@@ -129,6 +206,7 @@ function resetStaffFilters() {
     document.getElementById('staff-search-input').value = '';
     document.getElementById('staff-status-select').value = '';
     document.getElementById('staff-category-select').value = '';
+    currentPage = 0;
     renderTickets();
 }
 
