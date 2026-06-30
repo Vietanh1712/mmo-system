@@ -1,147 +1,128 @@
-# SPEC — Customer Wallet & Deposit (`/wallet`)
-> **Feature ID:** `feat-customer` | **Page:** `Wallet`
+# SPEC — Ví Cá Nhân & Nạp Tiền (Customer Wallet & Deposit)
+
+> **Feature ID:** `feat-wallet` | **Page:** `Wallet`
 > **Route:** `/wallet` | **Template:** `templates/account/wallet.html`
-> **JS Script:** `static/js/account-wallet.js` | **Prefix:** `cwlt-`
-> **Guard:** Private (sessionToken check)
+> **CSS Script:** `static/css/customer/style.css`
+> **JS Script:** `static/js/account-wallet.js`
+> **Version:** 1.0 | **Status:** Draft
+> **Backend ref:** `feat-wallet/UC-07-wallet-topup.md`
 
 ---
 
-## 1. MÔ TẢ TRANG
-Trang ví điện tử cá nhân cho phép khách hàng theo dõi số dư tài khoản của họ, được phân loại rõ ràng thành:
-- **Số dư khả dụng (`available_balance`)**: Số tiền thực tế người dùng có thể sử dụng để mua hàng hoặc rút ra.
-- **Số dư đóng băng (`hold_balance`)**: Số tiền tạm giữ do đơn hàng đang khiếu nại chưa được giải quyết hoặc do lệnh rút đang chờ Staff duyệt.
-- Tích hợp cổng nạp tiền tự động: sinh mã VietQR và kiểm tra giao dịch nạp thông qua cổng thanh toán SePay.
+## 1. TỔNG QUAN TRANG
+
+Trang Ví cá nhân cho phép người mua theo dõi biến động số dư và thực hiện nạp tiền tự động qua VietQR liên kết với SePay Webhook.
+
+Số dư ví được chia làm hai cột rõ rệt:
+* **Số dư khả dụng (`available_balance`):** Sử dụng để mua sắm sản phẩm hoặc tạo yêu cầu rút tiền mặt.
+* **Số dư tạm giữ (`hold_balance`):** Số dư đóng băng phục vụ quy trình ký quỹ Escrow 72h đơn hàng hoặc lệnh rút đang chờ duyệt.
+
+**Cấu trúc trang:**
+1. **Sidebar điều hướng:** Menu quản lý tài khoản bên trái.
+2. **Khối hiển thị số dư (Balance Cards):** Hai thẻ hiển thị hai số dư dạng số nguyên VNĐ.
+3. **Bảng lịch sử giao dịch ví:** Danh sách các biến động số dư (Nạp tiền, Rút tiền, Mua hàng, Hoàn tiền).
+4. **Modal Nạp tiền tự động:** Hộp thoại sinh mã QR VietQR động và lắng nghe trạng thái thanh toán chuyển khoản thời gian thực.
 
 ---
 
-## 2. MOCKUP GIAO DIỆN (ASCII WIREFRAME)
-```
-┌──────────────────────────────────────────────────────────────────┐
-│  MMO Market Header (Logo | Ví: 1.200.000đ | [Avatar] Menu)       │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  Ví Của Tôi / Quản Lý Số Dư                                      │
-│  ──────────────────────────────────────────────────────────────  │
-│                                                                  │
-│  ┌─────────────────────────────┐ ┌────────────────────────────┐  │
-│  │ Số dư khả dụng (VNĐ)        │ │ Số dư tạm giữ (VNĐ)        │  │
-│  │ 1.200.000đ                  │ │ 300.000đ                   │  │
-│  │                             │ │                            │  │
-│  │  [ ➕ Nạp Tiền ]             │ │ (Do đang có tranh chấp)    │  │
-│  └─────────────────────────────┘ └────────────────────────────┘  │
-│                                                                  │
-│  Lịch sử giao dịch ví                                            │
-│  ┌────────────────────────────────────────────────────────────┐  │
-│  │ ID     │ Loại GD   │ Số tiền    │ Trạng thái   │ Ngày tạo   │  │
-│  ├────────┼───────────┼────────────┼──────────────┼────────────┤  │
-│  │ #WT102 │ Nạp tiền  │ +500.000đ  │ Thành công   │ 27/06/2026 │  │
-│  │ #WT101 │ Mua hàng  │ -300.000đ  │ Escrow       │ 26/06/2026 │  │
-│  └────────────────────────────────────────────────────────────┘  │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘
-```
+## 2. DESIGN TOKENS ÁP DỤNG
 
-### Mockup Modal Nạp Tiền:
-```
-┌────────────────────────────────────────────────────┐
-│  NẠP TIỀN TỰ ĐỘNG QUA NGÂN HÀNG                     │
-├────────────────────────────────────────────────────┤
-│  Nhập số tiền cần nạp (Tối thiểu 10.000đ):         │
-│  [ 500000                       ] VNĐ              │
-│                                                    │
-│               [ Tiếp Tục Nạp ]                     │
-├────────────────────────────────────────────────────┤
-│  Mã QR thanh toán (Tải lại sau 15 phút):           │
-│                                                    │
-│              ┌──────────────────┐                  │
-│              │     [ QR CODE ]  │                  │
-│              │   (Quét để nạp)  │                  │
-│              └──────────────────┘                  │
-│  Nội dung chuyển khoản (bắt buộc):                 │
-│  [ NAPTIEN 12                       ] [Copy]       │
-│                                                    │
-│  [Chờ thanh toán...] 🔄                            │
-└────────────────────────────────────────────────────┘
+```css
+/* Color Palette */
+--ds-primary:         #2563eb;
+--ds-primary-hover:   #1d4ed8;
+--ds-bg:              #f8fafc;
+--ds-card:            #ffffff;
+--ds-border:          #cbd5e1;
+--ds-error:           #ef4444;
+--ds-success:         #10b981;
+--ds-gradient-wallet: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
+
+/* Layout & Shadow */
+--ds-radius-md:       8px;
+--ds-radius-lg:       12px;
+--ds-radius-xl:       16px;
+--ds-shadow:          0 4px 6px -1px rgba(0,0,0,0.1);
 ```
 
 ---
 
-## 3. CẤU TRÚC FILE HOẠT ĐỘNG
-- View: `templates/account/wallet.html` (Thymeleaf template)
-- Script: `static/js/account-wallet.js` (Vanilla JS)
-- API endpoint phụ thuộc:
-  * `GET /api/v1/wallet/balance` (Lấy số dư thực tế)
-  * `POST /api/v1/wallet/topup/init` (Khởi tạo yêu cầu nạp tiền)
+## 3. LAYOUT TỔNG THỂ & MOCKUP
 
----
-
-## 4. KHAI BÁO BIẾN TRẠNG THÁI (STATE VARIABLES)
-```javascript
-let availableBalance = 0;
-let holdBalance = 0;
-let topupAmount = 10000;
-let activeTransactionCode = '';
-let checkInterval = null;
+```
+┌────────────────────────────────────────────────────────┐
+│ [Logo] MMO Market                              [User]  │
+├────────────────────────────────────────────────────────┤
+│  ┌───────────┐  ┌────────────────────────────────────┐ │
+│  │  Sidebar  │  │  VÍ CỦA TÔI / QUẢN LÝ SỐ DƯ        │ │
+│  │  - Hồ sơ  │  │  ┌──────────────┐ ┌──────────────┐  │ │
+│  │  - Ví tiền│  │  │ Số dư khả    │ │ Số dư tạm giữ│  │ │
+│  │  - KYC    │  │  │ 1.200.000đ   │ │ 300.000đ     │  │ │
+│  │  - Orders │  │  │ [➕ Nạp Tiền]│ │ (Đang giữ)   │  │ │
+│  └───────────┘  │  └──────────────┘ └──────────────┘  │ │
+│                 │  LỊCH SỬ GIAO DỊCH VÍ              │ │
+│                 │  ┌──────────────────────────────┐  │ │
+│                 │  │#GD01 | Nạp tiền | +500K | OK │  │ │
+│                 │  └──────────────────────────────┘  │ │
+│                 └────────────────────────────────────┘ │
+└────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 5. LUỒNG XỬ LÝ SỰ KIỆN CHI TIẾT (EVENT FLOWS)
+## 4. CÁC THÀNH PHẦN GIAO DIỆN CHÍNH
 
-### 5.1 Khởi tạo trang (Page Initialization)
-1. Kiểm tra session của User qua token:
-   ```javascript
-   const token = sessionStorage.getItem('accessToken');
-   if (!token) { window.location.href = '/login'; return; }
-   ```
-2. Thực hiện gọi API lấy số dư:
-   ```javascript
-   fetch('/api/v1/wallet/balance', {
-       headers: { 'Authorization': 'Bearer ' + token }
-   })
-   .then(res => res.json())
-   .then(data => {
-       document.querySelector('#availableBalance').innerText = formatVND(data.availableBalance);
-       document.querySelector('#holdBalance').innerText = formatVND(data.holdBalance);
-   });
-   ```
+### 4.1 Thẻ Số Dư Khả Dụng — `.cwlt-balance-card`
+* Nền sử dụng gradient bắt mắt `var(--ds-gradient-wallet)`. Chữ số dư to đậm màu trắng.
+* Tích hợp nút hành động nạp tiền `[➕ Nạp Tiền]` dạng nút trong suốt có viền trắng.
 
-### 5.2 Sinh mã QR & Lắng nghe thanh toán VietQR
-1. Khách hàng click button "Tiếp Tục Nạp" sau khi điền số tiền.
-2. Gửi request:
-   ```javascript
-   fetch('/api/v1/wallet/topup/init', {
-       method: 'POST',
-       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-       body: JSON.stringify({ amount: topupAmount })
-   })
-   ```
-3. Nhận phản hồi chứa `transactionCode` và `qrUrl`.
-4. Điền mã chuyển khoản `NAPTIEN <UserID>` vào input, hiển thị hình ảnh QR lên modal.
-5. Kích hoạt `setInterval` mỗi 5 giây gọi `GET /api/v1/wallet/topup/status?code=` + `transactionCode`.
-6. Khi trạng thái chuyển thành `Success` -> Ẩn modal, cập nhật lại số dư khả dụng mới lên UI, hiển thị Toast thông báo.
+### 4.2 Modal Nạp Tiền — `.cwlt-topup-modal`
+* Khi click "Nạp tiền", modal hiển thị giữa màn hình với nền mờ phía sau (Overlay).
+* **Bước 1 (Nhập tiền):** Ô nhập số tiền cần nạp, nút xác nhận.
+* **Bước 2 (Hiển thị mã thanh toán):**
+  * Ảnh mã QR VietQR động (chứa thông tin SePay chuyển tiền).
+  * Ô hiển thị Nội dung chuyển khoản (bắt buộc) kèm một nút icon **Sao chép (Copy to clipboard)** kế bên.
+  * Hiển thị trạng thái xoay vòng `.cwlt-spinner` với dòng chữ: "Chờ thanh toán..."
 
 ---
 
-## 6. ĐẶC TẢ CSS & LAYOUT TOKENS
-- **Card chứa ví**: `.cwlt-balance-card` sử dụng gradient `#4f46e5` sang `#06b6d4`.
-- **Spinner chờ**: `.cwlt-spinner` xoay tròn vô hạn 360 độ sử dụng CSS Keyframes animation.
+## 5. LUỒNG XỬ LÝ JS & AJAX
+
+1. **Khởi tạo dữ liệu ví:**
+   * Gọi API `GET /api/v1/wallet/balance` lấy thông tin và hiển thị số dư ví của tôi lên các ô text tương ứng.
+   * Gọi API `GET /api/v1/wallet/transactions` tải lịch sử biến động số dư ví đưa vào bảng.
+2. **Khởi tạo nạp tiền:**
+   * Người dùng nhập số tiền nạp (validate số tiền tối thiểu `10,000` VNĐ) và nhấn "Tiếp tục".
+   * Gửi AJAX:
+     * **Endpoint:** `POST /api/v1/wallet/topup/init`
+     * **Payload:** `{ "amount": 100000 }`
+   * **Thành công (HTTP 200):** Nhận JSON trả về `{ "transactionCode": "MMO12345", "qrUrl": "https://..." }`.
+     * Cập nhật URL ảnh mã QR và điền mã chuyển khoản vào ô text.
+     * **Bắt đầu Polling kiểm tra:** Kích hoạt một bộ hẹn giờ `setInterval` cứ mỗi 5 giây gửi một cuộc gọi API kiểm tra: `GET /api/v1/wallet/topup/status?code=MMO12345`.
+3. **Xử lý thành công nạp tiền:**
+   * Khi kết quả API polling trả về trạng thái giao dịch nạp tiền thành công (`status = 'Success'`):
+     * Dừng bộ hẹn giờ `setInterval` (Clear Interval).
+     * Đóng modal nạp tiền.
+     * Kích hoạt Toast thông báo "Đã cộng tiền thành công".
+     * Tự động cập nhật số dư mới trên giao diện mà không cần tải lại toàn bộ trang.
 
 ---
 
-## 7. FUNCTIONAL REQUIREMENTS (EARS)
-| ID | EARS Requirement |
-|---|---|
-| FR-WLT-01 | WHEN a Customer opens the Wallet page, THE SYSTEM SHALL fetch wallet balances and display them in VND format. |
-| FR-WLT-02 | WHEN a Customer inputs a top-up amount less than 10,000 VND, THE SYSTEM SHALL disable the submit button and show a validation message. |
-| FR-WLT-03 | WHEN the top-up check API returns success, THE SYSTEM SHALL clear the polling timer, close the modal, and refresh balances. |
+## 6. RESPONSIVE
+
+* **Viewport ≥ 768px:** Hai thẻ số dư xếp hàng ngang chia đều 2 cột. Bảng lịch sử hiển thị đầy đủ các trường thông tin.
+* **Viewport < 768px:** Hai thẻ số dư xếp chồng dọc. Bảng lịch sử ẩn bớt các cột không quan trọng (Ngày tạo, Loại giao dịch phụ) để vừa khít chiều ngang màn hình điện thoại di động.
 
 ---
 
-## 8. ACCEPTANCE CRITERIA (Gherkin Scenarios)
-- **Kịch bản: Nạp tiền tự động qua QR thành công**
-  * **Given** Khách hàng đã đăng nhập và đang mở modal nạp tiền
-  * **When** Nhập số tiền 100,000đ và click "Tiếp Tục Nạp"
-  * **Then** Giao diện hiển thị mã QR VietQR và dòng nội dung "NAPTIEN 12"
-  * **When** Khách hàng hoàn tất chuyển khoản và Webhook SePay ghi nhận thành công
-  * **Then** Polling nhận được status Success, modal tự động đóng, số dư ví khả dụng tăng thêm 100,000đ kèm âm thanh/Toast thông báo.
+## 7. ACCESSIBILITY
+
+- Modal nạp tiền sử dụng `role="dialog"` và `aria-modal="true"`.
+- Nút sao chép nội dung chuyển khoản có nhãn `aria-label="Sao chép nội dung chuyển khoản"`.
+
+---
+
+## 8. OUT OF SCOPE
+
+- ❌ Liên kết tài khoản thẻ tín dụng tự động nạp định kỳ.
+- ❌ Hủy nạp tiền bằng tay (giao dịch hết hạn sau 15 phút sẽ tự động đóng).
