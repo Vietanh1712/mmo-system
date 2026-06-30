@@ -100,6 +100,6 @@ Tuân thủ Conventional Commits với ngôn ngữ tiếng Việt:
 ## ĐIỀU 6 — QUY TẮC PHỐI HỢP VỚI AI AGENT
 
 1.  **Đọc trước khi làm**: Trước khi bắt đầu thực hiện bất kỳ nhiệm vụ lập trình nào, AI Agent bắt buộc phải đọc qua 3 tài liệu cốt lõi: `.sdd/constitution.md`, `CLAUDE.md` và `AGENTS.md`.
-2.  **Đặc tả trước khi Code (Specify First)**: Tuyệt đối không viết code khi chưa có file spec tương ứng trong `.sdd/specs/` được duyệt.
+2.  **Đặc tả trước khi Code (Specify First)**: Tuyệt đối không viết code khi chưa có file spec tương ứng trong `.sdd/specs/` được duyệt. File Spec BẮT BUỘC phải viết theo tiêu chuẩn SDD và Speckit, tuân thủ style của EARS với đầy đủ 8 thành phần: (1) Context and Goal, (2) Actors, (3) Functional Requirements, (4) Non-Functional Requirements, (5) Data Model, (6) API Spec, (7) Error Handling, (8) Acceptance Criteria & Out of Scope.
 3.  **Lập kế hoạch (Plan Review)**: AI Agent phải đề xuất Implementation Plan chi tiết. Lập trình viên (Con người) phải review và duyệt kế hoạch này trước khi AI tiến hành code.
 4.  **Bảo toàn di sản**: AI Agent không được tự ý xóa hoặc thay đổi các đoạn code/comments hiện có trừ khi đó là yêu cầu trực tiếp của task.

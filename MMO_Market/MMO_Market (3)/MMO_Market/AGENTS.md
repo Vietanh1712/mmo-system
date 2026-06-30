@@ -213,7 +213,7 @@ public class GlobalExceptionHandler {
 ## 5. DEFINITION OF DONE (DoD)
 
 Mọi Task phát triển tính năng hoặc sửa lỗi chỉ được đánh giá là hoàn thành khi đáp ứng toàn bộ checklist sau:
-*   [ ] **Specification-Driven**: Phải có đặc tả spec tương ứng được đặt trong `.sdd/specs/`.
+*   [ ] **Specification-Driven**: Phải có đặc tả spec tương ứng được đặt trong `.sdd/specs/` và tuân thủ chặt chẽ chuẩn EARS (8 thành phần: 1. Context and Goal, 2. Actors, 3. Functional Requirements, 4. Non-Functional Requirements, 5. Data Model, 6. API Spec, 7. Error Handling, 8. Acceptance Criteria & Out of Scope).
 *   [ ] **Business Invariants**: Tuân thủ luật escrow 72 giờ, tiền tệ VNĐ BIGINT, ví khả dụng/đóng băng, soft delete.
 *   [ ] **Database First**: Bất kỳ thay đổi schema nào phải đi kèm script T-SQL di chuyển dữ liệu & rollback rõ ràng.
 *   [ ] **Authorization & RBAC**: Endpoint được bảo vệ, phân quyền Role chặt chẽ ở mức API và kiểm tra quyền sở hữu bản ghi ở Service layer.

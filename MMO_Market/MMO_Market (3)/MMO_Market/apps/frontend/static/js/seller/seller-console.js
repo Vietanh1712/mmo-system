@@ -1759,6 +1759,19 @@ async function initWithdrawalDetail() {
         document.querySelector('.seller-card__subtitle').textContent = `Lệnh #WD-${w.id}`;
 
         const badgeClass = w.status === 'Completed' ? 'ok' : 'pending';
+        let extraStatusInfo = '';
+        if (w.status === 'Failed' || w.status === 'Rejected') {
+            extraStatusInfo = `
+                <dt>Lý do từ chối</dt>
+                <dd style="color:var(--seller-danger);">${w.rejectionReason || 'Không có lý do'}</dd>
+            `;
+        }
+        if (w.reviewedAt) {
+            extraStatusInfo += `
+                <dt>Ngày xử lý</dt>
+                <dd>${w.reviewedAt.replace('T', ' ').substring(0, 16)}</dd>
+            `;
+        }
 
         // Map data to DL info list
         const dl = card.querySelector('.seller-info-grid');
@@ -1766,10 +1779,15 @@ async function initWithdrawalDetail() {
             dl.innerHTML = `
                 <dt>Mã lệnh</dt>
                 <dd>#WD-${w.id}</dd>
-                <dt>Số tiền</dt>
-                <dd>${formatVND(w.amountVnd)}</dd>
+                <dt>Số tiền nhận</dt>
+                <dd style="color:var(--seller-success); font-weight:600;">${formatVND(w.amountVnd)}</dd>
+                <dt>Phí dịch vụ</dt>
+                <dd style="color:var(--seller-danger);">${formatVND(w.feeVnd || 0)}</dd>
+                <dt>Tổng trừ ví</dt>
+                <dd style="font-weight:600;">${formatVND(w.amountVnd + (w.feeVnd || 0))}</dd>
                 <dt>Trạng thái</dt>
                 <dd><span class="badge ${badgeClass}">${w.status}</span></dd>
+                ${extraStatusInfo}
                 <dt>Ngân hàng</dt>
                 <dd>${w.bankName}</dd>
                 <dt>Số tài khoản</dt>

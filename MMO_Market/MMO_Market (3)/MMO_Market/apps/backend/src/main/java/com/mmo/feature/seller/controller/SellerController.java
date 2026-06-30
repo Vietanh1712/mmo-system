@@ -633,6 +633,7 @@ public class SellerController {
                 Map<String, Object> map = new HashMap<>();
                 map.put("id", w.getId());
                 map.put("amountVnd", w.getAmountVnd());
+                map.put("feeVnd", w.getFeeVnd());
                 map.put("bankName", w.getBankInfo().getBankName());
                 map.put("accountNumber", w.getBankInfo().getAccountNumber());
                 map.put("status", w.getStatus());
@@ -662,6 +663,7 @@ public class SellerController {
             Map<String, Object> map = new HashMap<>();
             map.put("id", w.getId());
             map.put("amountVnd", w.getAmountVnd());
+            map.put("feeVnd", w.getFeeVnd());
             map.put("status", w.getStatus());
             map.put("bankName", w.getBankInfo().getBankName());
             map.put("accountNumber", w.getBankInfo().getAccountNumber());
@@ -669,6 +671,8 @@ public class SellerController {
             map.put("branch", w.getBankInfo().getBranch() != null ? w.getBankInfo().getBranch() : "");
             map.put("proofFile", w.getProofFile() != null ? w.getProofFile() : "");
             map.put("createdAt", w.getCreatedAt().toString());
+            map.put("reviewedAt", w.getReviewedAt() != null ? w.getReviewedAt().toString() : "");
+            map.put("rejectionReason", w.getRejectionReason() != null ? w.getRejectionReason() : "");
             return ResponseEntity.ok(map);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
