@@ -9,16 +9,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import com.mmo.feature.staff.service.StaffDashboardService;
 import com.mmo.shared.dal.ComplaintRepository;
-import com.mmo.shared.dal.KycRequestRepository;
 import com.mmo.shared.dal.TransactionRepository;
 import com.mmo.shared.dal.WithdrawalRepository;
 import com.mmo.shared.dal.ShopFlagRepository;
-import com.mmo.shared.model.KycStatus;
 import com.mmo.shared.model.ShopFlag;
 import com.mmo.shared.model.Transaction;
 import com.mmo.shared.model.Withdrawal;
@@ -39,9 +36,6 @@ public class StaffController {
     private ComplaintRepository complaintRepository;
 
     @Autowired
-    private KycRequestRepository kycRequestRepository;
-
-    @Autowired
     private TransactionRepository transactionRepository;
 
     @Autowired
@@ -53,20 +47,7 @@ public class StaffController {
     @Autowired
     private StaffDashboardService staffDashboardService;
 
-    @ModelAttribute
-    public void addStaffSidebarCounts(Model model) {
-        long complaintCount = complaintRepository.countByStatusAndIsDeleteFalse("InProgress");
-        long pendingKycCount = kycRequestRepository.countByStatusAndIsDeleteFalse(KycStatus.PENDING);
-        long transactionCount = transactionRepository.countByIsDeleteFalse();
-        long withdrawalCount = withdrawalRepository.countByStatusAndIsDeleteFalse("Pending");
-        long flagCount = shopFlagRepository.countByIsDeleteFalse();
 
-        model.addAttribute("complaintCount", complaintCount);
-        model.addAttribute("pendingKycCount", pendingKycCount);
-        model.addAttribute("transactionCount", transactionCount);
-        model.addAttribute("withdrawalCount", withdrawalCount);
-        model.addAttribute("flagCount", flagCount);
-    }
 
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
@@ -271,9 +252,9 @@ public class StaffController {
         model.addAttribute("warningFlags",   shopFlagRepository.countByFlagLevelAndIsDeleteFalse("Warning"));
         model.addAttribute("criticalFlags",  shopFlagRepository.countByFlagLevelAndIsDeleteFalse("Critical"));
         model.addAttribute("removedFlags",   shopFlagRepository.countByStatusAndIsDeleteFalse("Removed"));
-        model.addAttribute("activeFlags",    shopFlagRepository.countByStatusAndIsDeleteFalse("Active"));
+        model.addAttribute("activeFlags",    shopFlagRepository.countByStatusAndIsDeleteFalse("Effect"));
         model.addAttribute("levels",         List.of("Warning", "Critical", "Danger"));
-        model.addAttribute("statuses",       List.of("Active", "Removed"));
+        model.addAttribute("statuses",       List.of("Effect", "Removed"));
         model.addAttribute("keyword",        keyword);
         model.addAttribute("selectedLevel",  lv);
         model.addAttribute("selectedStatus", st);

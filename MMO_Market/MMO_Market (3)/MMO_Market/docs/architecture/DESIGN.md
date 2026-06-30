@@ -218,3 +218,36 @@ Phân hệ dành cho nhân viên quản trị (Staff) tuân thủ tính đồng 
 ### 4. Thành phần Phân trang (Pagination Footer)
 *   **Vị trí**: Thanh phân trang sử dụng lớp `.ds-pagination` được đặt bên trong thẻ `.ds-card` và ngay dưới `.ds-table-wrap` để đóng vai trò làm card footer có đường kẻ ngăn cách `border-top`.
 *   **Giao diện số**: Phân trang bằng các ô vuông số (`‹`, `1`, `2`, `3`, `›`) thay vì chữ mô tả thô. Trang hiện tại sử dụng lớp `.ds-page-link-active` (nền xanh nhạt `#dbeafe`, chữ xanh đậm `#1d4ed8`), đi kèm thống kê tổng số lượng bản ghi ở góc phải.
+
+---
+
+## Master Table & Action Buttons Design (Mẫu thiết kế bảng chuẩn)
+
+Quy chuẩn thiết kế cho các bảng dữ liệu (như Nhật ký hệ thống Admin) và nút hành động xem chi tiết (hình mắt) được quy định thống nhất như sau:
+
+### 1. Cấu trúc Bảng dữ liệu (`.ds-table` / `.ds-table-wrap`)
+*   **Bao bọc Responsive**: Mọi bảng phải được bọc trong thẻ `.ds-table-wrap` có thuộc tính `overflow-x: auto` để tránh tràn khung hình trên thiết bị di động.
+*   **Thiết lập đường viền & Nền**:
+    - Bảng sử dụng nền trắng (`#ffffff`), không sử dụng các màu nền xám tối phá vỡ bố cục.
+    - Đường viền dọc ngăn cách cột sử dụng màu xám siêu nhạt `1px solid var(--ds-border)`. Cột cuối cùng loại bỏ viền dọc (`border-right: 0`).
+*   **Đệm ô (Padding)**: Bắt buộc sử dụng padding lớn `24px 32px` cho cả thẻ tiêu đề `th` và ô dữ liệu `td`. **Tuyệt đối không sử dụng đệm hẹp khiến chữ sát mép ô**.
+*   **Hiệu ứng Hover Highlight**:
+    - Dòng tiêu đề bảng (`thead tr`) sử dụng màu nền nhạt `var(--ds-table-head)` và không có hiệu ứng hover.
+    - Các dòng dữ liệu thân bảng (`tbody tr`) được cấu hình chuyển màu mượt mà (`transition: background-color 0.2s`) khi di chuột qua.
+    - Lớp hover sử dụng màu nền xám dịu làm nổi bật dòng đang trỏ chuột:
+      ```css
+      .ds-table tbody tr:hover {
+          background: #f1f5f9;
+      }
+      ```
+
+### 2. Nút bấm Hành động hình mắt (`.ds-icon-btn` & `.ds-icon`)
+*   **Nút bọc ngoài (`.ds-icon-btn`)**: Thiết kế hình tròn (`border-radius: 999px`), kích thước cố định `38px` x `38px`.
+*   **Huy hiệu xem chi tiết hình mắt (`.ds-icon-btn-view`)**:
+    - **Viền (Border)**: `1px solid #3b82f6` (Xanh dương tinh tế).
+    - **Nền (Background)**: `#eff6ff` (Nền xanh dịu cực nhạt).
+    - **Màu biểu tượng (Color)**: `#2563eb` (Xanh hoàng gia).
+    - **Hiệu ứng Hover**: Khi hover, nền sáng lên màu xanh đậm hơn một chút để báo hiệu trạng thái tương tác (`background: #dbeafe`).
+*   **Biểu tượng SVG hình mắt (`.ds-icon`)**:
+    - Phải sử dụng kích thước chuẩn `18px` x `18px` đặt chính giữa nút bấm để tối ưu hóa thị giác.
+    - Màu vẽ sử dụng thuộc tính `stroke="currentColor"` để kế thừa từ lớp cha `.ds-icon-btn-view`.

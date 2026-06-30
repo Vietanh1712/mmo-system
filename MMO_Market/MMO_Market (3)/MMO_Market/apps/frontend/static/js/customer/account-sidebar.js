@@ -46,6 +46,9 @@ class AccountSidebar {
         this.root.querySelectorAll('[data-account-role="seller-only"]').forEach(element => {
             element.hidden = role !== 'Seller';
         });
+        this.root.querySelectorAll('[data-account-role="customer-or-seller-only"]').forEach(element => {
+            element.hidden = role !== 'Customer' && role !== 'Seller';
+        });
     }
 
     renderCachedProfile() {

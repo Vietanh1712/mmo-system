@@ -137,7 +137,7 @@ function renderStaffComplaints() {
                 <td>${escapeHtml(item.createdAt.split(' ')[0])}</td>
                 <td class="ds-table-center">
                     <div class="ds-table-actions">
-                        <button class="ds-icon-btn ds-icon-btn-view" onclick="viewComplaintDetail('${item.id}')" aria-label="Xem chi tiết" style="border:none; background:transparent; cursor:pointer;">
+                        <button class="ds-icon-btn ds-icon-btn-view" onclick="viewComplaintDetail('${item.id}')" aria-label="Xem chi tiết">
                             <svg class="ds-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="width:16px; height:16px;">
                                 <path d="M2.25 12C3.73 8.12 7.49 5.25 12 5.25C16.51 5.25 20.27 8.12 21.75 12C20.27 15.88 16.51 18.75 12 18.75C7.49 18.75 3.73 15.88 2.25 12Z" stroke="currentColor" stroke-width="2"/>
                                 <path d="M12 15.25C13.79 15.25 15.25 13.79 15.25 12C15.25 10.21 13.79 8.75 12 8.75C10.21 8.75 8.75 10.21 8.75 12C8.75 13.79 10.21 15.25 12 15.25Z" stroke="currentColor" stroke-width="2"/>

@@ -29,6 +29,8 @@
             <span>Thông tin cá nhân</span>
         </a>
         <a class="account-sidebar__menu-link"
+           data-account-role="customer-or-seller-only"
+           hidden
            th:classappend="${activeMenu == 'kyc'} ? ' account-sidebar__menu-link--active' : ''"
            th:href="@{/account/kyc}">
             <i class="fa fa-id-card-o" aria-hidden="true"></i>

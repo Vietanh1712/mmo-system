@@ -304,15 +304,24 @@ body.auth-layout::after {
 .toggle-password {
     position: absolute;
     right: 15px;
-    color: rgba(255, 255, 255, 0.5);
+    width: 24px;
+    height: 24px;
+    background-color: #64748b;
+    color: #fff !important;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    transition: color 0.3s ease;
+    font-size: 11px;
+    transition: background-color 0.3s ease, color 0.3s ease;
     z-index: 10;
-    font-size: 16px;
+    border: 0;
+    padding: 0;
 }
 
 .toggle-password:hover {
-    color: var(--primary, #fff); /* Sáng lên khi di chuột vào */
+    background-color: var(--ds-primary, #2563eb);
 }
 
 .auth-password-wrapper {
@@ -329,14 +338,23 @@ body.auth-layout::after {
 
 .auth-toggle-password {
     border: 0;
-    background: transparent;
-    color: #64748b;
-    padding: 0;
+    background-color: #64748b;
+    color: #fff !important;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
     right: 16px;
+    font-size: 11px;
+    padding: 0;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
 .auth-toggle-password:hover {
-    color: var(--ds-primary, #2563eb);
+    background-color: var(--ds-primary, #2563eb);
 }
 
 .login-wrap .message {
@@ -433,4 +451,10 @@ body.auth-layout .message.info {
     .forgot-link {
         margin-right: 0;
     }
+}
+
+/* Ẩn con mắt mặc định của trình duyệt Edge/IE */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none !important;
 }

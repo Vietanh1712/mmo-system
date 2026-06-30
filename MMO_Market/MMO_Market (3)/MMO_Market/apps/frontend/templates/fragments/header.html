@@ -23,7 +23,8 @@
         body.is-system-user #contact-title + p,
         body.is-system-user [data-sidebar-visibility="buyer-only"],
         body.is-system-user .account-sidebar__wallet,
-        body.is-system-user .account-sidebar__role-slot {
+        body.is-system-user .account-sidebar__role-slot,
+        body.is-system-user [data-account-role="customer-or-seller-only"] {
             display: none !important;
         }
     </style>
@@ -194,7 +195,7 @@
                     }
 
                     if (isSystemRole && !forceCustomerHeader) {
-                        const forbiddenPaths = ['/cart', '/checkout', '/wallet/topup', '/wallet/transactions', '/pre-orders', '/account/orders'];
+                        const forbiddenPaths = ['/cart', '/checkout', '/wallet/topup', '/wallet/transactions', '/pre-orders', '/account/orders', '/account/kyc'];
                         if (forbiddenPaths.some(path => currentPath === path || currentPath.startsWith(path + '/'))) {
                             alert('Quản trị viên và nhân viên không có quyền truy cập chức năng này.');
                             window.location.replace('/');

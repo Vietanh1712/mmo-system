@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
     <link rel="stylesheet" th:href="@{/css/customer/profile.css}">
     <link rel="stylesheet" th:href="@{/css/customer/kyc.css}">
 </head>
+
 <body>
     <header th:replace="fragments/header :: header"></header>
 
@@ -25,7 +27,8 @@
                             <p class="ds-caption">Tài khoản của tôi</p>
                             <h1 class="ds-heading-lg">Định danh KYC</h1>
                             <p class="ds-body kyc-hero__subtitle">
-                                Xác minh danh tính để tăng độ tin cậy tài khoản và chuẩn bị cho các tính năng ví, giao dịch giá trị cao.
+                                Xác minh danh tính để tăng độ tin cậy tài khoản và chuẩn bị cho các tính năng ví, giao
+                                dịch giá trị cao.
                             </p>
                         </div>
                         <span class="ds-badge ds-badge-muted" id="kycStatusBadge">Chưa định danh</span>
@@ -74,7 +77,8 @@
                                     Gửi hồ sơ định danh để hệ thống có thể xác minh tài khoản của bạn.
                                 </p>
                             </div>
-                            <a class="ds-btn ds-btn-primary" id="kycPrimaryAction" th:href="@{/account/kyc(mode='submit')}">
+                            <a class="ds-btn ds-btn-primary" id="kycPrimaryAction"
+                                th:href="@{/account/kyc(mode='submit')}">
                                 Gửi yêu cầu định danh
                             </a>
                         </div>
@@ -99,7 +103,9 @@
                         </dl>
 
                         <div class="kyc-submitted-data" id="kycSubmittedData" hidden>
-                            <h3 class="ds-heading-sm" style="margin-top: 24px; margin-bottom: 16px; padding-top: 20px; border-top: 1px solid var(--ds-border);">Chi tiết hồ sơ đã gửi</h3>
+                            <h3 class="ds-heading-sm"
+                                style="margin-top: 24px; margin-bottom: 16px; padding-top: 20px; border-top: 1px solid var(--ds-border);">
+                                Chi tiết hồ sơ đã gửi</h3>
                             <dl class="kyc-meta" style="margin-top: 0; padding-top: 0; border-top: none;">
                                 <div>
                                     <dt>Họ và tên</dt>
@@ -118,19 +124,22 @@
                                     <dd id="kycViewAddress">-</dd>
                                 </div>
                             </dl>
-                            
+
                             <div class="kyc-upload-grid" style="margin-top: 20px;">
                                 <div class="kyc-view-image-box">
                                     <strong>Ảnh mặt trước</strong>
-                                    <img id="kycViewFrontImage" src="" alt="Mặt trước" style="width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: var(--ds-radius-lg); margin-top: 8px; border: 1px solid var(--ds-border);">
+                                    <img id="kycViewFrontImage" src="" alt="Mặt trước"
+                                        style="width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: var(--ds-radius-lg); margin-top: 8px; border: 1px solid var(--ds-border);">
                                 </div>
                                 <div class="kyc-view-image-box">
                                     <strong>Ảnh mặt sau</strong>
-                                    <img id="kycViewBackImage" src="" alt="Mặt sau" style="width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: var(--ds-radius-lg); margin-top: 8px; border: 1px solid var(--ds-border);">
+                                    <img id="kycViewBackImage" src="" alt="Mặt sau"
+                                        style="width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: var(--ds-radius-lg); margin-top: 8px; border: 1px solid var(--ds-border);">
                                 </div>
                                 <div class="kyc-view-image-box">
                                     <strong>Ảnh chân dung</strong>
-                                    <img id="kycViewSelfieImage" src="" alt="Chân dung" style="width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: var(--ds-radius-lg); margin-top: 8px; border: 1px solid var(--ds-border);">
+                                    <img id="kycViewSelfieImage" src="" alt="Chân dung"
+                                        style="width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: var(--ds-radius-lg); margin-top: 8px; border: 1px solid var(--ds-border);">
                                 </div>
                             </div>
                         </div>
@@ -158,8 +167,10 @@
                                 <div class="ds-datepicker" data-ds-datepicker>
                                     <input id="kycDateOfBirth" type="hidden" data-ds-date-value>
                                     <div class="ds-datepicker-field">
-                                        <input class="ds-datepicker-input" id="kycDateOfBirthDisplay" type="text" placeholder="dd/mm/yyyy" data-ds-date-display>
-                                        <button class="ds-datepicker-button" type="button" data-ds-date-toggle aria-label="Chọn ngày sinh">
+                                        <input class="ds-datepicker-input" id="kycDateOfBirthDisplay" type="text"
+                                            placeholder="dd/mm/yyyy" data-ds-date-display>
+                                        <button class="ds-datepicker-button" type="button" data-ds-date-toggle
+                                            aria-label="Chọn ngày sinh">
                                             <i class="fa fa-calendar" aria-hidden="true"></i>
                                         </button>
                                     </div>
@@ -186,19 +197,22 @@
 
                         <div class="kyc-upload-grid">
                             <label class="kyc-upload-box">
-                                <span class="kyc-upload-box__icon"><i class="fa fa-id-card-o" aria-hidden="true"></i></span>
+                                <span class="kyc-upload-box__icon"><i class="fa fa-id-card-o"
+                                        aria-hidden="true"></i></span>
                                 <strong>Ảnh mặt trước</strong>
                                 <small data-kyc-file-name="front">PNG, JPG hoặc PDF</small>
                                 <input id="kycFrontFile" type="file" accept="image/*,.pdf">
                             </label>
                             <label class="kyc-upload-box">
-                                <span class="kyc-upload-box__icon"><i class="fa fa-id-card" aria-hidden="true"></i></span>
+                                <span class="kyc-upload-box__icon"><i class="fa fa-id-card"
+                                        aria-hidden="true"></i></span>
                                 <strong>Ảnh mặt sau</strong>
                                 <small data-kyc-file-name="back">PNG, JPG hoặc PDF</small>
                                 <input id="kycBackFile" type="file" accept="image/*,.pdf">
                             </label>
                             <label class="kyc-upload-box">
-                                <span class="kyc-upload-box__icon"><i class="fa fa-camera" aria-hidden="true"></i></span>
+                                <span class="kyc-upload-box__icon"><i class="fa fa-camera"
+                                        aria-hidden="true"></i></span>
                                 <strong>Ảnh chân dung</strong>
                                 <small data-kyc-file-name="selfie">PNG hoặc JPG</small>
                                 <input id="kycSelfieFile" type="file" accept="image/*">
@@ -208,14 +222,16 @@
 
                         <label class="kyc-confirm">
                             <input id="kycConfirm" type="checkbox">
-                            <span>Tôi xác nhận thông tin cung cấp là chính xác và chịu trách nhiệm với hồ sơ đã gửi.</span>
+                            <span>Tôi xác nhận thông tin cung cấp là chính xác và chịu trách nhiệm với hồ sơ đã
+                                gửi.</span>
                         </label>
                         <small class="ds-error-text" id="kycConfirmError"></small>
 
                         <div class="profile-message ds-alert ds-alert-danger" id="kycFormMessage" hidden></div>
 
                         <div class="profile-actions">
-                            <button class="ds-btn ds-btn-primary" id="kycSubmitButton" type="submit">Gửi yêu cầu</button>
+                            <button class="ds-btn ds-btn-primary" id="kycSubmitButton" type="submit">Gửi yêu
+                                cầu</button>
                             <a class="ds-btn ds-btn-outline" th:href="@{/account/kyc}" id="kycCancelButton">Hủy</a>
                         </div>
                     </form>
@@ -231,4 +247,5 @@
     <script th:src="@{/js/components/datepicker.js}"></script>
     <script th:src="@{/js/customer/account-kyc.js}"></script>
 </body>
+
 </html>
