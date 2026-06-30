@@ -19,6 +19,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
      * Đếm số lượt bán THỰC TẾ (đơn Completed và Held) của một sản phẩm.
      * Không đếm đơn Pending / Cancelled / Refunded / Disputed.
      */
+    @Query("SELECT t.product.id, COUNT(t) FROM Transaction t WHERE t.product.id IN :productIds AND t.status IN ('Completed', 'Held') AND t.isDelete = false GROUP BY t.product.id")
+    List<Object[]> countByProductIdsAndIsDeleteFalse(@Param("productIds") List<Long> productIds);
+
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.product.id = :productId AND t.status IN ('Completed', 'Held') AND t.isDelete = false")
     Long countByProductIdAndIsDeleteFalse(@Param("productId") Long productId);
 

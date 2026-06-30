@@ -14,6 +14,12 @@ import java.util.List;
 public interface ReviewRepository extends JpaRepository<Review, Long> {
     List<Review> findByProductIdAndIsDeleteFalse(Long productId);
 
+    @Query("SELECT r.product.id, AVG(r.rating) FROM Review r WHERE r.product.id IN :productIds AND r.isDelete = false GROUP BY r.product.id")
+    List<Object[]> findAverageRatingByProductIds(@Param("productIds") List<Long> productIds);
+
+    @Query("SELECT r.product.id, COUNT(r) FROM Review r WHERE r.product.id IN :productIds AND r.isDelete = false GROUP BY r.product.id")
+    List<Object[]> countByProductIdsAndIsDeleteFalse(@Param("productIds") List<Long> productIds);
+
     @Query("SELECT AVG(r.rating) FROM Review r WHERE r.product.id = :productId AND r.isDelete = false")
     Double findAverageRatingByProductId(@Param("productId") Long productId);
 
