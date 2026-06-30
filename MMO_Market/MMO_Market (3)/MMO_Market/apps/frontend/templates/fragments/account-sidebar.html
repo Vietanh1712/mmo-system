@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<aside class="account-sidebar" th:fragment="accountSidebar(activeMenu)">
+    <div class="account-sidebar__user">
+        <div class="account-sidebar__avatar ds-avatar ds-avatar-md" data-account-sidebar="avatar">?</div>
+        <div class="account-sidebar__identity">
+            <strong class="account-sidebar__name" data-account-sidebar="name">Người dùng</strong>
+            <span class="account-sidebar__email" data-account-sidebar="email">-</span>
+        </div>
+    </div>
+
+    <div class="account-sidebar__wallet" data-sidebar-visibility="buyer-only">
+        <div>
+            <span class="account-sidebar__wallet-label">Số dư</span>
+            <strong class="account-sidebar__balance" data-account-sidebar="balance">0 VNĐ</strong>
+        </div>
+        <a class="account-sidebar__topup"
+           th:href="@{/wallet/topup}">Nạp</a>
+    </div>
+
+    <nav class="account-sidebar__menu" aria-label="Menu tài khoản">
+        <p class="account-sidebar__group-title">Tài khoản</p>
+        <a class="account-sidebar__menu-link"
+           th:classappend="${activeMenu == 'profile'} ? ' account-sidebar__menu-link--active' : ''"
+           th:href="@{/profile}">
+            <i class="fa fa-user-o" aria-hidden="true"></i>
+            <span>Thông tin cá nhân</span>
+        </a>
+        <a class="account-sidebar__menu-link"
+           data-account-role="customer-or-seller-only"
+           hidden
+           th:classappend="${activeMenu == 'kyc'} ? ' account-sidebar__menu-link--active' : ''"
+           th:href="@{/account/kyc}">
+            <i class="fa fa-id-card-o" aria-hidden="true"></i>
+            <span>Định danh KYC</span>
+        </a>
+        <a class="account-sidebar__menu-link"
+           th:classappend="${activeMenu == 'security'} ? ' account-sidebar__menu-link--active' : ''"
+           th:href="@{/account/security}">
+            <i class="fa fa-shield" aria-hidden="true"></i>
+            <span>Bảo mật & đổi mật khẩu</span>
+        </a>
+        <div class="account-sidebar__role-slot">
+            <a class="account-sidebar__menu-link"
+               data-account-role="customer-only"
+               hidden
+               th:classappend="${activeMenu == 'register-shop'} ? ' account-sidebar__menu-link--active' : ''"
+               th:href="@{/account/register-shop}">
+                <i class="fa fa-shopping-basket" aria-hidden="true"></i>
+                <span>Đăng ký mở Shop</span>
+            </a>
+            <a class="account-sidebar__menu-link"
+               data-account-role="seller-only"
+               hidden
+               th:href="@{/seller/dashboard}">
+                <i class="fa fa-dashboard" aria-hidden="true"></i>
+                <span>Seller Dashboard</span>
+            </a>
+        </div>
+
+        <p class="account-sidebar__group-title" data-sidebar-visibility="buyer-only">Ví & giao dịch</p>
+        <a class="account-sidebar__menu-link"
+           data-sidebar-visibility="buyer-only"
+           th:classappend="${activeMenu == 'wallet'} ? ' account-sidebar__menu-link--active' : ''"
+           th:href="@{/wallet}">
+            <i class="fa fa-credit-card" aria-hidden="true"></i>
+            <span>Ví của tôi</span>
+        </a>
+        <a class="account-sidebar__menu-link"
+           data-sidebar-visibility="buyer-only"
+           th:classappend="${activeMenu == 'topup'} ? ' account-sidebar__menu-link--active' : ''"
+           th:href="@{/wallet/topup}">
+            <i class="fa fa-plus-circle" aria-hidden="true"></i>
+            <span>Nạp tiền</span>
+        </a>
+        <a class="account-sidebar__menu-link"
+           data-sidebar-visibility="buyer-only"
+           th:classappend="${activeMenu == 'transactions'} ? ' account-sidebar__menu-link--active' : ''"
+           th:href="@{/wallet/transactions}">
+            <i class="fa fa-history" aria-hidden="true"></i>
+            <span>Lịch sử giao dịch</span>
+        </a>
+
+        <p class="account-sidebar__group-title" data-sidebar-visibility="buyer-only">Mua hàng</p>
+        <a class="account-sidebar__menu-link"
+           data-sidebar-visibility="buyer-only"
+           th:classappend="${activeMenu == 'orders'} ? ' account-sidebar__menu-link--active' : ''"
+           th:href="@{/account/orders}">
+            <i class="fa fa-shopping-bag" aria-hidden="true"></i>
+            <span>Đơn hàng của tôi</span>
+        </a>
+        <a class="account-sidebar__menu-link"
+           th:classappend="${activeMenu == 'notifications'} ? ' account-sidebar__menu-link--active' : ''"
+           th:href="@{/account/notifications}">
+            <i class="fa fa-bell-o" aria-hidden="true"></i>
+            <span>Thông báo</span>
+        </a>
+        <a class="account-sidebar__menu-link"
+           data-sidebar-visibility="buyer-only"
+           th:classappend="${activeMenu == 'tickets'} ? ' account-sidebar__menu-link--active' : ''"
+           th:href="@{/account/tickets}">
+            <i class="fa fa-ticket" aria-hidden="true"></i>
+            <span>Ticket của tôi</span>
+        </a>
+
+        <div class="account-sidebar__divider"></div>
+        <a class="account-sidebar__menu-link account-sidebar__menu-link--logout"
+           href="javascript:void(0)"
+           onclick="if(typeof logout === 'function') logout(); else { sessionStorage.clear(); localStorage.removeItem('accessToken'); localStorage.removeItem('refreshToken'); localStorage.removeItem('loginTimestamp'); localStorage.removeItem('userInfo'); localStorage.removeItem('user'); window.location.href='/login'; }">
+            <i class="fa fa-sign-out" aria-hidden="true"></i>
+            <span>Đăng xuất</span>
+        </a>
+    </nav>
+</aside>
+
+</body>
+</html>

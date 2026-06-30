@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Chi tiết cờ cảnh báo')}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('flags')}"></aside>
+
+            <section class="ds-section">
+                <nav class="staff-breadcrumb">
+                    <a href="/staff/flags">Cờ cảnh báo</a>
+                    <span>/</span>
+                    <span th:text="'#FLG-' + ${flag.id}"></span>
+                </nav>
+
+                <div class="staff-page-header">
+                    <div>
+                        <h1 class="ds-page-title">Chi tiết &amp; thao tác cờ shop</h1>
+                        <p class="ds-page-subtitle">Cờ #FLG-220 — GameHub Pro</p>
+                    </div>
+                    <span class="ds-badge ds-badge-danger">Mức cao</span>
+                </div>
+
+                <div class="staff-detail-grid">
+                    <div class="ds-svtack-md">
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Thông tin cờ</h2>
+                            </div>
+                            <div style="padding: 20px 24px;">
+                                <dl class="staff-info-list">
+                                    <div class="staff-info-row">
+                                        <dt>Mã cờ</dt>
+                                        <dd th:text="'#FLG-' + ${flag.id}"></dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Shop</dt>
+                                        <dd th:text="${flag.seller.fullName}"></dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Chủ shop</dt>
+                                        <dd th:text="${flag.seller.email}"></dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Lý do</dt>
+                                        <dd th:text="${flag.reason}"></dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Staff xử lý</dt>
+                                        <dd th:text="${flag.staff.fullName}"></dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Ngày cắm cờ</dt>
+                                        <dd th:text="${#temporals.format(flag.createdAt,'dd/MM/yyyy HH:mm')}"></dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Trạng thái</dt>
+                                        <dd><span class="ds-badge ds-badge-warning" th:text="${flag.status}"></span></dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
+
+<!--                        <div class="ds-card">-->
+<!--                            <div class="ds-card-header">-->
+<!--                                <h2 class="ds-card-title">Chỉnh sửa cờ</h2>-->
+<!--                            </div>-->
+<!--                            <form th:action="@{/staff/flags/update}" method="post">-->
+<!--                            <div class="ds-form-grid">-->
+<!--                                <div class="ds-form-field">-->
+<!--                                    <label class="ds-label" for="flagLevel">Mức độ cảnh báo</label>-->
+<!--&lt;!&ndash;                                    <select class="ds-input" id="flagLevel">&ndash;&gt;-->
+<!--&lt;!&ndash;                                        <option>Thấp</option>&ndash;&gt;-->
+<!--&lt;!&ndash;                                        <option>Trung bình</option>&ndash;&gt;-->
+<!--&lt;!&ndash;                                        <option selected>Cao</option>&ndash;&gt;-->
+<!--&lt;!&ndash;                                    </select>&ndash;&gt;-->
+<!--                                    <select class="ds-input"-->
+<!--                                            name="flagLevel" id="flagLevel">-->
+
+<!--                                        <option value="Warning"-->
+<!--                                                th:selected="${flag.flagLevel=='Warning'}">-->
+<!--                                            Warning-->
+<!--                                        </option>-->
+
+<!--                                        <option value="Danger"-->
+<!--                                                th:selected="${flag.flagLevel=='Danger'}">-->
+<!--                                            Danger-->
+<!--                                        </option>-->
+
+<!--                                        <option value="Critical"-->
+<!--                                                th:selected="${flag.flagLevel=='Critical'}">-->
+<!--                                            Critical-->
+<!--                                        </option>-->
+
+<!--                                    </select>-->
+<!--                                </div>-->
+<!--                                <div class="ds-form-field">-->
+<!--                                    <label class="ds-label" for="flagStatus">Trạng thái</label>-->
+<!--&lt;!&ndash;                                    <select class="ds-input" id="flagStatus">&ndash;&gt;-->
+<!--&lt;!&ndash;                                        <option selected>Đang hiệu lực</option>&ndash;&gt;-->
+<!--&lt;!&ndash;                                        <option>Đã gỡ</option>&ndash;&gt;-->
+<!--&lt;!&ndash;                                    </select>&ndash;&gt;-->
+
+<!--                                    <select class="ds-input"-->
+<!--                                            name="status" id="flagStatus">-->
+
+<!--                                        <option value="Effect"-->
+<!--                                                th:selected="${flag.status=='Effect'}">-->
+<!--                                            Effect-->
+<!--                                        </option>-->
+
+<!--                                        <option value="Removed"-->
+<!--                                                th:selected="${flag.status=='Removed'}">-->
+<!--                                            Removed-->
+<!--                                        </option>-->
+
+<!--                                    </select>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                                </form>-->
+<!--                            <div class="ds-form-field">-->
+<!--                                <label class="ds-label" for="flagReason">Lý do / ghi chú</label>-->
+<!--                                <textarea class="ds-textarea" id="flagReason" name="reason"-->
+<!--                                          th:text="${flag.reason}"></textarea>-->
+<!--                            </div>-->
+<!--                            <div class="ds-cluster">-->
+<!--                                <button class="ds-btn ds-btn-primary" type="submit" data-staff-action="save" data-staff-label="Đã cập nhật cờ cảnh báo">Lưu thay đổi</button>-->
+<!--                                <button class="ds-btn ds-btn-outline" type="button" data-staff-action="resolve" data-staff-label="Đã gỡ cờ cảnh báo">Gỡ cờ</button>-->
+<!--                            </div>-->
+<!--                        </div>-->
+
+
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Chỉnh sửa cờ</h2>
+                            </div>
+                            <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px;">
+                                <div th:if="${success}" class="ds-alert ds-alert-success">
+                                    <span th:text="${success}"></span>
+                                </div>
+                                <form th:action="@{/staff/flags/update}" method="post" style="display: flex; flex-direction: column; gap: 16px;">
+
+                                    <input type="hidden"
+                                           name="id"
+                                           th:value="${flag.id}">
+
+                                    <div class="ds-form-grid">
+
+                                        <div class="ds-form-field">
+                                            <label class="ds-label">Mức độ cảnh báo</label>
+
+                                            <select class="ds-select"
+                                                    name="flagLevel"
+                                                    id="flagLevel" style="background-color: #f8fafc; font-weight: 600;">
+
+                                                <option value="Warning"
+                                                        th:selected="${flag.flagLevel=='Warning'}">
+                                                    Warning
+                                                </option>
+
+                                                <option value="Danger"
+                                                        th:selected="${flag.flagLevel=='Danger'}">
+                                                    Danger
+                                                </option>
+
+                                                <option value="Critical"
+                                                        th:selected="${flag.flagLevel=='Critical'}">
+                                                    Critical
+                                                </option>
+
+                                            </select>
+                                        </div>
+
+                                        <div class="ds-form-field">
+                                            <label class="ds-label">Trạng thái</label>
+
+                                            <select class="ds-select"
+                                                    name="status"
+                                                    id="flagStatus" style="background-color: #f8fafc; font-weight: 600;">
+
+                                                <option value="Effect"
+                                                        th:selected="${flag.status=='Effect'}">
+                                                    Effect
+                                                </option>
+
+                                                <option value="Removed"
+                                                        th:selected="${flag.status=='Removed'}">
+                                                    Removed
+                                                </option>
+
+                                            </select>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="ds-form-field">
+                                        <label class="ds-label">Lý do / ghi chú</label>
+
+                                        <textarea class="ds-textarea"
+                                                  id="flagReason"
+                                                  name="reason"
+                                                  th:text="${flag.reason}" style="min-height: 100px;">
+                                        </textarea>
+                                    </div>
+
+                                    <div class="ds-cluster" style="gap: 8px;">
+                                        <button class="ds-btn ds-btn-primary"
+                                                type="submit" style="flex: 1;">
+                                            <i class="fa fa-save"></i> Lưu thay đổi
+                                        </button>
+                                        <button class="ds-btn ds-btn-outline"
+                                                type="submit"
+                                                formaction="/staff/flags/remove"
+                                                onclick="return confirm('Bạn có chắc muốn gỡ cờ này?');" style="flex: 1;">
+                                            <i class="fa fa-trash"></i> Gỡ cờ
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Lịch sử thao tác</h2>
+                            </div>
+                            <div style="padding: 20px 24px;">
+                                <div class="staff-timeline">
+                                    <div class="staff-timeline__item">
+                                        <span class="staff-timeline__dot"></span>
+                                        <div class="staff-timeline__content">
+                                            <strong>Cắm cờ mức cao</strong>
+                                            <p class="ds-caption">Nguyễn Văn Staff — 04/06/2026 14:10</p>
+                                        </div>
+                                    </div>
+                                    <div class="staff-timeline__item">
+                                        <span class="staff-timeline__dot"></span>
+                                        <div class="staff-timeline__content">
+                                            <strong>Nâng mức từ Trung bình → Cao</strong>
+                                            <p class="ds-caption">Nguyễn Văn Staff — 05/06/2026 08:00</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ds-card staff-action-card staff-sticky-column">
+                        <div style="padding: 16px 20px; display: flex; gap: 8px;">
+                            <a class="ds-btn ds-btn-outline" th:href="@{/staff/complaints/detail(id=${flag.complaint.id})}" style="flex: 1; font-size: 13px; padding: 8px 12px; justify-content: center; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
+                                <i class="fa fa-exclamation-circle"></i> Khiếu nại
+                            </a>
+                            <a class="ds-btn ds-btn-outline" href="/staff/flags" style="flex: 1; font-size: 13px; padding: 8px 12px; justify-content: center; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
+                                <i class="fa fa-arrow-left"></i> Quay lại
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/customer/auth.js}"></script>
+<script th:src="@{/js/staff/staff-ui.js}"></script>
+</body>
+</html>

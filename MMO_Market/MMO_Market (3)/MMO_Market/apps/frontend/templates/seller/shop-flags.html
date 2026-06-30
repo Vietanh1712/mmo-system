@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cờ cảnh báo Shop - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/features/home.css}">
+    <link rel="stylesheet" th:href="@{/css/customer/profile.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/seller/seller.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="ds-container-fluid admin-shell" style="max-width: 1500px; margin: 0 auto;">
+        <div class="admin-layout ds-two-column">
+            <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('shop-flags')}"></aside>
+
+            <section class="admin-workspace ds-page-shell" style="padding-right: 120px;">
+                <div class="view-header">
+                    <div>
+                        <h2>Cờ cảnh báo Shop</h2>
+                        <p>Theo dõi cảnh báo vi phạm từ Staff — ShopFlags</p>
+                    </div>
+                    <span class="ds-badge ds-badge-warning">Shop Flags</span>
+                </div>
+
+                <div class="stats-grid-4">
+                    <div class="stat-card-modern blue">
+                        <span class="stat-card-label">Tổng cờ cảnh báo</span>
+                        <div class="stat-card-value" id="totalFlags">0</div>
+                        <div class="stat-card-trend">Tất cả mức độ</div>
+                    </div>
+                    <div class="stat-card-modern blue">
+                        <span class="stat-card-label">Mức Warning</span>
+                        <div class="stat-card-value" id="warningCount">0</div>
+                        <div class="stat-card-trend">Cần cải thiện</div>
+                    </div>
+                    <div class="stat-card-modern red">
+                        <span class="stat-card-label">Mức Critical</span>
+                        <div class="stat-card-value" id="criticalCount">0</div>
+                        <div class="stat-card-trend">Nguy cơ bị khóa</div>
+                    </div>
+                    <div class="stat-card-modern blue">
+                        <span class="stat-card-label">Liên quan khiếu nại</span>
+                        <div class="stat-card-value" id="flagWithComplaint">0</div>
+                        <div class="stat-card-trend">Gắn Complaint ID</div>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <div class="card-header-flex">
+                        <h3>Danh sách cờ cảnh báo</h3>
+                    </div>
+                    <div style="padding: 16px 24px;">
+                        <!-- Dynamic flag cards will be rendered here -->
+                        <div class="flag-list" id="flagListContainer">
+                            <div style="text-align:center; padding: 30px; color: var(--ds-text-muted);">
+                                <i class="fa fa-spinner fa-spin"></i> Đang tải dữ liệu...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    <script th:src="@{/js/customer/auth.js}"></script>
+    <script th:src="@{/js/seller/seller-console.js}"></script>
+</body>
+</html>

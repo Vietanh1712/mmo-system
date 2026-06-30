@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Quản lý định danh KYC')}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('kyc')}"></aside>
+
+            <section class="ds-section">
+                <div class="staff-page-header">
+                    <div>
+                        <h1 class="ds-page-title">Quản lý yêu cầu định danh</h1>
+                        <p class="ds-page-subtitle">Danh sách hồ sơ KYC chờ phê duyệt hoặc đã xử lý.</p>
+                    </div>
+                </div>
+
+                <div class="staff-stat-grid">
+                    <div class="ds-card staff-stat-card blue">
+                        <p class="staff-stat-card__label">Tổng hồ sơ</p>
+                        <p class="staff-stat-card__value" id="stat-total-kyc">0</p>
+                    </div>
+                    <div class="ds-card staff-stat-card yellow">
+                        <p class="staff-stat-card__label">Chờ duyệt</p>
+                        <p class="staff-stat-card__value" id="stat-pending-kyc">0</p>
+                    </div>
+                    <div class="ds-card staff-stat-card green">
+                        <p class="staff-stat-card__label">Đã duyệt</p>
+                        <p class="staff-stat-card__value" id="stat-approved-kyc">0</p>
+                    </div>
+                    <div class="ds-card staff-stat-card red">
+                        <p class="staff-stat-card__label">Từ chối</p>
+                        <p class="staff-stat-card__value" id="stat-rejected-kyc">0</p>
+                    </div>
+                </div>
+
+                <div class="ds-card">
+                    <div class="ds-filter-panel">
+                        <h2 class="ds-card-title">Bộ lọc KYC</h2>
+                        <div class="ds-filter-grid">
+                            <input class="ds-input" type="text" id="kycCodeFilter" placeholder="Tìm theo mã hồ sơ...">
+                            <select class="ds-input" id="kycTypeFilter">
+                                <option value="">Tất cả loại giấy tờ</option>
+                                <option value="CCCD">CCCD</option>
+                                <option value="CMND">CMND</option>
+                                <option value="PASSPORT">Hộ chiếu (Passport)</option>
+                                <option value="DRIVER_LICENSE">Bằng lái xe</option>
+                            </select>
+                            <select class="ds-input" id="kycStatusFilter">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="PENDING">Chờ duyệt</option>
+                                <option value="APPROVED">Đã duyệt</option>
+                                <option value="REJECTED">Từ chối</option>
+                            </select>
+                        </div>
+                        <div class="ds-filter-actions">
+                            <button class="ds-btn ds-btn-primary" type="button" id="kycSearchBtn">Tìm kiếm</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ds-card">
+                    <div class="ds-table-wrap">
+                        <table class="ds-table">
+                            <thead>
+                            <tr>
+                                <th>Mã hồ sơ</th>
+                                <th>Số giấy tờ</th>
+                                <th>Loại giấy tờ</th>
+                                <th class="ds-table-center">Trạng thái</th>
+                                <th>Ngày gửi</th>
+                                <th class="ds-table-center">Thao tác</th>
+                            </tr>
+                            </thead>
+                            <tbody id="kycTableBody">
+                                <!-- JS will populate this -->
+                                <tr><td colspan="6" class="ds-table-center">Đang tải dữ liệu...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="kycPagination"></div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/customer/auth.js}"></script>
+<script th:src="@{/js/staff/staff-ui.js}"></script>
+<script th:src="@{/js/staff/staff-kyc.js}"></script>
+</body>
+</html>
