@@ -28,7 +28,12 @@
                             <span th:text="${transaction.product.productType}"></span>
                         </p>
                     </div>
-                    <span class="ds-badge" th:text="${transaction.status}"></span>
+                    <span th:if="${transaction.status == 'Pending'}" class="ds-badge ds-badge-info">Chờ xử lý</span>
+                    <span th:if="${transaction.status == 'Held'}" class="ds-badge ds-badge-warning">Tạm giữ bảo lãnh</span>
+                    <span th:if="${transaction.status == 'Completed'}" class="ds-badge ds-badge-success">Đã hoàn tất</span>
+                    <span th:if="${transaction.status == 'Refunded'}" class="ds-badge ds-badge-danger">Đã hoàn tiền</span>
+                    <span th:if="${transaction.status == 'Cancelled'}" class="ds-badge ds-badge-muted">Đã hủy</span>
+                    <span th:if="${transaction.status == 'Disputed'}" class="ds-badge ds-badge-purple">Đang khiếu nại</span>
                 </div>
 
                 <div class="staff-detail-grid">
@@ -37,148 +42,141 @@
                             <div class="ds-card-header">
                                 <h2 class="ds-card-title">Thông tin giao dịch</h2>
                             </div>
-                            <dl class="staff-info-list">
-                                <div class="staff-info-row">
-                                    <dt>Mã giao dịch</dt>
-                                    <dd th:text="'#TXN-' + ${transaction.id}"></dd>
-                                </div>
-                                <div class="staff-info-row">
-                                    <dt>Loại giao dịch</dt>
-                                    <dd><span class="ds-badge ds-badge-info" th:text="${transaction.product.productType}"></span></dd>
-                                </div>
-                                <div class="staff-info-row">
-                                    <dt>Số tiền</dt>
-                                    <dd class="ds-money" th:text="${#numbers.formatInteger(transaction.amountVnd,0,'COMMA')} + ' đ'"></dd>
-                                </div>
-                                <div class="staff-info-row">
-                                    <dt>Phí giao dịch</dt>
-                                    <dd class="ds-money" th:text="${#numbers.formatInteger(transaction.commissionVnd,0,'COMMA')} + ' đ'"></dd>
-                                </div>
-                                <div class="staff-info-row">
-                                    <dt>Phương thức thanh toán</dt>
-                                    <dd th:text="${transaction.paymentMethod}"></dd>
-                                </div>
-                                <div class="staff-info-row">
-                                    <dt>Thời gian tạo</dt>
-                                    <dd th:text="${#temporals.format(transaction.createdAt,'dd/MM/yyyy HH:mm:ss')}"></dd>
-                                </div>
-                                <div class="staff-info-row">
-                                    <dt>Thời gian hoàn tất</dt>
-                                    <dd th:text="${#temporals.format(transaction.escrowReleaseDate,'dd/MM/yyyy HH:mm:ss')}"></dd>
-                                </div>
-<!--                                <div class="staff-info-row">-->
-<!--                                    <dt>Mã tham chiếu</dt>-->
-<!--                                    <dd>REF-20260605-99281</dd>-->
-<!--                                </div>-->
-                            </dl>
+                            <div style="padding: 20px 24px;">
+                                <dl class="staff-info-list">
+                                    <div class="staff-info-row">
+                                        <dt>Mã giao dịch</dt>
+                                        <dd th:text="'#TXN-' + ${transaction.id}"></dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Loại giao dịch</dt>
+                                        <dd><span class="ds-badge ds-badge-info" th:text="${transaction.product.productType}"></span></dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Số tiền</dt>
+                                        <dd class="ds-money" th:text="${#numbers.formatInteger(transaction.amountVnd,0,'COMMA')} + ' đ'"></dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Phí giao dịch</dt>
+                                        <dd class="ds-money" th:text="${#numbers.formatInteger(transaction.commissionVnd,0,'COMMA')} + ' đ'"></dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Phương thức thanh toán</dt>
+                                        <dd th:text="${transaction.paymentMethod}"></dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Thời gian tạo</dt>
+                                        <dd th:text="${#temporals.format(transaction.createdAt,'dd/MM/yyyy HH:mm:ss')}"></dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Thời gian hoàn tất</dt>
+                                        <dd th:text="${#temporals.format(transaction.escrowReleaseDate,'dd/MM/yyyy HH:mm:ss')}"></dd>
+                                    </div>
+                                </dl>
+                            </div>
                         </div>
 
                         <div class="ds-card">
                             <div class="ds-card-header">
                                 <h2 class="ds-card-title">Người dùng &amp; đối tượng liên quan</h2>
                             </div>
-                            <dl class="staff-info-list">
-                                <div class="staff-info-row">
-                                    <dt>Người mua</dt>
-                                    <dd>
-                                        <span th:text="${transaction.customer.fullName}"></span>
-                                        —
-                                        <span th:text="${transaction.customer.email}"></span>
-                                    </dd>
-                                </div>
-                                <div class="staff-info-row">
-                                    <dt>Seller / Shop</dt>
-                                    <dd>
-                                        <span th:text="${transaction.seller.fullName}"></span>
-                                        —
-                                        <span th:text="${transaction.seller.email}"></span>
-                                    </dd>
-                                </div>
-<!--                                <div class="staff-info-row">-->
-<!--                                    <dt>Mã đơn hàng</dt>-->
-<!--                                    <dd><a href="#">#ORD-9921</a></dd>-->
-<!--                                </div>-->
-                                <div class="staff-info-row">
-                                    <dt>Sản phẩm</dt>
-                                    <dd>
-                                        <span th:text="${transaction.product.name}"></span>
-                                        -
-                                        <span th:text="${transaction.variant.variantName}"></span>
-                                    </dd>
-                                </div>
-<!--                                <div class="staff-info-row">-->
-<!--                                    <dt>Số dư trước GD</dt>-->
-<!--                                    <dd class="ds-money">1.250.000 đ</dd>-->
-<!--                                </div>-->
-<!--                                <div class="staff-info-row">-->
-<!--                                    <dt>Số dư sau GD</dt>-->
-<!--                                    <dd class="ds-money">900.000 đ</dd>-->
-<!--                                </div>-->
-                            </dl>
+                            <div style="padding: 20px 24px;">
+                                <dl class="staff-info-list">
+                                    <div class="staff-info-row">
+                                        <dt>Người mua</dt>
+                                        <dd>
+                                            <span th:text="${transaction.customer.fullName}"></span>
+                                            —
+                                            <span th:text="${transaction.customer.email}"></span>
+                                        </dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Seller / Shop</dt>
+                                        <dd>
+                                            <span th:text="${transaction.seller.fullName}"></span>
+                                            —
+                                            <span th:text="${transaction.seller.email}"></span>
+                                        </dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Sản phẩm</dt>
+                                        <dd>
+                                            <span th:text="${transaction.product.name}"></span>
+                                            -
+                                            <span th:text="${transaction.variant.variantName}"></span>
+                                        </dd>
+                                    </div>
+                                </dl>
+                            </div>
                         </div>
 
                         <div class="ds-card">
                             <div class="ds-card-header">
                                 <h2 class="ds-card-title">Lịch sử trạng thái</h2>
                             </div>
-                            <div class="staff-timeline">
-                                <div class="staff-timeline__item">
-                                    <span class="staff-timeline__dot"></span>
-                                    <div class="staff-timeline__content">
-                                        <strong>Khởi tạo giao dịch</strong>
-                                        <p class="ds-caption">Hệ thống — 05/06/2026 09:12:34</p>
+                            <div style="padding: 20px 24px;">
+                                <div class="staff-timeline">
+                                    <div class="staff-timeline__item">
+                                        <span class="staff-timeline__dot"></span>
+                                        <div class="staff-timeline__content">
+                                            <strong>Khởi tạo giao dịch</strong>
+                                            <p class="ds-caption">Hệ thống — 05/06/2026 09:12:34</p>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="staff-timeline__item">
-                                    <span class="staff-timeline__dot"></span>
-                                    <div class="staff-timeline__content">
-                                        <strong>Trừ tiền ví người mua</strong>
-                                        <p class="ds-caption">Ví — 05/06/2026 09:12:36</p>
+                                    <div class="staff-timeline__item">
+                                        <span class="staff-timeline__dot"></span>
+                                        <div class="staff-timeline__content">
+                                            <strong>Trừ tiền ví người mua</strong>
+                                            <p class="ds-caption">Ví — 05/06/2026 09:12:36</p>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="staff-timeline__item">
-                                    <span class="staff-timeline__dot"></span>
-                                    <div class="staff-timeline__content">
-                                        <strong>Giao dịch thành công</strong>
-                                        <p class="ds-caption">Hệ thống — 05/06/2026 09:12:41</p>
+                                    <div class="staff-timeline__item">
+                                        <span class="staff-timeline__dot"></span>
+                                        <div class="staff-timeline__content">
+                                            <strong>Giao dịch thành công</strong>
+                                            <p class="ds-caption">Hệ thống — 05/06/2026 09:12:41</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="ds-stack-md">
+                    <div class="ds-stack-md staff-sticky-column">
                         <div class="ds-card staff-action-card">
                             <div class="ds-card-header">
                                 <h2 class="ds-card-title">Tóm tắt</h2>
                             </div>
-                            <div class="ds-alert ds-alert-success">Giao dịch đã hoàn tất, tiền đã được giữ bảo lãnh theo quy trình C2C.</div>
-                            <dl class="staff-info-list">
-                                <div class="staff-info-row">
-                                    <dt>Trạng thái đơn</dt>
-                                    <dd><span class="ds-badge ds-badge-success"  th:text="${transaction.status}"></span></dd>
-                                </div>
-                                <div class="staff-info-row">
-                                    <dt>Giữ tiền bảo lãnh</dt>
-                                    <dd th:text="${remainingHours}"></dd>
-                                </div>
-                            </dl>
+                            <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px;">
+                                <div class="ds-alert ds-alert-success">Giao dịch đã hoàn tất, tiền đã được giữ bảo lãnh theo quy trình C2C.</div>
+                                <dl class="staff-info-list">
+                                    <div class="staff-info-row">
+                                        <dt>Trạng thái đơn</dt>
+                                        <dd>
+                                            <span th:if="${transaction.status == 'Pending'}" class="ds-badge ds-badge-info">Chờ xử lý</span>
+                                            <span th:if="${transaction.status == 'Held'}" class="ds-badge ds-badge-warning">Tạm giữ bảo lãnh</span>
+                                            <span th:if="${transaction.status == 'Completed'}" class="ds-badge ds-badge-success">Đã hoàn tất</span>
+                                            <span th:if="${transaction.status == 'Refunded'}" class="ds-badge ds-badge-danger">Đã hoàn tiền</span>
+                                            <span th:if="${transaction.status == 'Cancelled'}" class="ds-badge ds-badge-muted">Đã hủy</span>
+                                            <span th:if="${transaction.status == 'Disputed'}" class="ds-badge ds-badge-purple">Đang khiếu nại</span>
+                                        </dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Giữ tiền bảo lãnh</dt>
+                                        <dd th:text="${remainingHours}"></dd>
+                                    </div>
+                                </dl>
+                            </div>
                         </div>
 
                         <div class="ds-card staff-action-card">
-<!--                            <div class="ds-card-header">-->
-<!--                                <h2 class="ds-card-title">Ghi chú nội bộ (Staff)</h2>-->
-<!--                            </div>-->
-<!--                            <div class="ds-form-field">-->
-<!--                                <label class="ds-label" for="txnNote">Ghi chú xử lý</label>-->
-<!--                                <textarea class="ds-textarea" id="txnNote" placeholder="Ghi chú đối soát, tra soát, liên hệ user..."></textarea>-->
-<!--                            </div>-->
-<!--                            <div class="ds-cluster">-->
-<!--                                <button class="ds-btn ds-btn-primary" type="button" data-staff-action="save" data-staff-label="Đã lưu ghi chú giao dịch">Lưu ghi chú</button>-->
-<!--                            </div>-->
-                            <div class="ds-stack-sm ds-mt-md">
-                                <a class="ds-btn ds-btn-outline" th:if="${complaint != null}" th:href="@{/staff/complaints/detail(id=${complaint.id})}">Xem khiếu nại liên quan</a>
-                                <a class="ds-btn ds-btn-outline" href="/staff/transactions">Quay lại danh sách</a>
+                            <div style="padding: 16px 20px; display: flex; gap: 8px;">
+                                <a class="ds-btn ds-btn-outline" th:if="${complaint != null}" th:href="@{/staff/complaints/detail(id=${complaint.id})}" style="flex: 1; font-size: 13px; padding: 8px 12px; justify-content: center; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
+                                    <i class="fa fa-exclamation-circle"></i> Khiếu nại
+                                </a>
+                                <a class="ds-btn ds-btn-outline" href="/staff/transactions" style="flex: 1; font-size: 13px; padding: 8px 12px; justify-content: center; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
+                                    <i class="fa fa-arrow-left"></i> Quay lại
+                                </a>
                             </div>
                         </div>
                     </div>

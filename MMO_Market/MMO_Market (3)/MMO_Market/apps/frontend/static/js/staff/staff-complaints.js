@@ -1,4 +1,8 @@
 let allComplaints = [];
+let currentPage = 0;
+let pageSize = 10;
+let totalElements = 0;
+let totalPages = 0;
 
 async function loadStaffComplaintsFromApi() {
     const token = sessionStorage.getItem('accessToken');
@@ -8,8 +12,21 @@ async function loadStaffComplaintsFromApi() {
         return;
     }
 
+    const searchInput = document.getElementById('staff-search-input');
+    const search = searchInput ? searchInput.value.trim() : '';
+    const statusSelect = document.getElementById('staff-status-select');
+    const status = statusSelect ? statusSelect.value : '';
+
+    let url = `/api/complaints/all?page=${currentPage}&size=${pageSize}`;
+    if (search) {
+        url += `&keyword=${encodeURIComponent(search)}`;
+    }
+    if (status) {
+        url += `&status=${status}`;
+    }
+
     try {
-        const res = await fetch('/api/complaints/all', {
+        const res = await fetch(url, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -17,7 +34,8 @@ async function loadStaffComplaintsFromApi() {
         });
         if (res.ok) {
             const data = await res.json();
-            allComplaints = data.map(item => ({
+            const list = data.content || [];
+            allComplaints = list.map(item => ({
                 id: item.id ? `CMP-${item.id}` : 'CMP-UNKNOWN',
                 senderName: item.customer ? item.customer.fullName : 'N/A',
                 senderEmail: item.customer ? item.customer.email : 'N/A',
@@ -29,7 +47,8 @@ async function loadStaffComplaintsFromApi() {
                 evidence: item.evidence || 'Không có',
                 detail: item.description || ''
             }));
-            sessionStorage.setItem('mmoMarketComplaintsMockGlobal', JSON.stringify(allComplaints));
+            totalElements = data.totalElements || 0;
+            totalPages = data.totalPages || 0;
         } else {
             loadMockComplaints();
         }
@@ -44,7 +63,7 @@ function formatDateString(dateStr) {
         const d = new Date(dateStr);
         const pad = (n) => String(n).padStart(2, '0');
         return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    } catch(e) {
+    } catch (e) {
         return dateStr;
     }
 }
@@ -54,7 +73,7 @@ function loadMockComplaints() {
     initComplaints();
     try {
         allComplaints = JSON.parse(sessionStorage.getItem(key)) || [];
-    } catch(e) {
+    } catch (e) {
         allComplaints = [];
     }
 }
@@ -62,70 +81,16 @@ function loadMockComplaints() {
 function initComplaints() {
     const key = 'mmoMarketComplaintsMockGlobal';
     if (!sessionStorage.getItem(key)) {
-        const initialList = [
-            {
-                id: 'CMP-3310',
-                senderName: 'Nguyễn An',
-                senderEmail: 'buyer@mmo.com',
-                target: 'Shop GameHub Pro / Sản phẩm Gmail Premium',
-                category: 'Sản phẩm',
-                amount: 350000,
-                status: 'InProgress',
-                createdAt: '05/06/2026 08:12',
-                evidence: 'https://imgur.com/error_gmail.jpg',
-                detail: 'Tôi mua tài khoản Gmail Premium nhưng nhận được tài khoản đã bị khóa sau 2 giờ sử dụng. Đã liên hệ shop nhưng không được phản hồi. Yêu cầu hoàn tiền hoặc cấp tài khoản thay thế.'
-            },
-            {
-                id: 'CMP-3308',
-                senderName: 'Trần Hùng',
-                senderEmail: 'hung.tran@mmo.com',
-                target: 'Đơn #ORD-9921',
-                category: 'Giao dịch',
-                amount: 240000,
-                status: 'New',
-                createdAt: '04/06/2026 14:30',
-                evidence: 'Không có',
-                detail: 'Giao dịch lỗi, tài khoản không tự động kích hoạt.'
-            },
-            {
-                id: 'CMP-3295',
-                senderName: 'Lê Mai',
-                senderEmail: 'mai.le@mmo.com',
-                target: 'Shop Digital Keys',
-                category: 'Shop',
-                amount: 150000,
-                status: 'Resolved',
-                createdAt: '03/06/2026 10:15',
-                evidence: 'https://imgur.com/evidence_chat.jpg',
-                detail: 'Người bán không phản hồi chat.'
-            }
-        ];
+        const initialList = [];
         sessionStorage.setItem(key, JSON.stringify(initialList));
     }
 }
 
-function renderStaffComplaints() {
-    let list = allComplaints;
-
-    const search = document.getElementById('staff-search-input').value.trim().toLowerCase();
-    const status = document.getElementById('staff-status-select').value;
-    const category = document.getElementById('staff-category-select').value;
-
-    const filtered = list.filter(item => {
-        const matchesSearch = !search || 
-            item.id.toLowerCase().includes(search) || 
-            item.senderName.toLowerCase().includes(search) || 
-            item.senderEmail.toLowerCase().includes(search) || 
-            item.target.toLowerCase().includes(search);
-        const matchesStatus = !status || item.status === status;
-        const matchesCategory = !category || item.category === category;
-        return matchesSearch && matchesStatus && matchesCategory;
-    });
-
+function renderStaffComplaintsTable(list, isBackendDriven = true) {
     const tbody = document.getElementById('staff-complaints-body');
     if (!tbody) return;
 
-    if (filtered.length === 0) {
+    if (list.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="7" style="text-align: center; padding: 24px; color: var(--ds-text-subtle);">
@@ -133,11 +98,11 @@ function renderStaffComplaints() {
                 </td>
             </tr>
         `;
-        updatePaginationMeta(0);
+        renderPagination(0, 0);
         return;
     }
 
-    tbody.innerHTML = filtered.map(item => {
+    tbody.innerHTML = list.map(item => {
         let badgeClass = 'ds-badge-warning';
         let statusText = 'Đang xử lý';
         if (item.status === 'New') {
@@ -174,7 +139,7 @@ function renderStaffComplaints() {
                 <td>${escapeHtml(item.createdAt.split(' ')[0])}</td>
                 <td class="ds-table-center">
                     <div class="ds-table-actions">
-                        <button class="ds-icon-btn ds-icon-btn-view" onclick="viewComplaintDetail('${item.id}')" aria-label="Xem chi tiết" style="border:none; background:transparent; cursor:pointer;">
+                        <button class="ds-icon-btn ds-icon-btn-view" onclick="viewComplaintDetail('${item.id}')" aria-label="Xem chi tiết">
                             <svg class="ds-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="width:16px; height:16px;">
                                 <path d="M2.25 12C3.73 8.12 7.49 5.25 12 5.25C16.51 5.25 20.27 8.12 21.75 12C20.27 15.88 16.51 18.75 12 18.75C7.49 18.75 3.73 15.88 2.25 12Z" stroke="currentColor" stroke-width="2"/>
                                 <path d="M12 15.25C13.79 15.25 15.25 13.79 15.25 12C15.25 10.21 13.79 8.75 12 8.75C10.21 8.75 8.75 10.21 8.75 12C8.75 13.79 10.21 15.25 12 15.25Z" stroke="currentColor" stroke-width="2"/>
@@ -186,14 +151,61 @@ function renderStaffComplaints() {
         `;
     }).join('');
 
-    updatePaginationMeta(filtered.length);
+    if (isBackendDriven) {
+        renderPagination(totalElements, totalPages);
+    } else {
+        const localTotalPages = Math.ceil(list.length / pageSize);
+        renderPagination(list.length, localTotalPages);
+    }
 }
 
-function updatePaginationMeta(count) {
-    const totalMeta = document.querySelector('.ds-pagination-meta span');
-    if (totalMeta) {
-        totalMeta.textContent = `Tổng số: ${count} bản ghi`;
+async function renderStaffComplaints() {
+    const token = sessionStorage.getItem('accessToken');
+    if (!token) {
+        loadMockComplaints();
+        let list = allComplaints;
+        const search = document.getElementById('staff-search-input').value.trim().toLowerCase();
+        const status = document.getElementById('staff-status-select').value;
+        const category = document.getElementById('staff-category-select').value;
+
+        const filtered = list.filter(item => {
+            const matchesSearch = !search ||
+                item.id.toLowerCase().includes(search) ||
+                item.senderName.toLowerCase().includes(search) ||
+                item.senderEmail.toLowerCase().includes(search) ||
+                item.target.toLowerCase().includes(search);
+            const matchesStatus = !status || item.status === status;
+            const matchesCategory = !category || item.category === category;
+            return matchesSearch && matchesStatus && matchesCategory;
+        });
+
+        filtered.sort((a, b) => {
+            const idA = parseInt(a.id.replace('CMP-', '')) || 0;
+            const idB = parseInt(b.id.replace('CMP-', '')) || 0;
+            return idA - idB;
+        });
+
+        const localTotalPages = Math.ceil(filtered.length / pageSize);
+        if (currentPage >= localTotalPages) currentPage = 0;
+        const pageItems = filtered.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
+        renderStaffComplaintsTable(pageItems, false);
+        return;
     }
+
+    await loadStaffComplaintsFromApi();
+    renderStaffComplaintsTable(allComplaints, true);
+}
+
+function renderPagination(totalElements, totalPages) {
+    mountStaffPagination('complaintsPagination', {
+        page: currentPage,
+        totalPages: totalPages,
+        totalElements: totalElements,
+        pageSize: pageSize
+    }, {
+        onPage: (p) => { currentPage = p; renderStaffComplaints(); },
+        onSize: (s) => { pageSize = s; currentPage = 0; renderStaffComplaints(); }
+    });
 }
 
 function viewComplaintDetail(id) {
@@ -202,6 +214,7 @@ function viewComplaintDetail(id) {
 }
 
 function applyStaffFilters() {
+    currentPage = 0;
     renderStaffComplaints();
 }
 
@@ -209,6 +222,7 @@ function resetStaffFilters() {
     document.getElementById('staff-search-input').value = '';
     document.getElementById('staff-status-select').value = '';
     document.getElementById('staff-category-select').value = '';
+    currentPage = 0;
     renderStaffComplaints();
 }
 
@@ -221,7 +235,35 @@ function escapeHtml(value) {
         .replaceAll("'", '&#039;');
 }
 
+async function loadComplaintStats() {
+    const token = sessionStorage.getItem('accessToken');
+    if (!token) return;
+
+    try {
+        const res = await fetch('/api/complaints/stats', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        if (res.ok) {
+            const stats = await res.json();
+            const totalEl = document.getElementById('stat-total-complaints');
+            const inprogressEl = document.getElementById('stat-inprogress-complaints');
+            const resolvedEl = document.getElementById('stat-resolved-complaints');
+            const rejectedEl = document.getElementById('stat-rejected-complaints');
+
+            if (totalEl) totalEl.textContent = stats.total || 0;
+            if (inprogressEl) inprogressEl.textContent = stats.inProgress || 0;
+            if (resolvedEl) resolvedEl.textContent = stats.resolved || 0;
+            if (rejectedEl) rejectedEl.textContent = stats.rejected || 0;
+        }
+    } catch (err) {
+        console.error("Lỗi tải thống kê khiếu nại:", err);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadStaffComplaintsFromApi();
-    renderStaffComplaints();
+    await loadComplaintStats();
+    await renderStaffComplaints();
 });

@@ -307,6 +307,17 @@ function renderProfile(profile) {
     document.getElementById('profileShopStatus').textContent = profile.shopStatus || '-';
     document.getElementById('profileBalance').textContent = balance;
 
+    const normalizedRole = accountSidebar.normalizeRole(profile.role);
+    const isInternal = normalizedRole === 'Staff' || normalizedRole === 'Admin';
+    const nationalIdRow = document.getElementById('profileNationalIdRow');
+    if (nationalIdRow) {
+        nationalIdRow.hidden = isInternal;
+    }
+    const nationalIdField = document.getElementById('profileNationalIdField');
+    if (nationalIdField) {
+        nationalIdField.hidden = isInternal;
+    }
+
     accountSidebar.render(profile);
 }
 

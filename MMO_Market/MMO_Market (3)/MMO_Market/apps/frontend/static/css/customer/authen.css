@@ -434,3 +434,9 @@ body.auth-layout .message.info {
         margin-right: 0;
     }
 }
+
+/* Ẩn con mắt mặc định của trình duyệt Edge/IE */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none !important;
+}

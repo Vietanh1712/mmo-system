@@ -9,16 +9,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import com.mmo.feature.staff.service.StaffDashboardService;
 import com.mmo.shared.dal.ComplaintRepository;
-import com.mmo.shared.dal.KycRequestRepository;
 import com.mmo.shared.dal.TransactionRepository;
 import com.mmo.shared.dal.WithdrawalRepository;
 import com.mmo.shared.dal.ShopFlagRepository;
-import com.mmo.shared.model.KycStatus;
 import com.mmo.shared.model.ShopFlag;
 import com.mmo.shared.model.Transaction;
 import com.mmo.shared.model.Withdrawal;
@@ -39,9 +36,6 @@ public class StaffController {
     private ComplaintRepository complaintRepository;
 
     @Autowired
-    private KycRequestRepository kycRequestRepository;
-
-    @Autowired
     private TransactionRepository transactionRepository;
 
     @Autowired
@@ -53,20 +47,7 @@ public class StaffController {
     @Autowired
     private StaffDashboardService staffDashboardService;
 
-    @ModelAttribute
-    public void addStaffSidebarCounts(Model model) {
-        long complaintCount = complaintRepository.countByStatusAndIsDeleteFalse("InProgress");
-        long pendingKycCount = kycRequestRepository.countByStatusAndIsDeleteFalse(KycStatus.PENDING);
-        long transactionCount = transactionRepository.countByIsDeleteFalse();
-        long withdrawalCount = withdrawalRepository.countByStatusAndIsDeleteFalse("Pending");
-        long flagCount = shopFlagRepository.countByIsDeleteFalse();
 
-        model.addAttribute("complaintCount", complaintCount);
-        model.addAttribute("pendingKycCount", pendingKycCount);
-        model.addAttribute("transactionCount", transactionCount);
-        model.addAttribute("withdrawalCount", withdrawalCount);
-        model.addAttribute("flagCount", flagCount);
-    }
 
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
@@ -112,6 +93,7 @@ public class StaffController {
             @RequestParam(required = false) String fromDate,
             @RequestParam(required = false) String toDate,
             @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             Model model) {
 
         LocalDateTime from = null, to = null;
@@ -127,7 +109,7 @@ public class StaffController {
         String typeParam   = (type   != null && !type.isBlank())   ? type   : null;
         String statusParam = (status != null && !status.isBlank()) ? status : null;
 
-        Pageable pageable = PageRequest.of(page, 20, Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
         Page<Transaction> txPage = transactionRepository.searchTransactions(
                 kw, id, typeParam, statusParam, from, to, pageable);
 
@@ -147,6 +129,7 @@ public class StaffController {
         model.addAttribute("selectedStatus",  status);
         model.addAttribute("fromDate",        fromDate);
         model.addAttribute("toDate",          toDate);
+        model.addAttribute("pageSize",        size);
         return "staff/transactions";
     }
 
@@ -183,12 +166,13 @@ public class StaffController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long minAmount,
             @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             Model model) {
 
         String st = (status == null || status.isBlank() || status.equals("ALL")) ? null : status;
         String kw = (keyword != null && keyword.isBlank()) ? null : keyword;
 
-        Pageable pageable = PageRequest.of(page, 20, Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
         Page<Withdrawal> wPage = withdrawalRepository.searchWithdrawals(st, kw, minAmount, pageable);
 
         model.addAttribute("withdrawals",          wPage.getContent());
@@ -202,6 +186,7 @@ public class StaffController {
         model.addAttribute("keyword",               keyword);
         model.addAttribute("selectedStatus",        st);
         model.addAttribute("minAmount",             minAmount);
+        model.addAttribute("pageSize",              size);
         return "staff/withdrawals";
     }
 
@@ -254,13 +239,14 @@ public class StaffController {
             @RequestParam(required = false) String level,
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             Model model) {
 
         String lv = (level  == null || level.isBlank()  || level.equals("ALL"))  ? null : level;
         String st = (status == null || status.isBlank() || status.equals("ALL")) ? null : status;
         String kw = (keyword != null && keyword.isBlank()) ? null : keyword;
 
-        Pageable pageable = PageRequest.of(page, 20, Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
         Page<ShopFlag> fPage = shopFlagRepository.searchFlags(kw, lv, st, pageable);
 
         model.addAttribute("flags",          fPage.getContent());
@@ -271,12 +257,13 @@ public class StaffController {
         model.addAttribute("warningFlags",   shopFlagRepository.countByFlagLevelAndIsDeleteFalse("Warning"));
         model.addAttribute("criticalFlags",  shopFlagRepository.countByFlagLevelAndIsDeleteFalse("Critical"));
         model.addAttribute("removedFlags",   shopFlagRepository.countByStatusAndIsDeleteFalse("Removed"));
-        model.addAttribute("activeFlags",    shopFlagRepository.countByStatusAndIsDeleteFalse("Active"));
+        model.addAttribute("activeFlags",    shopFlagRepository.countByStatusAndIsDeleteFalse("Effect"));
         model.addAttribute("levels",         List.of("Warning", "Critical", "Danger"));
-        model.addAttribute("statuses",       List.of("Active", "Removed"));
+        model.addAttribute("statuses",       List.of("Effect", "Removed"));
         model.addAttribute("keyword",        keyword);
         model.addAttribute("selectedLevel",  lv);
         model.addAttribute("selectedStatus", st);
+        model.addAttribute("pageSize",       size);
         return "staff/flags";
     }
 

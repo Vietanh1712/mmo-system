@@ -28,7 +28,7 @@ public class WalletService {
         long escrowAmount = 0;
 
         for (WalletTransaction txn : transactions) {
-            if ("TOPUP".equals(txn.getType()) && "SUCCESS".equals(txn.getStatus())) {
+            if (("TOPUP".equals(txn.getType()) || "REFUND".equals(txn.getType())) && "SUCCESS".equals(txn.getStatus())) {
                 totalTopup += txn.getAmountVnd();
             }
             if ("PAYMENT".equals(txn.getType()) && "SUCCESS".equals(txn.getStatus())) {
@@ -64,6 +64,10 @@ public class WalletService {
     }
 
     public WalletTransaction recordTransaction(User user, String type, Long amountVnd, String status, String description, String referenceCode, Long balanceAfter) {
+        return recordTransaction(user, type, amountVnd, status, description, referenceCode, balanceAfter, null);
+    }
+
+    public WalletTransaction recordTransaction(User user, String type, Long amountVnd, String status, String description, String referenceCode, Long balanceAfter, Long referenceId) {
         String transactionType = (amountVnd != null && amountVnd >= 0) ? "IN" : "OUT";
         WalletTransaction txn = WalletTransaction.builder()
                 .user(user)
@@ -74,6 +78,7 @@ public class WalletService {
                 .referenceCode(referenceCode)
                 .balanceAfter(balanceAfter != null ? balanceAfter : 0L)
                 .transactionType(transactionType)
+                .referenceId(referenceId)
                 .build();
         return walletTransactionRepository.save(txn);
     }

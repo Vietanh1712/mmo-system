@@ -23,10 +23,26 @@
         body.is-system-user #contact-title + p,
         body.is-system-user [data-sidebar-visibility="buyer-only"],
         body.is-system-user .account-sidebar__wallet,
-        body.is-system-user .account-sidebar__role-slot {
+        body.is-system-user .account-sidebar__role-slot,
+        body.is-system-user [data-account-role="customer-or-seller-only"] {
             display: none !important;
         }
     </style>
+    <script>
+        // Immediately ensure seller pages show customer header elements.
+        try {
+            if (window && window.location && String(window.location.pathname).toLowerCase().startsWith('/seller')) {
+                document.body.classList.remove('is-system-user');
+                ['headerCartButton','headerNotifButton','topupNavItem','topupDropdownItem','transactionsDropdownItem','preordersDropdownItem','cartDropdownItem','sellerDashboardDropdownItem']
+                    .forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.style.display = '';
+                    });
+            }
+        } catch (e) {
+            // ignore
+        }
+    </script>
     <div class="header__top">
         <a href="/" class="header__logo">
             <i class="fa fa-diamond"></i>
@@ -149,14 +165,37 @@
                     const currentRole = parseHeaderRole(user.role);
                     const isSystemRole = currentRole === 'Admin' || currentRole === 'Staff';
                     const currentPath = window.location.pathname.toLowerCase();
-                    const isSellerConsole = currentPath.startsWith('/seller');
 
-                    if (isSystemRole || isSellerConsole) {
-                        document.body.classList.add('is-system-user');
+                    const forceCustomerHeader = currentPath.startsWith('/seller');
+
+
+                    if (forceCustomerHeader) {
+                        document.body.classList.remove('is-system-user');
+                        // Make sure key customer header controls are visible
+                        const headerCartBtn = document.getElementById('headerCartButton');
+                        const headerNotifBtn = document.getElementById('headerNotifButton');
+                        const topupNav = document.getElementById('topupNavItem');
+                        const topupDropdown = document.getElementById('topupDropdownItem');
+                        if (headerCartBtn) headerCartBtn.style.display = '';
+                        if (headerNotifBtn) headerNotifBtn.style.display = '';
+                        if (topupNav) topupNav.style.display = '';
+                        if (topupDropdown) topupDropdown.style.display = '';
+
+                        // Explicitly ensure the dropdown contains all customer links
+                        // (transactions, preorders, cart, topup, seller dashboard).
+                        ['transactionsDropdownItem','preordersDropdownItem','cartDropdownItem','topupDropdownItem','sellerDashboardDropdownItem']
+                            .forEach(id => {
+                                const el = document.getElementById(id);
+                                if (el) el.style.display = 'flex';
+                            });
+                    } else {
+                        if (isSystemRole) {
+                            document.body.classList.add('is-system-user');
+                        }
                     }
 
-                    if (isSystemRole) {
-                        const forbiddenPaths = ['/cart', '/checkout', '/wallet/topup', '/wallet/transactions', '/pre-orders', '/account/orders'];
+                    if (isSystemRole && !forceCustomerHeader) {
+                        const forbiddenPaths = ['/cart', '/checkout', '/wallet/topup', '/wallet/transactions', '/pre-orders', '/account/orders', '/account/kyc'];
                         if (forbiddenPaths.some(path => currentPath === path || currentPath.startsWith(path + '/'))) {
                             alert('Quản trị viên và nhân viên không có quyền truy cập chức năng này.');
                             window.location.replace('/');
@@ -171,8 +210,15 @@
                     const topupNavItem = document.getElementById('topupNavItem');
 
                     if (currentRole === 'Admin' || currentRole === 'Staff') {
-                        if (topupDropdownItem) topupDropdownItem.style.display = 'none';
-                        if (topupNavItem) topupNavItem.style.display = 'none';
+                        // Hide topup for Admin/Staff unless we're on seller pages
+                        // where header should remain customer-like.
+                        if (!forceCustomerHeader) {
+                            if (topupDropdownItem) topupDropdownItem.style.display = 'none';
+                            if (topupNavItem) topupNavItem.style.display = 'none';
+                        } else {
+                            if (topupDropdownItem) topupDropdownItem.style.display = '';
+                            if (topupNavItem) topupNavItem.style.display = '';
+                        }
                     }
 
                     if (currentRole === 'Admin' && adminWorkbenchItem) {
@@ -183,7 +229,9 @@
                         staffWorkItem.style.display = 'flex';
                     }
 
-                    if (headerIsSellerRole(user.role) && sellerDropdownItem) {
+                    // Show seller dashboard link in header only when not forcing
+                    // the customer header mode for seller pages (avoid duplication)
+                    if (!forceCustomerHeader && headerIsSellerRole(user.role) && sellerDropdownItem) {
                         sellerDropdownItem.style.display = 'flex';
                     }
 

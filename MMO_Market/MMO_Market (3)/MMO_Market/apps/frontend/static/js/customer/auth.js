@@ -863,6 +863,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const alertBox = document.getElementById('reset-msg');
     const passwordPattern = /^(?=.*[A-Z])(?=.*[\W_]).{6,}$/;
 
+    const passwordToggles = form.querySelectorAll('[data-toggle-password]');
+    passwordToggles.forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            const inputId = this.dataset.togglePassword;
+            const input = document.getElementById(inputId);
+            if (!input) return;
+
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+
+            const icon = this.querySelector('i');
+            if (icon) {
+                icon.classList.toggle('fa-eye', !isHidden);
+                icon.classList.toggle('fa-eye-slash', isHidden);
+            }
+
+            this.setAttribute('aria-label', isHidden ? 'Ẩn mật khẩu' : 'Hiển thị mật khẩu');
+        });
+    });
+
     if (!resetEmail) {
         alertBox.textContent = 'Lỗi hệ thống: Không tìm thấy thông tin yêu cầu khôi phục.';
         alertBox.className = 'message error';

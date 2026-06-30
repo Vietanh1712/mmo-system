@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng bán sản phẩm - MMO Market</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/features/home.css}">
     <link rel="stylesheet" th:href="@{/css/customer/profile.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
     <link rel="stylesheet" th:href="@{/css/seller/seller.css}">
     <style>
         .product-type-selector {
@@ -332,22 +334,22 @@
 <body>
     <header th:replace="fragments/header :: header"></header>
 
-    <main class="seller-page">
-        <div class="seller-layout">
+    <main class="ds-container-fluid admin-shell" style="max-width: 1500px; margin: 0 auto;">
+        <div class="admin-layout ds-two-column">
             <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('product-add')}"></aside>
 
-            <section class="seller-card">
-                <div class="seller-card__header">
-                    <div class="seller-card__header-main">
-                        <div class="seller-card__icon"><i class="fa fa-plus-square-o"></i></div>
-                        <div>
-                            <h1 class="seller-card__title">Đăng bán sản phẩm mới</h1>
-                            <p class="seller-card__subtitle">Nhập thông tin cơ bản của sản phẩm, sau đó thêm biến thể và tồn kho</p>
-                        </div>
+            <section class="admin-workspace ds-page-shell" style="padding-right: 120px;">
+                <div class="view-header">
+                    <div>
+                        <h2>Đăng bán sản phẩm mới</h2>
+                        <p>Nhập thông tin cơ bản của sản phẩm, sau đó thêm biến thể và tồn kho.</p>
                     </div>
+                    <a class="ds-btn ds-btn-outline" th:href="@{/seller/inventory}" style="text-decoration: none;">
+                        <i class="fa fa-arrow-left" aria-hidden="true"></i> Quay lại kho
+                    </a>
                 </div>
 
-                <form class="profile-edit-form seller-form-panel" id="productForm" novalidate>
+                <form class="profile-edit-form seller-form-panel seller-product-form admin-card" id="productForm" novalidate>
                     <!-- Section 1: Basic Info -->
                     <div class="form-section-title">Thông tin cơ bản sản phẩm</div>
 
@@ -444,11 +446,11 @@
                         <i class="fa fa-plus"></i> Thêm phân loại / biến thể
                     </button>
 
-                    <div class="profile-actions" style="margin-top: 32px;">
-                        <button class="profile-button profile-button--primary" type="submit">
-                            Đăng bán sản phẩm
+                    <div class="profile-actions seller-product-form__actions">
+                        <button class="profile-button profile-button--primary ds-btn ds-btn-primary" type="submit">
+                            <i class="fa fa-check" aria-hidden="true"></i> Đăng bán sản phẩm
                         </button>
-                        <a class="profile-button profile-button--secondary" th:href="@{/seller/inventory}">Hủy</a>
+                        <a class="profile-button profile-button--secondary ds-btn ds-btn-outline" th:href="@{/seller/inventory}">Hủy</a>
                     </div>
                 </form>
             </section>

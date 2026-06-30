@@ -33,6 +33,8 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
 
     List<Complaint> findAllByIsDeleteFalseOrderByCreatedAtDesc();
 
+    List<Complaint> findAllByIsDeleteFalseOrderByIdAsc();
+
     // phân trang
 
     Page<Complaint> findByIsDeleteFalse(Pageable pageable);
@@ -71,6 +73,36 @@ AND (
 )
 """)
     Page<Complaint> searchComplaints(
+            @Param("keyword") String keyword,
+            @Param("status") String status,
+            Pageable pageable
+    );
+
+    @Query("""
+SELECT c
+FROM Complaint c
+LEFT JOIN c.customer cust
+LEFT JOIN c.transaction tx
+LEFT JOIN tx.product prod
+WHERE c.isDelete = false
+AND (
+      (:complaintId IS NOT NULL AND c.id = :complaintId)
+      OR
+      (:complaintId IS NULL AND (
+            :keyword IS NULL
+            OR LOWER(c.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(cust.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(cust.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(prod.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+      ))
+)
+AND (
+      :status IS NULL
+      OR c.status = :status
+)
+""")
+    Page<Complaint> searchComplaintsForStaff(
+            @Param("complaintId") Long complaintId,
             @Param("keyword") String keyword,
             @Param("status") String status,
             Pageable pageable

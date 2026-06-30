@@ -184,7 +184,7 @@ function createSeedTransactions() {
 
 function renderSummary(transactions) {
     const summary = transactions.reduce((result, item) => {
-        if (item.type === 'TOPUP' && item.status === 'SUCCESS') {
+        if (['TOPUP', 'REFUND'].includes(item.type) && item.status === 'SUCCESS') {
             result.topup += Math.abs(Number(item.amount) || 0);
         }
 

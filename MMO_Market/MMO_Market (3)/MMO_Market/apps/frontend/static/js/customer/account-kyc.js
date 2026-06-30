@@ -37,6 +37,11 @@ async function loadKycPage() {
         }
 
         currentProfile = await response.json();
+        const normalizedRole = accountSidebar.normalizeRole(currentProfile.role);
+        if (normalizedRole === 'Staff' || normalizedRole === 'Admin') {
+            window.location.replace('/profile');
+            return;
+        }
         accountSidebar.render(currentProfile);
         currentKyc = await fetchKycState();
         renderKycState();

@@ -128,7 +128,7 @@ function renderTimeline() {
     const timeline = document.getElementById('detail-timeline');
     let html = `
         <div class="staff-timeline__item">
-            <span class="staff-timeline__dot" style="background-color: #0058be;"></span>
+            <span class="staff-timeline__dot" style="background-color: #0f172a;"></span>
             <div class="staff-timeline__content">
                 <strong>Tiếp nhận khiếu nại</strong>
                 <p class="ds-caption">Hệ thống — ${escapeHtml(currentComplaint.createdAt)}</p>

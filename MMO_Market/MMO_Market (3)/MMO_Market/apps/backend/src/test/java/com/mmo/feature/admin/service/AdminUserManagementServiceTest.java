@@ -153,7 +153,7 @@ class AdminUserManagementServiceTest {
         staffRequest.setFullName("Updated Staff Name");
         staffRequest.setActive(false); // Lock the account
         staffRequest.setPhone("0987654321");
-        staffRequest.setGender("Ná»¯");
+        staffRequest.setGender("Nam");
 
         var response = service.updateStaff(1L, 2L, staffRequest);
 
@@ -161,7 +161,7 @@ class AdminUserManagementServiceTest {
         assertEquals("Updated Staff Name", response.getFullName());
         assertTrue(response.getIsLocked());
         assertEquals("0987654321", staff.getPhone());
-        assertEquals("Ná»¯", staff.getGender());
+        assertEquals("Nam", staff.getGender());
         verify(userRepository).save(staff);
         verify(auditLogRepository).save(any(com.mmo.shared.model.AuditLog.class));
     }

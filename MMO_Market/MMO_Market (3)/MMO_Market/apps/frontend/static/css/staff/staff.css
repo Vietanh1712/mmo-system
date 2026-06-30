@@ -187,13 +187,13 @@
 .staff-stat-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
+    gap: 20px;
 }
 
 .staff-stat-card {
     position: relative;
     overflow: hidden;
-    padding: 18px;
+    padding: 20px;
     border: 1px solid var(--ds-border) !important;
     border-radius: var(--ds-radius-lg) !important;
     background: var(--ds-surface) !important;
@@ -263,11 +263,11 @@
 .staff-quick-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
+    gap: 20px;
 }
 
 .staff-quick-card {
-    padding: 18px;
+    padding: 20px;
     text-decoration: none;
     color: inherit;
     transition: transform 0.2s, box-shadow 0.2s;
@@ -309,19 +309,19 @@
 .staff-detail-grid {
     display: grid;
     grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
-    gap: 20px;
+    gap: 24px;
 }
 
 .staff-info-list {
     display: grid;
-    gap: 12px;
+    gap: 24px;
 }
 
 .staff-info-row {
     display: grid;
     grid-template-columns: 160px minmax(0, 1fr);
-    gap: 12px;
-    padding-bottom: 12px;
+    gap: 24px;
+    padding-bottom: 24px;
     border-bottom: 1px solid #e2e8f0;
 }
 
@@ -357,13 +357,13 @@
 
 .staff-timeline {
     display: grid;
-    gap: 14px;
+    gap: 20px;
 }
 
 .staff-timeline__item {
     display: grid;
     grid-template-columns: 12px minmax(0, 1fr);
-    gap: 12px;
+    gap: 16px;
 }
 
 .staff-timeline__dot {
@@ -375,7 +375,7 @@
 }
 
 .staff-timeline__content {
-    padding-bottom: 14px;
+    padding-bottom: 20px;
     border-bottom: 1px solid #e2e8f0;
 }
 
@@ -847,8 +847,13 @@
 }
 
 .staff-action-card {
+    /* No individual sticky behavior to prevent overlapping of multiple cards */
+}
+
+.staff-sticky-column {
     position: sticky;
-    top: 16px;
+    top: 110px;
+    align-self: start;
 }
 
 @media (max-width: 992px) {
@@ -870,13 +875,13 @@
 /*bo loc khieu lai*/
 
 .ds-filter-panel{
-    padding: 24px;
+    padding: 24px 32px;
 }
 
 .ds-filter-row{
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 20px;
 
     flex-wrap: nowrap; /* quan trọng */
 }
@@ -1005,6 +1010,26 @@
     border-radius: 8px;
     margin-bottom: 20px;
     border: 1px solid #10b981;
+}
+
+/* Nexus Market Design System (DESIGN.md) Overrides for Staff Page */
+.staff-page .ds-input,
+.staff-page .ds-select,
+.staff-page .ds-textarea {
+    border-radius: 8px !important; /* {rounded.md} */
+    border-color: #cbd5e1 !important; /* {colors.hairline-strong} */
+}
+
+.staff-page .ds-btn {
+    border-radius: 8px !important; /* {rounded.md} */
+}
+
+.staff-page .ds-alert {
+    border-radius: 8px !important; /* {rounded.md} */
+}
+
+.staff-page .ds-card {
+    border-radius: 12px !important; /* {rounded.lg} */
 }
 
 

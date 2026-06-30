@@ -1,7 +1,9 @@
-﻿(function () {
+(function () {
 let shopAccountSidebar = null;
 let shopRegistrationState = { status: 'NOT_SUBMITTED' };
 let kycApproved = false;
+let currentShopProfile = null;
+
 
 registerAccountPage('/js/customer/account-register-shop.js', initializeShopRegistrationPage);
 
@@ -20,6 +22,7 @@ async function initializeShopRegistrationPage() {
         const response = await authFetch('/v1/profile');
         if (!response.ok) throw new Error('Không thể tải thông tin tài khoản.');
         const profile = await response.json();
+        currentShopProfile = profile;
         if (!allowShopRegistration(profile.role)) {
             return;
         }
@@ -50,15 +53,20 @@ function allowShopRegistration(roleValue) {
 }
 
 async function loadKycStatus() {
+    if (isApprovedKycStatus(currentShopProfile?.kycStatus)) {
+        kycApproved = true;
+        return;
+    }
+
     try {
         const response = await authFetch('/v1/kyc/me');
         if (response.ok) {
             const data = await response.json();
             // data is an array of KYC history
             if (Array.isArray(data)) {
-                kycApproved = data.some(item => item.status === 'APPROVED');
+                kycApproved = data.some(item => isApprovedKycStatus(item.status || item.kycStatus));
             } else {
-                kycApproved = (data.status === 'APPROVED');
+                kycApproved = isApprovedKycStatus(data.status || data.kycStatus);
             }
         } else {
             kycApproved = false;
@@ -66,6 +74,11 @@ async function loadKycStatus() {
     } catch {
         kycApproved = false;
     }
+}
+
+function isApprovedKycStatus(status) {
+    const normalized = String(status || '').trim().toUpperCase();
+    return normalized === 'APPROVED' || normalized === 'VERIFIED';
 }
 
 async function loadShopRegistrationState() {
@@ -262,7 +275,8 @@ function showShopFormMessage(message) {
 function registerAccountPage(scriptPath, initializer) {
     window.AccountPageInitializers = window.AccountPageInitializers || {};
     window.AccountPageInitializers[scriptPath] = initializer;
-    if (document.currentScript?.dataset.accountPartial !== 'true') {
+    if (document.currentScript?.dataset.accountPartial !== 'true' && !initializer.__shopRegistrationDomReadyBound) {
+        initializer.__shopRegistrationDomReadyBound = true;
         document.addEventListener('DOMContentLoaded', initializer);
     }
 }

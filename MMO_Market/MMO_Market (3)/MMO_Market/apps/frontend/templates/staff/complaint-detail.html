@@ -32,41 +32,45 @@
                             <div class="ds-card-header">
                                 <h2 class="ds-card-title">Thông tin khiếu nại</h2>
                             </div>
-                            <dl class="staff-info-list">
-                                <div class="staff-info-row">
-                                    <dt>Mã khiếu nại</dt>
-                                    <dd id="detail-id">#CMP-3310</dd>
-                                </div>
-                                <div class="staff-info-row">
-                                    <dt>Người gửi</dt>
-                                    <dd id="detail-sender">Nguyễn An — buyer@mmo.com</dd>
-                                </div>
-                                <div class="staff-info-row">
-                                    <dt>Đối tượng</dt>
-                                    <dd id="detail-target">Shop GameHub Pro / Sản phẩm Gmail Premium</dd>
-                                </div>
-                                <div class="staff-info-row">
-                                    <dt>Loại</dt>
-                                    <dd id="detail-category">Sản phẩm không đúng mô tả</dd>
-                                </div>
-                                <div class="staff-info-row">
-                                    <dt>Số tiền liên quan</dt>
-                                    <dd id="detail-amount" class="ds-money">350.000 đ</dd>
-                                </div>
-                                <div class="staff-info-row">
-                                    <dt>Ngày tạo</dt>
-                                    <dd id="detail-date">05/06/2026 08:12</dd>
-                                </div>
-                            </dl>
+                            <div style="padding: 32px 40px;">
+                                <dl class="staff-info-list">
+                                    <div class="staff-info-row">
+                                        <dt>Mã khiếu nại</dt>
+                                        <dd id="detail-id">#CMP-3310</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Người gửi</dt>
+                                        <dd id="detail-sender">Nguyễn An — buyer@mmo.com</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Đối tượng</dt>
+                                        <dd id="detail-target">Shop GameHub Pro / Sản phẩm Gmail Premium</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Loại</dt>
+                                        <dd id="detail-category">Sản phẩm không đúng mô tả</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Số tiền liên quan</dt>
+                                        <dd id="detail-amount" class="ds-money">350.000 đ</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Ngày tạo</dt>
+                                        <dd id="detail-date">05/06/2026 08:12</dd>
+                                    </div>
+                                </dl>
+                            </div>
                         </div>
 
                         <div class="ds-card">
                             <div class="ds-card-header">
                                 <h2 class="ds-card-title">Nội dung khiếu nại</h2>
                             </div>
-                            <p class="ds-body" id="detail-description">Tôi mua tài khoản Gmail Premium nhưng nhận được tài khoản đã bị khóa sau 2 giờ sử dụng. Đã liên hệ shop nhưng không được phản hồi. Yêu cầu hoàn tiền hoặc cấp tài khoản thay thế.</p>
-                            <div class="ds-cluster ds-mt-md" id="detail-evidence-container">
-                                <span class="ds-badge ds-badge-muted" id="detail-evidence-label">Không có</span>
+                            <div style="padding: 32px 40px; display: flex; flex-direction: column; gap: 24px;">
+                                <p class="ds-body" id="detail-description">Tôi mua tài khoản Gmail Premium nhưng nhận được tài khoản đã bị khóa sau 2 giờ sử dụng. Đã liên hệ shop nhưng không được phản hồi. Yêu cầu hoàn tiền hoặc cấp tài khoản thay thế.</p>
+                                <div class="ds-cluster" id="detail-evidence-container">
+                                    <span class="ds-badge ds-badge-muted" id="detail-evidence-label">Không có</span>
+                                </div>
                             </div>
                         </div>
 
@@ -74,41 +78,53 @@
                             <div class="ds-card-header">
                                 <h2 class="ds-card-title">Lịch sử xử lý</h2>
                             </div>
-                            <div class="staff-timeline" id="detail-timeline">
-                                <div class="staff-timeline__item">
-                                    <span class="staff-timeline__dot"></span>
-                                    <div class="staff-timeline__content">
-                                        <strong>Tiếp nhận khiếu nại</strong>
-                                        <p class="ds-caption" id="detail-timeline-time">Hệ thống — 05/06/2026 08:12</p>
+                            <div style="padding: 32px 40px;">
+                                <div class="staff-timeline" id="detail-timeline">
+                                    <div class="staff-timeline__item">
+                                        <span class="staff-timeline__dot"></span>
+                                        <div class="staff-timeline__content">
+                                            <strong>Tiếp nhận khiếu nại</strong>
+                                            <p class="ds-caption" id="detail-timeline-time">Hệ thống — 05/06/2026 08:12</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="ds-card staff-action-card">
+                    <div class="ds-card staff-action-card staff-sticky-column">
                         <div class="ds-card-header">
                             <h2 class="ds-card-title">Xử lý khiếu nại</h2>
                         </div>
-                        <div class="ds-alert ds-alert-info">Chế độ giả lập Staff — Cập nhật sẽ đồng bộ tức thì sang người dùng.</div>
-                        <div class="ds-form-field">
-                            <label class="ds-label" for="complaintStatus">Trạng thái xử lý</label>
-                            <select class="ds-input" id="complaintStatus">
-                                <option value="New">Mới</option>
-                                <option value="InProgress">Đang xử lý</option>
-                                <option value="Resolved">Đã giải quyết</option>
-                                <option value="Rejected">Từ chối khiếu nại</option>
-                            </select>
+                        <div style="padding: 32px 40px; display: flex; flex-direction: column; gap: 24px;">
+                            <div class="ds-alert ds-alert-info">Chế độ giả lập Staff — Cập nhật sẽ đồng bộ tức thì sang người dùng.</div>
+                            <div class="ds-form-field">
+                                <label class="ds-label" for="complaintStatus">Trạng thái xử lý</label>
+                                <select class="ds-select" id="complaintStatus" style="background-color: #f8fafc; font-weight: 600;">
+                                    <option value="New">Mới</option>
+                                    <option value="InProgress">Đang xử lý</option>
+                                    <option value="Resolved">Đã giải quyết</option>
+                                    <option value="Rejected">Từ chối khiếu nại</option>
+                                </select>
+                            </div>
+                            <div class="ds-form-field">
+                                <label class="ds-label" for="complaintResolution">Kết quả / ghi chú</label>
+                                <textarea class="ds-textarea" id="complaintResolution" placeholder="Mô tả cách xử lý, hoàn tiền, cảnh báo shop..." style="min-height: 120px;"></textarea>
+                            </div>
+                            <div class="ds-cluster" style="gap: 8px;">
+                                <button class="ds-btn ds-btn-success" type="button" onclick="handleStaffAction('Resolved')" style="flex: 1;">
+                                    <i class="fa fa-check"></i> Giải quyết
+                                </button>
+                                <button class="ds-btn ds-btn-danger" type="button" onclick="handleStaffAction('Rejected')" style="flex: 1;">
+                                    <i class="fa fa-times"></i> Từ chối
+                                </button>
+                            </div>
+                            <div style="border-top: 1px solid var(--ds-border); padding-top: 16px; margin-top: 4px;">
+                                <a class="ds-btn ds-btn-outline" href="/staff/complaints" style="width: 100%;">
+                                    <i class="fa fa-arrow-left"></i> Quay lại danh sách
+                                </a>
+                            </div>
                         </div>
-                        <div class="ds-form-field">
-                            <label class="ds-label" for="complaintResolution">Kết quả / ghi chú</label>
-                            <textarea class="ds-textarea" id="complaintResolution" placeholder="Mô tả cách xử lý, hoàn tiền, cảnh báo shop..."></textarea>
-                        </div>
-                        <div class="ds-cluster">
-                            <button class="ds-btn ds-btn-success" type="button" onclick="handleStaffAction('Resolved')">Giải quyết</button>
-                            <button class="ds-btn ds-btn-danger" type="button" onclick="handleStaffAction('Rejected')">Từ chối</button>
-                        </div>
-                        <a class="ds-btn ds-btn-outline" href="/staff/complaints">Quay lại danh sách</a>
                     </div>
                 </div>
             </section>

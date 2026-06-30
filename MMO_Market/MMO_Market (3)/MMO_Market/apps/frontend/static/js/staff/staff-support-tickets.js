@@ -1,4 +1,6 @@
 let ticketsList = [];
+let currentPage = 0;
+let pageSize = 10;
 
 async function loadTickets() {
     try {
@@ -8,6 +10,7 @@ async function loadTickets() {
         }
         ticketsList = await res.json();
         updateStats();
+        currentPage = 0;
         renderTickets();
     } catch (e) {
         console.error(e);
@@ -41,8 +44,9 @@ function renderTickets() {
             (item.user && item.user.fullName.toLowerCase().includes(search));
         const matchesStatus = !status || item.status === status;
         const matchesCategory = !category || item.category === category;
-        return matchesSearch && matchesStatus && matchesCategory;
     });
+
+    filtered.sort((a, b) => a.id - b.id);
 
     const tbody = document.getElementById('staff-tickets-body');
     if (!tbody) return;
@@ -55,10 +59,18 @@ function renderTickets() {
                 </td>
             </tr>
         `;
+        renderPagination(0, 0);
         return;
     }
 
-    tbody.innerHTML = filtered.map(item => {
+    const totalPages = Math.ceil(filtered.length / pageSize);
+    if (currentPage >= totalPages) {
+        currentPage = 0;
+    }
+
+    const pageItems = filtered.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
+
+    tbody.innerHTML = pageItems.map(item => {
         let badgeClass = 'ds-badge-warning';
         let statusText = 'Đang xử lý';
         if (item.status === 'Open') {
@@ -103,7 +115,7 @@ function renderTickets() {
                 <td>${formattedDate}</td>
                 <td class="ds-table-center">
                     <div class="ds-table-actions">
-                        <button class="ds-icon-btn ds-icon-btn-view" onclick="viewTicketDetail('${item.id}')" aria-label="Xem chi tiết" style="border:none; background:transparent; cursor:pointer;">
+                        <button class="ds-icon-btn ds-icon-btn-view" onclick="viewTicketDetail('${item.id}')" aria-label="Xem chi tiết">
                             <svg class="ds-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="width:16px; height:16px;">
                                 <path d="M2.25 12C3.73 8.12 7.49 5.25 12 5.25C16.51 5.25 20.27 8.12 21.75 12C20.27 15.88 16.51 18.75 12 18.75C7.49 18.75 3.73 15.88 2.25 12Z" stroke="currentColor" stroke-width="2"/>
                                 <path d="M12 15.25C13.79 15.25 15.25 13.79 15.25 12C15.25 10.21 13.79 8.75 12 8.75C10.21 8.75 8.75 10.21 8.75 12C8.75 13.79 10.21 15.25 12 15.25Z" stroke="currentColor" stroke-width="2"/>
@@ -114,6 +126,20 @@ function renderTickets() {
             </tr>
         `;
     }).join('');
+
+    renderPagination(filtered.length, totalPages);
+}
+
+function renderPagination(totalElements, totalPages) {
+    mountStaffPagination('ticketPagination', {
+        page: currentPage,
+        totalPages: totalPages,
+        totalElements: totalElements,
+        pageSize: pageSize
+    }, {
+        onPage: (p) => { currentPage = p; renderTickets(); },
+        onSize: (s) => { pageSize = s; currentPage = 0; renderTickets(); }
+    });
 }
 
 function viewTicketDetail(id) {
@@ -122,6 +148,7 @@ function viewTicketDetail(id) {
 }
 
 function applyStaffFilters() {
+    currentPage = 0;
     renderTickets();
 }
 
@@ -129,6 +156,7 @@ function resetStaffFilters() {
     document.getElementById('staff-search-input').value = '';
     document.getElementById('staff-status-select').value = '';
     document.getElementById('staff-category-select').value = '';
+    currentPage = 0;
     renderTickets();
 }
 

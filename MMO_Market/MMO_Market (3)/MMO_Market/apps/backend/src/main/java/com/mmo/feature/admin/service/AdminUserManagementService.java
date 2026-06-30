@@ -164,7 +164,7 @@ public class AdminUserManagementService {
         userRepository.save(target);
 
         String action = nextLocked ? "LOCK_USER" : "UNLOCK_USER";
-        String details = String.format("%s %s", nextLocked ? "Khóa" : "Mở khóa", target.getEmail());
+        String details = String.format("%s %s", nextLocked ? "Khoa" : "Mo khoa", target.getEmail());
         
         Map<String, Object> diff = new HashMap<>();
         diff.put("isLocked", !nextLocked + " -> " + nextLocked);
@@ -206,7 +206,7 @@ public class AdminUserManagementService {
         User saved = userRepository.save(staff);
         Map<String, Object> diff = new HashMap<>();
         diff.put("role", "none -> Staff");
-        audit(operator, "CREATE_STAFF", String.format("Đã tạo tài khoản Staff %s (%d)",
+        audit(operator, "CREATE_STAFF", String.format("Da tao tai khoan Staff %s (%d)",
                 saved.getEmail(), saved.getId()), diff);
         return toResponse(saved);
     }
@@ -258,7 +258,7 @@ public class AdminUserManagementService {
             diff.put("active", oldActive + " -> " + request.getActive());
         }
 
-        audit(operator, "UPDATE_STAFF", String.format("Đã cập nhật tài khoản Staff %s (%d)",
+        audit(operator, "UPDATE_STAFF", String.format("Da cap nhat tai khoan Staff %s (%d)",
                 saved.getEmail(), saved.getId()), diff);
         return toResponse(saved);
     }
@@ -280,7 +280,7 @@ public class AdminUserManagementService {
         Map<String, Object> diff = new HashMap<>();
         diff.put("isDelete", "false -> true");
         
-        audit(operator, "SOFT_DELETE_USER", String.format("Đã xóa mềm tài khoản %s (%d)",
+        audit(operator, "SOFT_DELETE_USER", String.format("Da xoa mem tai khoan %s (%d)",
                 target.getEmail(), target.getId()), diff);
         return AdminActionResponse.builder()
                 .success(true)
@@ -302,7 +302,7 @@ public class AdminUserManagementService {
         Map<String, Object> diff = new HashMap<>();
         diff.put("isDelete", "false -> true");
         
-        audit(operator, "DELETE_STAFF", String.format("Đã xóa mềm tài khoản Staff %s (%d)",
+        audit(operator, "DELETE_STAFF", String.format("Da xoa mem tai khoan Staff %s (%d)",
                 staff.getEmail(), staff.getId()), diff);
         return AdminActionResponse.builder()
                 .success(true)
@@ -327,7 +327,7 @@ public class AdminUserManagementService {
         target.setRole(toRoleJson(normalizedTargetRole));
         userRepository.save(target);
 
-        String details = String.format("Đổi vai trò của %s từ %s sang %s", target.getEmail(), oldRole, normalizedTargetRole);
+        String details = String.format("Doi vai tro cua %s tu %s sang %s", target.getEmail(), oldRole, normalizedTargetRole);
         
         Map<String, Object> diff = new HashMap<>();
         diff.put("role", oldRole + " -> " + normalizedTargetRole);
@@ -400,8 +400,8 @@ public class AdminUserManagementService {
             return "Nam";
         }
         String value = gender.trim();
-        if (value.equalsIgnoreCase("nu") || value.equalsIgnoreCase("nữ") || value.equalsIgnoreCase("female")) {
-            return "Nữ";
+        if (value.equalsIgnoreCase("nu") || value.equalsIgnoreCase("n\u1EEF") || value.equalsIgnoreCase("female")) {
+            return "\u004E\u1EEF";
         }
         return "Nam";
     }

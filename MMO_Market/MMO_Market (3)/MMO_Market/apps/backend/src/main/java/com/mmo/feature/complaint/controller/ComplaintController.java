@@ -151,7 +151,12 @@ public class ComplaintController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<?> getAllComplaints(@AuthenticationPrincipal Long userId) {
+    public ResponseEntity<?> getAllComplaints(
+            @AuthenticationPrincipal Long userId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập."));
         }
@@ -160,11 +165,11 @@ public class ComplaintController {
         }
 
         try {
-            List<Complaint> complaints = complaintService.getAllComplaintsForStaff();
-            List<Map<String, Object>> response = complaints.stream()
-                    .map(this::mapComplaintToDto)
-                    .collect(Collectors.toList());
-            return ResponseEntity.ok(response);
+            org.springframework.data.domain.Page<Complaint> complaintsPage = 
+                    complaintService.searchComplaintsForStaff(keyword, status, page, size);
+            org.springframework.data.domain.Page<Map<String, Object>> responsePage = 
+                    complaintsPage.map(this::mapComplaintToDto);
+            return ResponseEntity.ok(responsePage);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "Lỗi lấy danh sách khiếu nại toàn hệ thống: " + e.getMessage()));
@@ -198,6 +203,28 @@ public class ComplaintController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "Lỗi cập nhật khiếu nại: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<?> getComplaintStats(@AuthenticationPrincipal Long userId) {
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập."));
+        }
+        if (!isStaffOrAdmin(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền truy cập thông tin này."));
+        }
+
+        try {
+            Map<String, Long> stats = new HashMap<>();
+            stats.put("total", complaintService.getTotalComplaints());
+            stats.put("inProgress", complaintService.getInProgressComplaints());
+            stats.put("resolved", complaintService.getResolvedComplaints());
+            stats.put("rejected", complaintService.getRefusedComplaints());
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Lỗi lấy thống kê khiếu nại: " + e.getMessage()));
         }
     }
 }

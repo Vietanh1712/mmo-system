@@ -14,19 +14,19 @@
 
 .ds-page-shell {
     display: grid;
-    gap: 20px;
+    gap: 24px;
 }
 
 .ds-two-column {
     display: grid;
     grid-template-columns: 260px minmax(0, 1fr);
-    gap: 20px;
+    gap: 24px;
 }
 
 .ds-section {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 24px;
 }
 
 .ds-stack-xs {

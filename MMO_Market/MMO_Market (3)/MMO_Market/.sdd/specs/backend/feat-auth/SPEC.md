@@ -115,7 +115,7 @@ CREATE TABLE EmailVerifications (
 ## 6. API SPEC (Đặc tả API)
 
 ### `POST /api/auth/register`
-*   **Description**: Đăng ký tài khoản người dùng mới.
+*   **Description**: Đăng ký tài khoản người dùng mới (yêu cầu mật khẩu có độ dài tối thiểu 6 ký tự, chứa ít nhất 1 chữ viết hoa và ít nhất 1 ký tự đặc biệt).
 *   **Request Body (JSON):**
     ```json
     {

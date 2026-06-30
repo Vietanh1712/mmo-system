@@ -174,13 +174,14 @@ public class KycService {
     }
 
     @Transactional(readOnly = true)
-    public org.springframework.data.domain.Page<KycResponseDto> getAllKycRequests(KycStatus status, org.springframework.data.domain.Pageable pageable) {
-        org.springframework.data.domain.Page<KycRequest> page;
-        if (status == null) {
-            page = kycRequestRepository.findAllByIsDeleteFalse(pageable);
-        } else {
-            page = kycRequestRepository.findByStatusAndIsDeleteFalse(status, pageable);
-        }
+    public org.springframework.data.domain.Page<KycResponseDto> getAllKycRequests(
+            KycStatus status,
+            String requestCode,
+            com.mmo.shared.model.IdType idType,
+            org.springframework.data.domain.Pageable pageable) {
+        
+        String cleanCode = (requestCode == null || requestCode.isBlank()) ? null : requestCode.trim();
+        org.springframework.data.domain.Page<KycRequest> page = kycRequestRepository.searchKycRequests(status, cleanCode, idType, pageable);
         return page.map(this::mapToDto);
     }
 
@@ -222,5 +223,15 @@ public class KycService {
 
         KycRequest updated = kycRequestRepository.save(request);
         return mapToDto(updated);
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Long> getKycStatistics() {
+        java.util.Map<String, Long> stats = new java.util.HashMap<>();
+        stats.put("total", kycRequestRepository.countByIsDeleteFalse());
+        stats.put("pending", kycRequestRepository.countByStatusAndIsDeleteFalse(KycStatus.PENDING));
+        stats.put("approved", kycRequestRepository.countByStatusAndIsDeleteFalse(KycStatus.APPROVED));
+        stats.put("rejected", kycRequestRepository.countByStatusAndIsDeleteFalse(KycStatus.REJECTED));
+        return stats;
     }
 }

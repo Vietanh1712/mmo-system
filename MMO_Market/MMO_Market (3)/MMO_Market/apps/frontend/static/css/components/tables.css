@@ -23,7 +23,7 @@
 .ds-table th,
 .ds-table td {
     border-right: 1px solid var(--ds-border);
-    padding: 12px 14px;
+    padding: 24px 32px;
     vertical-align: middle;
 }
 

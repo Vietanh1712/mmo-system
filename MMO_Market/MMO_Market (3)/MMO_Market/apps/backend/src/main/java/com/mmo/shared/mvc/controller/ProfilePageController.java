@@ -1,5 +1,6 @@
 package com.mmo.shared.mvc.controller;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -12,7 +13,14 @@ public class ProfilePageController {
     }
 
     @GetMapping("/account/kyc")
-    public String showKycPage() {
+    public String showKycPage(Authentication authentication) {
+        if (authentication != null) {
+            boolean isSystem = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_STAFF") || a.getAuthority().equals("ROLE_ADMIN"));
+            if (isSystem) {
+                return "redirect:/profile";
+            }
+        }
         return "account/kyc";
     }
 

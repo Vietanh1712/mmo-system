@@ -93,6 +93,16 @@ CREATE TABLE KYCRequests (
 ### `GET /api/v1/kyc/me`
 *   **Response (200 OK):** Trả về trạng thái hồ sơ KYC hiện tại của User đăng nhập.
 
+### `GET /api/v1/staff/kyc`
+*   **Description**: Lấy danh sách hồ sơ KYC toàn hệ thống (phục vụ Staff).
+*   **Request Query Parameters:**
+    *   `status`: String (PENDING, APPROVED, REJECTED - optional)
+    *   `requestCode`: String (optional)
+    *   `idType`: String (CCCD, CMND, PASSPORT, DRIVER_LICENSE - optional)
+    *   `page`: int (default: 0)
+    *   `size`: int (default: 10)
+*   **Response (200 OK):** Page object containing list of KYC requests sorted by ID ascending.
+
 ---
 
 ## 7. ERROR HANDLING (Xử lý lỗi)
