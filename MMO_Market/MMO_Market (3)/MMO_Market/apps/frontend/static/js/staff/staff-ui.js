@@ -127,6 +127,90 @@
         });
     }
 
+    function mountStaffPagination(containerId, state, handlers) {
+        const root = document.getElementById(containerId);
+        if (!root) return;
+
+        const page = state.page;
+        const totalPages = Math.max(state.totalPages, 1);
+        const totalElements = state.totalElements;
+        const pageSize = state.pageSize;
+        const options = state.pageSizeOptions || [10, 20, 50, 100];
+
+        let pagesHtml = '';
+        const addPage = (p) => {
+            pagesHtml += `<a href="#" role="button" class="ds-page-link${p === page ? ' ds-page-link-active' : ''}" data-page="${p}">${p + 1}</a>`;
+        };
+        if (totalPages <= 7) {
+            for (let p = 0; p < totalPages; p++) addPage(p);
+        } else {
+            addPage(0);
+            if (page > 2) pagesHtml += '<span class="ds-caption" style="padding:0 4px">…</span>';
+            for (let p = Math.max(1, page - 1); p <= Math.min(totalPages - 2, page + 1); p++) addPage(p);
+            if (page < totalPages - 3) pagesHtml += '<span class="ds-caption" style="padding:0 4px">…</span>';
+            addPage(totalPages - 1);
+        }
+
+        const sizeOptions = options.map(o =>
+            `<option value="${o}"${o === pageSize ? ' selected' : ''}>${o}</option>`
+        ).join('');
+
+        root.innerHTML = `
+            <div class="ds-pagination">
+                <div class="ds-pagination-pages">
+                    <a href="#" role="button" class="ds-page-link${page <= 0 ? ' ds-page-link-disabled' : ''}" data-nav="first" aria-label="Trang đầu">«</a>
+                    <a href="#" role="button" class="ds-page-link${page <= 0 ? ' ds-page-link-disabled' : ''}" data-nav="prev" aria-label="Trang trước">‹</a>
+                    ${pagesHtml}
+                    <a href="#" role="button" class="ds-page-link${page >= totalPages - 1 ? ' ds-page-link-disabled' : ''}" data-nav="next" aria-label="Trang sau">›</a>
+                    <a href="#" role="button" class="ds-page-link${page >= totalPages - 1 ? ' ds-page-link-disabled' : ''}" data-nav="last" aria-label="Trang cuối">»</a>
+                </div>
+                <div class="ds-pagination-meta">
+                    <span>Tổng số: ${totalElements} bản ghi</span>
+                    <select class="ds-page-size" aria-label="Số dòng mỗi trang">${sizeOptions}</select>
+                </div>
+            </div>
+        `;
+
+        root.querySelectorAll('[data-nav]').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (el.classList.contains('ds-page-link-disabled')) return;
+                const nav = el.getAttribute('data-nav');
+                let next = page;
+                if (nav === 'first') next = 0;
+                else if (nav === 'prev') next = page - 1;
+                else if (nav === 'next') next = page + 1;
+                else if (nav === 'last') next = totalPages - 1;
+                handlers.onPage(next);
+            });
+        });
+
+        root.querySelectorAll('[data-page]').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.preventDefault();
+                handlers.onPage(Number(el.getAttribute('data-page')));
+            });
+        });
+
+        const sizeSelect = root.querySelector('.ds-page-size');
+        if (sizeSelect) {
+            sizeSelect.addEventListener('change', () => {
+                handlers.onSize(Number(sizeSelect.value));
+            });
+        }
+    }
+
+    function changePageSize(newSize) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('size', newSize);
+        url.searchParams.set('page', '0');
+        window.location.href = url.toString();
+    }
+
+    // Expose helpers globally
+    window.mountStaffPagination = mountStaffPagination;
+    window.changePageSize = changePageSize;
+
     document.addEventListener('DOMContentLoaded', function () {
         loadMyPermissions();
         bindActionButtons();

@@ -1,6 +1,6 @@
 let ticketsList = [];
 let currentPage = 0;
-const pageSize = 10;
+let pageSize = 10;
 
 async function loadTickets() {
     try {
@@ -44,8 +44,9 @@ function renderTickets() {
             (item.user && item.user.fullName.toLowerCase().includes(search));
         const matchesStatus = !status || item.status === status;
         const matchesCategory = !category || item.category === category;
-        return matchesSearch && matchesStatus && matchesCategory;
     });
+
+    filtered.sort((a, b) => a.id - b.id);
 
     const tbody = document.getElementById('staff-tickets-body');
     if (!tbody) return;
@@ -130,66 +131,15 @@ function renderTickets() {
 }
 
 function renderPagination(totalElements, totalPages) {
-    const paginationPages = document.getElementById('ticketPaginationPages');
-    const paginationMeta = document.getElementById('ticketPaginationMeta');
-    
-    if (paginationMeta) {
-        paginationMeta.innerHTML = `<span>Tổng số: ${totalElements} bản ghi</span>`;
-    }
-    
-    if (paginationPages) {
-        paginationPages.innerHTML = '';
-        
-        // nút lùi
-        const prevSpan = document.createElement('span');
-        prevSpan.textContent = '‹';
-        if (currentPage > 0) {
-            prevSpan.className = 'ds-page-link';
-            prevSpan.style.cursor = 'pointer';
-            prevSpan.onclick = () => {
-                currentPage--;
-                renderTickets();
-            };
-        } else {
-            prevSpan.className = 'ds-page-link ds-page-link-disabled';
-        }
-        paginationPages.appendChild(prevSpan);
-
-        // các trang số
-        if (totalPages === 0) {
-            const pageSpan = document.createElement('span');
-            pageSpan.className = 'ds-page-link ds-page-link-active';
-            pageSpan.textContent = 1;
-            paginationPages.appendChild(pageSpan);
-        } else {
-            for (let i = 0; i < totalPages; i++) {
-                const span = document.createElement('span');
-                span.className = `ds-page-link ${i === currentPage ? 'ds-page-link-active' : ''}`;
-                span.style.cursor = 'pointer';
-                span.textContent = i + 1;
-                span.onclick = () => {
-                    currentPage = i;
-                    renderTickets();
-                };
-                paginationPages.appendChild(span);
-            }
-        }
-
-        // nút tiến
-        const nextSpan = document.createElement('span');
-        nextSpan.textContent = '›';
-        if (currentPage + 1 < totalPages) {
-            nextSpan.className = 'ds-page-link';
-            nextSpan.style.cursor = 'pointer';
-            nextSpan.onclick = () => {
-                currentPage++;
-                renderTickets();
-            };
-        } else {
-            nextSpan.className = 'ds-page-link ds-page-link-disabled';
-        }
-        paginationPages.appendChild(nextSpan);
-    }
+    mountStaffPagination('ticketPagination', {
+        page: currentPage,
+        totalPages: totalPages,
+        totalElements: totalElements,
+        pageSize: pageSize
+    }, {
+        onPage: (p) => { currentPage = p; renderTickets(); },
+        onSize: (s) => { pageSize = s; currentPage = 0; renderTickets(); }
+    });
 }
 
 function viewTicketDetail(id) {

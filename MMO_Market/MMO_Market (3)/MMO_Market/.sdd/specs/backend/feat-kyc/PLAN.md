@@ -29,6 +29,7 @@ Triển khai luồng xác thực định danh KYC (Know Your Customer) phía ng�
   - `findByUser_IdAndIsDeleteFalseOrderByCreatedAtDesc(userId)`: Lấy lịch sử KYC của user.
   - `findAllByIsDeleteFalse(pageable)`: Lấy toàn bộ danh sách KYC phân trang phục vụ Staff.
   - `findByStatusAndIsDeleteFalse(status, pageable)`: Lọc danh sách KYC theo trạng thái phân trang.
+  - `searchKycRequests(status, requestCode, idType, pageable)`: Tìm kiếm và lọc động yêu cầu KYC theo status, requestCode, và idType phục vụ Staff.
   - `existsByActiveUserId(activeUserId)`: Kiểm tra xem user có yêu cầu KYC nào đang xử lý/hoàn thành không.
 
 ### 3.3. DTOs
@@ -75,12 +76,13 @@ Sử dụng Thymeleaf kết hợp với JS thuần gọi API qua `authFetch` (ti
   - File: `templates/account/kyc.html` và [account-kyc.js](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/apps/frontend/static/js/customer/account-kyc.js).
   - Tải thông tin hiện tại qua `/v1/profile` và trạng thái hồ sơ qua `/v1/kyc/me`.
   - Hiển thị UI đa trạng thái: Chưa định danh, Đang chờ duyệt, Đã xác minh, Bị từ chối (kèm nút Gửi lại).
-  - Form submit chứa thông tin cá nhân và 3 ô tải ảnh. Gọi API `POST /api/v1/kyc`.
+  - Form submit chứa thông tin cá nhân (hỗ trợ 4 loại giấy tờ định danh: CCCD, CMND, PASSPORT, DRIVER_LICENSE) và 3 ô tải ảnh. Gọi API `POST /api/v1/kyc`.
 
 - **Trang danh sách duyệt KYC của Staff:**
   - File: `templates/staff/kyc.html` và [staff-kyc.js](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/apps/frontend/static/js/staff/staff-kyc.js).
   - Gọi API lấy danh sách thông qua `/v1/staff/kyc` (tránh lặp tiền tố `/api`).
-  - Phân trang kết quả kiểm duyệt và lọc trạng thái hồ sơ.
+  - Hỗ trợ lọc theo mã hồ sơ (text search), loại giấy tờ (dropdown select), và trạng thái hồ sơ.
+  - Phân trang kết quả kiểm duyệt đồng bộ thiết kế hệ thống và sắp xếp theo ID tăng dần.
 
 - **Trang chi tiết và xử lý duyệt của Staff:**
   - File: `templates/staff/kyc-detail.html` và [staff-kyc-detail.js](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/apps/frontend/static/js/staff/staff-kyc-detail.js).

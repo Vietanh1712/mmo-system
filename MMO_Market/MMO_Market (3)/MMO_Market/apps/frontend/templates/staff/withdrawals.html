@@ -163,17 +163,23 @@
                     </div>
                     <div class="ds-pagination">
                         <div class="ds-pagination-pages">
-                            <!-- lùi -->
+                            <!-- First -->
                             <a th:if="${currentPage > 0}"
-                               th:href="@{/staff/withdrawals(page=${currentPage - 1}, keyword=${keyword}, status=${selectedStatus}, minAmount=${minAmount})}"
-                               class="ds-page-link">‹</a>
+                               th:href="@{/staff/withdrawals(page=0, size=${pageSize}, keyword=${keyword}, status=${selectedStatus}, minAmount=${minAmount})}"
+                               class="ds-page-link" aria-label="Trang đầu">«</a>
+                            <span th:unless="${currentPage > 0}" class="ds-page-link ds-page-link-disabled">«</span>
+
+                            <!-- Previous -->
+                            <a th:if="${currentPage > 0}"
+                               th:href="@{/staff/withdrawals(page=${currentPage - 1}, size=${pageSize}, keyword=${keyword}, status=${selectedStatus}, minAmount=${minAmount})}"
+                               class="ds-page-link" aria-label="Trang trước">‹</a>
                             <span th:unless="${currentPage > 0}" class="ds-page-link ds-page-link-disabled">‹</span>
 
-                            <!-- các trang số -->
-                            <th:block th:if="${totalPages > 0}">
+                            <!-- các trang số (totalPages <= 7) -->
+                            <th:block th:if="${totalPages <= 7 and totalPages > 0}">
                                 <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
                                     <a th:if="${i != currentPage}"
-                                       th:href="@{/staff/withdrawals(page=${i}, keyword=${keyword}, status=${selectedStatus}, minAmount=${minAmount})}"
+                                       th:href="@{/staff/withdrawals(page=${i}, size=${pageSize}, keyword=${keyword}, status=${selectedStatus}, minAmount=${minAmount})}"
                                        th:text="${i + 1}"
                                        class="ds-page-link">1</a>
                                     <span th:if="${i == currentPage}"
@@ -181,18 +187,66 @@
                                           class="ds-page-link ds-page-link-active">1</span>
                                 </th:block>
                             </th:block>
+
+                            <!-- các trang số (totalPages > 7) -->
+                            <th:block th:if="${totalPages > 7}">
+                                <!-- First Page -->
+                                <a th:if="${currentPage != 0}"
+                                   th:href="@{/staff/withdrawals(page=0, size=${pageSize}, keyword=${keyword}, status=${selectedStatus}, minAmount=${minAmount})}"
+                                   class="ds-page-link">1</a>
+                                <span th:if="${currentPage == 0}" class="ds-page-link ds-page-link-active">1</span>
+
+                                <!-- Ellipsis before neighbors -->
+                                <span th:if="${currentPage > 2}" class="ds-caption" style="padding:0 4px">…</span>
+
+                                <!-- Neighbor pages -->
+                                <th:block th:each="i : ${#numbers.sequence(T(java.lang.Math).max(1, currentPage - 1), T(java.lang.Math).min(totalPages - 2, currentPage + 1))}">
+                                    <a th:if="${i != currentPage}"
+                                       th:href="@{/staff/withdrawals(page=${i}, size=${pageSize}, keyword=${keyword}, status=${selectedStatus}, minAmount=${minAmount})}"
+                                       th:text="${i + 1}"
+                                       class="ds-page-link">1</a>
+                                    <span th:if="${i == currentPage}"
+                                          th:text="${i + 1}"
+                                          class="ds-page-link ds-page-link-active">1</span>
+                                </th:block>
+
+                                <!-- Ellipsis after neighbors -->
+                                <span th:if="${currentPage < totalPages - 3}" class="ds-caption" style="padding:0 4px">…</span>
+
+                                <!-- Last Page -->
+                                <a th:if="${currentPage != totalPages - 1}"
+                                   th:href="@{/staff/withdrawals(page=${totalPages - 1}, size=${pageSize}, keyword=${keyword}, status=${selectedStatus}, minAmount=${minAmount})}"
+                                   th:text="${totalPages}"
+                                   class="ds-page-link">10</a>
+                                <span th:if="${currentPage == totalPages - 1}"
+                                      th:text="${totalPages}"
+                                      class="ds-page-link ds-page-link-active">10</span>
+                            </th:block>
+
                             <th:block th:unless="${totalPages > 0}">
                                 <span class="ds-page-link ds-page-link-active">1</span>
                             </th:block>
 
-                            <!-- tiến -->
+                            <!-- Next -->
                             <a th:if="${currentPage + 1 < totalPages}"
-                               th:href="@{/staff/withdrawals(page=${currentPage + 1}, keyword=${keyword}, status=${selectedStatus}, minAmount=${minAmount})}"
-                               class="ds-page-link">›</a>
+                               th:href="@{/staff/withdrawals(page=${currentPage + 1}, size=${pageSize}, keyword=${keyword}, status=${selectedStatus}, minAmount=${minAmount})}"
+                               class="ds-page-link" aria-label="Trang sau">›</a>
                             <span th:unless="${currentPage + 1 < totalPages}" class="ds-page-link ds-page-link-disabled">›</span>
+
+                            <!-- Last -->
+                            <a th:if="${currentPage + 1 < totalPages}"
+                               th:href="@{/staff/withdrawals(page=${totalPages - 1}, size=${pageSize}, keyword=${keyword}, status=${selectedStatus}, minAmount=${minAmount})}"
+                               class="ds-page-link" aria-label="Trang cuối">»</a>
+                            <span th:unless="${currentPage + 1 < totalPages}" class="ds-page-link ds-page-link-disabled">»</span>
                         </div>
                         <div class="ds-pagination-meta">
                             <span th:text="'Tổng số: ' + ${totalWithdrawals} + ' bản ghi'"></span>
+                            <select class="ds-page-size" onchange="changePageSize(this.value)" aria-label="Số dòng mỗi trang">
+                                <option value="10" th:selected="${pageSize == 10}">10</option>
+                                <option value="20" th:selected="${pageSize == 20}">20</option>
+                                <option value="50" th:selected="${pageSize == 50}">50</option>
+                                <option value="100" th:selected="${pageSize == 100}">100</option>
+                            </select>
                         </div>
                     </div>
                 </div>

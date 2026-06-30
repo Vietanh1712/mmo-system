@@ -286,7 +286,7 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Override
     public List<Complaint> getAllComplaintsForStaff() {
-        return complaintRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc();
+        return complaintRepository.findAllByIsDeleteFalseOrderByIdAsc();
     }
 
     @Override
@@ -436,5 +436,38 @@ public class ComplaintServiceImpl implements ComplaintService {
         }
 
         return complaintRepository.save(complaint);
+    }
+
+    @Override
+    public org.springframework.data.domain.Page<Complaint> searchComplaintsForStaff(String keyword, String status, int page, int size) {
+        org.springframework.data.domain.Pageable pageable = 
+                org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by("id").ascending());
+        
+        Long complaintId = null;
+        String searchKeyword = null;
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String clean = keyword.trim();
+            if (clean.startsWith("#")) {
+                clean = clean.substring(1);
+            }
+            if (clean.toUpperCase().startsWith("CMP-")) {
+                clean = clean.substring(4);
+            }
+            clean = clean.trim();
+            if (!clean.isEmpty()) {
+                try {
+                    complaintId = Long.parseLong(clean);
+                } catch (NumberFormatException e) {
+                    searchKeyword = clean;
+                }
+            }
+        }
+        
+        String queryStatus = null;
+        if (status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status)) {
+            queryStatus = status.trim();
+        }
+        
+        return complaintRepository.searchComplaintsForStaff(complaintId, searchKeyword, queryStatus, pageable);
     }
 }

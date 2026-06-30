@@ -84,7 +84,7 @@ Trang đăng ký cho phép khách vãng lai (Guest) tạo tài khoản mới b�
 
 1. **Kiểm tra tính hợp lệ dữ liệu Frontend (Client-side Validation):**
    * Kiểm tra định dạng Email hợp lệ bằng regex.
-   * Kiểm tra độ dài mật khẩu tối thiểu 6 ký tự.
+    * Kiểm tra mật khẩu phải có độ dài tối thiểu 6 ký tự, chứa ít nhất 1 chữ cái viết hoa và ít nhất 1 ký tự đặc biệt.
    * So sánh Mật khẩu và Nhập lại mật khẩu trùng khớp nhau. Nếu không khớp, hiển thị thông báo lỗi ngay dưới ô nhập mật khẩu thứ hai.
 2. **Gửi Request Đăng Ký:**
    * Gửi API qua AJAX:

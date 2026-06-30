@@ -30,6 +30,8 @@ public class StaffKycController {
     @PreAuthorize("hasAnyAuthority('ROLE_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<Page<KycResponseDto>> getAllKycRequests(
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String requestCode,
+            @RequestParam(required = false) String idType,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
@@ -41,9 +43,18 @@ public class StaffKycController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
             }
         }
+
+        com.mmo.shared.model.IdType typeEnum = null;
+        if (idType != null && !idType.isBlank()) {
+            try {
+                typeEnum = com.mmo.shared.model.IdType.valueOf(idType.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+        }
         
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<KycResponseDto> result = kycService.getAllKycRequests(kycStatus, pageRequest);
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "id"));
+        Page<KycResponseDto> result = kycService.getAllKycRequests(kycStatus, requestCode, typeEnum, pageRequest);
         return ResponseEntity.ok(result);
     }
 

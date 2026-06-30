@@ -43,4 +43,6 @@ public interface ComplaintService {
     Complaint getComplaintByIdForStaff(Long complaintId);
     
     Complaint updateComplaintStatus(Long complaintId, String status, String resolution);
+
+    org.springframework.data.domain.Page<Complaint> searchComplaintsForStaff(String keyword, String status, int page, int size);
 }

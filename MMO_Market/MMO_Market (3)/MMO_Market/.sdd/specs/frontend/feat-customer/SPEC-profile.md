@@ -90,7 +90,7 @@ Trang quản lý hồ sơ cá nhân cho phép người dùng thay đổi thông 
      * **Payload:** `{ "fullName": "Nguyen Van A", "phone": "0987654321", "address": "Hanoi" }`
    * **Thành công (HTTP 200):** Hiển thị Toast thông báo cập nhật hồ sơ thành công.
 3. **Thực hiện đổi mật khẩu:**
-   * Kiểm tra mật khẩu mới trùng khớp mật khẩu xác nhận và tối thiểu 8 ký tự.
+    * Kiểm tra mật khẩu mới trùng khớp mật khẩu xác nhận, có độ dài tối thiểu 6 ký tự, chứa ít nhất 1 chữ cái viết hoa và ít nhất 1 ký tự đặc biệt.
    * Gửi API:
      * **Endpoint:** `POST /api/v1/profile/change-password`
      * **Payload:** `{ "oldPassword": "...", "newPassword": "..." }`

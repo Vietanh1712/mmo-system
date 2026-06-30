@@ -1,3 +1,5 @@
+let kycPageSize = 10;
+
 document.addEventListener('DOMContentLoaded', () => {
     loadKycList();
     loadKycStats();
@@ -31,10 +33,20 @@ async function loadKycStats() {
 async function loadKycList(page = 0) {
     const statusSelect = document.getElementById('kycStatusFilter');
     const status = statusSelect ? statusSelect.value : '';
+    const codeInput = document.getElementById('kycCodeFilter');
+    const requestCode = codeInput ? codeInput.value.trim() : '';
+    const typeSelect = document.getElementById('kycTypeFilter');
+    const idType = typeSelect ? typeSelect.value : '';
 
-    let url = `/v1/staff/kyc?page=${page}&size=10`;
+    let url = `/v1/staff/kyc?page=${page}&size=${kycPageSize}`;
     if (status) {
         url += `&status=${status}`;
+    }
+    if (requestCode) {
+        url += `&requestCode=${encodeURIComponent(requestCode)}`;
+    }
+    if (idType) {
+        url += `&idType=${idType}`;
     }
 
     try {
@@ -90,21 +102,13 @@ function getStatusBadge(status) {
 }
 
 function renderPagination(data) {
-    const paginationPages = document.getElementById('kycPaginationPages');
-    const paginationMeta = document.getElementById('kycPaginationMeta');
-    
-    if (paginationMeta) {
-        paginationMeta.innerHTML = `<span>Tổng số: ${data.totalElements} bản ghi</span>`;
-    }
-    
-    if (paginationPages) {
-        paginationPages.innerHTML = '';
-        for (let i = 0; i < data.totalPages; i++) {
-            const span = document.createElement('span');
-            span.className = `ds-page-link ${i === data.number ? 'ds-page-link-active' : ''}`;
-            span.textContent = i + 1;
-            span.onclick = () => loadKycList(i);
-            paginationPages.appendChild(span);
-        }
-    }
+    mountStaffPagination('kycPagination', {
+        page: data.number,
+        totalPages: data.totalPages,
+        totalElements: data.totalElements,
+        pageSize: data.size
+    }, {
+        onPage: (p) => { loadKycList(p); },
+        onSize: (s) => { kycPageSize = s; loadKycList(0); }
+    });
 }

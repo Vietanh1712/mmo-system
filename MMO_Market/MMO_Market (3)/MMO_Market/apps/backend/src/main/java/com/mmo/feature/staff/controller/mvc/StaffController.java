@@ -93,6 +93,7 @@ public class StaffController {
             @RequestParam(required = false) String fromDate,
             @RequestParam(required = false) String toDate,
             @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             Model model) {
 
         LocalDateTime from = null, to = null;
@@ -108,7 +109,7 @@ public class StaffController {
         String typeParam   = (type   != null && !type.isBlank())   ? type   : null;
         String statusParam = (status != null && !status.isBlank()) ? status : null;
 
-        Pageable pageable = PageRequest.of(page, 20, Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
         Page<Transaction> txPage = transactionRepository.searchTransactions(
                 kw, id, typeParam, statusParam, from, to, pageable);
 
@@ -128,6 +129,7 @@ public class StaffController {
         model.addAttribute("selectedStatus",  status);
         model.addAttribute("fromDate",        fromDate);
         model.addAttribute("toDate",          toDate);
+        model.addAttribute("pageSize",        size);
         return "staff/transactions";
     }
 
@@ -164,12 +166,13 @@ public class StaffController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long minAmount,
             @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             Model model) {
 
         String st = (status == null || status.isBlank() || status.equals("ALL")) ? null : status;
         String kw = (keyword != null && keyword.isBlank()) ? null : keyword;
 
-        Pageable pageable = PageRequest.of(page, 20, Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
         Page<Withdrawal> wPage = withdrawalRepository.searchWithdrawals(st, kw, minAmount, pageable);
 
         model.addAttribute("withdrawals",          wPage.getContent());
@@ -183,6 +186,7 @@ public class StaffController {
         model.addAttribute("keyword",               keyword);
         model.addAttribute("selectedStatus",        st);
         model.addAttribute("minAmount",             minAmount);
+        model.addAttribute("pageSize",              size);
         return "staff/withdrawals";
     }
 
@@ -235,13 +239,14 @@ public class StaffController {
             @RequestParam(required = false) String level,
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             Model model) {
 
         String lv = (level  == null || level.isBlank()  || level.equals("ALL"))  ? null : level;
         String st = (status == null || status.isBlank() || status.equals("ALL")) ? null : status;
         String kw = (keyword != null && keyword.isBlank()) ? null : keyword;
 
-        Pageable pageable = PageRequest.of(page, 20, Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
         Page<ShopFlag> fPage = shopFlagRepository.searchFlags(kw, lv, st, pageable);
 
         model.addAttribute("flags",          fPage.getContent());
@@ -258,6 +263,7 @@ public class StaffController {
         model.addAttribute("keyword",        keyword);
         model.addAttribute("selectedLevel",  lv);
         model.addAttribute("selectedStatus", st);
+        model.addAttribute("pageSize",       size);
         return "staff/flags";
     }
 
