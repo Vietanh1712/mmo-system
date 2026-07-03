@@ -105,18 +105,17 @@ function renderStaffComplaintsTable(list, isBackendDriven = true) {
     tbody.innerHTML = list.map(item => {
         let badgeClass = 'ds-badge-warning';
         let statusText = 'Đang xử lý';
-        if (item.status === 'New') {
-            badgeClass = 'ds-badge-info';
-            statusText = 'Mới';
-        } else if (item.status === 'Resolved' || item.status === 'Completed') {
-            badgeClass = 'ds-badge-success';
-            statusText = 'Đã giải quyết';
-        } else if (item.status === 'Rejected') {
-            badgeClass = 'ds-badge-danger';
-            statusText = 'Từ chối';
-        } else if (item.status === 'InProgress') {
+        
+        const statusVal = (item.status || '').toLowerCase();
+        if (statusVal === 'new' || statusVal === 'open' || statusVal === 'inprogress' || statusVal === 'in_progress' || statusVal === 'processing') {
             badgeClass = 'ds-badge-warning';
             statusText = 'Đang xử lý';
+        } else if (statusVal === 'resolved' || statusVal === 'completed' || statusVal === 'success') {
+            badgeClass = 'ds-badge-success';
+            statusText = 'Đã giải quyết';
+        } else if (statusVal === 'rejected' || statusVal === 'refused' || statusVal === 'fail' || statusVal === 'failed') {
+            badgeClass = 'ds-badge-danger';
+            statusText = 'Từ chối';
         }
 
         const nameInitials = item.senderName ? item.senderName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'NA';

@@ -61,25 +61,29 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Override
     public long getTotalComplaints() {
-        return complaintRepository.countByIsDeleteFalse();
+        return complaintRepository.countAllNotDeleted();
     }
 
     @Override
     public long getInProgressComplaints() {
-        return complaintRepository
-                .countByStatusAndIsDeleteFalse("InProgress");
+        return complaintRepository.countByStatusesAndNotDeleted(java.util.List.of(
+                "InProgress", "inprogress", "In_Progress", "in_progress", "Processing", "processing",
+                "Open", "open", "New", "new"
+        ));
     }
 
     @Override
     public long getResolvedComplaints() {
-        return complaintRepository
-                .countByStatusAndIsDeleteFalse("Resolved");
+        return complaintRepository.countByStatusesAndNotDeleted(java.util.List.of(
+                "Resolved", "resolved", "Completed", "completed", "Success", "success"
+        ));
     }
 
     @Override
     public long getRefusedComplaints() {
-        return complaintRepository
-                .countByStatusAndIsDeleteFalse("Rejected");
+        return complaintRepository.countByStatusesAndNotDeleted(java.util.List.of(
+                "Rejected", "rejected", "Refused", "refused", "Failed", "failed", "Fail", "fail"
+        ));
     }
 
     private ComplaintDTO toDTO(Complaint c) {
@@ -490,12 +494,30 @@ public class ComplaintServiceImpl implements ComplaintService {
                 }
             }
         }
-
-        String queryStatus = null;
+        java.util.Collection<String> queryStatuses = new java.util.ArrayList<>();
+        boolean hasStatus = false;
         if (status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status)) {
-            queryStatus = status.trim();
+            String statusVal = status.trim();
+            hasStatus = true;
+            if ("New".equalsIgnoreCase(statusVal)) {
+                queryStatuses.addAll(java.util.List.of("New", "new", "Open", "open"));
+            } else if ("InProgress".equalsIgnoreCase(statusVal)) {
+                queryStatuses.addAll(java.util.List.of(
+                        "InProgress", "inprogress", "In_Progress", "in_progress", "Processing", "processing",
+                        "Open", "open", "New", "new"
+                ));
+            } else if ("Resolved".equalsIgnoreCase(statusVal) || "Completed".equalsIgnoreCase(statusVal)) {
+                queryStatuses.addAll(java.util.List.of("Resolved", "resolved", "Completed", "completed"));
+            } else if ("Rejected".equalsIgnoreCase(statusVal)) {
+                queryStatuses.addAll(java.util.List.of("Rejected", "rejected", "Refused", "refused"));
+            } else {
+                queryStatuses.add(statusVal);
+            }
         }
-
-        return complaintRepository.searchComplaintsForStaff(complaintId, searchKeyword, queryStatus, pageable);
+        if (!hasStatus) {
+            queryStatuses.add("DUMMY_STATUS_EMPTY");
+        }
+        
+        return complaintRepository.searchComplaintsForStaff(complaintId, searchKeyword, queryStatuses, hasStatus, pageable);
     }
 }

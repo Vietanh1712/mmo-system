@@ -22,6 +22,9 @@ public interface WithdrawalRepository extends JpaRepository<Withdrawal, Long> {
     @Query("SELECT w FROM Withdrawal w JOIN FETCH w.seller WHERE w.isDelete = false")
     List<Withdrawal> findAllWithSellerByIsDeleteFalse();
     long countByStatusAndIsDeleteFalse(String status);
+
+    @Query("SELECT COUNT(w) FROM Withdrawal w WHERE w.status IN (:statuses) AND (w.isDelete = false OR w.isDelete IS NULL)")
+    long countByStatusesAndNotDeleted(@Param("statuses") java.util.Collection<String> statuses);
     @Query(
             value = """
 SELECT w

@@ -17,7 +17,6 @@
                         <h1 class="ds-page-title">Quản lý cờ cảnh báo</h1>
                         <p class="ds-page-subtitle">Theo dõi shop bị cắm cờ và mức độ cảnh báo.</p>
                     </div>
-                    <a class="ds-btn ds-btn-primary" href="/staff/flags/detail">+ Cắm cờ mới</a>
                 </div>
 
                 <div class="staff-stat-grid">
@@ -71,7 +70,7 @@
                                     </option>
                                     <option th:each="l:${levels}"
                                             th:value="${l}"
-                                            th:text="${l}"
+                                            th:text="${l == 'Warning' ? 'Cảnh cáo' : (l == 'Danger' ? 'Nguy hiểm' : (l == 'Critical' ? 'Phê bình' : (l == 'Suspension' ? 'Đình chỉ' : (l == 'Ban' ? 'Cấm' : l))))}"
                                             th:selected="${l == selectedLevel}">
                                     </option>
                                 </select>
@@ -84,7 +83,7 @@
                                     </option>
                                     <option th:each="s:${statuses}"
                                             th:value="${s}"
-                                            th:text="${s}"
+                                            th:text="${#strings.toLowerCase(s) == 'effect' ? 'Hiệu lực' : (#strings.toLowerCase(s) == 'removed' or #strings.toLowerCase(s) == 'remove' ? 'Đã gỡ' : s)}"
                                             th:selected="${s == selectedStatus}">
                                     </option>
                                 </select>
@@ -112,6 +111,7 @@
                         <table class="ds-table">
                             <thead>
                             <tr>
+                                <th class="ds-table-center" style="width: 60px;">STT</th>
                                 <th>Mã cờ</th>
                                 <th>Shop</th>
                                 <th>Lý do</th>
@@ -122,7 +122,8 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <tr th:each="flag : ${flags}">
+                            <tr th:each="flag, iterStat : ${flags}">
+                                <td class="ds-table-center" th:text="${currentPage * pageSize + iterStat.count}">1</td>
                                 <td th:text="'#FLG-' + ${flag.id}">
                                 </td>
                                 <td>
@@ -140,15 +141,17 @@
                                 <td th:text="${flag.reason}">
                                 </td>
                                 <td class="ds-table-center">
-                                    <span class="ds-badge ds-badge-danger"
-                                          th:text="${flag.flagLevel}">
+                                    <span class="ds-badge"
+                                          th:classappend="${flag.flagLevel == 'Warning' ? 'ds-badge-warning' : (flag.flagLevel == 'Danger' or flag.flagLevel == 'Critical' ? 'ds-badge-danger' : 'ds-badge-info')}"
+                                          th:text="${flag.flagLevel == 'Warning' ? 'Cảnh cáo' : (flag.flagLevel == 'Danger' ? 'Nguy hiểm' : (flag.flagLevel == 'Critical' ? 'Phê bình' : (flag.flagLevel == 'Suspension' ? 'Đình chỉ' : (flag.flagLevel == 'Ban' ? 'Cấm' : flag.flagLevel))))}">
                                     </span>
                                 </td>
                                 <td th:text="${flag.staff.email}">
                                 </td>
                                 <td class="ds-table-center">
-                                     <span class="ds-badge ds-badge-warning"
-                                           th:text="${flag.status}">
+                                     <span class="ds-badge"
+                                           th:classappend="${#strings.toLowerCase(flag.status) == 'effect' ? 'ds-badge-success' : (#strings.toLowerCase(flag.status) == 'removed' or #strings.toLowerCase(flag.status) == 'remove' ? 'ds-badge-muted' : 'ds-badge-warning')}"
+                                           th:text="${#strings.toLowerCase(flag.status) == 'effect' ? 'Hiệu lực' : (#strings.toLowerCase(flag.status) == 'removed' or #strings.toLowerCase(flag.status) == 'remove' ? 'Đã gỡ' : flag.status)}">
                                      </span>
                                 </td>
                                 <td class="ds-table-center">

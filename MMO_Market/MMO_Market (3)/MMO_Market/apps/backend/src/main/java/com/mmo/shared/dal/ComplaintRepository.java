@@ -18,10 +18,14 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     List<Complaint> findByCustomerAndIsDeleteFalseOrderByCreatedAtDesc(User customer);
     List<Complaint> findByIsDeleteFalseOrderByCreatedAtDesc();
 
-    @Query("SELECT COUNT(c) FROM Complaint c WHERE c.seller = :seller AND c.status = 'InProgress' AND c.isDelete = false")
+    @Query("SELECT COUNT(c) FROM Complaint c WHERE (c.isDelete = false OR c.isDelete IS NULL)")
+    long countAllNotDeleted();
+
+    @Query("SELECT COUNT(c) FROM Complaint c WHERE c.status IN (:statuses) AND (c.isDelete = false OR c.isDelete IS NULL)")
+    long countByStatusesAndNotDeleted(@Param("statuses") java.util.Collection<String> statuses);
+
+    @Query("SELECT COUNT(c) FROM Complaint c WHERE c.seller = :seller AND c.status = 'InProgress' AND (c.isDelete = false OR c.isDelete IS NULL)")
     long countOpenComplaintsBySeller(@Param("seller") User seller);
-
-
 
     long countByStatusAndIsDeleteFalse(String status);
 
@@ -60,7 +64,7 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     @Query("""
 SELECT c
 FROM Complaint c
-WHERE c.isDelete = false
+WHERE (c.isDelete = false OR c.isDelete IS NULL)
 AND (
       :keyword IS NULL
       OR CAST(c.id AS string) = :keyword
@@ -84,7 +88,7 @@ FROM Complaint c
 LEFT JOIN c.customer cust
 LEFT JOIN c.transaction tx
 LEFT JOIN tx.product prod
-WHERE c.isDelete = false
+WHERE (c.isDelete = false OR c.isDelete IS NULL)
 AND (
       (:complaintId IS NOT NULL AND c.id = :complaintId)
       OR
@@ -97,14 +101,15 @@ AND (
       ))
 )
 AND (
-      :status IS NULL
-      OR c.status = :status
+      :hasStatus = false
+      OR c.status IN (:statuses)
 )
 """)
     Page<Complaint> searchComplaintsForStaff(
             @Param("complaintId") Long complaintId,
             @Param("keyword") String keyword,
-            @Param("status") String status,
+            @Param("statuses") java.util.Collection<String> statuses,
+            @Param("hasStatus") boolean hasStatus,
             Pageable pageable
     );
 }

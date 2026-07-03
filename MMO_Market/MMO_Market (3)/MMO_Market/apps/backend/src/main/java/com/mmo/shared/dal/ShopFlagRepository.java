@@ -24,6 +24,12 @@ public interface ShopFlagRepository extends JpaRepository<ShopFlag, Long> {
 
     long countByStatusAndIsDeleteFalse(String status);
 
+    @Query("SELECT COUNT(f) FROM ShopFlag f WHERE f.isDelete = false AND (LOWER(f.status) = 'removed' OR LOWER(f.status) = 'remove')")
+    long countRemovedFlags();
+
+    @Query("SELECT COUNT(f) FROM ShopFlag f WHERE f.isDelete = false AND LOWER(f.status) = 'effect'")
+    long countActiveFlags();
+
     List<ShopFlag> findAllByIsDeleteFalseOrderByCreatedAtDesc();
 
     Page<ShopFlag> findAllByIsDeleteFalse(Pageable pageable);
@@ -62,4 +68,9 @@ AND (
             Pageable pageable
     );
 
+    @Query("SELECT DISTINCT f.flagLevel FROM ShopFlag f WHERE f.isDelete = false AND f.flagLevel IS NOT NULL")
+    List<String> findDistinctFlagLevels();
+
+    @Query("SELECT DISTINCT f.status FROM ShopFlag f WHERE f.isDelete = false AND f.status IS NOT NULL")
+    List<String> findDistinctStatuses();
 }

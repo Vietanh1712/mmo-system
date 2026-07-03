@@ -47,6 +47,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     Long sumPlatformRevenue();
 
     long countByStatusAndIsDeleteFalse(String status);
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.status IN (:statuses) AND (t.isDelete = false OR t.isDelete IS NULL)")
+    long countByStatusesAndNotDeleted(@Param("statuses") java.util.Collection<String> statuses);
 
     long countByIsDeleteFalse();
 
@@ -84,16 +86,16 @@ AND (
 
 AND (
     :status IS NULL
-    OR LOWER(t.status)=LOWER(:status)
+    OR t.status = :status
 )
 
 AND (
-    :fromDate IS NULL
+    cast(:fromDate as timestamp) IS NULL
     OR t.createdAt >= :fromDate
 )
 
 AND (
-    :toDate IS NULL
+    cast(:toDate as timestamp) IS NULL
     OR t.createdAt <= :toDate
 )
 
