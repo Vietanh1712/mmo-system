@@ -16,6 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.mmo.shared.dal.ChatRepository;
+import com.mmo.shared.dal.ComplaintRepository;
+import com.mmo.shared.model.Chat;
+
 @RestController
 @RequestMapping("/api/complaints")
 public class ComplaintController {
@@ -25,6 +29,12 @@ public class ComplaintController {
 
     @Autowired
     private com.mmo.shared.dal.UserRepository userRepository;
+
+    @Autowired
+    private ChatRepository chatRepository;
+
+    @Autowired
+    private ComplaintRepository complaintRepository;
 
     private boolean isStaffOrAdmin(Long userId) {
         if (userId == null) return false;
@@ -190,13 +200,22 @@ public class ComplaintController {
 
         String status = request.get("status");
         String resolution = request.get("resolution");
+        String flagLevel = request.get("flagLevel");
+        String flagReason = request.get("flagReason");
 
         if (status == null || status.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "Trạng thái status không được để trống."));
         }
 
         try {
-            Complaint complaint = complaintService.updateComplaintStatus(id, status.trim(), resolution != null ? resolution.trim() : null);
+            Complaint complaint = complaintService.updateComplaintStatus(
+                    id, 
+                    status.trim(), 
+                    resolution != null ? resolution.trim() : null,
+                    flagLevel,
+                    flagReason,
+                    userId
+            );
             return ResponseEntity.ok(mapComplaintToDto(complaint));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));

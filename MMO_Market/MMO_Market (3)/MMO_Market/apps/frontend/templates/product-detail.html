@@ -236,7 +236,7 @@
                             <span class="rating-stars">
                                 <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i
                                     class="fa fa-star"></i><i class="fa fa-star-o"></i>
-                                4+ sao
+                                4 sao
                             </span>
                         </label>
                         <label class="filter-checkbox">
@@ -244,7 +244,7 @@
                             <span class="rating-stars">
                                 <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i
                                     class="fa fa-star-o"></i><i class="fa fa-star-o"></i>
-                                3+ sao
+                                3 sao
                             </span>
                         </label>
                     </div>
@@ -571,7 +571,7 @@
                 sales: "50",
                 rating: "4.6",
                 reviewsCount: 18,
-stock: 50,
+                stock: 50,
                 variants: [
                     { duration: 1, price: 299000, oldPrice: 500000, label: "1 Gói thiết kế" }
                 ],
@@ -711,7 +711,7 @@ stock: 50,
                     selectedProduct.categoryName = "Tăng tương tác";
                 } else if (nameLower.includes('wallet') || nameLower.includes('trust') || nameLower.includes('crypto')) {
                     selectedProduct.categoryName = "Blockchain";
-                } else if (nameLower.includes('logo') || nameLower.includes('banner') || nameLower.includes('thiết kế')) {
+                } else if (nameLower.includes('logo') || nameLower.includes('thiết kế') || nameLower.includes('design') || nameLower.includes('banner')) {
                     selectedProduct.categoryName = "Dịch vụ khác";
                 } else {
                     selectedProduct.categoryName = "Tài khoản Premium";
@@ -1281,17 +1281,6 @@ stock: 50,
                 });
             });
 
-            // Add automatic change listeners for immediate filtering on sidebar
-            const sidebarFilterForm = document.getElementById('sidebar-filter-form');
-            if (sidebarFilterForm) {
-                sidebarFilterForm.querySelectorAll('select, input[type="checkbox"]').forEach(el => {
-                    el.addEventListener('change', () => applySidebarFilters(new Event('submit')));
-                });
-                const slider = document.getElementById('price-slider');
-                if (slider) {
-                    slider.addEventListener('change', () => applySidebarFilters(new Event('submit')));
-                }
-            }
         });
 
         // Format Currency Helper

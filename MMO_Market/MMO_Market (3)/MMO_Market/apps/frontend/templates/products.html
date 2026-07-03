@@ -107,7 +107,7 @@
                             <span class="rating-stars">
                                 <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i
                                     class="fa fa-star"></i><i class="fa fa-star-o"></i>
-                                4+ sao
+                                4 sao
                             </span>
                         </label>
                         <label class="filter-checkbox">
@@ -115,7 +115,7 @@
                             <span class="rating-stars">
                                 <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i
                                     class="fa fa-star-o"></i><i class="fa fa-star-o"></i>
-                                3+ sao
+                                3 sao
                             </span>
                         </label>
                     </div>
@@ -589,8 +589,19 @@
             // 5. Rating Stars
             const ratingChecks = document.querySelectorAll('input[name="rating-filter"]:checked');
             if (ratingChecks.length > 0) {
-                const minRating = Math.min(...Array.from(ratingChecks).map(c => parseInt(c.value)));
-                filtered = filtered.filter(p => p.averageRating >= minRating);
+                const selectedRatings = Array.from(ratingChecks).map(c => parseInt(c.value));
+                filtered = filtered.filter(p => {
+                    return selectedRatings.some(rate => {
+                        if (rate === 5) {
+                            return p.averageRating >= 5.0;
+                        } else if (rate === 4) {
+                            return p.averageRating >= 4.0 && p.averageRating < 5.0;
+                        } else if (rate === 3) {
+                            return p.averageRating >= 3.0 && p.averageRating < 4.0;
+                        }
+                        return false;
+                    });
+                });
             }
 
             // 6. Sort

@@ -23,4 +23,5 @@ public class OrderDto {
     private String reviewComment;
     private Long transactionId;
     private java.util.Map<String, String> credentials;
+    private Long complaintId;
 }

@@ -166,12 +166,12 @@ async function loadOrderDetailPage() {
         }
 
         const transactionId = transactionIdMatch[1];
-        
+
         const txResponse = await authFetch(`/transactions/${transactionId}`);
         if (!txResponse.ok) {
             if (txResponse.status === 404 || txResponse.status === 403 || txResponse.status === 400) {
-                 showNotFound(orderCode);
-                 return;
+                showNotFound(orderCode);
+                return;
             }
             throw new Error('Không thể lấy chi tiết đơn hàng.');
         }
@@ -201,7 +201,7 @@ function renderOrderDetail(order) {
     document.getElementById('orderDetailContent').hidden = false;
     document.getElementById('orderTimeline').hidden = false;
     document.getElementById('orderDetailEmpty').hidden = true;
-    
+
     const msgEl = document.getElementById('orderDetailMessage');
     if (msgEl) {
         msgEl.hidden = true;
@@ -286,20 +286,63 @@ function showNotFound(orderCode) {
 
 function renderTimeline(order) {
     const activeSteps = getActiveSteps(order);
+    
     document.querySelectorAll('[data-order-step]').forEach(step => {
-        step.classList.toggle('order-timeline-item--active', activeSteps.includes(step.dataset.orderStep));
+        const stepName = step.dataset.orderStep;
+        
+        // Reset classes
+        step.classList.remove('order-timeline-item--active', 'order-timeline-item--disputed', 'order-timeline-item--failed');
+        
+        if (stepName === 'completed') {
+            const titleEl = step.querySelector('strong');
+            const descEl = step.querySelector('p');
+            const status = (order.status || '').toUpperCase();
+            
+            if (status === 'DISPUTED') {
+                step.classList.add('order-timeline-item--disputed');
+                if (titleEl) titleEl.textContent = 'Tranh chấp / Khiếu nại';
+                if (descEl) descEl.textContent = 'Đang trong quá trình xử lý khiếu nại.';
+            } else if (status === 'REFUNDED') {
+                step.classList.add('order-timeline-item--failed');
+                if (titleEl) titleEl.textContent = 'Đã hoàn tiền';
+                if (descEl) descEl.textContent = 'Đơn hàng đã được hoàn tiền cho người mua.';
+            } else if (status === 'CANCELLED') {
+                step.classList.add('order-timeline-item--failed');
+                if (titleEl) titleEl.textContent = 'Đã hủy đơn';
+                if (descEl) descEl.textContent = 'Đơn hàng đã bị hủy bỏ.';
+            } else if (status === 'COMPLETED') {
+                step.classList.add('order-timeline-item--active');
+                if (titleEl) titleEl.textContent = 'Hoàn tất';
+                if (descEl) descEl.textContent = 'Đơn hàng đã hoàn tất thành công.';
+            } else {
+                // Các trạng thái khác (PENDING, PAID, DELIVERED, HELD)
+                if (titleEl) titleEl.textContent = 'Hoàn tất / tranh chấp';
+                if (descEl) descEl.textContent = 'Kết thúc đơn hoặc mở xử lý khiếu nại.';
+            }
+        } else {
+            // Các bước 1, 2, 3
+            step.classList.toggle('order-timeline-item--active', activeSteps.includes(stepName));
+        }
     });
 }
 
 function getActiveSteps(order) {
     const steps = ['created'];
-    if (['PAID', 'DELIVERED', 'COMPLETED', 'DISPUTED', 'REFUNDED'].includes(order.status) || order.paymentStatus === 'PAID') {
+    const status = (order.status || '').toUpperCase();
+    const payStatus = (order.paymentStatus || '').toUpperCase();
+
+    // Bước 2 (Thanh toán): Đã thanh toán hoặc đang giữ tiền
+    if (['HELD', 'COMPLETED', 'DISPUTED', 'REFUNDED', 'PAID'].includes(status) || payStatus === 'PAID') {
         steps.push('paid');
     }
-    if (['DELIVERED', 'COMPLETED', 'DISPUTED', 'REFUNDED'].includes(order.status)) {
+    
+    // Bước 3 (Seller giao hàng): Khi đã ở trạng thái tạm giữ bảo lãnh (HELD) hoặc các trạng thái sau đó
+    if (['HELD', 'COMPLETED', 'DISPUTED', 'REFUNDED'].includes(status)) {
         steps.push('delivered');
     }
-    if (['COMPLETED', 'DISPUTED', 'REFUNDED', 'CANCELLED'].includes(order.status)) {
+    
+    // Bước 4 (Hoàn tất): Đơn hàng hoàn tất giải ngân thành công
+    if (status === 'COMPLETED') {
         steps.push('completed');
     }
     return steps;
@@ -461,4 +504,13 @@ function showSuccessToast(message) {
             toast.remove();
         }, 500);
     }, 3200);
+}
+
+function escapeHtml(value) {
+    return String(value || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
 }

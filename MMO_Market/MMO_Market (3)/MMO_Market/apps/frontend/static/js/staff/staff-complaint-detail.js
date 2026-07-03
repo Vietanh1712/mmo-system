@@ -40,6 +40,7 @@ async function loadComplaintDetails() {
                 const item = await res.json();
                 currentComplaint = {
                     id: item.id ? `CMP-${item.id}` : 'CMP-UNKNOWN',
+                    buyerId: item.customer ? item.customer.id : null,
                     senderName: item.customer ? item.customer.fullName : 'N/A',
                     senderEmail: item.customer ? item.customer.email : 'N/A',
                     target: item.transaction && item.transaction.productName ? item.transaction.productName : 'Sản phẩm',
@@ -122,7 +123,19 @@ async function loadComplaintDetails() {
 
     // Timeline
     renderTimeline();
+
+
 }
+
+window.toggleFlaggingFields = function() {
+    const enableFlagging = document.getElementById('enableFlagging').checked;
+    const fields = document.getElementById('flaggingFields');
+    if (fields) {
+        fields.style.display = enableFlagging ? 'flex' : 'none';
+    }
+};
+
+
 
 function renderTimeline() {
     const timeline = document.getElementById('detail-timeline');
@@ -186,6 +199,18 @@ async function handleStaffAction(status) {
         return;
     }
 
+    let flagLevel = null;
+    let flagReason = null;
+    const enableFlagging = document.getElementById('enableFlagging').checked;
+    if (enableFlagging) {
+        flagLevel = document.getElementById('flagLevel').value;
+        flagReason = document.getElementById('flagReason').value.trim();
+        if (!flagReason) {
+            showWarningToast('Vui lòng nhập lý do gắn cờ phạt shop!');
+            return;
+        }
+    }
+
     const id = currentComplaint.id;
     const numericId = id.replace('CMP-', '');
     const token = sessionStorage.getItem('accessToken');
@@ -200,7 +225,9 @@ async function handleStaffAction(status) {
                 },
                 body: JSON.stringify({
                     status: status,
-                    resolution: resolution || (status === 'Resolved' ? 'Đã xử lý & hoàn tất hỗ trợ.' : 'Khiếu nại không hợp lệ.')
+                    resolution: resolution || (status === 'Resolved' ? 'Đã xử lý & hoàn tất hỗ trợ.' : 'Khiếu nại không hợp lệ.'),
+                    flagLevel: flagLevel,
+                    flagReason: flagReason
                 })
             });
             

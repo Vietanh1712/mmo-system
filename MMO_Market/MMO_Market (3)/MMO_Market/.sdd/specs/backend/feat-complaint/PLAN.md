@@ -47,11 +47,12 @@ Triển khai quy trình khiếu nại đơn hàng (Complaints / Dispute) theo đ
     - Kiểm tra xem giao dịch có nằm trong thời gian 72h Escrow bảo lãnh không (nếu đã quá 72h và đã giải ngân thì không cho phép tạo khiếu nại).
     - Cập nhật trạng thái Transaction sang `Disputed` (Đóng băng dòng tiền không cho tự động giải ngân).
     - Lưu bản ghi `Complaint` với trạng thái `OPEN`.
-  - `updateComplaintStatus(id, status, resolution)`:
+  - `updateComplaintStatus(id, status, resolution, flagLevel, flagReason)`:
     - Chỉ cho phép Staff/Admin thực hiện.
     - Cập nhật nội dung phân xử `resolution`.
     - Nếu phân xử hoàn tiền (Refund): Trả lại tiền từ Escrow về `availableBalance` của Customer.
     - Nếu phân xử từ chối khiếu nại: Thực hiện giải ngân số tiền đơn hàng từ Escrow sang `availableBalance` của Seller.
+    - Nếu Staff/Admin chọn gắn cờ người bán: tạo và lưu bản ghi `ShopFlag` với `flagLevel` và `flagReason` tương ứng.
     - Đổi trạng thái khiếu nại sang `RESOLVED` hoặc `CLOSED`.
 
 ### 3.5. Controllers & Security
@@ -61,17 +62,20 @@ Triển khai quy trình khiếu nại đơn hàng (Complaints / Dispute) theo đ
   - `GET /`: Người mua xem lịch sử khiếu nại cá nhân (`@PreAuthorize("hasRole('CUSTOMER')")`).
   - `GET /all`: Staff/Admin xem danh sách khiếu nại toàn sàn (`@PreAuthorize("hasAnyAuthority('ROLE_STAFF', 'ROLE_ADMIN')")`).
   - `GET /{id}`: Xem chi tiết (Yêu cầu ownership hoặc có quyền Staff/Admin).
-  - `PUT /{id}/status`: Staff cập nhật trạng thái phân xử (`@PreAuthorize("hasAnyAuthority('ROLE_STAFF', 'ROLE_ADMIN')")`).
+  - `PUT /{id}/status`: Staff cập nhật trạng thái phân xử kèm theo thông tin gắn cờ shop (`@PreAuthorize("hasAnyAuthority('ROLE_STAFF', 'ROLE_ADMIN')")`).
+  - `GET /{id}/chats`: Trả về tin nhắn chat khiếu nại (Quyền: Buyer, Seller, Staff/Admin).
+  - `POST /{id}/chats`: Cho phép gửi tin nhắn chat khiếu nại (Quyền: Buyer, Seller. Chặn Staff/Admin gửi).
 
 ---
 
 ## 4. Các thành phần Frontend
 
 - **Màn hình khiếu nại của Người mua:**
-  - File: `templates/account/complaints.html`. Form tạo khiếu nại khi xem chi tiết một đơn hàng lỗi.
+  - File: `templates/account/order-detail.html`. Hiển thị thêm hộp thoại Chat Tranh Chấp cho phép nhắn tin thương lượng trực tiếp với Seller khi trạng thái đơn là `DISPUTED`.
 - **Màn hình phân xử của Staff:**
-  - File: `templates/staff/complaints.html` & `complaint-detail.html` và JS `static/js/staff/staff-complaints.js`.
-  - Staff xem mô tả lỗi, xem ảnh bằng chứng và chọn phương án xử lý (Hoàn tiền cho khách / Giải ngân cho shop).
+  - File: `templates/staff/complaint-detail.html` và JS `static/js/staff/staff-complaint-detail.js`.
+  - Staff xem mô tả lỗi, xem bằng chứng và **xem lịch sử cuộc trò chuyện thương lượng giữa Buyer và Seller** (chế độ Read-only).
+  - Staff chọn phương án xử lý (Hoàn tiền / Giải ngân) và tick chọn gắn cờ cảnh cáo shop người bán (`ShopFlag`).
 
 ---
 

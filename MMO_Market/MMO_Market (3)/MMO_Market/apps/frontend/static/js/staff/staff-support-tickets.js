@@ -44,6 +44,7 @@ function renderTickets() {
             (item.user && item.user.fullName.toLowerCase().includes(search));
         const matchesStatus = !status || item.status === status;
         const matchesCategory = !category || item.category === category;
+        return matchesSearch && matchesStatus && matchesCategory;
     });
 
     filtered.sort((a, b) => a.id - b.id);

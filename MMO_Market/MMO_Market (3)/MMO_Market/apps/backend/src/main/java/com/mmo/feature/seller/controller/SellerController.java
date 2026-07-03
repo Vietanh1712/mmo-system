@@ -909,7 +909,13 @@ public class SellerController {
             List<Map<String, Object>> chatList = chats.stream().map(msg -> {
                 Map<String, Object> map = new HashMap<>();
                 map.put("senderName", msg.getSender().getFullName());
-                map.put("senderRole", msg.getSender().getEmail().contains("seller") ? "Seller" : (msg.getSender().getEmail().contains("staff") ? "Staff" : "Customer"));
+                String role = "Customer";
+                if (msg.getSender().getId().equals(c.getSeller().getId())) {
+                    role = "Seller";
+                } else if (msg.getSender().getRole() != null && (msg.getSender().getRole().toLowerCase().contains("staff") || msg.getSender().getRole().toLowerCase().contains("admin"))) {
+                    role = "Staff";
+                }
+                map.put("senderRole", role);
                 map.put("message", msg.getMessage());
                 map.put("createdAt", msg.getCreatedAt().toString());
                 return map;

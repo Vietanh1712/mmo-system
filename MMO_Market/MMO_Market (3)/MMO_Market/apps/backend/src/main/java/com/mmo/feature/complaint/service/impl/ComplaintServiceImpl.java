@@ -1,4 +1,5 @@
 package com.mmo.feature.complaint.service.impl;
+
 import com.mmo.feature.complaint.service.ComplaintService;
 
 import com.mmo.shared.dto.ComplaintDTO;
@@ -23,6 +24,9 @@ import com.mmo.feature.wallet.service.WalletService;
 import com.mmo.shared.dal.NotificationRepository;
 import com.mmo.shared.model.Notification;
 
+import com.mmo.shared.dal.ShopFlagRepository;
+import com.mmo.shared.model.ShopFlag;
+
 @Service
 @Slf4j
 public class ComplaintServiceImpl implements ComplaintService {
@@ -41,6 +45,9 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Autowired
     private NotificationRepository notificationRepository;
+
+    @Autowired
+    private ShopFlagRepository shopFlagRepository;
 
     @Override
     public List<ComplaintDTO> getAllComplaints() {
@@ -98,45 +105,43 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         Page<Complaint> complaints;
 
-        boolean hasKeyword =
-                keyword != null && !keyword.trim().isEmpty();
+        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
 
-        boolean hasStatus =
-                status != null &&
-                        !status.trim().isEmpty() &&
-                        !status.equals("ALL");
+        boolean hasStatus = status != null &&
+                !status.trim().isEmpty() &&
+                !status.equals("ALL");
 
-//        if (hasKeyword && hasStatus) {
-//
-//            complaints =
-//                    complaintRepository
-//                            .findByDescriptionContainingIgnoreCaseAndStatusAndIsDeleteFalse(
-//                                    keyword,
-//                                    status,
-//                                    pageable);
-//
-//        } else if (hasKeyword) {
-//
-//            complaints =
-//                    complaintRepository
-//                            .findByDescriptionContainingIgnoreCaseAndIsDeleteFalse(
-//                                    keyword,
-//                                    pageable);
-//
-//        } else if (hasStatus) {
-//
-//            complaints =
-//                    complaintRepository
-//                            .findByStatusAndIsDeleteFalse(
-//                                    status,
-//                                    pageable);
-//
-//        } else {
-//
-//            complaints =
-//                    complaintRepository
-//                            .findByIsDeleteFalse(pageable);
-//        }
+        // if (hasKeyword && hasStatus) {
+        //
+        // complaints =
+        // complaintRepository
+        // .findByDescriptionContainingIgnoreCaseAndStatusAndIsDeleteFalse(
+        // keyword,
+        // status,
+        // pageable);
+        //
+        // } else if (hasKeyword) {
+        //
+        // complaints =
+        // complaintRepository
+        // .findByDescriptionContainingIgnoreCaseAndIsDeleteFalse(
+        // keyword,
+        // pageable);
+        //
+        // } else if (hasStatus) {
+        //
+        // complaints =
+        // complaintRepository
+        // .findByStatusAndIsDeleteFalse(
+        // status,
+        // pageable);
+        //
+        // } else {
+        //
+        // complaints =
+        // complaintRepository
+        // .findByIsDeleteFalse(pageable);
+        // }
 
         if (!hasKeyword) {
             keyword = null;
@@ -146,12 +151,10 @@ public class ComplaintServiceImpl implements ComplaintService {
             status = null;
         }
 
-        complaints =
-                complaintRepository.searchComplaints(
-                        keyword,
-                        status,
-                        pageable
-                );
+        complaints = complaintRepository.searchComplaints(
+                keyword,
+                status,
+                pageable);
 
         return complaints.map(this::toDTO);
     }
@@ -166,8 +169,7 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         Complaint complaint = complaintRepository
                 .findByIdAndIsDeleteFalse(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Complaint not found"));
+                .orElseThrow(() -> new RuntimeException("Complaint not found"));
 
         return ComplaintDTO.builder()
                 .id(complaint.getId())
@@ -183,19 +185,16 @@ public class ComplaintServiceImpl implements ComplaintService {
                 .amountVnd(
                         complaint.getTransaction() != null
                                 ? complaint.getTransaction().getAmountVnd()
-                                : null
-                )
+                                : null)
                 .commissionVnd(
                         complaint.getTransaction() != null
                                 ? complaint.getTransaction().getCommissionVnd()
-                                : null
-                )
+                                : null)
                 .transactionId(
                         complaint.getTransaction() != null
                                 ? complaint.getTransaction().getId()
                                 : null)
                 .build();
-
 
     }
 
@@ -208,15 +207,14 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         Complaint complaint = complaintRepository
                 .findByIdAndIsDeleteFalse(complaintId)
-                .orElseThrow(() ->
-                        new RuntimeException("Complaint not found"));
+                .orElseThrow(() -> new RuntimeException("Complaint not found"));
 
         complaint.setStatus(status);
         complaint.setResolution(resolution);
 
         complaintRepository.save(complaint);
     }
-    
+
     // --- Methods from HEAD ---
     @Override
     @Transactional
@@ -298,15 +296,39 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Override
     @Transactional
-    public Complaint updateComplaintStatus(Long complaintId, String status, String resolution) {
+    public Complaint updateComplaintStatus(Long complaintId, String status, String resolution, String flagLevel, String flagReason, Long staffId) {
         Complaint complaint = complaintRepository.findById(complaintId)
                 .filter(c -> c.getIsDelete() == null || !c.getIsDelete())
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khiếu nại."));
 
         complaint.setStatus(status);
         complaint.setResolution(resolution);
-        complaint.setResolvedBy(null); // Có thể được set từ controller nếu cần
+        
+        User staffUser = null;
+        if (staffId != null) {
+            staffUser = userRepository.findByIdAndIsDeleteFalse(staffId).orElse(null);
+            complaint.setResolvedBy(staffUser);
+        }
         complaint.setResolvedAt(LocalDateTime.now());
+
+        // Xử lý tạo ShopFlag nếu Staff chọn gắn cờ
+        if (flagLevel != null && !flagLevel.trim().isEmpty() && !"None".equalsIgnoreCase(flagLevel)) {
+            User seller = complaint.getSeller();
+            if (seller != null && staffUser != null) {
+                ShopFlag flag = ShopFlag.builder()
+                        .seller(seller)
+                        .staff(staffUser)
+                        .complaint(complaint)
+                        .reason(flagReason != null && !flagReason.trim().isEmpty() ? flagReason.trim() : "Vi phạm trong khiếu nại #" + complaintId)
+                        .flagLevel(flagLevel.trim())
+                        .status("Effect")
+                        .isDelete(false)
+                        .createdAt(LocalDateTime.now())
+                        .build();
+                shopFlagRepository.save(flag);
+                log.info("Staff ID {} đã gắn cờ {} cho Seller ID {} từ khiếu nại #{}", staffId, flagLevel, seller.getId(), complaintId);
+            }
+        }
 
         Transaction tx = complaint.getTransaction();
         if (tx != null) {
@@ -332,14 +354,14 @@ public class ComplaintServiceImpl implements ComplaintService {
                             String.format("Hoàn tiền khiếu nại #CMP-%d: %s", complaint.getId(), resolution),
                             referenceCode,
                             newBalance,
-                            complaint.getId()
-                    );
+                            complaint.getId());
 
                     // Gửi thông báo hoàn tiền cho Buyer
                     Notification buyerNotif = Notification.builder()
                             .userId(customer.getId())
                             .title("Thông báo hoàn tiền khiếu nại")
-                            .content(String.format("Khiếu nại #CMP-%d đối với đơn hàng MMO-ORD-%d đã được chấp nhận. Số tiền %,d VNĐ đã được hoàn trả vào ví của bạn.", 
+                            .content(String.format(
+                                    "Khiếu nại #CMP-%d đối với đơn hàng MMO-ORD-%d đã được chấp nhận. Số tiền %,d VNĐ đã được hoàn trả vào ví của bạn.",
                                     complaint.getId(), tx.getId(), tx.getAmountVnd()))
                             .type("WALLET")
                             .severity("SUCCESS")
@@ -355,7 +377,8 @@ public class ComplaintServiceImpl implements ComplaintService {
                         Notification sellerNotif = Notification.builder()
                                 .userId(seller.getId())
                                 .title("Đơn hàng bị hoàn tiền (Khiếu nại được chấp nhận)")
-                                .content(String.format("Khiếu nại #CMP-%d đối với đơn hàng MMO-ORD-%d đã được giải quyết. Đơn hàng đã bị hoàn tiền cho người mua.", 
+                                .content(String.format(
+                                        "Khiếu nại #CMP-%d đối với đơn hàng MMO-ORD-%d đã được giải quyết. Đơn hàng đã bị hoàn tiền cho người mua.",
                                         complaint.getId(), tx.getId()))
                                 .type("WALLET")
                                 .severity("WARNING")
@@ -366,7 +389,8 @@ public class ComplaintServiceImpl implements ComplaintService {
                         notificationRepository.save(sellerNotif);
                     }
 
-                    log.info("Ghi lại giao dịch hoàn tiền REFUND cho Customer ID {} từ khiếu nại #CMP-{}. Số tiền: {} VNĐ. Số dư mới: {} VNĐ",
+                    log.info(
+                            "Ghi lại giao dịch hoàn tiền REFUND cho Customer ID {} từ khiếu nại #CMP-{}. Số tiền: {} VNĐ. Số dư mới: {} VNĐ",
                             customer.getId(), complaint.getId(), tx.getAmountVnd(), newBalance);
                 }
             } else if ("Rejected".equalsIgnoreCase(status)) {
@@ -389,17 +413,18 @@ public class ComplaintServiceImpl implements ComplaintService {
                             "PAYMENT",
                             payout,
                             "SUCCESS",
-                            String.format("Giải ngân từ khiếu nại bị từ chối #CMP-%d: %s", complaint.getId(), resolution),
+                            String.format("Giải ngân từ khiếu nại bị từ chối #CMP-%d: %s", complaint.getId(),
+                                    resolution),
                             referenceCode,
                             newBalance,
-                            complaint.getId()
-                    );
+                            complaint.getId());
 
                     // Gửi thông báo giải ngân cho Seller
                     Notification sellerNotif = Notification.builder()
                             .userId(seller.getId())
                             .title("Thông báo giải ngân đơn hàng")
-                            .content(String.format("Khiếu nại #CMP-%d đối với đơn hàng MMO-ORD-%d đã bị từ chối. Số tiền %,d VNĐ đã được giải ngân vào ví của bạn.", 
+                            .content(String.format(
+                                    "Khiếu nại #CMP-%d đối với đơn hàng MMO-ORD-%d đã bị từ chối. Số tiền %,d VNĐ đã được giải ngân vào ví của bạn.",
                                     complaint.getId(), tx.getId(), payout))
                             .type("WALLET")
                             .severity("SUCCESS")
@@ -415,7 +440,8 @@ public class ComplaintServiceImpl implements ComplaintService {
                         Notification customerNotif = Notification.builder()
                                 .userId(customer.getId())
                                 .title("Khiếu nại đơn hàng bị từ chối")
-                                .content(String.format("Khiếu nại #CMP-%d đối với đơn hàng MMO-ORD-%d đã bị từ chối. Lý do: %s", 
+                                .content(String.format(
+                                        "Khiếu nại #CMP-%d đối với đơn hàng MMO-ORD-%d đã bị từ chối. Lý do: %s",
                                         complaint.getId(), tx.getId(), resolution))
                                 .type("WALLET")
                                 .severity("DANGER")
@@ -426,7 +452,8 @@ public class ComplaintServiceImpl implements ComplaintService {
                         notificationRepository.save(customerNotif);
                     }
 
-                    log.info("Ghi lại giao dịch giải ngân PAYMENT cho Seller ID {} từ khiếu nại #CMP-{} bị từ chối. Số tiền: {} VNĐ. Số dư mới: {} VNĐ",
+                    log.info(
+                            "Ghi lại giao dịch giải ngân PAYMENT cho Seller ID {} từ khiếu nại #CMP-{} bị từ chối. Số tiền: {} VNĐ. Số dư mới: {} VNĐ",
                             seller.getId(), complaint.getId(), payout, newBalance);
                 }
             } else if ("InProgress".equalsIgnoreCase(status) || "In_Progress".equalsIgnoreCase(status)) {
@@ -439,10 +466,11 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     @Override
-    public org.springframework.data.domain.Page<Complaint> searchComplaintsForStaff(String keyword, String status, int page, int size) {
-        org.springframework.data.domain.Pageable pageable = 
-                org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by("id").ascending());
-        
+    public org.springframework.data.domain.Page<Complaint> searchComplaintsForStaff(String keyword, String status,
+            int page, int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size,
+                org.springframework.data.domain.Sort.by("id").ascending());
+
         Long complaintId = null;
         String searchKeyword = null;
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -462,12 +490,12 @@ public class ComplaintServiceImpl implements ComplaintService {
                 }
             }
         }
-        
+
         String queryStatus = null;
         if (status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status)) {
             queryStatus = status.trim();
         }
-        
+
         return complaintRepository.searchComplaintsForStaff(complaintId, searchKeyword, queryStatus, pageable);
     }
 }

@@ -89,7 +89,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+
                     </div>
 
                     <div class="ds-card staff-action-card staff-sticky-column">
@@ -111,6 +111,29 @@
                                 <label class="ds-label" for="complaintResolution">Kết quả / ghi chú</label>
                                 <textarea class="ds-textarea" id="complaintResolution" placeholder="Mô tả cách xử lý, hoàn tiền, cảnh báo shop..." style="min-height: 120px;"></textarea>
                             </div>
+
+                            <!-- Form gắn cờ cảnh cáo người bán (Ẩn đi theo yêu cầu của người dùng) -->
+                            <div style="display: none;">
+                                <label class="ds-checkbox-label" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; cursor: pointer; color: #1e293b;">
+                                    <input type="checkbox" id="enableFlagging" onchange="toggleFlaggingFields()" style="width: 16px; height: 16px; cursor: pointer; margin: 0;">
+                                    Gắn cờ cảnh cáo người bán
+                                </label>
+                                <div id="flaggingFields" style="display: none; flex-direction: column; gap: 14px; margin-top: 14px;">
+                                    <div class="ds-form-field">
+                                        <label class="ds-label" for="flagLevel" style="font-size: 12px; font-weight: 600; margin-bottom: 4px;">Cấp độ cờ</label>
+                                        <select class="ds-select" id="flagLevel" style="font-size: 13px; font-weight: 600; padding: 8px 10px; background-color: #f8fafc;">
+                                            <option value="Warning">Warning (Cảnh báo)</option>
+                                            <option value="Critical">Critical (Nghiêm trọng)</option>
+                                            <option value="Danger">Danger (Nguy hiểm)</option>
+                                        </select>
+                                    </div>
+                                    <div class="ds-form-field">
+                                        <label class="ds-label" for="flagReason" style="font-size: 12px; font-weight: 600; margin-bottom: 4px;">Lý do gắn cờ</label>
+                                        <textarea class="ds-textarea" id="flagReason" placeholder="Mô tả lý do phạt shop..." style="min-height: 80px; font-size: 13px; padding: 8px 10px;"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="ds-cluster" style="gap: 8px;">
                                 <button class="ds-btn ds-btn-success" type="button" onclick="handleStaffAction('Resolved')" style="flex: 1;">
                                     <i class="fa fa-check"></i> Giải quyết

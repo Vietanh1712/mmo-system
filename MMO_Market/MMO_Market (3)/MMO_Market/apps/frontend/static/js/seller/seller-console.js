@@ -1685,51 +1685,7 @@ async function initComplaintDetail() {
             `;
         }
 
-        // 2. Load Chat History
-        const messagesContainer = card.querySelector('.chat-messages');
-        if (messagesContainer) {
-            if (!c.chats || c.chats.length === 0) {
-                messagesContainer.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--seller-muted);">Chưa có tin nhắn hội thoại.</div>';
-            } else {
-                messagesContainer.innerHTML = c.chats.map(msg => {
-                    let bubbleClass = 'chat-bubble--customer';
-                    if (msg.senderRole === 'Seller') bubbleClass = 'chat-bubble--seller';
-                    else if (msg.senderRole === 'Staff') bubbleClass = 'chat-bubble--staff';
 
-                    return `
-                        <div class="chat-bubble ${bubbleClass}">
-                            <span class="chat-bubble__meta">${msg.senderName} (${msg.senderRole}) · ${msg.createdAt.substring(11, 16)}</span>
-                            <div>${msg.message}</div>
-                        </div>
-                    `;
-                }).join('');
-
-                // Scroll to bottom
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }
-        }
-
-        // 3. Bind Chat Compose send event
-        const textInput = card.querySelector('.chat-compose textarea');
-        const sendBtn = card.querySelector('.chat-compose .profile-button--primary');
-        if (sendBtn && textInput) {
-            sendBtn.addEventListener('click', async () => {
-                const text = textInput.value.trim();
-                if (!text) return;
-
-                try {
-                    const postRes = await sellerFetch(`/complaints/${c.id}/chat`, {
-                        method: 'POST',
-                        body: JSON.stringify({ message: text })
-                    });
-                    if (!postRes.ok) throw new Error('Không thể gửi tin nhắn.');
-                    textInput.value = '';
-                    initComplaintDetail(); // Reload chat history
-                } catch (err) {
-                    showToast(err.message, 'error');
-                }
-            });
-        }
 
     } catch (err) {
         showToast(err.message, 'error');

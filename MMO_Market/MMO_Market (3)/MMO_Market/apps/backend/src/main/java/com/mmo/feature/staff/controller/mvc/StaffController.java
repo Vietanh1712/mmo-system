@@ -154,7 +154,7 @@ public class StaffController {
         }
         model.addAttribute("remainingHours", remainingHours);
 
-        Complaint complaint = complaintRepository.findByTransactionId(id);
+        Complaint complaint = complaintRepository.findFirstByTransactionIdAndIsDeleteFalseOrderByIdDesc(id).orElse(null);
         model.addAttribute("complaint", complaint);
 
         return "staff/transaction-detail";

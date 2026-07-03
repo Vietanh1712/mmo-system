@@ -29,7 +29,7 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
 
     //List<Complaint> findTop10ByIsDeleteFalseOrderByCreatedAtDesc();
 
-    Complaint findByTransactionId(Long transactionId);
+    java.util.Optional<Complaint> findFirstByTransactionIdAndIsDeleteFalseOrderByIdDesc(Long transactionId);
 
     List<Complaint> findAllByIsDeleteFalseOrderByCreatedAtDesc();
 
