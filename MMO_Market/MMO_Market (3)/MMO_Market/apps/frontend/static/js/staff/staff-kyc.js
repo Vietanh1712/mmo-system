@@ -8,11 +8,22 @@ document.addEventListener('DOMContentLoaded', () => {
         loadKycList();
         loadKycStats();
     });
+    const resetBtn = document.getElementById('kycResetBtn');
+    if (resetBtn) resetBtn.addEventListener('click', () => {
+        const codeInput = document.getElementById('kycCodeFilter');
+        if (codeInput) codeInput.value = '';
+        const typeSelect = document.getElementById('kycTypeFilter');
+        if (typeSelect) typeSelect.value = '';
+        const statusSelect = document.getElementById('kycStatusFilter');
+        if (statusSelect) statusSelect.value = '';
+        loadKycList();
+        loadKycStats();
+    });
 });
 
 async function loadKycStats() {
     try {
-        const response = await authFetch('/api/v1/staff/kyc/stats');
+        const response = await authFetch('/v1/staff/kyc/stats');
         if (response.ok) {
             const stats = await response.json();
             const totalEl = document.getElementById('stat-total-kyc');

@@ -29,8 +29,9 @@ public class StaffDashboardServiceImpl implements StaffDashboardService {
         @Override
         public StaffDashboardDTO getDashboardData() {
 
-                long openComplaints = complaintRepository.countByStatusAndIsDeleteFalse("Open")
-                                + complaintRepository.countByStatusAndIsDeleteFalse("InProgress");
+                long openComplaints = complaintRepository.countByStatusesAndNotDeleted(java.util.List.of(
+                                "Open", "open", "New", "new", "InProgress", "inprogress", "In_Progress", "in_progress", "Processing", "processing"
+                ));
 
                 long pendingWithdrawals = withdrawalRepository.countByStatusAndIsDeleteFalse("Pending");
 

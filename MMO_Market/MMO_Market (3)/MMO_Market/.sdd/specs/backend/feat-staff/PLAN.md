@@ -31,6 +31,8 @@ Triển khai giao diện vận hành MVC và REST API dành riêng cho nhân vi�
 - `ShopFlagRepository`:
   - `countByIsDeleteFalse()`: Đếm tổng số cờ đang hoạt động.
   - `searchFlags(keyword, level, status, pageable)`: Tìm kiếm phân trang cờ.
+  - `findDistinctFlagLevels()`: Lấy danh sách các mức độ cờ duy nhất từ database.
+  - `findDistinctStatuses()`: Lấy danh sách các trạng thái cờ duy nhất từ database.
 - `ComplaintRepository`, `WithdrawalRepository`, `KycRequestRepository`:
   - Cung cấp các hàm đếm số lượng hồ sơ `PENDING` phục vụ hiển thị số lượng badge trên menu sidebar của Staff.
 
