@@ -78,3 +78,5 @@ Các tệp tin thực tế trong dự án:
 | FR-STAF-21 | THE SYSTEM SHALL display and treat both New/Open and InProgress/Processing statuses as "Đang xử lý" (yellow badge) on complaints, and remove "Mới" option from the filters and options. |
 | FR-STAF-22 | THE SYSTEM SHALL remove the "+ Cắm cờ mới" button from the `/staff/flags` header area. |
 | FR-STAF-23 | WHEN Staff views the complaint detail page (`/staff/complaints/detail`), THE SYSTEM SHALL query and display the `resolution` value under a row labeled "Lý do / Kết quả" inside the information card. |
+| FR-STAF-24 | THE SYSTEM SHALL NOT support searching or filtering complaints by category/type. The complaints table shall remove the "Loại" (Type) column from the display. |
+| FR-STAF-25 | THE SYSTEM SHALL fetch distinct complaint statuses dynamically from the database using the GET `/api/complaints/statuses` endpoint to populate the status filter dropdown, rather than using hardcoded values. |

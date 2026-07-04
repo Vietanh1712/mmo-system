@@ -32,4 +32,6 @@
 | 1.13 | 2026-07-02 | Khắc phục lỗi bind trống danh sách queryStatuses bằng phần tử DUMMY khi hasStatus = false để tránh lỗi validate Hibernate query syntax (tránh API 500 fallback sang mock data) |
 | 1.14 | 2026-07-02 | Gộp trạng thái Mới (New/Open) thành Đang xử lý (InProgress) ở cả hiển thị cột trạng thái, badge chi tiết, form dropdown và mapping điều kiện lọc dữ liệu ở Backend |
 | 1.15 | 2026-07-02 | Xóa nút '+ Cắm cờ mới' khỏi tiêu đề trang quản lý cờ cảnh báo (flags.html) để tránh việc Staff tự ý tạo cờ không đúng quy trình |
-| 1.16 | 2026-07-02 | Bổ sung trường thông tin 'Lý do / Kết quả' lấy từ thuộc tính resolution của bảng Complaints vào thông tin chi tiết của khiếu nại (complaint-detail.html) |
+| 1.16 | 2026-07-02 | Bổ sung trường thông tin 'Lý do / Kết quả' lấy từ thuộc tính resolution của bảng Complaints vào thông tin chi tiết của khiếu nại (complaint-detail.html) |
+| 1.17 | 2026-07-04 | Loại bỏ tính năng tìm kiếm theo loại khiếu nại ở trang quản lý khiếu nại, loại bỏ cột 'Loại' trong bảng danh sách |
+| 1.18 | 2026-07-04 | Triển khai API lấy danh sách trạng thái khiếu nại động từ Database và tải động danh sách trạng thái lên bộ lọc giao diện thay vì hardcode |
