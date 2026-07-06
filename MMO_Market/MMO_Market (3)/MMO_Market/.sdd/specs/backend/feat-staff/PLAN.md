@@ -70,3 +70,41 @@ Triển khai giao diện vận hành MVC và REST API dành riêng cho nhân vi�
 
 - Sidebar luôn phải phản ánh chính xác số lượng hồ sơ chưa xử lý ở thời gian thực (real-time badge count).
 - Mọi thay đổi trạng thái nhạy cảm (như duyệt rút tiền, gỡ cờ shop, giải quyết khiếu nại) chỉ được thực hiện bởi nhân viên có tài khoản hợp lệ với role `STAFF` hoặc `ADMIN` (xác thực chặt chẽ ở cả controller MVC và API REST).
+
+---
+
+## 6. Sắp xếp hiển thị dữ liệu theo thời gian mới nhất
+
+Cập nhật tất cả các màn hình hiển thị danh sách của Staff, Customer và Product để mặc định sắp xếp theo thời gian tạo mới nhất (`createdAt` descending / DESC).
+
+### 6.1. Chi tiết thay đổi Backend:
+- **`StaffController.java`**:
+  - Cấu hình lại `Pageable` của `/transactions`, `/withdrawals`, và `/flags` thành `Sort.by("createdAt").descending()`.
+- **`StaffKycController.java`**:
+  - Đổi sorting của `pageRequest` trong `/api/v1/staff/kyc` thành `Sort.by(Sort.Direction.DESC, "createdAt")`.
+- **`ComplaintServiceImpl.java`**:
+  - Đổi sorting trong `searchComplaintsForStaff` thành `Sort.by("createdAt").descending()`.
+  - Thay đổi `getAllComplaintsForStaff` để gọi `complaintRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc()`.
+- **`PreOrderRepository.java` & `PreOrderService.java`**:
+  - Thêm phương thức `findByCustomerAndIsDeleteFalseOrderByCreatedAtDesc(User customer)` vào repository.
+  - Cập nhật service `getPreOrdersByCustomer` sử dụng phương thức sắp xếp mới để đảm bảo lịch sử đặt hàng trước hiển thị mới nhất trước.
+- **`ProductSearchController.java`**:
+  - Cấu hình `@PageableDefault` của `/products` có hướng sắp xếp mặc định là `Sort.Direction.DESC` theo `createdAt`.
+
+---
+
+## 7. Thêm cột Số thứ tự (STT) cho các bảng danh sách của Staff
+
+Bổ sung cột STT (Sequence Number) được tính toán theo phân trang (`currentPage * pageSize + index + 1`) vào các danh sách quản lý của Staff.
+
+### 7.1. Chi tiết thay đổi Frontend:
+- **`withdrawals.html`**:
+  - Bổ sung `<th class="ds-table-center" style="width: 60px;">STT</th>` vào header của bảng.
+  - Sử dụng biến Thymeleaf `iterStat` để render `<td class="ds-table-center" th:text="${currentPage * pageSize + iterStat.count}">1</td>`.
+- **`transactions.html`**:
+  - Bổ sung `<th class="ds-table-center" style="width: 60px;">STT</th>` vào header của bảng.
+  - Sử dụng biến Thymeleaf `iterStat` để render `<td class="ds-table-center" th:text="${currentPage * pageSize + iterStat.count}">1</td>`.
+- **`kyc.html` & `staff-kyc.js`**:
+  - Bổ sung `<th class="ds-table-center" style="width: 60px;">STT</th>` và cập nhật `colspan` từ 6 thành 7 trong `kyc.html`.
+  - Cập nhật hàm `loadKycList` và `renderTable` trong `staff-kyc.js` để truyền `page` và `size`, tính toán `stt = page * size + index + 1` và hiển thị trên cột đầu tiên.
+

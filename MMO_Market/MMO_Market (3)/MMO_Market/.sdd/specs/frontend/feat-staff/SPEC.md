@@ -80,3 +80,7 @@ Các tệp tin thực tế trong dự án:
 | FR-STAF-23 | WHEN Staff views the complaint detail page (`/staff/complaints/detail`), THE SYSTEM SHALL query and display the `resolution` value under a row labeled "Lý do / Kết quả" inside the information card. |
 | FR-STAF-24 | THE SYSTEM SHALL NOT support searching or filtering complaints by category/type. The complaints table shall remove the "Loại" (Type) column from the display. |
 | FR-STAF-25 | THE SYSTEM SHALL fetch distinct complaint statuses dynamically from the database using the GET `/api/complaints/statuses` endpoint to populate the status filter dropdown, rather than using hardcoded values. |
+| FR-STAF-26 | WHEN Staff views lists of transactions, withdrawals, shop flags, KYC requests, or complaints, THE SYSTEM SHALL display the data sorted by creation time (`createdAt`) in descending order (newest first). |
+| FR-STAF-27 | WHEN Customer views their pre-orders history list, THE SYSTEM SHALL retrieve and display pre-orders sorted by creation time (`createdAt`) in descending order (newest first). |
+| FR-STAF-28 | WHEN searching or listing products, THE SYSTEM SHALL default to sorting the products by creation time (`createdAt`) in descending order (newest first) unless otherwise specified by the user. |
+| FR-STAF-29 | WHEN Staff views `/staff/withdrawals`, `/staff/transactions`, or `/staff/kyc` tables, THE SYSTEM SHALL display a pagination-aware sequence number (STT) column computed as `currentPage * pageSize + index + 1`. |
