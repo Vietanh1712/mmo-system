@@ -273,15 +273,6 @@ function renderOrderDetail(order) {
         }
     }
 
-    const chatCard = document.getElementById('customer-dispute-chat-card');
-    if (chatCard) {
-        if (order.status === 'DISPUTED') {
-            checkAndLoadDisputeChat(order.transactionId || order.id);
-        } else {
-            chatCard.style.display = 'none';
-        }
-    }
-
     renderTimeline(order);
 }
 
@@ -612,6 +603,16 @@ async function loadCustomerDisputeChats(complaintId) {
         }
         
         container.innerHTML = chats.map(msg => {
+            if (msg.senderRole === 'Staff' || msg.message.startsWith('Hệ thống:')) {
+                return `
+                    <div style="text-align: center; margin: 12px 0; width: 100%; box-sizing: border-box;">
+                        <span style="font-size: 12px; background: #e2e8f0; color: #475569; padding: 6px 14px; border-radius: 6px; border: 1px solid #cbd5e1; display: inline-block; font-weight: 500; text-align: left;">
+                            ${escapeHtml(msg.message)}
+                        </span>
+                    </div>
+                `;
+            }
+
             let roleLabel = 'Khách hàng (Bạn)';
             let bg = 'rgba(37, 99, 235, 0.08)';
             let border = '1px solid rgba(37, 99, 235, 0.15)';
@@ -622,15 +623,10 @@ async function loadCustomerDisputeChats(complaintId) {
                 bg = 'rgba(217, 119, 6, 0.08)';
                 border = '1px solid rgba(217, 119, 6, 0.15)';
                 titleColor = '#d97706';
-            } else if (msg.senderRole === 'Staff') {
-                roleLabel = 'Hệ thống / Staff';
-                bg = 'rgba(71, 85, 105, 0.08)';
-                border = '1px solid rgba(71, 85, 105, 0.15)';
-                titleColor = '#475569';
             }
             
             return `
-                <div style="background: ${bg}; border: ${border}; border-radius: 8px; padding: 12px; font-size: 13px; line-height: 1.5;">
+                <div style="background: ${bg}; border: ${border}; border-radius: 8px; padding: 12px; font-size: 13px; line-height: 1.5; text-align: left;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <span style="font-weight: 700; color: ${titleColor};">${escapeHtml(msg.senderName)} <small style="font-weight: 500; opacity: 0.85;">(${roleLabel})</small></span>
                         <small style="color: #64748b; font-size: 11px;">${msg.createdAt ? msg.createdAt.replace('T', ' ').substring(0, 16) : ''}</small>

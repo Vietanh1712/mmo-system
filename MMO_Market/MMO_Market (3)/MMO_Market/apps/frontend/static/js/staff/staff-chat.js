@@ -372,6 +372,18 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         messages.forEach(msg => {
+            if (msg.message.startsWith('Hệ thống:')) {
+                const systemRow = document.createElement('div');
+                systemRow.style.cssText = 'width: 100%; display: flex; justify-content: center; margin: 12px 0; box-sizing: border-box;';
+                systemRow.innerHTML = `
+                    <div style="font-size: 12px; background: #e2e8f0; color: #475569; padding: 6px 14px; border-radius: 6px; border: 1px solid #cbd5e1; display: inline-block; font-weight: 500; text-align: left;">
+                        ${msg.message}
+                    </div>
+                `;
+                messagesContainer.appendChild(systemRow);
+                return;
+            }
+
             // Backend sets type='out' for staff messages, 'in' for contact messages
             const isMe = msg.type === 'out';
             const rowClass = isMe ? 'staff-chat-row--staff' : 'staff-chat-row--user';

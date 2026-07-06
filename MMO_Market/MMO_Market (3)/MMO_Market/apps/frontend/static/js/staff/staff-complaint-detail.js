@@ -338,6 +338,85 @@ async function handleStaffAction(status) {
     window.location.href = '/staff/complaints';
 }
 
+window.submitDecision = async function() {
+    const verdictSelect = document.getElementById('complaintStatus');
+    if (!verdictSelect) return;
+    const status = verdictSelect.value;
+    
+    if (status === 'InProgress') {
+        showWarningToast('Vui lòng chọn phán quyết Chấp nhận hoặc Từ chối khiếu nại!');
+        return;
+    }
+    
+    const resolution = document.getElementById('complaintResolution').value.trim();
+    if (!resolution && status === 'Rejected') {
+        showWarningToast('Vui lòng nhập lý do từ chối vào mục “Kết quả / ghi chú”!');
+        return;
+    }
+    if (!resolution && status === 'Resolved') {
+        showWarningToast('Vui lòng nhập lý do giải quyết/hoàn tiền vào mục “Kết quả / ghi chú”!');
+        return;
+    }
+
+    let flagLevel = null;
+    let flagReason = null;
+    const enableFlagging = document.getElementById('enableFlagging').checked;
+    if (enableFlagging) {
+        flagLevel = document.getElementById('flagLevel').value;
+        flagReason = document.getElementById('flagReason').value.trim();
+        if (!flagReason) {
+            showWarningToast('Vui lòng nhập lý do gắn cờ phạt shop!');
+            return;
+        }
+    }
+
+    const id = currentComplaint.id;
+    const numericId = id.replace('CMP-', '');
+    const token = sessionStorage.getItem('accessToken');
+    
+    if (token) {
+        try {
+            const res = await fetch(`/api/complaints/${numericId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    status: status,
+                    resolution: resolution || (status === 'Resolved' ? 'Đã xử lý & hoàn tất hỗ trợ.' : 'Khiếu nại không hợp lệ.'),
+                    flagLevel: flagLevel,
+                    flagReason: flagReason
+                })
+            });
+            
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.message || 'Lỗi từ hệ thống khi cập nhật khiếu nại.');
+            }
+        } catch (err) {
+            console.error(err);
+            showWarningToast('Lỗi cập nhật backend: ' + err.message + '. Hệ thống sẽ thực hiện cập nhật mock tạm thời.');
+        }
+    }
+
+    const key = 'mmoMarketComplaintsMockGlobal';
+    let list = [];
+    try {
+        list = JSON.parse(sessionStorage.getItem(key)) || [];
+    } catch(e) {}
+
+    const index = list.findIndex(c => c.id === currentComplaint.id);
+    if (index !== -1) {
+        list[index].status = status;
+        list[index].resolution = resolution || (status === 'Resolved' ? 'Đã xử lý & hoàn tất hỗ trợ.' : 'Khiếu nại không hợp lệ.');
+        sessionStorage.setItem(key, JSON.stringify(list));
+    }
+
+    showSuccessToast(`Đã cập nhật phán quyết: ${status === 'Resolved' ? 'Chấp nhận khiếu nại' : 'Từ chối khiếu nại'}`);
+    window.location.href = '/staff/complaints';
+};
+
 window.startDisputeAction = async function() {
     if (!currentComplaint) return;
     const numericId = currentComplaint.id.replace('CMP-', '');
@@ -377,5 +456,20 @@ window.startDisputeAction = async function() {
 
 
 document.addEventListener('DOMContentLoaded', () => {
+    const token = sessionStorage.getItem('accessToken');
+    const userStr = sessionStorage.getItem('user');
+    let isStaff = false;
+    if (userStr) {
+        try {
+            const user = JSON.parse(userStr);
+            const role = (user.role || '').toLowerCase();
+            isStaff = role.includes('staff') || role.includes('admin');
+        } catch(e) {}
+    }
+    if (!token || !isStaff) {
+        window.location.href = '/login';
+        return;
+    }
+
     loadComplaintDetails();
 });

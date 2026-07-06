@@ -266,6 +266,21 @@ async function loadComplaintStats() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    const token = sessionStorage.getItem('accessToken');
+    const userStr = sessionStorage.getItem('user');
+    let isStaff = false;
+    if (userStr) {
+        try {
+            const user = JSON.parse(userStr);
+            const role = (user.role || '').toLowerCase();
+            isStaff = role.includes('staff') || role.includes('admin');
+        } catch(e) {}
+    }
+    if (!token || !isStaff) {
+        window.location.href = '/login';
+        return;
+    }
+
     await loadComplaintStats();
     await renderStaffComplaints();
 });
