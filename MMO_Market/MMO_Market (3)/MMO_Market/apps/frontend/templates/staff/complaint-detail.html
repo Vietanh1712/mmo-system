@@ -78,6 +78,21 @@
                             </div>
                         </div>
 
+                        <!-- Khung chat đối chất (Được hiển thị khi status không phải là PENDING_REVIEW) -->
+                        <div class="ds-card" id="dispute-chat-card" style="display: none;">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Phòng chat đối chất (Staff Read-Only)</h2>
+                            </div>
+                            <div style="padding: 24px 32px; display: flex; flex-direction: column; gap: 16px;">
+                                <div id="dispute-chat-messages" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--ds-border, #cbd5e1); border-radius: 8px; padding: 16px; background: #f8fafc; display: flex; flex-direction: column; gap: 12px;">
+                                    <!-- Messages populated by JS -->
+                                </div>
+                                <div class="ds-alert ds-alert-warning" style="margin: 0; font-size: 13px;">
+                                    <i class="fa fa-info-circle"></i> Bạn đang theo dõi cuộc đối chất của Buyer và Seller. Bạn chỉ có quyền Read-only đối với phòng chat này.
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="ds-card">
                             <div class="ds-card-header">
                                 <h2 class="ds-card-title">Lịch sử xử lý</h2>
@@ -96,18 +111,36 @@
 
                     </div>
 
-                    <div class="ds-card staff-action-card staff-sticky-column">
+                    <div class="ds-card staff-action-card staff-sticky-column" id="staff-action-card">
                         <div class="ds-card-header">
                             <h2 class="ds-card-title">Xử lý khiếu nại</h2>
                         </div>
-                        <div style="padding: 32px 40px; display: flex; flex-direction: column; gap: 24px;">
+                        
+                        <!-- Khu vực dành cho PENDING_REVIEW: Mở đối chất -->
+                        <div id="dispute-start-section" style="padding: 32px 40px; display: none; flex-direction: column; gap: 16px;">
+                            <div class="ds-alert ds-alert-info" style="margin: 0;">Khiếu nại này đang ở trạng thái chờ duyệt. Vui lòng bấm nút dưới để mở cuộc đối chất đối thoại 3 bên.</div>
+                            <button class="ds-btn ds-btn-primary" id="btnStartDispute" type="button" onclick="startDisputeAction()" style="width: 100%; padding: 12px; font-weight: 600;">
+                                <i class="fa fa-comments"></i> Bắt đầu đối chất (Mở chat)
+                            </button>
+                            <div style="border-top: 1px solid var(--ds-border); padding-top: 16px; margin-top: 4px;">
+                                <a class="ds-btn ds-btn-outline" href="/staff/complaints" style="width: 100%;">
+                                    <i class="fa fa-arrow-left"></i> Quay lại danh sách
+                                </a>
+                            </div>
+                        </div>
+
+                        <div id="dispute-decision-section" style="padding: 32px 40px; display: flex; flex-direction: column; gap: 24px;">
                             <div class="ds-alert ds-alert-info">Chế độ giả lập Staff — Cập nhật sẽ đồng bộ tức thì sang người dùng.</div>
+                            <button class="ds-btn ds-btn-outline" type="button" onclick="document.getElementById('dispute-chat-card').scrollIntoView({behavior: 'smooth'})" style="width: 100%; border: 1px solid var(--brand-accent, #f97316); color: var(--brand-accent, #f97316); font-weight: 600;">
+                                <i class="fa fa-comments"></i> Xem Phòng chat đối chất 3 bên
+                            </button>
                             <div class="ds-form-field">
+
                                 <label class="ds-label" for="complaintStatus">Trạng thái xử lý</label>
                                 <select class="ds-select" id="complaintStatus" style="background-color: #f8fafc; font-weight: 600;">
                                     <option value="InProgress">Đang xử lý</option>
-                                    <option value="Resolved">Đã giải quyết</option>
-                                    <option value="Rejected">Từ chối khiếu nại</option>
+                                    <option value="Resolved">Đã giải quyết (Duyệt & Khấu trừ)</option>
+                                    <option value="Rejected">Từ chối khiếu nại (Giải ngân Seller)</option>
                                 </select>
                             </div>
                             <div class="ds-form-field">
@@ -115,26 +148,11 @@
                                 <textarea class="ds-textarea" id="complaintResolution" placeholder="Mô tả cách xử lý, hoàn tiền, cảnh báo shop..." style="min-height: 120px;"></textarea>
                             </div>
 
-                            <!-- Form gắn cờ cảnh cáo người bán (Ẩn đi theo yêu cầu của người dùng) -->
+                            <!-- Gắn cờ (Ẩn) -->
                             <div style="display: none;">
-                                <label class="ds-checkbox-label" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; cursor: pointer; color: #1e293b;">
-                                    <input type="checkbox" id="enableFlagging" onchange="toggleFlaggingFields()" style="width: 16px; height: 16px; cursor: pointer; margin: 0;">
-                                    Gắn cờ cảnh cáo người bán
-                                </label>
-                                <div id="flaggingFields" style="display: none; flex-direction: column; gap: 14px; margin-top: 14px;">
-                                    <div class="ds-form-field">
-                                        <label class="ds-label" for="flagLevel" style="font-size: 12px; font-weight: 600; margin-bottom: 4px;">Cấp độ cờ</label>
-                                        <select class="ds-select" id="flagLevel" style="font-size: 13px; font-weight: 600; padding: 8px 10px; background-color: #f8fafc;">
-                                            <option value="Warning">Warning (Cảnh báo)</option>
-                                            <option value="Critical">Critical (Nghiêm trọng)</option>
-                                            <option value="Danger">Danger (Nguy hiểm)</option>
-                                        </select>
-                                    </div>
-                                    <div class="ds-form-field">
-                                        <label class="ds-label" for="flagReason" style="font-size: 12px; font-weight: 600; margin-bottom: 4px;">Lý do gắn cờ</label>
-                                        <textarea class="ds-textarea" id="flagReason" placeholder="Mô tả lý do phạt shop..." style="min-height: 80px; font-size: 13px; padding: 8px 10px;"></textarea>
-                                    </div>
-                                </div>
+                                <input type="checkbox" id="enableFlagging">
+                                <select id="flagLevel"><option value="Warning"></option></select>
+                                <textarea id="flagReason"></textarea>
                             </div>
 
                             <div class="ds-cluster" style="gap: 8px;">
