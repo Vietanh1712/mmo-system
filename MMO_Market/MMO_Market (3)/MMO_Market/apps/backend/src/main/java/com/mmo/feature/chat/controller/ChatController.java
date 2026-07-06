@@ -38,6 +38,26 @@ public class ChatController {
         this.userStatusService = userStatusService;
     }
 
+    // 0. Get contact info by userId (for chat header when no existing chat)
+    @GetMapping("/contact/{contactId}/info")
+    public ResponseEntity<?> getContactInfo(@AuthenticationPrincipal Long userId,
+                                             @PathVariable Long contactId) {
+        userStatusService.updateActiveTime(userId);
+        Optional<User> contactOpt = userRepository.findById(contactId);
+        if (contactOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        User contact = contactOpt.get();
+        String name = contact.getFullName() != null ? contact.getFullName() : contact.getEmail().split("@")[0];
+        String avatar = (name.length() >= 2) ? name.substring(0, 2).toUpperCase() : "US";
+        Map<String, Object> info = new HashMap<>();
+        info.put("id", contact.getId());
+        info.put("name", name);
+        info.put("avatar", avatar);
+        info.put("online", userStatusService.isOnline(contactId));
+        return ResponseEntity.ok(info);
+    }
+
     // 1. Get list of chat contacts (recent contacts) for current user
     @GetMapping
     public ResponseEntity<?> getChatContacts(@AuthenticationPrincipal Long userId) {
@@ -48,12 +68,9 @@ public class ChatController {
         }
         User currentUser = currentUserOpt.get();
 
-        // Fetch all chat records involving this user and not soft-deleted
-        List<Chat> allChats = chatRepository.findAll().stream()
-                .filter(c -> !c.getIsDelete() && 
-                             ((c.getSender().getId().equals(userId) && !c.getSenderDeleted()) ||
-                              (c.getReceiver().getId().equals(userId) && !c.getReceiverDeleted())))
-                .collect(Collectors.toList());
+        // Fetch ALL chats (including soft-deleted) to build contact list
+        // This ensures contacts stay in sidebar even after clearing history
+        List<Chat> allChats = chatRepository.findAllChatsForContactList(currentUser);
 
         // Group by contact ID to get latest message for each contact
         Map<Long, Chat> contactLatestChat = new HashMap<>();
@@ -66,21 +83,33 @@ public class ChatController {
             }
         }
 
-        // Map to response objects
+        // Map to response objects, excluding:
+        // 1. Self-contacts (sender = receiver)
+        // 2. Contacts where current user cleared history (latest message is deleted)
         List<Map<String, Object>> responseList = contactLatestChat.entrySet().stream()
+                .filter(entry -> {
+                    if (entry.getKey().equals(userId)) return false; // exclude self
+                    Chat latestChat = entry.getValue();
+                    boolean isCurrentUserSender = latestChat.getSender().getId().equals(userId);
+                    boolean isDeletedByUser = isCurrentUserSender
+                            ? Boolean.TRUE.equals(latestChat.getSenderDeleted())
+                            : Boolean.TRUE.equals(latestChat.getReceiverDeleted());
+                    return !isDeletedByUser; // hide contact if history was cleared
+                })
                 .map(entry -> {
                     Long contactId = entry.getKey();
                     Chat latestChat = entry.getValue();
                     User contactUser = latestChat.getSender().getId().equals(userId) ? latestChat.getReceiver() : latestChat.getSender();
-                    
+
                     boolean isBlocked = chatBlockRepository.existsByBlockerAndBlocked(currentUser, contactUser);
                     boolean isBlockedByContact = chatBlockRepository.existsByBlockerAndBlocked(contactUser, currentUser);
                     boolean isMuted = chatMuteRepository.existsByUserAndContact(currentUser, contactUser);
+                    long unreadCount = chatRepository.countUnreadFrom(contactUser, currentUser);
 
                     Map<String, Object> map = new HashMap<>();
                     map.put("contactId", contactId);
                     map.put("name", contactUser.getFullName() != null ? contactUser.getFullName() : contactUser.getEmail().split("@")[0]);
-                    map.put("avatar", (contactUser.getFullName() != null && contactUser.getFullName().length() >= 2) ? 
+                    map.put("avatar", (contactUser.getFullName() != null && contactUser.getFullName().length() >= 2) ?
                             contactUser.getFullName().substring(0, 2).toUpperCase() : "US");
                     map.put("latestMessage", latestChat.getMessage());
                     map.put("latestTime", latestChat.getCreatedAt());
@@ -88,6 +117,7 @@ public class ChatController {
                     map.put("isBlockedByContact", isBlockedByContact);
                     map.put("isMuted", isMuted);
                     map.put("online", userStatusService.isOnline(contactId));
+                    map.put("unreadCount", unreadCount);
                     return map;
                 })
                 .sorted((m1, m2) -> {
@@ -100,6 +130,7 @@ public class ChatController {
         return ResponseEntity.ok(responseList);
     }
 
+
     // 2. Get active chats between current user and contact
     @GetMapping("/{contactId}")
     public ResponseEntity<?> getChatHistory(@AuthenticationPrincipal Long userId, @PathVariable Long contactId) {
@@ -111,6 +142,17 @@ public class ChatController {
         }
 
         List<Chat> chats = chatRepository.findActiveChatsBetweenUsers(currentUserOpt.get(), contactOpt.get());
+
+        // Mark all incoming messages from contact as read
+        chatRepository.markAllReadFrom(contactOpt.get(), currentUserOpt.get());
+
+        // Find the context product from the first message that has a productId
+        Long contextProductId = chats.stream()
+                .filter(c -> c.getProductId() != null)
+                .findFirst()
+                .map(Chat::getProductId)
+                .orElse(null);
+
         List<Map<String, Object>> messageList = chats.stream().map(c -> {
             Map<String, Object> map = new HashMap<>();
             map.put("id", c.getId());
@@ -122,7 +164,12 @@ public class ChatController {
             return map;
         }).collect(Collectors.toList());
 
-        return ResponseEntity.ok(messageList);
+        Map<String, Object> result = new HashMap<>();
+        result.put("messages", messageList);
+        result.put("contextProductId", contextProductId);
+
+        return ResponseEntity.ok(result);
+
     }
 
     // 3. Send message to contact
@@ -130,7 +177,12 @@ public class ChatController {
     public ResponseEntity<?> sendMessage(@AuthenticationPrincipal Long userId, 
                                          @PathVariable Long contactId, 
                                          @RequestBody Map<String, String> request) {
-        userStatusService.updateActiveTime(userId);
+
+        // Guard: cannot send message to yourself
+        if (userId.equals(contactId)) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Không thể gửi tin nhắn cho chính mình."));
+        }
+
         Optional<User> senderOpt = userRepository.findById(userId);
         Optional<User> receiverOpt = userRepository.findById(contactId);
         if (senderOpt.isEmpty() || receiverOpt.isEmpty()) {
@@ -155,6 +207,13 @@ public class ChatController {
             return ResponseEntity.badRequest().body(Map.of("message", "Nội dung tin nhắn không thể bỏ trống."));
         }
 
+        // Parse optional productId for product inquiry context
+        Long productId = null;
+        String productIdStr = request.get("productId");
+        if (productIdStr != null && !productIdStr.isBlank()) {
+            try { productId = Long.parseLong(productIdStr); } catch (NumberFormatException ignored) {}
+        }
+
         Chat chat = Chat.builder()
                 .sender(sender)
                 .receiver(receiver)
@@ -163,6 +222,7 @@ public class ChatController {
                 .isDelete(false)
                 .senderDeleted(false)
                 .receiverDeleted(false)
+                .productId(productId)
                 .build();
 
         Chat saved = chatRepository.save(chat);

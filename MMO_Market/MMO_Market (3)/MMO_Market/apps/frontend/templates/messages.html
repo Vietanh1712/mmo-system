@@ -20,70 +20,28 @@
         <!-- Sidebar -->
         <aside class="messages-sidebar" aria-label="Danh sách tin nhắn">
             <div class="messages-sidebar__header">
-                <h2 class="messages-sidebar__title">Messages</h2>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <h2 class="messages-sidebar__title" style="margin: 0;">Messages</h2>
+                    <span id="messages-unread-badge" style="display: none; background: #f97316; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px; white-space: nowrap;"></span>
+                </div>
                 <div class="messages-sidebar__search">
                     <i class="fa fa-search"></i>
                     <input type="search" id="chat-list-search" placeholder="Tìm cuộc trò chuyện..." oninput="filterChatList(this.value)">
                 </div>
             </div>
             <ul class="messages-chat-list" id="messages-chat-list">
-                <li class="messages-chat-item is-active" data-chat-id="1" onclick="selectChat(1)">
-                    <div class="messages-chat-item__avatar-wrap">
-                        <div class="messages-chat-item__avatar">SM</div>
-                        <span class="messages-chat-item__status"></span>
-                    </div>
-                    <div class="messages-chat-item__body">
-                        <div class="messages-chat-item__top">
-                            <span class="messages-chat-item__name">StoreMaster Official</span>
-                            <span class="messages-chat-item__time">10:24</span>
-                        </div>
-                        <div class="messages-chat-item__preview">
-                            <span>Dạ em đã gửi lại tài khoản Netflix ạ...</span>
-                            <span class="messages-chat-item__badge">2</span>
-                        </div>
-                    </div>
-                </li>
-                <li class="messages-chat-item" data-chat-id="2" onclick="selectChat(2)">
-                    <div class="messages-chat-item__avatar-wrap">
-                        <div class="messages-chat-item__avatar">NV</div>
-                        <span class="messages-chat-item__status"></span>
-                    </div>
-                    <div class="messages-chat-item__body">
-                        <div class="messages-chat-item__top">
-                            <span class="messages-chat-item__name">Netflix_Vip_Store</span>
-                            <span class="messages-chat-item__time">Hôm qua</span>
-                        </div>
-                        <div class="messages-chat-item__preview">
-                            <span>Cảm ơn bạn đã mua hàng!</span>
-                        </div>
-                    </div>
-                </li>
-                <li class="messages-chat-item" data-chat-id="3" onclick="selectChat(3)">
-                    <div class="messages-chat-item__avatar-wrap">
-                        <div class="messages-chat-item__avatar">CS</div>
-                        <span class="messages-chat-item__status messages-chat-item__status--offline"></span>
-                    </div>
-                    <div class="messages-chat-item__body">
-                        <div class="messages-chat-item__top">
-                            <span class="messages-chat-item__name">MMO Market Support</span>
-                            <span class="messages-chat-item__time">T2</span>
-                        </div>
-                        <div class="messages-chat-item__preview">
-                            <span>Ticket #1024 đã được xử lý xong.</span>
-                        </div>
-                    </div>
-                </li>
             </ul>
+
         </aside>
 
         <!-- Main chat -->
         <section class="messages-main" aria-label="Cửa sổ chat">
             <header class="messages-main__header">
                 <div class="messages-main__header-left" id="chat-header-info" style="cursor: pointer;" onclick="goToCurrentShop()" title="Xem gian hàng">
-                    <div class="messages-main__header-avatar" id="chat-header-avatar">SM</div>
+                    <div class="messages-main__header-avatar" id="chat-header-avatar"></div>
                     <div>
-                        <p class="messages-main__shop-name" id="chat-header-name">StoreMaster Official</p>
-                        <p class="messages-main__online" id="chat-header-status"><i class="fa fa-circle"></i> Online Now</p>
+                        <p class="messages-main__shop-name" id="chat-header-name"></p>
+                        <p class="messages-main__online" id="chat-header-status"></p>
                     </div>
                 </div>
                 <div class="messages-main__header-actions" style="position: relative;">
@@ -181,61 +139,16 @@
 
     <script th:src="@{/js/customer/auth.js}"></script>
     <script>
-        const CHAT_DATA = {
-            1: {
-                sellerId: 1,
-                name: 'StoreMaster Official',
-                avatar: 'SM',
-                online: true,
-                product: 'Tài khoản Netflix Premium 4K UHD 1 Tháng',
-                price: '65.000 VNĐ',
-                isBlocked: false,
-                isMuted: false
-            },
-            2: {
-                sellerId: 2,
-                name: 'Netflix_Vip_Store',
-                avatar: 'NV',
-                online: true,
-                product: 'Netflix Premium 4K Gói 1 Năm',
-                price: '650.000 VNĐ',
-                isBlocked: false,
-                isMuted: false
-            },
-            3: {
-                sellerId: null,
-                name: 'MMO Market Support',
-                avatar: 'CS',
-                online: false,
-                product: 'Hỗ trợ kỹ thuật — Ticket #1024',
-                price: '—',
-                isBlocked: false,
-                isMuted: false
-            }
-        };
+        const CHAT_DATA = {};
 
-        const MESSAGES_HISTORY = {
-            1: [
-                { sender: 'SM', name: 'StoreMaster Official', time: '10:15', text: 'Chào bạn! Cảm ơn bạn đã mua sản phẩm tại cửa hàng. Nếu cần hỗ trợ kích hoạt, cứ nhắn em nhé.', type: 'in' },
-                { sender: 'user', name: 'You', time: '10:18', text: 'Shop ơi, em chưa nhận được thông tin tài khoản trong đơn #ORD-8842 ạ.', type: 'out' },
-                { sender: 'SM', name: 'StoreMaster Official', time: '10:24', text: 'Dạ em đã gửi lại tài khoản Netflix qua phần chi tiết đơn hàng. Bạn kiểm tra lại giúp em nhé!', type: 'in' }
-            ],
-            2: [
-                { sender: 'NV', name: 'Netflix_Vip_Store', time: 'Hôm qua', text: 'Chào mừng quý khách đến với Netflix_Vip_Store! Các tài khoản đều được bảo hành đầy đủ.', type: 'in' },
-                { sender: 'user', name: 'You', time: 'Hôm qua', text: 'Tài khoản của mình dùng rất mượt, cảm ơn shop nhé!', type: 'out' },
-                { sender: 'NV', name: 'Netflix_Vip_Store', time: 'Hôm qua', text: 'Cảm ơn bạn đã mua hàng!', type: 'in' }
-            ],
-            3: [
-                { sender: 'CS', name: 'MMO Market Support', time: 'T2', text: '<strong>[Hệ thống]</strong> Yêu cầu hỗ trợ <em>Ticket #1024</em> đã được tạo thành công.', type: 'system' },
-                { sender: 'CS', name: 'MMO Market Support', time: 'T2', text: 'Ticket #1024 đã được xử lý xong.', type: 'in' }
-            ]
-        };
+        const MESSAGES_HISTORY = {};
 
-        let currentSelectedChatId = 1;
+        let currentSelectedChatId = null;
         let pendingAttachment = null;
         let activeChatList = []; // list from backend
         let chatPollInterval = null;
         let urlContextProduct = null;
+        let currentContextProduct = null; // active product context for current chat (set by URL or API)
 
         // Initialize chat page
         async function initChats() {
@@ -285,68 +198,56 @@
             if (!listContainer) return;
             listContainer.innerHTML = '';
 
-            const renderedIds = new Set();
-            
-            // 1. Render active chats from DB
-            activeChatList.forEach(c => {
-                renderedIds.add(c.contactId);
-                const isActive = c.contactId === currentSelectedChatId;
-                const timeStr = c.latestTime ? formatChatTime(new Date(c.latestTime)) : '';
-                
-                const li = document.createElement('li');
-                li.className = `messages-chat-item ${isActive ? 'is-active' : ''}`;
-                li.setAttribute('data-chat-id', c.contactId);
-                li.onclick = () => selectChat(c.contactId);
-                li.innerHTML = `
-                    <div class="messages-chat-item__avatar-wrap">
-                        <div class="messages-chat-item__avatar">${c.avatar}</div>
-                        <span class="messages-chat-item__status ${c.online ? '' : 'messages-chat-item__status--offline'}"></span>
-                    </div>
-                    <div class="messages-chat-item__body">
-                        <div class="messages-chat-item__top">
-                            <span class="messages-chat-item__name">${c.name}</span>
-                            <span class="messages-chat-item__time">${timeStr}</span>
-                        </div>
-                        <div class="messages-chat-item__preview">
-                            <span>${c.latestMessage || ''}</span>
-                        </div>
-                    </div>
-                `;
-                listContainer.appendChild(li);
-            });
+            let totalUnread = 0;
 
-            // 2. Fallback: render remaining mock contacts
-            Object.keys(CHAT_DATA).forEach(key => {
-                const id = parseInt(key);
-                const mockContact = CHAT_DATA[id];
-                const contactId = mockContact.sellerId ? mockContact.sellerId : 14; // Support Fallback ID
-                
-                if (!renderedIds.has(contactId)) {
-                    renderedIds.add(contactId);
-                    const isActive = contactId === currentSelectedChatId;
-                    
+            // Render contacts from DB
+            if (activeChatList.length === 0) {
+                listContainer.innerHTML = '<li style="padding: 16px; text-align: center; color: #94a3b8; font-size: 13px;">Chưa có cuộc trò chuyện nào.</li>';
+            } else {
+                activeChatList.forEach(c => {
+                    const isActive = c.contactId === currentSelectedChatId;
+                    const timeStr = c.latestTime ? formatChatTime(new Date(c.latestTime)) : '';
+                    const unread = c.unreadCount || 0;
+                    if (unread > 0) totalUnread++;
+
+                    const badgeHtml = (unread > 0 && !isActive)
+                        ? `<span class="messages-chat-item__badge">${unread}</span>`
+                        : '';
+
                     const li = document.createElement('li');
-                    li.className = `messages-chat-item ${isActive ? 'is-active' : ''}`;
-                    li.setAttribute('data-chat-id', contactId);
-                    li.onclick = () => selectChat(contactId);
+                    li.className = `messages-chat-item ${isActive ? 'is-active' : ''} ${(unread > 0 && !isActive) ? 'has-unread' : ''}`;
+                    li.setAttribute('data-chat-id', c.contactId);
+                    li.onclick = () => selectChat(c.contactId);
                     li.innerHTML = `
                         <div class="messages-chat-item__avatar-wrap">
-                            <div class="messages-chat-item__avatar">${mockContact.avatar}</div>
-                            <span class="messages-chat-item__status ${mockContact.online ? '' : 'messages-chat-item__status--offline'}"></span>
+                            <div class="messages-chat-item__avatar">${c.avatar}</div>
+                            <span class="messages-chat-item__status ${c.online ? '' : 'messages-chat-item__status--offline'}"></span>
                         </div>
                         <div class="messages-chat-item__body">
                             <div class="messages-chat-item__top">
-                                <span class="messages-chat-item__name">${mockContact.name}</span>
-                                <span class="messages-chat-item__time">Hôm qua</span>
+                                <span class="messages-chat-item__name ${unread > 0 && !isActive ? 'font-bold' : ''}">${c.name}</span>
+                                <span class="messages-chat-item__time">${timeStr}</span>
                             </div>
                             <div class="messages-chat-item__preview">
-                                <span>Nhấp để bắt đầu trò chuyện...</span>
+                                <span>${c.latestMessage || ''}</span>
+                                ${badgeHtml}
                             </div>
                         </div>
                     `;
                     listContainer.appendChild(li);
+                });
+            }
+
+            // Update total unread conversations badge
+            const totalBadge = document.getElementById('messages-unread-badge');
+            if (totalBadge) {
+                if (totalUnread > 0) {
+                    totalBadge.textContent = `${totalUnread} hội thoại chưa đọc`;
+                    totalBadge.style.display = 'inline-flex';
+                } else {
+                    totalBadge.style.display = 'none';
                 }
-            });
+            }
         }
 
         async function selectChat(id) {
@@ -374,16 +275,25 @@
                         isMuted: mock.isMuted
                     };
                 } else {
-                    chat = {
-                        contactId: id,
-                        name: `User #${id}`,
-                        avatar: 'US',
-                        online: false,
-                        product: 'Tin nhắn trực tuyến',
-                        price: '—',
-                        isBlocked: false,
-                        isMuted: false
-                    };
+                    // Fetch real contact info from backend (e.g. when navigating via ?sellerId=X)
+                    try {
+                        const infoRes = await authFetch(`/v1/chats/contact/${id}/info`);
+                        if (infoRes.ok) {
+                            const info = await infoRes.json();
+                            chat = {
+                                contactId: id,
+                                name: info.name,
+                                avatar: info.avatar,
+                                online: info.online,
+                                isBlocked: false,
+                                isMuted: false
+                            };
+                        } else {
+                            chat = { contactId: id, name: `Người dùng #${id}`, avatar: 'US', online: false, isBlocked: false, isMuted: false };
+                        }
+                    } catch (err) {
+                        chat = { contactId: id, name: `Người dùng #${id}`, avatar: 'US', online: false, isBlocked: false, isMuted: false };
+                    }
                 }
             }
 
@@ -415,31 +325,45 @@
             try {
                 const res = await authFetch(`/v1/chats/${id}`);
                 if (res.ok) {
-                    const dbMessages = await res.json();
-                    if (dbMessages && dbMessages.length > 0) {
-                        renderMessages(dbMessages);
-                        return;
+                    const data = await res.json();
+                    // Backend returns { messages: [...], contextProductId: N }
+                    const dbMessages = Array.isArray(data) ? data : (data.messages || []);
+                    const contextProductId = Array.isArray(data) ? null : data.contextProductId;
+
+                    // Determine product context for this chat:
+                    // 1. From URL params (customer side: sellerId matches current contact)
+                    if (urlContextProduct && urlContextProduct.sellerId === id) {
+                        currentContextProduct = urlContextProduct;
+                    } else if (contextProductId) {
+                        // 2. From API response (seller side: load product info from DB)
+                        currentContextProduct = null; // reset first
+                        try {
+                            const prodRes = await fetch(`/api/search/products/${contextProductId}`);
+                            if (prodRes.ok) {
+                                const prod = await prodRes.json();
+                                currentContextProduct = {
+                                    id: prod.id || contextProductId,
+                                    name: prod.name,
+                                    price: prod.price,
+                                    sellerId: prod.sellerId,
+                                    stock: prod.stock !== undefined ? prod.stock : 0
+                                };
+                            }
+                        } catch (err) {
+                            console.error('Cannot load context product from API:', err);
+                        }
+                    } else {
+                        currentContextProduct = null; // no product context
                     }
+
+                    renderMessages(dbMessages);
+                    return;
                 }
             } catch (err) {
                 console.error('Cannot load messages from database:', err);
             }
-
-            // Fallback to mock history
-            const mockKey = Object.keys(CHAT_DATA).find(k => 
-                CHAT_DATA[k].sellerId === id || (CHAT_DATA[k].sellerId === null && id === 14)
-            );
-            const history = MESSAGES_HISTORY[mockKey || 1] || [];
-            
-            const formatted = history.map((m, index) => ({
-                id: index,
-                senderId: m.type === 'out' ? 0 : id,
-                message: m.text,
-                createdAt: new Date().toISOString(),
-                type: m.type
-            }));
-            
-            renderMessages(formatted);
+            // Empty state if no messages
+            renderMessages([]);
         }
 
         function renderMessages(messages) {
@@ -461,25 +385,21 @@
             dateBadge.textContent = 'TODAY';
             body.appendChild(dateBadge);
 
-            // 2. Add context card (conditional on urlContextProduct matching the selected contact)
-            if (urlContextProduct && urlContextProduct.sellerId === currentSelectedChatId) {
+            // 2. Add context product card if this conversation has a product context
+            if (currentContextProduct) {
+                const cp = currentContextProduct;
                 const contextCard = document.createElement('article');
                 contextCard.className = 'messages-context-card';
-                contextCard.onclick = () => {
-                    window.location.href = `/products/${urlContextProduct.id}`;
-                };
-                
+                contextCard.onclick = () => { window.location.href = `/products/${cp.id}`; };
+
                 let formattedPrice = '—';
                 try {
                     formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
-                        .format(urlContextProduct.price)
-                        .replace('₫', 'VNĐ');
-                } catch (e) {
-                    formattedPrice = urlContextProduct.price + ' VNĐ';
-                }
+                        .format(cp.price).replace('₫', 'VNĐ');
+                } catch (e) { formattedPrice = cp.price + ' VNĐ'; }
 
-                const isOutOfStock = (urlContextProduct.stock === undefined || urlContextProduct.stock <= 0);
-                const stockBadge = isOutOfStock 
+                const isOutOfStock = (cp.stock === undefined || cp.stock <= 0);
+                const stockBadge = isOutOfStock
                     ? `<span class="messages-context-card__stock" style="color: #ef4444; background: #fef2f2;">HẾT HÀNG</span>`
                     : `<span class="messages-context-card__stock">CÒN HÀNG</span>`;
 
@@ -487,7 +407,7 @@
                     <div class="messages-context-card__thumb"><i class="fa fa-play-circle"></i></div>
                     <div class="messages-context-card__info">
                         <div class="messages-context-card__label">SẢN PHẨM ĐANG HỎI</div>
-                        <div class="messages-context-card__name">${urlContextProduct.name}</div>
+                        <div class="messages-context-card__name">${cp.name}</div>
                         <div class="messages-context-card__meta">
                             <span class="messages-context-card__price">${formattedPrice}</span>
                             ${stockBadge}
@@ -615,10 +535,18 @@
             }
 
             try {
+                // Include productId when customer initiates chat from a product page
+                const productIdToSend = (urlContextProduct && urlContextProduct.sellerId === currentSelectedChatId)
+                    ? String(urlContextProduct.id) : undefined;
+
                 const res = await authFetch(`/v1/chats/${currentSelectedChatId}`, {
                     method: 'POST',
-                    body: JSON.stringify({ message: messageText })
+                    body: JSON.stringify({
+                        message: messageText,
+                        ...(productIdToSend ? { productId: productIdToSend } : {})
+                    })
                 });
+
 
                 if (res.ok) {
                     input.value = '';
@@ -999,22 +927,28 @@
             if (sellerIdParam) {
                 const sId = parseInt(sellerIdParam);
                 selectChat(sId);
-            } else {
-                if (activeChatList.length > 0) {
-                    selectChat(activeChatList[0].contactId);
-                } else {
-                    selectChat(1);
-                }
+            } else if (activeChatList.length > 0) {
+                selectChat(activeChatList[0].contactId);
             }
+            // If no contacts and no sellerId param, leave panel empty
         }
 
         function startChatPolling() {
             if (chatPollInterval) clearInterval(chatPollInterval);
             
             chatPollInterval = setInterval(async () => {
+                // Refresh chat history for current contact
                 if (currentSelectedChatId) {
                     await loadChatHistory(currentSelectedChatId);
                 }
+                // Refresh sidebar to update unread badges from other contacts
+                try {
+                    const res = await authFetch('/v1/chats');
+                    if (res.ok) {
+                        activeChatList = await res.json();
+                        renderSidebarChats();
+                    }
+                } catch (e) { /* silent */ }
             }, 4000);
         }
 

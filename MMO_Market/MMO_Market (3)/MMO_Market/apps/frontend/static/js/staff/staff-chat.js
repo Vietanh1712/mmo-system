@@ -273,7 +273,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         messages.forEach(msg => {
-            const isMe = msg.senderId !== currentUserId;
+            // Backend sets type='out' for staff messages, 'in' for contact messages
+            const isMe = msg.type === 'out';
             const rowClass = isMe ? 'staff-chat-row--staff' : 'staff-chat-row--user';
             const bubbleClass = isMe ? 'staff-chat-bubble--staff' : 'staff-chat-bubble--user';
             

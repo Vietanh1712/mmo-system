@@ -48,6 +48,9 @@ public class Chat {
     @Column(name = "isRead")
     private Boolean isRead = false;
 
+    @Column(name = "product_id")
+    private Long productId; // context product when customer initiates chat from product page
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
