@@ -107,7 +107,10 @@ function renderStaffComplaintsTable(list, isBackendDriven = true) {
         let statusText = 'Đang xử lý';
         
         const statusVal = (item.status || '').toLowerCase();
-        if (statusVal === 'new' || statusVal === 'open' || statusVal === 'inprogress' || statusVal === 'in_progress' || statusVal === 'processing') {
+        if (statusVal === 'pending_review' || statusVal === 'pending_status') {
+            badgeClass = 'ds-badge-info';
+            statusText = 'Chờ duyệt';
+        } else if (statusVal === 'new' || statusVal === 'open' || statusVal === 'inprogress' || statusVal === 'in_progress' || statusVal === 'processing') {
             badgeClass = 'ds-badge-warning';
             statusText = 'Đang xử lý';
         } else if (statusVal === 'resolved' || statusVal === 'completed' || statusVal === 'success') {

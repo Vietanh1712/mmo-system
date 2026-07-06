@@ -44,7 +44,8 @@
                         <p class="messages-main__online" id="chat-header-status"></p>
                     </div>
                 </div>
-                <div class="messages-main__header-actions" style="position: relative;">
+                <div class="messages-main__header-actions" style="position: relative; display: flex; align-items: center; gap: 8px;">
+                    <a href="#" id="view-complaint-btn" class="messages-main__header-link-btn" style="display: none;" target="_blank"></a>
                     <button type="button" class="messages-main__action-btn" title="Tùy chọn" onclick="toggleDropdown(event)"><i class="fa fa-ellipsis-v"></i></button>
                     <div id="chat-dropdown" class="chat-dropdown" style="display: none;">
                         <a href="#" onclick="clearHistory(event)"><i class="fa fa-trash"></i> Xóa lịch sử chat</a>
@@ -91,7 +92,7 @@
                 <div class="msg-row msg-row--right">
                     <div class="msg-bubble-wrap">
                         <div class="msg-bubble msg-bubble--out">Shop ơi, em chưa nhận được thông tin tài khoản trong đơn #ORD-8842 ạ.</div>
-                        <span class="msg-meta">10:18 <i class="fa fa-check"></i><i class="fa fa-check"></i></span>
+                        <span class="msg-meta">10:18 <i class="fa fa-check"></i></span>
                     </div>
                 </div>
 
@@ -329,6 +330,18 @@
                     // Backend returns { messages: [...], contextProductId: N }
                     const dbMessages = Array.isArray(data) ? data : (data.messages || []);
                     const contextProductId = Array.isArray(data) ? null : data.contextProductId;
+                    const isComplaint = Array.isArray(data) ? false : !!data.isComplaint;
+                    const complaintId = Array.isArray(data) ? null : data.complaintId;
+                    const userRole = Array.isArray(data) ? null : data.userRole;
+                    const transactionId = Array.isArray(data) ? null : data.transactionId;
+
+                    let chat = activeChatList.find(c => c.contactId === id);
+                    if (chat) {
+                        chat.isComplaint = isComplaint;
+                        chat.complaintId = complaintId;
+                        chat.userRole = userRole;
+                        chat.transactionId = transactionId;
+                    }
 
                     // Determine product context for this chat:
                     // 1. From URL params (customer side: sellerId matches current contact)
@@ -450,7 +463,7 @@
                     row.innerHTML = `
                         <div class="msg-bubble-wrap">
                             <div class="msg-bubble msg-bubble--out">${msg.message}</div>
-                            <span class="msg-meta">${timeStr} <i class="fa fa-check"></i><i class="fa fa-check"></i></span>
+                            <span class="msg-meta">${timeStr} <i class="fa fa-check"></i></span>
                         </div>
                     `;
                 }
@@ -677,14 +690,31 @@
             const toggleBlockBtn = document.getElementById('toggle-block-btn');
             const toggleMuteBtn = document.getElementById('toggle-mute-btn');
             const attachBtn = document.querySelector('.messages-input-row__attach');
+            const viewComplaintBtn = document.getElementById('view-complaint-btn');
+
+            if (viewComplaintBtn) viewComplaintBtn.style.display = 'none';
 
             if (chat.contactId < 0 || chat.isComplaint) {
+                if (viewComplaintBtn) {
+                    const compId = chat.complaintId || (-chat.contactId);
+                    if (chat.userRole === 'seller') {
+                        viewComplaintBtn.href = `/seller/complaints/detail?id=${compId}`;
+                        viewComplaintBtn.innerHTML = '<i class="fa fa-gavel"></i> Chi tiết khiếu nại';
+                        viewComplaintBtn.style.display = 'inline-flex';
+                    } else if (chat.transactionId) {
+                        viewComplaintBtn.href = `/account/orders/MMO-ORD-${chat.transactionId}`;
+                        viewComplaintBtn.innerHTML = '<i class="fa fa-shopping-bag"></i> Đơn hàng khiếu nại';
+                        viewComplaintBtn.style.display = 'inline-flex';
+                    } else {
+                        viewComplaintBtn.style.display = 'none';
+                    }
+                }
                 if (toggleBlockBtn) toggleBlockBtn.style.display = 'none';
                 if (toggleMuteBtn) toggleMuteBtn.style.display = 'none';
                 if (attachBtn) {
-                    attachBtn.disabled = true;
-                    attachBtn.style.opacity = '0.5';
-                    attachBtn.style.cursor = 'not-allowed';
+                    attachBtn.disabled = false;
+                    attachBtn.style.opacity = '';
+                    attachBtn.style.cursor = '';
                 }
 
                 const input = document.getElementById('message-input');

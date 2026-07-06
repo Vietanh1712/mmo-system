@@ -239,6 +239,14 @@ public class ChatController {
             Map<String, Object> result = new HashMap<>();
             result.put("messages", messageList);
             result.put("isComplaint", true);
+            result.put("complaintId", complaint.getId());
+            result.put("userRole", complaint.getCustomer().getId().equals(userId) ? "customer" : "seller");
+            if (complaint.getTransaction() != null) {
+                result.put("transactionId", complaint.getTransaction().getId());
+            }
+            if (complaint.getTransaction() != null && complaint.getTransaction().getProduct() != null) {
+                result.put("contextProductId", complaint.getTransaction().getProduct().getId());
+            }
             return ResponseEntity.ok(result);
         }
 

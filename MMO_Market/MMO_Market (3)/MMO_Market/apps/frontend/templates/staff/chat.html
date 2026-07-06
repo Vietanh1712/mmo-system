@@ -2,6 +2,7 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{fragments/staff-head :: staffHead('Chat người dùng')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/features/messages.css}">
 </head>
 <body>
 <header th:replace="~{fragments/header :: header}"></header>
@@ -17,12 +18,15 @@
                         <h1 class="ds-page-title">Chat với người dùng</h1>
                         <p class="ds-page-subtitle">Hỗ trợ trực tiếp khách hàng và seller qua hội thoại.</p>
                     </div>
-                    <span id="unreadConversationsBadge" class="ds-badge ds-badge-info" style="display: none;">0 hội thoại chưa đọc</span>
                 </div>
 
                 <div class="staff-chat-layout">
                     <div class="ds-card staff-chat-list">
                         <div class="staff-chat-list__header">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                                <h2 style="margin: 0; font-size: 1.25rem; font-weight: bold; color: var(--ds-text-primary); font-family: inherit;">Messages</h2>
+                                <span id="staff-unread-badge" style="display: none; background: #f97316; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px; white-space: nowrap;"></span>
+                            </div>
                             <div class="staff-chat-search-wrap">
                                 <i class="fa fa-search"></i>
                                 <input type="search" placeholder="Tìm người dùng...">
@@ -42,7 +46,8 @@
                                     <div class="ds-entity-subtitle">Bắt đầu hội thoại</div>
                                 </div>
                             </div>
-                            <div class="staff-chat-header-actions" style="position: relative;">
+                            <div class="staff-chat-header-actions" style="position: relative; display: flex; align-items: center; gap: 8px;">
+                                <a href="#" id="view-staff-complaint-btn" class="messages-main__header-link-btn" style="display: none;" target="_blank"><i class="fa fa-gavel"></i> Chi tiết khiếu nại</a>
                                 <button type="button" class="staff-chat-action-btn" title="Tùy chọn" onclick="toggleChatDropdown(event)"><i class="fa fa-ellipsis-v"></i></button>
                                 <div id="staff-chat-dropdown" class="staff-chat-dropdown" style="display: none;">
                                     <a href="#" onclick="clearStaffChatHistory(event)"><i class="fa fa-trash"></i> Xóa lịch sử chat</a>

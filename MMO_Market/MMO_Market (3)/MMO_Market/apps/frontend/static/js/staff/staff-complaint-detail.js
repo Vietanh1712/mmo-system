@@ -97,39 +97,15 @@ async function loadComplaintDetails() {
 
     const startSection = document.getElementById('dispute-start-section');
     const decisionSection = document.getElementById('dispute-decision-section');
-    const chatCard = document.getElementById('dispute-chat-card');
 
     if (statusVal === 'pending_review' || statusVal === 'pending_status') {
         badgeClass = 'ds-badge-info';
         statusText = 'Chờ duyệt';
         if (startSection) startSection.style.display = 'flex';
         if (decisionSection) decisionSection.style.display = 'none';
-        if (chatCard) chatCard.style.display = 'none';
-        if (disputeChatPollInterval) {
-            clearInterval(disputeChatPollInterval);
-            disputeChatPollInterval = null;
-        }
     } else {
         if (startSection) startSection.style.display = 'none';
         if (decisionSection) decisionSection.style.display = 'flex';
-        if (chatCard) {
-            chatCard.style.display = 'block';
-            loadDisputeChats(numericId);
-            // Poll dispute chat messages
-            if (statusVal === 'inprogress' || statusVal === 'in_progress') {
-                if (!disputeChatPollInterval) {
-                    disputeChatPollInterval = setInterval(() => {
-                        loadDisputeChats(numericId);
-                    }, 4000);
-                }
-            } else {
-                if (disputeChatPollInterval) {
-                    clearInterval(disputeChatPollInterval);
-                    disputeChatPollInterval = null;
-                }
-            }
-        }
-
         if (statusVal === 'resolved' || statusVal === 'completed' || statusVal === 'success') {
             badgeClass = 'ds-badge-success';
             statusText = 'Đã giải quyết';
@@ -217,7 +193,19 @@ async function loadComplaintDetails() {
     renderTimeline();
 
 
+    // Setup redirect button and link to full chat page
+    const viewBtn = document.getElementById('view-dispute-chat-btn');
+    if (viewBtn) {
+        viewBtn.onclick = () => {
+            window.location.href = `/staff/chat?complaintId=${numericId}`;
+        };
+    }
+    const redirectBtn = document.getElementById('redirect-to-chat-btn');
+    if (redirectBtn) {
+        redirectBtn.href = `/staff/chat?complaintId=${numericId}`;
+    }
 }
+
 
 window.toggleFlaggingFields = function() {
     const enableFlagging = document.getElementById('enableFlagging').checked;
@@ -350,62 +338,6 @@ async function handleStaffAction(status) {
     window.location.href = '/staff/complaints';
 }
 
-async function loadDisputeChats(numericId) {
-    const token = sessionStorage.getItem('accessToken');
-    if (!token) return;
-    try {
-        const res = await fetch(`/api/complaints/${numericId}/chats`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        if (!res.ok) throw new Error('Không thể tải tin nhắn đối chất.');
-        const chats = await res.json();
-        
-        const container = document.getElementById('dispute-chat-messages');
-        if (!container) return;
-        
-        if (chats.length === 0) {
-            container.innerHTML = `<div style="text-align: center; color: #94a3b8; font-size: 13px; font-style: italic;">Chưa có tin nhắn đối chất nào.</div>`;
-            return;
-        }
-        
-        container.innerHTML = chats.map(msg => {
-            let roleLabel = 'Khách hàng';
-            let bg = 'rgba(37, 99, 235, 0.08)';
-            let border = '1px solid rgba(37, 99, 235, 0.15)';
-            let titleColor = '#2563eb';
-            
-            if (msg.senderRole === 'Seller') {
-                roleLabel = 'Người bán';
-                bg = 'rgba(217, 119, 6, 0.08)';
-                border = '1px solid rgba(217, 119, 6, 0.15)';
-                titleColor = '#d97706';
-            } else if (msg.senderRole === 'Staff') {
-                roleLabel = 'Hệ thống / Staff';
-                bg = 'rgba(71, 85, 105, 0.08)';
-                border = '1px solid rgba(71, 85, 105, 0.15)';
-                titleColor = '#475569';
-            }
-            
-            return `
-                <div style="background: ${bg}; border: ${border}; border-radius: 8px; padding: 12px; font-size: 13.5px; line-height: 1.5;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <span style="font-weight: 700; color: ${titleColor};">${escapeHtml(msg.senderName)} <small style="font-weight: 500; opacity: 0.85;">(${roleLabel})</small></span>
-                        <small style="color: #64748b; font-size: 11px;">${formatDateString(msg.createdAt)}</small>
-                    </div>
-                    <div style="color: #1e293b; white-space: pre-wrap;">${escapeHtml(msg.message)}</div>
-                </div>
-            `;
-        }).join('');
-        
-        container.scrollTop = container.scrollHeight;
-    } catch (err) {
-        console.error('Error loading dispute chats:', err);
-    }
-}
-
 window.startDisputeAction = async function() {
     if (!currentComplaint) return;
     const numericId = currentComplaint.id.replace('CMP-', '');
@@ -434,7 +366,7 @@ window.startDisputeAction = async function() {
         }
         
         showSuccessToast('Đã kích hoạt phòng chat đối chất 3 bên thành công!');
-        window.location.reload();
+        window.location.href = `/staff/chat?complaintId=${numericId}`;
     } catch(err) {
         showWarningToast(err.message);
     } finally {
@@ -442,6 +374,7 @@ window.startDisputeAction = async function() {
         btn.innerHTML = oldText;
     }
 };
+
 
 document.addEventListener('DOMContentLoaded', () => {
     loadComplaintDetails();
