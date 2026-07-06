@@ -32,7 +32,9 @@ public interface ComplaintService {
             String resolution);
             
     // --- Methods from HEAD ---
-    Complaint createComplaint(Long customerId, Long transactionId, String description, String evidence);
+    Complaint createComplaint(Long customerId, Long transactionId, String description, String evidence, String preferredSolution);
+    
+    Complaint startDispute(Long complaintId, Long staffId);
     
     List<Complaint> getCustomerComplaints(Long customerId);
     

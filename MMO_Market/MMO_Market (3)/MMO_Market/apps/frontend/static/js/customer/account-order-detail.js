@@ -113,7 +113,8 @@ async function handleComplaintSubmit(e) {
             body: JSON.stringify({
                 transactionId: Number(transactionId),
                 description: description,
-                evidence: evidence || null
+                evidence: evidence || null,
+                preferredSolution: document.getElementById('complaintPreferredSolution').value
             })
         });
 
@@ -269,6 +270,15 @@ function renderOrderDetail(order) {
             complaintBtn.style.display = 'inline-flex';
             complaintBtn.className = 'ds-btn ds-btn-danger';
             complaintBtn.innerHTML = '<i class="fa fa-gavel"></i> Khiếu nại';
+        }
+    }
+
+    const chatCard = document.getElementById('customer-dispute-chat-card');
+    if (chatCard) {
+        if (order.status === 'DISPUTED') {
+            checkAndLoadDisputeChat(order.transactionId || order.id);
+        } else {
+            chatCard.style.display = 'none';
         }
     }
 
@@ -513,4 +523,125 @@ function escapeHtml(value) {
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#039;');
+}
+
+let chatIntervalId = null;
+
+async function checkAndLoadDisputeChat(transactionId) {
+    const token = sessionStorage.getItem('accessToken');
+    if (!token) return;
+    try {
+        const res = await fetch('/api/complaints', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        if (!res.ok) return;
+        const list = await res.json();
+        const complaint = list.find(c => c.transaction && Number(c.transaction.id) === Number(transactionId));
+        if (complaint) {
+            const statusVal = (complaint.status || '').toLowerCase();
+            if (statusVal === 'in_progress' || statusVal === 'inprogress' || statusVal === 'resolved' || statusVal === 'rejected' || statusVal === 'completed') {
+                const chatCard = document.getElementById('customer-dispute-chat-card');
+                if (chatCard) chatCard.style.display = 'block';
+                
+                loadCustomerDisputeChats(complaint.id);
+                
+                if (chatIntervalId) clearInterval(chatIntervalId);
+                if (statusVal === 'in_progress' || statusVal === 'inprogress') {
+                    chatIntervalId = setInterval(() => loadCustomerDisputeChats(complaint.id), 5000);
+                }
+                
+                const chatForm = document.getElementById('customer-dispute-chat-form');
+                if (chatForm) {
+                    const newForm = chatForm.cloneNode(true);
+                    chatForm.parentNode.replaceChild(newForm, chatForm);
+                    
+                    newForm.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const inputEl = document.getElementById('customer-dispute-chat-input');
+                        const text = inputEl.value.trim();
+                        if (!text) return;
+                        
+                        try {
+                            const sendRes = await fetch(`/api/complaints/${complaint.id}/chats`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                body: JSON.stringify({ message: text })
+                            });
+                            if (!sendRes.ok) {
+                                const errData = await sendRes.json();
+                                throw new Error(errData.message || 'Lỗi gửi tin nhắn.');
+                            }
+                            inputEl.value = '';
+                            loadCustomerDisputeChats(complaint.id);
+                        } catch (err) {
+                            showErrorToast(err.message);
+                        }
+                    });
+                }
+            }
+        }
+    } catch(err) {
+        console.error('Error checking dispute chat:', err);
+    }
+}
+
+async function loadCustomerDisputeChats(complaintId) {
+    const token = sessionStorage.getItem('accessToken');
+    if (!token) return;
+    try {
+        const res = await fetch(`/api/complaints/${complaintId}/chats`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        if (!res.ok) return;
+        const chats = await res.json();
+        const container = document.getElementById('customer-dispute-chat-messages');
+        if (!container) return;
+        
+        if (chats.length === 0) {
+            container.innerHTML = `<div style="text-align: center; color: #94a3b8; font-size: 13px; font-style: italic;">Chưa có tin nhắn đối chất nào.</div>`;
+            return;
+        }
+        
+        container.innerHTML = chats.map(msg => {
+            let roleLabel = 'Khách hàng (Bạn)';
+            let bg = 'rgba(37, 99, 235, 0.08)';
+            let border = '1px solid rgba(37, 99, 235, 0.15)';
+            let titleColor = '#2563eb';
+            
+            if (msg.senderRole === 'Seller') {
+                roleLabel = 'Người bán';
+                bg = 'rgba(217, 119, 6, 0.08)';
+                border = '1px solid rgba(217, 119, 6, 0.15)';
+                titleColor = '#d97706';
+            } else if (msg.senderRole === 'Staff') {
+                roleLabel = 'Hệ thống / Staff';
+                bg = 'rgba(71, 85, 105, 0.08)';
+                border = '1px solid rgba(71, 85, 105, 0.15)';
+                titleColor = '#475569';
+            }
+            
+            return `
+                <div style="background: ${bg}; border: ${border}; border-radius: 8px; padding: 12px; font-size: 13px; line-height: 1.5;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="font-weight: 700; color: ${titleColor};">${escapeHtml(msg.senderName)} <small style="font-weight: 500; opacity: 0.85;">(${roleLabel})</small></span>
+                        <small style="color: #64748b; font-size: 11px;">${msg.createdAt ? msg.createdAt.replace('T', ' ').substring(0, 16) : ''}</small>
+                    </div>
+                    <div style="color: #1e293b; white-space: pre-wrap;">${escapeHtml(msg.message)}</div>
+                </div>
+            `;
+        }).join('');
+        
+        container.scrollTop = container.scrollHeight;
+    } catch(err) {
+        console.error('Error rendering dispute chats for customer:', err);
+    }
 }

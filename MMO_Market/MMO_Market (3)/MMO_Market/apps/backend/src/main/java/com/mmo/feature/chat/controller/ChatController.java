@@ -13,6 +13,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import com.mmo.feature.admin.service.UserStatusService;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,17 +26,20 @@ public class ChatController {
     private final ChatMuteRepository chatMuteRepository;
     private final UserRepository userRepository;
     private final UserStatusService userStatusService;
+    private final com.mmo.shared.dal.ComplaintRepository complaintRepository;
 
     public ChatController(ChatRepository chatRepository,
                           ChatBlockRepository chatBlockRepository,
                           ChatMuteRepository chatMuteRepository,
                           UserRepository userRepository,
-                          UserStatusService userStatusService) {
+                          UserStatusService userStatusService,
+                          com.mmo.shared.dal.ComplaintRepository complaintRepository) {
         this.chatRepository = chatRepository;
         this.chatBlockRepository = chatBlockRepository;
         this.chatMuteRepository = chatMuteRepository;
         this.userRepository = userRepository;
         this.userStatusService = userStatusService;
+        this.complaintRepository = complaintRepository;
     }
 
     // 0. Get contact info by userId (for chat header when no existing chat)
@@ -43,9 +47,25 @@ public class ChatController {
     public ResponseEntity<?> getContactInfo(@AuthenticationPrincipal Long userId,
                                              @PathVariable Long contactId) {
         userStatusService.updateActiveTime(userId);
+        if (contactId < 0) {
+            Long complaintId = -contactId;
+            Optional<com.mmo.shared.model.Complaint> compOpt = complaintRepository.findById(complaintId);
+            if (compOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Complaint not found"));
+            }
+            com.mmo.shared.model.Complaint complaint = compOpt.get();
+            Map<String, Object> info = new HashMap<>();
+            info.put("id", contactId);
+            info.put("name", "Tranh chấp #CMP-" + complaint.getId());
+            info.put("avatar", "TC");
+            info.put("online", true);
+            info.put("isComplaint", true);
+            return ResponseEntity.ok(info);
+        }
+
         Optional<User> contactOpt = userRepository.findById(contactId);
         if (contactOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().body(Map.of("message", "Contact not found"));
         }
         User contact = contactOpt.get();
         String name = contact.getFullName() != null ? contact.getFullName() : contact.getEmail().split("@")[0];
@@ -120,12 +140,48 @@ public class ChatController {
                     map.put("unreadCount", unreadCount);
                     return map;
                 })
-                .sorted((m1, m2) -> {
-                    java.time.LocalDateTime t1 = (java.time.LocalDateTime) m1.get("latestTime");
-                    java.time.LocalDateTime t2 = (java.time.LocalDateTime) m2.get("latestTime");
-                    return t2.compareTo(t1); // Sort desc by time
-                })
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        // Inject active complaints group chats
+        List<com.mmo.shared.model.Complaint> activeComplaints = complaintRepository.findActiveComplaintsForUser(currentUser);
+        for (com.mmo.shared.model.Complaint comp : activeComplaints) {
+            List<Chat> compChats = chatRepository.findByComplaintAndIsDeleteFalseOrderByCreatedAtAsc(comp);
+            String latestMsg = "Hệ thống: Nhân viên đã mở cuộc đối chất.";
+            java.time.LocalDateTime latestTime = comp.getCreatedAt();
+            if (!compChats.isEmpty()) {
+                Chat lastChat = compChats.get(compChats.size() - 1);
+                latestMsg = lastChat.getMessage();
+                latestTime = lastChat.getCreatedAt();
+            }
+
+            long unread = compChats.stream()
+                .filter(c -> !c.getSender().getId().equals(userId) && (c.getIsRead() == null || Boolean.FALSE.equals(c.getIsRead())))
+                .count();
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("contactId", -comp.getId()); // Use negative ID for complaint
+            map.put("name", "Tranh chấp #CMP-" + comp.getId() + " (" + (comp.getCustomer().getId().equals(userId) ? "Shop: " + comp.getSeller().getFullName() : "Khách: " + comp.getCustomer().getFullName()) + ")");
+            map.put("avatar", "TC");
+            map.put("latestMessage", latestMsg);
+            map.put("latestTime", latestTime);
+            map.put("isBlocked", false);
+            map.put("isBlockedByContact", false);
+            map.put("isMuted", false);
+            map.put("online", true);
+            map.put("unreadCount", unread);
+            map.put("isComplaint", true);
+            responseList.add(map);
+        }
+
+        // Sort combined list by newest first
+        responseList.sort((m1, m2) -> {
+            java.time.LocalDateTime t1 = (java.time.LocalDateTime) m1.get("latestTime");
+            java.time.LocalDateTime t2 = (java.time.LocalDateTime) m2.get("latestTime");
+            if (t1 == null && t2 == null) return 0;
+            if (t1 == null) return 1;
+            if (t2 == null) return -1;
+            return t2.compareTo(t1);
+        });
 
         return ResponseEntity.ok(responseList);
     }
@@ -136,9 +192,59 @@ public class ChatController {
     public ResponseEntity<?> getChatHistory(@AuthenticationPrincipal Long userId, @PathVariable Long contactId) {
         userStatusService.updateActiveTime(userId);
         Optional<User> currentUserOpt = userRepository.findById(userId);
+        if (currentUserOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "User not found"));
+        }
+        User currentUser = currentUserOpt.get();
+
+        if (contactId < 0) {
+            Long complaintId = -contactId;
+            Optional<com.mmo.shared.model.Complaint> compOpt = complaintRepository.findById(complaintId);
+            if (compOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Complaint not found"));
+            }
+            com.mmo.shared.model.Complaint complaint = compOpt.get();
+            if (!complaint.getCustomer().getId().equals(userId) && !complaint.getSeller().getId().equals(userId)) {
+                return ResponseEntity.status(403).body(Map.of("message", "Bạn không có quyền tham gia cuộc đối chất này."));
+            }
+
+            List<Chat> chats = chatRepository.findByComplaintAndIsDeleteFalseOrderByCreatedAtAsc(complaint);
+            chats.forEach(c -> {
+                if (!c.getSender().getId().equals(userId)) {
+                    c.setIsRead(true);
+                }
+            });
+            chatRepository.saveAll(chats);
+
+            List<Map<String, Object>> messageList = chats.stream().map(c -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", c.getId());
+                map.put("senderId", c.getSender().getId());
+                map.put("senderName", c.getSender().getFullName() != null ? c.getSender().getFullName() : c.getSender().getEmail().split("@")[0]);
+                map.put("receiverId", c.getReceiver().getId());
+                map.put("message", c.getMessage());
+                map.put("createdAt", c.getCreatedAt());
+                map.put("type", c.getSender().getId().equals(userId) ? "out" : "in");
+                
+                String role = "Khách hàng";
+                if (c.getSender().getId().equals(complaint.getSeller().getId())) {
+                    role = "Cửa hàng";
+                } else if (c.getSender().getRole() != null && (c.getSender().getRole().contains("Staff") || c.getSender().getRole().contains("Admin"))) {
+                    role = "Staff";
+                }
+                map.put("role", role);
+                return map;
+            }).collect(Collectors.toList());
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("messages", messageList);
+            result.put("isComplaint", true);
+            return ResponseEntity.ok(result);
+        }
+
         Optional<User> contactOpt = userRepository.findById(contactId);
-        if (currentUserOpt.isEmpty() || contactOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "User or contact not found"));
+        if (contactOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Contact not found"));
         }
 
         List<Chat> chats = chatRepository.findActiveChatsBetweenUsers(currentUserOpt.get(), contactOpt.get());
@@ -169,14 +275,59 @@ public class ChatController {
         result.put("contextProductId", contextProductId);
 
         return ResponseEntity.ok(result);
-
     }
 
-    // 3. Send message to contact
     @PostMapping("/{contactId}")
     public ResponseEntity<?> sendMessage(@AuthenticationPrincipal Long userId, 
                                          @PathVariable Long contactId, 
                                          @RequestBody Map<String, String> request) {
+
+        if (contactId < 0) {
+            Long complaintId = -contactId;
+            Optional<com.mmo.shared.model.Complaint> compOpt = complaintRepository.findById(complaintId);
+            if (compOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Complaint not found"));
+            }
+            com.mmo.shared.model.Complaint complaint = compOpt.get();
+            if (!complaint.getCustomer().getId().equals(userId) && !complaint.getSeller().getId().equals(userId)) {
+                return ResponseEntity.status(403).body(Map.of("message", "Bạn không có quyền tham gia cuộc đối chất này."));
+            }
+
+            if (!"In_Progress".equalsIgnoreCase(complaint.getStatus()) && !"InProgress".equalsIgnoreCase(complaint.getStatus())) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Phòng chat đối chất đã đóng hoặc chưa mở."));
+            }
+
+            String msgText = request.get("message");
+            if (msgText == null || msgText.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Tin nhắn không được để trống."));
+            }
+
+            User sender = userRepository.findByIdAndIsDeleteFalse(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("Người dùng không tồn tại."));
+            User receiver = complaint.getCustomer().getId().equals(userId) ? complaint.getSeller() : complaint.getCustomer();
+
+            Chat chat = new Chat();
+            chat.setComplaint(complaint);
+            chat.setSender(sender);
+            chat.setReceiver(receiver);
+            chat.setChatType("Complaint");
+            chat.setMessage(msgText.trim());
+            chat.setIsDelete(false);
+            chat.setSenderDeleted(false);
+            chat.setReceiverDeleted(false);
+            chat.setIsRead(false);
+            chat.setCreatedAt(LocalDateTime.now());
+
+            chat = chatRepository.save(chat);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", chat.getId());
+            response.put("senderId", userId);
+            response.put("message", chat.getMessage());
+            response.put("createdAt", chat.getCreatedAt());
+
+            return ResponseEntity.ok(response);
+        }
 
         // Guard: cannot send message to yourself
         if (userId.equals(contactId)) {

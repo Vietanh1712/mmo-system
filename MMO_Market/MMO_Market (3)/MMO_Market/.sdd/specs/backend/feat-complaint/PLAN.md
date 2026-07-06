@@ -83,4 +83,30 @@ Triển khai quy trình khiếu nại đơn hàng (Complaints / Dispute) theo đ
 
 - API chi tiết khiếu nại `/api/complaints/{id}` bắt buộc phải kiểm tra quyền hạn (phải là bên mua, bên bán hoặc Staff) để tránh IDOR.
 - Việc đổi trạng thái sang `RESOLVED` / `CLOSED` phải đi kèm với hành động hoàn tiền hoặc giải ngân ví tương ứng sử dụng `Pessimistic Lock` để bảo toàn số dư.
-- Chỉ cho phép tạo khiếu nại trong thời hạn bảo lãnh 72 giờ của Escrow.
+- Chỉ cho phép tạo khiếu nại trong thời hạn bảo lãnh của Escrow.
+
+---
+
+## 6. Quy tắc nghiệp vụ nâng cao & Quy trình chi tiết
+
+### 6.1. Chu Kỳ Giam Tiền Mặc Định (Escrow) Theo Cấp Độ
+Thời gian giam tiền bảo lãnh (`escrow_release_date`) khi người mua thanh toán thành công sẽ được hệ thống tính toán động dựa trên mức độ uy tín của Shop:
+- **Giai đoạn thử thách (Áp dụng cho 20 đơn hàng đầu tiên của Shop Mới):** Giam tiền cố định **7 ngày** (168 giờ) kể từ khi đơn hàng hoàn tất thành công.
+- **Giai đoạn tiêu chuẩn (Từ đơn hàng thứ 21 trở đi):** Nếu tỷ lệ lỗi tốt (tỷ lệ khiếu nại đúng < 2%), thời gian giam tiền tự động giảm về mặc định là **3 ngày** (72 giờ).
+- **Giai đoạn thắt chặt (Shop bị hạ xuống Level 0 - Cảnh cáo):** Khi Shop có tỷ lệ khiếu nại đúng $\ge 2\%$, hệ thống tự động tăng thời gian giam tiền trở lại thành **7 ngày** (168 giờ) cho mọi đơn hàng mới phát sinh.
+
+### 6.2. Quy Trình Các Bước Xử Lý Khiếu Nại Chi Tiết
+*   **Bước 1: Khách hàng (Customer) gửi đơn khiếu nại**
+    - Khi gặp lỗi trong thời hạn bảo lãnh (3 ngày hoặc 7 ngày tùy cấp độ Shop), Customer bấm nút khiếu nại trong trang chi tiết đơn hàng.
+    - Customer điền lý do, chọn hình thức mong muốn (Đổi tài khoản mới hoặc Hoàn tiền) và bắt buộc tải lên bằng chứng hình ảnh/video (evidence).
+    - Trạng thái đơn hàng/ticket chuyển thành `PENDING_REVIEW` (Chờ Staff duyệt).
+*   **Bước 2: Staff tiếp nhận và mở cuộc đối chất (Chat 3 bên)**
+    - Staff kiểm tra bằng chứng ban đầu. Nếu hợp lệ, Staff bấm nút "Mở cuộc đối chất".
+    - Hệ thống khởi tạo Phòng chat 3 bên (Customer, Seller, Staff).
+    - Quyền hạn chat: Customer và Seller nhắn tin thương lượng trực tiếp; Staff chỉ có quyền **Read-only** (chỉ theo dõi log chat và bằng chứng mới, không tham gia nhắn tin).
+*   **Bước 3: Phán quyết của Staff & Khấu trừ tài chính động**
+    - Sau khi theo dõi đối chất (hoặc sau 24h nếu Seller im lặng không phản hồi), Staff đưa ra phán quyết:
+        - **Lỗi thuộc về Customer:** Từ chối khiếu nại $\rightarrow$ Giải ngân toàn bộ tiền cho Seller.
+        - **Lỗi thuộc về Seller:** Phê duyệt khiếu nại $\rightarrow$ Hệ thống tự động khấu trừ số tiền chưa sử dụng trực tiếp từ ví Seller theo công thức:
+          $$\text{Số tiền trừ của Seller} = \frac{\text{Giá trị đơn hàng}}{\text{Tổng số ngày của gói (VD: 30)}} \times \text{Số ngày chưa sử dụng}$$
+          *(Số tiền này sẽ được hoàn trả lại cho người mua, phần còn lại giải ngân cho người bán).*

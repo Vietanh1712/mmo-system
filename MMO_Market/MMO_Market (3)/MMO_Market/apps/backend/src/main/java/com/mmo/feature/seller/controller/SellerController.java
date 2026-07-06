@@ -954,6 +954,10 @@ public class SellerController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền chat trong khiếu nại này."));
             }
 
+            if (!"In_Progress".equalsIgnoreCase(c.getStatus()) && !"InProgress".equalsIgnoreCase(c.getStatus())) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Phòng chat đối chất chưa được mở hoặc đã kết thúc."));
+            }
+
             String msgText = request.get("message");
             if (msgText == null || msgText.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Tin nhắn không được để trống."));

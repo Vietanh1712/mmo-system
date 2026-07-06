@@ -1,46 +1,35 @@
-# Walkthrough: Escrow Cycle, 3-way Dispute Chat & Financial Deduction Formula
+# Hướng Dẫn Xác Minh / Kiểm Thử (Dispute Chat Group in Normal Chats)
 
-Chúng ta đã hoàn thiện hệ thống xử lý khiếu nại và giam tiền (escrow) theo yêu cầu.
-
-## Các Thay Đổi Đã Thực Hiện
-
-### 1. Sửa Lỗi JS Nghiêm Trọng tại Trang Chi Tiết Khiếu Nại (Staff)
-- **Tập tin**: `staff-complaint-detail.js`
-- **Chi tiết**: Loại bỏ khai báo trùng lặp `statusVal`, `badge`, `badgeClass`, `statusText` làm vỡ JS trang Staff.
-- **Tính năng mới**: Thiết lập cơ chế tự động tải lại (polling) tin nhắn đối chất mỗi 4 giây khi trạng thái khiếu nại đang là `In_Progress`.
-
-### 2. Thêm Nút "Xem Phòng Chat Đối Chất" & Nâng Cấp Giao Diện Staff
-- **Tập tin**: `staff/complaint-detail.html`
-- **Chi tiết**: Thêm nút bấm trực quan để cuộn nhanh đến phòng chat đối chất 3 bên từ phần quyết định xử lý khiếu nại.
-- **Hiển thị**: Phân biệt rõ vai trò gửi tin nhắn trong phòng chat:
-  - Khách hàng (Customer) - nền xanh nhạt
-  - Người bán (Seller) - nền cam nhạt
-  - Hệ thống / Staff - nền xám nhạt
-
-### 3. Hỗ Trợ Phòng Chat 3 Bên Từ Phía Người Bán (Seller)
-- **Tập tin**: `seller/complaint-detail.html`, `seller-console.js`
-- **Chi tiết**:
-  - Nâng cấp giao diện chi tiết khiếu nại của Seller thành cấu trúc 2 cột.
-  - Tích hợp khung chat đối chất giống như Customer.
-  - Tự động tải lại tin nhắn đàm phán mỗi 4 giây.
-  - Khóa form gửi tin nhắn và hiển thị thông báo đóng phòng chat một khi Staff đã ra phán quyết (`Resolved` hoặc `Rejected`).
+Chúng ta đã chỉnh sửa toàn diện hệ thống tin nhắn đối chất theo yêu cầu: không tạo thêm màn hình chat riêng biệt trên trang chi tiết khiếu nại, mà tích hợp tự động cuộc đối chất thành một **"Nhóm trò chuyện"** ngay trong giao diện tin nhắn thường (`/messages`).
 
 ---
 
-## Hướng Dẫn Xác Minh / Kiểm Thử (Manual Verification)
+## 1. Các Thay Đổi Đã Thực Hiện
 
-1. **Khởi động ứng dụng**:
-   - Chạy Spring Boot backend.
-2. **Kích hoạt phòng chat 3 bên**:
-   - Đăng nhập tài khoản **Staff**.
-   - Vào mục **Khiếu nại**, chọn một khiếu nại ở trạng thái `PENDING_REVIEW` (Chờ duyệt).
-   - Nhấp nút **"Bắt đầu đối chất (Mở chat)"** để kích hoạt trạng thái `In_Progress`.
-3. **Đàm phán đối chất**:
-   - Đăng nhập tài khoản **Customer**, vào trang chi tiết khiếu nại → Nhập tin nhắn gửi đi.
-   - Đăng nhập tài khoản **Seller**, vào trang chi tiết khiếu nại → Xem tin nhắn đối chất và nhập tin nhắn phản hồi.
-   - Kiểm tra xem cả hai bên có nhận được tin nhắn của nhau theo thời gian thực (realtime polling 4s) hay không.
-4. **Phán quyết của Staff & Khấu trừ tài chính**:
-   - Đăng nhập tài khoản **Staff**, xem cuộc hội thoại đối chất của 2 bên trực tiếp từ chi tiết khiếu nại (chế độ Read-only).
-   - Staff đưa ra phán quyết:
-     - Chọn **Giải quyết** (Resolved) → Hệ thống tự động hoàn tiền cho khách hàng theo công thức tỷ lệ số ngày chưa sử dụng và trừ tiền trực tiếp từ ví của Seller.
-     - Chọn **Từ chối** (Rejected) → Giải ngân 100% tiền đơn hàng cho Seller.
+### Giao Diện Chi Tiết Khiếu Nại
+- **Customer & Seller**: Xóa bỏ hoàn toàn khung chat riêng biệt ở trang Chi tiết khiếu nại để tránh trùng lặp tính năng. Thay vào đó hiển thị nút **"Nhắn tin đối chất thương lượng"** điều hướng trực tiếp sang trang Tin nhắn thường kèm ngữ cảnh: `/messages?complaintId={id}`.
+- **Staff**: Giữ nguyên khung theo dõi đối chất Read-only tại trang quản lý khiếu nại của Staff để phục vụ công tác giám sát và ra phán quyết.
+
+### Cơ Chế "Tự Tạo Nhóm Trò Chuyện" ở Tin Nhắn Thường
+- **Sidebar danh sách chat**: Tự động hiển thị một liên hệ đặc biệt mang tên `Tranh chấp #CMP-{id} (Shop: ...)` hoặc `Tranh chấp #CMP-{id} (Khách: ...)` với nhãn ảnh đại diện `TC` cho tất cả các khiếu nại đang ở trạng thái `In_Progress`.
+- **Hỗ trợ ID âm (`contactId < 0`)**: Đại diện cho mã nhóm đối chất khiếu nại để tách biệt luồng xử lý với các tài khoản người dùng thông thường (`contactId > 0`).
+- **Phân vai tin nhắn**: Trong nhóm chat đối chất, tin nhắn hiển thị rõ vai trò gửi (`Khách hàng`, `Cửa hàng`, `Staff`) để các bên dễ đàm phán thương lượng.
+- **Ràng buộc an toàn**: Khi chat nhóm đối chất, vô hiệu hóa các nút Chặn, Tắt thông báo, và Đính kèm tệp để đảm bảo tính minh bạch của quá trình tranh chấp.
+
+---
+
+## 2. Hướng Dẫn Các Bước Test Thực Tế
+
+### **Bước 1: Khách hàng gửi khiếu nại**
+1. Đăng nhập tài khoản **Customer**, gửi một khiếu nại mới từ trang chi tiết đơn hàng.
+2. Trạng thái ban đầu của khiếu nại sẽ là `PENDING_REVIEW` (Chờ duyệt). Lúc này nút nhắn tin đối chất chưa hiển thị.
+
+### **Bước 2: Staff kích hoạt cuộc đối chất**
+1. Đăng nhập tài khoản **Staff**, xem chi tiết khiếu nại vừa tạo và nhấp nút **"Bắt đầu đối chất (Mở chat)"**. 
+2. Trạng thái khiếu nại chuyển sang `In_Progress`.
+
+### **Bước 3: Nhắn tin đối chất tại trang Tin nhắn thường**
+1. **Customer**: Vào trang chi tiết khiếu nại -> nhấp nút **"Nhắn tin đối chất thương lượng"**. Trang web sẽ tự động chuyển hướng sang `/messages?complaintId={id}` và chọn nhóm đối chất `Tranh chấp #CMP-{id}` ở sidebar.
+2. **Seller**: Vào Kênh người bán -> chi tiết khiếu nại -> nhấp nút **"Nhắn tin đối chất với Khách hàng"** để chuyển hướng tương tự.
+3. Thử nhắn tin qua lại giữa hai bên trực tiếp trên giao diện chat bình thường. Tin nhắn sẽ tự động gửi và lưu kèm ngữ cảnh khiếu nại.
+4. **Staff**: F5 lại trang chi tiết khiếu nại của nhân viên để kiểm tra lịch sử đối chất của 2 bên hiển thị đầy đủ ở chế độ Read-only.

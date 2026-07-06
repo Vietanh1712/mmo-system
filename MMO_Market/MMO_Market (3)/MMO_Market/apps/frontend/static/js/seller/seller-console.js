@@ -1685,137 +1685,14 @@ async function initComplaintDetail() {
             `;
         }
 
-        // 2. Fetch and initialize Seller chat
-        const chatForm = document.getElementById('chatForm');
-        if (chatForm) {
-            chatForm.addEventListener('submit', (e) => handleSellerChatSubmit(e, complaintId));
-        }
 
-        // Show/hide chat status based on complaint status
-        const chatClosedAlert = document.getElementById('chatClosedAlert');
-        if (c.status === 'Resolved' || c.status === 'Rejected') {
-            if (chatForm) chatForm.style.display = 'none';
-            if (chatClosedAlert) chatClosedAlert.removeAttribute('hidden');
-        } else {
-            if (chatForm) chatForm.style.display = 'flex';
-            if (chatClosedAlert) chatClosedAlert.setAttribute('hidden', 'true');
-        }
-
-        await loadSellerChatMessages(complaintId);
-
-        // Auto reload chat messages every 4 seconds
-        if (sellerChatInterval) clearInterval(sellerChatInterval);
-        if (c.status === 'In_Progress' || c.status === 'Open' || c.status === 'InProgress' || c.status === 'PENDING_REVIEW') {
-            sellerChatInterval = setInterval(() => {
-                loadSellerChatMessages(complaintId);
-            }, 4000);
-        }
 
     } catch (err) {
         showToast(err.message, 'error');
     }
 }
 
-let sellerChatInterval = null;
-
-function escapeHtml(value) {
-    return String(value || '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
-}
-
-async function loadSellerChatMessages(complaintId) {
-    const messagesContainer = document.getElementById('chatMessages');
-    const chatCount = document.getElementById('chatCountBadge');
-    const token = sessionStorage.getItem('accessToken');
-    if (!token || !messagesContainer) return;
-
-    try {
-        const res = await fetch(`/api/complaints/${complaintId}/chats`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (res.ok) {
-            const chats = await res.json();
-            if (chatCount) chatCount.textContent = `${chats.length} tin nhắn`;
-
-            if (chats.length === 0) {
-                messagesContainer.innerHTML = `<div style="text-align: center; color: #94a3b8; font-style: italic; font-size: 13px; padding: 20px 0;">Chưa có tin nhắn đối chất nào.</div>`;
-                return;
-            }
-
-            const userInfo = JSON.parse(sessionStorage.getItem('userInfo') || '{}');
-            const myUserId = userInfo.id;
-
-            messagesContainer.innerHTML = chats.map(msg => {
-                const isMe = (myUserId && msg.senderId === myUserId) || msg.senderRole === 'Seller';
-                
-                let roleLabel = 'Khách hàng';
-                if (msg.senderRole === 'Seller') {
-                    roleLabel = 'Bạn';
-                } else if (msg.senderRole === 'Staff') {
-                    roleLabel = 'Staff (Ban quản trị)';
-                }
-
-                const labelColor = isMe ? '#e0f2fe' : (msg.senderRole === 'Staff' ? '#fca5a5' : '#64748b');
-
-                return `
-                    <div class="chat-bubble ${isMe ? 'chat-bubble--out' : 'chat-bubble--in'}" style="display: flex; flex-direction: column; max-width: 75%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.4; word-break: break-word; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); margin-bottom: 8px; ${isMe ? 'align-self: flex-end; background-color: var(--seller-primary, #4f46e5); color: #ffffff; border-bottom-right-radius: 2px;' : 'align-self: flex-start; background-color: #f1f5f9; color: #1e293b; border-bottom-left-radius: 2px; border: 1px solid #e2e8f0;' }">
-                        <div class="chat-bubble-label" style="font-size: 10px; font-weight: 700; margin-bottom: 2px; color: ${labelColor};">${escapeHtml(roleLabel)}</div>
-                        <div style="word-break: break-word;">${escapeHtml(msg.message)}</div>
-                    </div>
-                `;
-            }).join('');
-
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-async function handleSellerChatSubmit(e, complaintId) {
-    e.preventDefault();
-    const input = document.getElementById('chatMessageInput');
-    const message = input.value.trim();
-    if (!message) return;
-
-    const token = sessionStorage.getItem('accessToken');
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-
-    if (submitBtn) submitBtn.disabled = true;
-    try {
-        const res = await fetch(`/api/complaints/${complaintId}/chats`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ message })
-        });
-
-        if (res.ok) {
-            input.value = '';
-            await loadSellerChatMessages(complaintId);
-        } else {
-            alert('Gửi tin nhắn thất bại. Hãy kiểm tra lại kết nối.');
-        }
-    } catch (err) {
-        console.error(err);
-    } finally {
-        if (submitBtn) submitBtn.disabled = false;
-    }
-}
-
-window.addEventListener('beforeunload', () => {
-    if (sellerChatInterval) clearInterval(sellerChatInterval);
-});
-
 // ==============================================================
-
 // 15. WITHDRAWAL DETAIL VIEW
 // ==============================================================
 async function initWithdrawalDetail() {

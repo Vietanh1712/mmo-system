@@ -1,4 +1,4 @@
-﻿-- ==============================================================================
+-- ==============================================================================
 -- CƠ SỞ DỮ LIỆU TOÀN DIỆN: MMO MARKET SYSTEM (SQL SERVER)
 -- Tên tệp: MMO_Market_Schema1.sql
 -- Mô tả: Khởi tạo database, định nghĩa toàn bộ bảng biểu, ràng buộc,
@@ -133,21 +133,23 @@ GO
 CREATE TABLE KYCRequests (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     user_id BIGINT NOT NULL,
-    full_name NVARCHAR(255) NOT NULL,
-    citizen_id VARCHAR(20) NOT NULL,
-    date_of_birth DATE,
-    front_id_image VARCHAR(255) NOT NULL,
-    back_id_image VARCHAR(255) NOT NULL,
-    selfie_image VARCHAR(255) NOT NULL,
-    status VARCHAR(20) DEFAULT 'Pending',
-    rejection_reason NVARCHAR(MAX),
+    active_user_id BIGINT NULL,
+    id_number VARCHAR(50) NOT NULL,
+    id_type VARCHAR(50) NOT NULL, -- CMND, CCCD, PASSPORT, DRIVER_LICENSE
+    request_code VARCHAR(32) NOT NULL UNIQUE,
+    version INT NOT NULL DEFAULT 0,
+    front_id_image VARCHAR(255) NULL,
+    back_id_image VARCHAR(255) NULL,
+    selfie_image VARCHAR(255) NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING', -- PENDING, APPROVED, REJECTED
+    rejection_reason NVARCHAR(500) NULL,
     reviewed_by BIGINT NULL,
     reviewed_at DATETIME NULL,
     created_at DATETIME DEFAULT GETDATE(),
     updated_at DATETIME DEFAULT GETDATE(),
-    isDelete BIT DEFAULT 0,
-    CONSTRAINT FK_KYC_User FOREIGN KEY(user_id) REFERENCES Users(id),
-    CONSTRAINT FK_KYC_Staff FOREIGN KEY(reviewed_by) REFERENCES Users(id)
+    isDelete BIT NOT NULL DEFAULT 0,
+    CONSTRAINT FK_KYC_User FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION,
+    CONSTRAINT FK_KYC_Staff FOREIGN KEY (reviewed_by) REFERENCES Users(id) ON DELETE NO ACTION
 );
 GO
 
@@ -300,6 +302,7 @@ CREATE TABLE Complaints (
     description NVARCHAR(MAX) NOT NULL,
     evidence NVARCHAR(MAX),
     status VARCHAR(20) DEFAULT 'Open',
+    preferred_solution VARCHAR(50) NULL, -- REPLACEMENT hoặc REFUND
     resolution NVARCHAR(MAX),
     created_at DATETIME DEFAULT GETDATE(),
     isDelete BIT DEFAULT 0,
@@ -316,6 +319,7 @@ CREATE TABLE ShopFlags (
     complaint_id BIGINT NULL,
     reason NVARCHAR(MAX) NOT NULL,
     flag_level VARCHAR(20) DEFAULT 'Warning',
+    status VARCHAR(20) DEFAULT 'Effect', -- Bổ sung cột status ('Effect', 'Remove')
     created_at DATETIME DEFAULT GETDATE(),
     isDelete BIT DEFAULT 0,
     CONSTRAINT FK_Flags_Seller FOREIGN KEY (seller_id) REFERENCES Users(id) ON DELETE NO ACTION,
@@ -744,6 +748,92 @@ INSERT INTO SellerBankInfo (user_id, bank_name, account_number, branch, created_
 VALUES (2, N'Vietcombank', '0123456789', N'Chi nhánh Hà Nội', GETDATE(), 0);
 
 PRINT N'✓ Nạp dữ liệu Mock thành công.';
+GO
+
+-- =============================================================================
+-- KHỐI NẠP DỮ LIỆU SỬA ĐỔI TOÀN DIỆN (ĐỒNG BỘ 100% VỚI JPA ENTITY)
+-- =============================================================================
+
+-- 1. Nạp bảng Transactions
+INSERT INTO Transactions
+(customer_id, seller_id, product_id, variant_id, amount_vnd, commission_vnd, status, escrow_release_date)
+VALUES
+(13, 1, 1, 1, 65000, 3250, 'Refunded', DATEADD(day, -5, GETDATE())),
+(13, 2, 2, 2, 650000, 32500, 'Completed', DATEADD(day, -10, GETDATE())),
+(13, 3, 3, 3, 150000, 7500, 'Pending', DATEADD(day, 7, GETDATE())),
+(13, 4, 4, 4, 250000, 12500, 'Pending', DATEADD(day, 3, GETDATE())),
+(13, 5, 5, 5, 99000, 4950, 'Completed', DATEADD(day, -2, GETDATE())),
+(13, 6, 6, 6, 120000, 6000, 'Pending', NULL),
+(13, 7, 7, 7, 180000, 9000, 'Completed', DATEADD(day, -4, GETDATE())),
+(13, 8, 8, 8, 35000, 1750, 'Fail', DATEADD(day, 5, GETDATE())),
+(13, 9, 9, 9, 850000, 42500, 'Fail', NULL),
+(13, 10, 10, 10, 350000, 17500, 'Completed', DATEADD(day, -1, GETDATE())),
+(13, 10, 9, 7, 5550000, 17500, 'Completed', DATEADD(day, -1, GETDATE())),
+(13, 5, 5, 5, 99000, 4950, 'Fail', DATEADD(day, -1, GETDATE()));
+GO
+
+-- 2. Nạp bảng KYCRequests
+INSERT INTO KYCRequests
+(user_id, id_number, id_type, request_code, front_id_image, back_id_image, selfie_image, status, rejection_reason, reviewed_by, reviewed_at)
+VALUES
+(1, '001111111111', 'CCCD', 'REQ00100000000000000000000000001', 'front1.jpg', 'back1.jpg', 'selfie1.jpg', 'APPROVED', NULL, 14, GETDATE()),
+(2, '001111111112', 'CCCD', 'REQ00200000000000000000000000002', 'front2.jpg', 'back2.jpg', 'selfie2.jpg', 'APPROVED', NULL, 14, GETDATE()),
+(3, '001111111113', 'CCCD', 'REQ00300000000000000000000000003', 'front3.jpg', 'back3.jpg', 'selfie3.jpg', 'PENDING', NULL, NULL, NULL),
+(4, '001111111114', 'CCCD', 'REQ00400000000000000000000000004', 'front4.jpg', 'back4.jpg', 'selfie4.jpg', 'REJECTED', N'Ảnh CCCD mờ', 14, GETDATE()),
+(5, '001111111115', 'CCCD', 'REQ00500000000000000000000000005', 'front5.jpg', 'back5.jpg', 'selfie5.jpg', 'APPROVED', NULL, 14, GETDATE()),
+(6, '001111111116', 'CCCD', 'REQ00600000000000000000000000006', 'front6.jpg', 'back6.jpg', 'selfie6.jpg', 'PENDING', NULL, NULL, NULL),
+(7, '001111111117', 'CCCD', 'REQ00700000000000000000000000007', 'front7.jpg', 'back7.jpg', 'selfie7.jpg', 'APPROVED', NULL, 14, GETDATE()),
+(8, '001111111118', 'CCCD', 'REQ00800000000000000000000000008', 'front8.jpg', 'back8.jpg', 'selfie8.jpg', 'REJECTED', N'Thông tin không khớp', 14, GETDATE()),
+(9, '001111111119', 'CCCD', 'REQ00900000000000000000000000009', 'front9.jpg', 'back9.jpg', 'selfie9.jpg', 'PENDING', NULL, NULL, NULL),
+(10, '001111111120', 'CCCD', 'REQ01000000000000000000000000000', 'front10.jpg', 'back10.jpg', 'selfie10.jpg', 'APPROVED', NULL, 14, GETDATE());
+GO
+
+-- 3. Nạp bảng Withdrawals
+INSERT INTO Withdrawals
+(seller_id, bank_info_id, amount_vnd, status, proof_file)
+VALUES
+(2, 1, 500000, 'Rejected', NULL),
+(2, 1, 1000000, 'Approved', 'proof1.jpg'),
+(2, 1, 2000000, 'Rejected', 'proof2.jpg'),
+(2, 1, 1500000, 'Rejected', NULL),
+(2, 1, 3000000, 'Approved', 'proof3.jpg'),
+(2, 1, 750000, 'Pending', NULL),
+(2, 1, 1250000, 'Rejected', 'proof4.jpg'),
+(2, 1, 900000, 'Rejected', 'proof5.jpg'),
+(2, 1, 600000, 'Rejected', NULL),
+(2, 1, 4500000, 'Approved', 'proof6.jpg');
+GO
+
+-- 4. Nạp bảng Complaints
+INSERT INTO Complaints
+(transaction_id, customer_id, seller_id, description, evidence, status, resolution)
+VALUES
+(1, 13, 1, N'Tài khoản đăng nhập lỗi', N'img1.png', 'Resolved', N'Đã cấp lại tài khoản'),
+(2, 13, 2, N'Giao hàng chậm', N'img2.png', 'Rejected', N'Đã xử lý'),
+(3, 13, 3, N'Sản phẩm không đúng mô tả', N'img3.png', 'InProgress', NULL),
+(4, 13, 4, N'Không nhận được thông tin', N'img4.png', 'InProgress', NULL),
+(5, 13, 5, N'Key kích hoạt thất bại', N'img5.png', 'Resolved', N'Đổi key mới'),
+(6, 13, 6, N'Yêu cầu hoàn tiền', N'img6.png', 'InProgress', NULL),
+(7, 13, 7, N'Tài khoản bị khóa', N'img7.png', 'Rejected', N'Đã hỗ trợ'),
+(8, 13, 8, N'Seller phản hồi chậm', N'img8.png', 'InProgress', NULL),
+(9, 13, 9, N'Tool không hoạt động', N'img9.png', 'InProgress', NULL),
+(10, 13, 10, N'Sai thông tin sản phẩm', N'img10.png', 'Resolved', N'Đã bồi thường');
+GO
+
+-- 5. Nạp bảng ShopFlags
+INSERT INTO ShopFlags
+(seller_id, staff_id, complaint_id, reason, flag_level, status)
+VALUES
+(1, 14, 1, N'Nhiều khiếu nại liên tiếp', 'Warning', 'Effect'),
+(2, 14, 2, N'Chậm phản hồi khách hàng', 'Warning', 'Remove'),
+(3, 14, 3, N'Nghi ngờ gian lận', 'Danger', 'Effect'),
+(4, 14, 4, N'Tỷ lệ hoàn tiền cao', 'Warning', 'Remove'),
+(5, 14, 5, N'Sản phẩm lỗi nhiều lần', 'Danger', 'Effect'),
+(6, 14, 6, N'Vi phạm chính sách', 'Critical', 'Remove'),
+(7, 14, 7, N'Tài khoản bị report', 'Warning', 'Effect'),
+(8, 14, 8, N'Tỷ lệ giao hàng thấp', 'Danger', 'Remove'),
+(9, 14, 9, N'Có dấu hiệu spam', 'Critical', 'Effect'),
+(10, 14, 10, N'Kiểm tra định kỳ', 'Warning', 'Remove');
 GO
 
 -- ==============================================================================

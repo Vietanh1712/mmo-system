@@ -156,6 +156,8 @@ public class StaffChatRestController {
                 map.put("senderName", c.getSender().getFullName());
                 map.put("message", c.getMessage());
                 map.put("createdAt", c.getCreatedAt().toString());
+                // Xác định direction: out = tin nhắn của staff, in = tin nhắn từ user
+                map.put("type", c.getSender().getId().equals(staff.getId()) ? "out" : "in");
                 return map;
             }).collect(Collectors.toList());
 
@@ -193,6 +195,7 @@ public class StaffChatRestController {
             map.put("senderName", chat.getSender().getFullName());
             map.put("message", chat.getMessage());
             map.put("createdAt", chat.getCreatedAt().toString());
+            map.put("type", "out");  // Staff always sends "out"
 
             return ResponseEntity.ok(map);
         } catch (Exception e) {

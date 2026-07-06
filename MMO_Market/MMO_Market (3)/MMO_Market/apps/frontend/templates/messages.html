@@ -675,6 +675,43 @@
             if (!chat) return;
 
             const toggleBlockBtn = document.getElementById('toggle-block-btn');
+            const toggleMuteBtn = document.getElementById('toggle-mute-btn');
+            const attachBtn = document.querySelector('.messages-input-row__attach');
+
+            if (chat.contactId < 0 || chat.isComplaint) {
+                if (toggleBlockBtn) toggleBlockBtn.style.display = 'none';
+                if (toggleMuteBtn) toggleMuteBtn.style.display = 'none';
+                if (attachBtn) {
+                    attachBtn.disabled = true;
+                    attachBtn.style.opacity = '0.5';
+                    attachBtn.style.cursor = 'not-allowed';
+                }
+
+                const input = document.getElementById('message-input');
+                const sendBtn = document.querySelector('.messages-input-row__send');
+                const emojiBtn = document.querySelector('.messages-input-row__emoji');
+                let banner = document.getElementById('chat-blocked-banner');
+                if (banner) banner.remove();
+
+                if (input) {
+                    input.disabled = false;
+                    input.placeholder = "Nhập tin nhắn đối chất thương lượng...";
+                }
+                if (sendBtn) {
+                    sendBtn.disabled = false;
+                    sendBtn.style.opacity = '';
+                    sendBtn.style.cursor = '';
+                }
+                if (emojiBtn) {
+                    emojiBtn.style.pointerEvents = '';
+                    emojiBtn.style.opacity = '';
+                }
+                return;
+            }
+
+            if (toggleBlockBtn) toggleBlockBtn.style.display = 'block';
+            if (toggleMuteBtn) toggleMuteBtn.style.display = 'block';
+
             if (toggleBlockBtn) {
                 if (chat.isBlocked) {
                     toggleBlockBtn.innerHTML = '<i class="fa fa-unlock"></i> Mở chặn liên hệ';
@@ -683,7 +720,6 @@
                 }
             }
 
-            const toggleMuteBtn = document.getElementById('toggle-mute-btn');
             if (toggleMuteBtn) {
                 if (chat.isMuted) {
                     toggleMuteBtn.innerHTML = '<i class="fa fa-bell"></i> Bật thông báo';
@@ -694,7 +730,6 @@
 
             const input = document.getElementById('message-input');
             const sendBtn = document.querySelector('.messages-input-row__send');
-            const attachBtn = document.querySelector('.messages-input-row__attach');
             const emojiBtn = document.querySelector('.messages-input-row__emoji');
             
             let banner = document.getElementById('chat-blocked-banner');
@@ -769,6 +804,7 @@
                 }
             }
         }
+
 
         // Inline Search message keywords in chat
         function toggleSearchMessages(e) {
@@ -923,8 +959,12 @@
 
         function selectInitialChat() {
             const urlParams = new URLSearchParams(window.location.search);
+            const complaintIdParam = urlParams.get('complaintId');
             const sellerIdParam = urlParams.get('sellerId');
-            if (sellerIdParam) {
+            if (complaintIdParam) {
+                const cId = parseInt(complaintIdParam);
+                selectChat(-cId);
+            } else if (sellerIdParam) {
                 const sId = parseInt(sellerIdParam);
                 selectChat(sId);
             } else if (activeChatList.length > 0) {
@@ -932,6 +972,7 @@
             }
             // If no contacts and no sellerId param, leave panel empty
         }
+
 
         function startChatPolling() {
             if (chatPollInterval) clearInterval(chatPollInterval);
