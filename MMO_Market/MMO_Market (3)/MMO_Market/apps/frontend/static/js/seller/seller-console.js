@@ -159,7 +159,7 @@ async function initDashboard() {
         }
 
         // Bind recent orders/transactions table
-        const tbody = document.querySelector('.seller-table tbody');
+        const tbody = document.querySelector('.seller-table tbody') || document.querySelector('.admin-table tbody');
         if (tbody) {
             if (!data.recentTransactions || data.recentTransactions.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Chưa có đơn hàng nào gần đây.</td></tr>';
@@ -243,7 +243,7 @@ async function initShopInfo() {
 // 4. INVENTORY & PRODUCT MANAGEMENT
 // ==============================================================================
 async function initInventory() {
-    const tbody = document.querySelector('.seller-table tbody');
+    const tbody = document.querySelector('.seller-table tbody') || document.querySelector('.admin-table tbody');
     if (!tbody) return;
 
     try {
@@ -697,7 +697,7 @@ async function initProductEdit() {
 
     const select = document.getElementById('category');
     const form = document.querySelector('.profile-edit-form');
-    const tbody = document.querySelector('.seller-table tbody');
+    const tbody = document.querySelector('.seller-table tbody') || document.querySelector('.admin-table tbody');
     if (!form || !tbody) return;
 
     try {
@@ -714,7 +714,8 @@ async function initProductEdit() {
         const p = await pRes.json();
 
         // Populate fields
-        document.querySelector('.seller-card__subtitle').textContent = `Sản phẩm #${p.id} — ${p.name}`;
+        const subtitleEl = document.querySelector('.seller-card__subtitle') || document.querySelector('.view-header p');
+        if (subtitleEl) subtitleEl.textContent = `Sản phẩm #${p.id} — ${p.name}`;
         document.getElementById('productName').value = p.name || '';
         document.getElementById('description').value = p.description || '';
         if (document.getElementById('userGuide')) {
@@ -826,7 +827,8 @@ async function initVariantForm() {
             const v = await res.json();
 
             currentProdId = v.productId;
-            document.querySelector('.seller-card__subtitle').textContent = `Sản phẩm: ${v.productName}`;
+            const subtitleEl1 = document.querySelector('.seller-card__subtitle') || document.querySelector('.view-header p');
+            if (subtitleEl1) subtitleEl1.textContent = `Sản phẩm: ${v.productName}`;
             document.getElementById('variantName').value = v.variantName;
             document.getElementById('priceVnd').value = v.priceVnd;
             document.getElementById('status').value = v.status;
@@ -879,7 +881,8 @@ async function initVariantForm() {
             const prodRes = await sellerFetch(`/products/${productId}`);
             if (prodRes.ok) {
                 const p = await prodRes.json();
-                document.querySelector('.seller-card__subtitle').textContent = `Sản phẩm: ${p.name}`;
+                const subtitleEl2 = document.querySelector('.seller-card__subtitle') || document.querySelector('.view-header p');
+                if (subtitleEl2) subtitleEl2.textContent = `Sản phẩm: ${p.name}`;
                 productType = p.productType || 'ACCOUNT';
             }
 
@@ -996,7 +999,7 @@ async function initVariantForm() {
 // 8. TRANSACTIONS VIEW (SALES HISTORY)
 // ==============================================================
 async function initTransactions() {
-    const tbody = document.querySelector('.seller-table tbody');
+    const tbody = document.querySelector('.seller-table tbody') || document.querySelector('.admin-table tbody');
     if (!tbody) return;
 
     try {
@@ -1566,7 +1569,7 @@ async function initReviews() {
 // 13. COMPLAINTS LIST VIEW
 // ==============================================================
 async function initComplaints() {
-    const tbody = document.querySelector('.seller-table tbody');
+    const tbody = document.querySelector('.seller-table tbody') || document.querySelector('.admin-table tbody');
     if (!tbody) return;
 
     try {
