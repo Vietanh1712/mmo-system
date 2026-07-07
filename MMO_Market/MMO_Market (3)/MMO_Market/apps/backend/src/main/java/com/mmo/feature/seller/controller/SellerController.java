@@ -310,6 +310,26 @@ public class SellerController {
             Category category = categoryRepository.findById(categoryId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy danh mục được chọn."));
 
+            // Check shop level restrictions
+            if (seller.getShopLevel() != null) {
+                if (seller.getShopLevel() == 0) {
+                    long activeProductsCount = productRepository.findBySellerAndIsDeleteFalseOrderByCreatedAtDesc(seller).size();
+                    if (activeProductsCount >= 5) {
+                        return ResponseEntity.badRequest().body(Map.of("message", "Shop của bạn đang trong trạng thái cảnh cáo. Chỉ được đăng tối đa 5 sản phẩm."));
+                    }
+                } else if (seller.getShopLevel() == 1) {
+                    for (Map<String, Object> vData : variantsList) {
+                        Object priceObj = vData.get("priceVnd");
+                        if (priceObj != null) {
+                            Long price = Long.valueOf(priceObj.toString());
+                            if (price > 200000) {
+                                return ResponseEntity.badRequest().body(Map.of("message", "Shop Mới (Level 1) chỉ được phép đăng bán sản phẩm có giá tối đa 200.000 VNĐ."));
+                            }
+                        }
+                    }
+                }
+            }
+
             Product p = new Product();
             p.setSeller(seller);
             p.setCategory(category);
