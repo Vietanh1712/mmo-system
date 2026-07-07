@@ -6,12 +6,14 @@
 - `apps/frontend/templates/staff/withdrawals.html`
 - `apps/frontend/templates/staff/complaints.html`
 - `apps/frontend/templates/staff/transactions.html` — Giao dịch toàn sàn (v1.1: bộ lọc ngày rút gọn còn 1 trường `fromDate`; v1.3: load động trạng thái từ database và Việt hóa nhãn hiển thị)
+- `apps/frontend/templates/staff/shop-registrations.html` — Quản lý yêu cầu mở Shop (v2.0: đồng bộ hóa giao diện gồm thống kê, bộ lọc từ khóa/trạng thái, phân trang và Modal xem chi tiết kiểm duyệt)
 
 ## JS Scripts
 - `apps/frontend/static/js/staff/staff-kyc.js`
 - `apps/frontend/static/js/staff/staff-kyc-detail.js` — (v1.1: bind fullName, email, dateOfBirth, address, rejectionReason từ API)
 - `apps/frontend/static/js/staff/staff-ui.js`
 - `apps/frontend/static/js/staff/staff-chat.js`
+- `apps/frontend/static/js/staff/staff-shop-registrations.js` — (v2.0: gọi API thống kê & tìm kiếm phân trang mới, hiển thị badge màu trạng thái, đồng bộ phân trang chung và điều khiển dữ liệu chi tiết lên Modal)
 
 ## Changelog
 | Version | Date | Mô tả |
@@ -34,4 +36,5 @@
 | 1.15 | 2026-07-02 | Xóa nút '+ Cắm cờ mới' khỏi tiêu đề trang quản lý cờ cảnh báo (flags.html) để tránh việc Staff tự ý tạo cờ không đúng quy trình |
 | 1.16 | 2026-07-02 | Bổ sung trường thông tin 'Lý do / Kết quả' lấy từ thuộc tính resolution của bảng Complaints vào thông tin chi tiết của khiếu nại (complaint-detail.html) |
 | 1.17 | 2026-07-04 | Loại bỏ tính năng tìm kiếm theo loại khiếu nại ở trang quản lý khiếu nại, loại bỏ cột 'Loại' trong bảng danh sách |
-| 1.18 | 2026-07-04 | Triển khai API lấy danh sách trạng thái khiếu nại động từ Database và tải động danh sách trạng thái lên bộ lọc giao diện thay vì hardcode |
+| 1.18 | 2026-07-04 | Triển khai API lấy danh sách trạng thái khiếu nại động từ Database và tải động danh sách trạng thái lên bộ lọc giao diện thay vì hardcode |
+| 2.0 | 2026-07-07 | Tích hợp Quản lý Shop vào Trung tâm Staff (Sidebar, Dashboard Quick Access), nâng cấp giao diện đồng bộ (thống kê, bộ lọc trạng thái yêu cầu & trạng thái shop, phân trang); thay thế cột danh mục bằng 3 cột: Trạng thái Shop, Tiền cọc, Số dư. Sửa lỗi thiếu script staff-ui.js hiển thị phân trang, Việt hóa hoàn chỉnh trạng thái; tải động danh sách trạng thái shop và trạng thái yêu cầu từ database lên bộ lọc; thay thế nút xem chi tiết ở cột Thao tác bằng nút gạt Bật/Tắt (Active/Banned) kiểm soát trực tiếp trạng thái hoạt động của Shop. |

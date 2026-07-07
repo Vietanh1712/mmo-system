@@ -10,17 +10,19 @@
     <list default="true" id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/PLAN.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/PLAN.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/SPEC.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/SPEC.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.sdd/specs/frontend/feat-staff/PLAN.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/frontend/feat-staff/PLAN.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.sdd/specs/frontend/feat-staff/SPEC.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/frontend/feat-staff/SPEC.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/service/impl/ComplaintServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/service/impl/ComplaintServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/kyc/controller/api/StaffKycController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/kyc/controller/api/StaffKycController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/preorder/service/PreOrderService.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/preorder/service/PreOrderService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/product/controller/ProductSearchController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/product/controller/ProductSearchController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/staff/controller/mvc/StaffController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/staff/controller/mvc/StaffController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/PreOrderRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/PreOrderRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-kyc.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-kyc.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/kyc.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/kyc.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/transactions.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/transactions.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/withdrawals.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/withdrawals.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/seller/controller/api/ShopRegistrationController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/seller/controller/api/ShopRegistrationController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/seller/service/ShopRegistrationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/seller/service/ShopRegistrationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/SellerRegistrationRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/SellerRegistrationRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/UserRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dto/ShopRegistrationResponseDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dto/ShopRegistrationResponseDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/model/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/model/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-shop-registrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-shop-registrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/fragments/staff-sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/fragments/staff-sidebar.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/dashboard.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/shop-registrations.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/shop-registrations.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
