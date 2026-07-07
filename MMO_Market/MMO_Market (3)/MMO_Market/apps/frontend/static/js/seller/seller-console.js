@@ -125,6 +125,18 @@ async function initSellerLayout() {
             avatarEl.textContent = data.shopName.charAt(0).toUpperCase();
         }
 
+        const levelBadgeEl = document.querySelector('.seller-sidebar__level-badge');
+        if (levelBadgeEl) {
+            const lvl = data.shopLevel !== undefined ? data.shopLevel : 1;
+            if (lvl === 0) {
+                levelBadgeEl.innerHTML = `<span style="color: #dc2626; background: #fee2e2; padding: 2px 6px; border-radius: 4px; display: inline-block; font-weight: 700; font-size: 11px;"><i class="fa fa-exclamation-triangle"></i> Cảnh cáo (Lvl 0)</span>`;
+            } else if (lvl === 2) {
+                levelBadgeEl.innerHTML = `<span style="color: #16a34a; background: #dcfce7; padding: 2px 6px; border-radius: 4px; display: inline-block; font-weight: 700; font-size: 11px;"><i class="fa fa-check-circle"></i> Uy tín (Lvl 2)</span>`;
+            } else {
+                levelBadgeEl.innerHTML = `<span style="color: #0284c7; background: #e0f2fe; padding: 2px 6px; border-radius: 4px; display: inline-block; font-weight: 700; font-size: 11px;"><i class="fa fa-star-o"></i> Shop mới (Lvl 1)</span>`;
+            }
+        }
+
         // Fetch dashboard to update balance
         const dashRes = await sellerFetch('/dashboard');
         if (dashRes.ok) {
@@ -156,6 +168,43 @@ async function initDashboard() {
             cards[1].textContent = data.completedSales;
             cards[2].textContent = data.activeProductsCount;
             cards[3].textContent = data.openComplaintsCount;
+        }
+
+        const lvlBadge = document.getElementById('dashboard-shop-level-badge');
+        if (lvlBadge) {
+            const lvl = data.shopLevel !== undefined ? data.shopLevel : 1;
+            if (lvl === 0) {
+                lvlBadge.innerHTML = `<span style="color: #dc2626; background: #fee2e2; padding: 4px 10px; border-radius: 6px; display: inline-block; font-weight: 700; font-size: 13px;"><i class="fa fa-exclamation-triangle"></i> Shop Cảnh Cáo (Level 0)</span>`;
+            } else if (lvl === 2) {
+                lvlBadge.innerHTML = `<span style="color: #16a34a; background: #dcfce7; padding: 4px 10px; border-radius: 6px; display: inline-block; font-weight: 700; font-size: 13px;"><i class="fa fa-check-circle"></i> Shop Uy Tín (Level 2)</span>`;
+            } else {
+                lvlBadge.innerHTML = `<span style="color: #0284c7; background: #e0f2fe; padding: 4px 10px; border-radius: 6px; display: inline-block; font-weight: 700; font-size: 13px;"><i class="fa fa-star-o"></i> Shop Mới (Level 1)</span>`;
+            }
+        }
+
+        const alertContainer = document.getElementById('shop-warning-alert-container');
+        if (alertContainer) {
+            const lvl = data.shopLevel !== undefined ? data.shopLevel : 1;
+            if (lvl === 0) {
+                const disputePercent = (data.disputeRate * 100).toFixed(2);
+                alertContainer.innerHTML = `
+                    <div style="background-color: #fee2e2; border-left: 4px solid #ef4444; padding: 16px; border-radius: 6px; margin-bottom: 24px; color: #7f1d1d;">
+                        <h4 style="margin: 0 0 6px 0; font-weight: 700; display: flex; align-items: center; gap: 8px; color: #dc2626;">
+                            <i class="fa fa-exclamation-circle" style="font-size: 18px;"></i> CẢNH BÁO: CỬA HÀNG ĐANG Ở CHẾ ĐỘ THẮT CHẶT (LEVEL 0)
+                        </h4>
+                        <p style="margin: 0; font-size: 13.5px;">
+                            Tỷ lệ khiếu nại lỗi tổng thể của Shop đã đạt từ 2% trở lên (hiện tại: <strong>${disputePercent}%</strong>).
+                        </p>
+                        <ul style="margin: 6px 0 0 0; padding-left: 20px; font-size: 13px; line-height: 1.5;">
+                            <li>Thời gian giam tiền (Escrow) tăng lên <strong>7 ngày</strong> đối với mọi đơn hàng mới phát sinh.</li>
+                            <li>Giới hạn hiển thị công khai tối đa <strong>5 sản phẩm</strong> cùng lúc trên sàn.</li>
+                            <li><strong>Cách khắc phục:</strong> Xử lý các khiếu nại tồn đọng và tiếp tục giao dịch an toàn để giảm tỷ lệ lỗi xuống dưới 2%, hệ thống sẽ tự động khôi phục level của Shop.</li>
+                        </ul>
+                    </div>
+                `;
+            } else {
+                alertContainer.innerHTML = '';
+            }
         }
 
         // Bind recent orders/transactions table

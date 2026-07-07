@@ -84,6 +84,22 @@ public class SellerController {
         return user;
     }
 
+    private int calculateShopLevel(User seller) {
+        long completedCount = transactionRepository.countCompletedSalesBySeller(seller);
+        long totalSold = transactionRepository.countTotalSalesBySeller(seller);
+        long resolvedComplaints = complaintRepository.countResolvedComplaintsBySeller(seller);
+
+        double disputeRate = totalSold > 0 ? (double) resolvedComplaints / totalSold : 0.0;
+
+        if (disputeRate >= 0.02) {
+            return 0; // Shop Cảnh Cáo (Level 0)
+        } else if (completedCount < 20) {
+            return 1; // Shop Mới (Level 1)
+        } else {
+            return 2; // Shop Uy Tín (Level 2)
+        }
+    }
+
     // 1. Dashboard API
     @GetMapping("/dashboard")
     public ResponseEntity<?> getDashboard(@AuthenticationPrincipal Long userId) {
@@ -114,6 +130,10 @@ public class SellerController {
                     })
                     .collect(Collectors.toList());
 
+            long resolvedComplaints = complaintRepository.countResolvedComplaintsBySeller(seller);
+            long totalSold = transactionRepository.countTotalSalesBySeller(seller);
+            double disputeRate = totalSold > 0 ? (double) resolvedComplaints / totalSold : 0.0;
+
             Map<String, Object> result = new HashMap<>();
             result.put("fullName", seller.getFullName());
             result.put("email", seller.getEmail());
@@ -124,6 +144,8 @@ public class SellerController {
             result.put("activeProductsCount", activeProductsCount);
             result.put("openComplaintsCount", openComplaints);
             result.put("recentTransactions", recentTransactions);
+            result.put("shopLevel", calculateShopLevel(seller));
+            result.put("disputeRate", disputeRate);
 
             return ResponseEntity.ok(result);
         } catch (Exception e) {
@@ -148,6 +170,7 @@ public class SellerController {
             result.put("accountNumber", bank != null ? bank.getAccountNumber() : "");
             result.put("accountHolder", seller.getFullName().toUpperCase());
             result.put("branch", bank != null ? bank.getBranch() : "");
+            result.put("shopLevel", calculateShopLevel(seller));
 
             return ResponseEntity.ok(result);
         } catch (Exception e) {
@@ -292,6 +315,12 @@ public class SellerController {
     public ResponseEntity<?> createProduct(@AuthenticationPrincipal Long userId, @RequestBody Map<String, Object> request) {
         try {
             User seller = getSeller(userId);
+            long activeProductsCount = productRepository.countBySellerIdAndIsDeleteFalse(seller.getId());
+            int shopLevel = calculateShopLevel(seller);
+            if (shopLevel == 0 && activeProductsCount >= 5) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Cửa hàng của bạn đang ở Level 0 (Cảnh cáo) do tỷ lệ lỗi khiếu nại >= 2%. Bạn chỉ được hiển thị tối đa 5 sản phẩm cùng lúc trên sàn. Hãy xóa bớt sản phẩm cũ hoặc khắc phục tỷ lệ khiếu nại để đăng bán thêm."));
+            }
+
             String name = (String) request.get("name");
             String description = (String) request.get("description");
             String userGuide = (String) request.get("userGuide");

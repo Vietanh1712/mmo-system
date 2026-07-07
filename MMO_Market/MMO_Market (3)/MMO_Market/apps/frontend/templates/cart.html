@@ -10,6 +10,16 @@
     <link rel="stylesheet" th:href="@{/css/features/search-results.css}">
     <link rel="stylesheet" th:href="@{/css/components/toast.css}">
     <style>
+        /* Hide input spin buttons */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
         .cart-page {
             max-width: 1200px;
             margin: 0 auto;
@@ -672,11 +682,12 @@
                     <div class="cart-item__tag"><i class="fa fa-tag"></i>${getProductTag(item)}</div>
                     <h2 class="cart-item__name">${item.productName}</h2>
                     <div class="cart-item__seller">Bán bởi: <strong>${item.sellerName}</strong></div>
+                    <div class="cart-item__variant" style="font-size: 12px; margin-top: 4px; color: var(--text-muted);">Phân loại: <strong style="color: var(--brand-accent);">${item.variantLabel || 'Mặc định'}</strong></div>
                 </div>
                 <div class="cart-item__side">
                     <div class="qty-control" aria-label="Điều chỉnh số lượng">
                         <button type="button" onclick="changeQuantity(${index}, -1)">-</button>
-                        <span>${item.quantity}</span>
+                        <input type="number" min="1" value="${item.quantity}" style="width: 42px; height: 28px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; font-weight: 600; color: var(--text-main); background: transparent; outline: none; margin: 0 4px;" onchange="setQuantity(${index}, this.value)">
                         <button type="button" onclick="changeQuantity(${index}, 1)">+</button>
                     </div>
                     <div class="cart-item__price">${formatVND(item.price * item.quantity)}</div>
@@ -711,6 +722,16 @@
 
     function changeQuantity(index, delta) {
         cart[index].quantity = Math.max(1, cart[index].quantity + delta);
+        saveCart();
+        renderCart();
+    }
+
+    function setQuantity(index, value) {
+        let val = parseInt(value, 10);
+        if (isNaN(val) || val < 1) {
+            val = 1;
+        }
+        cart[index].quantity = val;
         saveCart();
         renderCart();
     }

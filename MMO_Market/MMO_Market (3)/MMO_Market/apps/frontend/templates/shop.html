@@ -36,11 +36,12 @@
                     <span class="shop-profile-card__status-dot"></span>
                 </div>
                 <div class="shop-profile-card__details">
-                    <div class="shop-profile-card__title-row">
+                    <div class="shop-profile-card__title-row" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                         <h1 class="shop-profile-card__name" id="shop-name">Đang tải...</h1>
                         <span id="shop-verified-badge" class="shop-profile-card__verified" style="display: none;">
                             <i class="fa fa-check-circle"></i> Đã xác minh
                         </span>
+                        <div id="shop-detail-level-badge"></div>
                     </div>
                     <p class="shop-profile-card__joined"><i class="fa fa-calendar-o"></i> Tham gia: <span
                             id="shop-joined-date">...</span></p>
@@ -273,6 +274,18 @@
 
                     if (data.isVerified) {
                         document.getElementById('shop-verified-badge').style.display = 'inline-flex';
+                    }
+
+                    const lvlBadge = document.getElementById('shop-detail-level-badge');
+                    if (lvlBadge) {
+                        const lvl = data.shopLevel !== undefined ? data.shopLevel : 1;
+                        if (lvl === 0) {
+                            lvlBadge.innerHTML = `<span style="color: #dc2626; background: #fee2e2; padding: 2px 8px; border-radius: 4px; display: inline-block; font-weight: 700; font-size: 11px;"><i class="fa fa-exclamation-triangle"></i> Shop Cảnh Cáo (Level 0)</span>`;
+                        } else if (lvl === 2) {
+                            lvlBadge.innerHTML = `<span style="color: #16a34a; background: #dcfce7; padding: 2px 8px; border-radius: 4px; display: inline-block; font-weight: 700; font-size: 11px;"><i class="fa fa-check-circle"></i> Shop Uy Tín (Level 2)</span>`;
+                        } else {
+                            lvlBadge.innerHTML = `<span style="color: #0284c7; background: #e0f2fe; padding: 2px 8px; border-radius: 4px; display: inline-block; font-weight: 700; font-size: 11px;"><i class="fa fa-star-o"></i> Shop Mới (Level 1)</span>`;
+                        }
                     }
 
                     isSellerFollowing = !!data.isFollowing;
@@ -713,6 +726,7 @@
             const cartItem = {
                 productId: product.productId,
                 duration: 1,
+                variantLabel: '',
                 productName: product.productName,
                 sellerName: product.sellerName || document.getElementById('shop-name').innerText || 'VipStore',
                 price: product.price,

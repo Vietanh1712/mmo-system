@@ -144,7 +144,10 @@
                     <div class="shop-avatar">N</div>
                     <div class="shop-identity">
                         <span class="shop-name">NetflixVN Store</span>
-                        <span class="shop-verified"><i class="fa fa-check-circle"></i> Đã xác minh</span>
+                        <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 2px;">
+                            <span class="shop-verified" style="font-size: 11px;"><i class="fa fa-check-circle"></i> Đã xác minh</span>
+                            <div id="product-detail-shop-level-badge"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -910,6 +913,17 @@
                         const shopVerifiedEl = document.querySelector('.shop-verified');
                         if (shopVerifiedEl) {
                             shopVerifiedEl.style.display = data.isVerified ? 'inline-flex' : 'none';
+                        }
+                        const lvlBadge = document.getElementById('product-detail-shop-level-badge');
+                        if (lvlBadge) {
+                            const lvl = data.shopLevel !== undefined ? data.shopLevel : 1;
+                            if (lvl === 0) {
+                                lvlBadge.innerHTML = `<span style="color: #dc2626; background: #fee2e2; padding: 1px 6px; border-radius: 4px; display: inline-block; font-weight: 700; font-size: 10px; width: max-content;"><i class="fa fa-exclamation-triangle"></i> Cảnh cáo (Lvl 0)</span>`;
+                            } else if (lvl === 2) {
+                                lvlBadge.innerHTML = `<span style="color: #16a34a; background: #dcfce7; padding: 1px 6px; border-radius: 4px; display: inline-block; font-weight: 700; font-size: 10px; width: max-content;"><i class="fa fa-check-circle"></i> Uy tín (Lvl 2)</span>`;
+                            } else {
+                                lvlBadge.innerHTML = `<span style="color: #0284c7; background: #e0f2fe; padding: 1px 6px; border-radius: 4px; display: inline-block; font-weight: 700; font-size: 10px; width: max-content;"><i class="fa fa-star-o"></i> Shop mới (Lvl 1)</span>`;
+                            }
                         }
                     })
                     .catch(err => console.warn("Failed to load seller stats dynamically"));

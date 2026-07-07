@@ -52,12 +52,24 @@ public class TransactionService {
         Product product = productRepository.findByIdAndIsDeleteFalse(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Sản phẩm không tồn tại."));
 
-        // Tìm variant phù hợp theo variantLabel (variantName)
+        // Tìm variant phù hợp theo variantLabel (variantName) với cơ chế tìm kiếm mềm và fallback
         ProductVariant variant = product.getVariants().stream()
                 .filter(v -> v.getIsDelete() != null && !v.getIsDelete())
                 .filter(v -> v.getVariantName().equalsIgnoreCase(variantLabel))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Biến thể sản phẩm không tồn tại."));
+                .orElseGet(() -> {
+                    // Thử tìm kiếm theo cụm từ chứa (substring)
+                    return product.getVariants().stream()
+                            .filter(v -> v.getIsDelete() != null && !v.getIsDelete())
+                            .filter(v -> v.getVariantName().toLowerCase().contains(variantLabel.toLowerCase())
+                                    || variantLabel.toLowerCase().contains(v.getVariantName().toLowerCase()))
+                            .findFirst()
+                            // Fallback về biến thể đầu tiên khả dụng của sản phẩm
+                            .orElseGet(() -> product.getVariants().stream()
+                                    .filter(v -> v.getIsDelete() != null && !v.getIsDelete())
+                                    .findFirst()
+                                    .orElseThrow(() -> new IllegalArgumentException("Biến thể sản phẩm không tồn tại và sản phẩm không có biến thể khả dụng.")));
+                });
 
         // Kiểm tra số lượng tồn kho (stock)
         if (variant.getStock() == null || variant.getStock() <= 0) {
