@@ -10,4 +10,5 @@ import java.util.List;
 @Repository
 public interface PreOrderRepository extends JpaRepository<PreOrder, Long> {
     List<PreOrder> findByCustomerAndIsDeleteFalse(User customer);
+    List<PreOrder> findByCustomerAndIsDeleteFalseOrderByCreatedAtDesc(User customer);
 }

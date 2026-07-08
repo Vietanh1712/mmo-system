@@ -62,7 +62,7 @@
                                     </option>
                                     <option th:each="s : ${statuses}"
                                             th:value="${s}"
-                                            th:text="${s}"
+                                            th:text="${#strings.toLowerCase(s) == 'pending' ? 'Chờ duyệt' : (#strings.toLowerCase(s) == 'approved' ? 'Hoàn tất' : (#strings.toLowerCase(s) == 'rejected' ? 'Từ chối' : s))}"
                                             th:selected="${s == selectedStatus}">
                                     </option>
                                 </select>
@@ -96,6 +96,7 @@
                         <table class="ds-table">
                             <thead>
                             <tr>
+                                <th class="ds-table-center" style="width: 60px;">STT</th>
                                 <th>Mã GD</th>
                                 <th>Seller</th>
                                 <th>Số tiền</th>
@@ -106,7 +107,8 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <tr th:each="w : ${withdrawals}">
+                            <tr th:each="w, iterStat : ${withdrawals}">
+                                <td class="ds-table-center" th:text="${currentPage * pageSize + iterStat.count}">1</td>
                                 <td>
                                     #WD-
                                     <span th:text="${w.id}"></span>
@@ -138,11 +140,10 @@
 
                                 </td>
                                 <td class="ds-table-center">
-
-                                    <span
-                                         class="ds-badge"
-                                         th:text="${w.status}">
-                                      </span>
+                                    <span class="ds-badge"
+                                          th:classappend="${#strings.toLowerCase(w.status) == 'approved' ? 'ds-badge-success' : (#strings.toLowerCase(w.status) == 'rejected' ? 'ds-badge-danger' : 'ds-badge-warning')}"
+                                          th:text="${#strings.toLowerCase(w.status) == 'pending' ? 'Chờ duyệt' : (#strings.toLowerCase(w.status) == 'approved' ? 'Hoàn tất' : (#strings.toLowerCase(w.status) == 'rejected' ? 'Từ chối' : w.status))}">
+                                    </span>
                                 </td>
                                 <td
                                         th:text="${w.createdAt}">

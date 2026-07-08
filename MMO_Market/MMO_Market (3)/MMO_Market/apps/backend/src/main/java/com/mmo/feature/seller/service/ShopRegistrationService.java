@@ -13,10 +13,15 @@ import com.mmo.shared.model.KycStatus;
 import com.mmo.shared.model.SellerRegistration;
 import com.mmo.shared.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -81,6 +86,48 @@ public class ShopRegistrationService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public Page<ShopRegistrationResponseDto> getAllRegistrations(String status, String shopStatus, String keyword, int page, int size) {
+        org.springframework.data.domain.Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        String cleanStatus = (status == null || status.isBlank()) ? null : status.trim();
+        String cleanShopStatus = (shopStatus == null || shopStatus.isBlank()) ? null : shopStatus.trim();
+        String cleanKeyword = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
+
+        Long searchId = null;
+        if (cleanKeyword != null) {
+            String kwUpper = cleanKeyword.toUpperCase();
+            if (kwUpper.startsWith("SHOP-")) {
+                try {
+                    searchId = Long.parseLong(kwUpper.substring(5).trim());
+                } catch (NumberFormatException ignored) {}
+            } else {
+                try {
+                    searchId = Long.parseLong(cleanKeyword);
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+
+        Page<SellerRegistration> regPage = sellerRegistrationRepository.searchRegistrations(cleanStatus, cleanShopStatus, cleanKeyword, searchId, pageable);
+        return regPage.map(this::mapToDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Long> getRegistrationStats() {
+        Map<String, Long> stats = new HashMap<>();
+
+        long total = sellerRegistrationRepository.countByIsDeleteFalse();
+        long pending = sellerRegistrationRepository.countByStatusIgnoreCaseAndIsDeleteFalse("PENDING");
+        long approved = sellerRegistrationRepository.countByStatusIgnoreCaseAndIsDeleteFalse("APPROVED");
+        long rejected = sellerRegistrationRepository.countByStatusIgnoreCaseAndIsDeleteFalse("REJECTED");
+
+        stats.put("total", total);
+        stats.put("pending", pending);
+        stats.put("approved", approved);
+        stats.put("rejected", rejected);
+        return stats;
+    }
+
     @Transactional
     public ShopRegistrationResponseDto reviewRegistration(Long registrationId, ShopRegistrationReviewDto review) {
         SellerRegistration registration = sellerRegistrationRepository.findById(registrationId)
@@ -110,6 +157,7 @@ public class ShopRegistrationService {
     }
 
     private ShopRegistrationResponseDto mapToDto(SellerRegistration registration) {
+        User user = registration.getUser();
         return ShopRegistrationResponseDto.builder()
                 .id(registration.getId())
                 .status(registration.getStatus())
@@ -121,6 +169,40 @@ public class ShopRegistrationService {
                 .supportEmail(registration.getSupportEmail())
                 .supportPhone(registration.getSupportPhone())
                 .rejectionReason(registration.getRejectionReason())
+                .shopStatus(user != null ? user.getShopStatus() : null)
+                .depositVnd(user != null ? user.getDepositVnd() : 0L)
+                .balanceVnd(user != null ? user.getBalanceVnd() : 0L)
+                .ownerName(user != null ? user.getFullName() : null)
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> getDistinctShopStatuses() {
+        return userRepository.findDistinctShopStatuses();
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> getDistinctStatuses() {
+        return sellerRegistrationRepository.findDistinctStatuses();
+    }
+
+    @Transactional
+    public ShopRegistrationResponseDto toggleShopStatus(Long registrationId, boolean active) {
+        SellerRegistration registration = sellerRegistrationRepository.findById(registrationId)
+                .orElseThrow(() -> new IllegalArgumentException("Yêu cầu mở Shop không tồn tại."));
+        
+        User user = registration.getUser();
+        if (user == null) {
+            throw new IllegalArgumentException("Người dùng liên kết không tồn tại.");
+        }
+        
+        if (active) {
+            user.setShopStatus("Active");
+        } else {
+            user.setShopStatus("Banned");
+        }
+        
+        userRepository.save(user);
+        return mapToDto(registration);
     }
 }

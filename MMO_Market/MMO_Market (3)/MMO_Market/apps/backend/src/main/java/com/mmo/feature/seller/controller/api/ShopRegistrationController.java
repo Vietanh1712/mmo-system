@@ -5,6 +5,7 @@ import com.mmo.shared.dto.ShopRegistrationRequestDto;
 import com.mmo.shared.dto.ShopRegistrationResponseDto;
 import com.mmo.shared.dto.ShopRegistrationReviewDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import com.mmo.feature.seller.service.ShopRegistrationService;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/shop-registrations")
@@ -48,8 +50,32 @@ public class ShopRegistrationController {
 
     @GetMapping
     @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
-    public ResponseEntity<List<ShopRegistrationResponseDto>> getAllPendingRegistrations() {
-        return ResponseEntity.ok(shopRegistrationService.getAllPendingRegistrations());
+    public ResponseEntity<Page<ShopRegistrationResponseDto>> getAllRegistrations(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String shopStatus,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(shopRegistrationService.getAllRegistrations(status, shopStatus, keyword, page, size));
+    }
+
+    @GetMapping("/stats")
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Long>> getRegistrationStats() {
+        return ResponseEntity.ok(shopRegistrationService.getRegistrationStats());
+    }
+
+    @GetMapping("/shop-statuses")
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
+    public ResponseEntity<List<String>> getDistinctShopStatuses() {
+        return ResponseEntity.ok(shopRegistrationService.getDistinctShopStatuses());
+    }
+
+    @GetMapping("/statuses")
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
+    public ResponseEntity<List<String>> getDistinctStatuses() {
+        return ResponseEntity.ok(shopRegistrationService.getDistinctStatuses());
     }
 
     @PutMapping("/{id}/review")
@@ -59,6 +85,19 @@ public class ShopRegistrationController {
             ShopRegistrationResponseDto response = shopRegistrationService.reviewRegistration(id, review);
             return ResponseEntity.ok(response);
         } catch (IllegalStateException | IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(ShopRegistrationResponseDto.builder().status("ERROR").description(e.getMessage()).build());
+        }
+    }
+
+    @PutMapping("/{id}/toggle-status")
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
+    public ResponseEntity<ShopRegistrationResponseDto> toggleShopStatus(
+            @PathVariable Long id,
+            @RequestParam boolean active) {
+        try {
+            ShopRegistrationResponseDto response = shopRegistrationService.toggleShopStatus(id, active);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(ShopRegistrationResponseDto.builder().status("ERROR").description(e.getMessage()).build());
         }
     }

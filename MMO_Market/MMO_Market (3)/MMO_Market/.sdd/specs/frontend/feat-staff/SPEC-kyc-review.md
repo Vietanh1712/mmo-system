@@ -5,8 +5,9 @@
 > **Templates:** `templates/staff/kyc.html`, `templates/staff/kyc-detail.html`
 > **CSS Script:** `static/css/customer/style.css`
 > **JS Scripts:** `static/js/staff-kyc.js`, `static/js/staff-kyc-detail.js`
-> **Version:** 1.0 | **Status:** Draft
+> **Version:** 1.1 | **Status:** Active
 > **Backend ref:** `feat-kyc/UC-03-kyc-verification.md`
+> **Last Updated:** 2026-07-01
 
 ---
 
@@ -71,6 +72,23 @@ Trang kiểm duyệt hồ sơ KYC cung cấp giao diện dành riêng cho nhân 
 ### 4.2 Nút Phê Duyệt & Hộp Thoại Từ Chối
 * **Nút Phê Duyệt (`.btn-approve`):** Màu xanh lá, click hiển thị modal xác nhận nhanh "Phê duyệt hồ sơ này?".
 * **Nút Từ Chối (`.btn-reject`):** Màu đỏ, click hiển thị hộp thoại yêu cầu nhập bắt buộc lý do từ chối (rejection reason) từ Staff trước khi gửi.
+
+### 4.3 Khối Thông Tin Người Nộp — `.staff-info-list` (Cập nhật 2026-07-01)
+Phần "Thông tin người nộp" trên trang chi tiết KYC phải hiển thị đầy đủ các trường sau (lấy từ bảng `Users` và `KycRequest`):
+
+| Trường | Nguồn dữ liệu | Ghi chú |
+|---|---|---|
+| Họ và tên | `Users.full_name` | Hiển thị `-` nếu null |
+| Email | `Users.email` | |
+| Ngày sinh | `Users.date_of_birth` | Định dạng `YYYY-MM-DD` |
+| Địa chỉ | `Users.address` | Hiển thị `-` nếu null |
+| Loại giấy tờ | `KycRequest.id_type` | |
+| Số giấy tờ | `KycRequest.id_number` | |
+| Ngày gửi | `KycRequest.created_at` | Format `vi-VN` locale |
+| Lý do từ chối | `KycRequest.rejection_reason` | Luôn hiển thị, hiển thị `-` nếu NULL. Chữ màu đỏ để nổi bật. |
+
+**Backend DTO mapping:** `KycResponseDto` mở rộng các trường `fullName`, `email`, `address`, `dateOfBirth`, `rejectionReason`.
+**JS binding:** `staff-kyc-detail.js` tải từ `GET /api/v1/staff/kyc/{id}` và populate vào các phần tử HTML đã định danh.
 
 ---
 

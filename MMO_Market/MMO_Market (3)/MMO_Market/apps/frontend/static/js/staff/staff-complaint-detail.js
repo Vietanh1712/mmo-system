@@ -24,7 +24,16 @@ function formatDateString(dateStr) {
 }
 
 async function loadComplaintDetails() {
-    const id = sessionStorage.getItem('selectedComplaintId') || 'CMP-3310';
+    const urlParams = new URLSearchParams(window.location.search);
+    let id = urlParams.get('id');
+    if (id) {
+        if (!id.startsWith('CMP-')) {
+            id = 'CMP-' + id;
+        }
+        sessionStorage.setItem('selectedComplaintId', id);
+    } else {
+        id = sessionStorage.getItem('selectedComplaintId') || 'CMP-3310';
+    }
     const numericId = id.replace('CMP-', '');
     const token = sessionStorage.getItem('accessToken');
     
@@ -80,15 +89,19 @@ async function loadComplaintDetails() {
     const badge = document.getElementById('header-status-badge');
     let badgeClass = 'ds-badge-warning';
     let statusText = 'Đang xử lý';
-    if (currentComplaint.status === 'New') {
+    const statusVal = (currentComplaint.status || '').toLowerCase();
+    if (statusVal === 'new' || statusVal === 'open') {
         badgeClass = 'ds-badge-info';
         statusText = 'Mới';
-    } else if (currentComplaint.status === 'Resolved' || currentComplaint.status === 'Completed') {
+    } else if (statusVal === 'resolved' || statusVal === 'completed' || statusVal === 'success') {
         badgeClass = 'ds-badge-success';
         statusText = 'Đã giải quyết';
-    } else if (currentComplaint.status === 'Rejected') {
+    } else if (statusVal === 'rejected' || statusVal === 'refused' || statusVal === 'fail' || statusVal === 'failed') {
         badgeClass = 'ds-badge-danger';
         statusText = 'Từ chối';
+    } else if (statusVal === 'inprogress' || statusVal === 'in_progress' || statusVal === 'processing') {
+        badgeClass = 'ds-badge-warning';
+        statusText = 'Đang xử lý';
     }
     badge.className = `ds-badge ${badgeClass}`;
     badge.textContent = statusText;
@@ -100,6 +113,11 @@ async function loadComplaintDetails() {
     document.getElementById('detail-category').textContent = currentComplaint.category;
     document.getElementById('detail-amount').textContent = formatMoney(currentComplaint.amount);
     document.getElementById('detail-date').textContent = currentComplaint.createdAt;
+    
+    const resolutionEl = document.getElementById('detail-resolution');
+    if (resolutionEl) {
+        resolutionEl.textContent = currentComplaint.resolution || 'Chưa xử lý';
+    }
 
     // Content
     document.getElementById('detail-description').textContent = currentComplaint.detail;
@@ -117,7 +135,15 @@ async function loadComplaintDetails() {
     }
 
     // Form fields
-    document.getElementById('complaintStatus').value = currentComplaint.status;
+    let selectStatus = currentComplaint.status;
+    if (statusVal === 'open' || statusVal === 'new' || statusVal === 'inprogress' || statusVal === 'in_progress' || statusVal === 'processing') {
+        selectStatus = 'InProgress';
+    } else if (statusVal === 'resolved' || statusVal === 'completed' || statusVal === 'success') {
+        selectStatus = 'Resolved';
+    } else if (statusVal === 'rejected' || statusVal === 'refused' || statusVal === 'fail' || statusVal === 'failed') {
+        selectStatus = 'Rejected';
+    }
+    document.getElementById('complaintStatus').value = selectStatus;
     document.getElementById('complaintResolution').value = currentComplaint.resolution || '';
 
     // Timeline
