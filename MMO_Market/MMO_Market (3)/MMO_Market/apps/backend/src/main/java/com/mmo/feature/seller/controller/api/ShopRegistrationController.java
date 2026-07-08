@@ -49,7 +49,7 @@ public class ShopRegistrationController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_SHOPS') or hasRole('ADMIN')")
     public ResponseEntity<Page<ShopRegistrationResponseDto>> getAllRegistrations(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String shopStatus,
@@ -61,25 +61,25 @@ public class ShopRegistrationController {
     }
 
     @GetMapping("/stats")
-    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_SHOPS') or hasRole('ADMIN')")
     public ResponseEntity<Map<String, Long>> getRegistrationStats() {
         return ResponseEntity.ok(shopRegistrationService.getRegistrationStats());
     }
 
     @GetMapping("/shop-statuses")
-    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_SHOPS') or hasRole('ADMIN')")
     public ResponseEntity<List<String>> getDistinctShopStatuses() {
         return ResponseEntity.ok(shopRegistrationService.getDistinctShopStatuses());
     }
 
     @GetMapping("/statuses")
-    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_SHOPS') or hasRole('ADMIN')")
     public ResponseEntity<List<String>> getDistinctStatuses() {
         return ResponseEntity.ok(shopRegistrationService.getDistinctStatuses());
     }
 
     @PutMapping("/{id}/review")
-    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_SHOPS') or hasRole('ADMIN')")
     public ResponseEntity<ShopRegistrationResponseDto> reviewRegistration(@PathVariable Long id, @RequestBody ShopRegistrationReviewDto review) {
         try {
             ShopRegistrationResponseDto response = shopRegistrationService.reviewRegistration(id, review);
@@ -90,7 +90,7 @@ public class ShopRegistrationController {
     }
 
     @PutMapping("/{id}/toggle-status")
-    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_SHOPS') or hasRole('ADMIN')")
     public ResponseEntity<ShopRegistrationResponseDto> toggleShopStatus(
             @PathVariable Long id,
             @RequestParam boolean active) {

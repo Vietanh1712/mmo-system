@@ -29,7 +29,8 @@
             </a>
             <a class="staff-sidebar__link"
                th:classappend="${active == 'shop-registrations'} ? ' is-active' : ''"
-               href="/staff/shop-registrations">
+               href="/staff/shop-registrations"
+               data-required-permission="MANAGE_SHOPS">
                 <i class="fa fa-shopping-bag"></i> Shops
             </a>
             <a class="staff-sidebar__link"
