@@ -52,9 +52,18 @@
                                 <div id="staff-chat-dropdown" class="staff-chat-dropdown" style="display: none;">
                                     <a href="#" onclick="clearStaffChatHistory(event)"><i class="fa fa-trash"></i> Xóa lịch sử chat</a>
                                     <a href="#" id="toggle-staff-block-btn" onclick="toggleStaffBlock(event)"><i class="fa fa-ban"></i> Chặn liên hệ</a>
-                                    <a href="#" id="toggle-staff-mute-btn" onclick="toggleStaffMute(event)"><i class="fa fa-bell-slash"></i> Tắt thông báo</a>
+                                    <a href="#" onclick="toggleStaffSearchMessages(event)"><i class="fa fa-search"></i> Tìm tin nhắn</a>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Inline Search Bar inside current conversation for Staff -->
+                        <div id="staff-message-search-container" style="display: none; padding: 10px 16px; background: #f1f5f9; border-bottom: 1px solid var(--ds-border, #cbd5e1); align-items: center; gap: 8px; box-sizing: border-box;">
+                            <i class="fa fa-search" style="color: #64748b; font-size: 14px;"></i>
+                            <input type="text" id="staff-message-search-input" placeholder="Tìm tin nhắn trong cuộc trò chuyện..." style="flex: 1; border: none; background: transparent; outline: none; font-size: 13.5px; font-family: inherit;" oninput="performStaffMessageSearch(this.value)">
+                            <button type="button" onclick="closeStaffMessageSearch()" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 4px; display: inline-flex;" title="Đóng tìm kiếm">
+                                <i class="fa fa-times"></i>
+                            </button>
                         </div>
 
                         <div class="staff-chat-messages" id="staffChatMessages">

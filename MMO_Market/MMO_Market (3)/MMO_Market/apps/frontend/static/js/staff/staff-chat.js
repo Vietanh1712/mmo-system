@@ -32,9 +32,62 @@ document.addEventListener('DOMContentLoaded', function () {
         alert('Đã thực hiện chặn/mở chặn liên hệ (giả lập).');
     };
 
-    window.toggleStaffMute = function(event) {
-        event.preventDefault();
-        alert('Đã thay đổi trạng thái tắt/bật thông báo (giả lập).');
+
+
+    window.toggleStaffSearchMessages = function(event) {
+        if (event) event.preventDefault();
+        const container = document.getElementById('staff-message-search-container');
+        const input = document.getElementById('staff-message-search-input');
+        const isHidden = container.style.display === 'none';
+        
+        container.style.display = isHidden ? 'flex' : 'none';
+        if (isHidden) {
+            input.value = '';
+            input.focus();
+            window.clearStaffMessageHighlights();
+        } else {
+            window.clearStaffMessageHighlights();
+        }
+    };
+
+    window.closeStaffMessageSearch = function() {
+        const container = document.getElementById('staff-message-search-container');
+        if (container) container.style.display = 'none';
+        window.clearStaffMessageHighlights();
+    };
+
+    window.clearStaffMessageHighlights = function() {
+        const bubbles = document.querySelectorAll('.staff-chat-bubble');
+        bubbles.forEach(b => {
+            b.style.border = '';
+            b.style.background = '';
+        });
+    };
+
+    window.performStaffMessageSearch = function(term) {
+        window.clearStaffMessageHighlights();
+        if (!term || !term.trim()) return;
+
+        const kw = term.trim().toLowerCase();
+        const bubbles = document.querySelectorAll('.staff-chat-bubble');
+        let firstMatch = null;
+        let foundCount = 0;
+
+        bubbles.forEach(b => {
+            const text = b.textContent.toLowerCase();
+            if (text.includes(kw)) {
+                b.style.border = '2px solid var(--brand-accent, #f97316)';
+                b.style.background = '#fef3c7'; // yellow highlight background
+                foundCount++;
+                if (!firstMatch) {
+                    firstMatch = b;
+                }
+            }
+        });
+
+        if (firstMatch) {
+            firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     };
 
     // Attachments Handling
@@ -255,6 +308,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Select User
     function selectUser(userId, userName, userEmail, userRole, isOnline) {
+        // Reset search state
+        if (typeof window.closeStaffMessageSearch === 'function') {
+            window.closeStaffMessageSearch();
+        }
+
         currentUserId = userId;
         currentUserName = userName;
 

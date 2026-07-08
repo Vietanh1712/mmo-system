@@ -51,7 +51,6 @@
                         <a href="#" onclick="clearHistory(event)"><i class="fa fa-trash"></i> Xóa lịch sử chat</a>
                         <a href="#" id="toggle-block-btn" onclick="toggleBlockContact(event)"><i class="fa fa-ban"></i> Chặn liên hệ</a>
                         <a href="#" onclick="toggleSearchMessages(event)"><i class="fa fa-search"></i> Tìm tin nhắn</a>
-                        <a href="#" id="toggle-mute-btn" onclick="toggleMuteNotifications(event)"><i class="fa fa-bell-slash"></i> Tắt thông báo</a>
                     </div>
                 </div>
             </header>
@@ -653,36 +652,7 @@
             });
         }
 
-        async function toggleMuteNotifications(e) {
-            e.preventDefault();
-            
-            let chat = activeChatList.find(c => c.contactId === currentSelectedChatId);
-            if (!chat) {
-                const mockKey = Object.keys(CHAT_DATA).find(k => 
-                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 14)
-                );
-                if (mockKey) chat = CHAT_DATA[mockKey];
-            }
-            if (!chat) return;
 
-            const isMuted = chat.isMuted;
-            const actionText = isMuted ? 'bật' : 'tắt';
-            
-            try {
-                const endpoint = isMuted ? `/v1/chats/${currentSelectedChatId}/unmute` : `/v1/chats/${currentSelectedChatId}/mute`;
-                const res = await authFetch(endpoint, { method: 'POST' });
-                if (res.ok) {
-                    chat.isMuted = !isMuted;
-                    updateChatUIState(chat);
-                    showAlert(`Đã ${actionText} thông báo cho cuộc trò chuyện với ${chat.name}.`);
-                } else {
-                    showAlert(`Không thể ${actionText} thông báo.`);
-                }
-            } catch (err) {
-                console.error('Error toggling mute:', err);
-                showAlert(`Lỗi khi ${actionText} thông báo.`);
-            }
-        }
 
         function updateChatUIState(chat) {
             if (!chat) return;
@@ -740,21 +710,12 @@
             }
 
             if (toggleBlockBtn) toggleBlockBtn.style.display = 'block';
-            if (toggleMuteBtn) toggleMuteBtn.style.display = 'block';
 
             if (toggleBlockBtn) {
                 if (chat.isBlocked) {
                     toggleBlockBtn.innerHTML = '<i class="fa fa-unlock"></i> Mở chặn liên hệ';
                 } else {
                     toggleBlockBtn.innerHTML = '<i class="fa fa-ban"></i> Chặn liên hệ';
-                }
-            }
-
-            if (toggleMuteBtn) {
-                if (chat.isMuted) {
-                    toggleMuteBtn.innerHTML = '<i class="fa fa-bell"></i> Bật thông báo';
-                } else {
-                    toggleMuteBtn.innerHTML = '<i class="fa fa-bell-slash"></i> Tắt thông báo';
                 }
             }
 
