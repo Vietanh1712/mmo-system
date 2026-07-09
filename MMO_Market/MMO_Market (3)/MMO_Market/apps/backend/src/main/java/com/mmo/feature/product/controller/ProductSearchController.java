@@ -86,7 +86,7 @@ public class ProductSearchController {
             @RequestParam(required = false) String stockStatus, // e.g., "In Stock"
             @RequestParam(required = false) Long sellerId,
             @RequestParam(required = false) List<Integer> rating,
-            @PageableDefault(size = 12, sort = "createdAt") Pageable pageable) {
+            @PageableDefault(size = 12, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
 
         Page<ProductSearchResultDTO> results = productSearchService.searchProducts(
                 keyword, categoryId, minPrice, maxPrice, stockStatus, sellerId, rating, pageable);

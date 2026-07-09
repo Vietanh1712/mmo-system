@@ -53,7 +53,7 @@ public class StaffKycController {
             }
         }
         
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "id"));
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<KycResponseDto> result = kycService.getAllKycRequests(kycStatus, requestCode, typeEnum, pageRequest);
         return ResponseEntity.ok(result);
     }
