@@ -43,8 +43,6 @@ public interface ComplaintService {
     List<Complaint> getAllComplaintsForStaff();
     
     Complaint getComplaintByIdForStaff(Long complaintId);
-
-    List<com.mmo.shared.model.Chat> getComplaintChatHistory(Long complaintId, Long staffId);
     
     Complaint updateComplaintStatus(Long complaintId, String status, String resolution, String flagLevel, String flagReason, Long staffId);
 
