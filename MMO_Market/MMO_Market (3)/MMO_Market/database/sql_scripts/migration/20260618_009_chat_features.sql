@@ -1,3 +1,6 @@
+﻿USE MMO_System_Schema;
+GO
+
 -- Migration: Add chat delete/block/mute features
 -- Date: 2026-06-18
 
@@ -46,3 +49,4 @@ BEGIN
     );
 END
 GO
+

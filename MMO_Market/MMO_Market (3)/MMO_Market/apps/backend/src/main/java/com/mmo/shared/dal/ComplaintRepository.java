@@ -30,6 +30,7 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
 
     @Query("SELECT COUNT(c) FROM Complaint c WHERE c.seller = :seller AND c.status = 'InProgress' AND (c.isDelete = false OR c.isDelete IS NULL)")
     long countOpenComplaintsBySeller(@Param("seller") User seller);
+
     @Query("SELECT COUNT(c) FROM Complaint c WHERE c.seller = :seller AND c.status IN ('Resolved', 'Completed') AND (c.isDelete = false OR c.isDelete IS NULL)")
     long countResolvedComplaintsBySeller(@Param("seller") User seller);
 

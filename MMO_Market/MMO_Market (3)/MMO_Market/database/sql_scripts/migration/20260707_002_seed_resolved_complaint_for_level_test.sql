@@ -1,3 +1,6 @@
+﻿USE MMO_System_Schema;
+GO
+
 -- Migration: 20260707_002_seed_resolved_complaint_for_level_test
 -- Description: Seed 1 transaction and 1 resolved complaint for seller 1 (netflixvn@mmo.com) to test Level 0 warnings
 
@@ -16,3 +19,4 @@ BEGIN
     PRINT 'Test transaction and complaint already seeded.';
 END
 GO
+

@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- CƠ SỞ DỮ LIỆU TOÀN DIỆN: MMO MARKET SYSTEM (SQL SERVER)
--- Tên tệp: MMO_Market_Schema1.sql
+-- Tên tệp: MMO_System_Schema.sql
 -- Mô tả: Khởi tạo database, định nghĩa toàn bộ bảng biểu, ràng buộc,
 --       triggers nghiệp vụ và nạp dữ liệu seed chuẩn (Categories, Users, Products,
 --       ProductVariants, DigitalAssets, SystemConfigurations).
@@ -18,7 +18,6 @@ USE MMO_System_Schema;
 GO
 
 -- XÓA BẢNG CŨ NẾU CÓ ĐỂ TRÁNH XUNG ĐỘT (XÓA THEO THỨ TỰ CON TRƯỚC - CHA SAU)
-IF OBJECT_ID('SupportTickets', 'U') IS NOT NULL DROP TABLE SupportTickets;
 IF OBJECT_ID('AuditLogs', 'U') IS NOT NULL DROP TABLE AuditLogs;
 IF OBJECT_ID('Notifications', 'U') IS NOT NULL DROP TABLE Notifications;
 IF OBJECT_ID('SystemConfigurations', 'U') IS NOT NULL DROP TABLE SystemConfigurations;
@@ -26,8 +25,6 @@ IF OBJECT_ID('Reviews', 'U') IS NOT NULL DROP TABLE Reviews;
 IF OBJECT_ID('PreOrders', 'U') IS NOT NULL DROP TABLE PreOrders;
 IF OBJECT_ID('Wishlists', 'U') IS NOT NULL DROP TABLE Wishlists;
 IF OBJECT_ID('Chats', 'U') IS NOT NULL DROP TABLE Chats;
-IF OBJECT_ID('ChatBlocks', 'U') IS NOT NULL DROP TABLE ChatBlocks;
-IF OBJECT_ID('ChatMutes', 'U') IS NOT NULL DROP TABLE ChatMutes;
 IF OBJECT_ID('ShopFlags', 'U') IS NOT NULL DROP TABLE ShopFlags;
 IF OBJECT_ID('Complaints', 'U') IS NOT NULL DROP TABLE Complaints;
 IF OBJECT_ID('WalletTransactions', 'U') IS NOT NULL DROP TABLE WalletTransactions;
@@ -49,7 +46,7 @@ IF OBJECT_ID('Users', 'U') IS NOT NULL DROP TABLE Users;
 GO
 
 -- ==========================================
--- PHẦN 1: TÀI KHOẢN VÀ BẢO MẬT
+-- PHẦN 1: TÀI KHOẢN VÀ BẢO MẬT (MAPPED WITH User.java, Authentication.java, EmailVerification.java)
 -- ==========================================
 
 CREATE TABLE Users (
@@ -108,7 +105,7 @@ CREATE TABLE EmailVerifications (
 GO
 
 -- ==========================================
--- PHẦN 2: THÔNG TIN NGƯỜI BÁN VÀ CỬA HÀNG (KYC)
+-- PHẦN 2: THÔNG TIN NGƯỜI BÁN VÀ CỬA HÀNG (KYC - MAPPED WITH SellerRegistration.java, SellerBankInfo.java)
 -- ==========================================
 
 CREATE TABLE SellerRegistrations (
@@ -140,23 +137,21 @@ GO
 CREATE TABLE KYCRequests (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     user_id BIGINT NOT NULL,
-    active_user_id BIGINT NULL,
-    id_number VARCHAR(50) NOT NULL,
-    id_type VARCHAR(50) NOT NULL, -- CMND, CCCD, PASSPORT, DRIVER_LICENSE
-    request_code VARCHAR(32) NOT NULL UNIQUE,
-    version INT NOT NULL DEFAULT 0,
-    front_id_image VARCHAR(255) NULL,
-    back_id_image VARCHAR(255) NULL,
-    selfie_image VARCHAR(255) NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'PENDING', -- PENDING, APPROVED, REJECTED
-    rejection_reason NVARCHAR(500) NULL,
+    full_name NVARCHAR(255) NOT NULL,
+    citizen_id VARCHAR(20) NOT NULL,
+    date_of_birth DATE,
+    front_id_image VARCHAR(255) NOT NULL,
+    back_id_image VARCHAR(255) NOT NULL,
+    selfie_image VARCHAR(255) NOT NULL,
+    status VARCHAR(20) DEFAULT 'Pending',
+    rejection_reason NVARCHAR(MAX),
     reviewed_by BIGINT NULL,
     reviewed_at DATETIME NULL,
     created_at DATETIME DEFAULT GETDATE(),
     updated_at DATETIME DEFAULT GETDATE(),
-    isDelete BIT NOT NULL DEFAULT 0,
-    CONSTRAINT FK_KYC_User FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION,
-    CONSTRAINT FK_KYC_Staff FOREIGN KEY (reviewed_by) REFERENCES Users(id) ON DELETE NO ACTION
+    isDelete BIT DEFAULT 0,
+    CONSTRAINT FK_KYC_User FOREIGN KEY(user_id) REFERENCES Users(id),
+    CONSTRAINT FK_KYC_Staff FOREIGN KEY(reviewed_by) REFERENCES Users(id)
 );
 GO
 
@@ -171,7 +166,7 @@ CREATE TABLE KYCDocuments (
 GO
 
 -- ==========================================
--- PHẦN 3: QUẢN LÝ SẢN PHẨM VÀ KHO SỐ
+-- PHẦN 3: QUẢN LÝ SẢN PHẨM VÀ KHO SỐ (MAPPED WITH Category.java, Product.java, ProductVariant.java, DigitalAsset.java)
 -- ==========================================
 
 CREATE TABLE Categories (
@@ -181,8 +176,8 @@ CREATE TABLE Categories (
     description NVARCHAR(500),
     created_at DATETIME DEFAULT GETDATE(),
     updated_at DATETIME DEFAULT GETDATE(),
-    is_delete BIT DEFAULT 0,
-    isDelete BIT DEFAULT 0,
+    is_delete BIT DEFAULT 0, -- Đồng bộ với Category.java: @Column(name = "is_delete")
+    isDelete BIT DEFAULT 0,  -- Dự phòng tương thích ngược
     CONSTRAINT FK_Category_Parent FOREIGN KEY (parent_id) REFERENCES Categories(id) ON DELETE NO ACTION
 );
 GO
@@ -191,14 +186,14 @@ CREATE TABLE Products (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     seller_id BIGINT NOT NULL,
     category_id BIGINT NOT NULL,
-    name NVARCHAR(500) NOT NULL,
+    name NVARCHAR(500) NOT NULL, -- Tương thích với mô tả sản phẩm dài
     description NVARCHAR(MAX),
     image VARCHAR(255),
-    product_image_url NVARCHAR(500) NULL,
+    product_image_url NVARCHAR(500) NULL, -- Lưu trữ ảnh chi tiết sản phẩm
     product_type NVARCHAR(20) NOT NULL DEFAULT 'ACCOUNT', -- ACCOUNT | KEY | GAME_CARD
     created_at DATETIME DEFAULT GETDATE(),
-    isDelete BIT DEFAULT 0,
-    is_delete BIT DEFAULT 0,
+    isDelete BIT DEFAULT 0,  -- Đồng bộ với Product.java: @Column(name = "isDelete")
+    is_delete BIT DEFAULT 0, -- Dự phòng tương thích
     CONSTRAINT FK_Products_Seller FOREIGN KEY (seller_id) REFERENCES Users(id) ON DELETE NO ACTION,
     CONSTRAINT FK_Products_Category FOREIGN KEY (category_id) REFERENCES Categories(id) ON DELETE NO ACTION
 );
@@ -212,7 +207,7 @@ CREATE TABLE ProductVariants (
     stock INT DEFAULT 0,
     status VARCHAR(20) DEFAULT 'Pending',
     created_at DATETIME DEFAULT GETDATE(),
-    isDelete BIT DEFAULT 0,
+    isDelete BIT DEFAULT 0, -- Đồng bộ với ProductVariant.java: @Column(name = "isDelete")
     CONSTRAINT FK_Variants_Product FOREIGN KEY (product_id) REFERENCES Products(id) ON DELETE NO ACTION
 );
 GO
@@ -221,22 +216,22 @@ CREATE TABLE DigitalAssets (
     id                  BIGINT IDENTITY(1,1) PRIMARY KEY,
     variant_id          BIGINT NOT NULL,
     asset_type          NVARCHAR(20) NOT NULL,       -- ACCOUNT | KEY | GAME_CARD
-    asset_data          NVARCHAR(MAX) NOT NULL,
-    account_username    NVARCHAR(255) NULL,
-    account_password    NVARCHAR(500) NULL,
-    key_code            NVARCHAR(MAX) NULL,
-    card_code           NVARCHAR(MAX) NULL,
-    card_pin            NVARCHAR(255) NULL,
-    notes               NVARCHAR(MAX) NULL,
+    asset_data          NVARCHAR(MAX) NOT NULL,      -- Dữ liệu JSON dự phòng
+    account_username    NVARCHAR(255) NULL,          -- Cho loại ACCOUNT
+    account_password    NVARCHAR(500) NULL,          -- Cho loại ACCOUNT
+    key_code            NVARCHAR(MAX) NULL,          -- Cho loại KEY
+    card_code           NVARCHAR(MAX) NULL,          -- Cho loại GAME_CARD
+    card_pin            NVARCHAR(255) NULL,          -- Cho loại GAME_CARD
+    notes               NVARCHAR(MAX) NULL,          -- Ghi chú chung
     is_used             BIT NOT NULL DEFAULT 0,      -- 0 = còn hàng, 1 = đã bán
-    is_delete           BIT NOT NULL DEFAULT 0,
+    is_delete           BIT NOT NULL DEFAULT 0,      -- Đồng bộ với DigitalAsset.java: @Column(name = "is_delete")
     created_at          DATETIME NOT NULL DEFAULT GETDATE(),
     CONSTRAINT FK_DigitalAssets_Variant FOREIGN KEY (variant_id) REFERENCES ProductVariants(id) ON DELETE NO ACTION
 );
 GO
 
 -- ==========================================
--- PHẦN 4: GIAO DỊCH VÀ VÍ ĐIỆN TỬ (TÀI CHÍNH)
+-- PHẦN 4: GIAO DỊCH VÀ VÍ ĐIỆN TỬ (TÀI CHÍNH - MAPPED WITH TopupTransaction.java, Transaction.java, Withdrawal.java)
 -- ==========================================
 
 CREATE TABLE TopupTransactions (
@@ -298,7 +293,7 @@ CREATE TABLE WalletTransactions (
 GO
 
 -- ==========================================
--- PHẦN 5: CHĂM SÓC KHÁCH HÀNG VÀ KIỂM DUYỆT
+-- PHẦN 5: CHĂM SÓC KHÁCH HÀNG VÀ KIỂM DUYỆT (MAPPED WITH Complaint.java, ShopFlag.java, Chat.java)
 -- ==========================================
 
 CREATE TABLE Complaints (
@@ -309,7 +304,6 @@ CREATE TABLE Complaints (
     description NVARCHAR(MAX) NOT NULL,
     evidence NVARCHAR(MAX),
     status VARCHAR(20) DEFAULT 'Open',
-    preferred_solution VARCHAR(50) NULL, -- REPLACEMENT hoặc REFUND
     resolution NVARCHAR(MAX),
     created_at DATETIME DEFAULT GETDATE(),
     isDelete BIT DEFAULT 0,
@@ -326,7 +320,6 @@ CREATE TABLE ShopFlags (
     complaint_id BIGINT NULL,
     reason NVARCHAR(MAX) NOT NULL,
     flag_level VARCHAR(20) DEFAULT 'Warning',
-    status VARCHAR(20) DEFAULT 'Effect', -- Bổ sung cột status ('Effect', 'Remove')
     created_at DATETIME DEFAULT GETDATE(),
     isDelete BIT DEFAULT 0,
     CONSTRAINT FK_Flags_Seller FOREIGN KEY (seller_id) REFERENCES Users(id) ON DELETE NO ACTION,
@@ -375,7 +368,7 @@ CREATE TABLE ChatMutes (
 GO
 
 -- ==========================================
--- PHẦN 6: TÍNH NĂNG MỞ RỘNG
+-- PHẦN 6: TÍNH NĂNG MỞ RỘNG (WISH_LIST, PRE_ORDER, REVIEW, SHOP_FOLLOWERS)
 -- ==========================================
 
 CREATE TABLE Wishlists (
@@ -437,7 +430,7 @@ CREATE INDEX idx_seller ON ShopFollowers(seller_id);
 GO
 
 -- ==========================================
--- PHẦN 7: HỆ THỐNG VÀ KIỂM TOÁN
+-- PHẦN 7: HỆ THỐNG VÀ KIỂM TOÁN (SYSTEM & AUDIT - MAPPED WITH AuditLog.java)
 -- ==========================================
 
 CREATE TABLE SystemConfigurations (
@@ -473,7 +466,7 @@ CREATE TABLE AuditLogs (
 GO
 
 -- ==========================================
--- PHẦN 8: TRIGGERS NGHIỆP VỤ (CHẠY TRÊN SQL SERVER)
+-- PHẦN 8: TRIGGERS NGHIỆP VỤ (CHẠY TRÊN SQL SERVER - SET-BASED)
 -- ==========================================
 
 -- 1. Trigger kiểm tra số tiền rút tối thiểu 50,000 VND
@@ -613,7 +606,7 @@ VALUES
 (41, N'Dịch vụ Shopee', 4, N'Tăng view, mua hàng Shopee', 0, 0),
 (42, N'Dịch vụ Discord', 4, N'Tăng member Discord server', 0, 0),
 (43, N'Dịch vụ Twitter', 4, N'Tăng follower, retweet Twitter', 0, 0),
-(44, N'Dịch vụ Youtube', 4, N'Tăng view, subscriber Youtube', 0, 0),
+(44, N'Dịch vụ Youtube', 4, N'Tăng view, subcriber Youtube', 0, 0),
 (45, N'Dịch vụ Zalo', 4, N'Tăng member Zalo OA & tương tác', 0, 0),
 (46, N'Dịch vụ Instagram', 4, N'Tăng follow, like Instagram', 0, 0),
 (47, N'Tương tác khác', 4, N'Các dịch vụ tương tác khác', 0, 0),
@@ -669,6 +662,7 @@ VALUES
 (13, 'customer01@gmail.com', @PasswordHash, N'Nguyễn Văn Khách', N'Nam', N'123 Đường Nguyễn Trãi, Hà Nội', '001096001234', '1996-05-15', '{"role": "Customer"}', '0987654321', 'Pending', 500000, 1, 0, 0),
 (14, 'staff01@gmail.com', @PasswordHash, N'Trần Thị Nhân Viên', N'Nữ', N'456 Cầu Giấy, Hà Nội', '001098005678', '1998-08-20', '{"role": "Staff"}', '0912345678', 'Approved', 0, 1, 0, 0),
 (15, 'admin01@gmail.com', @PasswordHash, N'Admin MMO System', N'Nam', N'Hệ thống MMO Market', '001090009999', '1990-01-01', '{"role": "Admin"}', '0900000000', 'Approved', 0, 1, 0, 0),
+-- Tài khoản admin cấu hình hệ thống (admin@mmo.com / mật khẩu 123456)
 (16, 'admin@mmo.com', '$2a$10$NcmOXXGkICk.davDnIvgbuUcscMw31mHDhb5oei/4hHOaWZRzE.g6', N'Administrator', N'Nam', N'Hệ thống MMO Market', '001090000000', '1990-01-01', '{"role": "Admin"}', '0123456789', 'Approved', 0, 1, 0, 0);
 
 SET IDENTITY_INSERT Users OFF;
@@ -681,7 +675,7 @@ INSERT INTO Products (id, seller_id, category_id, name, description, image, prod
 VALUES 
 (1, 1, 27, N'Tài khoản Netflix Premium 4K UHD 1 Tháng (Xem riêng 1 thiết bị, bảo hành 1 đổi 1)', N'Xem phim chất lượng Ultra HD 4K trên mọi thiết bị. Giao tài khoản tự động lập tức sau khi thanh toán. Bảo hành 1 đổi 1 suốt thời gian sử dụng.', 'https://via.placeholder.com/300x160/fd761a/ffffff?text=Netflix+Premium', 'https://via.placeholder.com/300x160/fd761a/ffffff?text=Netflix+Premium', 'ACCOUNT', 0, 0),
 (2, 2, 27, N'Tài khoản Netflix Premium 4K UHD Gói 1 Năm (Chính chủ gia hạn ổn định)', N'Gói cước Netflix Premium 12 tháng xem ổn định không lo bị khóa hay đăng xuất. Hỗ trợ xem trên SmartTV, điện thoại, máy tính.', 'https://via.placeholder.com/300x160/fd761a/ffffff?text=Netflix+1Year', 'https://via.placeholder.com/300x160/fd761a/ffffff?text=Netflix+1Year', 'ACCOUNT', 0, 0),
-(3, 3, 27, N'Tài khoản ChatGPT Plus (OpenAI GPT-4o) Chính Chủ Sẵn 20$ Hơn 1 Tháng', N'Tài khoản OpenAI nâng cấp sẵn gói Plus trị giá 20$. Sử dụng GPT-4o không giới hạn tốc độ và tính năng mới nhất.', 'https://via.placeholder.com/300x160/fd761a/ffffff?text=ChatGPT+Plus', 'https://via.placeholder.com/300x160/fd761a/ffffff?text=ChatGPT+Plus', 'ACCOUNT', 0, 0),
+(3, 3, 27, N'Tài khoản ChatGPT Plus (OpenAI GPT-4o) Chính Chủ Sẵn 20$ Hạn 1 Tháng', N'Tài khoản OpenAI nâng cấp sẵn gói Plus trị giá 20$. Sử dụng GPT-4o không giới hạn tốc độ và tính năng mới nhất.', 'https://via.placeholder.com/300x160/fd761a/ffffff?text=ChatGPT+Plus', 'https://via.placeholder.com/300x160/fd761a/ffffff?text=ChatGPT+Plus', 'ACCOUNT', 0, 0),
 (4, 4, 27, N'Spotify Premium 1 Năm Giá Siêu Rẻ (Nâng cấp Family email của bạn)', N'Nghe nhạc chất lượng cao không quảng cáo trên Spotify. Nâng cấp trực tiếp trên email cá nhân của bạn thông qua liên kết Family.', 'https://via.placeholder.com/300x160/fd761a/ffffff?text=Spotify+Premium', 'https://via.placeholder.com/300x160/fd761a/ffffff?text=Spotify+Premium', 'ACCOUNT', 0, 0),
 (5, 5, 26, N'Key Windows 11 Pro Bản Quyền Vĩnh Viễn (Kèm hướng dẫn active chi tiết)', N'Kích hoạt bản quyền Windows 11 Professional vĩnh viễn theo máy. Hỗ trợ cập nhật đầy đủ, cài đặt lại Win vẫn giữ bản quyền.', 'https://via.placeholder.com/300x160/fd761a/ffffff?text=Windows+11+Key', 'https://via.placeholder.com/300x160/fd761a/ffffff?text=Windows+11+Key', 'KEY', 0, 0),
 (6, 6, 27, N'Youtube Premium Không Quảng Cáo 6 Tháng (Add Family bao chạy mượt)', N'Xem video Youtube không quảng cáo, hỗ trợ phát nhạc trong nền và tải xuống offline. Nâng cấp tài khoản chính chủ qua Family group.', 'https://via.placeholder.com/300x160/fd761a/ffffff?text=Youtube+Premium', 'https://via.placeholder.com/300x160/fd761a/ffffff?text=Youtube+Premium', 'ACCOUNT', 0, 0),
@@ -714,7 +708,8 @@ VALUES
 (13, N'Gói Thiết Kế Banner Logo', 299000, 50, 'Active', 0);
 GO
 
--- 6. Khởi tạo kho tài sản số mẫu (DigitalAssets)
+-- 6. Khởi tạo kho tài sản số mẫu (DigitalAssets) khớp cấu trúc cột chi tiết mới
+-- variant_id 1 (Netflix Shared - ACCOUNT)
 INSERT INTO DigitalAssets (variant_id, asset_type, asset_data, account_username, account_password, key_code, notes, is_used, is_delete)
 VALUES
 (1, 'ACCOUNT', N'{"username":"netflix_user_01@gmail.com","password":"NetflixSecure@2026","note":"Tài khoản mới 100%"}', 'netflix_user_01@gmail.com', 'NetflixSecure@2026', NULL, N'Tài khoản mới 100%', 0, 0),
@@ -723,18 +718,21 @@ VALUES
 (1, 'ACCOUNT', N'{"username":"netflix_user_04@gmail.com","password":"Nf@Account2026","note":"Còn 11 tháng"}', 'netflix_user_04@gmail.com', 'Nf@Account2026', NULL, N'Còn 11 tháng', 0, 0),
 (1, 'ACCOUNT', N'{"username":"netflix_user_05@gmail.com","password":"NetflixPro2026","note":"Đổi mk sau nhận"}', 'netflix_user_05@gmail.com', 'NetflixPro2026', NULL, N'Đổi mk sau nhận', 0, 0);
 
+-- variant_id 4 (Spotify Premium - ACCOUNT)
 INSERT INTO DigitalAssets (variant_id, asset_type, asset_data, account_username, account_password, key_code, notes, is_used, is_delete)
 VALUES
 (4, 'ACCOUNT', N'{"username":"spotify_family01@gmail.com","password":"Sp0tify@2026","note":"Gói gia đình 6 slot"}', 'spotify_family01@gmail.com', 'Sp0tify@2026', NULL, N'Gói gia đình 6 slot', 0, 0),
 (4, 'ACCOUNT', N'{"username":"spotify_family02@gmail.com","password":"Sp0tify!2026","note":"Còn 5 slot trống"}', 'spotify_family02@gmail.com', 'Sp0tify!2026', NULL, N'Còn 5 slot trống', 0, 0),
 (4, 'ACCOUNT', N'{"username":"spotify_family03@gmail.com","password":"SpFamily2026","note":"Còn 4 slot trống"}', 'spotify_family03@gmail.com', 'SpFamily2026', NULL, N'Còn 4 slot trống', 0, 0);
 
+-- variant_id 5 (Windows 11 Key - KEY)
 INSERT INTO DigitalAssets (variant_id, asset_type, asset_data, account_username, account_password, key_code, notes, is_used, is_delete)
 VALUES
 (5, 'KEY', N'{"key":"WIN11-PRO-A1B2-C3D4-E5F6","note":"Key bản quyền OEM kích hoạt Online"}', NULL, NULL, 'WIN11-PRO-A1B2-C3D4-E5F6', N'Key bản quyền OEM kích hoạt Online', 0, 0),
 (5, 'KEY', N'{"key":"WIN11-PRO-G7H8-I9J0-K1L2","note":"Key bản quyền OEM"}', NULL, NULL, 'WIN11-PRO-G7H8-I9J0-K1L2', N'Key bản quyền OEM', 0, 0),
 (5, 'KEY', N'{"key":"WIN11-PRO-M3N4-O5P6-Q7R8","note":"Key kích hoạt vĩnh viễn"}', NULL, NULL, 'WIN11-PRO-M3N4-O5P6-Q7R8', N'Key kích hoạt vĩnh viễn', 0, 0);
 
+-- variant_id 9 (Tool Facebook - KEY)
 INSERT INTO DigitalAssets (variant_id, asset_type, asset_data, account_username, account_password, key_code, notes, is_used, is_delete)
 VALUES
 (9, 'KEY', N'{"key":"TOOL-FB-NUOI NICK-A1B2-C3D4","note":"Tool Nuôi nick FB vĩnh viễn"}', NULL, NULL, 'TOOL-FB-NUOI NICK-A1B2-C3D4', N'Tool Nuôi nick FB vĩnh viễn', 0, 0),
@@ -742,105 +740,24 @@ VALUES
 GO
 
 -- ==========================================
--- PHẦN 10: NẠP DỮ LIỆU MOCK SELLER PORTAL
+-- PHẦN 10: NẠP DỮ LIỆU MOCK SELLER PORTAL (TỪ SEED_SellerMockData.sql)
 -- ==========================================
-PRINT N'⏳ Đang nạp dữ liệu Mock cho Seller Portal...';
+PRINT N'🔄 Đang nạp dữ liệu Mock cho Seller Portal...';
 
+-- Cập nhật số dư ví và trạng thái của Seller 01 (id = 2)
 UPDATE Users 
 SET shop_status = 'Active',
     balance_vnd = 25000000
 WHERE id = 2;
 
+-- Seed Seller Bank Info
 INSERT INTO SellerBankInfo (user_id, bank_name, account_number, branch, created_at, isDelete)
 VALUES (2, N'Vietcombank', '0123456789', N'Chi nhánh Hà Nội', GETDATE(), 0);
 
+-- Dọn dẹp các lịch sử giao dịch, khiếu nại và đánh giá để chuẩn bị cho môi trường chạy thực tế sạch 100%
+-- Không chèn sẵn Transactions, Withdrawals, Complaints, Chats, Reviews, ShopFlags mẫu.
+
 PRINT N'✓ Nạp dữ liệu Mock thành công.';
-GO
-
--- =============================================================================
--- KHỐI NẠP DỮ LIỆU SỬA ĐỔI TOÀN DIỆN (ĐỒNG BỘ 100% VỚI JPA ENTITY)
--- =============================================================================
-
--- 1. Nạp bảng Transactions
-INSERT INTO Transactions
-(customer_id, seller_id, product_id, variant_id, amount_vnd, commission_vnd, status, escrow_release_date)
-VALUES
-(13, 1, 1, 1, 65000, 3250, 'Refunded', DATEADD(day, -5, GETDATE())),
-(13, 2, 2, 2, 650000, 32500, 'Completed', DATEADD(day, -10, GETDATE())),
-(13, 3, 3, 3, 150000, 7500, 'Pending', DATEADD(day, 7, GETDATE())),
-(13, 4, 4, 4, 250000, 12500, 'Pending', DATEADD(day, 3, GETDATE())),
-(13, 5, 5, 5, 99000, 4950, 'Completed', DATEADD(day, -2, GETDATE())),
-(13, 6, 6, 6, 120000, 6000, 'Pending', NULL),
-(13, 7, 7, 7, 180000, 9000, 'Completed', DATEADD(day, -4, GETDATE())),
-(13, 8, 8, 8, 35000, 1750, 'Fail', DATEADD(day, 5, GETDATE())),
-(13, 9, 9, 9, 850000, 42500, 'Fail', NULL),
-(13, 10, 10, 10, 350000, 17500, 'Completed', DATEADD(day, -1, GETDATE())),
-(13, 10, 9, 7, 5550000, 17500, 'Completed', DATEADD(day, -1, GETDATE())),
-(13, 5, 5, 5, 99000, 4950, 'Fail', DATEADD(day, -1, GETDATE()));
-GO
-
--- 2. Nạp bảng KYCRequests
-INSERT INTO KYCRequests
-(user_id, id_number, id_type, request_code, front_id_image, back_id_image, selfie_image, status, rejection_reason, reviewed_by, reviewed_at)
-VALUES
-(1, '001111111111', 'CCCD', 'REQ00100000000000000000000000001', 'front1.jpg', 'back1.jpg', 'selfie1.jpg', 'APPROVED', NULL, 14, GETDATE()),
-(2, '001111111112', 'CCCD', 'REQ00200000000000000000000000002', 'front2.jpg', 'back2.jpg', 'selfie2.jpg', 'APPROVED', NULL, 14, GETDATE()),
-(3, '001111111113', 'CCCD', 'REQ00300000000000000000000000003', 'front3.jpg', 'back3.jpg', 'selfie3.jpg', 'PENDING', NULL, NULL, NULL),
-(4, '001111111114', 'CCCD', 'REQ00400000000000000000000000004', 'front4.jpg', 'back4.jpg', 'selfie4.jpg', 'REJECTED', N'Ảnh CCCD mờ', 14, GETDATE()),
-(5, '001111111115', 'CCCD', 'REQ00500000000000000000000000005', 'front5.jpg', 'back5.jpg', 'selfie5.jpg', 'APPROVED', NULL, 14, GETDATE()),
-(6, '001111111116', 'CCCD', 'REQ00600000000000000000000000006', 'front6.jpg', 'back6.jpg', 'selfie6.jpg', 'PENDING', NULL, NULL, NULL),
-(7, '001111111117', 'CCCD', 'REQ00700000000000000000000000007', 'front7.jpg', 'back7.jpg', 'selfie7.jpg', 'APPROVED', NULL, 14, GETDATE()),
-(8, '001111111118', 'CCCD', 'REQ00800000000000000000000000008', 'front8.jpg', 'back8.jpg', 'selfie8.jpg', 'REJECTED', N'Thông tin không khớp', 14, GETDATE()),
-(9, '001111111119', 'CCCD', 'REQ00900000000000000000000000009', 'front9.jpg', 'back9.jpg', 'selfie9.jpg', 'PENDING', NULL, NULL, NULL),
-(10, '001111111120', 'CCCD', 'REQ01000000000000000000000000000', 'front10.jpg', 'back10.jpg', 'selfie10.jpg', 'APPROVED', NULL, 14, GETDATE());
-GO
-
--- 3. Nạp bảng Withdrawals
-INSERT INTO Withdrawals
-(seller_id, bank_info_id, amount_vnd, status, proof_file)
-VALUES
-(2, 1, 500000, 'Rejected', NULL),
-(2, 1, 1000000, 'Approved', 'proof1.jpg'),
-(2, 1, 2000000, 'Rejected', 'proof2.jpg'),
-(2, 1, 1500000, 'Rejected', NULL),
-(2, 1, 3000000, 'Approved', 'proof3.jpg'),
-(2, 1, 750000, 'Pending', NULL),
-(2, 1, 1250000, 'Rejected', 'proof4.jpg'),
-(2, 1, 900000, 'Rejected', 'proof5.jpg'),
-(2, 1, 600000, 'Rejected', NULL),
-(2, 1, 4500000, 'Approved', 'proof6.jpg');
-GO
-
--- 4. Nạp bảng Complaints
-INSERT INTO Complaints
-(transaction_id, customer_id, seller_id, description, evidence, status, resolution)
-VALUES
-(1, 13, 1, N'Tài khoản đăng nhập lỗi', N'img1.png', 'Resolved', N'Đã cấp lại tài khoản'),
-(2, 13, 2, N'Giao hàng chậm', N'img2.png', 'Rejected', N'Đã xử lý'),
-(3, 13, 3, N'Sản phẩm không đúng mô tả', N'img3.png', 'InProgress', NULL),
-(4, 13, 4, N'Không nhận được thông tin', N'img4.png', 'InProgress', NULL),
-(5, 13, 5, N'Key kích hoạt thất bại', N'img5.png', 'Resolved', N'Đổi key mới'),
-(6, 13, 6, N'Yêu cầu hoàn tiền', N'img6.png', 'InProgress', NULL),
-(7, 13, 7, N'Tài khoản bị khóa', N'img7.png', 'Rejected', N'Đã hỗ trợ'),
-(8, 13, 8, N'Seller phản hồi chậm', N'img8.png', 'InProgress', NULL),
-(9, 13, 9, N'Tool không hoạt động', N'img9.png', 'InProgress', NULL),
-(10, 13, 10, N'Sai thông tin sản phẩm', N'img10.png', 'Resolved', N'Đã bồi thường');
-GO
-
--- 5. Nạp bảng ShopFlags
-INSERT INTO ShopFlags
-(seller_id, staff_id, complaint_id, reason, flag_level, status)
-VALUES
-(1, 14, 1, N'Nhiều khiếu nại liên tiếp', 'Warning', 'Effect'),
-(2, 14, 2, N'Chậm phản hồi khách hàng', 'Warning', 'Remove'),
-(3, 14, 3, N'Nghi ngờ gian lận', 'Danger', 'Effect'),
-(4, 14, 4, N'Tỷ lệ hoàn tiền cao', 'Warning', 'Remove'),
-(5, 14, 5, N'Sản phẩm lỗi nhiều lần', 'Danger', 'Effect'),
-(6, 14, 6, N'Vi phạm chính sách', 'Critical', 'Remove'),
-(7, 14, 7, N'Tài khoản bị report', 'Warning', 'Effect'),
-(8, 14, 8, N'Tỷ lệ giao hàng thấp', 'Danger', 'Remove'),
-(9, 14, 9, N'Có dấu hiệu spam', 'Critical', 'Effect'),
-(10, 14, 10, N'Kiểm tra định kỳ', 'Warning', 'Remove');
 GO
 
 -- ==============================================================================
@@ -851,7 +768,6 @@ PRINT N'======================================================';
 PRINT N'✓ CƠ SỞ DỮ LIỆU MMO_SYSTEM ĐÃ ĐƯỢC KHỞI TẠO HOÀN CHỈNH VÀ ĐỒNG BỘ 100%!';
 PRINT N'======================================================';
 GO
-
 
 
 
@@ -1905,11 +1821,14 @@ GO
 -- ==============================================================================
 -- =============================================================================
 -- Migration: Seed permissions for default Staff user
+-- Ngày: 2026-06-25
+-- Mục đích: Gán quyền mặc định cho staff01@gmail.com (id = 14)
 -- =============================================================================
 
 USE MMO_System_Schema;
 GO
 
+-- Kiểm tra và chèn các permission bổ sung nếu chưa có (để đảm bảo đồng bộ với DatabaseSeeder)
 IF EXISTS (SELECT * FROM sys.tables WHERE name = 'Permissions')
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'FLAG_SELLER')
@@ -1926,8 +1845,10 @@ BEGIN
 END
 GO
 
+-- Gán toàn bộ quyền cho Staff mẫu (user_id = 14, staff01@gmail.com)
 IF EXISTS (SELECT * FROM sys.tables WHERE name = 'UserPermissions') AND EXISTS (SELECT 1 FROM Users WHERE id = 14)
 BEGIN
+    -- APPROVE_KYC
     IF EXISTS (SELECT 1 FROM Permissions WHERE name = 'APPROVE_KYC')
     BEGIN
         DECLARE @KycPermId INT = (SELECT id FROM Permissions WHERE name = 'APPROVE_KYC');
@@ -1935,6 +1856,7 @@ BEGIN
             INSERT INTO UserPermissions (user_id, permission_id) VALUES (14, @KycPermId);
     END
 
+    -- FLAG_SELLER
     IF EXISTS (SELECT 1 FROM Permissions WHERE name = 'FLAG_SELLER')
     BEGIN
         DECLARE @FlagPermId INT = (SELECT id FROM Permissions WHERE name = 'FLAG_SELLER');
@@ -1942,6 +1864,7 @@ BEGIN
             INSERT INTO UserPermissions (user_id, permission_id) VALUES (14, @FlagPermId);
     END
 
+    -- APPROVE_WITHDRAWALS
     IF EXISTS (SELECT 1 FROM Permissions WHERE name = 'APPROVE_WITHDRAWALS')
     BEGIN
         DECLARE @WithdrawPermId INT = (SELECT id FROM Permissions WHERE name = 'APPROVE_WITHDRAWALS');
@@ -1949,6 +1872,7 @@ BEGIN
             INSERT INTO UserPermissions (user_id, permission_id) VALUES (14, @WithdrawPermId);
     END
 
+    -- HANDLE_DISPUTES
     IF EXISTS (SELECT 1 FROM Permissions WHERE name = 'HANDLE_DISPUTES')
     BEGIN
         DECLARE @DisputePermId INT = (SELECT id FROM Permissions WHERE name = 'HANDLE_DISPUTES');
@@ -1956,6 +1880,7 @@ BEGIN
             INSERT INTO UserPermissions (user_id, permission_id) VALUES (14, @DisputePermId);
     END
 
+    -- MANAGE_SUPPORT
     IF EXISTS (SELECT 1 FROM Permissions WHERE name = 'MANAGE_SUPPORT')
     BEGIN
         DECLARE @SupportPermId INT = (SELECT id FROM Permissions WHERE name = 'MANAGE_SUPPORT');
@@ -1975,9 +1900,14 @@ BEGIN
 END
 GO
 
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260625_003_add_user_guide_to_products.sql
 -- ==============================================================================
 -- Migration: Thêm cột user_guide vào bảng Products
--- ==============================================================================
+-- Tạo bởi Antigravity AI
+-- Ngày: 2026-06-25
+
 IF NOT EXISTS (
     SELECT * FROM INFORMATION_SCHEMA.COLUMNS
     WHERE TABLE_NAME = 'Products' AND COLUMN_NAME = 'user_guide'
@@ -1990,40 +1920,4 @@ ELSE
 BEGIN
     PRINT 'Cot user_guide da ton tai trong bang Products.';
 END
-GO
-
--- ==============================================================================
--- PHẦN THÊM MỚI: BẢNG SUPPORT TICKETS HỖ TRỢ
--- ==============================================================================
-USE MMO_System_Schema;
-GO
-
-IF OBJECT_ID('SupportTickets', 'U') IS NOT NULL DROP TABLE SupportTickets;
-GO
-
-CREATE TABLE SupportTickets (
-    id BIGINT IDENTITY(1,1) PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    category NVARCHAR(100) NOT NULL,
-    title NVARCHAR(255) NOT NULL,
-    description NVARCHAR(MAX) NOT NULL,
-    status VARCHAR(20) DEFAULT 'Open',
-    resolution NVARCHAR(MAX) NULL,
-    created_at DATETIME DEFAULT GETDATE(),
-    isDelete BIT DEFAULT 0,
-    CONSTRAINT FK_Tickets_Users FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION
-);
-GO
-
-CREATE INDEX idx_support_tickets_user ON SupportTickets(user_id);
-GO
-
--- 6. Nạp bảng SupportTickets
-INSERT INTO SupportTickets (user_id, category, title, description, status, resolution, created_at, isDelete)
-VALUES
-(13, N'Lỗi nạp tiền', N'Nạp tiền qua SePay không cộng số dư', N'Tôi đã chuyển khoản 500,000đ từ ngân hàng lúc 20:00 nhưng số dư khả dụng vẫn chưa được cập nhật. Nhờ Staff kiểm tra giúp.', 'Open', NULL, DATEADD(hour, -5, GETDATE()), 0),
-(13, N'Lỗi tài khoản', N'Không đăng nhập được bằng Google OAuth2', N'Khi tôi click vào đăng nhập Google thì báo lỗi redirect URI mismatch. Nhờ kỹ thuật hỗ trợ kiểm tra.', 'Processing', NULL, DATEADD(hour, -12, GETDATE()), 0),
-(13, N'Góp ý', N'Góp ý thêm tính năng thanh toán MoMo', N'Sàn nên tích hợp thêm cổng thanh toán MoMo để người dùng có nhiều lựa chọn nạp tiền hơn.', 'Processing', N'Cảm ơn bạn đã góp ý. Hệ thống đang lên kế hoạch tích hợp MoMo vào quý sau.', DATEADD(day, -1, GETDATE()), 0),
-(13, N'Khác', N'Hỏi về chính sách bảo hành 1 đổi 1 của Netflix', N'Tôi muốn biết chính sách bảo hành 1 đổi 1 là do seller tự xử lý hay sàn sẽ hỗ trợ nếu seller không phản hồi?', 'Resolved', N'Chào bạn, chính sách bảo hành sẽ do Seller tự xử lý trước. Tuy nhiên nếu quá 24h Seller không hỗ trợ, bạn có thể gửi khiếu nại để Ban quản trị sàn can thiệp.', DATEADD(day, -2, GETDATE()), 0),
-(13, N'Lỗi nạp tiền', N'Chuyển khoản sai nội dung giao dịch', N'Tôi chuyển khoản nạp tiền nhưng quên nhập mã giao dịch trong nội dung. Mã SePay của tôi là SP123456.', 'Resolved', N'Đã cộng tay thủ công cho user thành công.', DATEADD(day, -3, GETDATE()), 0);
 GO

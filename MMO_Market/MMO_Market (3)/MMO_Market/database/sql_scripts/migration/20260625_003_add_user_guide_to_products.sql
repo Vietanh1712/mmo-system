@@ -1,3 +1,6 @@
+﻿USE MMO_System_Schema;
+GO
+
 -- Migration: Thêm cột user_guide vào bảng Products
 -- Tạo bởi Antigravity AI
 -- Ngày: 2026-06-25
@@ -15,3 +18,4 @@ BEGIN
     PRINT 'Cot user_guide da ton tai trong bang Products.';
 END
 GO
+

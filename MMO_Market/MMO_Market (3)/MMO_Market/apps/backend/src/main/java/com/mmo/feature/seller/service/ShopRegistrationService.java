@@ -12,6 +12,8 @@ import com.mmo.shared.dal.UserRepository;
 import com.mmo.shared.model.KycStatus;
 import com.mmo.shared.model.SellerRegistration;
 import com.mmo.shared.model.User;
+import com.mmo.shared.dal.SystemConfigurationRepository;
+import com.mmo.feature.wallet.service.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,6 +38,12 @@ public class ShopRegistrationService {
     @Autowired
     private KycRequestRepository kycRequestRepository;
 
+    @Autowired
+    private SystemConfigurationRepository systemConfigurationRepository;
+
+    @Autowired
+    private WalletService walletService;
+
     @Transactional
     public ShopRegistrationResponseDto submitRegistration(Long userId, ShopRegistrationRequestDto request) {
         User user = userRepository.findByIdAndIsDeleteFalse(userId)
@@ -55,6 +63,29 @@ public class ShopRegistrationService {
         if ("APPROVED".equals(registration.getStatus())) {
             throw new IllegalStateException("Bạn đã có Shop đang hoạt động.");
         }
+
+        long fee = systemConfigurationRepository.findByConfigKey("SHOP_OPENING_FEE_VND")
+                .map(config -> {
+                    try {
+                        return Long.parseLong(config.getConfigValue());
+                    } catch (NumberFormatException e) {
+                        return 50000L;
+                    }
+                })
+                .orElse(50000L);
+
+        if (user.getBalanceVnd() == null) {
+            user.setBalanceVnd(0L);
+        }
+
+        if (user.getBalanceVnd() < fee) {
+            throw new IllegalStateException("INSUFFICIENT_FUNDS:" + fee);
+        }
+
+        user.setBalanceVnd(user.getBalanceVnd() - fee);
+        userRepository.save(user);
+
+        walletService.recordTransaction(user, "PAYMENT", -fee, "SUCCESS", "Thanh toán phí đăng ký mở Shop", "SHOP-REG-" + user.getId(), user.getBalanceVnd());
 
         registration.setUser(user);
         registration.setShopName(request.getShopName());
