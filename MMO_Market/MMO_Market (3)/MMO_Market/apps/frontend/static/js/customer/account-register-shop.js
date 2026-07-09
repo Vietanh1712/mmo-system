@@ -4,7 +4,7 @@ let shopRegistrationState = { status: 'NOT_SUBMITTED' };
 let kycApproved = false;
 let currentShopProfile = null;
 
-registerAccountPage('/js/account-register-shop.js', initializeShopRegistrationPage);
+
 registerAccountPage('/js/customer/account-register-shop.js', initializeShopRegistrationPage);
 
 async function initializeShopRegistrationPage() {

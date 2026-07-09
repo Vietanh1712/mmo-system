@@ -38,11 +38,29 @@ public class ProductSearchService {
                 keyword, categoryId, minPrice, maxPrice, stockStatus, sellerId, ratings);
 
         Page<Product> productPage = productRepository.findAll(spec, pageable);
+        
+        if (productPage.isEmpty()) {
+            return productPage.map(p -> convertToDTO(p, 0.0, 0L, 0L));
+        }
+        
+        List<Long> productIds = productPage.getContent().stream().map(Product::getId).toList();
+        
+        java.util.Map<Long, Double> avgRatings = reviewRepository.findAverageRatingByProductIds(productIds).stream()
+                .collect(java.util.stream.Collectors.toMap(obj -> (Long) obj[0], obj -> (Double) obj[1]));
+                
+        java.util.Map<Long, Long> reviewsCounts = reviewRepository.countByProductIdsAndIsDeleteFalse(productIds).stream()
+                .collect(java.util.stream.Collectors.toMap(obj -> (Long) obj[0], obj -> (Long) obj[1]));
+                
+        java.util.Map<Long, Long> salesCounts = transactionRepository.countByProductIdsAndIsDeleteFalse(productIds).stream()
+                .collect(java.util.stream.Collectors.toMap(obj -> (Long) obj[0], obj -> (Long) obj[1]));
 
-        return productPage.map(this::convertToDTO);
+        return productPage.map(product -> convertToDTO(product, 
+            avgRatings.getOrDefault(product.getId(), 0.0), 
+            reviewsCounts.getOrDefault(product.getId(), 0L), 
+            salesCounts.getOrDefault(product.getId(), 0L)));
     }
 
-    private ProductSearchResultDTO convertToDTO(Product product) {
+    private ProductSearchResultDTO convertToDTO(Product product, Double avgRating, Long reviewsCount, Long salesCount) {
         ProductSearchResultDTO dto = new ProductSearchResultDTO();
         dto.setProductId(product.getId());
         dto.setProductName(product.getName());
@@ -77,18 +95,9 @@ public class ProductSearchService {
             dto.setStock(0);
         }
 
-        // Query actual rating from Reviews database table
-        Double avgRating = reviewRepository.findAverageRatingByProductId(product.getId());
-        dto.setAverageRating(avgRating != null ? avgRating.floatValue() : 0.0f); // Default to 0.0 stars if no reviews yet
-
-        Long reviewsCount = reviewRepository.countByProductIdAndIsDeleteFalse(product.getId());
+        dto.setAverageRating(avgRating != null ? avgRating.floatValue() : 0.0f);
         dto.setReviewsCount(reviewsCount != null ? reviewsCount : 0L);
-
-        // Query actual sales count from Transactions database table
-        Long salesCount = transactionRepository.countByProductIdAndIsDeleteFalse(product.getId());
         dto.setSalesCount(salesCount != null ? salesCount : 0L);
-
-        // Classify as bestseller if sales count is high enough (e.g. >= 5 sales)
         dto.setBestseller(salesCount != null && salesCount >= 5);
         dto.setInstant(true); // Set instant delivery by default for this category of products
 

@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
 
 const ACCOUNT_ORDERS_MOCK_KEY = 'mmoMarketMyOrdersMock';
 
@@ -9,7 +9,7 @@ let pageSize = 5;
 let appliedFilters = createEmptyFilters();
 
 // THAY ĐỔI QUAN TRỌNG: Gọi registerAccountPage ĐÚNG CÁCH.
-registerAccountPage('/js/account-orders.js', initializeOrdersPage);
+registerAccountPage('/js/customer/account-orders.js', initializeOrdersPage);
 
 function initializeOrdersPage() {
     try {
