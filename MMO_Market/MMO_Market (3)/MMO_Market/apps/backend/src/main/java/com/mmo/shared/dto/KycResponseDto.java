@@ -22,4 +22,9 @@ public class KycResponseDto {
     private Integer version;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    
+    private String fullName;
+    private String email;
+    private String address;
+    private String dateOfBirth;
 }

@@ -48,10 +48,15 @@
                                          + ${withdrawal.seller.email}">
                                         </dd>
                                     </div>
-                                    <div class="staff-info-row">
-                                        <dt>Trạng thái</dt>
-                                        <dd th:text="${withdrawal.status}"></dd>
-                                    </div>
+                                     <div class="staff-info-row">
+                                         <dt>Trạng thái</dt>
+                                         <dd>
+                                             <span class="ds-badge"
+                                                   th:classappend="${#strings.toLowerCase(withdrawal.status) == 'approved' ? 'ds-badge-success' : (#strings.toLowerCase(withdrawal.status) == 'rejected' ? 'ds-badge-danger' : 'ds-badge-warning')}"
+                                                   th:text="${#strings.toLowerCase(withdrawal.status) == 'pending' ? 'Chờ duyệt' : (#strings.toLowerCase(withdrawal.status) == 'approved' ? 'Hoàn tất' : (#strings.toLowerCase(withdrawal.status) == 'rejected' ? 'Từ chối' : withdrawal.status))}">
+                                             </span>
+                                         </dd>
+                                     </div>
                                     <div class="staff-info-row">
                                         <dt>Số tiền rút</dt>
                                         <dd class="ds-money"  th:text="${#numbers.formatInteger(withdrawal.amountVnd,0,'COMMA')}
@@ -135,25 +140,14 @@
                                         Trạng thái
                                     </label>
 
-                                    <select class="ds-select"
-                                            name="status" style="background-color: #f8fafc; font-weight: 600;">
-
-                                        <option value="Pending"
-                                                th:selected="${withdrawal.status == 'Pending'}">
-                                            Pending
-                                        </option>
-
-                                        <option value="Approved"
-                                                th:selected="${withdrawal.status == 'Approved'}">
-                                            Approved
-                                        </option>
-
-                                        <option value="Rejected"
-                                                th:selected="${withdrawal.status == 'Rejected'}">
-                                            Rejected
-                                        </option>
-
-                                    </select>
+                                     <select class="ds-select"
+                                             name="status" style="background-color: #f8fafc; font-weight: 600;">
+                                         <option th:each="s : ${statuses}"
+                                                 th:value="${s}"
+                                                 th:text="${#strings.toLowerCase(s) == 'pending' ? 'Chờ duyệt' : (#strings.toLowerCase(s) == 'approved' ? 'Hoàn tất' : (#strings.toLowerCase(s) == 'rejected' ? 'Từ chối' : s))}"
+                                                 th:selected="${withdrawal.status == s}">
+                                         </option>
+                                     </select>
                                 </div>
 
                                 <div class="ds-cluster" style="gap: 8px;">

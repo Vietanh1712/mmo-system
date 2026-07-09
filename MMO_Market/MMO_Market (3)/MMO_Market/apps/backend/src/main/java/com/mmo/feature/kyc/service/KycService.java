@@ -139,6 +139,10 @@ public class KycService {
                 .version(request.getVersion())
                 .createdAt(request.getCreatedAt())
                 .updatedAt(request.getUpdatedAt())
+                .fullName(request.getUser().getFullName())
+                .email(request.getUser().getEmail())
+                .address(request.getUser().getAddress())
+                .dateOfBirth(request.getUser().getDateOfBirth() != null ? request.getUser().getDateOfBirth().toString() : null)
                 .build();
     }
 

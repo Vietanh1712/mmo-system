@@ -111,6 +111,17 @@ Trang Chi tiết đơn hàng hiển thị chi tiết hóa đơn thanh toán củ
 
 ---
 
-## 8. OUT OF SCOPE
+## 8. QUY TRÌNH HỖ TRỢ BẢO HÀNH & KHIẾU NẠI
+
+- **Hỗ trợ ngoài (Chat trực tiếp):** Trường hợp sản phẩm bị lỗi trong thời gian bảo hành (ví dụ: mua tài khoản 1 tháng nhưng hỏng sau 7 ngày sử dụng), Khách hàng chủ động nhắn tin trực tiếp với Người bán để thương lượng đổi tài khoản hoặc hoàn tiền.
+- **Mở khiếu nại tranh chấp (Complaint Dispute):** Nếu hai bên không tự giải quyết được, Khách hàng bấm nút **Khiếu nại** để đóng băng đơn hàng (chuyển trạng thái sang `DISPUTED`).
+- **Hội thoại tranh chấp (Dispute Chat):**
+  - Một phòng chat tranh chấp được tạo liên kết với khiếu nại. Khách hàng và Người bán có thể nhắn tin trao đổi đối chất trực tiếp tại đây.
+  - Nhân viên phân xử (Staff) tham gia phòng chat ở chế độ **Read-only** (chỉ có quyền xem cuộc trò chuyện của 2 người và bằng chứng đính kèm, không được phép chat).
+  - Nhân viên đưa ra phán quyết hoàn tiền (Refund) hoặc giải ngân (Payout), đồng thời có quyền **gắn cờ cảnh cáo shop người bán** nếu phát hiện vi phạm.
+
+---
+
+## 9. OUT OF SCOPE
 
 - ❌ Gửi lại mã thẻ qua Email của khách hàng (chỉ hiển thị xem trực tiếp bảo mật trên trình duyệt).

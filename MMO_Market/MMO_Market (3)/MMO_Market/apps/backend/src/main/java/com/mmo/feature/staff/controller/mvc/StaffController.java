@@ -97,8 +97,17 @@ public class StaffController {
             Model model) {
 
         LocalDateTime from = null, to = null;
-        try { if (fromDate != null && !fromDate.isBlank()) from = LocalDate.parse(fromDate).atStartOfDay(); } catch (Exception ignored) {}
-        try { if (toDate   != null && !toDate.isBlank())   to   = LocalDate.parse(toDate).atTime(23, 59, 59); } catch (Exception ignored) {}
+        try {
+            if (fromDate != null && !fromDate.isBlank()) {
+                from = LocalDate.parse(fromDate).atStartOfDay();
+                to = LocalDate.parse(fromDate).atTime(23, 59, 59);
+            }
+        } catch (Exception ignored) {}
+        try {
+            if (toDate != null && !toDate.isBlank()) {
+                to = LocalDate.parse(toDate).atTime(23, 59, 59);
+            }
+        } catch (Exception ignored) {}
 
         Long id = null;
         String kw = (keyword != null && keyword.isBlank()) ? null : keyword;
@@ -117,11 +126,13 @@ public class StaffController {
         model.addAttribute("currentPage",           page);
         model.addAttribute("totalPages",            txPage.getTotalPages());
         model.addAttribute("totalTransactions",     txPage.getTotalElements());
-        model.addAttribute("completedTransactions", transactionRepository.countByStatusAndIsDeleteFalse("Completed"));
-        model.addAttribute("pendingTransactions",   transactionRepository.countByStatusAndIsDeleteFalse("Pending"));
-        model.addAttribute("failTransactions",
-                transactionRepository.countByStatusAndIsDeleteFalse("Cancelled")
-              + transactionRepository.countByStatusAndIsDeleteFalse("Refunded"));
+        long completedCount = transactionRepository.countByStatusesAndNotDeleted(java.util.List.of("Success", "success", "Completed", "completed", "Held", "held", "Approved", "approved"));
+        long pendingCount = transactionRepository.countByStatusesAndNotDeleted(java.util.List.of("Pending", "pending", "Processing", "processing"));
+        long failCount = transactionRepository.countByStatusesAndNotDeleted(java.util.List.of("Failed", "failed", "Fail", "fail", "Rejected", "rejected", "Cancelled", "cancelled", "Cancel", "cancel"));
+
+        model.addAttribute("completedTransactions", completedCount);
+        model.addAttribute("pendingTransactions",   pendingCount);
+        model.addAttribute("failTransactions",      failCount);
         model.addAttribute("types",           transactionRepository.findAllTransactionTypes());
         model.addAttribute("statuses",        transactionRepository.findAllStatus());
         model.addAttribute("keyword",         keyword);
@@ -154,7 +165,7 @@ public class StaffController {
         }
         model.addAttribute("remainingHours", remainingHours);
 
-        Complaint complaint = complaintRepository.findByTransactionId(id);
+        Complaint complaint = complaintRepository.findFirstByTransactionIdAndIsDeleteFalseOrderByIdDesc(id).orElse(null);
         model.addAttribute("complaint", complaint);
 
         return "staff/transaction-detail";
@@ -178,10 +189,14 @@ public class StaffController {
         model.addAttribute("withdrawals",          wPage.getContent());
         model.addAttribute("currentPage",           page);
         model.addAttribute("totalPages",            wPage.getTotalPages());
+        long pending = withdrawalRepository.countByStatusesAndNotDeleted(java.util.List.of("Pending", "pending", "Processing", "processing"));
+        long completed = withdrawalRepository.countByStatusesAndNotDeleted(java.util.List.of("Completed", "completed", "Approved", "approved", "Success", "success"));
+        long rejected = withdrawalRepository.countByStatusesAndNotDeleted(java.util.List.of("Rejected", "rejected", "Failed", "failed"));
+
         model.addAttribute("totalWithdrawals",      withdrawalRepository.count());
-        model.addAttribute("pendingWithdrawals",    withdrawalRepository.countByStatusAndIsDeleteFalse("Pending"));
-        model.addAttribute("completedWithdrawals",  withdrawalRepository.countByStatusAndIsDeleteFalse("Completed"));
-        model.addAttribute("rejectedWithdrawals",   withdrawalRepository.countByStatusAndIsDeleteFalse("Rejected"));
+        model.addAttribute("pendingWithdrawals",    pending);
+        model.addAttribute("completedWithdrawals",  completed);
+        model.addAttribute("rejectedWithdrawals",   rejected);
         model.addAttribute("statuses",              withdrawalRepository.findAllStatus());
         model.addAttribute("keyword",               keyword);
         model.addAttribute("selectedStatus",        st);
@@ -195,6 +210,13 @@ public class StaffController {
         Withdrawal withdrawal = withdrawalRepository.findDetailById(id)
                 .orElseThrow(() -> new RuntimeException("Withdrawal request not found"));
         model.addAttribute("withdrawal", withdrawal);
+
+        List<String> statuses = withdrawalRepository.findAllStatus();
+        if (statuses.isEmpty()) {
+            statuses = List.of("Pending", "Approved", "Rejected");
+        }
+        model.addAttribute("statuses", statuses);
+
         return "staff/withdrawal-detail";
     }
 
@@ -256,10 +278,20 @@ public class StaffController {
         model.addAttribute("dangerFlags",    shopFlagRepository.countByFlagLevelAndIsDeleteFalse("Danger"));
         model.addAttribute("warningFlags",   shopFlagRepository.countByFlagLevelAndIsDeleteFalse("Warning"));
         model.addAttribute("criticalFlags",  shopFlagRepository.countByFlagLevelAndIsDeleteFalse("Critical"));
-        model.addAttribute("removedFlags",   shopFlagRepository.countByStatusAndIsDeleteFalse("Removed"));
-        model.addAttribute("activeFlags",    shopFlagRepository.countByStatusAndIsDeleteFalse("Effect"));
-        model.addAttribute("levels",         List.of("Warning", "Critical", "Danger"));
-        model.addAttribute("statuses",       List.of("Effect", "Removed"));
+        model.addAttribute("removedFlags",   shopFlagRepository.countRemovedFlags());
+        model.addAttribute("activeFlags",    shopFlagRepository.countActiveFlags());
+
+        List<String> levels = shopFlagRepository.findDistinctFlagLevels();
+        if (levels.isEmpty()) {
+            levels = List.of("Warning", "Critical", "Danger");
+        }
+        model.addAttribute("levels",         levels);
+
+        List<String> statuses = shopFlagRepository.findDistinctStatuses();
+        if (statuses.isEmpty()) {
+            statuses = List.of("Effect", "Removed");
+        }
+        model.addAttribute("statuses",       statuses);
         model.addAttribute("keyword",        keyword);
         model.addAttribute("selectedLevel",  lv);
         model.addAttribute("selectedStatus", st);
@@ -275,6 +307,19 @@ public class StaffController {
             return "redirect:/staff/flags";
         }
         model.addAttribute("flag", flag);
+        
+        List<String> levels = shopFlagRepository.findDistinctFlagLevels();
+        if (levels.isEmpty()) {
+            levels = List.of("Warning", "Critical", "Danger");
+        }
+        model.addAttribute("levels", levels);
+
+        List<String> statuses = shopFlagRepository.findDistinctStatuses();
+        if (statuses.isEmpty()) {
+            statuses = List.of("Effect", "Removed");
+        }
+        model.addAttribute("statuses", statuses);
+        
         return "staff/flag-detail";
     }
 

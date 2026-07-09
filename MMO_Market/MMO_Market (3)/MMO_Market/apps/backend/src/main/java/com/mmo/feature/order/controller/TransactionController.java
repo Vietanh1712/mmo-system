@@ -19,6 +19,9 @@ import com.mmo.feature.order.service.TransactionService;
 
 import java.util.Map;
 
+import com.mmo.shared.dal.ComplaintRepository;
+import com.mmo.shared.model.Complaint;
+
 @RestController
 @RequestMapping("/api/transactions")
 public class TransactionController {
@@ -31,6 +34,9 @@ public class TransactionController {
 
     @Autowired
     private com.mmo.shared.dal.ReviewRepository reviewRepository;
+
+    @Autowired
+    private com.mmo.shared.dal.ComplaintRepository complaintRepository;
 
     @PostMapping("/purchase")
     public ResponseEntity<?> purchaseProduct(
@@ -130,6 +136,11 @@ public class TransactionController {
                 
                 java.util.Optional<com.mmo.shared.model.Review> reviewOpt = reviewRepository.findByTransactionIdAndIsDeleteFalse(t.getId());
                 boolean isReviewed = reviewOpt.isPresent();
+                
+                Long complaintId = complaintRepository.findFirstByTransactionIdAndIsDeleteFalseOrderByIdDesc(t.getId())
+                        .map(Complaint::getId)
+                        .orElse(null);
+
                 return com.mmo.shared.dto.OrderDto.builder()
                         .orderCode("MMO-ORD-" + t.getId())
                         .transactionId(t.getId())
@@ -145,6 +156,7 @@ public class TransactionController {
                         .isReviewed(isReviewed)
                         .reviewRating(isReviewed ? reviewOpt.get().getRating() : null)
                         .reviewComment(isReviewed ? reviewOpt.get().getComment() : null)
+                        .complaintId(complaintId)
                         .build();
             }).toList();
 
@@ -173,6 +185,11 @@ public class TransactionController {
 
             java.util.Optional<com.mmo.shared.model.Review> reviewOpt = reviewRepository.findByTransactionIdAndIsDeleteFalse(t.getId());
             boolean isReviewed = reviewOpt.isPresent();
+
+            Long complaintId = complaintRepository.findFirstByTransactionIdAndIsDeleteFalseOrderByIdDesc(t.getId())
+                    .map(Complaint::getId)
+                    .orElse(null);
+
             com.mmo.shared.dto.OrderDto orderDto = com.mmo.shared.dto.OrderDto.builder()
                     .orderCode("MMO-ORD-" + t.getId())
                     .transactionId(t.getId())
@@ -188,6 +205,7 @@ public class TransactionController {
                     .isReviewed(isReviewed)
                     .reviewRating(isReviewed ? reviewOpt.get().getRating() : null)
                     .reviewComment(isReviewed ? reviewOpt.get().getComment() : null)
+                    .complaintId(complaintId)
                     .build();
 
             // Lấy thông tin tài sản số (nếu có)

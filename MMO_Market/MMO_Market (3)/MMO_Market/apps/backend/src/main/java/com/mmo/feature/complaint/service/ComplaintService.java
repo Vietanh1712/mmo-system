@@ -32,7 +32,9 @@ public interface ComplaintService {
             String resolution);
             
     // --- Methods from HEAD ---
-    Complaint createComplaint(Long customerId, Long transactionId, String description, String evidence);
+    Complaint createComplaint(Long customerId, Long transactionId, String description, String evidence, String preferredSolution);
+    
+    Complaint startDispute(Long complaintId, Long staffId);
     
     List<Complaint> getCustomerComplaints(Long customerId);
     
@@ -42,7 +44,7 @@ public interface ComplaintService {
     
     Complaint getComplaintByIdForStaff(Long complaintId);
     
-    Complaint updateComplaintStatus(Long complaintId, String status, String resolution);
+    Complaint updateComplaintStatus(Long complaintId, String status, String resolution, String flagLevel, String flagReason, Long staffId);
 
     org.springframework.data.domain.Page<Complaint> searchComplaintsForStaff(String keyword, String status, int page, int size);
 }

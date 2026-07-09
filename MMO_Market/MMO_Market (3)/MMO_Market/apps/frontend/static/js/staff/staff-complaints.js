@@ -105,18 +105,20 @@ function renderStaffComplaintsTable(list, isBackendDriven = true) {
     tbody.innerHTML = list.map(item => {
         let badgeClass = 'ds-badge-warning';
         let statusText = 'Đang xử lý';
-        if (item.status === 'New') {
+        
+        const statusVal = (item.status || '').toLowerCase();
+        if (statusVal === 'pending_review' || statusVal === 'pending_status') {
             badgeClass = 'ds-badge-info';
-            statusText = 'Mới';
-        } else if (item.status === 'Resolved' || item.status === 'Completed') {
-            badgeClass = 'ds-badge-success';
-            statusText = 'Đã giải quyết';
-        } else if (item.status === 'Rejected') {
-            badgeClass = 'ds-badge-danger';
-            statusText = 'Từ chối';
-        } else if (item.status === 'InProgress') {
+            statusText = 'Chờ duyệt';
+        } else if (statusVal === 'new' || statusVal === 'open' || statusVal === 'inprogress' || statusVal === 'in_progress' || statusVal === 'processing') {
             badgeClass = 'ds-badge-warning';
             statusText = 'Đang xử lý';
+        } else if (statusVal === 'resolved' || statusVal === 'completed' || statusVal === 'success') {
+            badgeClass = 'ds-badge-success';
+            statusText = 'Đã giải quyết';
+        } else if (statusVal === 'rejected' || statusVal === 'refused' || statusVal === 'fail' || statusVal === 'failed') {
+            badgeClass = 'ds-badge-danger';
+            statusText = 'Từ chối';
         }
 
         const nameInitials = item.senderName ? item.senderName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'NA';
@@ -264,6 +266,21 @@ async function loadComplaintStats() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    const token = sessionStorage.getItem('accessToken');
+    const userStr = sessionStorage.getItem('user');
+    let isStaff = false;
+    if (userStr) {
+        try {
+            const user = JSON.parse(userStr);
+            const role = (user.role || '').toLowerCase();
+            isStaff = role.includes('staff') || role.includes('admin');
+        } catch(e) {}
+    }
+    if (!token || !isStaff) {
+        window.location.href = '/login';
+        return;
+    }
+
     await loadComplaintStats();
     await renderStaffComplaints();
 });

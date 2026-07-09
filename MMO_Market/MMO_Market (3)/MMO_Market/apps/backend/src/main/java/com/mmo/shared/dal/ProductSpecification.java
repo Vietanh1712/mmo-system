@@ -77,18 +77,32 @@ public class ProductSpecification {
 
             // --- Rating Filter (based on AVG rating of Reviews table) ---
             if (ratings != null && !ratings.isEmpty()) {
-                int minRating = ratings.stream().mapToInt(Integer::intValue).min().orElse(0);
-                if (minRating > 0) {
-                    // Average rating subquery
+                List<Predicate> ratingPredicates = new ArrayList<>();
+                for (Integer rate : ratings) {
                     Subquery<Double> avgRatingSubquery = query.subquery(Double.class);
                     Root<com.mmo.shared.model.Review> reviewRoot = avgRatingSubquery.from(com.mmo.shared.model.Review.class);
-                    avgRatingSubquery.select(criteriaBuilder.avg(reviewRoot.get("rating")));
+                    avgRatingSubquery.select(criteriaBuilder.avg(reviewRoot.get("rating").as(Double.class)));
                     avgRatingSubquery.where(
                         criteriaBuilder.equal(reviewRoot.get("product").get("id"), root.get("id")),
                         criteriaBuilder.equal(reviewRoot.get("isDelete"), false)
                     );
                     
-                    predicates.add(criteriaBuilder.greaterThanOrEqualTo(avgRatingSubquery, (double) minRating));
+                    if (rate == 5) {
+                        ratingPredicates.add(criteriaBuilder.greaterThanOrEqualTo(avgRatingSubquery, 5.0));
+                    } else if (rate == 4) {
+                        ratingPredicates.add(criteriaBuilder.and(
+                            criteriaBuilder.greaterThanOrEqualTo(avgRatingSubquery, 4.0),
+                            criteriaBuilder.lessThan(avgRatingSubquery, 5.0)
+                        ));
+                    } else if (rate == 3) {
+                        ratingPredicates.add(criteriaBuilder.and(
+                            criteriaBuilder.greaterThanOrEqualTo(avgRatingSubquery, 3.0),
+                            criteriaBuilder.lessThan(avgRatingSubquery, 4.0)
+                        ));
+                    }
+                }
+                if (!ratingPredicates.isEmpty()) {
+                    predicates.add(criteriaBuilder.or(ratingPredicates.toArray(new Predicate[0])));
                 }
             }
 
