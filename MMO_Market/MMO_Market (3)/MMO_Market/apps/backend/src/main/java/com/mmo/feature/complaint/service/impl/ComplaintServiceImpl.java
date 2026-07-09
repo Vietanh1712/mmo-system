@@ -333,7 +333,7 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Override
     public List<Complaint> getAllComplaintsForStaff() {
-        return complaintRepository.findAllByIsDeleteFalseOrderByIdAsc();
+        return complaintRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc();
     }
 
     @Override
@@ -559,11 +559,9 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     @Override
-    public org.springframework.data.domain.Page<Complaint> searchComplaintsForStaff(String keyword, String status,
-            int page, int size) {
-        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size,
-                org.springframework.data.domain.Sort.by("id").ascending());
-
+    public org.springframework.data.domain.Page<Complaint> searchComplaintsForStaff(String keyword, String status, int page, int size) {
+        org.springframework.data.domain.Pageable pageable = 
+                org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by("createdAt").descending());
         Long complaintId = null;
         String searchKeyword = null;
         if (keyword != null && !keyword.trim().isEmpty()) {

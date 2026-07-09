@@ -118,7 +118,7 @@ public class StaffController {
         String typeParam   = (type   != null && !type.isBlank())   ? type   : null;
         String statusParam = (status != null && !status.isBlank()) ? status : null;
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Transaction> txPage = transactionRepository.searchTransactions(
                 kw, id, typeParam, statusParam, from, to, pageable);
 
@@ -183,7 +183,7 @@ public class StaffController {
         String st = (status == null || status.isBlank() || status.equals("ALL")) ? null : status;
         String kw = (keyword != null && keyword.isBlank()) ? null : keyword;
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Withdrawal> wPage = withdrawalRepository.searchWithdrawals(st, kw, minAmount, pageable);
 
         model.addAttribute("withdrawals",          wPage.getContent());
@@ -268,7 +268,7 @@ public class StaffController {
         String st = (status == null || status.isBlank() || status.equals("ALL")) ? null : status;
         String kw = (keyword != null && keyword.isBlank()) ? null : keyword;
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<ShopFlag> fPage = shopFlagRepository.searchFlags(kw, lv, st, pageable);
 
         model.addAttribute("flags",          fPage.getContent());

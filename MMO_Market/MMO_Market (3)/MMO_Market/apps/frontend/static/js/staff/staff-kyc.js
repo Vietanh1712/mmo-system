@@ -65,27 +65,29 @@ async function loadKycList(page = 0) {
         if (!response.ok) throw new Error('Failed to load');
         const data = await response.json();
         
-        renderTable(data.content);
+        renderTable(data.content, data.number, data.size);
         renderPagination(data);
     } catch (e) {
         console.error("Lỗi tải dữ liệu KYC", e);
     }
 }
 
-function renderTable(content) {
+function renderTable(content, page, size) {
     const tbody = document.getElementById('kycTableBody');
     if (!tbody) return;
     tbody.innerHTML = '';
     
     if (content.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="ds-table-center">Không có dữ liệu</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="ds-table-center">Không có dữ liệu</td></tr>';
         return;
     }
 
-    content.forEach(kyc => {
+    content.forEach((kyc, index) => {
+        const stt = page * size + index + 1;
         const statusBadge = getStatusBadge(kyc.status);
         const tr = document.createElement('tr');
         tr.innerHTML = `
+            <td class="ds-table-center">${stt}</td>
             <td>#${kyc.requestCode}</td>
             <td>${kyc.idNumber}</td>
             <td>${kyc.idType}</td>

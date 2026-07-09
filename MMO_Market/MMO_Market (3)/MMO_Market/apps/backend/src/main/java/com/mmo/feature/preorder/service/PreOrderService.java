@@ -87,7 +87,7 @@ public class PreOrderService {
         User customer = userRepository.findByIdAndIsDeleteFalse(customerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Tài khoản không hợp lệ."));
 
-        List<PreOrder> preOrders = preOrderRepository.findByCustomerAndIsDeleteFalse(customer);
+        List<PreOrder> preOrders = preOrderRepository.findByCustomerAndIsDeleteFalseOrderByCreatedAtDesc(customer);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         return preOrders.stream()

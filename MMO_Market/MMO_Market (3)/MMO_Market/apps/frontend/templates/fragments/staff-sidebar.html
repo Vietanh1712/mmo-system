@@ -28,6 +28,11 @@
                 <i class="fa fa-id-card"></i> Định danh KYC
             </a>
             <a class="staff-sidebar__link"
+               th:classappend="${active == 'shop-registrations'} ? ' is-active' : ''"
+               href="/staff/shop-registrations">
+                <i class="fa fa-shopping-bag"></i> Shops
+            </a>
+            <a class="staff-sidebar__link"
                th:classappend="${active == 'transactions'} ? ' is-active' : ''"
                href="/staff/transactions">
                 <i class="fa fa-exchange"></i> Giao dịch
