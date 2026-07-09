@@ -19,5 +19,5 @@ public interface DigitalAssetRepository extends JpaRepository<DigitalAsset, Long
 
     long countByVariantAndIsUsedFalseAndIsDeleteFalse(ProductVariant variant);
 
-    java.util.Optional<DigitalAsset> findByTransactionAndIsDeleteFalse(Transaction transaction);
+    List<DigitalAsset> findByTransactionAndIsDeleteFalse(Transaction transaction);
 }

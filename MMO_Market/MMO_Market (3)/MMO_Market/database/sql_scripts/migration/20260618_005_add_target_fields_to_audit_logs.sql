@@ -1,3 +1,6 @@
+﻿USE MMO_System_Schema;
+GO
+
 -- =============================================================================
 -- Migration: Bổ sung các cột Target vào AuditLogs
 -- Ngày: 2026-06-18
@@ -45,3 +48,4 @@ BEGIN
     PRINT 'Đã thêm cột target_type vào AuditLogs';
 END
 GO
+

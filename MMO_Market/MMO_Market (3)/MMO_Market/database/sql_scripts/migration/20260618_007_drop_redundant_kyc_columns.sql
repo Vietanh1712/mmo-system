@@ -1,3 +1,6 @@
+﻿USE MMO_System_Schema;
+GO
+
 -- Migration: Drop redundant KYC columns
 -- Description: Drop full_name and date_of_birth from KYCRequests since they are now managed in the Users table via KycRequest -> User entity relationship.
 -- Author: Antigravity Agent
@@ -44,3 +47,4 @@ SELECT column_name, data_type, is_nullable
 FROM INFORMATION_SCHEMA.COLUMNS
 WHERE table_name = 'KYCRequests';
 GO
+

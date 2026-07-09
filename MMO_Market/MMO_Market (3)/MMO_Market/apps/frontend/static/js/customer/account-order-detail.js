@@ -69,6 +69,12 @@ async function handleComplaintSubmit(e) {
 
     const fileInput = document.getElementById('complaintEvidenceFile');
     const statusText = document.getElementById('uploadStatusText');
+    
+    if (!fileInput || fileInput.files.length === 0) {
+        showWarningToast('Vui lòng cung cấp ảnh hoặc video bằng chứng.');
+        return;
+    }
+
     if (fileInput && fileInput.files.length > 0) {
         if (statusText) statusText.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tải lên ảnh/video bằng chứng...';
         const file = fileInput.files[0];

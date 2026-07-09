@@ -1,3 +1,6 @@
+﻿USE MMO_System_Schema;
+GO
+
 -- ==============================================================================
 -- ADD IMAGE URL TO PRODUCT VARIANTS
 -- File: 20260619_AddVariantImageColumn.sql
@@ -23,3 +26,4 @@ BEGIN
     PRINT N'✓ Column image_url already exists in ProductVariants table.';
 END
 GO
+

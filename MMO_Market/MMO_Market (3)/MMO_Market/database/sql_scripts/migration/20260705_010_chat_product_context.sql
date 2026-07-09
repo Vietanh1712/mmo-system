@@ -1,3 +1,6 @@
+﻿USE MMO_System_Schema;
+GO
+
 -- Migration: Add product_id context column to Chats table
 -- Date: 2026-07-05
 -- Purpose: Store product context when customer initiates chat from product page
@@ -12,3 +15,4 @@ BEGIN
     PRINT 'Column product_id already exists in Chats table.';
 END
 GO
+

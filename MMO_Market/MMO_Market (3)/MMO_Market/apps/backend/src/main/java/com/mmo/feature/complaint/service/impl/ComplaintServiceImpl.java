@@ -257,6 +257,20 @@ public class ComplaintServiceImpl implements ComplaintService {
             throw new IllegalArgumentException("Không thể khiếu nại giao dịch đã bị hủy hoặc hoàn tiền.");
         }
 
+        // Kiểm tra xem khách hàng và người bán đã chat với nhau chưa
+        List<com.mmo.shared.model.Chat> chats = chatRepository.findActiveChatsBetweenUsers(customer, transaction.getSeller());
+        if (chats == null || chats.isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng nhắn tin trao đổi với người bán trước khi tạo khiếu nại. Chỉ tạo khiếu nại khi hai bên không thể tự giải quyết.");
+        }
+
+        // Bắt buộc có lý do và bằng chứng
+        if (description == null || description.trim().isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng cung cấp lý do khiếu nại.");
+        }
+        if (evidence == null || evidence.trim().isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng cung cấp bằng chứng (hình ảnh/video) khiếu nại.");
+        }
+
         // Đóng băng tiền/giao dịch: Cập nhật trạng thái giao dịch thành 'Disputed'
         transaction.setStatus("Disputed");
         transactionRepository.save(transaction);
@@ -341,6 +355,21 @@ public class ComplaintServiceImpl implements ComplaintService {
         return complaintRepository.findById(complaintId)
                 .filter(c -> c.getIsDelete() == null || !c.getIsDelete())
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khiếu nại."));
+    }
+
+    @Override
+    public List<com.mmo.shared.model.Chat> getComplaintChatHistory(Long complaintId, Long staffId) {
+        Complaint complaint = getComplaintByIdForStaff(complaintId);
+        if (complaint.getTransaction() == null) {
+            return java.util.Collections.emptyList();
+        }
+        User customer = complaint.getCustomer();
+        User seller = complaint.getSeller();
+        if (customer == null || seller == null) {
+            return java.util.Collections.emptyList();
+        }
+        // Staff views full chat history without deleted filters
+        return chatRepository.findNormalChatsBetween(customer, seller);
     }
 
     @Override
