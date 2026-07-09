@@ -28,3 +28,7 @@ node_modules/
 target/
 .idea/
 *.log
+# VS Code
+.vscode/
+*.code-workspace
+.history/

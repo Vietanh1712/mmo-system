@@ -341,12 +341,7 @@ public class SellerController {
 
             // Check shop level restrictions
             if (seller.getShopLevel() != null) {
-                if (seller.getShopLevel() == 0) {
-                    long activeProductsCount = productRepository.findBySellerAndIsDeleteFalseOrderByCreatedAtDesc(seller).size();
-                    if (activeProductsCount >= 5) {
-                        return ResponseEntity.badRequest().body(Map.of("message", "Shop của bạn đang trong trạng thái cảnh cáo. Chỉ được đăng tối đa 5 sản phẩm."));
-                    }
-                } else if (seller.getShopLevel() == 1) {
+                if (seller.getShopLevel() == 1) {
                     for (Map<String, Object> vData : variantsList) {
                         Object priceObj = vData.get("priceVnd");
                         if (priceObj != null) {
