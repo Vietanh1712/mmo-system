@@ -142,36 +142,7 @@ public class ChatController {
                 })
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        // Inject active complaints group chats
-        List<com.mmo.shared.model.Complaint> activeComplaints = complaintRepository.findActiveComplaintsForUser(currentUser);
-        for (com.mmo.shared.model.Complaint comp : activeComplaints) {
-            List<Chat> compChats = chatRepository.findByComplaintAndIsDeleteFalseOrderByCreatedAtAsc(comp);
-            String latestMsg = "Hệ thống: Nhân viên đã mở cuộc đối chất.";
-            java.time.LocalDateTime latestTime = comp.getCreatedAt();
-            if (!compChats.isEmpty()) {
-                Chat lastChat = compChats.get(compChats.size() - 1);
-                latestMsg = lastChat.getMessage();
-                latestTime = lastChat.getCreatedAt();
-            }
 
-            long unread = compChats.stream()
-                .filter(c -> !c.getSender().getId().equals(userId) && (c.getIsRead() == null || Boolean.FALSE.equals(c.getIsRead())))
-                .count();
-
-            Map<String, Object> map = new HashMap<>();
-            map.put("contactId", -comp.getId()); // Use negative ID for complaint
-            map.put("name", "Tranh chấp #CMP-" + comp.getId() + " (" + (comp.getCustomer().getId().equals(userId) ? "Shop: " + comp.getSeller().getFullName() : "Khách: " + comp.getCustomer().getFullName()) + ")");
-            map.put("avatar", "TC");
-            map.put("latestMessage", latestMsg);
-            map.put("latestTime", latestTime);
-            map.put("isBlocked", false);
-            map.put("isBlockedByContact", false);
-            map.put("isMuted", false);
-            map.put("online", true);
-            map.put("unreadCount", unread);
-            map.put("isComplaint", true);
-            responseList.add(map);
-        }
 
         // Sort combined list by newest first
         responseList.sort((m1, m2) -> {
