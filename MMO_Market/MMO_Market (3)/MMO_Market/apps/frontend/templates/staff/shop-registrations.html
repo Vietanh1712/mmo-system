@@ -52,26 +52,26 @@
             <section class="ds-section">
                 <div class="staff-page-header">
                     <div>
-                        <h1 class="ds-page-title">Quản lý yêu cầu mở Shop</h1>
-                        <p class="ds-page-subtitle">Danh sách yêu cầu mở Shop chờ phê duyệt hoặc đã xử lý.</p>
+                        <h1 class="ds-page-title">Quản lý Shop</h1>
+                        <p class="ds-page-subtitle">Quản lý danh sách các Shop đăng ký bán hàng trên hệ thống.</p>
                     </div>
                 </div>
 
                 <div class="staff-stat-grid">
                     <div class="ds-card staff-stat-card blue">
-                        <p class="staff-stat-card__label">Tổng yêu cầu</p>
+                        <p class="staff-stat-card__label">Tổng số Shop</p>
                         <p class="staff-stat-card__value" id="stat-total-shops">0</p>
                     </div>
-                    <div class="ds-card staff-stat-card yellow">
-                        <p class="staff-stat-card__label">Chờ duyệt</p>
+                    <div class="ds-card staff-stat-card green">
+                        <p class="staff-stat-card__label">Shop đang hoạt động</p>
                         <p class="staff-stat-card__value" id="stat-pending-shops">0</p>
                     </div>
-                    <div class="ds-card staff-stat-card green">
-                        <p class="staff-stat-card__label">Đã duyệt</p>
+                    <div class="ds-card staff-stat-card yellow">
+                        <p class="staff-stat-card__label">Shop bị khóa</p>
                         <p class="staff-stat-card__value" id="stat-approved-shops">0</p>
                     </div>
                     <div class="ds-card staff-stat-card red">
-                        <p class="staff-stat-card__label">Từ chối</p>
+                        <p class="staff-stat-card__label">Tổng tiền cọc</p>
                         <p class="staff-stat-card__value" id="stat-rejected-shops">0</p>
                     </div>
                 </div>
@@ -81,12 +81,6 @@
                         <h2 class="ds-card-title">Bộ lọc yêu cầu</h2>
                         <div class="ds-filter-grid">
                             <input class="ds-input" type="text" id="shopKeywordFilter" placeholder="Tìm theo mã, tên shop, email...">
-                            <select class="ds-input" id="regStatusFilter">
-                                <option value="">Trạng thái yêu cầu (Tất cả)</option>
-                                <option value="PENDING">Chờ duyệt</option>
-                                <option value="APPROVED">Chấp thuận (Đã duyệt)</option>
-                                <option value="REJECTED">Từ chối</option>
-                            </select>
                             <select class="ds-input" id="shopAccountStatusFilter">
                                 <option value="">Trạng thái Shop (Tất cả)</option>
                                 <option value="PENDING">Chờ kích hoạt</option>
@@ -112,13 +106,12 @@
                                 <th class="ds-table-center">Trạng thái Shop</th>
                                 <th class="ds-table-right">Tiền cọc (VNĐ)</th>
                                 <th class="ds-table-right">Số dư (VNĐ)</th>
-                                <th class="ds-table-center">Trạng thái yêu cầu</th>
                                 <th>Ngày gửi</th>
                                 <th class="ds-table-center">Thao tác</th>
                             </tr>
                             </thead>
                             <tbody id="shopRegistrationsTableBody">
-                                <tr><td colspan="9" class="ds-table-center">Đang tải dữ liệu...</td></tr>
+                                <tr><td colspan="8" class="ds-table-center">Đang tải dữ liệu...</td></tr>
                             </tbody>
                         </table>
                     </div>

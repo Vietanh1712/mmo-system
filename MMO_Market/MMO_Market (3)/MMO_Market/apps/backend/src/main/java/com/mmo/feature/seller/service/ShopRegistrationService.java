@@ -116,15 +116,15 @@ public class ShopRegistrationService {
     public Map<String, Long> getRegistrationStats() {
         Map<String, Long> stats = new HashMap<>();
 
-        long total = sellerRegistrationRepository.countByIsDeleteFalse();
-        long pending = sellerRegistrationRepository.countByStatusIgnoreCaseAndIsDeleteFalse("PENDING");
-        long approved = sellerRegistrationRepository.countByStatusIgnoreCaseAndIsDeleteFalse("APPROVED");
-        long rejected = sellerRegistrationRepository.countByStatusIgnoreCaseAndIsDeleteFalse("REJECTED");
+        long totalShops = userRepository.countTotalShops();
+        long activeShops = userRepository.countActiveShops();
+        long bannedShops = userRepository.countBannedShops();
+        long totalDeposit = userRepository.sumTotalDeposit();
 
-        stats.put("total", total);
-        stats.put("pending", pending);
-        stats.put("approved", approved);
-        stats.put("rejected", rejected);
+        stats.put("totalShops", totalShops);
+        stats.put("activeShops", activeShops);
+        stats.put("bannedShops", bannedShops);
+        stats.put("totalDeposit", totalDeposit);
         return stats;
     }
 

@@ -13,7 +13,6 @@
         loadRegistrations();
         loadRegistrationStats();
         loadShopAccountStatuses();
-        loadRegistrationStatuses();
 
         // Search and filter events
         const searchBtn = document.getElementById('shopSearchBtn');
@@ -29,8 +28,6 @@
             resetBtn.addEventListener('click', () => {
                 const keywordInput = document.getElementById('shopKeywordFilter');
                 if (keywordInput) keywordInput.value = '';
-                const statusSelect = document.getElementById('regStatusFilter');
-                if (statusSelect) statusSelect.value = '';
                 const shopStatusSelect = document.getElementById('shopAccountStatusFilter');
                 if (shopStatusSelect) shopStatusSelect.value = '';
                 loadRegistrations(0);
@@ -54,10 +51,10 @@
                 const approvedEl = document.getElementById('stat-approved-shops');
                 const rejectedEl = document.getElementById('stat-rejected-shops');
 
-                if (totalEl) totalEl.textContent = stats.total || 0;
-                if (pendingEl) pendingEl.textContent = stats.pending || 0;
-                if (approvedEl) approvedEl.textContent = stats.approved || 0;
-                if (rejectedEl) rejectedEl.textContent = stats.rejected || 0;
+                if (totalEl) totalEl.textContent = stats.totalShops || 0;
+                if (pendingEl) pendingEl.textContent = stats.activeShops || 0;
+                if (approvedEl) approvedEl.textContent = stats.bannedShops || 0;
+                if (rejectedEl) rejectedEl.textContent = formatVnd(stats.totalDeposit || 0);
             }
         } catch (error) {
             console.error("Lỗi tải thống kê đăng ký Shop", error);
@@ -66,19 +63,14 @@
 
     async function loadRegistrations(page = 0) {
         const tbody = document.getElementById('shopRegistrationsTableBody');
-        tbody.innerHTML = '<tr><td colspan="9" class="ds-table-center">Đang tải...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="ds-table-center">Đang tải...</td></tr>';
 
-        const statusSelect = document.getElementById('regStatusFilter');
-        const status = statusSelect ? statusSelect.value : '';
         const shopStatusSelect = document.getElementById('shopAccountStatusFilter');
         const shopStatus = shopStatusSelect ? shopStatusSelect.value : '';
         const keywordInput = document.getElementById('shopKeywordFilter');
         const keyword = keywordInput ? keywordInput.value.trim() : '';
 
         let url = `/v1/shop-registrations?page=${page}&size=${shopPageSize}`;
-        if (status) {
-            url += `&status=${status}`;
-        }
         if (shopStatus) {
             url += `&shopStatus=${shopStatus}`;
         }
@@ -94,10 +86,10 @@
                 renderTable(registrationsList, data.number, data.size);
                 renderPagination(data);
             } else {
-                tbody.innerHTML = '<tr><td colspan="9" class="ds-table-center">Lỗi khi tải dữ liệu</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="ds-table-center">Lỗi khi tải dữ liệu</td></tr>';
             }
         } catch (error) {
-            tbody.innerHTML = '<tr><td colspan="9" class="ds-table-center">Lỗi kết nối</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="ds-table-center">Lỗi kết nối</td></tr>';
         }
     }
 
@@ -106,7 +98,7 @@
         tbody.innerHTML = '';
 
         if (!content || content.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="ds-table-center">Không có yêu cầu nào.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="ds-table-center">Không có yêu cầu nào.</td></tr>';
             return;
         }
 
@@ -119,7 +111,6 @@
                 }
             } catch(e) {}
 
-            const statusBadge = getStatusBadge(item.status);
             const shopStatusBadge = getShopStatusBadge(item.shopStatus);
             const depositFormatted = formatVnd(item.depositVnd);
             const balanceFormatted = formatVnd(item.balanceVnd);
@@ -138,7 +129,6 @@
                 <td class="ds-table-center">${shopStatusBadge}</td>
                 <td class="ds-table-right">${depositFormatted}</td>
                 <td class="ds-table-right">${balanceFormatted}</td>
-                <td class="ds-table-center">${statusBadge}</td>
                 <td>${formattedDate}</td>
                 <td class="ds-table-center">
                     <label class="ds-switch" title="Bật/Tắt trạng thái hoạt động">
@@ -192,7 +182,7 @@
         const stUpper = shopStatus.toUpperCase();
         if (stUpper === 'PENDING') return '<span class="ds-badge ds-badge-warning">Chờ kích hoạt</span>';
         if (stUpper === 'ACTIVE' || stUpper === 'APPROVED') return '<span class="ds-badge ds-badge-success">Hoạt động</span>';
-        if (stUpper === 'BANNED' || stUpper === 'LOCKED') return '<span class="ds-badge ds-badge-danger">Đang bị khóa</span>';
+        if (stUpper === 'BANNED' || stUpper === 'LOCKED') return '<span class="ds-badge ds-badge-warning">Đang bị khóa</span>';
         if (stUpper === 'REJECTED') return '<span class="ds-badge ds-badge-danger">Bị từ chối</span>';
         return `<span class="ds-badge ds-badge-info">${shopStatus}</span>`;
     }
@@ -202,14 +192,7 @@
         return value.toLocaleString('vi-VN');
     }
 
-    function getStatusBadge(status) {
-        if (!status) return '<span class="ds-badge ds-badge-warning">Chờ duyệt</span>';
-        const stUpper = status.toUpperCase();
-        if (stUpper === 'PENDING') return '<span class="ds-badge ds-badge-warning">Chờ duyệt</span>';
-        if (stUpper === 'APPROVED') return '<span class="ds-badge ds-badge-success">Chấp thuận</span>';
-        if (stUpper === 'REJECTED') return '<span class="ds-badge ds-badge-danger">Từ chối</span>';
-        return `<span class="ds-badge ds-badge-info">${status}</span>`;
-    }
+
 
     function openReviewModal(item) {
         document.getElementById('modalShopCode').value = item.code || '';
@@ -335,43 +318,5 @@
         }
     }
 
-    async function loadRegistrationStatuses() {
-        const select = document.getElementById('regStatusFilter');
-        if (!select) return;
-        
-        try {
-            const response = await authFetch('/v1/shop-registrations/statuses');
-            if (response.ok) {
-                const statuses = await response.json();
-                select.innerHTML = '<option value="">Trạng thái yêu cầu (Tất cả)</option>';
-                
-                const addedValues = new Set();
-                statuses.forEach(s => {
-                    if (!s) return;
-                    const stUpper = s.toUpperCase();
-                    
-                    let label = s;
-                    let val = s;
-                    
-                    if (stUpper === 'PENDING') {
-                        label = 'Chờ duyệt';
-                    } else if (stUpper === 'APPROVED') {
-                        label = 'Chấp thuận (Đã duyệt)';
-                    } else if (stUpper === 'REJECTED') {
-                        label = 'Từ chối';
-                    }
-                    
-                    if (!addedValues.has(label)) {
-                        addedValues.add(label);
-                        const opt = document.createElement('option');
-                        opt.value = val;
-                        opt.textContent = label;
-                        select.appendChild(opt);
-                    }
-                });
-            }
-        } catch (error) {
-            console.error("Lỗi tải danh sách trạng thái yêu cầu từ database:", error);
-        }
-    }
+
 })();
