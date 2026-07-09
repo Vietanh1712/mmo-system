@@ -57,6 +57,10 @@ public class Transaction {
     @Column(name = "payment_method")
     private String paymentMethod;
 
+    @Column(name = "quantity", nullable = false)
+    @Builder.Default
+    private Integer quantity = 1;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {

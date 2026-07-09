@@ -12,4 +12,7 @@ import lombok.NoArgsConstructor;
 public class PurchaseRequest {
     private Long productId;
     private String variantLabel;
+    
+    @Builder.Default
+    private Integer quantity = 1;
 }

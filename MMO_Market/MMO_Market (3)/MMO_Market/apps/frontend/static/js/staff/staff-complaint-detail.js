@@ -191,8 +191,6 @@ async function loadComplaintDetails() {
 
     // Timeline
     renderTimeline();
-
-
     // Setup redirect button and link to full chat page
     const viewBtn = document.getElementById('view-dispute-chat-btn');
     if (viewBtn) {
@@ -204,6 +202,9 @@ async function loadComplaintDetails() {
     if (redirectBtn) {
         redirectBtn.href = `/staff/chat?complaintId=${numericId}`;
     }
+
+    // Load chats
+    await loadComplaintChats(numericId);
 }
 
 
@@ -258,6 +259,75 @@ function renderTimeline() {
         html += `
             <div class="staff-timeline__item">
                 <span class="staff-timeline__dot" style="background-color: #ef4444;"></span>
+                <div class="staff-timeline__content">
+                    <strong>Từ chối khiếu nại</strong>
+                    <p class="ds-caption">Nguyễn Văn Staff — Vừa xong</p>
+                    <p class="ds-body" style="font-size: 13px; font-style: italic; margin-top: 4px; padding-left: 8px; border-left: 2px solid #ef4444;">
+                        Lý do: ${escapeHtml(currentComplaint.resolution || 'Bằng chứng không hợp lệ.')}
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+
+    timeline.innerHTML = html;
+}
+
+async function loadComplaintChats(complaintId) {
+    const chatContainer = document.getElementById('staff-chat-container');
+    if (!chatContainer) return;
+
+    try {
+        const token = sessionStorage.getItem('accessToken');
+        const res = await fetch(`/api/complaints/${complaintId}/chat`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!res.ok) {
+            throw new Error('Không thể tải tin nhắn');
+        }
+
+        const chats = await res.json();
+        
+        if (!chats || chats.length === 0) {
+            chatContainer.innerHTML = '<p class="ds-caption" style="text-align: center;">Chưa có tin nhắn nào được trao đổi.</p>';
+            return;
+        }
+
+        let chatHtml = '';
+        chats.forEach(chat => {
+            const senderId = chat.senderId;
+            const msgTime = chat.createdAt ? new Date(chat.createdAt).toLocaleString('vi-VN') : '';
+            
+            // Just display generic labels since we don't have user roles easily available here
+            // But we know who is buyer and who is seller from currentComplaint
+            let senderLabel = 'Khách hàng';
+            let align = 'left';
+            let bgColor = '#fff';
+            
+            // If sender is not customer (assumes senderEmail is customer's email or something)
+            // But we don't easily have sellerId in currentComplaint from the simple map.
+            // Let's just alternate or use ID heuristically if we added sellerId.
+            // We can just rely on senderId. Let's assume lower ID is seller or we just use 'Người gửi: ID'
+            
+            chatHtml += `
+                <div style="display: flex; flex-direction: column; align-items: flex-start; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 8px;">
+                    <span style="font-size: 11px; color: #64748b; margin-bottom: 4px;">User ID: ${senderId} - ${msgTime}</span>
+                    <div style="background: ${bgColor}; padding: 10px 14px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        <p style="margin: 0; font-size: 13.5px; color: #1e293b; white-space: pre-wrap;">${chat.message}</p>
+                    </div>
+                </div>
+            `;
+        });
+        
+        chatContainer.innerHTML = chatHtml;
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    } catch (e) {
+        chatContainer.innerHTML = '<p class="ds-caption" style="text-align: center; color: #ef4444;">Lỗi tải tin nhắn.</p>';
+    }
+}
                 <div class="staff-timeline__content">
                     <strong>Từ chối hỗ trợ / khiếu nại</strong>
                     <p class="ds-caption">Nguyễn Văn Staff — Vừa xong</p>

@@ -45,7 +45,7 @@ public class TransactionService {
      * Thực hiện mua sản phẩm và trừ tiền từ số dư của người mua, bọc trong Transaction.
      */
     @Transactional
-    public Transaction purchaseProduct(Long userId, Long productId, String variantLabel) {
+    public Transaction purchaseProduct(Long userId, Long productId, String variantLabel, Integer quantity) {
         User customer = userRepository.findByIdAndIsDeleteFalse(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Người mua không tồn tại."));
 
@@ -71,9 +71,13 @@ public class TransactionService {
                                     .orElseThrow(() -> new IllegalArgumentException("Biến thể sản phẩm không tồn tại và sản phẩm không có biến thể khả dụng.")));
                 });
 
+        if (quantity == null || quantity <= 0) {
+            quantity = 1;
+        }
+
         // Kiểm tra số lượng tồn kho (stock)
-        if (variant.getStock() == null || variant.getStock() <= 0) {
-            throw new IllegalArgumentException("Sản phẩm đã hết hàng.");
+        if (variant.getStock() == null || variant.getStock() < quantity) {
+            throw new IllegalArgumentException("Sản phẩm không đủ số lượng tồn kho.");
         }
 
         // Đọc cấu hình phí cố định người mua (Flat Buyer Fee)
@@ -85,9 +89,10 @@ public class TransactionService {
 
         // Kiểm tra số dư ví người mua (bao gồm cả phí cố định người mua)
         long price = variant.getPriceVnd();
-        long totalDebit = price + flatBuyerFee;
+        long totalAmount = price * quantity;
+        long totalDebit = totalAmount + flatBuyerFee;
         if (customer.getBalanceVnd() == null || customer.getBalanceVnd() < totalDebit) {
-            throw new IllegalArgumentException("Số dư tài khoản không đủ để thực hiện thanh toán (bao gồm phí người mua: " + flatBuyerFee + " VNĐ).");
+            throw new IllegalArgumentException("Số dư tài khoản không đủ để thực hiện thanh toán (cần " + totalDebit + " VNĐ).");
         }
 
         // Trừ tiền người mua
@@ -95,7 +100,7 @@ public class TransactionService {
         userRepository.save(customer);
 
         // Giảm tồn kho
-        variant.setStock(variant.getStock() - 1);
+        variant.setStock(variant.getStock() - quantity);
 
         // Đọc cấu hình hoa hồng mặc định của sàn (Commission Percent)
         double basePercent = systemConfigurationRepository.findByConfigKey("DEFAULT_COMMISSION_PERCENT")
@@ -105,7 +110,7 @@ public class TransactionService {
                 }).orElse(5.0);
 
         // Tính phí hoa hồng động
-        long commission = (long) (price * (basePercent / 100.0));
+        long commission = (long) (totalAmount * (basePercent / 100.0));
 
         // Tính toán thời gian giam tiền Escrow (Escrow Hold Hours) động
         int escrowHoldHours = 72; // Mặc định 3 ngày
@@ -138,8 +143,9 @@ public class TransactionService {
                 .seller(product.getSeller())
                 .product(product)
                 .variant(variant)
-                .amountVnd(price)
+                .amountVnd(totalAmount)
                 .commissionVnd(commission)
+                .quantity(quantity)
                 .status("Held")
                 .escrowReleaseDate(LocalDateTime.now().plusHours(escrowHoldHours))
                 .build();
@@ -148,14 +154,19 @@ public class TransactionService {
         // Gán DigitalAsset nếu có
         java.util.List<com.mmo.shared.model.DigitalAsset> availableAssets = digitalAssetRepository.findByVariantAndIsUsedFalseAndIsDeleteFalse(variant);
         if (!availableAssets.isEmpty()) {
-            com.mmo.shared.model.DigitalAsset assetToAssign = availableAssets.get(0);
-            assetToAssign.setIsUsed(true);
-            assetToAssign.setTransaction(transaction);
-            digitalAssetRepository.save(assetToAssign);
+            if (availableAssets.size() < quantity) {
+                throw new IllegalArgumentException("Không đủ tài khoản/key trong kho để giao. Vui lòng giảm số lượng mua.");
+            }
+            for (int i = 0; i < quantity; i++) {
+                com.mmo.shared.model.DigitalAsset assetToAssign = availableAssets.get(i);
+                assetToAssign.setIsUsed(true);
+                assetToAssign.setTransaction(transaction);
+                digitalAssetRepository.save(assetToAssign);
+            }
         }
 
         // Record to Wallet Ledger (Customer paid)
-        walletService.recordTransaction(customer, "PAYMENT", -price, "SUCCESS", "Thanh toán đơn hàng " + product.getName(), "MMO-ORD-" + transaction.getId(), customer.getBalanceVnd());
+        walletService.recordTransaction(customer, "PAYMENT", -totalAmount, "SUCCESS", "Thanh toán đơn hàng " + product.getName(), "MMO-ORD-" + transaction.getId(), customer.getBalanceVnd());
 
         return transaction;
     }

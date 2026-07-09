@@ -845,6 +845,1045 @@ PRINT N'✓ CƠ SỞ DỮ LIỆU MMO_SYSTEM ĐÃ ĐƯỢC KHỞI TẠO HOÀN CH�
 PRINT N'======================================================';
 GO
 
+
+
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260618_001_create_permissions_and_user_permissions.sql
+-- ==============================================================================
+-- =============================================================================
+-- Migration: Tạo bảng Permissions và UserPermissions
+-- Ngày: 2026-06-18
+-- Mục đích: Hỗ trợ phân quyền người dùng (RBAC) chi tiết cho Staff và Admin
+-- =============================================================================
+
+USE MMO_System_Schema;
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Permissions')
+BEGIN
+    CREATE TABLE Permissions (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        group_name NVARCHAR(100) NOT NULL,
+        description NVARCHAR(500) NULL,
+        created_at DATETIME DEFAULT GETDATE()
+    );
+    PRINT 'Đã tạo bảng Permissions';
+END
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'UserPermissions')
+BEGIN
+    CREATE TABLE UserPermissions (
+        user_id BIGINT NOT NULL,
+        permission_id INT NOT NULL,
+        assigned_at DATETIME DEFAULT GETDATE(),
+        PRIMARY KEY (user_id, permission_id),
+        CONSTRAINT FK_UserPermissions_User FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
+        CONSTRAINT FK_UserPermissions_Permission FOREIGN KEY (permission_id) REFERENCES Permissions(id) ON DELETE CASCADE
+    );
+    PRINT 'Đã tạo bảng UserPermissions';
+END
+GO
+
+-- Seed 8 permissions hệ thống vào bảng Permissions
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'Permissions')
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'MANAGE_USERS')
+        INSERT INTO Permissions (name, group_name, description) VALUES ('MANAGE_USERS', N'Người dùng', N'Quản lý thông tin và trạng thái người dùng');
+    IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'MANAGE_PRODUCTS')
+        INSERT INTO Permissions (name, group_name, description) VALUES ('MANAGE_PRODUCTS', N'Sản phẩm', N'Kiểm duyệt và quản lý sản phẩm, biến thể');
+    IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'MANAGE_CATEGORIES')
+        INSERT INTO Permissions (name, group_name, description) VALUES ('MANAGE_CATEGORIES', N'Danh mục', N'Quản lý danh mục sản phẩm');
+    IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'APPROVE_KYC')
+        INSERT INTO Permissions (name, group_name, description) VALUES ('APPROVE_KYC', N'KYC', N'Xem và duyệt các yêu cầu xác minh danh tính');
+    IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'APPROVE_WITHDRAWALS')
+        INSERT INTO Permissions (name, group_name, description) VALUES ('APPROVE_WITHDRAWALS', N'Tài chính', N'Xem và duyệt các yêu cầu rút tiền');
+    IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'RESOLVE_COMPLAINTS')
+        INSERT INTO Permissions (name, group_name, description) VALUES ('RESOLVE_COMPLAINTS', N'Tranh chấp', N'Giải quyết các khiếu nại và tranh chấp đơn hàng');
+    IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'MANAGE_SYSTEM_CONFIG')
+        INSERT INTO Permissions (name, group_name, description) VALUES ('MANAGE_SYSTEM_CONFIG', N'Hệ thống', N'Quản lý các cấu hình tham số hệ thống');
+    
+    PRINT 'Đã seed 7 permissions hệ thống';
+END
+GO
+
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260618_002_add_support_tickets.sql
+-- ==============================================================================
+-- ==============================================================================
+-- MIGRATION: ADD SUPPORT TICKETS TABLE (SQL SERVER)
+-- Tên tệp: 20260618_001_add_support_tickets.sql
+-- Mô tả: Khởi tạo bảng SupportTickets phân tách với bảng Complaints
+-- ==============================================================================
+USE MMO_System_Schema;
+GO
+
+IF OBJECT_ID('SupportTickets', 'U') IS NOT NULL DROP TABLE SupportTickets;
+GO
+
+CREATE TABLE SupportTickets (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    category NVARCHAR(100) NOT NULL, -- Lỗi nạp tiền, Lỗi tài khoản, Góp ý, Khác
+    title NVARCHAR(255) NOT NULL,
+    description NVARCHAR(MAX) NOT NULL,
+    status VARCHAR(20) DEFAULT 'Open', -- Open, Processing, Resolved, Closed
+    resolution NVARCHAR(MAX) NULL,
+    created_at DATETIME DEFAULT GETDATE(),
+    isDelete BIT DEFAULT 0,
+    CONSTRAINT FK_SupportTickets_Users FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION
+);
+GO
+
+CREATE INDEX idx_support_tickets_user ON SupportTickets(user_id);
+GO
+
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260618_003_kyc_migration.sql
+-- ==============================================================================
+USE MMO_System_Schema;
+GO
+-- =============================================================================
+-- MIGRATION: Chuẩn hóa KYC V2 (Strict Mode)
+-- =============================================================================
+
+BEGIN TRY
+    BEGIN TRANSACTION;
+    PRINT '--- BẮT ĐẦU MIGRATION KYC ---';
+
+    -- 1. KIỂM TRA BASELINE
+    IF OBJECT_ID('dbo.KYCRequests', 'U') IS NULL
+        RAISERROR('LỖI BASELINE: Bảng dbo.KYCRequests không tồn tại.', 16, 1);
+
+    IF OBJECT_ID('dbo.KYCDocuments', 'U') IS NULL
+        RAISERROR('LỖI BASELINE: Bảng dbo.KYCDocuments không tồn tại.', 16, 1);
+
+    -- Pre-check citizen_id (VARCHAR(20) NOT NULL), status (VARCHAR(20)), isDelete (BIT NULL)
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.columns c JOIN sys.types t ON c.user_type_id = t.user_type_id
+        WHERE c.object_id = OBJECT_ID('dbo.KYCRequests') AND c.name = 'citizen_id' AND t.name = 'varchar' AND c.max_length = 20 AND c.is_nullable = 0
+    ) OR NOT EXISTS (
+        SELECT 1 FROM sys.columns c JOIN sys.types t ON c.user_type_id = t.user_type_id
+        WHERE c.object_id = OBJECT_ID('dbo.KYCRequests') AND c.name = 'status' AND t.name = 'varchar' AND c.max_length = 20
+    ) OR NOT EXISTS (
+        SELECT 1 FROM sys.columns c JOIN sys.types t ON c.user_type_id = t.user_type_id
+        WHERE c.object_id = OBJECT_ID('dbo.KYCRequests') AND c.name = 'isDelete' AND t.name = 'bit' AND c.is_nullable = 1
+    )
+    BEGIN
+        RAISERROR('LỖI BASELINE: Cấu hình citizen_id, status hoặc isDelete không đúng kiểu dữ liệu khởi điểm.', 16, 1);
+    END
+
+    IF EXISTS (SELECT 1 FROM sys.columns WHERE Name IN ('id_number', 'id_type', 'request_code', 'version', 'active_user_id') AND Object_ID = OBJECT_ID('dbo.KYCRequests'))
+        RAISERROR('LỖI BASELINE: Tồn tại cột rác từ version khác. Abort.', 16, 1);
+
+    -- Pre-check rỗng dữ liệu
+    IF EXISTS (SELECT 1 FROM dbo.KYCDocuments) OR EXISTS (SELECT 1 FROM dbo.KYCRequests)
+        RAISERROR('LỖI DỮ LIỆU: Bảng KYCRequests hoặc KYCDocuments đang có dữ liệu rác. Yêu cầu truncate DB Test trước.', 16, 1);
+
+    -- 2. SCHEMA CHANGES
+    DROP TABLE dbo.KYCDocuments;
+
+    EXEC sp_rename 'dbo.KYCRequests.citizen_id', 'id_number', 'COLUMN';
+    ALTER TABLE dbo.KYCRequests ALTER COLUMN id_number VARCHAR(50) NOT NULL;
+
+    -- Xử lý Default Status Cũ (Drop 'Pending' cũ, thêm 'PENDING' mới)
+    DECLARE @statusConstraintName NVARCHAR(200);
+    SELECT @statusConstraintName = d.name 
+    FROM sys.default_constraints d JOIN sys.columns c ON d.parent_object_id = c.object_id AND d.parent_column_id = c.column_id 
+    WHERE c.name = 'status' AND c.object_id = OBJECT_ID('dbo.KYCRequests');
+
+    IF @statusConstraintName IS NOT NULL
+        EXEC('ALTER TABLE dbo.KYCRequests DROP CONSTRAINT ' + @statusConstraintName);
+        
+    ALTER TABLE dbo.KYCRequests ADD CONSTRAINT DF_KYC_Status DEFAULT 'PENDING' FOR status;
+
+    -- Thêm id_type, request_code, version
+    ALTER TABLE dbo.KYCRequests ADD id_type VARCHAR(50) NOT NULL CONSTRAINT DF_KYC_IdType DEFAULT 'CCCD';
+    ALTER TABLE dbo.KYCRequests ADD request_code VARCHAR(32) NOT NULL;
+    ALTER TABLE dbo.KYCRequests ADD CONSTRAINT UQ_KYC_RequestCode UNIQUE (request_code);
+    ALTER TABLE dbo.KYCRequests ADD version INT NOT NULL CONSTRAINT DF_KYC_Version DEFAULT 0;
+
+    -- Xử lý isDelete Default Cũ -> Set BIT NOT NULL
+    DECLARE @isDeleteConstraintName NVARCHAR(200);
+    SELECT @isDeleteConstraintName = d.name 
+    FROM sys.default_constraints d JOIN sys.columns c ON d.parent_object_id = c.object_id AND d.parent_column_id = c.column_id 
+    WHERE c.name = 'isDelete' AND c.object_id = OBJECT_ID('dbo.KYCRequests');
+
+    IF @isDeleteConstraintName IS NOT NULL
+        EXEC('ALTER TABLE dbo.KYCRequests DROP CONSTRAINT ' + @isDeleteConstraintName);
+
+    ALTER TABLE dbo.KYCRequests ALTER COLUMN isDelete BIT NOT NULL;
+    ALTER TABLE dbo.KYCRequests ADD CONSTRAINT DF_KYC_IsDelete DEFAULT 0 FOR isDelete;
+
+    -- Thêm active_user_id
+    ALTER TABLE dbo.KYCRequests ADD active_user_id BIGINT NULL;
+
+    -- 3. CONSTRAINTS & INDEXES
+    EXEC('CREATE UNIQUE INDEX UQ_KYC_Active_Per_User ON dbo.KYCRequests(active_user_id) WHERE active_user_id IS NOT NULL;');
+
+    EXEC('ALTER TABLE dbo.KYCRequests ADD CONSTRAINT CHK_KYC_Status CHECK (status IN (''PENDING'', ''APPROVED'', ''REJECTED''));');
+    EXEC('ALTER TABLE dbo.KYCRequests ADD CONSTRAINT CHK_KYC_IdType CHECK (id_type IN (''CCCD'', ''CMND'', ''PASSPORT'', ''DRIVER_LICENSE''));');
+
+    EXEC('ALTER TABLE dbo.KYCRequests ADD CONSTRAINT CHK_KYC_ActiveState CHECK (
+        (isDelete = 1 AND active_user_id IS NULL) OR
+        (isDelete = 0 AND status IN (''PENDING'', ''APPROVED'') AND active_user_id = user_id) OR
+        (isDelete = 0 AND status = ''REJECTED'' AND active_user_id IS NULL)
+    );');
+
+    EXEC('ALTER TABLE dbo.KYCRequests ADD CONSTRAINT CHK_KYC_ReviewState CHECK (
+        (status = ''PENDING'' AND reviewed_by IS NULL AND reviewed_at IS NULL AND rejection_reason IS NULL) OR
+        (status = ''APPROVED'' AND reviewed_by IS NOT NULL AND reviewed_at IS NOT NULL AND rejection_reason IS NULL) OR
+        (status = ''REJECTED'' AND reviewed_by IS NOT NULL AND reviewed_at IS NOT NULL AND rejection_reason IS NOT NULL AND LTRIM(RTRIM(rejection_reason)) != '''')
+    );');
+
+    EXEC('CREATE INDEX IDX_KYC_User_Created ON dbo.KYCRequests(user_id, created_at DESC);');
+    EXEC('CREATE INDEX IDX_KYC_Status_Created ON dbo.KYCRequests(status, created_at DESC);');
+    EXEC('CREATE INDEX IDX_KYC_Reviewer_Date ON dbo.KYCRequests(reviewed_by, reviewed_at DESC);');
+
+    PRINT '--- MIGRATION HOÀN TẤT THÀNH CÔNG ---';
+    COMMIT TRANSACTION;
+
+END TRY
+BEGIN CATCH
+    IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+    DECLARE @E NVARCHAR(4000) = ERROR_MESSAGE();
+    RAISERROR(@E, 16, 1);
+END CATCH;
+GO
+
+
+USE MMO_System_Schema;
+GO
+-- 1. Check Constraint
+SELECT name, definition FROM sys.check_constraints WHERE parent_object_id = OBJECT_ID('dbo.KYCRequests');
+
+-- 2. Check Index definition
+SELECT i.name, i.filter_definition, c.name as column_name 
+FROM sys.indexes i JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
+WHERE i.object_id = OBJECT_ID('dbo.KYCRequests');
+
+-- 3. Check nullability/default
+SELECT c.name, t.name as type, c.max_length, c.is_nullable, d.definition as default_val
+FROM sys.columns c JOIN sys.types t ON c.user_type_id = t.user_type_id
+LEFT JOIN sys.default_constraints d ON c.default_object_id = d.object_id
+WHERE c.object_id = OBJECT_ID('dbo.KYCRequests') AND c.name IN ('status', 'isDelete', 'id_number', 'request_code');
+
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260618_004_add_media_url_to_reviews.sql
+-- ==============================================================================
+USE MMO_System;
+GO
+
+IF COL_LENGTH('Reviews', 'media_url') IS NULL
+BEGIN
+    ALTER TABLE Reviews ADD media_url NVARCHAR(MAX) NULL;
+END
+GO
+
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260618_005_add_target_fields_to_audit_logs.sql
+-- ==============================================================================
+-- =============================================================================
+-- Migration: Bổ sung các cột Target vào AuditLogs
+-- Ngày: 2026-06-18
+-- Mục đích: Hỗ trợ log chi tiết đối tượng chịu tác động từ hành động của Admin/Staff
+-- =============================================================================
+
+USE MMO_System_Schema;
+GO
+
+-- Thêm cột target_user_id vào AuditLogs
+IF NOT EXISTS (
+    SELECT 1 FROM sys.columns 
+    WHERE object_id = OBJECT_ID('AuditLogs') 
+      AND name = 'target_user_id'
+)
+BEGIN
+    ALTER TABLE AuditLogs
+    ADD target_user_id BIGINT NULL;
+    PRINT 'Đã thêm cột target_user_id vào AuditLogs';
+END
+GO
+
+-- Thêm cột target_id vào AuditLogs
+IF NOT EXISTS (
+    SELECT 1 FROM sys.columns 
+    WHERE object_id = OBJECT_ID('AuditLogs') 
+      AND name = 'target_id'
+)
+BEGIN
+    ALTER TABLE AuditLogs
+    ADD target_id BIGINT NULL;
+    PRINT 'Đã thêm cột target_id vào AuditLogs';
+END
+GO
+
+-- Thêm cột target_type vào AuditLogs
+IF NOT EXISTS (
+    SELECT 1 FROM sys.columns 
+    WHERE object_id = OBJECT_ID('AuditLogs') 
+      AND name = 'target_type'
+)
+BEGIN
+    ALTER TABLE AuditLogs
+    ADD target_type VARCHAR(100) NULL;
+    PRINT 'Đã thêm cột target_type vào AuditLogs';
+END
+GO
+
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260618_006_add_transaction_id_to_reviews.sql
+-- ==============================================================================
+-- Migration: Add transaction_id to Reviews table
+-- Purpose: Link each review to a specific transaction so users can review
+--          the same product multiple times if they have different purchase orders.
+-- Date: 2026-06-18
+
+USE MMO_System_Schema;
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_NAME = 'Reviews' AND COLUMN_NAME = 'transaction_id'
+)
+BEGIN
+    ALTER TABLE Reviews ADD transaction_id BIGINT NULL;
+    ALTER TABLE Reviews ADD CONSTRAINT FK_Reviews_Transaction
+        FOREIGN KEY (transaction_id) REFERENCES Transactions(id) ON DELETE NO ACTION;
+    PRINT 'Added transaction_id column and FK to Reviews table.';
+END
+ELSE
+BEGIN
+    PRINT 'Column transaction_id already exists in Reviews table. Skipping.';
+END
+GO
+
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260618_007_drop_redundant_kyc_columns.sql
+-- ==============================================================================
+-- Migration: Drop redundant KYC columns
+-- Description: Drop full_name and date_of_birth from KYCRequests since they are now managed in the Users table via KycRequest -> User entity relationship.
+-- Author: Antigravity Agent
+-- Date: 2026-06-18
+
+USE MMO_System_Schema;
+GO
+
+-- 1. Pre-check and drop full_name
+IF EXISTS (
+    SELECT 1 
+    FROM sys.columns 
+    WHERE Name = N'full_name' AND Object_ID = Object_ID(N'dbo.KYCRequests')
+)
+BEGIN
+    ALTER TABLE dbo.KYCRequests DROP COLUMN full_name;
+    PRINT 'Dropped column full_name from KYCRequests.';
+END
+ELSE
+BEGIN
+    PRINT 'Column full_name does not exist in KYCRequests.';
+END
+GO
+
+-- 2. Pre-check and drop date_of_birth
+IF EXISTS (
+    SELECT 1 
+    FROM sys.columns 
+    WHERE Name = N'date_of_birth' AND Object_ID = Object_ID(N'dbo.KYCRequests')
+)
+BEGIN
+    ALTER TABLE dbo.KYCRequests DROP COLUMN date_of_birth;
+    PRINT 'Dropped column date_of_birth from KYCRequests.';
+END
+ELSE
+BEGIN
+    PRINT 'Column date_of_birth does not exist in KYCRequests.';
+END
+GO
+
+-- 3. Verification
+PRINT 'Verification: Current columns in KYCRequests';
+SELECT column_name, data_type, is_nullable
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE table_name = 'KYCRequests';
+GO
+
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260618_008_add_reviewer_and_rejection_reason_to_withdrawals.sql
+-- ==============================================================================
+-- =============================================================================
+-- Migration: Bổ sung các cột duyệt yêu cầu rút tiền vào Withdrawals
+-- Ngày: 2026-06-18
+-- Mục đích: Lưu trữ lịch sử duyệt rút tiền của Staff/Admin cùng lý do từ chối nếu có
+-- =============================================================================
+
+USE MMO_System_Schema;
+GO
+
+-- Thêm cột reviewed_by vào Withdrawals
+IF NOT EXISTS (
+    SELECT 1 FROM sys.columns 
+    WHERE object_id = OBJECT_ID('Withdrawals') 
+      AND name = 'reviewed_by'
+)
+BEGIN
+    ALTER TABLE Withdrawals
+    ADD reviewed_by BIGINT NULL;
+    
+    -- Thêm khoá ngoại trỏ tới Users
+    ALTER TABLE Withdrawals
+    ADD CONSTRAINT FK_Withdrawals_ReviewedBy FOREIGN KEY (reviewed_by) REFERENCES Users(id) ON DELETE NO ACTION;
+    
+    PRINT 'Đã thêm cột reviewed_by và FK tương ứng vào Withdrawals';
+END
+GO
+
+-- Thêm cột reviewed_at vào Withdrawals
+IF NOT EXISTS (
+    SELECT 1 FROM sys.columns 
+    WHERE object_id = OBJECT_ID('Withdrawals') 
+      AND name = 'reviewed_at'
+)
+BEGIN
+    ALTER TABLE Withdrawals
+    ADD reviewed_at DATETIME NULL;
+    PRINT 'Đã thêm cột reviewed_at vào Withdrawals';
+END
+GO
+
+-- Thêm cột rejection_reason vào Withdrawals
+IF NOT EXISTS (
+    SELECT 1 FROM sys.columns 
+    WHERE object_id = OBJECT_ID('Withdrawals') 
+      AND name = 'rejection_reason'
+)
+BEGIN
+    ALTER TABLE Withdrawals
+    ADD rejection_reason NVARCHAR(MAX) NULL;
+    PRINT 'Đã thêm cột rejection_reason vào Withdrawals';
+END
+GO
+
+-- Thêm cột fee_vnd vào Withdrawals
+IF NOT EXISTS (
+    SELECT 1 FROM sys.columns 
+    WHERE object_id = OBJECT_ID('Withdrawals') 
+      AND name = 'fee_vnd'
+)
+BEGIN
+    ALTER TABLE Withdrawals
+    ADD fee_vnd BIGINT NULL DEFAULT 0;
+    PRINT 'Đã thêm cột fee_vnd vào Withdrawals';
+END
+GO
+
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260618_009_chat_features.sql
+-- ==============================================================================
+-- Migration: Add chat delete/block/mute features
+-- Date: 2026-06-18
+
+USE MMO_System_Schema;
+GO
+
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Chats') AND name = 'sender_deleted')
+BEGIN
+    ALTER TABLE Chats ADD sender_deleted BIT DEFAULT 0;
+END
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Chats') AND name = 'receiver_deleted')
+BEGIN
+    ALTER TABLE Chats ADD receiver_deleted BIT DEFAULT 0;
+END
+GO
+
+-- Create ChatBlocks table
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('ChatBlocks') AND type = 'U')
+BEGIN
+    CREATE TABLE ChatBlocks (
+        id BIGINT IDENTITY(1,1) PRIMARY KEY,
+        blocker_id BIGINT NOT NULL,
+        blocked_id BIGINT NOT NULL,
+        created_at DATETIME DEFAULT GETDATE(),
+        CONSTRAINT FK_ChatBlocks_Blocker FOREIGN KEY (blocker_id) REFERENCES Users(id) ON DELETE NO ACTION,
+        CONSTRAINT FK_ChatBlocks_Blocked FOREIGN KEY (blocked_id) REFERENCES Users(id) ON DELETE NO ACTION,
+        CONSTRAINT UQ_ChatBlocks UNIQUE (blocker_id, blocked_id)
+    );
+END
+GO
+
+-- Create ChatMutes table
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('ChatMutes') AND type = 'U')
+BEGIN
+    CREATE TABLE ChatMutes (
+        id BIGINT IDENTITY(1,1) PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        contact_id BIGINT NOT NULL,
+        created_at DATETIME DEFAULT GETDATE(),
+        CONSTRAINT FK_ChatMutes_User FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION,
+        CONSTRAINT FK_ChatMutes_Contact FOREIGN KEY (contact_id) REFERENCES Users(id) ON DELETE NO ACTION,
+        CONSTRAINT UQ_ChatMutes UNIQUE (user_id, contact_id)
+    );
+END
+GO
+
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260618_010_add_resolution_fields_to_complaints.sql
+-- ==============================================================================
+-- =============================================================================
+-- Migration: Bổ sung các cột phân xử tranh chấp vào Complaints
+-- Ngày: 2026-06-18
+-- Mục đích: Lưu trữ lịch sử giải quyết khiếu nại của Staff/Admin cùng loại quyết định
+-- =============================================================================
+
+USE MMO_System_Schema;
+GO
+
+-- Thêm cột resolved_by vào Complaints
+IF NOT EXISTS (
+    SELECT 1 FROM sys.columns 
+    WHERE object_id = OBJECT_ID('Complaints') 
+      AND name = 'resolved_by'
+)
+BEGIN
+    ALTER TABLE Complaints
+    ADD resolved_by BIGINT NULL;
+    
+    -- Thêm khoá ngoại trỏ tới Users
+    ALTER TABLE Complaints
+    ADD CONSTRAINT FK_Complaints_ResolvedBy FOREIGN KEY (resolved_by) REFERENCES Users(id) ON DELETE NO ACTION;
+    
+    PRINT 'Đã thêm cột resolved_by và FK tương ứng vào Complaints';
+END
+GO
+
+-- Thêm cột resolved_at vào Complaints
+IF NOT EXISTS (
+    SELECT 1 FROM sys.columns 
+    WHERE object_id = OBJECT_ID('Complaints') 
+      AND name = 'resolved_at'
+)
+BEGIN
+    ALTER TABLE Complaints
+    ADD resolved_at DATETIME NULL;
+    PRINT 'Đã thêm cột resolved_at vào Complaints';
+END
+GO
+
+-- Thêm cột decision_type vào Complaints
+IF NOT EXISTS (
+    SELECT 1 FROM sys.columns 
+    WHERE object_id = OBJECT_ID('Complaints') 
+      AND name = 'decision_type'
+)
+BEGIN
+    ALTER TABLE Complaints
+    ADD decision_type VARCHAR(50) NULL; -- VD: REFUND_CUSTOMER, PAY_SELLER, DISMISS
+    PRINT 'Đã thêm cột decision_type vào Complaints';
+END
+GO
+
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260618_011_add_is_global_to_notifications.sql
+-- ==============================================================================
+-- =============================================================================
+-- Migration: Cập nhật bảng Notifications để hỗ trợ thông báo toàn hệ thống (Broadcast)
+-- Ngày: 2026-06-18
+-- Mục đích: Sửa user_id thành Nullable và bổ sung cột is_global
+-- =============================================================================
+
+USE MMO_System_Schema;
+GO
+
+-- Sửa cột user_id thành Nullable trong bảng Notifications
+IF EXISTS (
+    SELECT 1 FROM sys.columns 
+    WHERE object_id = OBJECT_ID('Notifications') 
+      AND name = 'user_id' 
+      AND is_nullable = 0
+)
+BEGIN
+    ALTER TABLE Notifications
+    ALTER COLUMN user_id BIGINT NULL;
+    PRINT 'Đã sửa cột user_id thành Nullable trong Notifications';
+END
+GO
+
+-- Thêm cột is_global vào Notifications
+IF NOT EXISTS (
+    SELECT 1 FROM sys.columns 
+    WHERE object_id = OBJECT_ID('Notifications') 
+      AND name = 'is_global'
+)
+BEGIN
+    ALTER TABLE Notifications
+    ADD is_global BIT NOT NULL DEFAULT 0;
+    PRINT 'Đã thêm cột is_global vào Notifications';
+END
+GO
+
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260619_001_add_variant_image_column.sql
+-- ==============================================================================
+-- ==============================================================================
+-- ADD IMAGE URL TO PRODUCT VARIANTS
+-- File: 20260619_AddVariantImageColumn.sql
+-- Description: Add image_url column to ProductVariants table.
+-- ==============================================================================
+
+USE MMO_System_Schema;
+GO
+
+IF NOT EXISTS (
+    SELECT 1 
+    FROM sys.columns 
+    WHERE object_id = OBJECT_ID('dbo.ProductVariants') 
+      AND name = 'image_url'
+)
+BEGIN
+    ALTER TABLE dbo.ProductVariants
+    ADD image_url NVARCHAR(500) NULL;
+    PRINT N'✓ Added column image_url to ProductVariants table.';
+END
+ELSE
+BEGIN
+    PRINT N'✓ Column image_url already exists in ProductVariants table.';
+END
+GO
+
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260619_002_fix_categories_is_delete.sql
+-- ==============================================================================
+-- ==============================================================================
+-- FIX CATEGORY DELETION COLUMNS
+-- File: 20260619_FixCategoriesIsDelete.sql
+-- Description: Reset column values to 0 where they are NULL.
+-- ==============================================================================
+
+USE MMO_System;
+GO
+
+-- 1. Ensure any null is_delete or isDelete columns are active (0)
+UPDATE Categories
+SET is_delete = 0
+WHERE is_delete IS NULL;
+
+UPDATE Categories
+SET isDelete = 0
+WHERE isDelete IS NULL;
+GO
+
+PRINT N'✓ Categories deletion status fixed successfully.';
+GO
+
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260620_001_sync_system_configurations_and_triggers.sql
+-- ==============================================================================
+-- =============================================================================
+-- Migration: Đồng bộ cấu hình hệ thống và cập nhật triggers động
+-- Ngày: 2026-06-20
+-- Mục đích: Đảm bảo toàn bộ các tham số cấu hình hệ thống được khởi tạo mặc định
+--          và cập nhật các triggers để truy vấn giá trị động thay vì hardcode.
+-- =============================================================================
+
+USE MMO_System_Schema;
+GO
+
+-- 1. Bổ sung các cấu hình hệ thống mặc định nếu chưa tồn tại
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'SystemConfigurations')
+BEGIN
+    -- Cấu hình chung (General Configurations)
+    IF NOT EXISTS (SELECT 1 FROM SystemConfigurations WHERE config_key = 'SESSION_TIMEOUT_MINS')
+        INSERT INTO SystemConfigurations (config_key, config_value, description)
+        VALUES ('SESSION_TIMEOUT_MINS', '15', N'Thời gian phiên đăng nhập (phút)');
+
+    IF NOT EXISTS (SELECT 1 FROM SystemConfigurations WHERE config_key = 'OTP_TIMEOUT_MINS')
+        INSERT INTO SystemConfigurations (config_key, config_value, description)
+        VALUES ('OTP_TIMEOUT_MINS', '5', N'Thời gian hiệu lực của mã OTP (phút)');
+
+    IF NOT EXISTS (SELECT 1 FROM SystemConfigurations WHERE config_key = 'MAX_LOGIN_RETRIES')
+        INSERT INTO SystemConfigurations (config_key, config_value, description)
+        VALUES ('MAX_LOGIN_RETRIES', '5', N'Số lần đăng nhập sai tối đa');
+
+    IF NOT EXISTS (SELECT 1 FROM SystemConfigurations WHERE config_key = 'LOCK_DURATION_MINS')
+        INSERT INTO SystemConfigurations (config_key, config_value, description)
+        VALUES ('LOCK_DURATION_MINS', '15', N'Thời gian khóa tài khoản tạm thời (phút)');
+
+    IF NOT EXISTS (SELECT 1 FROM SystemConfigurations WHERE config_key = 'ESCROW_HOLD_HOURS')
+        INSERT INTO SystemConfigurations (config_key, config_value, description)
+        VALUES ('ESCROW_HOLD_HOURS', '72', N'Thời gian đóng băng tiền giao dịch bảo trợ Escrow (giờ)');
+
+    IF NOT EXISTS (SELECT 1 FROM SystemConfigurations WHERE config_key = 'ALLOW_GOOGLE_LOGIN')
+        INSERT INTO SystemConfigurations (config_key, config_value, description)
+        VALUES ('ALLOW_GOOGLE_LOGIN', 'true', N'Cho phép đăng nhập bằng tài khoản Google (true/false)');
+
+    IF NOT EXISTS (SELECT 1 FROM SystemConfigurations WHERE config_key = 'ALLOW_REGISTER')
+        INSERT INTO SystemConfigurations (config_key, config_value, description)
+        VALUES ('ALLOW_REGISTER', 'true', N'Cho phép đăng ký tài khoản mới (true/false)');
+
+    IF NOT EXISTS (SELECT 1 FROM SystemConfigurations WHERE config_key = 'REQUIRE_WITHDRAW_2FA')
+        INSERT INTO SystemConfigurations (config_key, config_value, description)
+        VALUES ('REQUIRE_WITHDRAW_2FA', 'true', N'Bắt buộc xác thực OTP (2FA) khi rút tiền (true/false)');
+
+    -- Cấu hình phí & hoa hồng (Commissions & Fees)
+    IF NOT EXISTS (SELECT 1 FROM SystemConfigurations WHERE config_key = 'WITHDRAWAL_FEE_PERCENT')
+        INSERT INTO SystemConfigurations (config_key, config_value, description)
+        VALUES ('WITHDRAWAL_FEE_PERCENT', '1.5', N'Phần trăm phí rút tiền (%)');
+
+    IF NOT EXISTS (SELECT 1 FROM SystemConfigurations WHERE config_key = 'MIN_WITHDRAW_FEE_VND')
+        INSERT INTO SystemConfigurations (config_key, config_value, description)
+        VALUES ('MIN_WITHDRAW_FEE_VND', '10000', N'Phí rút tiền tối thiểu (VNĐ)');
+
+    IF NOT EXISTS (SELECT 1 FROM SystemConfigurations WHERE config_key = 'MAX_WITHDRAWAL_VND')
+        INSERT INTO SystemConfigurations (config_key, config_value, description)
+        VALUES ('MAX_WITHDRAWAL_VND', '50000000', N'Số tiền rút tối đa trong một giao dịch (VNĐ)');
+
+    IF NOT EXISTS (SELECT 1 FROM SystemConfigurations WHERE config_key = 'MIN_DEPOSIT_LIMIT_VND')
+        INSERT INTO SystemConfigurations (config_key, config_value, description)
+        VALUES ('MIN_DEPOSIT_LIMIT_VND', '10000', N'Số tiền nạp tối thiểu (VNĐ)');
+
+    IF NOT EXISTS (SELECT 1 FROM SystemConfigurations WHERE config_key = 'MAX_DEPOSIT_LIMIT_VND')
+        INSERT INTO SystemConfigurations (config_key, config_value, description)
+        VALUES ('MAX_DEPOSIT_LIMIT_VND', '50000000', N'Số tiền nạp tối đa trong một giao dịch (VNĐ)');
+
+    IF NOT EXISTS (SELECT 1 FROM SystemConfigurations WHERE config_key = 'SELLER_UPGRADE_FEE_VND')
+        INSERT INTO SystemConfigurations (config_key, config_value, description)
+        VALUES ('SELLER_UPGRADE_FEE_VND', '50000', N'Phí nâng cấp tài khoản bán hàng Seller (VNĐ)');
+
+    IF NOT EXISTS (SELECT 1 FROM SystemConfigurations WHERE config_key = 'PRODUCT_FEATURED_FEE_VND')
+        INSERT INTO SystemConfigurations (config_key, config_value, description)
+        VALUES ('PRODUCT_FEATURED_FEE_VND', '10000', N'Phí đẩy tin nổi bật sản phẩm (VNĐ)');
+
+    IF NOT EXISTS (SELECT 1 FROM SystemConfigurations WHERE config_key = 'FLAT_BUYER_FEE_VND')
+        INSERT INTO SystemConfigurations (config_key, config_value, description)
+        VALUES ('FLAT_BUYER_FEE_VND', '1000', N'Phí cố định thu từ người mua trên mỗi đơn hàng (VNĐ)');
+
+    PRINT 'Đã bổ sung cấu hình hệ thống mặc định đầy đủ.';
+END
+GO
+
+-- 2. Cập nhật trigger trg_CheckWithdrawalMin kiểm tra số tiền rút tối thiểu động từ cấu hình
+CREATE OR ALTER TRIGGER trg_CheckWithdrawalMin
+ON Withdrawals
+AFTER INSERT
+AS
+BEGIN
+    DECLARE @MinWithdrawal BIGINT = 50000;
+    SELECT @MinWithdrawal = TRY_CAST(config_value AS BIGINT) 
+    FROM SystemConfigurations 
+    WHERE config_key = 'MIN_WITHDRAWAL_VND';
+    
+    IF @MinWithdrawal IS NULL SET @MinWithdrawal = 50000;
+
+    IF EXISTS (SELECT 1 FROM inserted WHERE amount_vnd < @MinWithdrawal)
+    BEGIN
+        DECLARE @ErrMsg NVARCHAR(255) = N'Lỗi: Số tiền rút tối thiểu phải là ' + FORMAT(@MinWithdrawal, 'N0') + N' VNĐ theo chính sách sàn.';
+        RAISERROR (@ErrMsg, 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+GO
+PRINT 'Đã cập nhật trigger trg_CheckWithdrawalMin động.';
+GO
+
+-- 3. Cập nhật trigger trg_HoldFundsEscrow thiết lập trạng thái Giữ Tiền và thời gian giam tiền Escrow động từ cấu hình
+CREATE OR ALTER TRIGGER trg_HoldFundsEscrow
+ON Transactions
+AFTER INSERT
+AS
+BEGIN
+    DECLARE @EscrowHoldHours INT = 72;
+    SELECT @EscrowHoldHours = TRY_CAST(config_value AS INT) 
+    FROM SystemConfigurations 
+    WHERE config_key = 'ESCROW_HOLD_HOURS';
+    
+    IF @EscrowHoldHours IS NULL SET @EscrowHoldHours = 72;
+
+    -- Update statuses to 'Held'
+    UPDATE Transactions
+    SET status = 'Held'
+    FROM Transactions t
+    INNER JOIN inserted i ON t.id = i.id
+    WHERE t.status IS NULL OR t.status = 'Pending';
+
+    -- Update Escrow release dates dynamically based on shop level and completed order count
+    UPDATE t
+    SET t.escrow_release_date = DATEADD(HOUR, 
+        CASE 
+            WHEN u.shop_level = 0 THEN 168 -- 7 days for warned shops (Level 0)
+            WHEN u.shop_level = 1 AND (
+                SELECT COUNT(*) FROM Transactions tx 
+                INNER JOIN Products p2 ON tx.product_id = p2.id 
+                WHERE p2.seller_id = p.seller_id AND tx.status IN ('Completed', 'Delivered', 'Paid')
+            ) < 20 THEN 168 -- 7 days for new shops (Level 1) under 20 orders
+            ELSE @EscrowHoldHours -- 3 days normally
+        END, 
+        GETDATE())
+    FROM Transactions t
+    INNER JOIN inserted i ON t.id = i.id
+    INNER JOIN Products p ON i.product_id = p.id
+    INNER JOIN Users u ON p.seller_id = u.id
+    WHERE t.escrow_release_date IS NULL;
+END;
+GO
+PRINT 'Đã cập nhật trigger trg_HoldFundsEscrow động.';
+GO
+
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260623_001_add_shop_registration_columns.sql
+-- ==============================================================================
+-- Migration: Add category, support_email, support_phone to SellerRegistrations
+-- Purpose: Support full shop registration form data
+-- Author: Antigravity
+-- Date: 2026-06-23
+
+USE MMO_System_Schema;
+GO
+
+-- Pre-check
+IF EXISTS (SELECT * FROM information_schema.tables WHERE table_name = 'SellerRegistrations')
+BEGIN
+    PRINT 'Table SellerRegistrations exists. Proceeding with adding columns...';
+    
+    -- Check and add category
+    IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_name = 'SellerRegistrations' AND column_name = 'category')
+    BEGIN
+        ALTER TABLE SellerRegistrations ADD category NVARCHAR(100) NULL;
+        PRINT 'Added column category.';
+    END
+    ELSE
+    BEGIN
+        PRINT 'Column category already exists.';
+    END
+
+    -- Check and add support_email
+    IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_name = 'SellerRegistrations' AND column_name = 'support_email')
+    BEGIN
+        ALTER TABLE SellerRegistrations ADD support_email VARCHAR(255) NULL;
+        PRINT 'Added column support_email.';
+    END
+    ELSE
+    BEGIN
+        PRINT 'Column support_email already exists.';
+    END
+
+    -- Check and add support_phone
+    IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_name = 'SellerRegistrations' AND column_name = 'support_phone')
+    BEGIN
+        ALTER TABLE SellerRegistrations ADD support_phone VARCHAR(20) NULL;
+        PRINT 'Added column support_phone.';
+    END
+    ELSE
+    BEGIN
+        PRINT 'Column support_phone already exists.';
+    END
+END
+ELSE
+BEGIN
+    PRINT 'Error: Table SellerRegistrations does not exist.';
+END
+GO
+
+-- Verification
+SELECT column_name, data_type, character_maximum_length 
+FROM information_schema.columns 
+WHERE table_name = 'SellerRegistrations' 
+  AND column_name IN ('category', 'support_email', 'support_phone');
+GO
+
+
+-- =========================================================================================
+-- MIGRATION: Thêm cột rejection_reason cho SellerRegistrations
+-- AUTHOR: Agent
+-- DATE: 2026-06-23
+-- =========================================================================================
+
+-- 1. Pre-check: Nếu chưa có cột rejection_reason thì thêm vào
+IF NOT EXISTS (
+    SELECT * FROM sys.columns 
+    WHERE object_id = OBJECT_ID(N'[dbo].[SellerRegistrations]') 
+    AND name = 'rejection_reason'
+)
+BEGIN
+    ALTER TABLE [dbo].[SellerRegistrations]
+    ADD [rejection_reason] NVARCHAR(MAX) NULL;
+    
+    PRINT 'Da them cot rejection_reason thanh cong.';
+END
+ELSE
+BEGIN
+    PRINT 'Cot rejection_reason da ton tai.';
+END
+GO
+
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260623_002_remove_view_revenue_permission.sql
+-- ==============================================================================
+-- =============================================================================
+-- Migration: Xóa quyền VIEW_REVENUE (Xem báo cáo doanh thu sàn)
+-- Ngày: 2026-06-23
+-- Mục đích: Loại bỏ quyền xem báo cáo doanh thu sàn khỏi hệ thống
+-- =============================================================================
+
+USE MMO_System_Schema;
+GO
+
+IF EXISTS (SELECT 1 FROM Permissions WHERE name = 'VIEW_REVENUE')
+BEGIN
+    DELETE FROM Permissions WHERE name = 'VIEW_REVENUE';
+    PRINT 'Đã xóa quyền VIEW_REVENUE khỏi bảng Permissions';
+END
+ELSE
+BEGIN
+    PRINT 'Quyền VIEW_REVENUE không tồn tại hoặc đã được xóa trước đó';
+END
+GO
+
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260623_003_add_payment_method_to_transactions.sql
+-- ==============================================================================
+
+USE MMO_System_Schema;
+GO
+
+ALTER TABLE Transactions
+ADD payment_method NVARCHAR(50);
+GO
+
+
+EXEC sp_executesql N'
+UPDATE Transactions
+SET payment_method = ''Wallet''
+WHERE id IN (1,2,3);
+
+UPDATE Transactions
+SET payment_method = ''Bank Transfer''
+WHERE id IN (4,5,6);
+
+UPDATE Transactions
+SET payment_method = ''VietQR''
+WHERE id IN (7,8);
+
+UPDATE Transactions
+SET payment_method = ''Credit Card''
+WHERE id IN (9,10);
+';
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260623_004_add_type_kyc_to_kyc_requests.sql
+-- ==============================================================================
+
+USE MMO_System_Schema;
+GO
+
+ALTER TABLE KYCRequests
+ADD type_kyc NVARCHAR(50);
+GO
+
+
+
+EXEC sp_executesql N'
+UPDATE KYCRequests
+SET type_kyc = ''CCCD''
+WHERE id IN (1,2,3, 10);
+
+UPDATE KYCRequests
+SET type_kyc = ''Birth certificate''
+WHERE id IN (4,5,6);
+
+UPDATE KYCRequests
+SET type_kyc = ''Passport''
+WHERE id IN (7,8, 9);
+';
+
+
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260624_001_create_wallet_transactions.sql
+-- ==============================================================================
+-- Migration: 20260624_001_create_wallet_transactions
+-- Description: Create WalletTransactions table for storing all wallet balance history (ledger).
+
+USE MMO_System_Schema;
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[WalletTransactions]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE [dbo].[WalletTransactions] (
+        [id] BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        [user_id] BIGINT NOT NULL,
+        [type] VARCHAR(50) NOT NULL, -- TOPUP, PAYMENT, REFUND, ESCROW, WITHDRAWAL
+        [amount_vnd] BIGINT NOT NULL,
+        [status] VARCHAR(20) NOT NULL, -- PENDING, SUCCESS, FAILED
+        [description] NVARCHAR(255) NULL,
+        [reference_code] VARCHAR(100) NULL, -- E.g. MMO-ORD-1234, SEPAY-1234
+        [created_at] DATETIME DEFAULT GETDATE(),
+        [isDelete] BIT DEFAULT 0,
+        CONSTRAINT [FK_WalletTransactions_Users] FOREIGN KEY ([user_id]) REFERENCES [dbo].[Users]([id])
+    );
+    
+    CREATE INDEX [IX_WalletTransactions_UserId] ON [dbo].[WalletTransactions]([user_id], [created_at] DESC);
+    PRINT 'Created WalletTransactions table successfully.';
+END
+ELSE
+BEGIN
+    PRINT 'WalletTransactions table already exists.';
+END
+GO
+
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260625_001_add_transaction_id_to_digital_assets.sql
+-- ==============================================================================
+-- =========================================================================
+-- Migration: Add transaction_id to DigitalAssets
+-- Date: 2026-06-25
+-- Description: Liên kết tài sản số đã bán với Transaction tương ứng.
+-- =========================================================================
+USE MMO_System_Schema;
+GO
+
+IF NOT EXISTS (
+    SELECT 1 
+    FROM sys.columns 
+    WHERE object_id = OBJECT_ID('DigitalAssets') AND name = 'transaction_id'
+)
+BEGIN
+    ALTER TABLE DigitalAssets
+    ADD transaction_id BIGINT NULL;
+
+    -- Thêm foreign key liên kết với Transactions
+    ALTER TABLE DigitalAssets
+    ADD CONSTRAINT FK_DigitalAssets_Transactions
+    FOREIGN KEY (transaction_id) REFERENCES Transactions(id);
+END
+GO
+
+
+-- ==============================================================================
+-- MERGED MIGRATION: 20260625_002_seed_staff_permissions.sql
+-- ==============================================================================
 -- =============================================================================
 -- Migration: Seed permissions for default Staff user
 -- =============================================================================
