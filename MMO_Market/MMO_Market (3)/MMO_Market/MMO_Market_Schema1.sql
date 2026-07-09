@@ -1822,6 +1822,9 @@ BEGIN
         
     IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'MANAGE_SUPPORT')
         INSERT INTO Permissions (name, group_name, description) VALUES ('MANAGE_SUPPORT', N'Vận hành', N'Cho phép tiếp nhận, phản hồi và hỗ trợ giải đáp các thắc mắc (ticketing/live chat) của khách hàng.');
+
+    IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'MANAGE_SHOPS')
+        INSERT INTO Permissions (name, group_name, description) VALUES ('MANAGE_SHOPS', N'Vận hành', N'Cho phép xem, phê duyệt yêu cầu mở gian hàng, khóa hoặc mở khóa hoạt động của các Shop.');
 END
 GO
 
@@ -1868,7 +1871,15 @@ BEGIN
             INSERT INTO UserPermissions (user_id, permission_id) VALUES (14, @SupportPermId);
     END
 
-    PRINT 'Đã gán toàn bộ 5 permissions cho Staff (id = 14)';
+    -- MANAGE_SHOPS
+    IF EXISTS (SELECT 1 FROM Permissions WHERE name = 'MANAGE_SHOPS')
+    BEGIN
+        DECLARE @ShopsPermId INT = (SELECT id FROM Permissions WHERE name = 'MANAGE_SHOPS');
+        IF NOT EXISTS (SELECT 1 FROM UserPermissions WHERE user_id = 14 AND permission_id = @ShopsPermId)
+            INSERT INTO UserPermissions (user_id, permission_id) VALUES (14, @ShopsPermId);
+    END
+
+    PRINT 'Đã gán toàn bộ 6 permissions cho Staff (id = 14)';
 END
 GO
 

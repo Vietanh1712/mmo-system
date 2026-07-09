@@ -58,6 +58,11 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .name("MANAGE_SUPPORT")
                 .groupName("Vận hành")
                 .description("Cho phép tiếp nhận, phản hồi và hỗ trợ giải đáp các thắc mắc (ticketing/live chat) của khách hàng.")
+                .build(),
+            Permission.builder()
+                .name("MANAGE_SHOPS")
+                .groupName("Vận hành")
+                .description("Cho phép xem, phê duyệt yêu cầu mở gian hàng, khóa hoặc mở khóa hoạt động của các Shop.")
                 .build()
         );
 
@@ -76,7 +81,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 if (staff.getUserPermissions() == null) {
                     staff.setUserPermissions(new java.util.HashSet<>());
                 }
-                List<String> staffPermNames = Arrays.asList("APPROVE_KYC", "FLAG_SELLER", "APPROVE_WITHDRAWALS", "HANDLE_DISPUTES", "MANAGE_SUPPORT");
+                List<String> staffPermNames = Arrays.asList("APPROVE_KYC", "FLAG_SELLER", "APPROVE_WITHDRAWALS", "HANDLE_DISPUTES", "MANAGE_SUPPORT", "MANAGE_SHOPS");
                 List<Permission> staffPerms = allPerms.stream()
                         .filter(p -> staffPermNames.contains(p.getName()))
                         .collect(Collectors.toList());

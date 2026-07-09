@@ -15,7 +15,8 @@
         { id: 'FLAG_SELLER', label: 'Cắm cờ & Đánh gạch Seller', group: 'Kiểm duyệt', desc: 'Cho phép gắn cờ vi phạm (gạch phạt) đối với người bán vi phạm chính sách.' },
         { id: 'APPROVE_WITHDRAWALS', label: 'Phê duyệt yêu cầu rút tiền', group: 'Tài chính', desc: 'Cho phép duyệt lệnh chuyển tiền/rút tiền của Seller từ ví hệ thống về tài khoản ngân hàng.' },
         { id: 'HANDLE_DISPUTES', label: 'Phân xử tranh chấp & Hoàn tiền', group: 'Vận hành', desc: 'Cho phép làm trung gian giải quyết khiếu nại giữa người mua và người bán, hoàn trả hoặc giải ngân tiền Escrow.' },
-        { id: 'MANAGE_SUPPORT', label: 'Tiếp nhận & Hỗ trợ khách hàng', group: 'Vận hành', desc: 'Cho phép tiếp nhận, phản hồi và hỗ trợ giải đáp các thắc mắc (ticketing/live chat) của khách hàng.' }
+        { id: 'MANAGE_SUPPORT', label: 'Tiếp nhận & Hỗ trợ khách hàng', group: 'Vận hành', desc: 'Cho phép tiếp nhận, phản hồi và hỗ trợ giải đáp các thắc mắc (ticketing/live chat) của khách hàng.' },
+        { id: 'MANAGE_SHOPS', label: 'Quản lý cửa hàng (Shop)', group: 'Vận hành', desc: 'Cho phép xem, phê duyệt yêu cầu mở gian hàng, khóa hoặc mở khóa hoạt động của các Shop.' }
     ];
 
     const MOCK_DEFAULT = {
@@ -34,8 +35,8 @@
             { id: 'TX1005', timestamp: '2026-06-02T11:45:00Z', email: 'pham.duc.d@gmail.com', type: 'Withdrawal', amount: 50000000, fee: 750000, status: 'Completed' }
         ],
         permissions: {
-            2: ['APPROVE_KYC', 'REVIEW_SUSPICIOUS', 'AUDIT_ACCOUNTS', 'HANDLE_DISPUTES', 'MANAGE_REQUESTS'],
-            3: ['APPROVE_WITHDRAWALS', 'MANAGE_ESCROW', 'HANDLE_DISPUTES', 'MANAGE_REQUESTS']
+            2: ['APPROVE_KYC', 'REVIEW_SUSPICIOUS', 'AUDIT_ACCOUNTS', 'HANDLE_DISPUTES', 'MANAGE_REQUESTS', 'MANAGE_SHOPS'],
+            3: ['APPROVE_WITHDRAWALS', 'MANAGE_ESCROW', 'HANDLE_DISPUTES', 'MANAGE_REQUESTS', 'MANAGE_SHOPS']
         },
         systemConfig: {
             appName: 'MMO Market System',
@@ -50,8 +51,7 @@
         commissions: {
             basePercent: 5.0,
             withdrawalPercent: 1.5,
-            sellerUpgradeFee: 50000,
-            productFeaturedFee: 10000,
+            shopOpeningFee: 50000,
             minWithdrawLimit: 50000,
             maxWithdrawLimit: 50000000,
             minDepositLimit: 10000,
@@ -434,8 +434,7 @@
         });
 
         const currencyInputIds = [
-            'commSellerUpgradeFee',
-            'commProductFeaturedFee',
+            'commShopOpeningFee',
             'commMinWithdrawLimit',
             'commMaxWithdrawLimit',
             'commMinDepositLimit',
@@ -1780,8 +1779,8 @@
             if (summaryRes.ok) {
                 const summary = await summaryRes.json();
                 setText('revCommissions', formatVnd(summary.commissions));
-                // Cột 'revBuyerFees' bây giờ hiển thị tổng phí dịch vụ Seller (Upgrade + Featured)
-                setText('revBuyerFees', formatVnd((summary.sellerUpgradeFees || 0) + (summary.productFeaturedFees || 0)));
+                // Cột 'revBuyerFees' hiển thị phí mở shop
+                setText('revBuyerFees', formatVnd(summary.shopOpeningFees || 0));
                 setText('revWithdrawalFees', formatVnd(summary.withdrawalFees));
                 setText('revNetTotal', formatVnd(summary.netTotal));
             }
@@ -2205,8 +2204,7 @@
             
             document.getElementById('commBasePercent').value = c.basePercent;
             document.getElementById('commWithdrawPercent').value = c.withdrawalPercent;
-            document.getElementById('commSellerUpgradeFee').value = formatNumberWithDots(c.sellerUpgradeFee);
-            document.getElementById('commProductFeaturedFee').value = formatNumberWithDots(c.productFeaturedFee);
+            document.getElementById('commShopOpeningFee').value = formatNumberWithDots(c.shopOpeningFee);
             document.getElementById('commMinWithdrawLimit').value = formatNumberWithDots(c.minWithdrawLimit);
             document.getElementById('commMaxWithdrawLimit').value = formatNumberWithDots(c.maxWithdrawLimit);
             document.getElementById('commMinDepositLimit').value = formatNumberWithDots(c.minDepositLimit);
@@ -2220,8 +2218,7 @@
         const payload = {
             basePercent: Number(document.getElementById('commBasePercent').value),
             withdrawalPercent: Number(document.getElementById('commWithdrawPercent').value),
-            sellerUpgradeFee: stripDots(document.getElementById('commSellerUpgradeFee').value),
-            productFeaturedFee: stripDots(document.getElementById('commProductFeaturedFee').value),
+            shopOpeningFee: stripDots(document.getElementById('commShopOpeningFee').value),
             minWithdrawLimit: stripDots(document.getElementById('commMinWithdrawLimit').value),
             maxWithdrawLimit: stripDots(document.getElementById('commMaxWithdrawLimit').value),
             minDepositLimit: stripDots(document.getElementById('commMinDepositLimit').value),

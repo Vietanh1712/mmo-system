@@ -100,28 +100,17 @@ public class AdminRevenueService {
         // 1. Phí hoa hồng: từ các C2C Transactions có trạng thái 'Completed' hoặc 'Held'
         long commissions = transactionRepository.sumCommissionForCompletedOrHeldTransactions();
 
-        // 2. Phí nâng cấp Seller: từ số lượng SellerRegistrations có trạng thái 'Approved'
-        long upgradeFee = systemConfigurationRepository.findByConfigKey("SELLER_UPGRADE_FEE_VND")
+        // 2. Phí mở Shop: từ số lượng SellerRegistrations có trạng thái 'Approved'
+        long shopOpeningFee = systemConfigurationRepository.findByConfigKey("SHOP_OPENING_FEE_VND")
                 .map(c -> {
                     try { return Long.parseLong(c.getConfigValue()); }
                     catch (NumberFormatException e) { return 50000L; }
                 }).orElse(50000L);
 
         long approvedSellers = sellerRegistrationRepository.countByStatusAndIsDeleteFalse("Approved");
-        long sellerUpgradeFees = approvedSellers * upgradeFee;
+        long shopOpeningFees = approvedSellers * shopOpeningFee;
 
-        // 3. Phí đẩy tin nổi bật sản phẩm: từ số lượng sản phẩm đang hoạt động
-        long featuredFee = systemConfigurationRepository.findByConfigKey("PRODUCT_FEATURED_FEE_VND")
-                .map(c -> {
-                    try { return Long.parseLong(c.getConfigValue()); }
-                    catch (NumberFormatException e) { return 10000L; }
-                }).orElse(10000L);
-
-        long activeProducts = productRepository.countByIsDeleteFalse();
-        // Giả sử có khoảng 20% sản phẩm sử dụng tính năng đẩy tin nổi bật
-        long productFeaturedFees = (long) (activeProducts * 0.2) * featuredFee;
-
-        // 4. Phí rút tiền: từ các Withdrawals có trạng thái 'Completed'
+        // 3. Phí rút tiền: từ các Withdrawals có trạng thái 'Completed'
         double withdrawalPercent = systemConfigurationRepository.findByConfigKey("WITHDRAWAL_FEE_PERCENT")
                 .map(c -> {
                     try { return Double.parseDouble(c.getConfigValue()); }
@@ -144,13 +133,12 @@ public class AdminRevenueService {
             return Math.max(calculatedFee, minWithdrawFee);
         }).sum();
 
-        // 5. Doanh thu ròng tổng cộng
-        long netTotal = commissions + sellerUpgradeFees + productFeaturedFees + withdrawalFees;
+        // 4. Doanh thu ròng tổng cộng
+        long netTotal = commissions + shopOpeningFees + withdrawalFees;
 
         return RevenueSummaryResponse.builder()
                 .commissions(commissions)
-                .sellerUpgradeFees(sellerUpgradeFees)
-                .productFeaturedFees(productFeaturedFees)
+                .shopOpeningFees(shopOpeningFees)
                 .withdrawalFees(withdrawalFees)
                 .netTotal(netTotal)
                 .build();
