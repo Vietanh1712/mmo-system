@@ -92,7 +92,7 @@ public class StaffChatRestController {
             }
 
             // Inject active complaints group chats for Staff
-            List<com.mmo.shared.model.Complaint> activeComplaints = complaintRepository.findAllByIsDeleteFalseOrderByIdAsc();
+            List<com.mmo.shared.model.Complaint> activeComplaints = complaintRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc();
             for (com.mmo.shared.model.Complaint comp : activeComplaints) {
                 if ("In_Progress".equalsIgnoreCase(comp.getStatus()) || "InProgress".equalsIgnoreCase(comp.getStatus())) {
                     List<Chat> compChats = chatRepository.findByComplaintAndIsDeleteFalseOrderByCreatedAtAsc(comp);
