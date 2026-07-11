@@ -469,4 +469,103 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         return complaintRepository.save(complaint);
     }
+
+    @Override
+    @Transactional
+    public void lockShop(Long sellerId, String reason) {
+        User seller = userRepository.findByIdAndIsDeleteFalse(sellerId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người bán."));
+                
+        // Update shop status
+        seller.setShopStatus("Banned");
+        seller.setWithdrawalLocked(true);
+        userRepository.save(seller);
+        
+        // Process refunds for Held and Disputed transactions
+        List<Transaction> activeTransactions = transactionRepository.findBySellerAndIsDeleteFalseOrderByCreatedAtDesc(seller)
+            .stream()
+            .filter(t -> "Held".equalsIgnoreCase(t.getStatus()) || "Disputed".equalsIgnoreCase(t.getStatus()) || "Pending".equalsIgnoreCase(t.getStatus()))
+            .collect(Collectors.toList());
+            
+        for (Transaction tx : activeTransactions) {
+            if ("Pending".equalsIgnoreCase(tx.getStatus())) {
+                tx.setStatus("Cancelled");
+                transactionRepository.save(tx);
+            } else {
+                tx.setStatus("Refunded");
+                transactionRepository.save(tx);
+                
+                // Refund to customer
+                User customer = tx.getCustomer();
+                if (customer != null) {
+                    long oldBalance = (customer.getBalanceVnd() != null ? customer.getBalanceVnd() : 0L);
+                    long newBalance = oldBalance + tx.getAmountVnd();
+                    customer.setBalanceVnd(newBalance);
+                    userRepository.save(customer);
+                    
+                    String referenceCode = String.format("REFUND-SHOPBANNED-TX-%d", tx.getId());
+                    walletService.recordTransaction(
+                            customer,
+                            "REFUND",
+                            tx.getAmountVnd(),
+                            "SUCCESS",
+                            "Hoàn tiền do shop bị khóa vi phạm: " + reason,
+                            referenceCode,
+                            newBalance,
+                            null
+                    );
+                    
+                    // notification
+                    Notification buyerNotif = Notification.builder()
+                            .userId(customer.getId())
+                            .title("Hoàn tiền đơn hàng")
+                            .content(String.format("Đơn hàng MMO-ORD-%d đã được hoàn tiền (%,d VNĐ) do shop bị khóa vì vi phạm.", tx.getId(), tx.getAmountVnd()))
+                            .type("WALLET")
+                            .severity("SUCCESS")
+                            .isRead(false)
+                            .isDelete(false)
+                            .targetUrl("/account/transactions")
+                            .build();
+                    notificationRepository.save(buyerNotif);
+                }
+            }
+        }
+        
+        // Notify seller
+        Notification sellerNotif = Notification.builder()
+                .userId(seller.getId())
+                .title("Shop của bạn đã bị khóa")
+                .content("Shop của bạn đã bị khóa do vi phạm nghiêm trọng. Lý do: " + reason + ". Vui lòng liên hệ admin để biết thêm chi tiết.")
+                .type("SYSTEM")
+                .severity("DANGER")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/")
+                .build();
+        notificationRepository.save(sellerNotif);
+    }
+
+    @Override
+    @Transactional
+    public void unlockShop(Long sellerId, String reason) {
+        User seller = userRepository.findByIdAndIsDeleteFalse(sellerId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người bán."));
+                
+        seller.setShopStatus("Active"); 
+        seller.setWithdrawalLocked(false);
+        userRepository.save(seller);
+        
+        // Notify seller
+        Notification sellerNotif = Notification.builder()
+                .userId(seller.getId())
+                .title("Shop của bạn đã được mở khóa")
+                .content("Shop của bạn đã được mở khóa. Lý do: " + reason + ".")
+                .type("SYSTEM")
+                .severity("SUCCESS")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/")
+                .build();
+        notificationRepository.save(sellerNotif);
+    }
 }

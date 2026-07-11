@@ -255,4 +255,46 @@ public class ComplaintController {
                     .body(Map.of("message", "Lỗi lấy thống kê khiếu nại: " + e.getMessage()));
         }
     }
+
+    @PostMapping("/shop/{sellerId}/lock")
+    public ResponseEntity<?> lockShop(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long sellerId,
+            @RequestBody(required = false) Map<String, String> request) {
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập."));
+        if (!isStaffOrAdmin(userId)) return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền thực hiện."));
+        
+        String reason = (request != null && request.get("reason") != null) ? request.get("reason") : "Vi phạm chính sách nền tảng";
+        
+        try {
+            complaintService.lockShop(sellerId, reason);
+            return ResponseEntity.ok(Map.of("message", "Đã khóa shop và hoàn tiền các đơn hàng liên quan thành công."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Lỗi khóa shop: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/shop/{sellerId}/unlock")
+    public ResponseEntity<?> unlockShop(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long sellerId,
+            @RequestBody(required = false) Map<String, String> request) {
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập."));
+        if (!isStaffOrAdmin(userId)) return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền thực hiện."));
+        
+        String reason = (request != null && request.get("reason") != null) ? request.get("reason") : "Được admin/staff mở khóa";
+        
+        try {
+            complaintService.unlockShop(sellerId, reason);
+            return ResponseEntity.ok(Map.of("message", "Đã mở khóa shop thành công."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Lỗi mở khóa shop: " + e.getMessage()));
+        }
+    }
 }

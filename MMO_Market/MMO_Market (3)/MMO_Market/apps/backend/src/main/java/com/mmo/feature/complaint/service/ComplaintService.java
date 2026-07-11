@@ -45,4 +45,8 @@ public interface ComplaintService {
     List<com.mmo.shared.model.Chat> getComplaintChatHistory(Long complaintId, Long staffId);
     
     Complaint updateComplaintStatus(Long complaintId, String status, String resolution);
+
+    void lockShop(Long sellerId, String reason);
+    
+    void unlockShop(Long sellerId, String reason);
 }
