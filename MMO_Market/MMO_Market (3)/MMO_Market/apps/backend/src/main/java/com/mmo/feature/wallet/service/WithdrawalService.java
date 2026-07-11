@@ -6,9 +6,11 @@ import com.mmo.shared.dal.SellerBankInfoRepository;
 import com.mmo.shared.dal.SystemConfigurationRepository;
 import com.mmo.shared.dal.UserRepository;
 import com.mmo.shared.dal.WithdrawalRepository;
+import com.mmo.shared.dal.NotificationRepository;
 import com.mmo.shared.model.SellerBankInfo;
 import com.mmo.shared.model.User;
 import com.mmo.shared.model.Withdrawal;
+import com.mmo.shared.model.Notification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.List;
 
 @Service
 public class WithdrawalService {
@@ -34,6 +37,9 @@ public class WithdrawalService {
 
     @Autowired
     private AuthenticationService authenticationService;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     /**
      * Thực hiện yêu cầu rút tiền của Seller bọc trong Transaction.
@@ -119,7 +125,39 @@ public class WithdrawalService {
         w.setFeeVnd(fee);
         w.setStatus("Pending");
         w.setIsDelete(false);
-        withdrawalRepository.save(w);
+        Withdrawal saved = withdrawalRepository.save(w);
+
+        // 1. Tạo thông báo cho Seller
+        Notification sellerNotif = Notification.builder()
+                .userId(seller.getId())
+                .title("Yêu cầu rút tiền thành công")
+                .content(String.format("Yêu cầu rút tiền số tiền %s VNĐ của bạn đã được gửi thành công và đang chờ duyệt.", String.format("%,d", amount)))
+                .type("WALLET")
+                .severity("INFO")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/wallet/transactions")
+                .build();
+        notificationRepository.save(sellerNotif);
+
+        // 2. Tạo thông báo cho toàn bộ Staff & Admin
+        List<User> staffAndAdmins = userRepository.findStaffAndAdmins();
+        for (User staff : staffAndAdmins) {
+            if (staff.getId().equals(seller.getId())) {
+                continue;
+            }
+            Notification staffNotif = Notification.builder()
+                    .userId(staff.getId())
+                    .title("Yêu cầu rút tiền mới")
+                    .content(String.format("Có yêu cầu rút tiền mới số tiền %s VNĐ từ %s (%s) cần duyệt.", String.format("%,d", amount), seller.getFullName(), seller.getEmail()))
+                    .type("WALLET")
+                    .severity("WARNING")
+                    .isRead(false)
+                    .isDelete(false)
+                    .targetUrl("/staff/withdrawals/detail?id=" + saved.getId())
+                    .build();
+            notificationRepository.save(staffNotif);
+        }
 
         Map<String, Object> result = new HashMap<>();
         result.put("newBalance", seller.getBalanceVnd());

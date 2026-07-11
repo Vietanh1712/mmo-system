@@ -288,7 +288,54 @@ public class ComplaintServiceImpl implements ComplaintService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return complaintRepository.save(complaint);
+        Complaint saved = complaintRepository.save(complaint);
+
+        // 1. Gửi thông báo cho Customer (người khiếu nại)
+        Notification customerNotif = Notification.builder()
+                .userId(customer.getId())
+                .title("Đã nhận yêu cầu khiếu nại")
+                .content(String.format("Yêu cầu khiếu nại của bạn cho giao dịch #TXN-%d đã được tiếp nhận và đang chờ duyệt.", transaction.getId()))
+                .type("COMPLAINT")
+                .severity("INFO")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/account/complaints/detail?id=" + saved.getId())
+                .build();
+        notificationRepository.save(customerNotif);
+
+        // 2. Gửi thông báo cảnh báo cho Seller (người bị khiếu nại)
+        Notification sellerNotif = Notification.builder()
+                .userId(transaction.getSeller().getId())
+                .title("Giao dịch bị khiếu nại")
+                .content(String.format("Giao dịch #TXN-%d bán sản phẩm \"%s\" của bạn đã bị khách hàng khiếu nại. Số dư giao dịch tạm thời bị đóng băng. Vui lòng kiểm tra lại.", transaction.getId(), transaction.getProduct().getName()))
+                .type("COMPLAINT")
+                .severity("WARNING")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/seller/complaints")
+                .build();
+        notificationRepository.save(sellerNotif);
+
+        // 3. Gửi thông báo cho toàn bộ Staff & Admin
+        List<User> staffAndAdmins = userRepository.findStaffAndAdmins();
+        for (User staff : staffAndAdmins) {
+            if (staff.getId().equals(customer.getId())) {
+                continue;
+            }
+            Notification staffNotif = Notification.builder()
+                    .userId(staff.getId())
+                    .title("Có khiếu nại mới cần xử lý")
+                    .content(String.format("Giao dịch #TXN-%d giữa %s và %s đang bị khiếu nại cần xử lý.", transaction.getId(), customer.getFullName(), transaction.getSeller().getFullName()))
+                    .type("COMPLAINT")
+                    .severity("WARNING")
+                    .isRead(false)
+                    .isDelete(false)
+                    .targetUrl("/staff/complaints/detail?id=" + saved.getId())
+                    .build();
+            notificationRepository.save(staffNotif);
+        }
+
+        return saved;
     }
 
     @Override
@@ -321,6 +368,32 @@ public class ComplaintServiceImpl implements ComplaintService {
         systemMsg.setIsRead(false);
         systemMsg.setCreatedAt(LocalDateTime.now());
         chatRepository.save(systemMsg);
+
+        // Gửi thông báo cho Customer
+        Notification customerDisputeNotif = Notification.builder()
+                .userId(complaint.getCustomer().getId())
+                .title("Mở cuộc đối chất khiếu nại")
+                .content(String.format("Phòng chat đối chất cho khiếu nại #CMP-%d (giao dịch #TXN-%d) đã được nhân viên %s mở. Vui lòng vào thương lượng.", complaint.getId(), complaint.getTransaction().getId(), staff.getFullName()))
+                .type("COMPLAINT")
+                .severity("WARNING")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/account/complaints/detail?id=" + complaint.getId())
+                .build();
+        notificationRepository.save(customerDisputeNotif);
+
+        // Gửi thông báo cho Seller
+        Notification sellerDisputeNotif = Notification.builder()
+                .userId(complaint.getSeller().getId())
+                .title("Mở cuộc đối chất khiếu nại")
+                .content(String.format("Phòng chat đối chất cho khiếu nại #CMP-%d (giao dịch #TXN-%d) đã được nhân viên %s mở. Vui lòng vào giải trình.", complaint.getId(), complaint.getTransaction().getId(), staff.getFullName()))
+                .type("COMPLAINT")
+                .severity("WARNING")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/seller/complaints")
+                .build();
+        notificationRepository.save(sellerDisputeNotif);
 
         return complaint;
     }

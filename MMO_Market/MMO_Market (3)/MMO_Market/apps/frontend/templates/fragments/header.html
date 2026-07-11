@@ -424,6 +424,22 @@
         }
         window.getCartStorageKey = getCartStorageKey;
 
+        function getNotifStorageKey() {
+            try {
+                const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user") || localStorage.getItem("userInfo") || localStorage.getItem("user");
+                if (userString && userString !== "null" && userString !== "undefined") {
+                    const user = JSON.parse(userString);
+                    if (user && user.id) {
+                        return `mmoReadNotifs_${user.id}`;
+                    }
+                }
+            } catch (error) {
+                console.error("Error determining notif key:", error);
+            }
+            return 'mmoReadNotifs_guest';
+        }
+        window.getNotifStorageKey = getNotifStorageKey;
+
         function refreshHeaderCartBadge() {
             const badge = document.getElementById('headerCartCount');
             if (!badge) return;
@@ -464,7 +480,7 @@
                 }
 
                 if (list) {
-                    const readIds = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
+                    const readIds = JSON.parse(localStorage.getItem(getNotifStorageKey()) || '[]');
                     const unreadCount = list.filter(n => {
                         if (n.isBroadcast) {
                             return !readIds.includes(n.originalTimestamp);
