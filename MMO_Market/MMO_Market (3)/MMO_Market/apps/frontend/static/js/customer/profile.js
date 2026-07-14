@@ -1,8 +1,8 @@
-let currentProfile = null;
+﻿let currentProfile = null;
 var accountSidebar = null;
 let profileMessageTimer = null;
 
-registerAccountPage('/js/profile.js', initializeProfilePage);
+registerAccountPage('/js/customer/profile.js', initializeProfilePage);
 
 function initializeProfilePage() {
     accountSidebar = new AccountSidebar();

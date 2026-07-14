@@ -1,11 +1,11 @@
-(function () {
+﻿(function () {
 const DEFAULT_KYC_STATE = { status: 'NOT_SUBMITTED' };
 
 let accountSidebar = null;
 let currentProfile = null;
 let currentKyc = DEFAULT_KYC_STATE;
 
-registerAccountPage('/js/account-kyc.js', initializeKycPage);
+registerAccountPage('/js/customer/account-kyc.js', initializeKycPage);
 
 function initializeKycPage() {
     accountSidebar = new AccountSidebar();

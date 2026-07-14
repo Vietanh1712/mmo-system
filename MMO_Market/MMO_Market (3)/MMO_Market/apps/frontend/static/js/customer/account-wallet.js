@@ -1,9 +1,9 @@
-(function () {
+﻿(function () {
 
 let accountSidebar = null;
 let walletProfile = null;
 
-registerAccountPage('/js/account-wallet.js', initializeWalletPage);
+registerAccountPage('/js/customer/account-wallet.js', initializeWalletPage);
 
 function initializeWalletPage() {
     accountSidebar = new AccountSidebar();

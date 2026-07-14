@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
 
 let accountSidebar = null;
 let walletTransactions = [];
@@ -6,7 +6,7 @@ let currentPage = 1;
 let pageSize = 5;
 let appliedFilters = createEmptyFilters();
 
-registerAccountPage('/js/account-transactions.js', initializeTransactionsPage);
+registerAccountPage('/js/customer/account-transactions.js', initializeTransactionsPage);
 
 function initializeTransactionsPage() {
     accountSidebar = new AccountSidebar();
