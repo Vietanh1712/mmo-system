@@ -9,28 +9,7 @@
   <component name="ChangeListManager">
     <list default="true" id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-complaint/PLAN.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-complaint/PLAN.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-complaint/SPEC.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-complaint/SPEC.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/PLAN.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/PLAN.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/SPEC.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/SPEC.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/frontend/feat-staff/PLAN.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/frontend/feat-staff/PLAN.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/frontend/feat-staff/SPEC.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/frontend/feat-staff/SPEC.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/seller/controller/api/ShopRegistrationController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/seller/controller/api/ShopRegistrationController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/seller/service/ShopRegistrationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/seller/service/ShopRegistrationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/staff/controller/mvc/StaffController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/staff/controller/mvc/StaffController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/staff/service/impl/StaffDashboardServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/staff/service/impl/StaffDashboardServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/UserRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dto/ShopRegistrationResponseDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dto/ShopRegistrationResponseDto.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dto/StaffDashboardDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dto/StaffDashboardDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/css/staff/staff.css" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/css/staff/staff.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-complaint-detail.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-complaint-detail.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-shop-registrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-shop-registrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-ui.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-ui.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/fragments/staff-sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/fragments/staff-sidebar.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/complaint-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/complaint-detail.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/dashboard.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/shop-registrations.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/shop-registrations.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/transaction-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/transaction-detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/complaints.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/complaints.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -304,61 +283,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.0001070075343403" />
-      <entry key="S2" value="1.1017076428419421" />
-      <entry key="S5" value="1.4008126646996968" />
-      <entry key="S10" value="1.6330976739016634" />
-      <entry key="S30" value="1.8586648715632905" />
-      <entry key="S60" value="1.927501721658696" />
-      <entry key="M2" value="2.0174142186319055" />
-      <entry key="M5" value="2.6870938351320826" />
-      <entry key="M10" value="3.760352156831191" />
-      <entry key="M15" value="4.90237611964367" />
-      <entry key="M30" value="9.715839371448176" />
-      <entry key="H1" value="18.100816605951177" />
-      <entry key="H2" value="26.438334345755308" />
-      <entry key="H4" value="32.39419709183756" />
-      <entry key="D1" value="38.59940053072176" />
-      <entry key="W1" value="39.796387399396444" />
+      <entry key="MS100" value="1.1453038761975163" />
+      <entry key="MS500" value="2.126827456188116" />
+      <entry key="S2" value="2.8123996882914835" />
+      <entry key="S5" value="3.2577415480837884" />
+      <entry key="S10" value="3.5517723118044335" />
+      <entry key="S30" value="3.8284306434133497" />
+      <entry key="S60" value="3.911909853027487" />
+      <entry key="M2" value="4.009324631080085" />
+      <entry key="M5" value="4.683012495696279" />
+      <entry key="M10" value="5.757635373528707" />
+      <entry key="M15" value="6.900085500043478" />
+      <entry key="M30" value="11.713683853469748" />
+      <entry key="H1" value="20.098858962183023" />
+      <entry key="H2" value="28.436918062207425" />
+      <entry key="H4" value="34.39333269862041" />
+      <entry key="D1" value="40.59922933277914" />
+      <entry key="W1" value="41.796362194850076" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="0.03467404600212016" />
-      <entry key="MS500" value="0.5105568914528934" />
-      <entry key="S2" value="0.9297151654138693" />
-      <entry key="S5" value="1.3070333408201031" />
-      <entry key="S10" value="1.5769068486528" />
-      <entry key="S30" value="1.838428799792828" />
-      <entry key="S60" value="1.9566378902946373" />
-      <entry key="M2" value="2.231067034557201" />
-      <entry key="M5" value="3.173797544795759" />
-      <entry key="M10" value="4.126936191970333" />
-      <entry key="M15" value="4.645108353263137" />
-      <entry key="M30" value="5.491535765588524" />
-      <entry key="H1" value="6.321372760912037" />
-      <entry key="H2" value="6.9988275760442855" />
-      <entry key="H4" value="7.448574780379697" />
-      <entry key="D1" value="7.8999265425198395" />
-      <entry key="W1" value="7.985487422104655" />
+      <entry key="MS100" value="7.932152308166361E-4" />
+      <entry key="MS500" value="0.2398399071439911" />
+      <entry key="S2" value="0.7696960208495034" />
+      <entry key="S5" value="1.2119212388179923" />
+      <entry key="S10" value="1.5184479325715978" />
+      <entry key="S30" value="1.8154241282473271" />
+      <entry key="S60" value="1.9443574281205167" />
+      <entry key="M2" value="2.2240545821472524" />
+      <entry key="M5" value="3.1698035589489852" />
+      <entry key="M10" value="4.12433865488665" />
+      <entry key="M15" value="4.643159028675256" />
+      <entry key="M30" value="5.490383380306712" />
+      <entry key="H1" value="6.320709463844656" />
+      <entry key="H2" value="6.998460375456168" />
+      <entry key="H4" value="7.448379379300985" />
+      <entry key="D1" value="7.899892001884282" />
+      <entry key="W1" value="7.985482434276584" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.03467404600212217" />
-      <entry key="MS500" value="0.5117082333169655" />
-      <entry key="S2" value="1.1417767951337046" />
-      <entry key="S5" value="2.053771708157818" />
-      <entry key="S10" value="2.7780820965401416" />
-      <entry key="S30" value="3.5190751956538273" />
-      <entry key="S60" value="3.7886137228983734" />
-      <entry key="M2" value="4.194398857466969" />
-      <entry key="M5" value="5.828466510440911" />
-      <entry key="M10" value="7.864818919755699" />
-      <entry key="M15" value="9.529934521375584" />
-      <entry key="M30" value="15.195965472188803" />
-      <entry key="H1" value="24.41492705221595" />
-      <entry key="H2" value="33.43285338778778" />
-      <entry key="H4" value="39.84038824342941" />
-      <entry key="D1" value="46.49889111829322" />
-      <entry key="W1" value="47.781811491171155" />
+      <entry key="MS100" value="0.1743955326913121" />
+      <entry key="MS500" value="1.395058627670489" />
+      <entry key="S2" value="2.682865557446809" />
+      <entry key="S5" value="3.7944117775977158" />
+      <entry key="S10" value="4.619276451803661" />
+      <entry key="S30" value="5.456239207104132" />
+      <entry key="S60" value="5.755410056355431" />
+      <entry key="M2" value="6.176496708745855" />
+      <entry key="M5" value="7.8192428331347985" />
+      <entry key="M10" value="9.858923977167736" />
+      <entry key="M15" value="11.525305390776953" />
+      <entry key="M30" value="17.192461666848633" />
+      <entry key="H1" value="26.41220772004001" />
+      <entry key="H2" value="35.431020551722206" />
+      <entry key="H4" value="41.83930372234945" />
+      <entry key="D1" value="48.49868125002371" />
+      <entry key="W1" value="49.781780708606966" />
     </decayedShown>
   </component>
   <component name="ProblemsViewState">
