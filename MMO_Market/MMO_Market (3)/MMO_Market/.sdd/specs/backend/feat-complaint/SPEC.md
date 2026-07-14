@@ -39,7 +39,7 @@ Trong giao dịch C2C sản phẩm số, người mua có thể nhận được 
 | **FR-COMP-04** | WHEN a Staff/Admin retrieves all complaints (`GET /all`), THE SYSTEM SHALL return all complaints regardless of customer. |
 | **FR-COMP-05** | WHEN a Staff/Admin views a complaint detail, THE SYSTEM SHALL return full complaint info (customer, seller, transaction, resolution). |
 | **FR-COMP-06** | WHEN a Customer views a complaint detail, THE SYSTEM SHALL only return it if they are the owner (`customer_id = userId`). |
-| **FR-COMP-07** | WHEN a Staff updates the complaint status to `RESOLVED` or `CLOSED`, THE SYSTEM SHALL save `resolution` text and update the `status` field. |
+| **FR-COMP-07** | WHEN a Staff updates the complaint status (to `InProgress`, `RESOLVED`, or `REJECTED`), THE SYSTEM SHALL save `resolution` text and update the `status` field. |
 | **FR-COMP-08** | THE SYSTEM SHALL allow the Seller to view complaints raised against their shop via `/api/seller/complaints/**` (see feat-seller SPEC). |
 
 ---
@@ -51,7 +51,7 @@ Trong giao dịch C2C sản phẩm số, người mua có thể nhận được 
 | **BR-COMP-01** | Chỉ người mua (Customer) mới được tạo khiếu nại, không phải Seller hay Staff. |
 | **BR-COMP-02** | Một giao dịch chỉ có thể có một khiếu nại đang OPEN tại một thời điểm. |
 | **BR-COMP-03** | Soft delete: không xóa vật lý bản ghi `Complaints`. |
-| **BR-COMP-04** | Khi giải quyết (`RESOLVED`/`CLOSED`), bắt buộc phải có `resolution` (lý do phán quyết). |
+| **BR-COMP-04** | Khi giải quyết (`RESOLVED`) hoặc từ chối (`REJECTED`), bắt buộc phải có `resolution` (lý do phán quyết). |
 
 ---
 

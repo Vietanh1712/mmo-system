@@ -78,6 +78,18 @@ public class ShopRegistrationController {
         return ResponseEntity.ok(shopRegistrationService.getDistinctStatuses());
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
+    public ResponseEntity<ShopRegistrationResponseDto> getRegistrationById(@PathVariable Long id) {
+        try {
+            ShopRegistrationResponseDto response = shopRegistrationService.getRegistrationById(id);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
     @PutMapping("/{id}/review")
     @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<ShopRegistrationResponseDto> reviewRegistration(@PathVariable Long id, @RequestBody ShopRegistrationReviewDto review) {
@@ -96,6 +108,19 @@ public class ShopRegistrationController {
             @RequestParam boolean active) {
         try {
             ShopRegistrationResponseDto response = shopRegistrationService.toggleShopStatus(id, active);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(ShopRegistrationResponseDto.builder().status("ERROR").description(e.getMessage()).build());
+        }
+    }
+
+    @PutMapping("/{id}/update-status")
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
+    public ResponseEntity<ShopRegistrationResponseDto> updateShopStatus(
+            @PathVariable Long id,
+            @RequestParam String status) {
+        try {
+            ShopRegistrationResponseDto response = shopRegistrationService.updateShopStatus(id, status);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(ShopRegistrationResponseDto.builder().status("ERROR").description(e.getMessage()).build());

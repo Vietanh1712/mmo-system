@@ -12,6 +12,8 @@ import com.mmo.shared.dal.UserRepository;
 import com.mmo.shared.model.KycStatus;
 import com.mmo.shared.model.SellerRegistration;
 import com.mmo.shared.model.User;
+import com.mmo.shared.model.SellerBankInfo;
+import com.mmo.shared.dal.SellerBankInfoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,6 +37,9 @@ public class ShopRegistrationService {
 
     @Autowired
     private KycRequestRepository kycRequestRepository;
+
+    @Autowired
+    private SellerBankInfoRepository sellerBankInfoRepository;
 
     @Transactional
     public ShopRegistrationResponseDto submitRegistration(Long userId, ShopRegistrationRequestDto request) {
@@ -79,6 +84,15 @@ public class ShopRegistrationService {
     }
 
     @Transactional(readOnly = true)
+    public ShopRegistrationResponseDto getRegistrationById(Long id) {
+        SellerRegistration registration = sellerRegistrationRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy yêu cầu đăng ký Shop."));
+        return mapToDto(registration);
+    }
+
+
+
+    @Transactional(readOnly = true)
     public List<ShopRegistrationResponseDto> getAllPendingRegistrations() {
         return sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc().stream()
                 .filter(reg -> "PENDING".equals(reg.getStatus()))
@@ -117,14 +131,18 @@ public class ShopRegistrationService {
         Map<String, Long> stats = new HashMap<>();
 
         long totalShops = userRepository.countTotalShops();
-        long activeShops = userRepository.countActiveShops();
-        long bannedShops = userRepository.countBannedShops();
         long totalDeposit = userRepository.sumTotalDeposit();
+        long permanentBannedShops = userRepository.countPermanentBannedShops();
+        long indefiniteLockedShops = userRepository.countIndefiniteLockedShops();
+        long temporarySuspendedShops = userRepository.countTemporarySuspendedShops();
+        long withdrawnShops = userRepository.countWithdrawnShops();
 
         stats.put("totalShops", totalShops);
-        stats.put("activeShops", activeShops);
-        stats.put("bannedShops", bannedShops);
         stats.put("totalDeposit", totalDeposit);
+        stats.put("permanentBannedShops", permanentBannedShops);
+        stats.put("indefiniteLockedShops", indefiniteLockedShops);
+        stats.put("temporarySuspendedShops", temporarySuspendedShops);
+        stats.put("withdrawnShops", withdrawnShops);
         return stats;
     }
 
@@ -158,21 +176,28 @@ public class ShopRegistrationService {
 
     private ShopRegistrationResponseDto mapToDto(SellerRegistration registration) {
         User user = registration.getUser();
+        SellerBankInfo bank = null;
+        if (user != null) {
+            bank = sellerBankInfoRepository.findByUserAndIsDeleteFalse(user).orElse(null);
+        }
         return ShopRegistrationResponseDto.builder()
                 .id(registration.getId())
                 .status(registration.getStatus())
-                .code("SHOP-" + String.format("%06d", registration.getId() != null ? registration.getId() : 0))
+                .code("SHOP-" + (registration.getId() != null ? registration.getId() : ""))
                 .submittedAt(registration.getCreatedAt() != null ? registration.getCreatedAt().toString() : null)
                 .shopName(registration.getShopName())
                 .category(registration.getCategory())
                 .description(registration.getDescription())
-                .supportEmail(registration.getSupportEmail())
-                .supportPhone(registration.getSupportPhone())
+                .supportEmail(user != null ? user.getEmail() : null)
+                .supportPhone(user != null ? user.getPhone() : null)
                 .rejectionReason(registration.getRejectionReason())
                 .shopStatus(user != null ? user.getShopStatus() : null)
                 .depositVnd(user != null ? user.getDepositVnd() : 0L)
                 .balanceVnd(user != null ? user.getBalanceVnd() : 0L)
                 .ownerName(user != null ? user.getFullName() : null)
+                .bankAccountNumber(bank != null ? bank.getAccountNumber() : null)
+                .bankName(bank != null ? bank.getBankName() : null)
+                .bankBranch(bank != null ? bank.getBranch() : null)
                 .build();
     }
 
@@ -202,6 +227,25 @@ public class ShopRegistrationService {
             user.setShopStatus("Banned");
         }
         
+        userRepository.save(user);
+        return mapToDto(registration);
+    }
+
+    @Transactional
+    public ShopRegistrationResponseDto updateShopStatus(Long registrationId, String shopStatus) {
+        SellerRegistration registration = sellerRegistrationRepository.findById(registrationId)
+                .orElseThrow(() -> new IllegalArgumentException("Yêu cầu mở Shop không tồn tại."));
+        
+        User user = registration.getUser();
+        if (user == null) {
+            throw new IllegalArgumentException("Người dùng liên kết không tồn tại.");
+        }
+        
+        if (shopStatus == null || shopStatus.isBlank()) {
+            throw new IllegalArgumentException("Trạng thái không hợp lệ.");
+        }
+        
+        user.setShopStatus(shopStatus);
         userRepository.save(user);
         return mapToDto(registration);
     }

@@ -226,7 +226,7 @@ async function handleStaffAction(status) {
                 },
                 body: JSON.stringify({
                     status: status,
-                    resolution: resolution || (status === 'Resolved' ? 'Đã xử lý & hoàn tất hỗ trợ.' : 'Khiếu nại không hợp lệ.')
+                    resolution: resolution || (status === 'Resolved' ? 'Đã xử lý & hoàn tất hỗ trợ.' : (status === 'InProgress' ? 'Đang trong quá trình xử lý.' : 'Khiếu nại không hợp lệ.'))
                 })
             });
             
@@ -249,12 +249,23 @@ async function handleStaffAction(status) {
     const index = list.findIndex(c => c.id === currentComplaint.id);
     if (index !== -1) {
         list[index].status = status;
-        list[index].resolution = resolution || (status === 'Resolved' ? 'Đã xử lý & hoàn tất hỗ trợ.' : 'Khiếu nại không hợp lệ.');
+        list[index].resolution = resolution || (status === 'Resolved' ? 'Đã xử lý & hoàn tất hỗ trợ.' : (status === 'InProgress' ? 'Đang trong quá trình xử lý.' : 'Khiếu nại không hợp lệ.'));
         sessionStorage.setItem(key, JSON.stringify(list));
     }
 
-    showSuccessToast(`Đã cập nhật trạng thái khiếu nại sang: ${status === 'Resolved' ? 'Đã giải quyết' : 'Từ chối'}`);
+    let statusLabel = 'Đang xử lý';
+    if (status === 'Resolved') statusLabel = 'Đã giải quyết';
+    else if (status === 'Rejected') statusLabel = 'Từ chối';
+
+    showSuccessToast(`Đã cập nhật trạng thái khiếu nại sang: ${statusLabel}`);
     window.location.href = '/staff/complaints';
+}
+
+async function submitComplaintStatus() {
+    const statusSelect = document.getElementById('complaintStatus');
+    if (statusSelect) {
+        await handleStaffAction(statusSelect.value);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

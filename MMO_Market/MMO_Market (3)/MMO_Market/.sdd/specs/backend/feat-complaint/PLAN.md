@@ -70,8 +70,8 @@ Triển khai quy trình khiếu nại đơn hàng (Complaints / Dispute) theo đ
 - **Màn hình khiếu nại của Người mua:**
   - File: `templates/account/complaints.html`. Form tạo khiếu nại khi xem chi tiết một đơn hàng lỗi.
 - **Màn hình phân xử của Staff:**
-  - File: `templates/staff/complaints.html` & `complaint-detail.html` và JS `static/js/staff/staff-complaints.js`.
-  - Staff xem mô tả lỗi, xem ảnh bằng chứng và chọn phương án xử lý (Hoàn tiền cho khách / Giải ngân cho shop).
+  - File: `templates/staff/complaints.html` & `complaint-detail.html` và JS `static/js/staff/staff-complaints.js`, `staff-complaint-detail.js`.
+  - Staff xem mô tả lỗi, xem ảnh bằng chứng, chọn trạng thái phân xử thông qua hộp chọn dropdown (`InProgress` - Đang xử lý, `Resolved` - Đã giải quyết, `Rejected` - Từ chối), điền ghi chú giải quyết (`resolution`) và nhấn nút "Cập nhật" để hoàn tất. Giao diện được tối ưu hóa loại bỏ các thông báo alert không cần thiết.
 
 ---
 

@@ -214,5 +214,16 @@
     document.addEventListener('DOMContentLoaded', function () {
         loadMyPermissions();
         bindActionButtons();
+
+        // Dropdown toggle handler
+        document.querySelectorAll('.staff-sidebar__dropdown-toggle').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const dropdown = btn.closest('.staff-sidebar__dropdown');
+                if (dropdown) {
+                    dropdown.classList.toggle('is-open');
+                }
+            });
+        });
     });
 })();

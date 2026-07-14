@@ -17,4 +17,8 @@ public class StaffDashboardDTO {
     private long totalComplaints;
 
     private long pendingKyc;
+
+    private long pendingTransactions;
+
+    private long totalShops;
 }

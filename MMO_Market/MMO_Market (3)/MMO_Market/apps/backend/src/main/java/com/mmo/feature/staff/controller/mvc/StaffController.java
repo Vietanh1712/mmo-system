@@ -55,6 +55,12 @@ public class StaffController {
         return "staff/dashboard";
     }
 
+    @GetMapping("/documents")
+    public String documentsDashboard(Model model) {
+        model.addAttribute("dashboard", staffDashboardService.getDashboardData());
+        return "staff/documents-dashboard";
+    }
+
     @GetMapping("/complaints")
     public String complaints() {
         return "staff/complaints";
@@ -373,4 +379,15 @@ public class StaffController {
     public String shopRegistrations() {
         return "staff/shop-registrations";
     }
+
+    @GetMapping("/shop-registrations/detail")
+    public String shopRegistrationDetail() {
+        return "staff/shop-registration-detail";
+    }
+
+    @GetMapping("/shop-registrations/update-status")
+    public String shopRegistrationUpdateStatus() {
+        return "staff/shop-registration-update-status";
+    }
 }
+
