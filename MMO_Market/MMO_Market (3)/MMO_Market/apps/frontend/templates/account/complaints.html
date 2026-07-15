@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khiếu nại của tôi - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/features/home.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/customer/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/customer/orders.css}">
+    <style>
+        .complaints-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+        }
+        .complaints-table th {
+            text-align: left;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-bottom: 2px solid var(--ds-border, #cbd5e1);
+            color: #64748b;
+            font-weight: 700;
+        }
+        .complaints-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--ds-border, #e2e8f0);
+            color: var(--ds-text, #334155);
+        }
+        .complaints-empty {
+            padding: 40px;
+            text-align: center;
+            color: #94a3b8;
+        }
+        .complaints-empty i {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="profile-page ds-page">
+        <div class="ds-container">
+            <div class="profile-layout ds-two-column">
+                <aside th:replace="~{fragments/account-sidebar :: accountSidebar('complaints')}"></aside>
+
+                <section class="orders-page ds-page-shell">
+                    <section class="orders-hero ds-card" style="background: linear-gradient(135deg, #fef2f2 0%, #fff5f5 100%); border-left: 4px solid #ef4444;">
+                        <div>
+                            <p class="ds-caption" style="color: #ef4444;">Hỗ trợ & Bảo vệ khách hàng</p>
+                            <h1 class="ds-heading-lg" style="color: #991b1b;">Khiếu nại của tôi</h1>
+                            <p class="ds-body orders-hero__subtitle" style="color: #7f1d1d;">
+                                Theo dõi, đàm phán đối chất trực tiếp với Shop và nhận phán quyết phân xử từ Staff MMO Market.
+                            </p>
+                        </div>
+                    </section>
+
+                    <div class="ds-alert ds-alert-info" id="complaintsMessage" hidden></div>
+
+                    <section class="orders-table-card ds-card" style="padding: 0; overflow: hidden;">
+                        <div style="padding: 20px 24px; border-bottom: 1px solid var(--ds-border, #e2e8f0);">
+                            <h2 class="ds-card-title">Danh sách khiếu nại</h2>
+                            <p class="ds-caption">Danh sách các giao dịch đơn hàng bạn đã mở khiếu nại tranh chấp.</p>
+                        </div>
+
+                        <div style="overflow-x: auto;">
+                            <table class="complaints-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mã khiếu nại</th>
+                                        <th>Mã đơn hàng</th>
+                                        <th>Sản phẩm / Biến thể</th>
+                                        <th>Số tiền</th>
+                                        <th>Trạng thái</th>
+                                        <th>Ngày gửi</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="complaintsTableBody">
+                                    <tr>
+                                        <td colspan="7">
+                                            <div class="complaints-empty">
+                                                <i class="fa fa-gavel"></i>
+                                                <p>Bạn chưa gửi khiếu nại nào.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="fragments/footer :: footer"></footer>
+
+    <script th:src="@{/js/customer/auth.js}"></script>
+    <script th:src="@{/js/customer/account-sidebar.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = sessionStorage.getItem('accessToken');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            try {
+                // Gọi API lấy danh sách khiếu nại của Customer
+                const res = await fetch('/api/complaints', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.ok) {
+                    const complaints = await res.json();
+                    renderComplaints(complaints);
+                } else {
+                    showMsg('Không thể tải danh sách khiếu nại.', 'danger');
+                }
+            } catch (err) {
+                console.error(err);
+                showMsg('Lỗi kết nối máy chủ.', 'danger');
+            }
+        });
+
+        function renderComplaints(list) {
+            const tbody = document.getElementById('complaintsTableBody');
+            if (list.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7">
+                            <div class="complaints-empty">
+                                <i class="fa fa-gavel"></i>
+                                <p>Bạn chưa gửi khiếu nại nào.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = list.map(c => {
+                let statusBadge = '';
+                if (c.status === 'Resolved') {
+                    statusBadge = '<span class="ds-badge ds-badge-success">Chấp nhận hoàn tiền</span>';
+                } else if (c.status === 'Rejected') {
+                    statusBadge = '<span class="ds-badge ds-badge-danger">Bác đơn (Giải ngân)</span>';
+                } else if (c.status === 'InProgress') {
+                    statusBadge = '<span class="ds-badge ds-badge-warning"><i class="fa fa-spinner fa-spin"></i> Đang tranh chấp</span>';
+                } else {
+                    statusBadge = `<span class="ds-badge ds-badge-muted">${c.status}</span>`;
+                }
+
+                const priceFormatted = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(c.amountVnd || 0);
+                const createdDate = c.createdAt ? c.createdAt.substring(0, 16).replace('T', ' ') : 'N/A';
+
+                return `
+                    <tr>
+                        <td style="font-weight: 700; color: var(--ds-primary);">#COMP-${c.id}</td>
+                        <td><a href="/account/orders/MMO-ORD-${c.transactionId}" style="color: var(--ds-primary); font-weight: 600;">MMO-ORD-${c.transactionId}</a></td>
+                        <td>
+                            <strong style="display: block; font-size: 13.5px;">${escapeHtml(c.productName)}</strong>
+                            <span style="font-size: 11.5px; color: #64748b;">Biến thể: ${escapeHtml(c.variantName)}</span>
+                        </td>
+                        <td style="font-weight: 700; color: #10b981;">${priceFormatted}</td>
+                        <td>${statusBadge}</td>
+                        <td style="color: #64748b; font-size: 12.5px;">${createdDate}</td>
+                        <td>
+                            <a class="ds-btn" href="/account/complaints/detail?id=${c.id}" style="padding: 6px 12px; font-size: 12px; margin: 0;">
+                                <i class="fa fa-eye"></i> Xem chi tiết
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function showMsg(text, type) {
+            const el = document.getElementById('complaintsMessage');
+            el.className = `ds-alert ds-alert-${type}`;
+            el.textContent = text;
+            el.hidden = false;
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+    </script>
+</body>
+</html>

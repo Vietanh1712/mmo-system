@@ -45,7 +45,6 @@
                             <input class="ds-input" type="search" id="staff-search-input" placeholder="Tìm mã khiếu nại, người gửi, đối tượng...">
                             <select class="ds-input" id="staff-status-select">
                                 <option value="">Tất cả trạng thái</option>
-                                <option value="New">Mới</option>
                                 <option value="InProgress">Đang xử lý</option>
                                 <option value="Resolved">Đã giải quyết</option>
                                 <option value="Rejected">Từ chối</option>
@@ -86,23 +85,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="ds-pagination">
-                        <div class="ds-pagination-pages">
-                            <span class="ds-page-link ds-page-link-disabled">‹</span>
-                            <span class="ds-page-link ds-page-link-active">1</span>
-                            <span class="ds-page-link">2</span>
-                            <span class="ds-page-link">3</span>
-                            <span class="ds-page-link">›</span>
-                        </div>
-                        <div class="ds-pagination-meta">
-                            <span>Tổng số: 128 bản ghi</span>
-                            <select class="ds-page-size">
-                                <option>10</option>
-                                <option selected>20</option>
-                                <option>50</option>
-                            </select>
-                        </div>
-                    </div>
+                    <div id="complaintsPagination"></div>
                 </div>
             </section>
         </div>

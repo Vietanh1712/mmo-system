@@ -1,4 +1,4 @@
-const SECURITY_STORAGE_KEY = 'mmoMarketSecurityMock';
+﻿const SECURITY_STORAGE_KEY = 'mmoMarketSecurityMock';
 const SECURITY_DEFAULT_STATE = {
     twoFactorEnabled: false,
     lastPasswordChangedAt: null
@@ -22,7 +22,7 @@ function registerAccountPage(scriptPath, initializer) {
     }
 }
 
-registerAccountPage('/js/account-security.js', initializeSecurityPage);
+registerAccountPage('/js/customer/account-security.js', initializeSecurityPage);
 
 function initializeSecurityPage() {
     accountSidebar = new AccountSidebar();

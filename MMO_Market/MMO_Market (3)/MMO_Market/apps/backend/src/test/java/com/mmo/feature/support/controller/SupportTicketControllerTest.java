@@ -88,21 +88,21 @@ class SupportTicketControllerTest {
 
         SupportTicket ticket = new SupportTicket();
         ticket.setId(10L);
-        ticket.setCategory("Lỗi nạp tiền");
-        ticket.setTitle("Nạp tiền lỗi");
-        ticket.setDescription("Mô tả lỗi");
+        ticket.setCategory("Loi nap tien");
+        ticket.setTitle("Nap tien loi");
+        ticket.setDescription("Mo ta loi");
         ticket.setStatus("Pending");
         ticket.setUser(user);
 
-        when(supportTicketService.createTicket(1L, "Lỗi nạp tiền", "Nạp tiền lỗi", "Mô tả lỗi")).thenReturn(ticket);
+        when(supportTicketService.createTicket(1L, "Loi nap tien", "Nap tien loi", "Mo ta loi")).thenReturn(ticket);
 
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(1L, null, Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         Map<String, String> body = Map.of(
-                "category", "Lỗi nạp tiền",
-                "title", "Nạp tiền lỗi",
-                "description", "Mô tả lỗi"
+                "category", "Loi nap tien",
+                "title", "Nap tien loi",
+                "description", "Mo ta loi"
         );
 
         // Act & Assert
@@ -129,21 +129,21 @@ class SupportTicketControllerTest {
 
         SupportTicket ticket = new SupportTicket();
         ticket.setId(11L);
-        ticket.setCategory("Góp ý");
-        ticket.setTitle("Góp ý UI");
-        ticket.setDescription("Góp ý");
+        ticket.setCategory("Gop y");
+        ticket.setTitle("Gop y UI");
+        ticket.setDescription("Gop y");
         ticket.setStatus("Pending");
         ticket.setUser(user);
 
-        when(supportTicketService.createTicket(2L, "Góp ý", "Góp ý UI", "Góp ý")).thenReturn(ticket);
+        when(supportTicketService.createTicket(2L, "Gop y", "Gop y UI", "Gop y")).thenReturn(ticket);
 
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(2L, null, Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         Map<String, String> body = Map.of(
-                "category", "Góp ý",
-                "title", "Góp ý UI",
-                "description", "Góp ý"
+                "category", "Gop y",
+                "title", "Gop y UI",
+                "description", "Gop y"
         );
 
         // Act & Assert
@@ -170,9 +170,9 @@ class SupportTicketControllerTest {
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         Map<String, String> body = Map.of(
-                "category", "Lỗi nạp tiền",
-                "title", "Nạp tiền lỗi",
-                "description", "Mô tả lỗi"
+                "category", "Loi nap tien",
+                "title", "Nap tien loi",
+                "description", "Mo ta loi"
         );
 
         // Act & Assert
@@ -180,7 +180,7 @@ class SupportTicketControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Chỉ tài khoản Customer hoặc Seller mới được phép tạo ticket hỗ trợ."));
+                .andExpect(jsonPath("$.message").value("Chi tai khoan Customer hoac Seller moi duoc phep tao ticket ho tro."));
     }
 
     @Test
@@ -197,9 +197,9 @@ class SupportTicketControllerTest {
 
         SupportTicket ticket = new SupportTicket();
         ticket.setId(10L);
-        ticket.setCategory("Lỗi nạp tiền");
-        ticket.setTitle("Nạp tiền lỗi");
-        ticket.setDescription("Mô tả lỗi");
+        ticket.setCategory("Loi nap tien");
+        ticket.setTitle("Nap tien loi");
+        ticket.setDescription("Mo ta loi");
         ticket.setStatus("Pending");
         ticket.setUser(user);
 
@@ -232,6 +232,6 @@ class SupportTicketControllerTest {
         // Act & Assert
         mockMvc.perform(get("/api/support-tickets"))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Chỉ tài khoản Customer hoặc Seller mới có lịch sử ticket."));
+                .andExpect(jsonPath("$.message").value("Chi tai khoan Customer hoac Seller moi co lich su ticket."));
     }
 }

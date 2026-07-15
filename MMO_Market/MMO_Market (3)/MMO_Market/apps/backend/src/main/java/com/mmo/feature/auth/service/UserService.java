@@ -154,8 +154,8 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bạn cần hoàn tất xác minh danh tính (KYC) trước khi đăng ký Shop.");
         }
         
-        // 2. Lấy cấu hình phí nâng cấp Seller
-        long upgradeFee = systemConfigurationRepository.findByConfigKey("SELLER_UPGRADE_FEE_VND")
+        // 2. Lấy cấu hình phí mở Shop
+        long shopOpeningFee = systemConfigurationRepository.findByConfigKey("SHOP_OPENING_FEE_VND")
                 .map(c -> {
                     try { return Long.parseLong(c.getConfigValue()); }
                     catch (NumberFormatException e) { return 50000L; }
@@ -163,8 +163,8 @@ public class UserService {
                 
         // 3. Kiểm tra số dư ví
         long userBalance = user.getBalanceVnd() != null ? user.getBalanceVnd() : 0L;
-        if (userBalance < upgradeFee) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Số dư tài khoản không đủ để thực hiện đăng ký shop (Phí nâng cấp: " + String.format("%,d", upgradeFee) + " VNĐ).");
+        if (userBalance < shopOpeningFee) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Số dư tài khoản không đủ để thực hiện đăng ký shop (Phí mở shop: " + String.format("%,d", shopOpeningFee) + " VNĐ).");
         }
         
         String shopName = requestData.getShopName();
@@ -177,7 +177,7 @@ public class UserService {
         }
         
         // 4. Trừ tiền ví của user
-        user.setBalanceVnd(userBalance - upgradeFee);
+        user.setBalanceVnd(userBalance - shopOpeningFee);
         userRepository.save(user);
         
         // 5. Lưu đăng ký shop (Tạo Pending -> chuyển thành Approved để kích hoạt trigger đổi role)

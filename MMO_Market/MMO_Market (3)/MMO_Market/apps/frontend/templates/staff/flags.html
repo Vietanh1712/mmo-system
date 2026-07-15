@@ -17,7 +17,6 @@
                         <h1 class="ds-page-title">Quản lý cờ cảnh báo</h1>
                         <p class="ds-page-subtitle">Theo dõi shop bị cắm cờ và mức độ cảnh báo.</p>
                     </div>
-                    <a class="ds-btn ds-btn-primary" href="/staff/flags/detail">+ Cắm cờ mới</a>
                 </div>
 
                 <div class="staff-stat-grid">
@@ -71,7 +70,7 @@
                                     </option>
                                     <option th:each="l:${levels}"
                                             th:value="${l}"
-                                            th:text="${l}"
+                                            th:text="${l == 'Warning' ? 'Cảnh cáo' : (l == 'Danger' ? 'Nguy hiểm' : (l == 'Critical' ? 'Phê bình' : (l == 'Suspension' ? 'Đình chỉ' : (l == 'Ban' ? 'Cấm' : l))))}"
                                             th:selected="${l == selectedLevel}">
                                     </option>
                                 </select>
@@ -84,7 +83,7 @@
                                     </option>
                                     <option th:each="s:${statuses}"
                                             th:value="${s}"
-                                            th:text="${s}"
+                                            th:text="${#strings.toLowerCase(s) == 'effect' ? 'Hiệu lực' : (#strings.toLowerCase(s) == 'removed' or #strings.toLowerCase(s) == 'remove' ? 'Đã gỡ' : s)}"
                                             th:selected="${s == selectedStatus}">
                                     </option>
                                 </select>
@@ -112,6 +111,7 @@
                         <table class="ds-table">
                             <thead>
                             <tr>
+                                <th class="ds-table-center" style="width: 60px;">STT</th>
                                 <th>Mã cờ</th>
                                 <th>Shop</th>
                                 <th>Lý do</th>
@@ -122,7 +122,8 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <tr th:each="flag : ${flags}">
+                            <tr th:each="flag, iterStat : ${flags}">
+                                <td class="ds-table-center" th:text="${currentPage * pageSize + iterStat.count}">1</td>
                                 <td th:text="'#FLG-' + ${flag.id}">
                                 </td>
                                 <td>
@@ -140,15 +141,17 @@
                                 <td th:text="${flag.reason}">
                                 </td>
                                 <td class="ds-table-center">
-                                    <span class="ds-badge ds-badge-danger"
-                                          th:text="${flag.flagLevel}">
+                                    <span class="ds-badge"
+                                          th:classappend="${flag.flagLevel == 'Warning' ? 'ds-badge-warning' : (flag.flagLevel == 'Danger' or flag.flagLevel == 'Critical' ? 'ds-badge-danger' : 'ds-badge-info')}"
+                                          th:text="${flag.flagLevel == 'Warning' ? 'Cảnh cáo' : (flag.flagLevel == 'Danger' ? 'Nguy hiểm' : (flag.flagLevel == 'Critical' ? 'Phê bình' : (flag.flagLevel == 'Suspension' ? 'Đình chỉ' : (flag.flagLevel == 'Ban' ? 'Cấm' : flag.flagLevel))))}">
                                     </span>
                                 </td>
                                 <td th:text="${flag.staff.email}">
                                 </td>
                                 <td class="ds-table-center">
-                                     <span class="ds-badge ds-badge-warning"
-                                           th:text="${flag.status}">
+                                     <span class="ds-badge"
+                                           th:classappend="${#strings.toLowerCase(flag.status) == 'effect' ? 'ds-badge-success' : (#strings.toLowerCase(flag.status) == 'removed' or #strings.toLowerCase(flag.status) == 'remove' ? 'ds-badge-muted' : 'ds-badge-warning')}"
+                                           th:text="${#strings.toLowerCase(flag.status) == 'effect' ? 'Hiệu lực' : (#strings.toLowerCase(flag.status) == 'removed' or #strings.toLowerCase(flag.status) == 'remove' ? 'Đã gỡ' : flag.status)}">
                                      </span>
                                 </td>
                                 <td class="ds-table-center">
@@ -167,17 +170,23 @@
                     </div>
                     <div class="ds-pagination">
                         <div class="ds-pagination-pages">
-                            <!-- lùi -->
+                            <!-- First -->
                             <a th:if="${currentPage > 0}"
-                               th:href="@{/staff/flags(page=${currentPage - 1}, keyword=${keyword}, level=${selectedLevel}, status=${selectedStatus})}"
-                               class="ds-page-link">‹</a>
+                               th:href="@{/staff/flags(page=0, size=${pageSize}, keyword=${keyword}, level=${selectedLevel}, status=${selectedStatus})}"
+                               class="ds-page-link" aria-label="Trang đầu">«</a>
+                            <span th:unless="${currentPage > 0}" class="ds-page-link ds-page-link-disabled">«</span>
+
+                            <!-- Previous -->
+                            <a th:if="${currentPage > 0}"
+                               th:href="@{/staff/flags(page=${currentPage - 1}, size=${pageSize}, keyword=${keyword}, level=${selectedLevel}, status=${selectedStatus})}"
+                               class="ds-page-link" aria-label="Trang trước">‹</a>
                             <span th:unless="${currentPage > 0}" class="ds-page-link ds-page-link-disabled">‹</span>
 
-                            <!-- các trang số -->
-                            <th:block th:if="${totalPages > 0}">
+                            <!-- các trang số (totalPages <= 7) -->
+                            <th:block th:if="${totalPages <= 7 and totalPages > 0}">
                                 <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
                                     <a th:if="${i != currentPage}"
-                                       th:href="@{/staff/flags(page=${i}, keyword=${keyword}, level=${selectedLevel}, status=${selectedStatus})}"
+                                       th:href="@{/staff/flags(page=${i}, size=${pageSize}, keyword=${keyword}, level=${selectedLevel}, status=${selectedStatus})}"
                                        th:text="${i + 1}"
                                        class="ds-page-link">1</a>
                                     <span th:if="${i == currentPage}"
@@ -185,18 +194,66 @@
                                           class="ds-page-link ds-page-link-active">1</span>
                                 </th:block>
                             </th:block>
+
+                            <!-- các trang số (totalPages > 7) -->
+                            <th:block th:if="${totalPages > 7}">
+                                <!-- First Page -->
+                                <a th:if="${currentPage != 0}"
+                                   th:href="@{/staff/flags(page=0, size=${pageSize}, keyword=${keyword}, level=${selectedLevel}, status=${selectedStatus})}"
+                                   class="ds-page-link">1</a>
+                                <span th:if="${currentPage == 0}" class="ds-page-link ds-page-link-active">1</span>
+
+                                <!-- Ellipsis before neighbors -->
+                                <span th:if="${currentPage > 2}" class="ds-caption" style="padding:0 4px">…</span>
+
+                                <!-- Neighbor pages -->
+                                <th:block th:each="i : ${#numbers.sequence(T(java.lang.Math).max(1, currentPage - 1), T(java.lang.Math).min(totalPages - 2, currentPage + 1))}">
+                                    <a th:if="${i != currentPage}"
+                                       th:href="@{/staff/flags(page=${i}, size=${pageSize}, keyword=${keyword}, level=${selectedLevel}, status=${selectedStatus})}"
+                                       th:text="${i + 1}"
+                                       class="ds-page-link">1</a>
+                                    <span th:if="${i == currentPage}"
+                                          th:text="${i + 1}"
+                                          class="ds-page-link ds-page-link-active">1</span>
+                                </th:block>
+
+                                <!-- Ellipsis after neighbors -->
+                                <span th:if="${currentPage < totalPages - 3}" class="ds-caption" style="padding:0 4px">…</span>
+
+                                <!-- Last Page -->
+                                <a th:if="${currentPage != totalPages - 1}"
+                                   th:href="@{/staff/flags(page=${totalPages - 1}, size=${pageSize}, keyword=${keyword}, level=${selectedLevel}, status=${selectedStatus})}"
+                                   th:text="${totalPages}"
+                                   class="ds-page-link">10</a>
+                                <span th:if="${currentPage == totalPages - 1}"
+                                      th:text="${totalPages}"
+                                      class="ds-page-link ds-page-link-active">10</span>
+                            </th:block>
+
                             <th:block th:unless="${totalPages > 0}">
                                 <span class="ds-page-link ds-page-link-active">1</span>
                             </th:block>
 
-                            <!-- tiến -->
+                            <!-- Next -->
                             <a th:if="${currentPage + 1 < totalPages}"
-                               th:href="@{/staff/flags(page=${currentPage + 1}, keyword=${keyword}, level=${selectedLevel}, status=${selectedStatus})}"
-                               class="ds-page-link">›</a>
+                               th:href="@{/staff/flags(page=${currentPage + 1}, size=${pageSize}, keyword=${keyword}, level=${selectedLevel}, status=${selectedStatus})}"
+                               class="ds-page-link" aria-label="Trang sau">›</a>
                             <span th:unless="${currentPage + 1 < totalPages}" class="ds-page-link ds-page-link-disabled">›</span>
+
+                            <!-- Last -->
+                            <a th:if="${currentPage + 1 < totalPages}"
+                               th:href="@{/staff/flags(page=${totalPages - 1}, size=${pageSize}, keyword=${keyword}, level=${selectedLevel}, status=${selectedStatus})}"
+                               class="ds-page-link" aria-label="Trang cuối">»</a>
+                            <span th:unless="${currentPage + 1 < totalPages}" class="ds-page-link ds-page-link-disabled">»</span>
                         </div>
                         <div class="ds-pagination-meta">
                             <span th:text="'Tổng số: ' + ${totalFlags} + ' bản ghi'"></span>
+                            <select class="ds-page-size" onchange="changePageSize(this.value)" aria-label="Số dòng mỗi trang">
+                                <option value="10" th:selected="${pageSize == 10}">10</option>
+                                <option value="20" th:selected="${pageSize == 20}">20</option>
+                                <option value="50" th:selected="${pageSize == 50}">50</option>
+                                <option value="100" th:selected="${pageSize == 100}">100</option>
+                            </select>
                         </div>
                     </div>
                 </div>

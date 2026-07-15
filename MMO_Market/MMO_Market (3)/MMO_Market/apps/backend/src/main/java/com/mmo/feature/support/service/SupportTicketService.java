@@ -58,14 +58,14 @@ public class SupportTicketService {
     public SupportTicket updateTicketStatus(Long id, String status, String resolution) {
         SupportTicket ticket = getTicketById(id);
         
-        // Chấp nhận trạng thái: Open, Processing, Resolved, Closed, Replied
-        if (!status.equals("Open") && !status.equals("Processing") && !status.equals("Resolved") && !status.equals("Closed") && !status.equals("Replied")) {
+        // Chấp nhận trạng thái rút gọn: Open, Processing, Resolved
+        if (!status.equals("Open") && !status.equals("Processing") && !status.equals("Resolved")) {
             throw new IllegalArgumentException("Trạng thái ticket không hợp lệ.");
         }
         
         if (resolution != null && !resolution.trim().isEmpty()) {
-            if (!status.equals("Resolved") && !status.equals("Closed")) {
-                status = "Replied";
+            if (!status.equals("Resolved")) {
+                status = "Processing";
             }
         }
         

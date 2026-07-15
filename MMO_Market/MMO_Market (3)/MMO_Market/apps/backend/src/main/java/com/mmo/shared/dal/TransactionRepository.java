@@ -19,6 +19,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
      * Đếm số lượt bán THỰC TẾ (đơn Completed và Held) của một sản phẩm.
      * Không đếm đơn Pending / Cancelled / Refunded / Disputed.
      */
+    @Query("SELECT t.product.id, COUNT(t) FROM Transaction t WHERE t.product.id IN :productIds AND t.status IN ('Completed', 'Held') AND t.isDelete = false GROUP BY t.product.id")
+    List<Object[]> countByProductIdsAndIsDeleteFalse(@Param("productIds") List<Long> productIds);
+
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.product.id = :productId AND t.status IN ('Completed', 'Held') AND t.isDelete = false")
     Long countByProductIdAndIsDeleteFalse(@Param("productId") Long productId);
 
@@ -27,6 +30,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.seller = :seller AND t.status = 'Completed' AND t.isDelete = false")
     long countCompletedSalesBySeller(@Param("seller") User seller);
+
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.seller = :seller AND t.isDelete = false")
+    long countTotalSalesBySeller(@Param("seller") User seller);
 
     @Query("SELECT SUM(t.amountVnd - t.commissionVnd) FROM Transaction t WHERE t.seller = :seller AND t.status = 'Completed' AND t.isDelete = false")
     Long sumCompletedEarningsBySeller(@Param("seller") User seller);
@@ -47,6 +53,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     Long sumPlatformRevenue();
 
     long countByStatusAndIsDeleteFalse(String status);
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.status IN (:statuses) AND (t.isDelete = false OR t.isDelete IS NULL)")
+    long countByStatusesAndNotDeleted(@Param("statuses") java.util.Collection<String> statuses);
 
     long countByIsDeleteFalse();
 
@@ -84,16 +92,16 @@ AND (
 
 AND (
     :status IS NULL
-    OR LOWER(t.status)=LOWER(:status)
+    OR t.status = :status
 )
 
 AND (
-    :fromDate IS NULL
+    cast(:fromDate as timestamp) IS NULL
     OR t.createdAt >= :fromDate
 )
 
 AND (
-    :toDate IS NULL
+    cast(:toDate as timestamp) IS NULL
     OR t.createdAt <= :toDate
 )
 

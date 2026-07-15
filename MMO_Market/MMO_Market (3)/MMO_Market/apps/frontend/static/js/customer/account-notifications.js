@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
 const ACCOUNT_NOTIFICATIONS_MOCK_KEY = 'mmoMarketNotificationsMock';
 
 let accountSidebar = null;
@@ -7,7 +7,7 @@ let currentPage = 1;
 let pageSize = 5;
 let appliedFilters = createEmptyFilters();
 
-registerAccountPage('/js/account-notifications.js', initializeNotificationsPage);
+registerAccountPage('/js/customer/account-notifications.js', initializeNotificationsPage);
 
 function initializeNotificationsPage() {
     accountSidebar = new AccountSidebar();

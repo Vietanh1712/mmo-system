@@ -1,3 +1,5 @@
+let kycPageSize = 10;
+
 document.addEventListener('DOMContentLoaded', () => {
     loadKycList();
     loadKycStats();
@@ -6,11 +8,22 @@ document.addEventListener('DOMContentLoaded', () => {
         loadKycList();
         loadKycStats();
     });
+    const resetBtn = document.getElementById('kycResetBtn');
+    if (resetBtn) resetBtn.addEventListener('click', () => {
+        const codeInput = document.getElementById('kycCodeFilter');
+        if (codeInput) codeInput.value = '';
+        const typeSelect = document.getElementById('kycTypeFilter');
+        if (typeSelect) typeSelect.value = '';
+        const statusSelect = document.getElementById('kycStatusFilter');
+        if (statusSelect) statusSelect.value = '';
+        loadKycList();
+        loadKycStats();
+    });
 });
 
 async function loadKycStats() {
     try {
-        const response = await authFetch('/api/v1/staff/kyc/stats');
+        const response = await authFetch('/v1/staff/kyc/stats');
         if (response.ok) {
             const stats = await response.json();
             const totalEl = document.getElementById('stat-total-kyc');
@@ -31,10 +44,20 @@ async function loadKycStats() {
 async function loadKycList(page = 0) {
     const statusSelect = document.getElementById('kycStatusFilter');
     const status = statusSelect ? statusSelect.value : '';
+    const codeInput = document.getElementById('kycCodeFilter');
+    const requestCode = codeInput ? codeInput.value.trim() : '';
+    const typeSelect = document.getElementById('kycTypeFilter');
+    const idType = typeSelect ? typeSelect.value : '';
 
-    let url = `/v1/staff/kyc?page=${page}&size=10`;
+    let url = `/v1/staff/kyc?page=${page}&size=${kycPageSize}`;
     if (status) {
         url += `&status=${status}`;
+    }
+    if (requestCode) {
+        url += `&requestCode=${encodeURIComponent(requestCode)}`;
+    }
+    if (idType) {
+        url += `&idType=${idType}`;
     }
 
     try {
@@ -42,27 +65,29 @@ async function loadKycList(page = 0) {
         if (!response.ok) throw new Error('Failed to load');
         const data = await response.json();
         
-        renderTable(data.content);
+        renderTable(data.content, data.number, data.size);
         renderPagination(data);
     } catch (e) {
         console.error("Lỗi tải dữ liệu KYC", e);
     }
 }
 
-function renderTable(content) {
+function renderTable(content, page, size) {
     const tbody = document.getElementById('kycTableBody');
     if (!tbody) return;
     tbody.innerHTML = '';
     
     if (content.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="ds-table-center">Không có dữ liệu</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="ds-table-center">Không có dữ liệu</td></tr>';
         return;
     }
 
-    content.forEach(kyc => {
+    content.forEach((kyc, index) => {
+        const stt = page * size + index + 1;
         const statusBadge = getStatusBadge(kyc.status);
         const tr = document.createElement('tr');
         tr.innerHTML = `
+            <td class="ds-table-center">${stt}</td>
             <td>#${kyc.requestCode}</td>
             <td>${kyc.idNumber}</td>
             <td>${kyc.idType}</td>
@@ -90,21 +115,13 @@ function getStatusBadge(status) {
 }
 
 function renderPagination(data) {
-    const paginationPages = document.getElementById('kycPaginationPages');
-    const paginationMeta = document.getElementById('kycPaginationMeta');
-    
-    if (paginationMeta) {
-        paginationMeta.innerHTML = `<span>Tổng số: ${data.totalElements} bản ghi</span>`;
-    }
-    
-    if (paginationPages) {
-        paginationPages.innerHTML = '';
-        for (let i = 0; i < data.totalPages; i++) {
-            const span = document.createElement('span');
-            span.className = `ds-page-link ${i === data.number ? 'ds-page-link-active' : ''}`;
-            span.textContent = i + 1;
-            span.onclick = () => loadKycList(i);
-            paginationPages.appendChild(span);
-        }
-    }
+    mountStaffPagination('kycPagination', {
+        page: data.number,
+        totalPages: data.totalPages,
+        totalElements: data.totalElements,
+        pageSize: data.size
+    }, {
+        onPage: (p) => { loadKycList(p); },
+        onSize: (s) => { kycPageSize = s; loadKycList(0); }
+    });
 }

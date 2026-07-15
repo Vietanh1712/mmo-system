@@ -144,7 +144,10 @@
                     <div class="shop-avatar">N</div>
                     <div class="shop-identity">
                         <span class="shop-name">NetflixVN Store</span>
-                        <span class="shop-verified"><i class="fa fa-check-circle"></i> Đã xác minh</span>
+                        <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 2px;">
+                            <span class="shop-verified" style="font-size: 11px;"><i class="fa fa-check-circle"></i> Đã xác minh</span>
+                            <div id="product-detail-shop-level-badge"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -236,7 +239,7 @@
                             <span class="rating-stars">
                                 <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i
                                     class="fa fa-star"></i><i class="fa fa-star-o"></i>
-                                4+ sao
+                                4 sao
                             </span>
                         </label>
                         <label class="filter-checkbox">
@@ -244,7 +247,7 @@
                             <span class="rating-stars">
                                 <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i
                                     class="fa fa-star-o"></i><i class="fa fa-star-o"></i>
-                                3+ sao
+                                3 sao
                             </span>
                         </label>
                     </div>
@@ -571,7 +574,7 @@
                 sales: "50",
                 rating: "4.6",
                 reviewsCount: 18,
-stock: 50,
+                stock: 50,
                 variants: [
                     { duration: 1, price: 299000, oldPrice: 500000, label: "1 Gói thiết kế" }
                 ],
@@ -711,7 +714,7 @@ stock: 50,
                     selectedProduct.categoryName = "Tăng tương tác";
                 } else if (nameLower.includes('wallet') || nameLower.includes('trust') || nameLower.includes('crypto')) {
                     selectedProduct.categoryName = "Blockchain";
-                } else if (nameLower.includes('logo') || nameLower.includes('banner') || nameLower.includes('thiết kế')) {
+                } else if (nameLower.includes('logo') || nameLower.includes('thiết kế') || nameLower.includes('design') || nameLower.includes('banner')) {
                     selectedProduct.categoryName = "Dịch vụ khác";
                 } else {
                     selectedProduct.categoryName = "Tài khoản Premium";
@@ -910,6 +913,17 @@ stock: 50,
                         const shopVerifiedEl = document.querySelector('.shop-verified');
                         if (shopVerifiedEl) {
                             shopVerifiedEl.style.display = data.isVerified ? 'inline-flex' : 'none';
+                        }
+                        const lvlBadge = document.getElementById('product-detail-shop-level-badge');
+                        if (lvlBadge) {
+                            const lvl = data.shopLevel !== undefined ? data.shopLevel : 1;
+                            if (lvl === 0) {
+                                lvlBadge.innerHTML = `<span style="color: #dc2626; background: #fee2e2; padding: 1px 6px; border-radius: 4px; display: inline-block; font-weight: 700; font-size: 10px; width: max-content;"><i class="fa fa-exclamation-triangle"></i> Cảnh cáo (Lvl 0)</span>`;
+                            } else if (lvl === 2) {
+                                lvlBadge.innerHTML = `<span style="color: #16a34a; background: #dcfce7; padding: 1px 6px; border-radius: 4px; display: inline-block; font-weight: 700; font-size: 10px; width: max-content;"><i class="fa fa-check-circle"></i> Uy tín (Lvl 2)</span>`;
+                            } else {
+                                lvlBadge.innerHTML = `<span style="color: #0284c7; background: #e0f2fe; padding: 1px 6px; border-radius: 4px; display: inline-block; font-weight: 700; font-size: 10px; width: max-content;"><i class="fa fa-star-o"></i> Shop mới (Lvl 1)</span>`;
+                            }
                         }
                     })
                     .catch(err => console.warn("Failed to load seller stats dynamically"));
@@ -1281,17 +1295,6 @@ stock: 50,
                 });
             });
 
-            // Add automatic change listeners for immediate filtering on sidebar
-            const sidebarFilterForm = document.getElementById('sidebar-filter-form');
-            if (sidebarFilterForm) {
-                sidebarFilterForm.querySelectorAll('select, input[type="checkbox"]').forEach(el => {
-                    el.addEventListener('change', () => applySidebarFilters(new Event('submit')));
-                });
-                const slider = document.getElementById('price-slider');
-                if (slider) {
-                    slider.addEventListener('change', () => applySidebarFilters(new Event('submit')));
-                }
-            }
         });
 
         // Format Currency Helper

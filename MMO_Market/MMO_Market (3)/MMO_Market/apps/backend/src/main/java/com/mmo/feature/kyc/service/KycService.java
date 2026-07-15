@@ -139,6 +139,10 @@ public class KycService {
                 .version(request.getVersion())
                 .createdAt(request.getCreatedAt())
                 .updatedAt(request.getUpdatedAt())
+                .fullName(request.getUser().getFullName())
+                .email(request.getUser().getEmail())
+                .address(request.getUser().getAddress())
+                .dateOfBirth(request.getUser().getDateOfBirth() != null ? request.getUser().getDateOfBirth().toString() : null)
                 .build();
     }
 
@@ -174,13 +178,14 @@ public class KycService {
     }
 
     @Transactional(readOnly = true)
-    public org.springframework.data.domain.Page<KycResponseDto> getAllKycRequests(KycStatus status, org.springframework.data.domain.Pageable pageable) {
-        org.springframework.data.domain.Page<KycRequest> page;
-        if (status == null) {
-            page = kycRequestRepository.findAllByIsDeleteFalse(pageable);
-        } else {
-            page = kycRequestRepository.findByStatusAndIsDeleteFalse(status, pageable);
-        }
+    public org.springframework.data.domain.Page<KycResponseDto> getAllKycRequests(
+            KycStatus status,
+            String requestCode,
+            com.mmo.shared.model.IdType idType,
+            org.springframework.data.domain.Pageable pageable) {
+        
+        String cleanCode = (requestCode == null || requestCode.isBlank()) ? null : requestCode.trim();
+        org.springframework.data.domain.Page<KycRequest> page = kycRequestRepository.searchKycRequests(status, cleanCode, idType, pageable);
         return page.map(this::mapToDto);
     }
 

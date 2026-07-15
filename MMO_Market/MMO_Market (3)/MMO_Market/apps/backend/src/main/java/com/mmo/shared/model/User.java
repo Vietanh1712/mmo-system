@@ -59,6 +59,9 @@ public class User {
     @Column(name = "balance_vnd")
     private Long balanceVnd; // Default: 0
 
+    @Column(name = "deposit_vnd")
+    private Long depositVnd; // Default: 0
+
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String permissions;
 
@@ -104,6 +107,9 @@ public class User {
         }
         if (balanceVnd == null) {
             balanceVnd = 0L;
+        }
+        if (depositVnd == null) {
+            depositVnd = 0L;
         }
         if (isVerified == null) {
             isVerified = false;

@@ -1,4 +1,5 @@
 let currentComplaint = null;
+let disputeChatPollInterval = null;
 
 function formatMoney(amount) {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(amount) || 0);
@@ -24,7 +25,16 @@ function formatDateString(dateStr) {
 }
 
 async function loadComplaintDetails() {
-    const id = sessionStorage.getItem('selectedComplaintId') || 'CMP-3310';
+    const urlParams = new URLSearchParams(window.location.search);
+    let id = urlParams.get('id');
+    if (id) {
+        if (!id.startsWith('CMP-')) {
+            id = 'CMP-' + id;
+        }
+        sessionStorage.setItem('selectedComplaintId', id);
+    } else {
+        id = sessionStorage.getItem('selectedComplaintId') || 'CMP-3310';
+    }
     const numericId = id.replace('CMP-', '');
     const token = sessionStorage.getItem('accessToken');
     
@@ -40,16 +50,19 @@ async function loadComplaintDetails() {
                 const item = await res.json();
                 currentComplaint = {
                     id: item.id ? `CMP-${item.id}` : 'CMP-UNKNOWN',
+                    buyerId: item.customer ? item.customer.id : null,
                     senderName: item.customer ? item.customer.fullName : 'N/A',
                     senderEmail: item.customer ? item.customer.email : 'N/A',
                     target: item.transaction && item.transaction.productName ? item.transaction.productName : 'Sản phẩm',
-                    category: 'Sản phẩm',
+                    transactionId: item.transaction ? item.transaction.id : null,
+                    category: 'Sản phẩm số',
                     amount: item.transaction ? item.transaction.amountVnd : 0,
                     status: item.status,
                     createdAt: item.createdAt ? formatDateString(item.createdAt) : 'N/A',
                     evidence: item.evidence || 'Không có',
                     detail: item.description || '',
-                    resolution: item.resolution || ''
+                    resolution: item.resolution || '',
+                    preferredSolution: item.preferredSolution === 'REPLACEMENT' ? 'Đổi tài khoản mới' : (item.preferredSolution === 'REFUND' ? 'Hoàn tiền' : 'N/A')
                 };
             }
         } catch (err) {
@@ -76,37 +89,83 @@ async function loadComplaintDetails() {
     document.getElementById('breadcrumb-complaint-id').textContent = `#${currentComplaint.id}`;
     document.getElementById('header-complaint-subtitle').textContent = `Mã khiếu nại #${currentComplaint.id} — ${currentComplaint.target}`;
     
-    // Status badge
+    // Status badge & Sections
     const badge = document.getElementById('header-status-badge');
     let badgeClass = 'ds-badge-warning';
     let statusText = 'Đang xử lý';
-    if (currentComplaint.status === 'New') {
+    const statusVal = (currentComplaint.status || '').toLowerCase();
+
+    const startSection = document.getElementById('dispute-start-section');
+    const decisionSection = document.getElementById('dispute-decision-section');
+
+    if (statusVal === 'pending_review' || statusVal === 'pending_status') {
         badgeClass = 'ds-badge-info';
-        statusText = 'Mới';
-    } else if (currentComplaint.status === 'Resolved' || currentComplaint.status === 'Completed') {
-        badgeClass = 'ds-badge-success';
-        statusText = 'Đã giải quyết';
-    } else if (currentComplaint.status === 'Rejected') {
-        badgeClass = 'ds-badge-danger';
-        statusText = 'Từ chối';
+        statusText = 'Chờ duyệt';
+        if (startSection) startSection.style.display = 'flex';
+        if (decisionSection) decisionSection.style.display = 'none';
+    } else {
+        if (startSection) startSection.style.display = 'none';
+        if (decisionSection) decisionSection.style.display = 'flex';
+        if (statusVal === 'resolved' || statusVal === 'completed' || statusVal === 'success') {
+            badgeClass = 'ds-badge-success';
+            statusText = 'Đã giải quyết';
+        } else if (statusVal === 'rejected' || statusVal === 'refused' || statusVal === 'fail' || statusVal === 'failed') {
+            badgeClass = 'ds-badge-danger';
+            statusText = 'Từ chối';
+        } else {
+            badgeClass = 'ds-badge-warning';
+            statusText = 'Đang xử lý';
+        }
     }
     badge.className = `ds-badge ${badgeClass}`;
     badge.textContent = statusText;
 
-    // Populate table fields
-    document.getElementById('detail-id').textContent = `#${currentComplaint.id}`;
-    document.getElementById('detail-sender').textContent = `${currentComplaint.senderName} — ${currentComplaint.senderEmail}`;
-    document.getElementById('detail-target').textContent = currentComplaint.target;
-    document.getElementById('detail-category').textContent = currentComplaint.category;
-    document.getElementById('detail-amount').textContent = formatMoney(currentComplaint.amount);
-    document.getElementById('detail-date').textContent = currentComplaint.createdAt;
+
+    // Populate table fields (Overwrite the list to add preferred solution row)
+    const dlList = document.querySelector('.staff-info-list');
+    if (dlList) {
+        dlList.innerHTML = `
+            <div class="staff-info-row">
+                <dt>Mã khiếu nại</dt>
+                <dd id="detail-id">#${currentComplaint.id}</dd>
+            </div>
+            <div class="staff-info-row">
+                <dt>Người gửi</dt>
+                <dd id="detail-sender">${escapeHtml(currentComplaint.senderName)} — ${escapeHtml(currentComplaint.senderEmail)}</dd>
+            </div>
+            <div class="staff-info-row">
+                <dt>Đối tượng</dt>
+                <dd id="detail-target">${escapeHtml(currentComplaint.target)}</dd>
+            </div>
+            <div class="staff-info-row">
+                <dt>Loại</dt>
+                <dd id="detail-category">${escapeHtml(currentComplaint.category)}</dd>
+            </div>
+            <div class="staff-info-row">
+                <dt>Số tiền liên quan</dt>
+                <dd id="detail-amount" class="ds-money" style="font-weight: 700;">${formatMoney(currentComplaint.amount)}</dd>
+            </div>
+            <div class="staff-info-row">
+                <dt>Giải pháp mong muốn</dt>
+                <dd style="font-weight: 700; color: #b45309;">${escapeHtml(currentComplaint.preferredSolution || 'N/A')}</dd>
+            </div>
+            <div class="staff-info-row">
+                <dt>Ngày tạo</dt>
+                <dd id="detail-date">${escapeHtml(currentComplaint.createdAt)}</dd>
+            </div>
+            <div class="staff-info-row">
+                <dt>Lý do / Kết quả</dt>
+                <dd id="detail-resolution" style="font-style: italic; color: #475569;">${escapeHtml(currentComplaint.resolution || 'Chưa xử lý')}</dd>
+            </div>
+        `;
+    }
 
     // Content
     document.getElementById('detail-description').textContent = currentComplaint.detail;
 
     // Evidence
     const evContainer = document.getElementById('detail-evidence-container');
-    if (currentComplaint.evidence && currentComplaint.evidence !== 'Không có') {
+    if (currentComplaint.evidence && currentComplaint.evidence !== 'Không có' && currentComplaint.evidence !== '') {
         evContainer.innerHTML = `
             <a href="${escapeHtml(currentComplaint.evidence)}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 6px; font-weight: 600; text-decoration: none; font-size: 13px;">
                 <i class="fa fa-external-link"></i> Xem ảnh bằng chứng / Đính kèm
@@ -117,15 +176,46 @@ async function loadComplaintDetails() {
     }
 
     // Form fields
-    document.getElementById('complaintStatus').value = currentComplaint.status;
-    document.getElementById('complaintResolution').value = currentComplaint.resolution || '';
+    let selectStatus = currentComplaint.status;
+    if (statusVal === 'open' || statusVal === 'new' || statusVal === 'inprogress' || statusVal === 'in_progress' || statusVal === 'processing') {
+        selectStatus = 'InProgress';
+    } else if (statusVal === 'resolved' || statusVal === 'completed' || statusVal === 'success') {
+        selectStatus = 'Resolved';
+    } else if (statusVal === 'rejected' || statusVal === 'refused' || statusVal === 'fail' || statusVal === 'failed') {
+        selectStatus = 'Rejected';
+    }
+    const cmpStatusSelect = document.getElementById('complaintStatus');
+    if (cmpStatusSelect) cmpStatusSelect.value = selectStatus;
+    const cmpResText = document.getElementById('complaintResolution');
+    if (cmpResText) cmpResText.value = currentComplaint.resolution || '';
 
     // Timeline
     renderTimeline();
-    
-    // Load chats
-    await loadComplaintChats(numericId);
+
+
+    // Setup redirect button and link to full chat page
+    const viewBtn = document.getElementById('view-dispute-chat-btn');
+    if (viewBtn) {
+        viewBtn.onclick = () => {
+            window.location.href = `/staff/chat?complaintId=${numericId}`;
+        };
+    }
+    const redirectBtn = document.getElementById('redirect-to-chat-btn');
+    if (redirectBtn) {
+        redirectBtn.href = `/staff/chat?complaintId=${numericId}`;
+    }
 }
+
+
+window.toggleFlaggingFields = function() {
+    const enableFlagging = document.getElementById('enableFlagging').checked;
+    const fields = document.getElementById('flaggingFields');
+    if (fields) {
+        fields.style.display = enableFlagging ? 'flex' : 'none';
+    }
+};
+
+
 
 function renderTimeline() {
     const timeline = document.getElementById('detail-timeline');
@@ -169,75 +259,6 @@ function renderTimeline() {
             <div class="staff-timeline__item">
                 <span class="staff-timeline__dot" style="background-color: #ef4444;"></span>
                 <div class="staff-timeline__content">
-                    <strong>Từ chối khiếu nại</strong>
-                    <p class="ds-caption">Nguyễn Văn Staff — Vừa xong</p>
-                    <p class="ds-body" style="font-size: 13px; font-style: italic; margin-top: 4px; padding-left: 8px; border-left: 2px solid #ef4444;">
-                        Lý do: ${escapeHtml(currentComplaint.resolution || 'Bằng chứng không hợp lệ.')}
-                    </p>
-                </div>
-            </div>
-        `;
-    }
-
-    timeline.innerHTML = html;
-}
-
-async function loadComplaintChats(complaintId) {
-    const chatContainer = document.getElementById('staff-chat-container');
-    if (!chatContainer) return;
-
-    try {
-        const token = sessionStorage.getItem('accessToken');
-        const res = await fetch(`/api/complaints/${complaintId}/chat`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        
-        if (!res.ok) {
-            throw new Error('Không thể tải tin nhắn');
-        }
-
-        const chats = await res.json();
-        
-        if (!chats || chats.length === 0) {
-            chatContainer.innerHTML = '<p class="ds-caption" style="text-align: center;">Chưa có tin nhắn nào được trao đổi.</p>';
-            return;
-        }
-
-        let chatHtml = '';
-        chats.forEach(chat => {
-            const senderId = chat.senderId;
-            const msgTime = chat.createdAt ? new Date(chat.createdAt).toLocaleString('vi-VN') : '';
-            
-            // Just display generic labels since we don't have user roles easily available here
-            // But we know who is buyer and who is seller from currentComplaint
-            let senderLabel = 'Khách hàng';
-            let align = 'left';
-            let bgColor = '#fff';
-            
-            // If sender is not customer (assumes senderEmail is customer's email or something)
-            // But we don't easily have sellerId in currentComplaint from the simple map.
-            // Let's just alternate or use ID heuristically if we added sellerId.
-            // We can just rely on senderId. Let's assume lower ID is seller or we just use 'Người gửi: ID'
-            
-            chatHtml += `
-                <div style="display: flex; flex-direction: column; align-items: flex-start; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 8px;">
-                    <span style="font-size: 11px; color: #64748b; margin-bottom: 4px;">User ID: ${senderId} - ${msgTime}</span>
-                    <div style="background: ${bgColor}; padding: 10px 14px; border-radius: 8px; border: 1px solid #cbd5e1;">
-                        <p style="margin: 0; font-size: 13.5px; color: #1e293b; white-space: pre-wrap;">${chat.message}</p>
-                    </div>
-                </div>
-            `;
-        });
-        
-        chatContainer.innerHTML = chatHtml;
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-    } catch (e) {
-        chatContainer.innerHTML = '<p class="ds-caption" style="text-align: center; color: #ef4444;">Lỗi tải tin nhắn.</p>';
-    }
-}
-                <div class="staff-timeline__content">
                     <strong>Từ chối hỗ trợ / khiếu nại</strong>
                     <p class="ds-caption">Nguyễn Văn Staff — Vừa xong</p>
                     <p class="ds-body" style="font-size: 13px; font-style: italic; margin-top: 4px; padding-left: 8px; border-left: 2px solid #ef4444;">
@@ -258,6 +279,18 @@ async function handleStaffAction(status) {
         return;
     }
 
+    let flagLevel = null;
+    let flagReason = null;
+    const enableFlagging = document.getElementById('enableFlagging').checked;
+    if (enableFlagging) {
+        flagLevel = document.getElementById('flagLevel').value;
+        flagReason = document.getElementById('flagReason').value.trim();
+        if (!flagReason) {
+            showWarningToast('Vui lòng nhập lý do gắn cờ phạt shop!');
+            return;
+        }
+    }
+
     const id = currentComplaint.id;
     const numericId = id.replace('CMP-', '');
     const token = sessionStorage.getItem('accessToken');
@@ -272,7 +305,9 @@ async function handleStaffAction(status) {
                 },
                 body: JSON.stringify({
                     status: status,
-                    resolution: resolution || (status === 'Resolved' ? 'Đã xử lý & hoàn tất hỗ trợ.' : 'Khiếu nại không hợp lệ.')
+                    resolution: resolution || (status === 'Resolved' ? 'Đã xử lý & hoàn tất hỗ trợ.' : 'Khiếu nại không hợp lệ.'),
+                    flagLevel: flagLevel,
+                    flagReason: flagReason
                 })
             });
             
@@ -303,6 +338,138 @@ async function handleStaffAction(status) {
     window.location.href = '/staff/complaints';
 }
 
+window.submitDecision = async function() {
+    const verdictSelect = document.getElementById('complaintStatus');
+    if (!verdictSelect) return;
+    const status = verdictSelect.value;
+    
+    if (status === 'InProgress') {
+        showWarningToast('Vui lòng chọn phán quyết Chấp nhận hoặc Từ chối khiếu nại!');
+        return;
+    }
+    
+    const resolution = document.getElementById('complaintResolution').value.trim();
+    if (!resolution && status === 'Rejected') {
+        showWarningToast('Vui lòng nhập lý do từ chối vào mục “Kết quả / ghi chú”!');
+        return;
+    }
+    if (!resolution && status === 'Resolved') {
+        showWarningToast('Vui lòng nhập lý do giải quyết/hoàn tiền vào mục “Kết quả / ghi chú”!');
+        return;
+    }
+
+    let flagLevel = null;
+    let flagReason = null;
+    const enableFlagging = document.getElementById('enableFlagging').checked;
+    if (enableFlagging) {
+        flagLevel = document.getElementById('flagLevel').value;
+        flagReason = document.getElementById('flagReason').value.trim();
+        if (!flagReason) {
+            showWarningToast('Vui lòng nhập lý do gắn cờ phạt shop!');
+            return;
+        }
+    }
+
+    const id = currentComplaint.id;
+    const numericId = id.replace('CMP-', '');
+    const token = sessionStorage.getItem('accessToken');
+    
+    if (token) {
+        try {
+            const res = await fetch(`/api/complaints/${numericId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    status: status,
+                    resolution: resolution || (status === 'Resolved' ? 'Đã xử lý & hoàn tất hỗ trợ.' : 'Khiếu nại không hợp lệ.'),
+                    flagLevel: flagLevel,
+                    flagReason: flagReason
+                })
+            });
+            
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.message || 'Lỗi từ hệ thống khi cập nhật khiếu nại.');
+            }
+        } catch (err) {
+            console.error(err);
+            showWarningToast('Lỗi cập nhật backend: ' + err.message + '. Hệ thống sẽ thực hiện cập nhật mock tạm thời.');
+        }
+    }
+
+    const key = 'mmoMarketComplaintsMockGlobal';
+    let list = [];
+    try {
+        list = JSON.parse(sessionStorage.getItem(key)) || [];
+    } catch(e) {}
+
+    const index = list.findIndex(c => c.id === currentComplaint.id);
+    if (index !== -1) {
+        list[index].status = status;
+        list[index].resolution = resolution || (status === 'Resolved' ? 'Đã xử lý & hoàn tất hỗ trợ.' : 'Khiếu nại không hợp lệ.');
+        sessionStorage.setItem(key, JSON.stringify(list));
+    }
+
+    showSuccessToast(`Đã cập nhật phán quyết: ${status === 'Resolved' ? 'Chấp nhận khiếu nại' : 'Từ chối khiếu nại'}`);
+    window.location.href = '/staff/complaints';
+};
+
+window.startDisputeAction = async function() {
+    if (!currentComplaint) return;
+    const numericId = currentComplaint.id.replace('CMP-', '');
+    const token = sessionStorage.getItem('accessToken');
+    if (!token) {
+        showWarningToast('Vui lòng đăng nhập trước.');
+        return;
+    }
+    
+    const btn = document.getElementById('btnStartDispute');
+    const oldText = btn.innerHTML;
+    btn.setAttribute('disabled', 'true');
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang kích hoạt...';
+    
+    try {
+        const res = await fetch(`/api/complaints/${numericId}/start-dispute`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.message || 'Lỗi mở đối chất.');
+        }
+        
+        showSuccessToast('Đã kích hoạt phòng chat đối chất 3 bên thành công!');
+        window.location.href = `/staff/chat?complaintId=${numericId}`;
+    } catch(err) {
+        showWarningToast(err.message);
+    } finally {
+        btn.removeAttribute('disabled');
+        btn.innerHTML = oldText;
+    }
+};
+
+
 document.addEventListener('DOMContentLoaded', () => {
+    const token = sessionStorage.getItem('accessToken');
+    const userStr = sessionStorage.getItem('user');
+    let isStaff = false;
+    if (userStr) {
+        try {
+            const user = JSON.parse(userStr);
+            const role = (user.role || '').toLowerCase();
+            isStaff = role.includes('staff') || role.includes('admin');
+        } catch(e) {}
+    }
+    if (!token || !isStaff) {
+        window.location.href = '/login';
+        return;
+    }
+
     loadComplaintDetails();
 });

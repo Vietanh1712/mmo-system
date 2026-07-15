@@ -1,3 +1,6 @@
+﻿USE MMO_System_Schema;
+GO
+
 USE MMO_Market_Schema;
 GO
 -- =============================================================================
@@ -125,3 +128,4 @@ SELECT c.name, t.name as type, c.max_length, c.is_nullable, d.definition as defa
 FROM sys.columns c JOIN sys.types t ON c.user_type_id = t.user_type_id
 LEFT JOIN sys.default_constraints d ON c.default_object_id = d.object_id
 WHERE c.object_id = OBJECT_ID('dbo.KYCRequests') AND c.name IN ('status', 'isDelete', 'id_number', 'request_code');
+

@@ -13,6 +13,7 @@
 ## Phase 2: Repositories
 
 - [x] **2.1** `KycRequestRepository` — cung cấp truy vấn kiểm tra hồ sơ theo user `findByUserIdAndIsDeleteFalse` và tìm kiếm theo trạng thái.
+- [x] **2.2** `KycRequestRepository` — cung cấp truy vấn lọc động `searchKycRequests` theo status, requestCode, và idType.
 
 ## Phase 3: DTOs & Validation
 
@@ -28,6 +29,8 @@
 
 - [x] **5.1** `KycController` — tiếp nhận hồ sơ qua `POST /api/v1/kyc` dưới dạng multipart form-data.
 - [x] **5.2** Chỉ cho phép người dùng đăng nhập truy cập các tài nguyên KYC cá nhân qua phân quyền Security.
+- [x] **5.3** `StaffKycController` — hỗ trợ phân trang động mặc định 10 dòng, lọc theo `requestCode` và `idType`, sắp xếp ID tăng dần.
+- [x] **5.4** `kyc.html` (Customer) — bổ sung tùy chọn "Bằng lái xe" (`DRIVER_LICENSE`) tại danh sách loại giấy tờ gửi định danh.
 
 ## Phase 6: Testing
 

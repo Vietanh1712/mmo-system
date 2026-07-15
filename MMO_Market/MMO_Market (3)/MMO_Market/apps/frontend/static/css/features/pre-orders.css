@@ -46,8 +46,9 @@
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: #0f172a;
-    color: #ffffff;
+    background: #fff7ed;
+    color: var(--brand-accent, #ea580c);
+    border: 1px solid rgba(234, 88, 12, 0.12);
     font-size: 24px;
     font-weight: 700;
 }
@@ -55,7 +56,7 @@
 .preorders-panel-card__title {
     margin: 0;
     color: #0f172a;
-    font-size: 26px;
+    font-size: 20px;
     font-weight: 700;
 }
 
@@ -242,12 +243,12 @@
 
 /* States classes */
 .workflow-step--active .workflow-step__circle {
-    background-color: #2563eb; /* active blue */
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+    background-color: var(--brand-accent, #ea580c); /* active brand orange */
+    box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.15);
 }
 
 .workflow-step--active .workflow-step__label {
-    color: #2563eb;
+    color: var(--brand-accent, #ea580c);
 }
 
 .workflow-step--success .workflow-step__circle {
@@ -269,7 +270,7 @@
 }
 
 .workflow-line--active {
-    background: linear-gradient(90deg, #cbd5e1 0%, #2563eb 50%, #cbd5e1 100%);
+    background: linear-gradient(90deg, #cbd5e1 0%, var(--brand-accent, #ea580c) 50%, #cbd5e1 100%);
     background-size: 200% 100%;
     animation: workflowLineProgress 1.6s infinite linear;
 }

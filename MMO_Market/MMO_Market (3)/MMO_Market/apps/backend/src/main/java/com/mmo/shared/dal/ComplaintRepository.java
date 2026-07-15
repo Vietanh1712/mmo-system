@@ -18,12 +18,24 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     List<Complaint> findByCustomerAndIsDeleteFalseOrderByCreatedAtDesc(User customer);
     List<Complaint> findByIsDeleteFalseOrderByCreatedAtDesc();
 
-    @Query("SELECT COUNT(c) FROM Complaint c WHERE c.seller = :seller AND c.status = 'InProgress' AND c.isDelete = false")
+    @Query("SELECT c FROM Complaint c WHERE (c.customer = :user OR c.seller = :user) AND (c.status = 'In_Progress' OR c.status = 'InProgress') AND (c.isDelete = false OR c.isDelete IS NULL)")
+    List<Complaint> findActiveComplaintsForUser(@Param("user") User user);
+
+
+    @Query("SELECT COUNT(c) FROM Complaint c WHERE (c.isDelete = false OR c.isDelete IS NULL)")
+    long countAllNotDeleted();
+
+    @Query("SELECT COUNT(c) FROM Complaint c WHERE c.status IN (:statuses) AND (c.isDelete = false OR c.isDelete IS NULL)")
+    long countByStatusesAndNotDeleted(@Param("statuses") java.util.Collection<String> statuses);
+
+    @Query("SELECT COUNT(c) FROM Complaint c WHERE c.seller = :seller AND c.status = 'InProgress' AND (c.isDelete = false OR c.isDelete IS NULL)")
     long countOpenComplaintsBySeller(@Param("seller") User seller);
+
+    @Query("SELECT COUNT(c) FROM Complaint c WHERE c.seller = :seller AND c.status IN ('Resolved', 'Completed') AND (c.isDelete = false OR c.isDelete IS NULL)")
+    long countResolvedComplaintsBySeller(@Param("seller") User seller);
 
     @Query("SELECT COUNT(c) FROM Complaint c WHERE c.seller = :seller AND c.isDelete = false AND YEAR(c.createdAt) = :year AND MONTH(c.createdAt) = :month")
     long countComplaintsBySellerAndMonth(@Param("seller") User seller, @Param("year") int year, @Param("month") int month);
-
 
     long countByStatusAndIsDeleteFalse(String status);
 
@@ -31,9 +43,11 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
 
     //List<Complaint> findTop10ByIsDeleteFalseOrderByCreatedAtDesc();
 
-    Complaint findByTransactionId(Long transactionId);
+    java.util.Optional<Complaint> findFirstByTransactionIdAndIsDeleteFalseOrderByIdDesc(Long transactionId);
 
     List<Complaint> findAllByIsDeleteFalseOrderByCreatedAtDesc();
+
+    List<Complaint> findAllByIsDeleteFalseOrderByIdAsc();
 
     // phân trang
 
@@ -60,7 +74,7 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     @Query("""
 SELECT c
 FROM Complaint c
-WHERE c.isDelete = false
+WHERE (c.isDelete = false OR c.isDelete IS NULL)
 AND (
       :keyword IS NULL
       OR CAST(c.id AS string) = :keyword
@@ -75,6 +89,37 @@ AND (
     Page<Complaint> searchComplaints(
             @Param("keyword") String keyword,
             @Param("status") String status,
+            Pageable pageable
+    );
+
+    @Query("""
+SELECT c
+FROM Complaint c
+LEFT JOIN c.customer cust
+LEFT JOIN c.transaction tx
+LEFT JOIN tx.product prod
+WHERE (c.isDelete = false OR c.isDelete IS NULL)
+AND (
+      (:complaintId IS NOT NULL AND c.id = :complaintId)
+      OR
+      (:complaintId IS NULL AND (
+            :keyword IS NULL
+            OR LOWER(c.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(cust.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(cust.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(prod.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+      ))
+)
+AND (
+      :hasStatus = false
+      OR c.status IN (:statuses)
+)
+""")
+    Page<Complaint> searchComplaintsForStaff(
+            @Param("complaintId") Long complaintId,
+            @Param("keyword") String keyword,
+            @Param("statuses") java.util.Collection<String> statuses,
+            @Param("hasStatus") boolean hasStatus,
             Pageable pageable
     );
 }

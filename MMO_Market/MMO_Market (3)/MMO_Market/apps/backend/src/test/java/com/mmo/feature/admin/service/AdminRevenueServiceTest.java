@@ -73,9 +73,7 @@ class AdminRevenueServiceTest {
         when(userRepository.findByIdAndIsDeleteFalse(1L)).thenReturn(Optional.of(admin));
         when(transactionRepository.sumCommissionForCompletedOrHeldTransactions()).thenReturn(500000L);
         when(sellerRegistrationRepository.countByStatusAndIsDeleteFalse("Approved")).thenReturn(10L);
-        when(productRepository.countByIsDeleteFalse()).thenReturn(50L);
-        when(systemConfigurationRepository.findByConfigKey("SELLER_UPGRADE_FEE_VND")).thenReturn(Optional.empty()); // default 50000L
-        when(systemConfigurationRepository.findByConfigKey("PRODUCT_FEATURED_FEE_VND")).thenReturn(Optional.empty()); // default 10000L
+        when(systemConfigurationRepository.findByConfigKey("SHOP_OPENING_FEE_VND")).thenReturn(Optional.empty()); // default 50000L
         when(systemConfigurationRepository.findByConfigKey("WITHDRAWAL_FEE_PERCENT")).thenReturn(Optional.empty()); // default 1.5
         when(systemConfigurationRepository.findByConfigKey("MIN_WITHDRAW_FEE_VND")).thenReturn(Optional.empty()); // default 10000L
 
@@ -92,10 +90,9 @@ class AdminRevenueServiceTest {
 
         assertNotNull(summary);
         assertEquals(500000L, summary.getCommissions());
-        assertEquals(500000L, summary.getSellerUpgradeFees()); // 10 * 50000
-        assertEquals(100000L, summary.getProductFeaturedFees()); // (50 * 0.2) * 10000
+        assertEquals(500000L, summary.getShopOpeningFees()); // 10 * 50000
         assertEquals(15000L, summary.getWithdrawalFees());
-        assertEquals(1115000L, summary.getNetTotal());
+        assertEquals(1015000L, summary.getNetTotal());
     }
 
     @Test

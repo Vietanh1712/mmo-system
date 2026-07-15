@@ -32,7 +32,9 @@ public interface ComplaintService {
             String resolution);
             
     // --- Methods from HEAD ---
-    Complaint createComplaint(Long customerId, Long transactionId, String description, String evidence);
+    Complaint createComplaint(Long customerId, Long transactionId, String description, String evidence, String preferredSolution);
+    
+    Complaint startDispute(Long complaintId, Long staffId);
     
     List<Complaint> getCustomerComplaints(Long customerId);
     
@@ -41,12 +43,8 @@ public interface ComplaintService {
     List<Complaint> getAllComplaintsForStaff();
     
     Complaint getComplaintByIdForStaff(Long complaintId);
-
-    List<com.mmo.shared.model.Chat> getComplaintChatHistory(Long complaintId, Long staffId);
     
-    Complaint updateComplaintStatus(Long complaintId, String status, String resolution);
+    Complaint updateComplaintStatus(Long complaintId, String status, String resolution, String flagLevel, String flagReason, Long staffId);
 
-    void lockShop(Long sellerId, String reason);
-    
-    void unlockShop(Long sellerId, String reason);
+    org.springframework.data.domain.Page<Complaint> searchComplaintsForStaff(String keyword, String status, int page, int size);
 }

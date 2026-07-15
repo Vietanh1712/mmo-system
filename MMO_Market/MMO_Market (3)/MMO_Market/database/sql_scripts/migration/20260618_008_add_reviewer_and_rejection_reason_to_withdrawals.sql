@@ -1,3 +1,6 @@
+﻿USE MMO_System_Schema;
+GO
+
 -- =============================================================================
 -- Migration: Bổ sung các cột duyệt yêu cầu rút tiền vào Withdrawals
 -- Ngày: 2026-06-18
@@ -63,3 +66,4 @@ BEGIN
     PRINT 'Đã thêm cột fee_vnd vào Withdrawals';
 END
 GO
+

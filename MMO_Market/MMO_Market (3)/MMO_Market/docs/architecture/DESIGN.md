@@ -218,6 +218,63 @@ Phân hệ dành cho nhân viên quản trị (Staff) tuân thủ tính đồng 
 ### 4. Thành phần Phân trang (Pagination Footer)
 *   **Vị trí**: Thanh phân trang sử dụng lớp `.ds-pagination` được đặt bên trong thẻ `.ds-card` và ngay dưới `.ds-table-wrap` để đóng vai trò làm card footer có đường kẻ ngăn cách `border-top`.
 *   **Giao diện số**: Phân trang bằng các ô vuông số (`‹`, `1`, `2`, `3`, `›`) thay vì chữ mô tả thô. Trang hiện tại sử dụng lớp `.ds-page-link-active` (nền xanh nhạt `#dbeafe`, chữ xanh đậm `#1d4ed8`), đi kèm thống kê tổng số lượng bản ghi ở góc phải.
+*   **Đặc tả CSS của thành phần**:
+    ```css
+    .ds-pagination {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+        border-top: 1px solid var(--ds-border);
+        background: #ffffff;
+        padding: 12px 16px;
+        color: #4b5563;
+        font-size: 13px;
+    }
+    .ds-pagination-pages {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .ds-page-link {
+        display: inline-flex;
+        min-width: 36px;
+        height: 36px;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--ds-radius-sm);
+        color: #4b5563;
+        text-decoration: none;
+        transition: background-color 0.2s, color 0.2s;
+    }
+    .ds-page-link:hover {
+        background: var(--ds-primary-soft);
+        color: var(--ds-primary);
+    }
+    .ds-page-link-active {
+        background: #dbeafe;
+        color: #1d4ed8;
+        font-weight: 700;
+    }
+    .ds-page-link-disabled {
+        pointer-events: none;
+        opacity: 0.4;
+    }
+    .ds-pagination-meta {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    .ds-page-size {
+        height: 40px;
+        border: 1px solid #60a5fa;
+        border-radius: var(--ds-radius-sm);
+        background: #ffffff;
+        padding: 0 12px;
+        color: #374151;
+    }
+    ```
 
 ---
 

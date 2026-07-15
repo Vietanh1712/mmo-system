@@ -1,10 +1,7 @@
 const TICKET_STATUS_MAP = {
     'Open':       { label: 'Mới',            cls: 'ticket-badge--processing', icon: 'fa-plus-circle' },
-    'Pending':    { label: 'Chờ xử lý',      cls: 'ticket-badge--pending',    icon: 'fa-clock-o' },
     'Processing': { label: 'Đang xử lý',     cls: 'ticket-badge--processing', icon: 'fa-spinner fa-spin' },
-    'Replied':    { label: 'Đã phản hồi',   cls: 'ticket-badge--replied',    icon: 'fa-reply' },
     'Resolved':   { label: 'Đã giải quyết',  cls: 'ticket-badge--resolved',   icon: 'fa-check-circle' },
-    'Closed':     { label: 'Đã đóng',        cls: 'ticket-badge--closed',     icon: 'fa-times-circle' },
 };
 
 function formatTicketDate(dateStr) {

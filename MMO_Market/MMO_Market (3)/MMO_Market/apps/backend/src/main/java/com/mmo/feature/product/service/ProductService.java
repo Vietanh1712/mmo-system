@@ -66,12 +66,16 @@ public class ProductService {
             }
         }
 
-        // Đếm số giao dịch cho từng sản phẩm từ DB để hiển thị lượt bán thực tế
+        if (products == null || products.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<Long> productIds = products.stream().map(Product::getId).collect(Collectors.toList());
+        java.util.Map<Long, Long> salesCounts = transactionRepository.countByProductIdsAndIsDeleteFalse(productIds).stream()
+                .collect(Collectors.toMap(obj -> (Long) obj[0], obj -> (Long) obj[1]));
+
         return products.stream()
-                .map(p -> {
-                    Long salesCount = transactionRepository.countByProductIdAndIsDeleteFalse(p.getId());
-                    return FeaturedProductDTO.fromEntity(p, salesCount);
-                })
+                .map(p -> FeaturedProductDTO.fromEntity(p, salesCounts.getOrDefault(p.getId(), 0L)))
                 .collect(Collectors.toList());
     }
 }

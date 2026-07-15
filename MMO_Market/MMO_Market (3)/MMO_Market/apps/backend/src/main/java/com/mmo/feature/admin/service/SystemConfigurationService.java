@@ -141,8 +141,7 @@ public class SystemConfigurationService {
         SystemConfigResponse.CommissionsDto comm = SystemConfigResponse.CommissionsDto.builder()
                 .basePercent(getDouble(map, "DEFAULT_COMMISSION_PERCENT", 5.0))
                 .withdrawalPercent(getDouble(map, "WITHDRAWAL_FEE_PERCENT", 1.5))
-                .sellerUpgradeFee(getLong(map, "SELLER_UPGRADE_FEE_VND", 50000L))
-                .productFeaturedFee(getLong(map, "PRODUCT_FEATURED_FEE_VND", 10000L))
+                .shopOpeningFee(getLong(map, "SHOP_OPENING_FEE_VND", 50000L))
                 .minWithdrawLimit(getLong(map, "MIN_WITHDRAWAL_VND", 50000L))
                 .maxWithdrawLimit(getLong(map, "MAX_WITHDRAWAL_VND", 50000000L))
                 .minDepositLimit(getLong(map, "MIN_DEPOSIT_LIMIT_VND", 10000L))
@@ -246,18 +245,11 @@ public class SystemConfigurationService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phí rút tiền phải nằm trong khoảng từ 0% đến 100%.");
         }
 
-        if (request.getSellerUpgradeFee() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phí nâng cấp tài khoản Seller không được để trống.");
+        if (request.getShopOpeningFee() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phí mở shop không được để trống.");
         }
-        if (request.getSellerUpgradeFee() < 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phí nâng cấp tài khoản Seller không được nhỏ hơn 0 VNĐ.");
-        }
-
-        if (request.getProductFeaturedFee() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phí đẩy tin nổi bật sản phẩm không được để trống.");
-        }
-        if (request.getProductFeaturedFee() < 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phí đẩy tin nổi bật sản phẩm không được nhỏ hơn 0 VNĐ.");
+        if (request.getShopOpeningFee() < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phí mở shop không được nhỏ hơn 0 VNĐ.");
         }
 
         if (request.getMinWithdrawLimit() == null) {
@@ -292,8 +284,7 @@ public class SystemConfigurationService {
         Map<String, Object> diff = new HashMap<>();
         checkAndAddDiff(diff, "basePercent", getDouble(original, "DEFAULT_COMMISSION_PERCENT", 5.0), request.getBasePercent());
         checkAndAddDiff(diff, "withdrawalPercent", getDouble(original, "WITHDRAWAL_FEE_PERCENT", 1.5), request.getWithdrawalPercent());
-        checkAndAddDiff(diff, "sellerUpgradeFee", getLong(original, "SELLER_UPGRADE_FEE_VND", 50000L), request.getSellerUpgradeFee());
-        checkAndAddDiff(diff, "productFeaturedFee", getLong(original, "PRODUCT_FEATURED_FEE_VND", 10000L), request.getProductFeaturedFee());
+        checkAndAddDiff(diff, "shopOpeningFee", getLong(original, "SHOP_OPENING_FEE_VND", 50000L), request.getShopOpeningFee());
         checkAndAddDiff(diff, "minWithdrawLimit", getLong(original, "MIN_WITHDRAWAL_VND", 50000L), request.getMinWithdrawLimit());
         checkAndAddDiff(diff, "maxWithdrawLimit", getLong(original, "MAX_WITHDRAWAL_VND", 50000000L), request.getMaxWithdrawLimit());
         checkAndAddDiff(diff, "minDepositLimit", getLong(original, "MIN_DEPOSIT_LIMIT_VND", 10000L), request.getMinDepositLimit());
@@ -301,8 +292,7 @@ public class SystemConfigurationService {
 
         updateKey("DEFAULT_COMMISSION_PERCENT", String.valueOf(request.getBasePercent()), "Phần trăm hoa hồng mặc định sàn thu của Seller", operator.getId());
         updateKey("WITHDRAWAL_FEE_PERCENT", String.valueOf(request.getWithdrawalPercent()), "Phí rút tiền (%)", operator.getId());
-        updateKey("SELLER_UPGRADE_FEE_VND", String.valueOf(request.getSellerUpgradeFee()), "Phí nâng cấp tài khoản Seller (VNĐ)", operator.getId());
-        updateKey("PRODUCT_FEATURED_FEE_VND", String.valueOf(request.getProductFeaturedFee()), "Phí đẩy tin nổi bật sản phẩm (VNĐ)", operator.getId());
+        updateKey("SHOP_OPENING_FEE_VND", String.valueOf(request.getShopOpeningFee()), "Phí mở shop (VNĐ)", operator.getId());
         updateKey("MIN_WITHDRAWAL_VND", String.valueOf(request.getMinWithdrawLimit()), "Số tiền rút tối thiểu", operator.getId());
         updateKey("MAX_WITHDRAWAL_VND", String.valueOf(request.getMaxWithdrawLimit()), "Số tiền rút tối đa", operator.getId());
         updateKey("MIN_DEPOSIT_LIMIT_VND", String.valueOf(request.getMinDepositLimit()), "Số tiền nạp tối thiểu", operator.getId());

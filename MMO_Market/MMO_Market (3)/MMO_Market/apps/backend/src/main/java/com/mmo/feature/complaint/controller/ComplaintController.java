@@ -15,6 +15,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
+
+import com.mmo.shared.dal.ChatRepository;
+import com.mmo.shared.dal.ComplaintRepository;
+import com.mmo.shared.model.Chat;
 
 @RestController
 @RequestMapping("/api/complaints")
@@ -25,6 +30,12 @@ public class ComplaintController {
 
     @Autowired
     private com.mmo.shared.dal.UserRepository userRepository;
+
+    @Autowired
+    private ChatRepository chatRepository;
+
+    @Autowired
+    private ComplaintRepository complaintRepository;
 
     private boolean isStaffOrAdmin(Long userId) {
         if (userId == null) return false;
@@ -89,6 +100,7 @@ public class ComplaintController {
         Object txIdObj = request.get("transactionId");
         String description = (String) request.get("description");
         String evidence = (String) request.get("evidence");
+        String preferredSolution = (String) request.get("preferredSolution");
 
         if (txIdObj == null || description == null || description.trim().isEmpty()) {
             return ResponseEntity.badRequest()
@@ -97,7 +109,13 @@ public class ComplaintController {
 
         try {
             Long transactionId = Long.valueOf(txIdObj.toString());
-            Complaint complaint = complaintService.createComplaint(userId, transactionId, description.trim(), evidence != null ? evidence.trim() : null);
+            Complaint complaint = complaintService.createComplaint(
+                    userId, 
+                    transactionId, 
+                    description.trim(), 
+                    evidence != null ? evidence.trim() : null,
+                    preferredSolution != null ? preferredSolution.trim() : null
+            );
             return ResponseEntity.ok(mapComplaintToDto(complaint));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
@@ -150,41 +168,13 @@ public class ComplaintController {
         }
     }
 
-    @GetMapping("/{id}/chat")
-    public ResponseEntity<?> getComplaintChatHistory(
-            @AuthenticationPrincipal Long userId,
-            @PathVariable Long id) {
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập."));
-        }
-        if (!isStaffOrAdmin(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền truy cập thông tin này."));
-        }
-
-        try {
-            List<com.mmo.shared.model.Chat> chats = complaintService.getComplaintChatHistory(id, userId);
-            // Convert to DTO/Map if needed, for simplicity we can return the raw list or map it
-            List<Map<String, Object>> response = chats.stream().map(c -> {
-                Map<String, Object> map = new HashMap<>();
-                map.put("id", c.getId());
-                map.put("message", c.getMessage());
-                map.put("createdAt", c.getCreatedAt());
-                map.put("senderId", c.getSender() != null ? c.getSender().getId() : null);
-                map.put("receiverId", c.getReceiver() != null ? c.getReceiver().getId() : null);
-                return map;
-            }).collect(Collectors.toList());
-
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("message", "Lỗi lấy tin nhắn: " + e.getMessage()));
-        }
-    }
-
     @GetMapping("/all")
-    public ResponseEntity<?> getAllComplaints(@AuthenticationPrincipal Long userId) {
+    public ResponseEntity<?> getAllComplaints(
+            @AuthenticationPrincipal Long userId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập."));
         }
@@ -193,11 +183,11 @@ public class ComplaintController {
         }
 
         try {
-            List<Complaint> complaints = complaintService.getAllComplaintsForStaff();
-            List<Map<String, Object>> response = complaints.stream()
-                    .map(this::mapComplaintToDto)
-                    .collect(Collectors.toList());
-            return ResponseEntity.ok(response);
+            org.springframework.data.domain.Page<Complaint> complaintsPage = 
+                    complaintService.searchComplaintsForStaff(keyword, status, page, size);
+            org.springframework.data.domain.Page<Map<String, Object>> responsePage = 
+                    complaintsPage.map(this::mapComplaintToDto);
+            return ResponseEntity.ok(responsePage);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "Lỗi lấy danh sách khiếu nại toàn hệ thống: " + e.getMessage()));
@@ -218,13 +208,22 @@ public class ComplaintController {
 
         String status = request.get("status");
         String resolution = request.get("resolution");
+        String flagLevel = request.get("flagLevel");
+        String flagReason = request.get("flagReason");
 
         if (status == null || status.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "Trạng thái status không được để trống."));
         }
 
         try {
-            Complaint complaint = complaintService.updateComplaintStatus(id, status.trim(), resolution != null ? resolution.trim() : null);
+            Complaint complaint = complaintService.updateComplaintStatus(
+                    id, 
+                    status.trim(), 
+                    resolution != null ? resolution.trim() : null,
+                    flagLevel,
+                    flagReason,
+                    userId
+            );
             return ResponseEntity.ok(mapComplaintToDto(complaint));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
@@ -256,45 +255,141 @@ public class ComplaintController {
         }
     }
 
-    @PostMapping("/shop/{sellerId}/lock")
-    public ResponseEntity<?> lockShop(
+    @PostMapping("/{id}/start-dispute")
+    public ResponseEntity<?> startDispute(
             @AuthenticationPrincipal Long userId,
-            @PathVariable Long sellerId,
-            @RequestBody(required = false) Map<String, String> request) {
-        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập."));
-        if (!isStaffOrAdmin(userId)) return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền thực hiện."));
-        
-        String reason = (request != null && request.get("reason") != null) ? request.get("reason") : "Vi phạm chính sách nền tảng";
-        
+            @PathVariable Long id) {
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập."));
+        }
+        if (!isStaffOrAdmin(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Chỉ nhân viên mới được tiếp nhận đối chất."));
+        }
+
         try {
-            complaintService.lockShop(sellerId, reason);
-            return ResponseEntity.ok(Map.of("message", "Đã khóa shop và hoàn tiền các đơn hàng liên quan thành công."));
+            Complaint complaint = complaintService.startDispute(id, userId);
+            return ResponseEntity.ok(mapComplaintToDto(complaint));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("message", "Lỗi khóa shop: " + e.getMessage()));
+                    .body(Map.of("message", "Lỗi mở cuộc đối chất: " + e.getMessage()));
         }
     }
 
-    @PostMapping("/shop/{sellerId}/unlock")
-    public ResponseEntity<?> unlockShop(
+    @GetMapping("/{id}/chats")
+    public ResponseEntity<?> getComplaintChats(
             @AuthenticationPrincipal Long userId,
-            @PathVariable Long sellerId,
-            @RequestBody(required = false) Map<String, String> request) {
-        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập."));
-        if (!isStaffOrAdmin(userId)) return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền thực hiện."));
-        
-        String reason = (request != null && request.get("reason") != null) ? request.get("reason") : "Được admin/staff mở khóa";
-        
+            @PathVariable Long id) {
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập."));
+        }
+
         try {
-            complaintService.unlockShop(sellerId, reason);
-            return ResponseEntity.ok(Map.of("message", "Đã mở khóa shop thành công."));
+            Complaint complaint = complaintRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khiếu nại."));
+
+            boolean isBuyer = complaint.getCustomer().getId().equals(userId);
+            boolean isSeller = complaint.getSeller().getId().equals(userId);
+            boolean isStaff = isStaffOrAdmin(userId);
+
+            if (!isBuyer && !isSeller && !isStaff) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền truy cập cuộc đối chất này."));
+            }
+
+            List<Chat> chats = chatRepository.findByComplaintAndIsDeleteFalseOrderByCreatedAtAsc(complaint);
+            List<Map<String, Object>> chatList = chats.stream().map(msg -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", msg.getId());
+                map.put("senderId", msg.getSender().getId());
+                map.put("senderName", msg.getSender().getFullName());
+                
+                String role = "Customer";
+                if (msg.getSender().getId().equals(complaint.getSeller().getId())) {
+                    role = "Seller";
+                } else if (isStaffOrAdmin(msg.getSender().getId())) {
+                    role = "Staff";
+                }
+                map.put("senderRole", role);
+                map.put("message", msg.getMessage());
+                map.put("createdAt", msg.getCreatedAt() != null ? msg.getCreatedAt().toString() : "");
+                return map;
+            }).collect(Collectors.toList());
+
+            return ResponseEntity.ok(chatList);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("message", "Lỗi mở khóa shop: " + e.getMessage()));
+                    .body(Map.of("message", "Lỗi lấy danh sách chat đối chất: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{id}/chats")
+    public ResponseEntity<?> sendComplaintChat(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request) {
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập."));
+        }
+
+        try {
+            Complaint complaint = complaintRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khiếu nại."));
+
+            if (!"In_Progress".equalsIgnoreCase(complaint.getStatus()) && !"InProgress".equalsIgnoreCase(complaint.getStatus())) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Phòng chat đối chất chưa được mở hoặc đã kết thúc."));
+            }
+
+            if (isStaffOrAdmin(userId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Nhân viên chỉ có quyền Read-only đối với phòng chat đối chất."));
+            }
+
+            boolean isBuyer = complaint.getCustomer().getId().equals(userId);
+            boolean isSeller = complaint.getSeller().getId().equals(userId);
+
+            if (!isBuyer && !isSeller) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền tham gia phòng chat này."));
+            }
+
+            String msgText = request.get("message");
+            if (msgText == null || msgText.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Tin nhắn không được để trống."));
+            }
+
+            User currentUser = userRepository.findByIdAndIsDeleteFalse(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("Người dùng không tồn tại."));
+            User receiver = isBuyer ? complaint.getSeller() : complaint.getCustomer();
+
+            Chat chat = new Chat();
+            chat.setComplaint(complaint);
+            chat.setSender(currentUser);
+            chat.setReceiver(receiver);
+            chat.setChatType("Complaint");
+            chat.setMessage(msgText.trim());
+            chat.setIsDelete(false);
+            chat.setSenderDeleted(false);
+            chat.setReceiverDeleted(false);
+            chat.setIsRead(false);
+            chat.setCreatedAt(LocalDateTime.now());
+
+            chat = chatRepository.save(chat);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", chat.getId());
+            response.put("senderId", userId);
+            response.put("senderName", currentUser.getFullName());
+            response.put("senderRole", isBuyer ? "Customer" : "Seller");
+            response.put("message", chat.getMessage());
+            response.put("createdAt", chat.getCreatedAt().toString());
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Lỗi gửi tin nhắn đối chất: " + e.getMessage()));
         }
     }
 }

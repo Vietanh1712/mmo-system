@@ -51,40 +51,33 @@
                                    th:value="${keyword}">
 
                             <select class="ds-input" name="type">
-
                                 <option value="">Tất cả loại</option>
-
                                 <option
                                         th:each="item : ${types}"
                                         th:value="${item}"
-                                        th:text="${item}"
+                                        th:text="${item == 'ACCOUNT' ? 'Tài khoản' : (item == 'KEY' ? 'Key game / code' : (item == 'GAME_CARD' ? 'Thẻ game' : (item == 'SERVICE' ? 'Dịch vụ' : item)))}"
                                         th:selected="${#strings.equalsIgnoreCase(item, selectedType)}"
                                 >
                                 </option>
-
                             </select>
 
                             <select class="ds-input" name="status">
                                 <option value="">Tất cả trạng thái</option>
-                                <option value="Pending" th:selected="${selectedStatus == 'Pending'}">Chờ xử lý</option>
-                                <option value="Held" th:selected="${selectedStatus == 'Held'}">Tạm giữ bảo lãnh</option>
-                                <option value="Completed" th:selected="${selectedStatus == 'Completed'}">Đã hoàn tất</option>
-                                <option value="Refunded" th:selected="${selectedStatus == 'Refunded'}">Đã hoàn tiền</option>
-                                <option value="Cancelled" th:selected="${selectedStatus == 'Cancelled'}">Đã hủy</option>
-                                <option value="Disputed" th:selected="${selectedStatus == 'Disputed'}">Đang khiếu nại</option>
+                                <option
+                                        th:each="s : ${statuses}"
+                                        th:value="${s}"
+                                        th:text="${#strings.toLowerCase(s) == 'success' or #strings.toLowerCase(s) == 'completed' ? 'Thành công' : (#strings.toLowerCase(s) == 'pending' or #strings.toLowerCase(s) == 'processing' ? 'Đang xử lý' : (#strings.toLowerCase(s) == 'hold' or #strings.toLowerCase(s) == 'holding' or #strings.toLowerCase(s) == 'escrow' or #strings.toLowerCase(s) == 'held' ? 'Tạm giữ' : (#strings.toLowerCase(s) == 'refunded' or #strings.toLowerCase(s) == 'refund' ? 'Hoàn tiền' : (#strings.toLowerCase(s) == 'disputed' or #strings.toLowerCase(s) == 'complaint' ? 'Khiếu nại' : (#strings.toLowerCase(s) == 'rejected' or #strings.toLowerCase(s) == 'failed' or #strings.toLowerCase(s) == 'cancelled' or #strings.toLowerCase(s) == 'cancel' or #strings.toLowerCase(s) == 'fail' ? 'Từ chối' : s)))))}"
+                                        th:selected="${s == selectedStatus}"
+                                >
+                                </option>
                             </select>
 
                         </div>
-                        <div class="ds-filter-grid" style="grid-template-columns:repeat(2,minmax(220px,1fr));max-width:520px">
+                        <div class="ds-filter-grid" style="grid-template-columns:repeat(1,minmax(220px,1fr));max-width:260px">
                             <input class="ds-input"
                                    type="date"
                                    name="fromDate"
                                    th:value="${fromDate}">
-
-                            <input class="ds-input"
-                                   type="date"
-                                   name="toDate"
-                                   th:value="${toDate}">
 
                         </div>
                         <div class="ds-filter-actions">
@@ -108,6 +101,7 @@
                         <table class="ds-table">
                             <thead>
                             <tr>
+                                <th class="ds-table-center" style="width: 60px;">STT</th>
                                 <th>Mã GD</th>
                                 <th>Loại</th>
                                 <th>Người dùng</th>
@@ -115,16 +109,16 @@
                                 <th>Số tiền</th>
                                 <th class="ds-table-center">Trạng thái</th>
                                 <th>Thời gian tạo</th>
-                                <th>Thời gian giao dịch đến</th>
                                 <th class="ds-table-center">Thao tác</th>
                             </tr>
                             </thead>
                             <tbody>
-                            <tr th:each="t : ${transactions}">
+                            <tr th:each="t, iterStat : ${transactions}">
+                                <td class="ds-table-center" th:text="${currentPage * pageSize + iterStat.count}">1</td>
                                 <td th:text="'#TXN-'+${t.id}"></td>
                                 <td>
                                     <span class="ds-badge ds-badge-info"
-                                         th:text="${t.product.productType}">
+                                         th:text="${t.product.productType == 'ACCOUNT' ? 'Tài khoản' : (t.product.productType == 'KEY' ? 'Key game / code' : (t.product.productType == 'GAME_CARD' ? 'Thẻ game' : (t.product.productType == 'SERVICE' ? 'Dịch vụ' : t.product.productType)))}">
                                     </span>
                                 </td>
                                 <td>
@@ -147,19 +141,13 @@
                                     th:text="${#numbers.formatInteger(t.amountVnd,0,'COMMA')} + ' đ'">
                                 </td>
                                  <td class="ds-table-center">
-                                    <span th:if="${t.status == 'Pending'}" class="ds-badge ds-badge-info">Chờ xử lý</span>
-                                    <span th:if="${t.status == 'Held'}" class="ds-badge ds-badge-warning">Tạm giữ bảo lãnh</span>
-                                    <span th:if="${t.status == 'Completed'}" class="ds-badge ds-badge-success">Đã hoàn tất</span>
-                                    <span th:if="${t.status == 'Refunded'}" class="ds-badge ds-badge-danger">Đã hoàn tiền</span>
-                                    <span th:if="${t.status == 'Cancelled'}" class="ds-badge ds-badge-muted">Đã hủy</span>
-                                    <span th:if="${t.status == 'Disputed'}" class="ds-badge ds-badge-purple">Đang khiếu nại</span>
-                                    <span th:if="${t.status != 'Pending' && t.status != 'Held' && t.status != 'Completed' && t.status != 'Refunded' && t.status != 'Cancelled' && t.status != 'Disputed'}" class="ds-badge ds-badge-muted" th:text="${t.status}"></span>
+                                     <span class="ds-badge"
+                                           th:classappend="${#strings.toLowerCase(t.status) == 'success' or #strings.toLowerCase(t.status) == 'completed' or #strings.contains(t.status, 'Thành công') or #strings.contains(t.status, 'Hoàn tất') ? 'ds-badge-success' : (#strings.toLowerCase(t.status) == 'pending' or #strings.toLowerCase(t.status) == 'processing' or #strings.contains(t.status, 'Đang xử lý') or #strings.contains(t.status, 'Chờ xử lý') ? 'ds-badge-info' : (#strings.toLowerCase(t.status) == 'hold' or #strings.toLowerCase(t.status) == 'holding' or #strings.toLowerCase(t.status) == 'escrow' or #strings.toLowerCase(t.status) == 'held' or #strings.contains(t.status, 'Tạm giữ') or #strings.contains(t.status, 'Bảo lãnh') or #strings.contains(t.status, 'Giữ') ? 'ds-badge-warning' : (#strings.toLowerCase(t.status) == 'refunded' or #strings.toLowerCase(t.status) == 'refund' or #strings.contains(t.status, 'Hoàn tiền') ? 'ds-badge-danger' : (#strings.toLowerCase(t.status) == 'disputed' or #strings.toLowerCase(t.status) == 'complaint' or #strings.contains(t.status, 'Khiếu nại') or #strings.contains(t.status, 'Tranh chấp') ? 'ds-badge-purple' : 'ds-badge-muted'))))}"
+                                           th:text="${#strings.toLowerCase(t.status) == 'success' or #strings.toLowerCase(t.status) == 'completed' ? 'Thành công' : (#strings.toLowerCase(t.status) == 'pending' or #strings.toLowerCase(t.status) == 'processing' ? 'Đang xử lý' : (#strings.toLowerCase(t.status) == 'hold' or #strings.toLowerCase(t.status) == 'holding' or #strings.toLowerCase(t.status) == 'escrow' or #strings.toLowerCase(t.status) == 'held' ? 'Tạm giữ' : (#strings.toLowerCase(t.status) == 'refunded' or #strings.toLowerCase(t.status) == 'refund' ? 'Hoàn tiền' : (#strings.toLowerCase(t.status) == 'disputed' or #strings.toLowerCase(t.status) == 'complaint' ? 'Khiếu nại' : (#strings.toLowerCase(t.status) == 'rejected' or #strings.toLowerCase(t.status) == 'failed' or #strings.toLowerCase(t.status) == 'cancelled' or #strings.toLowerCase(t.status) == 'cancel' or #strings.toLowerCase(t.status) == 'fail' ? 'Từ chối' : t.status)))))}">
+                                     </span>
                                  </td>
                                 <td
                                         th:text="${#temporals.format(t.createdAt,'dd/MM/yyyy HH:mm')}">
-                                </td>
-                                <td
-                                        th:text="${#temporals.format(t.escrowReleaseDate,'dd/MM/yyyy HH:mm')}">
                                 </td>
                                 <td class="ds-table-center">
                                     <div class="ds-table-actions">
@@ -178,17 +166,23 @@
                     </div>
                     <div class="ds-pagination">
                         <div class="ds-pagination-pages">
+                            <!-- First -->
+                            <a th:if="${currentPage > 0}"
+                               th:href="@{/staff/transactions(page=0, size=${pageSize}, keyword=${keyword}, type=${selectedType}, status=${selectedStatus}, fromDate=${fromDate}, toDate=${toDate})}"
+                               class="ds-page-link" aria-label="Trang đầu">«</a>
+                            <span th:unless="${currentPage > 0}" class="ds-page-link ds-page-link-disabled">«</span>
+
                             <!-- Previous -->
                             <a th:if="${currentPage > 0}"
-                               th:href="@{/staff/transactions(page=${currentPage - 1}, keyword=${keyword}, type=${selectedType}, status=${selectedStatus}, fromDate=${fromDate}, toDate=${toDate})}"
-                               class="ds-page-link">‹</a>
+                               th:href="@{/staff/transactions(page=${currentPage - 1}, size=${pageSize}, keyword=${keyword}, type=${selectedType}, status=${selectedStatus}, fromDate=${fromDate}, toDate=${toDate})}"
+                               class="ds-page-link" aria-label="Trang trước">‹</a>
                             <span th:unless="${currentPage > 0}" class="ds-page-link ds-page-link-disabled">‹</span>
 
-                            <!-- các trang số -->
-                            <th:block th:if="${totalPages > 0}">
+                            <!-- các trang số (totalPages <= 7) -->
+                            <th:block th:if="${totalPages <= 7 and totalPages > 0}">
                                 <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
                                     <a th:if="${i != currentPage}"
-                                       th:href="@{/staff/transactions(page=${i}, keyword=${keyword}, type=${selectedType}, status=${selectedStatus}, fromDate=${fromDate}, toDate=${toDate})}"
+                                       th:href="@{/staff/transactions(page=${i}, size=${pageSize}, keyword=${keyword}, type=${selectedType}, status=${selectedStatus}, fromDate=${fromDate}, toDate=${toDate})}"
                                        th:text="${i + 1}"
                                        class="ds-page-link">1</a>
                                     <span th:if="${i == currentPage}"
@@ -196,18 +190,66 @@
                                           class="ds-page-link ds-page-link-active">1</span>
                                 </th:block>
                             </th:block>
+
+                            <!-- các trang số (totalPages > 7) -->
+                            <th:block th:if="${totalPages > 7}">
+                                <!-- First Page -->
+                                <a th:if="${currentPage != 0}"
+                                   th:href="@{/staff/transactions(page=0, size=${pageSize}, keyword=${keyword}, type=${selectedType}, status=${selectedStatus}, fromDate=${fromDate}, toDate=${toDate})}"
+                                   class="ds-page-link">1</a>
+                                <span th:if="${currentPage == 0}" class="ds-page-link ds-page-link-active">1</span>
+
+                                <!-- Ellipsis before neighbors -->
+                                <span th:if="${currentPage > 2}" class="ds-caption" style="padding:0 4px">…</span>
+
+                                <!-- Neighbor pages -->
+                                <th:block th:each="i : ${#numbers.sequence(T(java.lang.Math).max(1, currentPage - 1), T(java.lang.Math).min(totalPages - 2, currentPage + 1))}">
+                                    <a th:if="${i != currentPage}"
+                                       th:href="@{/staff/transactions(page=${i}, size=${pageSize}, keyword=${keyword}, type=${selectedType}, status=${selectedStatus}, fromDate=${fromDate}, toDate=${toDate})}"
+                                       th:text="${i + 1}"
+                                       class="ds-page-link">1</a>
+                                    <span th:if="${i == currentPage}"
+                                          th:text="${i + 1}"
+                                          class="ds-page-link ds-page-link-active">1</span>
+                                </th:block>
+
+                                <!-- Ellipsis after neighbors -->
+                                <span th:if="${currentPage < totalPages - 3}" class="ds-caption" style="padding:0 4px">…</span>
+
+                                <!-- Last Page -->
+                                <a th:if="${currentPage != totalPages - 1}"
+                                   th:href="@{/staff/transactions(page=${totalPages - 1}, size=${pageSize}, keyword=${keyword}, type=${selectedType}, status=${selectedStatus}, fromDate=${fromDate}, toDate=${toDate})}"
+                                   th:text="${totalPages}"
+                                   class="ds-page-link">10</a>
+                                <span th:if="${currentPage == totalPages - 1}"
+                                      th:text="${totalPages}"
+                                      class="ds-page-link ds-page-link-active">10</span>
+                            </th:block>
+
                             <th:block th:unless="${totalPages > 0}">
                                 <span class="ds-page-link ds-page-link-active">1</span>
                             </th:block>
 
                             <!-- Next -->
                             <a th:if="${currentPage + 1 < totalPages}"
-                               th:href="@{/staff/transactions(page=${currentPage + 1}, keyword=${keyword}, type=${selectedType}, status=${selectedStatus}, fromDate=${fromDate}, toDate=${toDate})}"
-                               class="ds-page-link">›</a>
+                               th:href="@{/staff/transactions(page=${currentPage + 1}, size=${pageSize}, keyword=${keyword}, type=${selectedType}, status=${selectedStatus}, fromDate=${fromDate}, toDate=${toDate})}"
+                               class="ds-page-link" aria-label="Trang sau">›</a>
                             <span th:unless="${currentPage + 1 < totalPages}" class="ds-page-link ds-page-link-disabled">›</span>
+
+                            <!-- Last -->
+                            <a th:if="${currentPage + 1 < totalPages}"
+                               th:href="@{/staff/transactions(page=${totalPages - 1}, size=${pageSize}, keyword=${keyword}, type=${selectedType}, status=${selectedStatus}, fromDate=${fromDate}, toDate=${toDate})}"
+                               class="ds-page-link" aria-label="Trang cuối">»</a>
+                            <span th:unless="${currentPage + 1 < totalPages}" class="ds-page-link ds-page-link-disabled">»</span>
                         </div>
                         <div class="ds-pagination-meta">
                             <span th:text="'Tổng số: ' + ${totalTransactions} + ' bản ghi'"></span>
+                            <select class="ds-page-size" onchange="changePageSize(this.value)" aria-label="Số dòng mỗi trang">
+                                <option value="10" th:selected="${pageSize == 10}">10</option>
+                                <option value="20" th:selected="${pageSize == 20}">20</option>
+                                <option value="50" th:selected="${pageSize == 50}">50</option>
+                                <option value="100" th:selected="${pageSize == 100}">100</option>
+                            </select>
                         </div>
                     </div>
                 </div>

@@ -57,7 +57,7 @@ public class Transaction {
     @Column(name = "payment_method")
     private String paymentMethod;
 
-    @Column(name = "quantity", nullable = false)
+    @Column(name = "quantity", nullable = false, columnDefinition = "int default 1")
     @Builder.Default
     private Integer quantity = 1;
 

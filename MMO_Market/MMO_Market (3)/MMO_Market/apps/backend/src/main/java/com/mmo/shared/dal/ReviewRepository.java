@@ -14,13 +14,19 @@ import java.util.List;
 public interface ReviewRepository extends JpaRepository<Review, Long> {
     List<Review> findByProductIdAndIsDeleteFalse(Long productId);
 
-    @Query("SELECT AVG(r.rating) FROM Review r WHERE r.product.id = :productId AND r.isDelete = false")
+    @Query("SELECT r.product.id, AVG(r.rating) FROM Review r WHERE r.product.id IN :productIds AND r.isDelete = false GROUP BY r.product.id")
+    List<Object[]> findAverageRatingByProductIds(@Param("productIds") List<Long> productIds);
+
+    @Query("SELECT r.product.id, COUNT(r) FROM Review r WHERE r.product.id IN :productIds AND r.isDelete = false GROUP BY r.product.id")
+    List<Object[]> countByProductIdsAndIsDeleteFalse(@Param("productIds") List<Long> productIds);
+
+    @Query("SELECT AVG(CAST(r.rating AS double)) FROM Review r WHERE r.product.id = :productId AND r.isDelete = false")
     Double findAverageRatingByProductId(@Param("productId") Long productId);
 
     @Query("SELECT COUNT(r) FROM Review r WHERE r.product.id = :productId AND r.isDelete = false")
     Long countByProductIdAndIsDeleteFalse(@Param("productId") Long productId);
 
-    @Query("SELECT AVG(r.rating) FROM Review r WHERE r.product.seller.id = :sellerId AND r.isDelete = false")
+    @Query("SELECT AVG(CAST(r.rating AS double)) FROM Review r WHERE r.product.seller.id = :sellerId AND r.isDelete = false")
     Double findAverageRatingBySellerId(@Param("sellerId") Long sellerId);
 
     List<Review> findByProductAndIsDeleteFalseOrderByCreatedAtDesc(Product product);

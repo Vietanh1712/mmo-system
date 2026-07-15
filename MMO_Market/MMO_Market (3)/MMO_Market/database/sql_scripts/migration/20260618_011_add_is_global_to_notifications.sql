@@ -1,3 +1,6 @@
+﻿USE MMO_System_Schema;
+GO
+
 -- =============================================================================
 -- Migration: Cập nhật bảng Notifications để hỗ trợ thông báo toàn hệ thống (Broadcast)
 -- Ngày: 2026-06-18
@@ -33,3 +36,4 @@ BEGIN
     PRINT 'Đã thêm cột is_global vào Notifications';
 END
 GO
+

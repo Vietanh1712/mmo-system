@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
 const TOPUP_MIN_AMOUNT = 10000;
 const TOPUP_MAX_AMOUNT = 50000000;
 
@@ -13,7 +13,7 @@ let sepayConfig = {
 let pollingInterval = null;
 let initialBalance = 0;
 
-registerAccountPage('/js/account-topup.js', initializeTopupPage);
+registerAccountPage('/js/customer/account-topup.js', initializeTopupPage);
 
 function initializeTopupPage() {
     accountSidebar = new AccountSidebar();
