@@ -120,9 +120,24 @@ public class ProfileController {
     }
 
     @PostMapping("/register-shop")
-    public ProfileResponse registerShop(
+    public org.springframework.http.ResponseEntity<?> registerShop(
             @AuthenticationPrincipal Long userId,
             @RequestBody ShopRegistrationRequestDto request) {
-        return userService.registerShop(userId, request);
+        try {
+            ProfileResponse response = userService.registerShop(userId, request);
+            return org.springframework.http.ResponseEntity.ok(response);
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            return org.springframework.http.ResponseEntity.status(e.getStatusCode())
+                    .body(new Object() {
+                        public final boolean success = false;
+                        public final String message = e.getReason();
+                    });
+        } catch (Exception e) {
+            return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Object() {
+                        public final boolean success = false;
+                        public final String message = "Lỗi hệ thống: " + e.getMessage();
+                    });
+        }
     }
 }

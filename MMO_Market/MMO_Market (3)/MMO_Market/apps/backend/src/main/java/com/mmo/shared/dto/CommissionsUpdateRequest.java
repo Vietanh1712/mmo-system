@@ -12,8 +12,7 @@ import lombok.NoArgsConstructor;
 public class CommissionsUpdateRequest {
     private Double basePercent;
     private Double withdrawalPercent;
-    private Long sellerUpgradeFee;
-    private Long productFeaturedFee;
+    private Long shopOpeningFee;
     private Long minWithdrawLimit;
     private Long maxWithdrawLimit;
     private Long minDepositLimit;

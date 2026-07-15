@@ -1,3 +1,6 @@
+﻿USE MMO_System_Schema;
+GO
+
 -- Migration: Add transaction_id to Reviews table
 -- Purpose: Link each review to a specific transaction so users can review
 --          the same product multiple times if they have different purchase orders.
@@ -21,3 +24,4 @@ BEGIN
     PRINT 'Column transaction_id already exists in Reviews table. Skipping.';
 END
 GO
+

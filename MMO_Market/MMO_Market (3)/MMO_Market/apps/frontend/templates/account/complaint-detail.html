@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết khiếu nại - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/features/home.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/customer/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/customer/orders.css}">
+    <style>
+        .complaint-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 24px;
+            align-items: start;
+        }
+        @media (max-width: 992px) {
+            .complaint-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--ds-border, #cbd5e1);
+            font-size: 13.5px;
+        }
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            color: #64748b;
+            font-weight: 500;
+        }
+        .detail-value {
+            font-weight: 600;
+            color: var(--ds-text, #1e293b);
+        }
+        .evidence-image {
+            max-width: 100%;
+            border-radius: 8px;
+            border: 1px solid var(--ds-border, #e2e8f0);
+            margin-top: 10px;
+            max-height: 240px;
+            object-fit: contain;
+        }
+        .chat-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 380px;
+            overflow-y: auto;
+            padding: 16px;
+            border: 1px solid var(--ds-border, #e2e8f0);
+            border-radius: 8px;
+            background: #fafafa;
+            min-height: 120px;
+            box-sizing: border-box;
+        }
+        .chat-bubble {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.4;
+            word-break: break-word;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        .chat-bubble--out {
+            align-self: flex-end;
+            background-color: var(--ds-primary, #4f46e5);
+            color: #ffffff;
+            border-bottom-right-radius: 2px;
+        }
+        .chat-bubble--in {
+            align-self: flex-start;
+            background-color: #f1f5f9;
+            color: #1e293b;
+            border-bottom-left-radius: 2px;
+            border: 1px solid #e2e8f0;
+        }
+        .chat-bubble-label {
+            font-size: 10px;
+            font-weight: 700;
+            margin-bottom: 2px;
+            opacity: 0.85;
+        }
+    </style>
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="profile-page ds-page">
+        <div class="ds-container">
+            <div class="profile-layout ds-two-column">
+                <aside th:replace="~{fragments/account-sidebar :: accountSidebar('complaints')}"></aside>
+
+                <section class="orders-page ds-page-shell">
+                    <div style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                        <a href="/account/complaints" style="color: var(--ds-primary); font-weight: 600; text-decoration: none; font-size: 14px; display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="fa fa-arrow-left"></i> Quay lại danh sách
+                        </a>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 24px; max-width: 900px; margin: 0 auto; width: 100%;">
+                        <!-- Chi tiết khiếu nại -->
+                        <div style="display: flex; flex-direction: column; gap: 24px;">
+                            <div class="ds-card">
+                                <div class="ds-card-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--ds-border, #e2e8f0); padding-bottom: 14px;">
+                                    <div>
+                                        <h1 class="ds-card-title" id="complaintTitle">Chi tiết Khiếu nại</h1>
+                                        <p class="ds-caption" id="complaintDate">-</p>
+                                    </div>
+                                    <span class="ds-badge" id="complaintStatusBadge">Đang tải...</span>
+                                </div>
+                                <div style="padding: 24px;">
+                                    <div class="detail-item">
+                                        <span class="detail-label">Mã khiếu nại:</span>
+                                        <span class="detail-value" id="c-id" style="color: var(--ds-primary);">-</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Mã giao dịch / Đơn hàng:</span>
+                                        <span class="detail-value"><a href="" id="c-order-link" style="color: var(--ds-primary); text-decoration: none;">-</a></span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Sản phẩm số:</span>
+                                        <span class="detail-value" id="c-product">-</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Người bán (Shop):</span>
+                                        <span class="detail-value" id="c-seller">-</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Giá trị giao dịch:</span>
+                                        <span class="detail-value" id="c-amount" style="color: #10b981;">-</span>
+                                    </div>
+                                    <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                                        <a href="/messages" id="chatDisputeBtn" class="ds-btn ds-btn-primary" style="display: none; align-items: center; gap: 8px;">
+                                            <i class="fa fa-comments"></i> Nhắn tin đối chất thương lượng
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="ds-card">
+                                <div class="ds-card-header">
+                                    <h2 class="ds-card-title">Mô tả khiếu nại & Bằng chứng</h2>
+                                </div>
+                                <div style="padding: 24px;">
+                                    <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px; font-size: 13.5px; line-height: 1.5; color: #1e293b;" id="c-description">
+                                        -
+                                    </div>
+                                    <div id="c-evidence-section" hidden style="margin-top: 16px;">
+                                        <strong style="font-size: 13px; color: #64748b; display: block; margin-bottom: 6px;">Hình ảnh/Tệp chứng cứ:</strong>
+                                        <img src="" class="evidence-image" id="c-evidence-img" alt="Bằng chứng khiếu nại" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="ds-card" id="staffResolutionCard" hidden style="border-left: 4px solid var(--ds-primary);">
+                                <div class="ds-card-header">
+                                    <h2 class="ds-card-title" style="color: var(--ds-primary);">Phán quyết của Staff Ban quản trị</h2>
+                                </div>
+                                <div style="padding: 24px;">
+                                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px; font-size: 13.5px; line-height: 1.5; color: #166534;" id="c-resolution">
+                                        -
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="fragments/footer :: footer"></footer>
+
+    <script th:src="@{/js/customer/auth.js}"></script>
+    <script th:src="@{/js/customer/account-sidebar.js}"></script>
+    <script>
+        let currentComplaint = null;
+        let chatInterval = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = sessionStorage.getItem('accessToken');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            if (!id) {
+                window.location.href = '/account/complaints';
+                return;
+            }
+
+            // Tải chi tiết khiếu nại
+            await loadComplaintDetails(id);
+        });
+
+        async function loadComplaintDetails(id) {
+            const token = sessionStorage.getItem('accessToken');
+            try {
+                const res = await fetch(`/api/complaints/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.ok) {
+                    currentComplaint = await res.json();
+                    renderComplaintDetails(currentComplaint);
+                } else {
+                    window.location.href = '/account/complaints';
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderComplaintDetails(c) {
+            document.getElementById('complaintTitle').textContent = `Khiếu nại #COMP-${c.id}`;
+            document.getElementById('c-id').textContent = `#COMP-${c.id}`;
+            document.getElementById('c-product').textContent = `${c.productName} (${c.variantName})`;
+            document.getElementById('c-seller').textContent = c.sellerName;
+            document.getElementById('c-description').textContent = c.description;
+
+            const createdDate = c.createdAt ? c.createdAt.substring(0, 16).replace('T', ' ') : 'N/A';
+            document.getElementById('complaintDate').textContent = `Ngày gửi: ${createdDate}`;
+
+            // Định dạng tiền
+            const amountFormatted = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(c.amountVnd || 0);
+            document.getElementById('c-amount').textContent = amountFormatted;
+
+            // Link đơn hàng
+            const orderLink = document.getElementById('c-order-link');
+            orderLink.href = `/account/orders/MMO-ORD-${c.transactionId}`;
+            orderLink.textContent = `MMO-ORD-${c.transactionId}`;
+
+            // Chứng cứ
+            const evidenceSec = document.getElementById('c-evidence-section');
+            if (c.evidence) {
+                document.getElementById('c-evidence-img').src = c.evidence;
+                evidenceSec.hidden = false;
+            } else {
+                evidenceSec.hidden = true;
+            }
+
+            // Trạng thái Badge
+            const badge = document.getElementById('complaintStatusBadge');
+            badge.className = 'ds-badge';
+            if (c.status === 'Resolved') {
+                badge.classList.add('ds-badge-success');
+                badge.textContent = 'Hoàn tiền thành công';
+            } else if (c.status === 'Rejected') {
+                badge.classList.add('ds-badge-danger');
+                badge.textContent = 'Đã bác đơn';
+            } else {
+                badge.classList.add('ds-badge-warning');
+                badge.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tranh chấp';
+            }
+
+            // Phán quyết của Staff
+            const resCard = document.getElementById('staffResolutionCard');
+            if (c.status === 'Resolved' || c.status === 'Rejected') {
+                document.getElementById('c-resolution').textContent = c.resolution || 'Staff đã quyết định phân xử giao dịch này.';
+                resCard.hidden = false;
+            } else {
+                resCard.hidden = true;
+            }
+
+            // Nút nhắn tin đối chất
+            const chatBtn = document.getElementById('chatDisputeBtn');
+            if (chatBtn) {
+                // Nhấn tin đối chất sẽ mở /messages với sellerId và complaintId
+                chatBtn.href = `/messages?sellerId=${c.sellerId}&complaintId=${c.id}`;
+                if (c.status === 'Resolved' || c.status === 'Rejected' || c.status === 'PENDING_REVIEW') {
+                    chatBtn.style.display = 'none';
+                } else {
+                    chatBtn.style.display = 'inline-flex';
+                }
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+    </script>
+</body>
+</html>
+

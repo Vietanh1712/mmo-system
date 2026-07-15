@@ -23,8 +23,9 @@
             </a>
             <a class="staff-sidebar__link"
                th:classappend="${active == 'shop-registrations'} ? ' is-active' : ''"
-               href="/staff/shop-registrations">
-                <i class="fa fa-shopping-bag"></i> Quản lý Shops
+               href="/staff/shop-registrations"
+               data-required-permission="MANAGE_SHOPS">
+                 <i class="fa fa-shopping-bag"></i> Quản lý Shops
             </a>
             
             <!-- Collapsible Dropdown for Quản lý đơn từ -->

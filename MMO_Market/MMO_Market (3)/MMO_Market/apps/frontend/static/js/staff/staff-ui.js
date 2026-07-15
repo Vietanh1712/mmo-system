@@ -67,6 +67,7 @@
                     else if (reqPerm === 'APPROVE_WITHDRAWALS') permLabel = 'Phê duyệt yêu cầu rút tiền';
                     else if (reqPerm === 'HANDLE_DISPUTES') permLabel = 'Phân xử tranh chấp & Hoàn tiền';
                     else if (reqPerm === 'MANAGE_SUPPORT') permLabel = 'Tiếp nhận & Hỗ trợ khách hàng';
+                    else if (reqPerm === 'MANAGE_SHOPS') permLabel = 'Quản lý cửa hàng (Shop)';
 
                     showToast('Bạn không có quyền truy cập chức năng này. Quyền yêu cầu: ' + permLabel, 'danger');
                 });

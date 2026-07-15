@@ -94,7 +94,7 @@
             <i class="fa fa-dashboard"></i> Seller Dashboard
         </div>
         <div class="dropdown-divider"></div>
-        <div class="dropdown-item" onclick="if(typeof logout === 'function') logout(); else { sessionStorage.clear(); localStorage.removeItem('accessToken'); localStorage.removeItem('refreshToken'); localStorage.removeItem('loginTimestamp'); localStorage.removeItem('userInfo'); localStorage.removeItem('user'); window.location.href='/login'; }">
+        <div class="dropdown-item dropdown-item--logout" onclick="if(typeof logout === 'function') logout(); else { sessionStorage.clear(); localStorage.removeItem('accessToken'); localStorage.removeItem('refreshToken'); localStorage.removeItem('loginTimestamp'); localStorage.removeItem('userInfo'); localStorage.removeItem('user'); window.location.href='/login'; }">
             <i class="fa fa-sign-out"></i> Đăng xuất
         </div>
     </div>
@@ -424,6 +424,22 @@
         }
         window.getCartStorageKey = getCartStorageKey;
 
+        function getNotifStorageKey() {
+            try {
+                const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user") || localStorage.getItem("userInfo") || localStorage.getItem("user");
+                if (userString && userString !== "null" && userString !== "undefined") {
+                    const user = JSON.parse(userString);
+                    if (user && user.id) {
+                        return `mmoReadNotifs_${user.id}`;
+                    }
+                }
+            } catch (error) {
+                console.error("Error determining notif key:", error);
+            }
+            return 'mmoReadNotifs_guest';
+        }
+        window.getNotifStorageKey = getNotifStorageKey;
+
         function refreshHeaderCartBadge() {
             const badge = document.getElementById('headerCartCount');
             if (!badge) return;
@@ -464,7 +480,7 @@
                 }
 
                 if (list) {
-                    const readIds = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
+                    const readIds = JSON.parse(localStorage.getItem(getNotifStorageKey()) || '[]');
                     const unreadCount = list.filter(n => {
                         if (n.isBroadcast) {
                             return !readIds.includes(n.originalTimestamp);

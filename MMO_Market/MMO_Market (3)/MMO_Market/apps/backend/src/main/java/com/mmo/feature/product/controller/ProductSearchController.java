@@ -12,6 +12,7 @@ import com.mmo.shared.dal.UserRepository;
 import com.mmo.shared.dto.ReviewResponseDTO;
 import com.mmo.shared.model.Review;
 import com.mmo.shared.model.ShopFollower;
+import com.mmo.shared.dal.ComplaintRepository;
 
 import com.mmo.shared.dto.FeaturedProductDTO;
 import com.mmo.shared.dto.ProductSearchResultDTO;
@@ -72,6 +73,9 @@ public class ProductSearchController {
 
     @Autowired
     private com.mmo.shared.dal.ShopFollowerRepository shopFollowerRepository;
+
+    @Autowired
+    private ComplaintRepository complaintRepository;
 
     @GetMapping("/products")
     public ResponseEntity<Page<ProductSearchResultDTO>> searchProducts(
@@ -319,6 +323,18 @@ public class ProductSearchController {
                         isFollowing = shopFollowerRepository.findByFollowerIdAndSellerIdAndIsDeleteFalse(activeUserId, sellerId).isPresent();
                     }
 
+                    long completedCount = transactionRepository.countCompletedSalesBySeller(user);
+                    long totalSold = transactionRepository.countTotalSalesBySeller(user);
+                    long resolvedComplaints = complaintRepository.countResolvedComplaintsBySeller(user);
+
+                    double disputeRate = totalSold > 0 ? (double) resolvedComplaints / totalSold : 0.0;
+                    int shopLevel = 1;
+                    if (disputeRate >= 0.02) {
+                        shopLevel = 0;
+                    } else if (completedCount >= 20) {
+                        shopLevel = 2;
+                    }
+
                     java.util.Map<String, Object> profile = new java.util.HashMap<>();
                     profile.put("id", user.getId());
                     profile.put("shopName", user.getFullName() != null ? user.getFullName() : "Gian hàng đối tác");
@@ -331,6 +347,7 @@ public class ProductSearchController {
                     profile.put("email", user.getEmail());
                     profile.put("followerCount", followerCount);
                     profile.put("isFollowing", isFollowing);
+                    profile.put("shopLevel", shopLevel);
                     return ResponseEntity.ok(profile);
                 })
                 .orElse(ResponseEntity.notFound().build());

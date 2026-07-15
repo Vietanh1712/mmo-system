@@ -46,28 +46,8 @@
                     </div>
                 </div>
 
-                <div class="admin-card">
-                    <div class="card-header-flex">
-                        <h3>Kênh trao đổi (ComplaintChats)</h3>
-                    </div>
-                    <div style="padding: 20px 24px;">
-                        <div class="chat-panel">
-                            <!-- Chat history: populated by JS -->
-                            <div class="chat-messages">
-                                <div style="text-align:center; padding: 20px; color: var(--ds-text-muted);">
-                                    <i class="fa fa-spinner fa-spin"></i> Đang tải lịch sử tin nhắn...
-                                </div>
-                            </div>
-                            <div class="chat-compose" style="margin-top: 16px;">
-                                <label for="sellerReply" style="display:block;margin-bottom:8px;font-weight:600;font-size:14px;">Phản hồi của Seller</label>
-                                <textarea id="sellerReply" class="ds-textarea" placeholder="Nhập giải trình, bằng chứng hoặc đề xuất xử lý..." style="width:100%;min-height:100px;"></textarea>
-                                <div style="margin-top:12px; display:flex; gap:8px;">
-                                    <button class="ds-btn ds-btn-primary" type="button">Gửi phản hồi</button>
-                                    <a class="ds-btn ds-btn-outline" th:href="@{/seller/complaints}">Quay lại danh sách</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div style="margin-top: 16px; display: flex; gap: 8px;">
+                    <a class="ds-btn ds-btn-outline" th:href="@{/seller/complaints}">Quay lại danh sách</a>
                 </div>
             </section>
         </div>

@@ -22,5 +22,8 @@ public class OrderDto {
     private Integer reviewRating;
     private String reviewComment;
     private Long transactionId;
+    private Integer quantity;
+    private Long complaintId;
     private java.util.Map<String, String> credentials;
+    private java.util.List<java.util.Map<String, String>> credentialsList;
 }

@@ -54,32 +54,34 @@ Bước 5  [Backend]:    Validate: user thực hiện cuộc gọi phải là Bu
                        Validate: transaction.status = 'Escrow'
                        Tạo bản ghi trong Complaints với status = 'OPEN'
                        Tạm khóa/đóng băng tự động giải phóng tiền của đơn hàng
-                       Tự động mở kênh chat WebSocket giữa Buyer, Seller và Staff
+                       Khởi tạo kênh chat tranh chấp liên kết với khiếu nại (chatType = 'Complaint', complaint_id)
                        Trả về: status = 200, complaintId, status = "OPEN"
 Bước 6  [Frontend]:   Hiển thị giao dịch chuyển sang trạng thái "Tranh chấp"
-Bước 7  [Staff]:      Nhận thông báo tranh chấp mới, tham gia vào kênh chat đối chất
-Bước 8  [Buyer/Seller]: Đưa ra các bằng chứng trao đổi
-Bước 9  [Staff]:      Xác định lỗi thuộc về Seller, bấm "Chấp nhận hoàn tiền" (Resolved)
-Bước 10 [Frontend]:   POST /api/complaints/resolve/{id} { resolutionReason }
+Bước 7  [Staff]:      Nhận thông báo tranh chấp mới, tham gia xem phòng chat tranh chấp ở chế độ Read-only (chỉ xem tin nhắn của Buyer và Seller và bằng chứng, không được phép chat)
+Bước 8  [Buyer/Seller]: Nhắn tin trao đổi trực tiếp, đưa ra các bằng chứng đối chất
+Bước 9  [Staff]:      Xác định lỗi thuộc về Seller, bấm "Chấp nhận hoàn tiền" (Resolved), chọn mức độ gắn cờ shop người bán (Warning, Critical, Danger) và nhập lý do
+Bước 10 [Frontend]:   POST /api/complaints/resolve/{id} { resolutionReason, flagLevel, flagReason }
 Bước 11 [Backend]:    @Transactional (Atomicity):
                        - Cập nhật Complaints.status = 'RESOLVED' và lưu resolutionReason
                        - Hoàn tiền: cộng số tiền giao dịch vào available_balance của Buyer
                        - Tạo WalletTransactions (type = 'REFUND', amount, refCode: "REFUND-CMP-{id}")
+                       - Tạo ShopFlag liên kết với seller_id, complaint_id, flagLevel và lý do nếu Staff chọn gắn cờ
                        - Tạo Notification (type = 'WALLET') gửi thông báo hoàn tiền thành công cho Buyer
                        - Tạo Notification (type = 'WALLET') gửi thông báo cho Seller
                        Trả về: status = 200, message = "RESOLVED"
 ```
 
-### 3.2 Luồng Phụ A — Từ Chối Khiếu Nại (Giải Ngân Cho Seller)
+### 3.2 Luồng Phụ A — Từ Chối Khiếu Nại (Giải Ngân Cho Seller & Tùy chọn Gắn cờ)
 
 ```
-Bước 9  [Staff]:      Xác định sản phẩm hoạt động tốt, lỗi do Buyer sử dụng sai cách, bấm "Từ chối khiếu nại" (Rejected)
-Bước 10 [Frontend]:   POST /api/complaints/reject/{id} { resolutionReason }
+Bước 9  [Staff]:      Xác định sản phẩm hoạt động tốt, lỗi do Buyer sử dụng sai cách, bấm "Từ chối khiếu nại" (Rejected), tùy chọn gắn cờ shop nếu phát hiện vi phạm khác
+Bước 10 [Frontend]:   POST /api/complaints/reject/{id} { resolutionReason, flagLevel, flagReason }
 Bước 11 [Backend]:    @Transactional:
-                       - Cập nhật Complaints.status = 'CLOSED' và lưu resolutionReason
+                       - Cập nhật Complaints.status = 'CLOSED' (hoặc Rejected) và lưu resolutionReason
                        - Tính phí hoa hồng hệ thống của Seller
                        - Cộng tiền (amount - hoa hồng) vào available_balance của Seller
                        - Tạo WalletTransactions (type = 'PAYMENT', refCode: "PAYOUT-CMP-REJECTED-{id}")
+                       - Tạo ShopFlag liên kết nếu Staff chọn gắn cờ
                        - Tạo Notification (type = 'WALLET') gửi thông báo giải ngân cho Seller
                        - Tạo Notification (type = 'WALLET') gửi thông báo từ chối cho Buyer kèm lý do
                        Trả về: status = 200, message = "REJECTED"

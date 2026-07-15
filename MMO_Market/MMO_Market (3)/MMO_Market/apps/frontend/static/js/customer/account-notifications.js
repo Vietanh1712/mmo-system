@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
 const ACCOUNT_NOTIFICATIONS_MOCK_KEY = 'mmoMarketNotificationsMock';
 
 let accountSidebar = null;
@@ -52,7 +52,8 @@ async function fetchAndRenderNotifications() {
         }
 
         const data = await response.json();
-        const readTimestamps = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
+        const key = getLocalNotifStorageKey();
+        const readTimestamps = JSON.parse(localStorage.getItem(key) || '[]');
         
         notifications = data.map(item => {
             if (item.isBroadcast) {
@@ -140,10 +141,11 @@ async function openNotification(notificationId) {
     if (!notification) return;
 
     if (notification.isBroadcast) {
-        const readTimestamps = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
+        const key = getLocalNotifStorageKey();
+        const readTimestamps = JSON.parse(localStorage.getItem(key) || '[]');
         if (!readTimestamps.includes(notification.originalTimestamp)) {
             readTimestamps.push(notification.originalTimestamp);
-            localStorage.setItem('mmoReadNotifs', JSON.stringify(readTimestamps));
+            localStorage.setItem(key, JSON.stringify(readTimestamps));
         }
     } else {
         try {
@@ -243,7 +245,8 @@ async function markAllAsRead() {
         return;
     }
 
-    const readTimestamps = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
+    const key = getLocalNotifStorageKey();
+    const readTimestamps = JSON.parse(localStorage.getItem(key) || '[]');
     notifications = notifications.map(item => {
         if (item.isBroadcast) {
             if (!readTimestamps.includes(item.originalTimestamp)) {
@@ -252,7 +255,7 @@ async function markAllAsRead() {
         }
         return { ...item, status: 'READ' };
     });
-    localStorage.setItem('mmoReadNotifs', JSON.stringify(readTimestamps));
+    localStorage.setItem(key, JSON.stringify(readTimestamps));
 
     if (typeof window.refreshHeaderNotifBadge === 'function') {
         window.refreshHeaderNotifBadge();
@@ -261,6 +264,24 @@ async function markAllAsRead() {
     renderSummary();
     renderNotifications();
     showNotificationsMessage('Đã đánh dấu tất cả thông báo là đã đọc.', 'success');
+}
+
+function getLocalNotifStorageKey() {
+    if (typeof window.getNotifStorageKey === 'function') {
+        return window.getNotifStorageKey();
+    }
+    try {
+        const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user") || localStorage.getItem("userInfo") || localStorage.getItem("user");
+        if (userString && userString !== "null" && userString !== "undefined") {
+            const user = JSON.parse(userString);
+            if (user && user.id) {
+                return `mmoReadNotifs_${user.id}`;
+            }
+        }
+    } catch (error) {
+        console.error("Error determining notif key:", error);
+    }
+    return 'mmoReadNotifs_guest';
 }
 
 function getFilteredNotifications() {

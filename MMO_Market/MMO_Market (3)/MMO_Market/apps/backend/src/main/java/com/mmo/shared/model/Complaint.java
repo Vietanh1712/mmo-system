@@ -36,6 +36,9 @@ public class Complaint {
     @Column(length = 20)
     private String status = "Open"; // Open, In_Progress, Resolved, Closed
 
+    @Column(name = "preferred_solution", length = 50)
+    private String preferredSolution; // REPLACEMENT, REFUND
+
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String resolution;
 

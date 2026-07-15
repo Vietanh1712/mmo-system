@@ -24,6 +24,18 @@ async function loadShopInfo() {
         document.getElementById('accountHolder').value = data.accountHolder || '';
         document.getElementById('branch').value = data.branch || '';
 
+        const lvlBadge = document.getElementById('shop-info-level-badge');
+        if (lvlBadge) {
+            const lvl = data.shopLevel !== undefined ? data.shopLevel : 1;
+            if (lvl === 0) {
+                lvlBadge.innerHTML = `<span style="color: #dc2626; background: #fee2e2; padding: 4px 10px; border-radius: 6px; display: inline-block; font-weight: 700; font-size: 13px;"><i class="fa fa-exclamation-triangle"></i> Shop Cảnh Cáo (Level 0)</span>`;
+            } else if (lvl === 2) {
+                lvlBadge.innerHTML = `<span style="color: #16a34a; background: #dcfce7; padding: 4px 10px; border-radius: 6px; display: inline-block; font-weight: 700; font-size: 13px;"><i class="fa fa-check-circle"></i> Shop Uy Tín (Level 2)</span>`;
+            } else {
+                lvlBadge.innerHTML = `<span style="color: #0284c7; background: #e0f2fe; padding: 4px 10px; border-radius: 6px; display: inline-block; font-weight: 700; font-size: 13px;"><i class="fa fa-star-o"></i> Shop Mới (Level 1)</span>`;
+            }
+        }
+
         renderShopStatus(readEffectiveShopStatus(data.shopStatus));
     } catch (error) {
         showShopError(error.message || 'Không thể tải thông tin cửa hàng.');

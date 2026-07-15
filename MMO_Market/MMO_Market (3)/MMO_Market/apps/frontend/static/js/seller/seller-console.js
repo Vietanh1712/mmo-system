@@ -125,6 +125,18 @@ async function initSellerLayout() {
             avatarEl.textContent = data.shopName.charAt(0).toUpperCase();
         }
 
+        const levelBadgeEl = document.querySelector('.seller-sidebar__level-badge');
+        if (levelBadgeEl) {
+            const lvl = data.shopLevel !== undefined ? data.shopLevel : 1;
+            if (lvl === 0) {
+                levelBadgeEl.innerHTML = `<span style="color: #dc2626; background: #fee2e2; padding: 2px 6px; border-radius: 4px; display: inline-block; font-weight: 700; font-size: 11px;"><i class="fa fa-exclamation-triangle"></i> Cảnh cáo (Lvl 0)</span>`;
+            } else if (lvl === 2) {
+                levelBadgeEl.innerHTML = `<span style="color: #16a34a; background: #dcfce7; padding: 2px 6px; border-radius: 4px; display: inline-block; font-weight: 700; font-size: 11px;"><i class="fa fa-check-circle"></i> Uy tín (Lvl 2)</span>`;
+            } else {
+                levelBadgeEl.innerHTML = `<span style="color: #0284c7; background: #e0f2fe; padding: 2px 6px; border-radius: 4px; display: inline-block; font-weight: 700; font-size: 11px;"><i class="fa fa-star-o"></i> Shop mới (Lvl 1)</span>`;
+            }
+        }
+
         // Fetch dashboard to update balance
         const dashRes = await sellerFetch('/dashboard');
         if (dashRes.ok) {
@@ -158,8 +170,45 @@ async function initDashboard() {
             cards[3].textContent = data.openComplaintsCount;
         }
 
+        const lvlBadge = document.getElementById('dashboard-shop-level-badge');
+        if (lvlBadge) {
+            const lvl = data.shopLevel !== undefined ? data.shopLevel : 1;
+            if (lvl === 0) {
+                lvlBadge.innerHTML = `<span style="color: #dc2626; background: #fee2e2; padding: 4px 10px; border-radius: 6px; display: inline-block; font-weight: 700; font-size: 13px;"><i class="fa fa-exclamation-triangle"></i> Shop Cảnh Cáo (Level 0)</span>`;
+            } else if (lvl === 2) {
+                lvlBadge.innerHTML = `<span style="color: #16a34a; background: #dcfce7; padding: 4px 10px; border-radius: 6px; display: inline-block; font-weight: 700; font-size: 13px;"><i class="fa fa-check-circle"></i> Shop Uy Tín (Level 2)</span>`;
+            } else {
+                lvlBadge.innerHTML = `<span style="color: #0284c7; background: #e0f2fe; padding: 4px 10px; border-radius: 6px; display: inline-block; font-weight: 700; font-size: 13px;"><i class="fa fa-star-o"></i> Shop Mới (Level 1)</span>`;
+            }
+        }
+
+        const alertContainer = document.getElementById('shop-warning-alert-container');
+        if (alertContainer) {
+            const lvl = data.shopLevel !== undefined ? data.shopLevel : 1;
+            if (lvl === 0) {
+                const disputePercent = (data.disputeRate * 100).toFixed(2);
+                alertContainer.innerHTML = `
+                    <div style="background-color: #fee2e2; border-left: 4px solid #ef4444; padding: 16px; border-radius: 6px; margin-bottom: 24px; color: #7f1d1d;">
+                        <h4 style="margin: 0 0 6px 0; font-weight: 700; display: flex; align-items: center; gap: 8px; color: #dc2626;">
+                            <i class="fa fa-exclamation-circle" style="font-size: 18px;"></i> CẢNH BÁO: CỬA HÀNG ĐANG Ở CHẾ ĐỘ THẮT CHẶT (LEVEL 0)
+                        </h4>
+                        <p style="margin: 0; font-size: 13.5px;">
+                            Tỷ lệ khiếu nại lỗi tổng thể của Shop đã đạt từ 2% trở lên (hiện tại: <strong>${disputePercent}%</strong>).
+                        </p>
+                        <ul style="margin: 6px 0 0 0; padding-left: 20px; font-size: 13px; line-height: 1.5;">
+                            <li>Thời gian giam tiền (Escrow) tăng lên <strong>7 ngày</strong> đối với mọi đơn hàng mới phát sinh.</li>
+                            <li>Giới hạn hiển thị công khai tối đa <strong>5 sản phẩm</strong> cùng lúc trên sàn.</li>
+                            <li><strong>Cách khắc phục:</strong> Xử lý các khiếu nại tồn đọng và tiếp tục giao dịch an toàn để giảm tỷ lệ lỗi xuống dưới 2%, hệ thống sẽ tự động khôi phục level của Shop.</li>
+                        </ul>
+                    </div>
+                `;
+            } else {
+                alertContainer.innerHTML = '';
+            }
+        }
+
         // Bind recent orders/transactions table
-        const tbody = document.querySelector('.seller-table tbody');
+        const tbody = document.querySelector('.seller-table tbody') || document.querySelector('.admin-table tbody');
         if (tbody) {
             if (!data.recentTransactions || data.recentTransactions.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Chưa có đơn hàng nào gần đây.</td></tr>';
@@ -243,7 +292,7 @@ async function initShopInfo() {
 // 4. INVENTORY & PRODUCT MANAGEMENT
 // ==============================================================================
 async function initInventory() {
-    const tbody = document.querySelector('.seller-table tbody');
+    const tbody = document.querySelector('.seller-table tbody') || document.querySelector('.admin-table tbody');
     if (!tbody) return;
 
     try {
@@ -697,7 +746,7 @@ async function initProductEdit() {
 
     const select = document.getElementById('category');
     const form = document.querySelector('.profile-edit-form');
-    const tbody = document.querySelector('.seller-table tbody');
+    const tbody = document.querySelector('.seller-table tbody') || document.querySelector('.admin-table tbody');
     if (!form || !tbody) return;
 
     try {
@@ -714,7 +763,8 @@ async function initProductEdit() {
         const p = await pRes.json();
 
         // Populate fields
-        document.querySelector('.seller-card__subtitle').textContent = `Sản phẩm #${p.id} — ${p.name}`;
+        const subtitleEl = document.querySelector('.seller-card__subtitle') || document.querySelector('.view-header p');
+        if (subtitleEl) subtitleEl.textContent = `Sản phẩm #${p.id} — ${p.name}`;
         document.getElementById('productName').value = p.name || '';
         document.getElementById('description').value = p.description || '';
         if (document.getElementById('userGuide')) {
@@ -826,7 +876,8 @@ async function initVariantForm() {
             const v = await res.json();
 
             currentProdId = v.productId;
-            document.querySelector('.seller-card__subtitle').textContent = `Sản phẩm: ${v.productName}`;
+            const subtitleEl1 = document.querySelector('.seller-card__subtitle') || document.querySelector('.view-header p');
+            if (subtitleEl1) subtitleEl1.textContent = `Sản phẩm: ${v.productName}`;
             document.getElementById('variantName').value = v.variantName;
             document.getElementById('priceVnd').value = v.priceVnd;
             document.getElementById('status').value = v.status;
@@ -879,7 +930,8 @@ async function initVariantForm() {
             const prodRes = await sellerFetch(`/products/${productId}`);
             if (prodRes.ok) {
                 const p = await prodRes.json();
-                document.querySelector('.seller-card__subtitle').textContent = `Sản phẩm: ${p.name}`;
+                const subtitleEl2 = document.querySelector('.seller-card__subtitle') || document.querySelector('.view-header p');
+                if (subtitleEl2) subtitleEl2.textContent = `Sản phẩm: ${p.name}`;
                 productType = p.productType || 'ACCOUNT';
             }
 
@@ -996,7 +1048,7 @@ async function initVariantForm() {
 // 8. TRANSACTIONS VIEW (SALES HISTORY)
 // ==============================================================
 async function initTransactions() {
-    const tbody = document.querySelector('.seller-table tbody');
+    const tbody = document.querySelector('.seller-table tbody') || document.querySelector('.admin-table tbody');
     if (!tbody) return;
 
     try {
@@ -1566,7 +1618,7 @@ async function initReviews() {
 // 13. COMPLAINTS LIST VIEW
 // ==============================================================
 async function initComplaints() {
-    const tbody = document.querySelector('.seller-table tbody');
+    const tbody = document.querySelector('.seller-table tbody') || document.querySelector('.admin-table tbody');
     if (!tbody) return;
 
     try {
@@ -1685,51 +1737,7 @@ async function initComplaintDetail() {
             `;
         }
 
-        // 2. Load Chat History
-        const messagesContainer = card.querySelector('.chat-messages');
-        if (messagesContainer) {
-            if (!c.chats || c.chats.length === 0) {
-                messagesContainer.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--seller-muted);">Chưa có tin nhắn hội thoại.</div>';
-            } else {
-                messagesContainer.innerHTML = c.chats.map(msg => {
-                    let bubbleClass = 'chat-bubble--customer';
-                    if (msg.senderRole === 'Seller') bubbleClass = 'chat-bubble--seller';
-                    else if (msg.senderRole === 'Staff') bubbleClass = 'chat-bubble--staff';
 
-                    return `
-                        <div class="chat-bubble ${bubbleClass}">
-                            <span class="chat-bubble__meta">${msg.senderName} (${msg.senderRole}) · ${msg.createdAt.substring(11, 16)}</span>
-                            <div>${msg.message}</div>
-                        </div>
-                    `;
-                }).join('');
-
-                // Scroll to bottom
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }
-        }
-
-        // 3. Bind Chat Compose send event
-        const textInput = card.querySelector('.chat-compose textarea');
-        const sendBtn = card.querySelector('.chat-compose .profile-button--primary');
-        if (sendBtn && textInput) {
-            sendBtn.addEventListener('click', async () => {
-                const text = textInput.value.trim();
-                if (!text) return;
-
-                try {
-                    const postRes = await sellerFetch(`/complaints/${c.id}/chat`, {
-                        method: 'POST',
-                        body: JSON.stringify({ message: text })
-                    });
-                    if (!postRes.ok) throw new Error('Không thể gửi tin nhắn.');
-                    textInput.value = '';
-                    initComplaintDetail(); // Reload chat history
-                } catch (err) {
-                    showToast(err.message, 'error');
-                }
-            });
-        }
 
     } catch (err) {
         showToast(err.message, 'error');

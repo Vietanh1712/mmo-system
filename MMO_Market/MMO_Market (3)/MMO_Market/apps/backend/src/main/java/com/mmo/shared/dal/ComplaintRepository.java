@@ -18,6 +18,10 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     List<Complaint> findByCustomerAndIsDeleteFalseOrderByCreatedAtDesc(User customer);
     List<Complaint> findByIsDeleteFalseOrderByCreatedAtDesc();
 
+    @Query("SELECT c FROM Complaint c WHERE (c.customer = :user OR c.seller = :user) AND (c.status = 'In_Progress' OR c.status = 'InProgress') AND (c.isDelete = false OR c.isDelete IS NULL)")
+    List<Complaint> findActiveComplaintsForUser(@Param("user") User user);
+
+
     @Query("SELECT COUNT(c) FROM Complaint c WHERE (c.isDelete = false OR c.isDelete IS NULL)")
     long countAllNotDeleted();
 
@@ -27,13 +31,19 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     @Query("SELECT COUNT(c) FROM Complaint c WHERE c.seller = :seller AND c.status = 'InProgress' AND (c.isDelete = false OR c.isDelete IS NULL)")
     long countOpenComplaintsBySeller(@Param("seller") User seller);
 
+    @Query("SELECT COUNT(c) FROM Complaint c WHERE c.seller = :seller AND c.status IN ('Resolved', 'Completed') AND (c.isDelete = false OR c.isDelete IS NULL)")
+    long countResolvedComplaintsBySeller(@Param("seller") User seller);
+
+    @Query("SELECT COUNT(c) FROM Complaint c WHERE c.seller = :seller AND c.isDelete = false AND YEAR(c.createdAt) = :year AND MONTH(c.createdAt) = :month")
+    long countComplaintsBySellerAndMonth(@Param("seller") User seller, @Param("year") int year, @Param("month") int month);
+
     long countByStatusAndIsDeleteFalse(String status);
 
     long countByIsDeleteFalse();
 
     //List<Complaint> findTop10ByIsDeleteFalseOrderByCreatedAtDesc();
 
-    Complaint findByTransactionId(Long transactionId);
+    java.util.Optional<Complaint> findFirstByTransactionIdAndIsDeleteFalseOrderByIdDesc(Long transactionId);
 
     List<Complaint> findAllByIsDeleteFalseOrderByCreatedAtDesc();
 

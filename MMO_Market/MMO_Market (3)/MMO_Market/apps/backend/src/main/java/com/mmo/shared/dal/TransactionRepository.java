@@ -31,6 +31,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.seller = :seller AND t.status = 'Completed' AND t.isDelete = false")
     long countCompletedSalesBySeller(@Param("seller") User seller);
 
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.seller = :seller AND t.isDelete = false")
+    long countTotalSalesBySeller(@Param("seller") User seller);
+
     @Query("SELECT SUM(t.amountVnd - t.commissionVnd) FROM Transaction t WHERE t.seller = :seller AND t.status = 'Completed' AND t.isDelete = false")
     Long sumCompletedEarningsBySeller(@Param("seller") User seller);
 

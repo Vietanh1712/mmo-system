@@ -50,10 +50,12 @@ body {
 }
 
 .preorder-title {
-    font-size: 26px;
-    font-weight: 900;
+    font-size: 20px;
+    font-weight: 700;
     color: var(--brand-dark, #0f172a);
     margin: 0 0 8px;
+    border-bottom: 1.5px solid var(--panel-border);
+    padding-bottom: 10px;
 }
 
 .preorder-subtitle {
@@ -139,6 +141,7 @@ body {
 .field input,
 .field textarea {
     width: 100%;
+    box-sizing: border-box;
     border: 1px solid var(--panel-border);
     border-radius: 8px;
     padding: 12px 14px;
@@ -170,21 +173,35 @@ body {
     margin-top: 8px;
     border: 0;
     border-radius: 8px;
-    background: var(--danger);
+    background: var(--action-orange, #fd761a);
     color: #fff;
     font-family: "Roboto", Arial, sans-serif;
     font-size: 15px;
-    font-weight: 800;
+    font-weight: 700;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
     padding: 14px 16px;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
-    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.22);
+    transition: all 0.2s;
+    box-shadow: 0 4px 14px rgba(253, 118, 26, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .submit-btn:hover {
-    background: #b91c1c;
+    background: #e0600f;
+    box-shadow: 0 6px 18px rgba(253, 118, 26, 0.3);
     transform: translateY(-1px);
+}
+
+.submit-btn:disabled {
+    background-color: #cbd5e1;
+    color: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
 }
 
 .summary-title {
@@ -222,11 +239,13 @@ body {
 .summary-total {
     margin-top: 10px;
     padding-top: 14px;
-    border-top: 1px solid var(--panel-border);
+    border-top: 1.5px solid var(--panel-border);
 }
 
 .summary-total .value {
-    font-size: 30px;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--danger, #dc2626);
     line-height: 1.1;
 }
 
@@ -290,12 +309,35 @@ body {
     margin-top: 14px;
     border: 0;
     border-radius: 8px;
-    padding: 10px 14px;
-    background: var(--danger);
-    color: #fff;
+    padding: 12px 20px;
     font-family: "Roboto", Arial, sans-serif;
     font-weight: 700;
+    font-size: 14px;
     cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.success-box button:first-of-type {
+    background: var(--brand-dark, #0f172a);
+    color: #fff;
+}
+
+.success-box button:first-of-type:hover {
+    background: #1e293b;
+    transform: translateY(-1px);
+}
+
+.success-box button:last-of-type {
+    background: var(--success, #16a34a);
+    color: #fff;
+}
+
+.success-box button:last-of-type:hover {
+    background: #15803d;
+    transform: translateY(-1px);
 }
 
 .preorder-toast {

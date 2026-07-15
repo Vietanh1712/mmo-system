@@ -63,6 +63,10 @@
                         <p class="staff-stat-card__value" id="stat-total-shops">0</p>
                     </div>
                     <div class="ds-card staff-stat-card green">
+                        <p class="staff-stat-card__label">Shop đang hoạt động</p>
+                        <p class="staff-stat-card__value" id="stat-active-shops">0</p>
+                    </div>
+                    <div class="ds-card staff-stat-card green" style="border-left: 4px solid #10b981 !important;">
                         <p class="staff-stat-card__label">Tổng tiền cọc</p>
                         <p class="staff-stat-card__value" id="stat-total-deposit">0</p>
                     </div>
@@ -128,7 +132,6 @@
         </div>
     </div>
 </main>
-
 
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 <script th:src="@{/js/customer/auth.js}"></script>

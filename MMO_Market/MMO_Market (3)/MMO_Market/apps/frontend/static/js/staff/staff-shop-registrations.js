@@ -44,6 +44,7 @@
             if (response.ok) {
                 const stats = await response.json();
                 const totalEl = document.getElementById('stat-total-shops');
+                const activeEl = document.getElementById('stat-active-shops');
                 const depositEl = document.getElementById('stat-total-deposit');
                 const bannedEl = document.getElementById('stat-banned-shops');
                 const lockedEl = document.getElementById('stat-locked-shops');
@@ -51,6 +52,7 @@
                 const withdrawnEl = document.getElementById('stat-withdrawn-shops');
 
                 if (totalEl) totalEl.textContent = stats.totalShops || 0;
+                if (activeEl) activeEl.textContent = stats.activeShops || 0;
                 if (depositEl) depositEl.textContent = formatVnd(stats.totalDeposit || 0) + ' đ';
                 if (bannedEl) bannedEl.textContent = stats.permanentBannedShops || 0;
                 if (lockedEl) lockedEl.textContent = stats.indefiniteLockedShops || 0;
@@ -105,6 +107,7 @@
 
         content.forEach((item, index) => {
             const stt = page * size + index + 1;
+
             const shopStatusBadge = getShopStatusBadge(item.shopStatus);
             const depositFormatted = formatVnd(item.depositVnd);
             const balanceFormatted = formatVnd(item.balanceVnd);
@@ -119,6 +122,7 @@
                 <td class="ds-table-center">${shopStatusBadge}</td>
                 <td class="ds-table-right">${depositFormatted}</td>
                 <td class="ds-table-right">${balanceFormatted}</td>
+
                 <td class="ds-table-center">
                     <div class="ds-table-actions">
                         <a class="ds-btn ds-btn-sm ds-btn-outline" href="/staff/shop-registrations/update-status?id=${item.id}" style="font-size: 11px; padding: 4px 8px; border-radius: 4px;" title="Cập nhật trạng thái">
@@ -142,6 +146,7 @@
         const stUpper = shopStatus.toUpperCase();
         if (stUpper === 'PENDING') return '<span class="ds-badge ds-badge-warning">Chờ kích hoạt</span>';
         if (stUpper === 'ACTIVE' || stUpper === 'APPROVED') return '<span class="ds-badge ds-badge-success">Hoạt động</span>';
+
         if (stUpper === 'REJECTED') return '<span class="ds-badge ds-badge-danger">Bị từ chối</span>';
         
         // 4 new statuses mapping
@@ -157,6 +162,7 @@
         if (value === null || value === undefined) return '0';
         return value.toLocaleString('vi-VN');
     }
+
 
 
 

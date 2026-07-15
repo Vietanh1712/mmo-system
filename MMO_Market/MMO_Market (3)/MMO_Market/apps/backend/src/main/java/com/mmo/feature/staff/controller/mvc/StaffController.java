@@ -16,10 +16,12 @@ import com.mmo.shared.dal.ComplaintRepository;
 import com.mmo.shared.dal.TransactionRepository;
 import com.mmo.shared.dal.WithdrawalRepository;
 import com.mmo.shared.dal.ShopFlagRepository;
+import com.mmo.shared.dal.NotificationRepository;
 import com.mmo.shared.model.ShopFlag;
 import com.mmo.shared.model.Transaction;
 import com.mmo.shared.model.Withdrawal;
 import com.mmo.shared.model.Complaint;
+import com.mmo.shared.model.Notification;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -46,6 +48,9 @@ public class StaffController {
 
     @Autowired
     private StaffDashboardService staffDashboardService;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
 
 
@@ -171,7 +176,7 @@ public class StaffController {
         }
         model.addAttribute("remainingHours", remainingHours);
 
-        Complaint complaint = complaintRepository.findByTransactionId(id);
+        Complaint complaint = complaintRepository.findFirstByTransactionIdAndIsDeleteFalseOrderByIdDesc(id).orElse(null);
         model.addAttribute("complaint", complaint);
 
         return "staff/transaction-detail";
@@ -237,6 +242,28 @@ public class StaffController {
         withdrawal.setStatus(status);
         withdrawalRepository.save(withdrawal);
 
+        // Gửi thông báo cho Seller
+        String title = "Cập nhật yêu cầu rút tiền";
+        String content = String.format("Yêu cầu rút tiền số tiền %s VNĐ của bạn đã chuyển sang trạng thái: %s.", String.format("%,d", withdrawal.getAmountVnd()), "Approved".equalsIgnoreCase(status) || "Completed".equalsIgnoreCase(status) ? "Đã duyệt" : status);
+        String severity = "Approved".equalsIgnoreCase(status) || "Completed".equalsIgnoreCase(status) ? "SUCCESS" : "INFO";
+        if ("Rejected".equalsIgnoreCase(status)) {
+            title = "Yêu cầu rút tiền bị từ chối";
+            content = String.format("Yêu cầu rút tiền số tiền %s VNĐ của bạn đã bị từ chối.", String.format("%,d", withdrawal.getAmountVnd()));
+            severity = "DANGER";
+        }
+
+        Notification notif = Notification.builder()
+                .userId(withdrawal.getSeller().getId())
+                .title(title)
+                .content(content)
+                .type("WALLET")
+                .severity(severity)
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/wallet/transactions")
+                .build();
+        notificationRepository.save(notif);
+
         redirectAttributes.addFlashAttribute(
                 "success",
                 "Cập nhật trạng thái thành công"
@@ -253,6 +280,19 @@ public class StaffController {
                 .orElseThrow(() -> new RuntimeException("Withdrawal request not found"));
         withdrawal.setStatus("Rejected");
         withdrawalRepository.save(withdrawal);
+
+        // Gửi thông báo từ chối cho Seller
+        Notification notif = Notification.builder()
+                .userId(withdrawal.getSeller().getId())
+                .title("Yêu cầu rút tiền bị từ chối")
+                .content(String.format("Yêu cầu rút tiền số tiền %s VNĐ của bạn đã bị từ chối.", String.format("%,d", withdrawal.getAmountVnd())))
+                .type("WALLET")
+                .severity("DANGER")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/wallet/transactions")
+                .build();
+        notificationRepository.save(notif);
 
         redirectAttributes.addFlashAttribute(
                 "warning",

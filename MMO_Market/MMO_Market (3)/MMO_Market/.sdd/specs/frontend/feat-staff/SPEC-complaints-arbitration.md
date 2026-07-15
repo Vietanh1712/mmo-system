@@ -12,16 +12,16 @@
 
 ## 1. TỔNG QUAN TRANG
 
-Trang phân xử khiếu nại cung cấp phòng đối chất trực tuyến thời gian thực (Dispute Room) kết nối trực tiếp 3 bên: Người mua (Buyer) khiếu nại, Người bán (Seller) bị tố cáo và Nhân viên kiểm duyệt (Staff) đóng vai trò trung gian phân xử. 
+Trang phân xử khiếu nại cung cấp phòng đối chất trực tuyến (Dispute Room) cho phép Nhân viên kiểm duyệt (Staff) kiểm tra quá trình đàm thoại thương lượng trực tiếp giữa Người mua (Buyer) và Người bán (Seller). 
 
-Trang hỗ trợ xem chứng cứ lỗi, đàm thoại thảo luận và thực thi phán quyết chuyển tiền: **Hoàn tiền về ví khả dụng cho Buyer (đóng đơn)** hoặc **Giải ngân về ví khả dụng cho Seller (bác đơn khiếu nại)**.
+Trang hỗ trợ xem chứng cứ lỗi, xem lịch sử đối thoại thương lượng và thực thi phán quyết chuyển tiền: **Hoàn tiền về ví khả dụng cho Buyer** hoặc **Giải ngân về ví khả dụng cho Seller**, kèm theo chức năng **gắn cờ cảnh cáo shop người bán** nếu phát hiện lỗi vi phạm.
 
 **Cấu trúc trang:**
 1. **Trang danh sách khiếu nại (`/staff/complaints`):** Bảng quản lý hiển thị các khiếu nại đang có trạng thái `OPEN` kèm nút bấm dẫn vào chi tiết.
 2. **Trang phòng đối chất chi tiết (`/staff/complaints/{complaintId}`):**
-   * *Cột trái (Chi tiết & Chứng cứ):* Hiển thị thông tin đơn hàng bị tranh chấp, mô tả lỗi của Buyer và hình ảnh/video bằng chứng đi kèm.
-   * *Cột phải (Khung chat WebSocket):* Giao diện chat thời gian thực hiển thị tin nhắn phân biệt màu sắc theo vai trò (Staff màu vàng nổi bật, Buyer màu xanh đậm, Seller màu xanh lá).
-   * *Thanh phán quyết (Action Bar):* Gồm 2 nút bấm lớn: "Hoàn tiền cho Buyer" và "Giải ngân cho Seller".
+   * *Cột trái (Chi tiết, Chứng cứ & Chat):* Hiển thị thông tin đơn hàng bị tranh chấp, mô tả lỗi của Buyer, ảnh/video bằng chứng, và **Hộp thoại trò chuyện thương lượng thương thảo (Read-only)** hiển thị lịch sử đối chất của Buyer và Seller.
+   * *Cột phải (Thanh xử lý):* Giao diện chọn phương án phân xử (Hoàn tiền / Bác đơn), ghi chú kết quả, checkbox kích hoạt gắn cờ shop người bán, dropdown chọn cấp độ cờ (Warning, Critical, Danger) và lý do phạt shop.
+   * *Thanh phán quyết (Action Bar):* Gồm 2 nút bấm lớn: "Giải quyết" (Chấp nhận hoàn tiền) và "Từ chối" (Bác khiếu nại, giải ngân).
 
 ---
 
@@ -77,58 +77,43 @@ Trang hỗ trợ xem chứng cứ lỗi, đàm thoại thảo luận và thực 
 
 ## 4. CÁC THÀNH PHẦN GIAO DIỆN CHÍNH
 
-### 4.1 Khung Chat Thời Gian Thực — `.stf-chat-container`
-* Chiều cao cố định `450px`, tích hợp thanh cuộn dọc tự động cuộn xuống dưới cùng khi có tin nhắn mới.
-* Tin nhắn hiển thị dạng bong bóng thoại (Speech bubble) bo góc:
-  * Tin nhắn của Staff: Căn lề phải, nền `var(--ds-chat-staff-bg)`.
+### 4.1 Khung Chat Tranh Chấp — `#disputeChatHistory`
+* Chế độ **Read-only** cho Staff. Staff chỉ được đọc và theo dõi diễn biến trao đổi của hai bên mà không có quyền gửi tin nhắn (nút gửi tin nhắn và ô nhập text bị ẩn/không có đối với vai trò Staff).
+* Phân biệt bong bóng thoại bằng màu sắc:
   * Tin nhắn của Buyer: Căn lề trái, nền `var(--ds-chat-buyer-bg)`.
   * Tin nhắn của Seller: Căn lề trái, nền `var(--ds-chat-seller-bg)`.
 
-### 4.2 Thanh Phán Quyết Tài Chính — `.stf-decision-bar`
-* Chứa 2 nút hành động lớn chiếm trọn bề ngang ở dưới cùng trang:
-  * Nút Hoàn tiền (`.btn-action-refund`): Đỏ cam nổi bật, click kích hoạt modal phê duyệt hoàn ví khả dụng cho Buyer.
-  * Nút Bác đơn (`.btn-action-payout`): Xanh lá, click kích hoạt modal phê duyệt giải ngân ví khả dụng cho Seller.
+### 4.2 Thanh Phán Quyết & Gắn Cờ Cảnh Cáo Shop
+* **Giao diện xử lý khiếu nại:** Dropdown lựa chọn trạng thái xử lý và ghi chú lý do phân xử.
+* **Hộp kiểm Gắn cờ (Shop Flagging):** Khi check chọn, hiển thị thêm:
+  * Dropdown cấp độ cờ: Warning (Cảnh báo), Critical (Nghiêm trọng), Danger (Nguy hiểm).
+  * Textarea nhập lý do gắn cờ phạt shop.
 
 ---
 
-## 5. LUỒNG XỬ LÝ JS & REAL-TIME WEBSOCKET
+## 5. LUỒNG XỬ LÝ JS & REST API
 
-### 5.1 Kết nối WebSocket trực tuyến:
-* Khi load trang đối chất `/staff/complaints/{complaintId}`, JS tự động khởi tạo kết nối WebSocket Stomp:
-  ```javascript
-  const socket = new SockJS('/ws-complaints');
-  const stompClient = Stomp.over(socket);
-  stompClient.connect({ 'Authorization': 'Bearer ' + token }, function (frame) {
-      stompClient.subscribe('/topic/complaint/' + complaintId, function (messageOutput) {
-          appendChatMessage(JSON.parse(messageOutput.body));
-      });
-  });
-  ```
-* Lắng nghe gói tin chèn tin nhắn mới vào `.stf-chat-container` và chạy hiệu ứng cuộn mượt.
+### 5.1 Tải lịch sử chat đối chất:
+* Thực hiện gửi request:
+  * **Endpoint:** `GET /api/complaints/{complaintId}/chats`
+  * **Headers:** `Authorization: Bearer <token>`
+* Kết quả (HTTP 200) trả về danh sách các tin nhắn trao đổi của Buyer và Seller, được render phân biệt màu sắc vào khung chat `#disputeChatHistory`.
 
-### 5.2 Xử lý gửi tin nhắn của Staff:
-* Staff nhập nội dung và nhấn Enter/nút Gửi:
-  * JS gửi gói tin qua WebSocket:
-    ```javascript
-    stompClient.send('/app/complaint/chat/' + complaintId, {}, JSON.stringify({
-        senderId: currentStaffId,
-        content: messageText
-    }));
-    ```
-
-### 5.3 Gửi quyết định phán quyết:
-1. **Chấp nhận hoàn tiền cho Buyer:**
-   * Gửi API:
-     * **Endpoint:** `POST /api/complaints/resolve/{complaintId}`
-     * **Headers:** `Content-Type: application/json`, `Authorization: Bearer <token>`
-     * **Payload:** `{ "resolutionReason": "Mã thẻ bị trùng lặp, Seller không đưa được code thay thế" }`
-   * **Thành công (HTTP 200):** Tự động đóng phòng chat, hiển thị thông báo phân xử thành công và hoàn tiền về ví khả dụng Buyer.
-2. **Bác đơn khiếu nại (Giải ngân cho Seller):**
-   * Gửi API:
-     * **Endpoint:** `POST /api/complaints/reject/{complaintId}`
-     * **Headers:** `Content-Type: application/json`, `Authorization: Bearer <token>`
-     * **Payload:** `{ "resolutionReason": "Người mua không đưa ra được bằng chứng chứng minh mã thẻ lỗi" }`
-   * **Thành công (HTTP 200):** Chuyển tiền từ hold balance về ví khả dụng Seller (trừ phí hoa hồng), đóng phòng chat.
+### 5.2 Gửi quyết định phán quyết & Gắn cờ shop:
+* Staff bấm nút "Giải quyết" (Resolved) hoặc "Từ chối" (Rejected):
+  * Thực hiện gửi API:
+    * **Endpoint:** `PUT /api/complaints/{complaintId}/status`
+    * **Headers:** `Content-Type: application/json`, `Authorization: Bearer <token>`
+    * **Payload:** 
+      ```json
+      {
+        "status": "Resolved", // hoặc "Rejected"
+        "resolution": "Ghi chú lý do phân xử của Staff...",
+        "flagLevel": "Warning", // "Warning", "Critical", "Danger" hoặc null/None
+        "flagReason": "Lý do phạt/gắn cờ cảnh cáo shop..."
+      }
+      ```
+  * **Thành công (HTTP 200):** Cập nhật trạng thái giao dịch, hoàn trả/giải ngân ví tương ứng, đồng thời tự động lưu vết `ShopFlag` cảnh cáo shop người bán nếu được chọn. Hiển thị thông báo thành công và chuyển về trang danh sách khiếu nại.
 
 ---
 
