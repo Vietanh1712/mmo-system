@@ -1,17 +1,28 @@
 package com.mmo.feature.seller.service;
 
 import com.mmo.shared.dal.ComplaintRepository;
+import com.mmo.shared.dal.TransactionRepository;
 import com.mmo.shared.dal.UserRepository;
 import com.mmo.shared.model.User;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Service tự động đánh giá và cập nhật cấp độ gian hàng (Shop Level) theo nghiệp vụ:
+ * - Level 0 (Cảnh Cáo): Tỷ lệ khiếu nại đúng tổng thể >= 2%
+ * - Level 1 (Mới):      Tuổi shop < 30 ngày HOẶC số đơn thành công < 20
+ * - Level 2 (Uy Tín):   Tuổi >= 30 ngày VÀ đơn >= 20 VÀ tỷ lệ lỗi < 2%
+ *
+ * Công thức: tỷ lệ lỗi = (Số đơn bị khiếu nại đúng / Tổng đơn đã bán) × 100
+ */
 @Service
+@Slf4j
 public class ShopLevelService {
 
     @Autowired
@@ -20,68 +31,84 @@ public class ShopLevelService {
     @Autowired
     private ComplaintRepository complaintRepository;
 
-    // Logic to evaluate a single seller's flags (can be called manually or after a complaint is resolved)
+    @Autowired
+    private TransactionRepository transactionRepository;
+
+    /**
+     * Đánh giá lại cấp độ gian hàng cho một Seller cụ thể.
+     * Gọi sau mỗi lần Staff resolve khiếu nại hoặc theo cron hàng ngày.
+     */
     @Transactional
-    public void evaluateSellerFlags(Long sellerId) {
+    public void evaluateSellerLevel(Long sellerId) {
         User seller = userRepository.findByIdAndIsDeleteFalse(sellerId)
-                .orElseThrow(() -> new IllegalArgumentException("Seller not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Seller not found: " + sellerId));
 
         if (seller.getRole() == null || !seller.getRole().toLowerCase().contains("seller")) {
             return;
         }
 
-        LocalDate now = LocalDate.now();
-        long complaintsThisMonth = complaintRepository.countComplaintsBySellerAndMonth(seller, now.getYear(), now.getMonthValue());
+        // --- Tính toán các chỉ số ---
+        long totalSold = transactionRepository.countTotalSalesBySeller(seller);
+        long resolvedComplaints = complaintRepository.countResolvedComplaintsBySeller(seller);
+        long completedCount = transactionRepository.countCompletedSalesBySeller(seller);
 
-        // Default Reset
-        seller.setWithdrawalLocked(false);
-        if (seller.getShopLevel() != null && seller.getShopLevel() == 0) {
-            // Check if they escape Level 0 (for simplicity here, if complaints drop or we just let staff handle escape)
-            // User requested: escape when defect rate drops. We don't have defect rate easily calculated here, 
-            // but we can remove restrictions if complaints <= 5.
-            if (complaintsThisMonth <= 5) {
-                seller.setShopLevel(1); // Return to Level 1
-            }
+        double disputeRate = totalSold > 0 ? (double) resolvedComplaints / totalSold : 0.0;
+
+        boolean isNewByAge = seller.getCreatedAt() != null &&
+                java.time.Duration.between(seller.getCreatedAt(), LocalDateTime.now()).toDays() < 30;
+        boolean isNewByOrders = completedCount < 20;
+
+        // --- Xác định Level mới ---
+        int newLevel;
+        if (disputeRate >= 0.02) {
+            newLevel = 0; // Level 0: Tỷ lệ lỗi >= 2%
+        } else if (isNewByAge || isNewByOrders) {
+            newLevel = 1; // Level 1: Chưa đủ điều kiện uy tín
+        } else {
+            newLevel = 2; // Level 2: Đủ điều kiện Uy Tín
         }
 
-        // Apply Flags based on complaints
-        if (complaintsThisMonth > 10) {
-            // Flag 2: Temporary wallet freeze, cannot post products (level 0)
-            seller.setWithdrawalLocked(true);
-            seller.setShopLevel(0);
-        } else if (complaintsThisMonth > 5) {
-            // Flag 1: Warning, restrict withdrawal
-            seller.setWithdrawalLocked(true);
-            // Optional: keep shopLevel 1 or 2, but restricted
-        }
+        int currentLevel = seller.getShopLevel() != null ? seller.getShopLevel() : 1;
 
-        // Flag 3 logic (Permanent Ban): Usually handled by Staff manually when they see the flags, 
-        // but if we automate: e.g. >15 complaints = 3 flags
-        if (complaintsThisMonth > 15) {
-            seller.setFlag3Count((seller.getFlag3Count() != null ? seller.getFlag3Count() : 0) + 1);
-            if (seller.getFlag3Count() > 1) {
-                seller.setIsLocked(true);
-                seller.setShopStatus("Banned");
-            } else {
-                seller.setIsLocked(true);
-                seller.setShopStatus("Banned"); // First time 3 flags, still locked, but can be unlocked by admin
-            }
+        if (newLevel != currentLevel) {
+            seller.setShopLevel(newLevel);
+            userRepository.save(seller);
+            log.info("Shop Level thay đổi: Seller ID {} | {} → Level {} (disputeRate={:.2f}%, completedOrders={}, ageDays={})",
+                    sellerId, currentLevel, newLevel,
+                    disputeRate * 100, completedCount,
+                    seller.getCreatedAt() != null
+                            ? java.time.Duration.between(seller.getCreatedAt(), LocalDateTime.now()).toDays()
+                            : -1);
         }
-
-        userRepository.save(seller);
     }
 
-    // Cron job to evaluate all sellers (e.g. daily at midnight)
+    /**
+     * Cron job chạy hàng ngày lúc 00:00 để đánh giá lại toàn bộ Seller.
+     */
     @Scheduled(cron = "0 0 0 * * ?")
     @Transactional
     public void evaluateAllSellers() {
-        // Fetch all sellers
-        // Note: For large systems, this should be paginated
-        List<User> users = userRepository.findAll(); // Simplified for now
+        List<User> users = userRepository.findAll();
+        int updated = 0;
         for (User user : users) {
-            if (user.getRole() != null && user.getRole().toLowerCase().contains("seller") && !user.getIsDelete()) {
-                evaluateSellerFlags(user.getId());
+            if (user.getRole() != null
+                    && user.getRole().toLowerCase().contains("seller")
+                    && Boolean.FALSE.equals(user.getIsDelete())) {
+                try {
+                    evaluateSellerLevel(user.getId());
+                    updated++;
+                } catch (Exception e) {
+                    log.error("Lỗi khi đánh giá Seller ID {}: {}", user.getId(), e.getMessage());
+                }
             }
         }
+        log.info("Đánh giá Shop Level hoàn tất. Số Seller được xử lý: {}", updated);
+    }
+
+    // Giữ lại method cũ để không phá vỡ các caller còn sót
+    @Transactional
+    @Deprecated
+    public void evaluateSellerFlags(Long sellerId) {
+        evaluateSellerLevel(sellerId);
     }
 }

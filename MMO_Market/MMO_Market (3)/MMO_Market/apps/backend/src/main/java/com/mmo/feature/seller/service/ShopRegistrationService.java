@@ -48,7 +48,6 @@ public class ShopRegistrationService {
 
     @Autowired
     private NotificationRepository notificationRepository;
-
     @Transactional
     public ShopRegistrationResponseDto submitRegistration(Long userId, ShopRegistrationRequestDto request) {
         User user = userRepository.findByIdAndIsDeleteFalse(userId)
@@ -68,29 +67,6 @@ public class ShopRegistrationService {
         if ("APPROVED".equals(registration.getStatus())) {
             throw new IllegalStateException("Bạn đã có Shop đang hoạt động.");
         }
-
-        long fee = systemConfigurationRepository.findByConfigKey("SHOP_OPENING_FEE_VND")
-                .map(config -> {
-                    try {
-                        return Long.parseLong(config.getConfigValue());
-                    } catch (NumberFormatException e) {
-                        return 50000L;
-                    }
-                })
-                .orElse(50000L);
-
-        if (user.getBalanceVnd() == null) {
-            user.setBalanceVnd(0L);
-        }
-
-        if (user.getBalanceVnd() < fee) {
-            throw new IllegalStateException("INSUFFICIENT_FUNDS:" + fee);
-        }
-
-        user.setBalanceVnd(user.getBalanceVnd() - fee);
-        userRepository.save(user);
-
-        walletService.recordTransaction(user, "PAYMENT", -fee, "SUCCESS", "Thanh toán phí đăng ký mở Shop", "SHOP-REG-" + user.getId(), user.getBalanceVnd());
 
         registration.setUser(user);
         registration.setShopName(request.getShopName());
@@ -185,15 +161,15 @@ public class ShopRegistrationService {
     public Map<String, Long> getRegistrationStats() {
         Map<String, Long> stats = new HashMap<>();
 
-        long total = sellerRegistrationRepository.countByIsDeleteFalse();
-        long pending = sellerRegistrationRepository.countByStatusIgnoreCaseAndIsDeleteFalse("PENDING");
-        long approved = sellerRegistrationRepository.countByStatusIgnoreCaseAndIsDeleteFalse("APPROVED");
-        long rejected = sellerRegistrationRepository.countByStatusIgnoreCaseAndIsDeleteFalse("REJECTED");
+        long totalShops = userRepository.countTotalShops();
+        long activeShops = userRepository.countActiveShops();
+        long bannedShops = userRepository.countBannedShops();
+        long totalDeposit = userRepository.sumTotalDeposit();
 
-        stats.put("total", total);
-        stats.put("pending", pending);
-        stats.put("approved", approved);
-        stats.put("rejected", rejected);
+        stats.put("totalShops", totalShops);
+        stats.put("activeShops", activeShops);
+        stats.put("bannedShops", bannedShops);
+        stats.put("totalDeposit", totalDeposit);
         return stats;
     }
 

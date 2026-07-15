@@ -25,6 +25,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Boolean existsByEmailAndIsDeleteFalse(String email);
     long countByIsDeleteFalse();
 
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND (UPPER(u.shopStatus) = 'ACTIVE' OR UPPER(u.shopStatus) = 'APPROVED' OR UPPER(u.shopStatus) = 'BANNED' OR UPPER(u.shopStatus) = 'LOCKED')")
+    long countTotalShops();
+
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND (UPPER(u.shopStatus) = 'ACTIVE' OR UPPER(u.shopStatus) = 'APPROVED')")
+    long countActiveShops();
+
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND (UPPER(u.shopStatus) = 'BANNED' OR UPPER(u.shopStatus) = 'LOCKED')")
+    long countBannedShops();
+
+    @org.springframework.data.jpa.repository.Query("SELECT COALESCE(SUM(u.depositVnd), 0) FROM User u WHERE u.isDelete = false")
+    long sumTotalDeposit();
+
     @org.springframework.data.jpa.repository.Query("SELECT u FROM User u WHERE u.isDelete = false AND (LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     List<User> searchUsers(@org.springframework.data.repository.query.Param("keyword") String keyword);
 

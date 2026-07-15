@@ -54,6 +54,9 @@ public class ComplaintServiceImpl implements ComplaintService {
     @Autowired
     private ChatRepository chatRepository;
 
+    @Autowired
+    private com.mmo.feature.seller.service.ShopLevelService shopLevelService;
+
     @Override
     public List<ComplaintDTO> getAllComplaints() {
 
@@ -625,6 +628,18 @@ public class ComplaintServiceImpl implements ComplaintService {
             } else if ("InProgress".equalsIgnoreCase(status) || "In_Progress".equalsIgnoreCase(status)) {
                 tx.setStatus("Disputed");
                 transactionRepository.save(tx);
+            }
+        }
+
+        // Tự động tính toán lại và cập nhật shop_level vào DB cho Seller
+        if ("Resolved".equalsIgnoreCase(status) || "Completed".equalsIgnoreCase(status)) {
+            User seller = complaint.getSeller();
+            if (seller != null) {
+                try {
+                    shopLevelService.evaluateSellerLevel(seller.getId());
+                } catch (Exception e) {
+                    log.error("Lỗi khi tự động đánh giá lại Shop Level cho Seller ID {}: {}", seller.getId(), e.getMessage());
+                }
             }
         }
 
