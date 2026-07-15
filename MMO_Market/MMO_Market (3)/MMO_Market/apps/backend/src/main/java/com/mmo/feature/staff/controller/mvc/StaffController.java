@@ -150,7 +150,32 @@ public class StaffController {
         return "staff/transactions";
     }
 
-   /////
+    @GetMapping("/transactions/detail")
+    public String transactionDetail(@RequestParam Long id, Model model) {
+        Transaction transaction = transactionRepository.findDetailById(id);
+        if (transaction == null) {
+            return "redirect:/staff/transactions";
+        }
+        model.addAttribute("transaction", transaction);
+
+        String remainingHours = "";
+        if (transaction.getEscrowReleaseDate() != null) {
+            long hours = Duration.between(LocalDateTime.now(), transaction.getEscrowReleaseDate()).toHours();
+            if (hours < 0) {
+                remainingHours = "Đã giải ngân (quá hạn bảo lãnh)";
+            } else {
+                remainingHours = hours + " giờ";
+            }
+        } else {
+            remainingHours = "Không có thông tin bảo lãnh";
+        }
+        model.addAttribute("remainingHours", remainingHours);
+
+        Complaint complaint = complaintRepository.findByTransactionId(id);
+        model.addAttribute("complaint", complaint);
+
+        return "staff/transaction-detail";
+    }
 
     @GetMapping("/withdrawals")
     public String withdrawals(
