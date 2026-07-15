@@ -9,9 +9,11 @@ import com.mmo.shared.dto.ShopRegistrationReviewDto;
 import com.mmo.shared.dal.KycRequestRepository;
 import com.mmo.shared.dal.SellerRegistrationRepository;
 import com.mmo.shared.dal.UserRepository;
+import com.mmo.shared.dal.NotificationRepository;
 import com.mmo.shared.model.KycStatus;
 import com.mmo.shared.model.SellerRegistration;
 import com.mmo.shared.model.User;
+import com.mmo.shared.model.Notification;
 import com.mmo.shared.dal.SystemConfigurationRepository;
 import com.mmo.feature.wallet.service.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +45,9 @@ public class ShopRegistrationService {
 
     @Autowired
     private WalletService walletService;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     @Transactional
     public ShopRegistrationResponseDto submitRegistration(Long userId, ShopRegistrationRequestDto request) {
@@ -96,6 +101,39 @@ public class ShopRegistrationService {
         registration.setStatus("PENDING");
 
         SellerRegistration saved = sellerRegistrationRepository.save(registration);
+
+        // 1. Tạo thông báo cho Customer
+        Notification customerNotif = Notification.builder()
+                .userId(user.getId())
+                .title("Đăng ký mở Shop thành công")
+                .content(String.format("Yêu cầu đăng ký mở Shop \"%s\" của bạn đã được gửi thành công và đang chờ duyệt.", saved.getShopName()))
+                .type("SYSTEM")
+                .severity("INFO")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/account/register-shop")
+                .build();
+        notificationRepository.save(customerNotif);
+
+        // 2. Tạo thông báo cho toàn bộ Staff & Admin
+        List<User> staffAndAdmins = userRepository.findStaffAndAdmins();
+        for (User staff : staffAndAdmins) {
+            if (staff.getId().equals(user.getId())) {
+                continue;
+            }
+            Notification staffNotif = Notification.builder()
+                    .userId(staff.getId())
+                    .title("Yêu cầu mở Shop mới")
+                    .content(String.format("Có yêu cầu mở Shop mới \"%s\" từ %s (%s) cần phê duyệt.", saved.getShopName(), user.getFullName(), user.getEmail()))
+                    .type("SYSTEM")
+                    .severity("WARNING")
+                    .isRead(false)
+                    .isDelete(false)
+                    .targetUrl("/staff/shop-registrations")
+                    .build();
+            notificationRepository.save(staffNotif);
+        }
+
         return mapToDto(saved);
     }
 
@@ -184,6 +222,36 @@ public class ShopRegistrationService {
         }
 
         SellerRegistration updated = sellerRegistrationRepository.save(registration);
+
+        // Tạo thông báo kết quả cho Customer/Seller
+        User user = updated.getUser();
+        String title = "";
+        String content = "";
+        String severity = "INFO";
+        String targetUrl = "/account/register-shop";
+        if ("APPROVED".equals(updated.getStatus())) {
+            title = "Yêu cầu mở Shop đã được duyệt";
+            content = String.format("Chúc mừng! Yêu cầu đăng ký mở Shop \"%s\" của bạn đã được phê duyệt thành công. Vui lòng đăng nhập lại để kích hoạt giao diện bán hàng.", updated.getShopName());
+            severity = "SUCCESS";
+            targetUrl = "/seller/dashboard";
+        } else if ("REJECTED".equals(updated.getStatus())) {
+            title = "Yêu cầu mở Shop bị từ chối";
+            content = String.format("Yêu cầu đăng ký mở Shop \"%s\" của bạn bị từ chối. Lý do: %s", updated.getShopName(), updated.getRejectionReason() != null ? updated.getRejectionReason() : "Hồ sơ không hợp lệ");
+            severity = "DANGER";
+        }
+
+        Notification resultNotif = Notification.builder()
+                .userId(user.getId())
+                .title(title)
+                .content(content)
+                .type("SYSTEM")
+                .severity(severity)
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl(targetUrl)
+                .build();
+        notificationRepository.save(resultNotif);
+
         return mapToDto(updated);
     }
 
@@ -234,6 +302,21 @@ public class ShopRegistrationService {
         }
         
         userRepository.save(user);
+
+        // Gửi thông báo cho Seller
+        Notification statusNotif = Notification.builder()
+                .userId(user.getId())
+                .title(active ? "Hoạt động Shop đã được kích hoạt" : "Cảnh báo: Shop đã bị khóa")
+                .content(active ? String.format("Tài khoản Shop \"%s\" của bạn đã được kích hoạt hoạt động trở lại.", registration.getShopName()) 
+                               : String.format("Tài khoản Shop \"%s\" của bạn đã bị khóa tạm thời do vi phạm điều khoản quy định.", registration.getShopName()))
+                .type("SYSTEM")
+                .severity(active ? "SUCCESS" : "DANGER")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl(active ? "/seller/dashboard" : "/profile")
+                .build();
+        notificationRepository.save(statusNotif);
+
         return mapToDto(registration);
     }
 }

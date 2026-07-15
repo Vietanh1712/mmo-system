@@ -294,7 +294,8 @@
                     }
 
                     // Check if this item is unread (not present in mmoReadNotifs localStorage)
-                    const readTimestamps = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
+                    const key = getLocalNotifStorageKey();
+                    const readTimestamps = JSON.parse(localStorage.getItem(key) || '[]');
                     const isUnread = !readTimestamps.includes(item.timestamp);
                     const unreadClass = isUnread ? 'notification-item--unread' : '';
                     const unreadBadge = isUnread ? `<span class="ds-badge ds-badge-info" style="margin-left: auto;">Chưa đọc</span>` : '';
@@ -426,11 +427,30 @@
             document.getElementById('notifDetailModal').style.display = 'none';
         }
 
+        function getLocalNotifStorageKey() {
+            if (typeof window.getNotifStorageKey === 'function') {
+                return window.getNotifStorageKey();
+            }
+            try {
+                const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user") || localStorage.getItem("userInfo") || localStorage.getItem("user");
+                if (userString && userString !== "null" && userString !== "undefined") {
+                    const user = JSON.parse(userString);
+                    if (user && user.id) {
+                        return `mmoReadNotifs_${user.id}`;
+                    }
+                }
+            } catch (error) {
+                console.error("Error determining notif key:", error);
+            }
+            return 'mmoReadNotifs_guest';
+        }
+
         function markAsRead(timestamp) {
-            const readTimestamps = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
+            const key = getLocalNotifStorageKey();
+            const readTimestamps = JSON.parse(localStorage.getItem(key) || '[]');
             if (!readTimestamps.includes(timestamp)) {
                 readTimestamps.push(timestamp);
-                localStorage.setItem('mmoReadNotifs', JSON.stringify(readTimestamps));
+                localStorage.setItem(key, JSON.stringify(readTimestamps));
                 if (typeof window.refreshHeaderNotifBadge === 'function') {
                     window.refreshHeaderNotifBadge();
                 }

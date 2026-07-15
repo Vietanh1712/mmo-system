@@ -28,6 +28,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @org.springframework.data.jpa.repository.Query("SELECT u FROM User u WHERE u.isDelete = false AND (LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     List<User> searchUsers(@org.springframework.data.repository.query.Param("keyword") String keyword);
 
+    @org.springframework.data.jpa.repository.Query("SELECT u FROM User u WHERE u.isDelete = false AND (LOWER(u.role) LIKE '%admin%' OR LOWER(u.role) LIKE '%staff%')")
+    List<User> findStaffAndAdmins();
+
     @org.springframework.data.jpa.repository.Query("SELECT DISTINCT u.shopStatus FROM User u WHERE u.shopStatus IS NOT NULL AND u.isDelete = false")
     List<String> findDistinctShopStatuses();
 }
