@@ -131,15 +131,5 @@ WHERE t.isDelete = false
 
     // detail
 
-    @Query("""
-SELECT t
-FROM Transaction t
-LEFT JOIN FETCH t.customer
-LEFT JOIN FETCH t.seller
-LEFT JOIN FETCH t.product
-LEFT JOIN FETCH t.variant
-WHERE t.id = :id
-AND t.isDelete = false
-""")
-    Transaction findDetailById(@Param("id") Long id);
+
 }
