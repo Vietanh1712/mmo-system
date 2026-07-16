@@ -45,11 +45,10 @@ public class WithdrawalService {
         }
 
         User seller = userRepository.findByIdAndIsDeleteFalse(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông tin tài khoản người bán."));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông tin tài khoản."));
 
-        String role = normalizeRole(seller.getRole());
-        if (!role.contains("seller")) {
-            throw new IllegalArgumentException("Tài khoản không có quyền truy cập Seller Portal.");
+        if (seller.getWithdrawalLocked() != null && seller.getWithdrawalLocked()) {
+            throw new IllegalArgumentException("Ví của bạn đang bị khóa do vi phạm. Không thể thực hiện rút tiền lúc này.");
         }
 
         // Load configurations dynamically

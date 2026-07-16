@@ -73,4 +73,14 @@ public class ProfilePageController {
     public String showMyTicketsPage() {
         return "account/tickets";
     }
+
+    @GetMapping("/account/complaints")
+    public String showMyComplaintsPage() {
+        return "account/complaints";
+    }
+
+    @GetMapping("/account/complaints/detail")
+    public String showComplaintDetailPage() {
+        return "account/complaint-detail";
+    }
 }

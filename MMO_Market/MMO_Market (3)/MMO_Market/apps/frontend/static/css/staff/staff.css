@@ -661,6 +661,20 @@
     border-bottom-left-radius: 4px;
 }
 
+.staff-chat-bubble--customer {
+    background: #dbeafe;
+    color: #1e293b;
+    border: none;
+    border-bottom-left-radius: 4px;
+}
+
+.staff-chat-bubble--seller {
+    background: #ffedd5;
+    color: #1e293b;
+    border: none;
+    border-bottom-left-radius: 4px;
+}
+
 /* Message metadata (time/status) */
 .staff-chat-meta {
     font-size: 11px;
@@ -687,6 +701,30 @@
 }
 
 .staff-chat-action-btn:hover {
+    border-color: #f97316;
+    color: #0f172a;
+}
+
+.messages-main__header-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    padding: 0 14px;
+    height: 38px;
+    text-decoration: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-weight: 600;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #64748b;
+    box-sizing: border-box;
+    transition: all 0.15s;
+    cursor: pointer;
+}
+
+.messages-main__header-link-btn:hover {
     border-color: #f97316;
     color: #0f172a;
 }

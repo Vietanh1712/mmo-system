@@ -19,9 +19,15 @@ async function loadKycDetail() {
         currentVersion = kyc.version;
         
         document.getElementById('kycRequestCodeDisplay').textContent = `#${kyc.requestCode}`;
+        document.getElementById('kycFullName').textContent = kyc.fullName || '-';
+        document.getElementById('kycEmail').textContent = kyc.email || '-';
+        document.getElementById('kycDateOfBirth').textContent = kyc.dateOfBirth || '-';
+        document.getElementById('kycAddress').textContent = kyc.address || '-';
         document.getElementById('kycIdNumber').textContent = kyc.idNumber;
         document.getElementById('kycIdType').textContent = kyc.idType;
         document.getElementById('kycCreatedAt').textContent = new Date(kyc.createdAt).toLocaleString('vi-VN');
+
+        document.getElementById('kycRejectionReason').textContent = kyc.rejectionReason || '-';
         
         const badge = document.getElementById('kycStatusBadge');
         if (kyc.status === 'PENDING') {

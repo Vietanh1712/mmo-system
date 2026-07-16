@@ -40,12 +40,11 @@ async function loadStaffComplaintsFromApi() {
                 senderName: item.customer ? item.customer.fullName : 'N/A',
                 senderEmail: item.customer ? item.customer.email : 'N/A',
                 target: item.transaction && item.transaction.productName ? item.transaction.productName : 'Sản phẩm',
-                category: 'Sản phẩm',
                 amount: item.transaction ? item.transaction.amountVnd : 0,
                 status: item.status,
                 createdAt: item.createdAt ? formatDateString(item.createdAt) : 'N/A',
                 evidence: item.evidence || 'Không có',
-                detail: item.description || ''
+                description: item.description || ''
             }));
             totalElements = data.totalElements || 0;
             totalPages = data.totalPages || 0;
@@ -93,7 +92,7 @@ function renderStaffComplaintsTable(list, isBackendDriven = true) {
     if (list.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" style="text-align: center; padding: 24px; color: var(--ds-text-subtle);">
+                <td colspan="6" style="text-align: center; padding: 24px; color: var(--ds-text-subtle);">
                     Không tìm thấy khiếu nại nào phù hợp với bộ lọc.
                 </td>
             </tr>
@@ -105,18 +104,20 @@ function renderStaffComplaintsTable(list, isBackendDriven = true) {
     tbody.innerHTML = list.map(item => {
         let badgeClass = 'ds-badge-warning';
         let statusText = 'Đang xử lý';
-        if (item.status === 'New') {
+        
+        const statusVal = (item.status || '').toLowerCase();
+        if (statusVal === 'pending_review' || statusVal === 'pending_status') {
             badgeClass = 'ds-badge-info';
-            statusText = 'Mới';
-        } else if (item.status === 'Resolved' || item.status === 'Completed') {
-            badgeClass = 'ds-badge-success';
-            statusText = 'Đã giải quyết';
-        } else if (item.status === 'Rejected') {
-            badgeClass = 'ds-badge-danger';
-            statusText = 'Từ chối';
-        } else if (item.status === 'InProgress') {
+            statusText = 'Chờ duyệt';
+        } else if (statusVal === 'new' || statusVal === 'open' || statusVal === 'inprogress' || statusVal === 'in_progress' || statusVal === 'processing') {
             badgeClass = 'ds-badge-warning';
             statusText = 'Đang xử lý';
+        } else if (statusVal === 'resolved' || statusVal === 'completed' || statusVal === 'success') {
+            badgeClass = 'ds-badge-success';
+            statusText = 'Đã giải quyết';
+        } else if (statusVal === 'rejected' || statusVal === 'refused' || statusVal === 'fail' || statusVal === 'failed') {
+            badgeClass = 'ds-badge-danger';
+            statusText = 'Từ chối';
         }
 
         const nameInitials = item.senderName ? item.senderName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'NA';
@@ -134,7 +135,6 @@ function renderStaffComplaintsTable(list, isBackendDriven = true) {
                     </div>
                 </td>
                 <td>${escapeHtml(item.target)}</td>
-                <td>${escapeHtml(item.category)}</td>
                 <td class="ds-table-center"><span class="ds-badge ${badgeClass}">${statusText}</span></td>
                 <td>${escapeHtml(item.createdAt.split(' ')[0])}</td>
                 <td class="ds-table-center">
@@ -166,17 +166,16 @@ async function renderStaffComplaints() {
         let list = allComplaints;
         const search = document.getElementById('staff-search-input').value.trim().toLowerCase();
         const status = document.getElementById('staff-status-select').value;
-        const category = document.getElementById('staff-category-select').value;
 
         const filtered = list.filter(item => {
             const matchesSearch = !search ||
                 item.id.toLowerCase().includes(search) ||
                 item.senderName.toLowerCase().includes(search) ||
                 item.senderEmail.toLowerCase().includes(search) ||
-                item.target.toLowerCase().includes(search);
+                item.target.toLowerCase().includes(search) ||
+                (item.description && item.description.toLowerCase().includes(search));
             const matchesStatus = !status || item.status === status;
-            const matchesCategory = !category || item.category === category;
-            return matchesSearch && matchesStatus && matchesCategory;
+            return matchesSearch && matchesStatus;
         });
 
         filtered.sort((a, b) => {
@@ -221,7 +220,6 @@ function applyStaffFilters() {
 function resetStaffFilters() {
     document.getElementById('staff-search-input').value = '';
     document.getElementById('staff-status-select').value = '';
-    document.getElementById('staff-category-select').value = '';
     currentPage = 0;
     renderStaffComplaints();
 }
@@ -263,7 +261,77 @@ async function loadComplaintStats() {
     }
 }
 
+async function loadComplaintStatuses() {
+    const select = document.getElementById('staff-status-select');
+    if (!select) return;
+
+    // Reset select to default option
+    select.innerHTML = '<option value="">Tất cả trạng thái</option>';
+
+    const token = sessionStorage.getItem('accessToken');
+    let dbStatuses = ['InProgress', 'Resolved', 'Rejected']; // fallback/mock
+
+    if (token) {
+        try {
+            const response = await fetch('/api/complaints/statuses', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                dbStatuses = await response.json();
+            }
+        } catch (err) {
+            console.error("Lỗi lấy danh sách trạng thái khiếu nại:", err);
+        }
+    }
+
+    const addedValues = new Set();
+    dbStatuses.forEach(s => {
+        if (!s) return;
+        const lowerS = s.toLowerCase();
+        let value = s;
+        let label = s;
+        
+        if (lowerS === 'new' || lowerS === 'open' || lowerS === 'inprogress' || lowerS === 'in_progress' || lowerS === 'processing') {
+            value = 'InProgress';
+            label = 'Đang xử lý';
+        } else if (lowerS === 'resolved' || lowerS === 'completed' || lowerS === 'success') {
+            value = 'Resolved';
+            label = 'Đã giải quyết';
+        } else if (lowerS === 'rejected' || lowerS === 'refused' || lowerS === 'fail' || lowerS === 'failed') {
+            value = 'Rejected';
+            label = 'Từ chối';
+        }
+        
+        if (!addedValues.has(value)) {
+            addedValues.add(value);
+            const opt = document.createElement('option');
+            opt.value = value;
+            opt.textContent = label;
+            select.appendChild(opt);
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+    const token = sessionStorage.getItem('accessToken');
+    const userStr = sessionStorage.getItem('user');
+    let isStaff = false;
+    if (userStr) {
+        try {
+            const user = JSON.parse(userStr);
+            const role = (user.role || '').toLowerCase();
+            isStaff = role.includes('staff') || role.includes('admin');
+        } catch(e) {}
+    }
+    if (!token || !isStaff) {
+        window.location.href = '/login';
+        return;
+    }
+
+    await loadComplaintStatuses();
     await loadComplaintStats();
     await renderStaffComplaints();
 });

@@ -56,7 +56,8 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/api/auth/reset-password"),
                                 new AntPathRequestMatcher("/api/auth/check-reset-otp"),
                                 new AntPathRequestMatcher("/api/sepay/config"),
-                                new AntPathRequestMatcher("/api/sepay/webhook")
+                                new AntPathRequestMatcher("/api/sepay/webhook"),
+                                new AntPathRequestMatcher("/api/public/**")
                         ).permitAll()
 
                         // Public MVC endpoints (Cho phép trình duyệt tải giao diện HTML)

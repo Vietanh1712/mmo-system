@@ -1,3 +1,6 @@
+﻿USE MMO_System_Schema;
+GO
+
 USE MMO_System;
 GO
 
@@ -6,3 +9,4 @@ BEGIN
     ALTER TABLE Reviews ADD media_url NVARCHAR(MAX) NULL;
 END
 GO
+

@@ -47,8 +47,20 @@ public class User {
     @Column(name = "shop_status")
     private String shopStatus; // Pending, Active, Banned
 
+    @Column(name = "shop_level")
+    private Integer shopLevel; // Default: 1 (Level 1 = New Shop, Level 2 = Prestige, Level 0 = Warning)
+
+    @Column(name = "flag_3_count")
+    private Integer flag3Count; // Default: 0
+
+    @Column(name = "withdrawal_locked")
+    private Boolean withdrawalLocked; // Default: false
+
     @Column(name = "balance_vnd")
     private Long balanceVnd; // Default: 0
+
+    @Column(name = "deposit_vnd")
+    private Long depositVnd; // Default: 0
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String permissions;
@@ -96,6 +108,9 @@ public class User {
         if (balanceVnd == null) {
             balanceVnd = 0L;
         }
+        if (depositVnd == null) {
+            depositVnd = 0L;
+        }
         if (isVerified == null) {
             isVerified = false;
         }
@@ -113,6 +128,15 @@ public class User {
         }
         if (shopStatus == null) {
             shopStatus = "Pending";
+        }
+        if (shopLevel == null) {
+            shopLevel = 1;
+        }
+        if (flag3Count == null) {
+            flag3Count = 0;
+        }
+        if (withdrawalLocked == null) {
+            withdrawalLocked = false;
         }
     }
 

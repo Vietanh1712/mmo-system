@@ -1,3 +1,6 @@
+﻿USE MMO_System_Schema;
+GO
+
 -- ==============================================================================
 -- FIX CATEGORY DELETION COLUMNS
 -- File: 20260619_FixCategoriesIsDelete.sql
@@ -19,3 +22,4 @@ GO
 
 PRINT N'✓ Categories deletion status fixed successfully.';
 GO
+

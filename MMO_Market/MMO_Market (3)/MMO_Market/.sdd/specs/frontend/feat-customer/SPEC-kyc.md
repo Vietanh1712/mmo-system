@@ -47,35 +47,72 @@ Trang KYC cung cấp giao diện tải lên hồ sơ pháp lý gồm Số CCCD/C
 ## 3. LAYOUT TỔNG THỂ & MOCKUP
 
 ```
-┌────────────────────────────────────────────────────────┐
-│ [Logo] MMO Market                              [User]  │
-├────────────────────────────────────────────────────────┤
-│  ┌───────────┐  ┌────────────────────────────────────┐ │
-│  │  Sidebar  │  │  XÁC THỰC DANH TÍNH (KYC)          │ │
-│  │  - Hồ sơ  │  │  Họ tên: [ Nguyễn Văn A        ]   │ │
-│  │  - Ví tiền│  │  Số CCCD/CMND: [ 001095012345  ]   │ │
-│  │  - KYC    │  │  ┌──────────┐ ┌──────────┐         │ │
-│  │  - Orders │  │  │Mặt trước │ │Mặt sau   │         │ │
-│  └───────────┘  │  │[Xem ảnh] │ │[Xem ảnh] │         │ │
-│                 │  └──────────┘ └──────────┘         │ │
-│                 │  [ GỬI YÊU CẦU XÁC THỰC ]          │ │
-│                 └────────────────────────────────────┘ │
-└────────────────────────────────────────────────────────┘
+Trang KYC hỗ trợ 2 trạng thái: **Chế độ mặc định (View Mode)** và **Chế độ nộp hồ sơ (Submit Mode)** (khi click Gửi yêu cầu hoặc vào url `?mode=submit`).
+
+### 3.1 Chế độ mặc định (View Mode)
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ [Logo] MMO Market                         [Search]      [User]  │
+├─────────────────────────────────────────────────────────────────┤
+│  ┌──────────────────────┐  ┌─────────────────────────────────┐  │
+│  │ (User Card)          │  │ Định danh KYC     [Chưa định danh] │
+│  │                      │  │ Xác minh danh tính để tăng...   │  │
+│  │ (Menu Sidebar)       │  ├─────────────────────────────────┤  │
+│  │                      │  │ [i] KYC giúp tăng độ tin cậy... │  │
+│  │                      │  ├─────────────────────────────────┤  │
+│  │                      │  │ (1) Chuẩn bị -> (2) Gửi yêu cầu │  │
+│  │                      │  │ -> (3) Staff duyệt -> (4) Hoàn tất │
+│  │                      │  ├─────────────────────────────────┤  │
+│  │                      │  │ Bạn chưa gửi hồ sơ KYC          │  │
+│  │                      │  │ [ Gửi yêu cầu định danh ]       │  │
+│  │                      │  │ Mã yêu cầu: -     Ngày gửi: -   │  │
+│  │                      │  │ Loại giấy tờ: -                 │  │
+│  └──────────────────────┘  └─────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 3.2 Chế độ nộp hồ sơ (Submit Mode - `?mode=submit`)
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ┌──────────────────────┐  ┌─────────────────────────────────┐  │
+│  │ (Sidebar)            │  │ (Giữ nguyên header và Stepper)  │  │
+│  │                      │  ├─────────────────────────────────┤  │
+│  │                      │  │ Gửi yêu cầu định danh           │  │
+│  │                      │  │ Họ và tên theo giấy tờ          │  │
+│  │                      │  │ [ Nguyễn Văn Khách            ] │  │
+│  │                      │  │ Số CCCD/CMND/Hộ chiếu           │  │
+│  │                      │  │ [ 001096001234                ] │  │
+│  │                      │  │ Ngày sinh       Loại giấy tờ    │  │
+│  │                      │  │ [ 15/05/1996 📅][ Chọn loại v ] │  │
+│  │                      │  │ Địa chỉ thường trú              │  │
+│  │                      │  │ [ 123 Đường Nguyễn Trãi...    ] │  │
+│  │                      │  │                                 │  │
+│  │                      │  │ [Ảnh mặt trước] [Ảnh mặt sau]   │  │
+│  │                      │  │ [Ảnh chân dung]                 │  │
+│  │                      │  │                                 │  │
+│  │                      │  │ [x] Tôi xác nhận thông tin...   │  │
+│  │                      │  │ [ Gửi yêu cầu ] [ Hủy ]         │  │
+│  └──────────────────────┘  └─────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## 4. CÁC THÀNH PHẦN GIAO DIỆN CHÍNH
 
-### 4.1 Vùng Tải Lên Ảnh — `.kyc-upload-zone`
-* Gồm 3 hộp tải tệp riêng biệt: Mặt trước, Mặt sau và Ảnh chân dung.
-* Thiết kế: Đường viền đứt nét (`border: 2px dashed var(--ds-border)`), căn giữa biểu tượng đám mây tải lên và nhãn text hướng dẫn. Hover sẽ đổi nét vẽ viền sang màu xanh thương hiệu.
-* **Xem trước hình ảnh (Image Preview):** Khi người dùng chọn file ảnh thành công, JS đọc tệp bằng `FileReader` và kết xuất ảnh hiển thị đè lên vùng upload zone kèm một nút "Xóa ảnh" nhỏ ở góc phải để người dùng có thể tải lại ảnh khác.
+### 4.1 Thanh tiến trình (Stepper)
+* Hiển thị 4 bước của quy trình KYC: (1) Chuẩn bị hồ sơ, (2) Gửi yêu cầu, (3) Staff xét duyệt, (4) Hoàn tất. Trạng thái hiển thị phụ thuộc vào dữ liệu API trả về.
 
-### 4.2 Hộp Thông Báo Trạng Thái — `.kyc-status-banner`
-* Trạng thái `PENDING`: Nền màu vàng nhạt, chữ màu cam đậm, hiển thị icon đồng hồ cát.
-* Trạng thái `APPROVED`: Nền màu xanh lá nhạt, chữ màu xanh lá đậm, hiển thị icon tick tròn xanh.
-* Trạng thái `REJECTED`: Nền màu đỏ nhạt, chữ màu đỏ đậm, hiển thị rõ lý do từ chối cụ thể (`rejectionReason`).
+### 4.2 Lịch sử & Trạng thái KYC
+* Hiển thị bảng tóm tắt "Bạn chưa gửi hồ sơ KYC" (hoặc đang duyệt) gồm Mã yêu cầu, Ngày gửi, Loại giấy tờ.
+* Có nút `[ Gửi yêu cầu định danh ]` màu xanh (hiển thị khi chưa có yêu cầu nào PENDING). Nhấn vào sẽ chuyển giao diện sang dạng form (`?mode=submit`).
+
+### 4.3 Form Gửi Yêu Cầu Định Danh (`?mode=submit`)
+* **Input Text:** Họ và tên (`#fullName`), Số CCCD/CMND (`#idNumber`), Ngày sinh (`#dateOfBirth` - dạng datepicker), Địa chỉ (`#address` - textarea).
+* **Dropdown:** Loại giấy tờ (`#idType` - CCCD/CMND/Hộ chiếu).
+* **Vùng Tải Lên Ảnh:** Gồm 3 khối tải tệp riêng biệt (Ảnh mặt trước, Ảnh mặt sau, Ảnh chân dung). Thiết kế viền đứt nét đè xem trước ảnh (Preview) khi chọn file.
+* **Checkbox:** Xác nhận trách nhiệm thông tin cung cấp.
+* **Buttons:** `[ Gửi yêu cầu ]` (Submit form) và `[ Hủy ]` (Quay về chế độ View).
 
 ---
 
@@ -85,18 +122,20 @@ Trang KYC cung cấp giao diện tải lên hồ sơ pháp lý gồm Số CCCD/C
    * Gửi API:
      * **Endpoint:** `GET /api/v1/kyc/me`
      * **Headers:** `Authorization: Bearer <token>`
-   * **Xử lý kết quả:**
-     * Trả về trạng thái `NOT_SUBMITTED` -> Hiển thị form trống.
-     * Trả về trạng thái `PENDING` -> Hiển thị thông báo "Đang chờ duyệt", vô hiệu hóa tất cả nút và ô nhập liệu.
-     * Trả về trạng thái `APPROVED` -> Hiển thị thông báo "Đã xác thực", hiển thị các thông tin cơ bản ở dạng chỉ đọc.
-     * Trả về trạng thái `REJECTED` -> Hiển thị thông báo lý do từ chối kèm form điền thông tin cũ để người dùng chỉnh sửa.
+   * **Xử lý kết quả (List lịch sử KYC):**
+     * Danh sách rỗng -> Hiển thị "Chưa định danh", Form trống.
+     * Có yêu cầu `PENDING` -> Hiển thị bước Stepper tương ứng, khóa nút Gửi yêu cầu mới.
+     * Yêu cầu `APPROVED` / `REJECTED` -> Hiển thị badge trạng thái và lịch sử duyệt ở bảng tóm tắt.
 2. **Gửi Hồ Sơ KYC Mới:**
-   * Bắt đầu validate local: Số CCCD phải dài từ 9 đến 12 chữ số. Cả 3 file ảnh bắt buộc phải được chọn, định dạng file phải là `image/jpeg` hoặc `image/png`, kích thước mỗi file `< 5MB`.
+   * Bắt đầu validate local: Các ô text không rỗng, chọn loại giấy tờ, bắt buộc tải lên đủ 3 ảnh (jpeg/png < 5MB), bắt buộc tích Checkbox xác nhận.
    * Tạo đối tượng `FormData`:
      ```javascript
      const formData = new FormData();
      formData.append('fullName', fullNameInput.value);
-     formData.append('citizenId', citizenIdInput.value);
+     formData.append('dateOfBirth', dobInput.value);
+     formData.append('address', addressInput.value);
+     formData.append('idNumber', idNumberInput.value);
+     formData.append('idType', idTypeInput.value);
      formData.append('frontImage', frontFile);
      formData.append('backImage', backFile);
      formData.append('selfieImage', selfieFile);
@@ -104,9 +143,9 @@ Trang KYC cung cấp giao diện tải lên hồ sơ pháp lý gồm Số CCCD/C
    * Gửi API:
      * **Endpoint:** `POST /api/v1/kyc`
      * **Method:** `POST`
-     * **Headers:** `Authorization: Bearer <token>` (Không set Content-Type để trình duyệt tự động thiết lập multipart boundary).
+     * **Headers:** `Authorization: Bearer <token>` (Không set Content-Type)
      * **Body:** `formData`
-   * **Xử lý phản hồi thành công (HTTP 200):** Hiển thị Toast thông báo gửi thành công và tải lại trang để chuyển giao diện sang trạng thái `PENDING`.
+   * **Thành công (HTTP 200/201):** Thông báo gửi hồ sơ thành công và reload lại trang về chế độ View.
 
 ---
 

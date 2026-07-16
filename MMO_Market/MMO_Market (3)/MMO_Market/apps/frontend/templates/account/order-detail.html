@@ -124,6 +124,9 @@
                         </div>
                     </section>
 
+
+
+
                     <section class="ds-empty-state order-detail-empty" id="orderDetailEmpty" hidden>
                         <p>Không tìm thấy đơn hàng này.</p>
                         <a class="ds-btn ds-btn-primary" th:href="@{/account/orders}">Quay lại đơn hàng</a>
@@ -154,9 +157,17 @@
                         <textarea id="complaintDescription" rows="4" placeholder="Vui lòng mô tả chi tiết lỗi sản phẩm hoặc hành vi gian lận của người bán..." required style="width: 100%; padding: 10px; border: 1px solid var(--ds-border, #cbd5e1); border-radius: 6px; font-family: inherit; font-size: 13.5px; resize: vertical; box-sizing: border-box;"></textarea>
                     </div>
 
+                    <div class="form-group" style="text-align: left; margin-bottom: 16px;">
+                        <label for="complaintPreferredSolution" style="display: block; font-size: 13.5px; font-weight: 600; color: var(--ds-text, #1e293b); margin-bottom: 6px;">Phương án giải quyết mong muốn <span style="color: red;">*</span></label>
+                        <select id="complaintPreferredSolution" required style="width: 100%; padding: 10px; border: 1px solid var(--ds-border, #cbd5e1); border-radius: 6px; font-family: inherit; font-size: 13.5px; box-sizing: border-box; background: #fff;">
+                            <option value="REFUND">Hoàn tiền</option>
+                            <option value="REPLACEMENT">Đổi tài khoản mới</option>
+                        </select>
+                    </div>
+
                     <div class="form-group" style="text-align: left; margin-bottom: 20px;">
-                        <label for="complaintEvidenceFile" style="display: block; font-size: 13.5px; font-weight: 600; color: var(--ds-text, #1e293b); margin-bottom: 6px;">Tải lên ảnh, video bằng chứng từ máy cá nhân</label>
-                        <input id="complaintEvidenceFile" type="file" accept="image/*,video/*" style="width: 100%; padding: 10px; border: 1px solid var(--ds-border, #cbd5e1); border-radius: 6px; font-family: inherit; font-size: 13.5px; box-sizing: border-box; background: #fff;">
+                        <label for="complaintEvidenceFile" style="display: block; font-size: 13.5px; font-weight: 600; color: var(--ds-text, #1e293b); margin-bottom: 6px;">Tải lên ảnh, video bằng chứng từ máy cá nhân <span style="color: red;">*</span></label>
+                        <input id="complaintEvidenceFile" type="file" accept="image/*,video/*" required style="width: 100%; padding: 10px; border: 1px solid var(--ds-border, #cbd5e1); border-radius: 6px; font-family: inherit; font-size: 13.5px; box-sizing: border-box; background: #fff;">
                         <input id="complaintEvidence" type="hidden">
                         <div id="uploadStatusText" style="font-size: 12.5px; margin-top: 6px; color: var(--ds-text-muted, #64748b);"></div>
                     </div>

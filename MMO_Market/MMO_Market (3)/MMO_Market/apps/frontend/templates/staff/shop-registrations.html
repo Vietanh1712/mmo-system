@@ -2,6 +2,44 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{fragments/staff-head :: staffHead('Duyệt yêu cầu mở Shop')}"></th:block>
+    <style>
+        .ds-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+        }
+        .ds-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .ds-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #e74c3c; /* mặc định màu đỏ: bị khóa */
+            transition: .4s;
+            border-radius: 22px;
+        }
+        .ds-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        .ds-switch input:checked + .ds-slider {
+            background-color: #2ecc71; /* màu xanh: hoạt động */
+        }
+        .ds-switch input:checked + .ds-slider:before {
+            transform: translateX(18px);
+        }
+    </style>
 </head>
 <body>
 <header th:replace="~{fragments/header :: header}"></header>
@@ -15,7 +53,51 @@
                 <div class="staff-page-header">
                     <div>
                         <h1 class="ds-page-title">Quản lý yêu cầu mở Shop</h1>
-                        <p class="ds-page-subtitle">Danh sách các yêu cầu mở Shop đang chờ xét duyệt.</p>
+                        <p class="ds-page-subtitle">Danh sách yêu cầu mở Shop chờ phê duyệt hoặc đã xử lý.</p>
+                    </div>
+                </div>
+
+                <div class="staff-stat-grid">
+                    <div class="ds-card staff-stat-card blue">
+                        <p class="staff-stat-card__label">Tổng yêu cầu</p>
+                        <p class="staff-stat-card__value" id="stat-total-shops">0</p>
+                    </div>
+                    <div class="ds-card staff-stat-card yellow">
+                        <p class="staff-stat-card__label">Chờ duyệt</p>
+                        <p class="staff-stat-card__value" id="stat-pending-shops">0</p>
+                    </div>
+                    <div class="ds-card staff-stat-card green">
+                        <p class="staff-stat-card__label">Đã duyệt</p>
+                        <p class="staff-stat-card__value" id="stat-approved-shops">0</p>
+                    </div>
+                    <div class="ds-card staff-stat-card red">
+                        <p class="staff-stat-card__label">Từ chối</p>
+                        <p class="staff-stat-card__value" id="stat-rejected-shops">0</p>
+                    </div>
+                </div>
+
+                <div class="ds-card">
+                    <div class="ds-filter-panel">
+                        <h2 class="ds-card-title">Bộ lọc yêu cầu</h2>
+                        <div class="ds-filter-grid">
+                            <input class="ds-input" type="text" id="shopKeywordFilter" placeholder="Tìm theo mã, tên shop, email...">
+                            <select class="ds-input" id="regStatusFilter">
+                                <option value="">Trạng thái yêu cầu (Tất cả)</option>
+                                <option value="PENDING">Chờ duyệt</option>
+                                <option value="APPROVED">Chấp thuận (Đã duyệt)</option>
+                                <option value="REJECTED">Từ chối</option>
+                            </select>
+                            <select class="ds-input" id="shopAccountStatusFilter">
+                                <option value="">Trạng thái Shop (Tất cả)</option>
+                                <option value="PENDING">Chờ kích hoạt</option>
+                                <option value="ACTIVE">Đang hoạt động</option>
+                                <option value="BANNED">Đang bị khóa</option>
+                            </select>
+                        </div>
+                        <div class="ds-filter-actions">
+                            <button class="ds-btn ds-btn-secondary" type="button" id="shopResetBtn">Làm mới bộ lọc</button>
+                            <button class="ds-btn ds-btn-primary" type="button" id="shopSearchBtn">Tìm kiếm</button>
+                        </div>
                     </div>
                 </div>
 
@@ -24,18 +106,23 @@
                         <table class="ds-table">
                             <thead>
                             <tr>
+                                <th class="ds-table-center" style="width: 60px;">STT</th>
                                 <th>Mã yêu cầu</th>
                                 <th>Tên Shop</th>
-                                <th>Danh mục</th>
+                                <th class="ds-table-center">Trạng thái Shop</th>
+                                <th class="ds-table-right">Tiền cọc (VNĐ)</th>
+                                <th class="ds-table-right">Số dư (VNĐ)</th>
+                                <th class="ds-table-center">Trạng thái yêu cầu</th>
                                 <th>Ngày gửi</th>
                                 <th class="ds-table-center">Thao tác</th>
                             </tr>
                             </thead>
                             <tbody id="shopRegistrationsTableBody">
-                                <tr><td colspan="5" class="ds-table-center">Đang tải dữ liệu...</td></tr>
+                                <tr><td colspan="9" class="ds-table-center">Đang tải dữ liệu...</td></tr>
                             </tbody>
                         </table>
                     </div>
+                    <div id="shopPagination"></div>
                 </div>
             </section>
         </div>
@@ -46,16 +133,40 @@
 <dialog class="ds-modal" id="reviewModal">
     <div class="ds-modal-content">
         <div class="ds-modal-header">
-            <h3 class="ds-modal-title">Duyệt đăng ký Shop</h3>
+            <h3 class="ds-modal-title" id="modalTitle">Chi tiết đăng ký Shop</h3>
             <button class="ds-btn ds-btn-icon" id="closeReviewModal" type="button" aria-label="Đóng"><i class="fa fa-times"></i></button>
         </div>
         <div class="ds-modal-body">
             <div class="ds-form-field">
-                <label class="ds-label">Lý do từ chối (nếu có)</label>
+                <label class="ds-label">Mã yêu cầu</label>
+                <input class="ds-input" id="modalShopCode" readonly>
+            </div>
+            <div class="ds-form-field">
+                <label class="ds-label">Tên Shop</label>
+                <input class="ds-input" id="modalShopName" readonly>
+            </div>
+            <div class="ds-form-field">
+                <label class="ds-label">Danh mục kinh doanh</label>
+                <input class="ds-input" id="modalShopCategory" readonly>
+            </div>
+            <div class="ds-form-field">
+                <label class="ds-label">Email liên hệ</label>
+                <input class="ds-input" id="modalShopEmail" readonly>
+            </div>
+            <div class="ds-form-field">
+                <label class="ds-label">Số điện thoại</label>
+                <input class="ds-input" id="modalShopPhone" readonly>
+            </div>
+            <div class="ds-form-field">
+                <label class="ds-label">Mô tả Shop</label>
+                <textarea class="ds-textarea" id="modalShopDesc" rows="3" readonly></textarea>
+            </div>
+            <div class="ds-form-field" id="rejectionReasonFieldGroup">
+                <label class="ds-label" id="rejectionReasonLabel">Lý do từ chối</label>
                 <textarea class="ds-textarea" id="reviewReason" rows="3" placeholder="Nhập lý do nếu từ chối..."></textarea>
             </div>
         </div>
-        <div class="ds-modal-footer">
+        <div class="ds-modal-footer" id="modalFooterActions">
             <button class="ds-btn ds-btn-danger" id="rejectBtn" type="button">Từ chối</button>
             <button class="ds-btn ds-btn-success" id="approveBtn" type="button">Chấp thuận</button>
         </div>
@@ -64,6 +175,7 @@
 
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 <script th:src="@{/js/customer/auth.js}"></script>
+<script th:src="@{/js/staff/staff-ui.js}"></script>
 <script th:src="@{/js/staff/staff-shop-registrations.js}"></script>
 </body>
 </html>

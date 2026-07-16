@@ -38,27 +38,46 @@ public class TransactionService {
     @Autowired
     private com.mmo.shared.dal.SystemConfigurationRepository systemConfigurationRepository;
 
+    @Autowired
+    private com.mmo.shared.dal.ComplaintRepository complaintRepository;
+
     /**
      * Thực hiện mua sản phẩm và trừ tiền từ số dư của người mua, bọc trong Transaction.
      */
     @Transactional
-    public Transaction purchaseProduct(Long userId, Long productId, String variantLabel) {
+    public Transaction purchaseProduct(Long userId, Long productId, String variantLabel, Integer quantity) {
         User customer = userRepository.findByIdAndIsDeleteFalse(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Người mua không tồn tại."));
 
         Product product = productRepository.findByIdAndIsDeleteFalse(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Sản phẩm không tồn tại."));
 
-        // Tìm variant phù hợp theo variantLabel (variantName)
+        // Tìm variant phù hợp theo variantLabel (variantName) với cơ chế tìm kiếm mềm và fallback
         ProductVariant variant = product.getVariants().stream()
                 .filter(v -> v.getIsDelete() != null && !v.getIsDelete())
                 .filter(v -> v.getVariantName().equalsIgnoreCase(variantLabel))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Biến thể sản phẩm không tồn tại."));
+                .orElseGet(() -> {
+                    // Thử tìm kiếm theo cụm từ chứa (substring)
+                    return product.getVariants().stream()
+                            .filter(v -> v.getIsDelete() != null && !v.getIsDelete())
+                            .filter(v -> v.getVariantName().toLowerCase().contains(variantLabel.toLowerCase())
+                                    || variantLabel.toLowerCase().contains(v.getVariantName().toLowerCase()))
+                            .findFirst()
+                            // Fallback về biến thể đầu tiên khả dụng của sản phẩm
+                            .orElseGet(() -> product.getVariants().stream()
+                                    .filter(v -> v.getIsDelete() != null && !v.getIsDelete())
+                                    .findFirst()
+                                    .orElseThrow(() -> new IllegalArgumentException("Biến thể sản phẩm không tồn tại và sản phẩm không có biến thể khả dụng.")));
+                });
+
+        if (quantity == null || quantity <= 0) {
+            quantity = 1;
+        }
 
         // Kiểm tra số lượng tồn kho (stock)
-        if (variant.getStock() == null || variant.getStock() <= 0) {
-            throw new IllegalArgumentException("Sản phẩm đã hết hàng.");
+        if (variant.getStock() == null || variant.getStock() < quantity) {
+            throw new IllegalArgumentException("Sản phẩm không đủ số lượng tồn kho.");
         }
 
         // Đọc cấu hình phí cố định người mua (Flat Buyer Fee)
@@ -70,9 +89,10 @@ public class TransactionService {
 
         // Kiểm tra số dư ví người mua (bao gồm cả phí cố định người mua)
         long price = variant.getPriceVnd();
-        long totalDebit = price + flatBuyerFee;
+        long totalAmount = price * quantity;
+        long totalDebit = totalAmount + flatBuyerFee;
         if (customer.getBalanceVnd() == null || customer.getBalanceVnd() < totalDebit) {
-            throw new IllegalArgumentException("Số dư tài khoản không đủ để thực hiện thanh toán (bao gồm phí người mua: " + flatBuyerFee + " VNĐ).");
+            throw new IllegalArgumentException("Số dư tài khoản không đủ để thực hiện thanh toán (cần " + totalDebit + " VNĐ).");
         }
 
         // Trừ tiền người mua
@@ -80,7 +100,7 @@ public class TransactionService {
         userRepository.save(customer);
 
         // Giảm tồn kho
-        variant.setStock(variant.getStock() - 1);
+        variant.setStock(variant.getStock() - quantity);
 
         // Đọc cấu hình hoa hồng mặc định của sàn (Commission Percent)
         double basePercent = systemConfigurationRepository.findByConfigKey("DEFAULT_COMMISSION_PERCENT")
@@ -90,14 +110,32 @@ public class TransactionService {
                 }).orElse(5.0);
 
         // Tính phí hoa hồng động
-        long commission = (long) (price * (basePercent / 100.0));
+        long commission = (long) (totalAmount * (basePercent / 100.0));
 
-        // Đọc cấu hình thời gian giam tiền Escrow (Escrow Hold Hours)
-        int escrowHoldHours = systemConfigurationRepository.findByConfigKey("ESCROW_HOLD_HOURS")
-                .map(c -> {
-                    try { return Integer.parseInt(c.getConfigValue()); }
-                    catch (NumberFormatException e) { return 72; }
-                }).orElse(72);
+        // Tính toán thời gian giam tiền Escrow (Escrow Hold Hours) động
+        int escrowHoldHours = 72; // Mặc định 3 ngày
+        
+        User seller = product.getSeller();
+        long completedCount = transactionRepository.countCompletedSalesBySeller(seller);
+        long totalSold = transactionRepository.countTotalSalesBySeller(seller);
+        long resolvedComplaints = complaintRepository.countResolvedComplaintsBySeller(seller);
+        
+        double disputeRate = totalSold > 0 ? (double) resolvedComplaints / totalSold : 0.0;
+        
+        if (completedCount < 20) {
+            // Giai đoạn thử thách (20 đơn đầu tiên của Shop mới)
+            escrowHoldHours = 168; // 7 ngày
+        } else if (disputeRate >= 0.02) {
+            // Giai đoạn thắt chặt (Tỷ lệ khiếu nại đúng >= 2%)
+            escrowHoldHours = 168; // 7 ngày
+        } else {
+            // Giai đoạn tiêu chuẩn
+            escrowHoldHours = systemConfigurationRepository.findByConfigKey("ESCROW_HOLD_HOURS")
+                    .map(c -> {
+                        try { return Integer.parseInt(c.getConfigValue()); }
+                        catch (NumberFormatException e) { return 72; }
+                    }).orElse(72);
+        }
 
         // Tạo giao dịch mới (trạng thái Held để bảo lãnh Escrow)
         Transaction transaction = Transaction.builder()
@@ -105,8 +143,9 @@ public class TransactionService {
                 .seller(product.getSeller())
                 .product(product)
                 .variant(variant)
-                .amountVnd(price)
+                .amountVnd(totalAmount)
                 .commissionVnd(commission)
+                .quantity(quantity)
                 .status("Held")
                 .escrowReleaseDate(LocalDateTime.now().plusHours(escrowHoldHours))
                 .build();
@@ -115,14 +154,19 @@ public class TransactionService {
         // Gán DigitalAsset nếu có
         java.util.List<com.mmo.shared.model.DigitalAsset> availableAssets = digitalAssetRepository.findByVariantAndIsUsedFalseAndIsDeleteFalse(variant);
         if (!availableAssets.isEmpty()) {
-            com.mmo.shared.model.DigitalAsset assetToAssign = availableAssets.get(0);
-            assetToAssign.setIsUsed(true);
-            assetToAssign.setTransaction(transaction);
-            digitalAssetRepository.save(assetToAssign);
+            if (availableAssets.size() < quantity) {
+                throw new IllegalArgumentException("Không đủ tài khoản/key trong kho để giao. Vui lòng giảm số lượng mua.");
+            }
+            for (int i = 0; i < quantity; i++) {
+                com.mmo.shared.model.DigitalAsset assetToAssign = availableAssets.get(i);
+                assetToAssign.setIsUsed(true);
+                assetToAssign.setTransaction(transaction);
+                digitalAssetRepository.save(assetToAssign);
+            }
         }
 
         // Record to Wallet Ledger (Customer paid)
-        walletService.recordTransaction(customer, "PAYMENT", -price, "SUCCESS", "Thanh toán đơn hàng " + product.getName(), "MMO-ORD-" + transaction.getId(), customer.getBalanceVnd());
+        walletService.recordTransaction(customer, "PAYMENT", -totalAmount, "SUCCESS", "Thanh toán đơn hàng " + product.getName(), "MMO-ORD-" + transaction.getId(), customer.getBalanceVnd());
 
         return transaction;
     }

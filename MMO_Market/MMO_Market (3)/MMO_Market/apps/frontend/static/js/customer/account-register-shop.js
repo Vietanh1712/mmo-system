@@ -3,6 +3,7 @@ let shopAccountSidebar = null;
 let shopRegistrationState = { status: 'NOT_SUBMITTED' };
 let kycApproved = false;
 let currentShopProfile = null;
+let shopOpeningFee = 50000;
 
 
 registerAccountPage('/js/customer/account-register-shop.js', initializeShopRegistrationPage);
@@ -17,6 +18,18 @@ async function initializeShopRegistrationPage() {
     shopAccountSidebar = new AccountSidebar();
     document.getElementById('shopRegistrationForm').addEventListener('submit', submitShopRegistration);
     document.getElementById('shopEditRequestButton').addEventListener('click', editShopRegistration);
+
+    try {
+        const feeResponse = await fetch('/api/public/config/shop-fee');
+        if (feeResponse.ok) {
+            const feeData = await feeResponse.json();
+            if (feeData.shopOpeningFee) {
+                shopOpeningFee = feeData.shopOpeningFee;
+            }
+        }
+    } catch (e) {
+        console.error('Không thể tải phí mở shop', e);
+    }
 
     try {
         const response = await authFetch('/v1/profile');
@@ -192,6 +205,16 @@ async function submitShopRegistration(event) {
     }
     if (!valid) return;
 
+    const formattedFee = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(shopOpeningFee);
+    showCustomConfirmModal(
+        `Phí đăng ký mở Shop là ${formattedFee}. Số tiền này sẽ được trừ vào ví của bạn. Bạn có đồng ý tiếp tục không?`, 
+        () => {
+            executeShopRegistrationSubmit(data);
+        }
+    );
+}
+
+async function executeShopRegistrationSubmit(data) {
     const submitBtn = document.getElementById('shopSubmitButton');
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang gửi...';
@@ -235,7 +258,20 @@ async function submitShopRegistration(event) {
             renderShopRegistrationState();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
-            showShopFormMessage(result.message || 'Không thể gửi yêu cầu đăng ký shop.');
+            if (result.message && (result.message.startsWith('INSUFFICIENT_FUNDS') || result.message.includes('Số dư tài khoản không đủ'))) {
+                const msg = result.message.startsWith('INSUFFICIENT_FUNDS') 
+                    ? 'Tài khoản của bạn không đủ số dư để thanh toán phí mở Shop.' 
+                    : result.message;
+                    
+                showShopFormMessage(`
+                    <div>${msg}</div>
+                    <div style="margin-top: 10px;">
+                        <a href="/wallet/topup" style="display: inline-block; padding: 6px 16px; background: #dc3545; color: white; text-decoration: none; border-radius: 4px; font-weight: 500; font-size: 14px;"><i class="fa fa-plus-circle"></i> Nạp thêm tiền</a>
+                    </div>
+                `);
+            } else {
+                showShopFormMessage(result.message || 'Không thể gửi yêu cầu đăng ký shop.');
+            }
         }
     } catch (error) {
         showShopFormMessage('Lỗi kết nối khi gửi yêu cầu đăng ký shop.');
@@ -268,8 +304,61 @@ function clearShopErrors() {
 
 function showShopFormMessage(message) {
     const element = document.getElementById('shopFormMessage');
-    element.textContent = message;
+    element.innerHTML = message;
     element.hidden = false;
+}
+
+function showCustomConfirmModal(message, onConfirm) {
+    let overlay = document.getElementById('customConfirmOverlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'customConfirmOverlay';
+        overlay.style = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 99999;';
+        
+        const modalBox = document.createElement('div');
+        modalBox.style = 'background: white; padding: 24px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+        
+        const icon = document.createElement('div');
+        icon.innerHTML = '<i class="fa fa-info-circle" style="font-size: 40px; color: #007bff; margin-bottom: 16px;"></i>';
+        
+        const title = document.createElement('h4');
+        title.textContent = 'Xác nhận mở Shop';
+        title.style = 'margin-top: 0; margin-bottom: 12px; font-weight: 600; color: #333;';
+        
+        const text = document.createElement('p');
+        text.id = 'customConfirmText';
+        text.style = 'color: #555; margin-bottom: 24px; font-size: 15px; line-height: 1.5;';
+        
+        const btnContainer = document.createElement('div');
+        btnContainer.style = 'display: flex; gap: 12px; justify-content: center;';
+        
+        const btnCancel = document.createElement('button');
+        btnCancel.textContent = 'Huỷ';
+        btnCancel.style = 'padding: 8px 20px; border-radius: 6px; border: 1px solid #ddd; background: #f8f9fa; cursor: pointer; font-weight: 500; color: #333; font-size: 14px;';
+        btnCancel.onclick = () => { overlay.style.display = 'none'; };
+        
+        const btnOk = document.createElement('button');
+        btnOk.id = 'customConfirmOkBtn';
+        btnOk.textContent = 'Đồng ý';
+        btnOk.style = 'padding: 8px 20px; border-radius: 6px; border: none; background: #007bff; color: white; cursor: pointer; font-weight: 500; box-shadow: 0 2px 4px rgba(0,123,255,0.2); font-size: 14px;';
+        
+        btnContainer.appendChild(btnCancel);
+        btnContainer.appendChild(btnOk);
+        
+        modalBox.appendChild(icon);
+        modalBox.appendChild(title);
+        modalBox.appendChild(text);
+        modalBox.appendChild(btnContainer);
+        overlay.appendChild(modalBox);
+        document.body.appendChild(overlay);
+    }
+    
+    document.getElementById('customConfirmText').textContent = message;
+    document.getElementById('customConfirmOkBtn').onclick = () => {
+        overlay.style.display = 'none';
+        onConfirm();
+    };
+    overlay.style.display = 'flex';
 }
 
 function registerAccountPage(scriptPath, initializer) {

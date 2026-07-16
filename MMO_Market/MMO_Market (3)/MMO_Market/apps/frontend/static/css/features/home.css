@@ -370,17 +370,23 @@ a {
 }
 
 /* Nút Đăng xuất làm nổi bật màu đỏ */
-.dropdown-item:last-child {
+.dropdown-item--logout {
     margin-top: 4px;
+    color: #ef4444 !important;
+    transition: background-color 0.2s, color 0.2s;
 }
 
-.dropdown-item:last-child:hover {
-    background-color: #fef2f2;
-    color: #ef4444;
+.dropdown-item--logout i {
+    color: #ef4444 !important;
 }
 
-.dropdown-item:last-child:hover i {
-    color: #ef4444;
+.dropdown-item--logout:hover {
+    background-color: #fef2f2 !important;
+    color: #dc2626 !important;
+}
+
+.dropdown-item--logout:hover i {
+    color: #dc2626 !important;
 }
 
 /* ==================================================

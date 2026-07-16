@@ -19,6 +19,9 @@ import com.mmo.feature.order.service.TransactionService;
 
 import java.util.Map;
 
+import com.mmo.shared.dal.ComplaintRepository;
+import com.mmo.shared.model.Complaint;
+
 @RestController
 @RequestMapping("/api/transactions")
 public class TransactionController {
@@ -31,6 +34,10 @@ public class TransactionController {
 
     @Autowired
     private com.mmo.shared.dal.ReviewRepository reviewRepository;
+
+    @Autowired
+    private com.mmo.shared.dal.ComplaintRepository complaintRepository;
+    private DigitalAssetRepository digitalAssetRepository;
 
     @PostMapping("/purchase")
     public ResponseEntity<?> purchaseProduct(
@@ -52,38 +59,26 @@ public class TransactionController {
 
         try {
             // Thực hiện transaction bọc trong service layer
-            Transaction transaction = transactionService.purchaseProduct(userId, request.getProductId(), request.getVariantLabel());
+            Transaction transaction = transactionService.purchaseProduct(userId, request.getProductId(), request.getVariantLabel(), request.getQuantity());
 
-            // Tự sinh credentials (mock) cho tài khoản số nếu sản phẩm thuộc dạng tài khoản số/key bản quyền
-            String productName = transaction.getProduct().getName();
-            String lowerName = productName.toLowerCase();
-            boolean isAccount = lowerName.contains("tài khoản") ||
-                    lowerName.contains("premium") ||
-                    lowerName.contains("spotify") ||
-                    lowerName.contains("netflix") ||
-                    lowerName.contains("canva") ||
-                    lowerName.contains("chatgpt") ||
-                    lowerName.contains("gmail") ||
-                    lowerName.contains("vpn") ||
-                    lowerName.contains("key");
-
+            // Lấy credentials thật từ DB (nếu có gán DigitalAsset)
+            java.util.List<DigitalAsset> assignedAssets = digitalAssetRepository.findByTransactionAndIsDeleteFalse(transaction);
+            
             PurchaseResponse.CredentialsDTO credentialsDTO = null;
-            if (isAccount) {
-                int randomNum = (int) (1000 + Math.random() * 9000);
-                String cleanName = productName.replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
-                if (cleanName.length() > 8) {
-                    cleanName = cleanName.substring(0, 8);
-                }
-
-                if (lowerName.contains("key")) {
+            if (!assignedAssets.isEmpty()) {
+                // Return the first credential in the response for backward compatibility,
+                // or just leave it null and frontend can call detail endpoint to see all.
+                // We will return the first one here.
+                DigitalAsset asset = assignedAssets.get(0);
+                if ("KEY".equalsIgnoreCase(asset.getAssetType()) || "GAME_CARD".equalsIgnoreCase(asset.getAssetType())) {
                     credentialsDTO = PurchaseResponse.CredentialsDTO.builder()
-                            .username("KEY-" + randomNum + "-ABCD-EFGH-IJKL")
+                            .username(asset.getKeyCode() != null ? asset.getKeyCode() : asset.getCardCode())
                             .password("(Product Key)")
                             .build();
                 } else {
                     credentialsDTO = PurchaseResponse.CredentialsDTO.builder()
-                            .username(cleanName + "_" + randomNum + "@gmail.com")
-                            .password("Pass_" + randomNum + "_Secure")
+                            .username(asset.getAccountUsername())
+                            .password(asset.getAccountPassword())
                             .build();
                 }
             }
@@ -96,7 +91,7 @@ public class TransactionController {
                     .transactionCode(transactionCode)
                     .orderCode(orderCode)
                     .finalBalance(transaction.getCustomer().getBalanceVnd())
-                    .productName(productName)
+                    .productName(transaction.getProduct() != null ? transaction.getProduct().getName() : "")
                     .amount(transaction.getAmountVnd())
                     .credentials(credentialsDTO)
                     .transactionId(transaction.getId())
@@ -130,6 +125,11 @@ public class TransactionController {
                 
                 java.util.Optional<com.mmo.shared.model.Review> reviewOpt = reviewRepository.findByTransactionIdAndIsDeleteFalse(t.getId());
                 boolean isReviewed = reviewOpt.isPresent();
+                
+                Long complaintId = complaintRepository.findFirstByTransactionIdAndIsDeleteFalseOrderByIdDesc(t.getId())
+                        .map(Complaint::getId)
+                        .orElse(null);
+
                 return com.mmo.shared.dto.OrderDto.builder()
                         .orderCode("MMO-ORD-" + t.getId())
                         .transactionId(t.getId())
@@ -138,6 +138,7 @@ public class TransactionController {
                         .variantLabel(t.getVariant() != null ? t.getVariant().getVariantName() : "")
                         .sellerName(t.getSeller() != null ? t.getSeller().getFullName() : "Người bán")
                         .amount(t.getAmountVnd())
+                        .quantity(t.getQuantity())
                         .status(status)
                         .paymentStatus(paymentStatus)
                         .createdAt(t.getCreatedAt() != null ? java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy").format(t.getCreatedAt()) : "")
@@ -145,6 +146,7 @@ public class TransactionController {
                         .isReviewed(isReviewed)
                         .reviewRating(isReviewed ? reviewOpt.get().getRating() : null)
                         .reviewComment(isReviewed ? reviewOpt.get().getComment() : null)
+                        .complaintId(complaintId)
                         .build();
             }).toList();
 
@@ -173,6 +175,11 @@ public class TransactionController {
 
             java.util.Optional<com.mmo.shared.model.Review> reviewOpt = reviewRepository.findByTransactionIdAndIsDeleteFalse(t.getId());
             boolean isReviewed = reviewOpt.isPresent();
+
+            Long complaintId = complaintRepository.findFirstByTransactionIdAndIsDeleteFalseOrderByIdDesc(t.getId())
+                    .map(Complaint::getId)
+                    .orElse(null);
+
             com.mmo.shared.dto.OrderDto orderDto = com.mmo.shared.dto.OrderDto.builder()
                     .orderCode("MMO-ORD-" + t.getId())
                     .transactionId(t.getId())
@@ -181,6 +188,7 @@ public class TransactionController {
                     .variantLabel(t.getVariant() != null ? t.getVariant().getVariantName() : "")
                     .sellerName(t.getSeller() != null ? t.getSeller().getFullName() : "Người bán")
                     .amount(t.getAmountVnd())
+                    .quantity(t.getQuantity())
                     .status(status)
                     .paymentStatus(paymentStatus)
                     .createdAt(t.getCreatedAt() != null ? java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy").format(t.getCreatedAt()) : "")
@@ -188,28 +196,28 @@ public class TransactionController {
                     .isReviewed(isReviewed)
                     .reviewRating(isReviewed ? reviewOpt.get().getRating() : null)
                     .reviewComment(isReviewed ? reviewOpt.get().getComment() : null)
+                    .complaintId(complaintId)
                     .build();
 
             // Lấy thông tin tài sản số (nếu có)
-            com.mmo.shared.dal.DigitalAssetRepository assetRepo = org.springframework.web.context.support.WebApplicationContextUtils
-                .getRequiredWebApplicationContext(
-                    ((org.springframework.web.context.request.ServletRequestAttributes) 
-                    org.springframework.web.context.request.RequestContextHolder.getRequestAttributes())
-                    .getRequest().getServletContext()
-                ).getBean(com.mmo.shared.dal.DigitalAssetRepository.class);
-            
-            java.util.Optional<com.mmo.shared.model.DigitalAsset> assetOpt = assetRepo.findByTransactionAndIsDeleteFalse(t);
-            if (assetOpt.isPresent()) {
-                com.mmo.shared.model.DigitalAsset asset = assetOpt.get();
-                java.util.Map<String, String> creds = new java.util.HashMap<>();
-                if ("KEY".equalsIgnoreCase(asset.getAssetType()) || "GAME_CARD".equalsIgnoreCase(asset.getAssetType())) {
-                    creds.put("username", asset.getKeyCode() != null ? asset.getKeyCode() : asset.getCardCode());
-                    creds.put("password", "(Product Key)");
-                } else {
-                    creds.put("username", asset.getAccountUsername());
-                    creds.put("password", asset.getAccountPassword());
+            java.util.List<com.mmo.shared.model.DigitalAsset> assignedAssets = digitalAssetRepository.findByTransactionAndIsDeleteFalse(t);
+            if (!assignedAssets.isEmpty()) {
+                java.util.List<java.util.Map<String, String>> credsList = new java.util.ArrayList<>();
+                for (DigitalAsset asset : assignedAssets) {
+                    java.util.Map<String, String> creds = new java.util.HashMap<>();
+                    if ("KEY".equalsIgnoreCase(asset.getAssetType()) || "GAME_CARD".equalsIgnoreCase(asset.getAssetType())) {
+                        creds.put("username", asset.getKeyCode() != null ? asset.getKeyCode() : asset.getCardCode());
+                        creds.put("password", "(Product Key)");
+                    } else {
+                        creds.put("username", asset.getAccountUsername());
+                        creds.put("password", asset.getAccountPassword());
+                    }
+                    credsList.add(creds);
                 }
-                orderDto.setCredentials(creds);
+                orderDto.setCredentialsList(credsList);
+                if (credsList.size() > 0) {
+                    orderDto.setCredentials(credsList.get(0)); // backward compatibility
+                }
             }
 
             return ResponseEntity.ok(orderDto);

@@ -48,15 +48,9 @@ function populateFields() {
     } else if (currentTicket.status === 'Resolved') {
         badgeClass = 'ds-badge-success';
         statusText = 'Đã giải quyết';
-    } else if (currentTicket.status === 'Closed') {
-        badgeClass = 'ds-badge-muted';
-        statusText = 'Đã đóng';
     } else if (currentTicket.status === 'Processing') {
         badgeClass = 'ds-badge-warning';
         statusText = 'Đang xử lý';
-    } else if (currentTicket.status === 'Replied') {
-        badgeClass = 'ds-badge-success';
-        statusText = 'Đã phản hồi';
     }
     badge.className = `ds-badge ${badgeClass}`;
     badge.textContent = statusText;
@@ -95,7 +89,7 @@ function renderTimeline() {
         </div>
     `;
 
-    if (currentTicket.status === 'Processing' || currentTicket.status === 'Resolved' || currentTicket.status === 'Closed' || currentTicket.status === 'Replied') {
+    if (currentTicket.status === 'Processing' || currentTicket.status === 'Resolved') {
         html += `
             <div class="staff-timeline__item">
                 <span class="staff-timeline__dot" style="background-color: #f59e0b;"></span>
@@ -110,10 +104,6 @@ function renderTimeline() {
     if (currentTicket.resolution) {
         let dotColor = '#10b981';
         let titleText = 'Đã phản hồi &amp; Giải quyết';
-        if (currentTicket.status === 'Closed') {
-            dotColor = '#64748b';
-            titleText = 'Đã đóng ticket';
-        }
 
         html += `
             <div class="staff-timeline__item">
@@ -136,8 +126,8 @@ async function submitStaffAction() {
     const status = document.getElementById('ticketStatus').value;
     const resolution = document.getElementById('ticketResolution').value.trim();
 
-    if ((status === 'Resolved' || status === 'Closed') && !resolution) {
-        showWarningToast('Vui lòng nhập nội dung phản hồi trực tiếp khi giải quyết hoặc đóng ticket!');
+    if (status === 'Resolved' && !resolution) {
+        showWarningToast('Vui lòng nhập nội dung phản hồi trực tiếp khi giải quyết ticket!');
         return;
     }
 

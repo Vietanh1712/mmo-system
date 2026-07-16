@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentUserId = null;
     let currentUserName = '';
     let pendingAttachment = null;
+    let currentContextProduct = null;
 
     // 3-dot Dropdown Actions
     window.toggleChatDropdown = function(event) {
@@ -31,9 +32,62 @@ document.addEventListener('DOMContentLoaded', function () {
         alert('Đã thực hiện chặn/mở chặn liên hệ (giả lập).');
     };
 
-    window.toggleStaffMute = function(event) {
-        event.preventDefault();
-        alert('Đã thay đổi trạng thái tắt/bật thông báo (giả lập).');
+
+
+    window.toggleStaffSearchMessages = function(event) {
+        if (event) event.preventDefault();
+        const container = document.getElementById('staff-message-search-container');
+        const input = document.getElementById('staff-message-search-input');
+        const isHidden = container.style.display === 'none';
+        
+        container.style.display = isHidden ? 'flex' : 'none';
+        if (isHidden) {
+            input.value = '';
+            input.focus();
+            window.clearStaffMessageHighlights();
+        } else {
+            window.clearStaffMessageHighlights();
+        }
+    };
+
+    window.closeStaffMessageSearch = function() {
+        const container = document.getElementById('staff-message-search-container');
+        if (container) container.style.display = 'none';
+        window.clearStaffMessageHighlights();
+    };
+
+    window.clearStaffMessageHighlights = function() {
+        const bubbles = document.querySelectorAll('.staff-chat-bubble');
+        bubbles.forEach(b => {
+            b.style.border = '';
+            b.style.background = '';
+        });
+    };
+
+    window.performStaffMessageSearch = function(term) {
+        window.clearStaffMessageHighlights();
+        if (!term || !term.trim()) return;
+
+        const kw = term.trim().toLowerCase();
+        const bubbles = document.querySelectorAll('.staff-chat-bubble');
+        let firstMatch = null;
+        let foundCount = 0;
+
+        bubbles.forEach(b => {
+            const text = b.textContent.toLowerCase();
+            if (text.includes(kw)) {
+                b.style.border = '2px solid var(--brand-accent, #f97316)';
+                b.style.background = '#fef3c7'; // yellow highlight background
+                foundCount++;
+                if (!firstMatch) {
+                    firstMatch = b;
+                }
+            }
+        });
+
+        if (firstMatch) {
+            firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     };
 
     // Attachments Handling
@@ -143,15 +197,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const item = document.createElement('a');
                 item.className = `staff-chat-item ${isActive}`;
+                item.setAttribute('data-id', conv.userId);
                 item.href = '#';
                 item.onclick = (e) => {
                     e.preventDefault();
                     selectUser(conv.userId, conv.userName, conv.userEmail, conv.userRole, isOnline);
                 };
 
+                let avatarClass = 'ds-avatar-success';
+                if (conv.userRole === 'Seller') {
+                    avatarClass = 'ds-avatar-primary';
+                } else if (conv.userRole === 'Dispute') {
+                    avatarClass = 'ds-avatar-danger';
+                }
+
                 item.innerHTML = `
                     <div class="staff-avatar-wrap">
-                        <span class="ds-avatar ds-avatar-sm ${conv.userRole === 'Seller' ? 'ds-avatar-primary' : 'ds-avatar-success'}">${initial}</span>
+                        <span class="ds-avatar ds-avatar-sm ${avatarClass}">${conv.userRole === 'Dispute' ? 'TC' : initial}</span>
                         <span class="staff-chat-status ${isOnline ? '' : 'staff-chat-status--offline'}"></span>
                     </div>
                     <div style="flex: 1; overflow: hidden;">
@@ -174,6 +236,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 badgeElement.style.display = 'inline-flex';
             } else {
                 badgeElement.style.display = 'none';
+            }
+        }
+
+        const staffUnreadBadge = document.getElementById('staff-unread-badge');
+        if (staffUnreadBadge) {
+            if (totalUnread > 0) {
+                staffUnreadBadge.textContent = `${totalUnread} hội thoại chưa đọc`;
+                staffUnreadBadge.style.display = 'inline-block';
+            } else {
+                staffUnreadBadge.style.display = 'none';
             }
         }
     }
@@ -236,19 +308,42 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Select User
     function selectUser(userId, userName, userEmail, userRole, isOnline) {
+        // Reset search state
+        if (typeof window.closeStaffMessageSearch === 'function') {
+            window.closeStaffMessageSearch();
+        }
+
         currentUserId = userId;
         currentUserName = userName;
 
         // Update UI styles
         document.querySelectorAll('.staff-chat-item').forEach(el => el.classList.remove('is-active'));
-        // (If the user is in the list, we could set is-active, but we rely on re-rendering or manual toggling)
-        loadConversations(); // Reload to clear badges and set active state
-
+        
         // Update Panel Header
         panelHeaderTitle.textContent = userName;
-        panelHeaderSubtitle.innerHTML = `${userEmail} · ${userRole} · <span style="color: ${isOnline ? '#10b981' : '#94a3b8'}; display: inline-flex; align-items: center; gap: 4px;"><i class="fa fa-circle" style="font-size: 8px;"></i> ${isOnline ? 'Online Now' : 'Offline'}</span>`;
-        panelHeaderAvatar.textContent = userName ? userName.substring(0, 2).toUpperCase() : 'NA';
-        panelHeaderAvatar.className = `ds-avatar ds-avatar-sm ${userRole === 'Seller' ? 'ds-avatar-primary' : 'ds-avatar-success'}`;
+        if (userId < 0) {
+            panelHeaderSubtitle.innerHTML = `${userEmail} · ${userRole}`;
+            panelHeaderAvatar.textContent = 'TC';
+            panelHeaderAvatar.className = 'ds-avatar ds-avatar-sm ds-avatar-danger';
+            
+            chatInput.disabled = true;
+            chatInput.placeholder = "Nhân viên chỉ có quyền Read-only đối với phòng chat đối chất.";
+            const attachBtn = document.querySelector('.staff-input-attach');
+            if (attachBtn) attachBtn.style.pointerEvents = 'none';
+            const inputSub = document.querySelector('.staff-input-sub');
+            if (inputSub) inputSub.style.display = 'none';
+        } else {
+            panelHeaderSubtitle.innerHTML = `${userEmail} · ${userRole} · <span style="color: ${isOnline ? '#10b981' : '#94a3b8'}; display: inline-flex; align-items: center; gap: 4px;"><i class="fa fa-circle" style="font-size: 8px;"></i> ${isOnline ? 'Online Now' : 'Offline'}</span>`;
+            panelHeaderAvatar.textContent = userName ? userName.substring(0, 2).toUpperCase() : 'NA';
+            panelHeaderAvatar.className = `ds-avatar ds-avatar-sm ${userRole === 'Seller' ? 'ds-avatar-primary' : 'ds-avatar-success'}`;
+            
+            chatInput.disabled = false;
+            chatInput.placeholder = "Nhập tin nhắn...";
+            const attachBtn = document.querySelector('.staff-input-attach');
+            if (attachBtn) attachBtn.style.pointerEvents = 'auto';
+            const inputSub = document.querySelector('.staff-input-sub');
+            if (inputSub) inputSub.style.display = 'flex';
+        }
 
         // Load Messages
         loadMessages(userId);
@@ -257,33 +352,120 @@ document.addEventListener('DOMContentLoaded', function () {
     // Load Messages
     async function loadMessages(userId) {
         messagesContainer.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--ds-text-tertiary);">Đang tải tin nhắn...</div>';
+        const viewStaffComplaintBtn = document.getElementById('view-staff-complaint-btn');
+        if (viewStaffComplaintBtn) {
+            if (userId < 0) {
+                const complaintId = -userId;
+                viewStaffComplaintBtn.href = `/staff/complaints/detail?id=${complaintId}`;
+                viewStaffComplaintBtn.style.display = 'inline-flex';
+            } else {
+                viewStaffComplaintBtn.style.display = 'none';
+            }
+        }
         try {
-            const messages = await fetchApi(`/api/v1/staff/chat/${userId}`);
-            renderMessages(messages);
+            const data = await fetchApi(`/api/v1/staff/chat/${userId}`);
+            const messages = Array.isArray(data) ? data : (data.messages || []);
+            const contextProductId = Array.isArray(data) ? null : data.contextProductId;
+
+            currentContextProduct = null;
+            if (contextProductId) {
+                try {
+                    const prod = await fetchApi(`/api/search/products/${contextProductId}`);
+                    if (prod) {
+                        currentContextProduct = {
+                            id: prod.id || contextProductId,
+                            name: prod.name,
+                            price: prod.price,
+                            sellerId: prod.sellerId
+                        };
+                    }
+                } catch (e) {
+                    console.error('Cannot load context product details:', e);
+                }
+            }
+
+            renderMessages(messages, currentContextProduct);
         } catch (error) {
             messagesContainer.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--ds-color-danger);">Lỗi: ${error.message}</div>`;
         }
     }
 
-    function renderMessages(messages) {
+    function renderMessages(messages, currentContextProduct) {
         messagesContainer.innerHTML = '';
+
+        if (currentContextProduct) {
+            const cp = currentContextProduct;
+            const contextCard = document.createElement('div');
+            contextCard.className = 'messages-context-card';
+            contextCard.style.marginBottom = '16px';
+            contextCard.onclick = () => { window.open(`/products/${cp.id}`, '_blank'); };
+
+            let formattedPrice = '—';
+            try {
+                formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
+                    .format(cp.price).replace('₫', 'VNĐ');
+            } catch (e) { formattedPrice = cp.price + ' VNĐ'; }
+
+            contextCard.innerHTML = `
+                <div class="messages-context-card__thumb"><i class="fa fa-play-circle"></i></div>
+                <div class="messages-context-card__info">
+                    <div class="messages-context-card__label">SẢN PHẨM TRANH CHẤP</div>
+                    <div class="messages-context-card__name">${cp.name}</div>
+                    <div class="messages-context-card__meta">
+                        <span class="messages-context-card__price">${formattedPrice}</span>
+                        <span class="messages-context-card__stock">CÒN HÀNG</span>
+                    </div>
+                </div>
+                <i class="fa fa-chevron-right messages-context-card__chevron"></i>
+            `;
+            messagesContainer.appendChild(contextCard);
+        }
+
         if (messages.length === 0) {
-            messagesContainer.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--ds-text-tertiary);">Chưa có tin nhắn nào. Bắt đầu hội thoại ngay!</div>';
+            const emptyEl = document.createElement('div');
+            emptyEl.style.cssText = 'text-align: center; padding: 2rem; color: var(--ds-text-tertiary);';
+            emptyEl.textContent = 'Chưa có tin nhắn nào.';
+            messagesContainer.appendChild(emptyEl);
             return;
         }
 
         messages.forEach(msg => {
-            const isMe = msg.senderId !== currentUserId;
+            if (msg.message.startsWith('Hệ thống:')) {
+                const systemRow = document.createElement('div');
+                systemRow.style.cssText = 'width: 100%; display: flex; justify-content: center; margin: 12px 0; box-sizing: border-box;';
+                systemRow.innerHTML = `
+                    <div style="font-size: 12px; background: #e2e8f0; color: #475569; padding: 6px 14px; border-radius: 6px; border: 1px solid #cbd5e1; display: inline-block; font-weight: 500; text-align: left;">
+                        ${msg.message}
+                    </div>
+                `;
+                messagesContainer.appendChild(systemRow);
+                return;
+            }
+
+            // Backend sets type='out' for staff messages, 'in' for contact messages
+            const isMe = msg.type === 'out';
             const rowClass = isMe ? 'staff-chat-row--staff' : 'staff-chat-row--user';
-            const bubbleClass = isMe ? 'staff-chat-bubble--staff' : 'staff-chat-bubble--user';
+            
+            let bubbleClass = isMe ? 'staff-chat-bubble--staff' : 'staff-chat-bubble--user';
+            if (!isMe && msg.role) {
+                if (msg.role.includes('Cửa hàng') || msg.role.includes('Seller')) {
+                    bubbleClass = 'staff-chat-bubble--seller';
+                } else if (msg.role.includes('Khách hàng') || msg.role.includes('Customer') || msg.role.includes('Buyer')) {
+                    bubbleClass = 'staff-chat-bubble--customer';
+                }
+            }
             
             const timeObj = new Date(msg.createdAt);
             const timeStr = timeObj.getHours().toString().padStart(2, '0') + ':' + timeObj.getMinutes().toString().padStart(2, '0');
 
             const row = document.createElement('div');
             row.className = `staff-chat-row ${rowClass}`;
+
+            const roleLabel = msg.role ? `<span style="font-size: 10px; font-weight: bold; color: var(--ds-text-secondary); display: block; margin-bottom: 2px;">${msg.senderName} (${msg.role})</span>` : '';
+
             row.innerHTML = `
                 <div class="staff-chat-bubble-wrap">
+                    ${roleLabel}
                     <div class="staff-chat-bubble ${bubbleClass}">${msg.message}</div>
                     <span class="staff-chat-meta">${timeStr}</span>
                 </div>
@@ -356,5 +538,34 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Initial Load
-    loadConversations();
+    loadConversations().then(() => {
+        // Select initial chat from URL params if present
+        const urlParams = new URLSearchParams(window.location.search);
+        const complaintIdParam = urlParams.get('complaintId');
+        if (complaintIdParam) {
+            const cId = parseInt(complaintIdParam);
+            selectUser(-cId, `Tranh chấp #CMP-${cId}`, "Đối chất khiếu nại", "Dispute", true);
+        }
+    });
+
+    // Auto-polling interval for real-time messages & sidebar updates
+    setInterval(() => {
+        if (currentUserId) {
+            // Poll active messages
+            fetchApi(`/api/v1/staff/chat/${currentUserId}`)
+                .then(data => {
+                    const messages = Array.isArray(data) ? data : (data.messages || []);
+                    renderMessages(messages, currentContextProduct);
+                })
+                .catch(err => console.error('Failed to poll messages:', err));
+        }
+        // Poll sidebar conversations list
+        fetchApi('/api/v1/staff/chat/conversations')
+            .then(conversations => {
+                // Render sidebar silently
+                renderConversations(conversations);
+            })
+            .catch(err => console.error('Failed to poll conversations:', err));
+    }, 4000);
 });
+

@@ -1,4 +1,4 @@
-﻿-- ==============================================================================
+-- ==============================================================================
 -- CƠ SỞ DỮ LIỆU TOÀN DIỆN: MMO MARKET SYSTEM (SQL SERVER)
 -- Tên tệp: MMO_System_Schema.sql
 -- Mô tả: Khởi tạo database, định nghĩa toàn bộ bảng biểu, ràng buộc,
@@ -1535,16 +1535,30 @@ BEGIN
     
     IF @EscrowHoldHours IS NULL SET @EscrowHoldHours = 72;
 
+    -- Update statuses to 'Held'
     UPDATE Transactions
     SET status = 'Held'
     FROM Transactions t
     INNER JOIN inserted i ON t.id = i.id
     WHERE t.status IS NULL OR t.status = 'Pending';
 
-    UPDATE Transactions
-    SET escrow_release_date = DATEADD(HOUR, @EscrowHoldHours, GETDATE())
+    -- Update Escrow release dates dynamically based on shop level and completed order count
+    UPDATE t
+    SET t.escrow_release_date = DATEADD(HOUR, 
+        CASE 
+            WHEN u.shop_level = 0 THEN 168 -- 7 days for warned shops (Level 0)
+            WHEN u.shop_level = 1 AND (
+                SELECT COUNT(*) FROM Transactions tx 
+                INNER JOIN Products p2 ON tx.product_id = p2.id 
+                WHERE p2.seller_id = p.seller_id AND tx.status IN ('Completed', 'Delivered', 'Paid')
+            ) < 20 THEN 168 -- 7 days for new shops (Level 1) under 20 orders
+            ELSE @EscrowHoldHours -- 3 days normally
+        END, 
+        GETDATE())
     FROM Transactions t
     INNER JOIN inserted i ON t.id = i.id
+    INNER JOIN Products p ON i.product_id = p.id
+    INNER JOIN Users u ON p.seller_id = u.id
     WHERE t.escrow_release_date IS NULL;
 END;
 GO
@@ -1808,6 +1822,9 @@ BEGIN
         
     IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'MANAGE_SUPPORT')
         INSERT INTO Permissions (name, group_name, description) VALUES ('MANAGE_SUPPORT', N'Vận hành', N'Cho phép tiếp nhận, phản hồi và hỗ trợ giải đáp các thắc mắc (ticketing/live chat) của khách hàng.');
+
+    IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'MANAGE_SHOPS')
+        INSERT INTO Permissions (name, group_name, description) VALUES ('MANAGE_SHOPS', N'Vận hành', N'Cho phép xem, phê duyệt yêu cầu mở gian hàng, khóa hoặc mở khóa hoạt động của các Shop.');
 END
 GO
 
@@ -1854,7 +1871,15 @@ BEGIN
             INSERT INTO UserPermissions (user_id, permission_id) VALUES (14, @SupportPermId);
     END
 
-    PRINT 'Đã gán toàn bộ 5 permissions cho Staff (id = 14)';
+    -- MANAGE_SHOPS
+    IF EXISTS (SELECT 1 FROM Permissions WHERE name = 'MANAGE_SHOPS')
+    BEGIN
+        DECLARE @ShopsPermId INT = (SELECT id FROM Permissions WHERE name = 'MANAGE_SHOPS');
+        IF NOT EXISTS (SELECT 1 FROM UserPermissions WHERE user_id = 14 AND permission_id = @ShopsPermId)
+            INSERT INTO UserPermissions (user_id, permission_id) VALUES (14, @ShopsPermId);
+    END
+
+    PRINT 'Đã gán toàn bộ 6 permissions cho Staff (id = 14)';
 END
 GO
 
