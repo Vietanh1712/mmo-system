@@ -4,112 +4,103 @@
 > **Route:** `/account/orders` | **Template:** `templates/account/orders.html`
 > **CSS Script:** `static/css/customer/style.css`
 > **JS Script:** `static/js/account-orders.js`
-> **Version:** 1.0 | **Status:** Draft
-> **Backend ref:** `feat-order/UC-08-order-checkout.md`
+> **Version:** 2.0 | **Status:** Published
+> **Backend ref:** `feat-order/UC-20-order-history.md`
 
 ---
 
 ## 1. TỔNG QUAN TRANG
 
-Trang quản lý đơn hàng cho phép người mua (Customer) xem lại toàn bộ các sản phẩm số đã mua, hiển thị mã thẻ/tài sản số, tạo khiếu nại đóng băng giao dịch và thực hiện bấm xác nhận nhận hàng sớm để giải phóng tiền ký quỹ Escrow cho người bán.
+Trang quản lý đơn hàng cho phép người mua (Customer) xem lại toàn bộ các sản phẩm số đã mua, theo dõi trạng thái thanh toán và tiến trình xử lý (Escrow).
+Khác với thiết kế cũ dạng dạng lưới thẻ (Cards), thiết kế mới sử dụng **Bảng (Table)** chuyên nghiệp kèm **Bộ lọc đa tiêu chí** và các **Block thống kê**.
 
 **Cấu trúc trang:**
-1. **Sidebar điều hướng:** Menu quản lý tài khoản bên trái.
-2. **Order List (Thành phần chính):** Danh sách các thẻ đơn hàng (Order Cards) phân trang.
-3. **Modal xem tài sản số:** Hộp thoại hiển thị danh sách các mã thẻ, tài khoản mật khẩu đã mua.
-4. **Modal xác nhận nhận hàng:** Hộp thoại cảnh báo rủi ro mất quyền khiếu nại trước khi giải phóng tiền.
+1. **Sidebar điều hướng:** Menu quản lý tài khoản bên trái (Đơn hàng của tôi đang active).
+2. **Khu vực Nội dung chính:**
+   - Tiêu đề & Nút "Tiếp tục mua hàng".
+   - Bốn khối thống kê số liệu (Tổng đơn, Hoàn tất, Đang xử lý, Tranh chấp).
+   - Bộ lọc đơn hàng đa tiêu chí.
+   - Bảng danh sách đơn hàng chi tiết kèm phân trang.
 
 ---
 
-## 2. DESIGN TOKENS ÁP DỤNG
+## 2. LAYOUT TỔNG THỂ & MOCKUP
 
-```css
-/* Color Palette */
---ds-primary:         #2563eb;
---ds-primary-hover:   #1d4ed8;
---ds-bg:              #f8fafc;
---ds-card:            #ffffff;
---ds-border:          #cbd5e1;
---ds-error:           #ef4444;
---ds-success:         #10b981;
---ds-warning:         #f59e0b;
-
-/* Shape & Shadows */
---ds-radius-md:       8px;
---ds-radius-lg:       12px;
---ds-shadow:          0 1px 3px 0 rgba(0,0,0,0.1);
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│ [Logo] MMO Market                         [Search]      [User]  │
+├─────────────────────────────────────────────────────────────────┤
+│  ┌──────────────────────┐  ┌─────────────────────────────────┐  │
+│  │ (User Card)          │  │ Mua hàng                        │  │
+│  │                      │  │ Đơn hàng của tôi                │  │
+│  │ (Menu Sidebar)       │  │ Theo dõi các sản phẩm số...     │  │
+│  │ - Ví của tôi         │  │                 [Tiếp tục mua...] │  │
+│  │ - Nạp tiền           │  ├─────────────────────────────────┤  │
+│  │ - Đơn hàng (Active)  │  │ [ Tổng đơn ] [ Hoàn tất   ]     │  │
+│  │                      │  │ [ 2 đơn    ] [ 1 đơn      ]     │  │
+│  │                      │  │ [ Đang xử lý] [ Tranh chấp  ]   │  │
+│  │                      │  │ [ 0 đơn     ] [ 0 đơn       ]   │  │
+│  │                      │  ├─────────────────────────────────┤  │
+│  │                      │  │ Bộ lọc đơn hàng                 │  │
+│  │                      │  │ Tìm kiếm       Trạng thái  T.Toán │  │
+│  │                      │  │ [ Mã đơn/Tên ] [Tất cả]   [Tất cả]│  │
+│  │                      │  │ Thời gian                       │  │
+│  │                      │  │ [dd/mm - dd/mm] [Làm mới] [Tìm] │  │
+│  │                      │  ├─────────────────────────────────┤  │
+│  │                      │  │ Danh sách đơn hàng              │  │
+│  │                      │  │ Hiển thị 1-2/2 đơn hàng.        │  │
+│  │                      │  │ Mã đơn| Sản phẩm | Tiền | T.Thái | T.Toán | Ngày | Thao tác│  │
+│  │                      │  │ ORD-2 | Netflix..| 100k | Xong   | Đã trả | 9/7  | [Eye]   │  │
+│  │                      │  │ ORD-1 | Netflix..| 65k  | Tạm giữ| Đã trả | 25/6 | [Eye]   │  │
+│  │                      │  │                                 │  │
+│  │                      │  │  << <  [1]  > >>                │  │
+│  └──────────────────────┘  └─────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 3. LAYOUT TỔNG THỂ & MOCKUP
+## 3. CÁC THÀNH PHẦN GIAO DIỆN CHÍNH
 
-```
-┌────────────────────────────────────────────────────────┐
-│ [Logo] MMO Market                              [User]  │
-├────────────────────────────────────────────────────────┤
-│  ┌───────────┐  ┌────────────────────────────────────┐ │
-│  │  Sidebar  │  │  LỊCH SỬ ĐƠN HÀNG ĐÃ MUA           │ │
-│  │  - Hồ sơ  │  │                                    │ │
-│  │  - Ví tiền│  │  ┌──────────────────────────────┐  │ │
-│  │  - KYC    │  │  │ Đơn #OR8572 - Netflix Premium│  │ │
-│  │  - Orders │  │  │ 50.000 VNĐ | Trạng thái: ESCROW│  │ │
-│  └───────────┘  │  │ [Xem Mã Thẻ] [Đã Nhận] [KhiếuNại]│  │ │
-│                 │  └──────────────────────────────┘  │ │
-│                 └────────────────────────────────────┘ │
-└────────────────────────────────────────────────────────┘
-```
+### 3.1 Tiêu đề & Nút thao tác
+* **Tiêu đề:** "Đơn hàng của tôi".
+* **Nút bấm:** Nút `[ Tiếp tục mua hàng ]` chuyển hướng người dùng ra trang chủ `/`.
 
----
+### 3.2 Khối Thống Kê Nhanh (Stats)
+* Do API `/api/transactions/me` trả về toàn bộ mảng dữ liệu, JS ở frontend sẽ dùng hàm `.reduce()` hoặc `.filter().length` để đếm tự động:
+  * **Tổng đơn:** `.length`
+  * **Hoàn tất:** Đếm các đơn có `status == 'COMPLETED'`
+  * **Đang xử lý:** Đếm các đơn có `status == 'PENDING'` hoặc `ESCROW` (Tạm giữ)
+  * **Tranh chấp:** Đếm các đơn có `status == 'COMPLAINT'`
 
-## 4. CÁC THÀNH PHẦN GIAO DIỆN CHÍNH
+### 3.3 Bộ Lọc Đơn Hàng (Filters)
+* Quá trình filter được thực hiện cục bộ (Local Filter) trên biến mảng Javascript đang lưu kết quả từ API.
+* **Tìm kiếm:** Theo Mã đơn hàng, Tên sản phẩm, hoặc Tên người bán.
+* **Trạng thái đơn:** (Tất cả, Hoàn tất, Tạm giữ, Tranh chấp, Hủy).
+* **Thanh toán:** (Tất cả, Đã thanh toán, Chờ thanh toán, Hoàn tiền).
+* **Khoảng thời gian:** So sánh chuỗi ngày tháng.
 
-### 4.1 Thẻ Đơn Hàng — `.order-item-card`
-* Hiển thị: Mã đơn hàng dạng `#ORxxxx`, Tên sản phẩm, Tên phân loại biến thể, Giá tiền, Ngày đặt hàng, Tên Shop người bán và trạng thái hiện tại (`Escrow` - Đang giam tiền, `Completed` - Thành công, `Complaint` - Tranh chấp).
-* **Nhóm nút chức năng:**
-  * *Nút Xem mã thẻ (`.btn-view-asset`):* Chỉ hiển thị khi đơn hàng đã thanh toán thành công.
-  * *Nút Đã nhận hàng (`.btn-confirm-received`):* Chỉ hiển thị khi đơn hàng ở trạng thái `Escrow`.
-  * *Nút Khiếu nại (`.btn-dispute`):* Chỉ hiển thị khi đơn hàng ở trạng thái `Escrow`. Click sẽ dẫn sang trang tạo khiếu nại.
-
-### 4.2 Modal Hiển Thị Mã Thẻ — `.order-asset-modal`
-* Vùng chứa danh sách tài sản số bàn giao. Mỗi dòng chứa 1 mã thẻ dạng copy-paste được, có nút icon **Sao chép (Copy)** nhanh.
+### 3.4 Bảng Danh Sách Đơn Hàng & Phân Trang
+* **Các cột:**
+  - `Mã đơn`: Tiền tố `MMO-ORD-` + ID giao dịch.
+  - `Sản phẩm`: Tên sản phẩm + Phân loại (Variant) + Tên Shop (Người bán).
+  - `Số tiền`: Giá trị đơn hàng (VND).
+  - `Trạng thái`: Dùng badge (Hoàn tất - Xanh lá, Tạm giữ - Xanh biển nhạt, Tranh chấp - Cam/Đỏ).
+  - `Thanh toán`: Badge `Đã thanh toán` (Xanh lá).
+  - `Ngày mua`: `HH:mm:ss dd/MM/yyyy`.
+  - `Thao tác`: Icon con mắt 👁️ màu xanh lam có vòng tròn bao quanh (`.btn-view-order`). Khi click sẽ điều hướng sang trang chi tiết đơn hàng `/account/orders/{id}` hoặc bật Modal tùy thiết kế.
 
 ---
 
-## 5. LUỒNG XỬ LÝ JS & AJAX
+## 4. LUỒNG XỬ LÝ JS & AJAX
 
-1. **Tải lịch sử đơn hàng:**
-   * Gọi API: `GET /api/v1/orders/my-orders?page=0&size=10`
-   * Kết xuất dữ liệu lên danh sách thẻ.
-2. **Xem danh sách mã thẻ đã mua:**
-   * Khi click "Xem mã thẻ số":
-     * Gọi API: `GET /api/v1/orders/{orderId}/assets`
-     * **Thành công (HTTP 200):** Nhận danh sách các tài sản đã giải mã (AES giải mã đầu backend). Hiển thị modal `.order-asset-modal` chứa danh sách mã thẻ để người dùng copy.
-3. **Xác nhận đã nhận hàng sớm (Giải phóng Escrow):**
-   * Khi click "Xác nhận đã nhận":
-     * Hiển thị cảnh báo: "Bằng việc bấm xác nhận, tiền sẽ lập tức được chuyển cho người bán. Bạn sẽ không thể khiếu nại đơn hàng này."
-     * Người dùng nhấn "Xác nhận đồng ý" -> Gửi request:
-       * **Endpoint:** `POST /api/v1/orders/{orderId}/confirm-received`
-       * **Headers:** `Authorization: Bearer <token>`
-     * **Thành công (HTTP 200):** Đóng modal, cập nhật trạng thái đơn hàng trên UI thành `Completed`, ẩn 2 nút "Đã nhận hàng" và "Khiếu nại", kích hoạt Toast báo thành công.
-
----
-
-## 6. RESPONSIVE
-
-* **Viewport ≥ 768px:** Các nút chức năng đặt nằm ngang cạnh nhau bên phải thông tin đơn hàng.
-* **Viewport < 768px:** Thẻ đơn hàng co hẹp, các nút chức năng xếp dọc chiếm 100% chiều ngang thẻ để dễ chạm bấm trên màn hình cảm ứng di động.
-
----
-
-## 7. ACCESSIBILITY
-
-- Sử dụng cảnh báo modal có nút tập trung mặc định vào hành động hủy bỏ để phòng tránh thao tác nhầm lẫn của người dùng.
-- Thêm thuộc tính `aria-describedby` liên kết mã đơn hàng với thông báo lỗi nảy sinh.
-
----
-
-## 8. OUT OF SCOPE
-
-- ❌ Gửi trả hàng và tự động hoàn tiền trực tiếp từ giao diện lịch sử (bắt buộc phải qua quy trình giải quyết khiếu nại đối chất).
-- ❌ Xuất hóa đơn đỏ VAT cho đơn hàng số đã mua.
+1. **Khi load trang:**
+   * Script gọi `GET /api/transactions/me`.
+   * Backend trả về 1 mảng JSON chứa tất cả đơn hàng. Script gán vào biến toàn cục `window.allOrders = data`.
+2. **Cập nhật UI:**
+   * Tính toán 4 khối thống kê từ `window.allOrders`.
+   * Gán `window.filteredOrders = window.allOrders`.
+   * Gọi hàm `renderTable(pageNumber)` để cắt mảng `filteredOrders` (ví dụ cắt 10 dòng đầu) và hiển thị ra `<tbody>`.
+3. **Khi Submit Bộ lọc:**
+   * Xóa bỏ dữ liệu cũ trên bảng, chạy hàm `.filter()` trên `window.allOrders` để tạo ra mảng `filteredOrders` mới.
+   * Chạy lại hàm `renderTable(1)`. Trang tự động chuyển về trang 1.
