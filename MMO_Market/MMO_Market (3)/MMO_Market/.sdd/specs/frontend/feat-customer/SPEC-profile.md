@@ -5,7 +5,7 @@
 > **CSS Script:** `static/css/customer/style.css`
 > **JS Script:** `static/js/profile.js`
 > **Version:** 1.0 | **Status:** Draft
-> **Backend ref:** `feat-auth/UC-01-authentication.md`
+> **Backend ref:** `feat-auth/UC-02-user-profile.md`
 
 ---
 

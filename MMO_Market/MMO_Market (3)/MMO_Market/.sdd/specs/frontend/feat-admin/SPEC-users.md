@@ -1,6 +1,7 @@
 # SPEC — Admin User Management Page
 > **Route:** `/admin/users` | **Template:** `templates/admin/users.html`
 > **JS Script:** `static/js/admin-console.js` | **Prefix:** `ausr-`
+> **Backend ref:** `feat-admin/UC-15-system-administration.md`
 
 ---
 

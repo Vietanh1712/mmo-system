@@ -1,6 +1,6 @@
 # SPEC — Complaint Refund & Notification in Wallet History
 > **Feature ID:** `feat-complaint-refund`
-> **UC Coverage:** UC-14 (Complaint Management), UC-09 (Notifications)
+> **UC Coverage:** UC-10 (Complaints & Dispute Resolution), UC-13 (Notification)
 > **Version:** 1.1 | **Status:** Active
 > **Author:** Team | **Last Updated:** 2026-06-29
 

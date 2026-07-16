@@ -5,7 +5,7 @@
 > **CSS Script:** `static/css/customer/style.css`
 > **JS Script:** `static/js/seller-withdrawals.js`
 > **Version:** 1.0 | **Status:** Draft
-> **Backend ref:** `feat-staff/UC-14-staff-operations.md`
+> **Backend ref:** `feat-wallet/UC-09-withdrawal.md`
 
 ---
 

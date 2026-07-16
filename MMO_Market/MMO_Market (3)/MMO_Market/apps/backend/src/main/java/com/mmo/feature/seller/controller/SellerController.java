@@ -222,12 +222,24 @@ public class SellerController {
         // Return only sub-categories
         List<Category> allCategories = categoryRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc();
         List<Map<String, Object>> result = allCategories.stream()
-                .filter(c -> c.getParent() != null)
-                .map(c -> {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("id", c.getId());
-                    map.put("name", c.getName());
-                    return map;
+                .filter(c -> c.getParent() == null)
+                .map(parent -> {
+                    Map<String, Object> parentMap = new HashMap<>();
+                    parentMap.put("id", parent.getId());
+                    parentMap.put("name", parent.getName());
+                    
+                    List<Map<String, Object>> subList = allCategories.stream()
+                            .filter(c -> c.getParent() != null && c.getParent().getId().equals(parent.getId()))
+                            .map(c -> {
+                                Map<String, Object> map = new HashMap<>();
+                                map.put("id", c.getId());
+                                map.put("name", c.getName());
+                                return map;
+                            })
+                            .collect(Collectors.toList());
+                    
+                    parentMap.put("subCategories", subList);
+                    return parentMap;
                 })
                 .collect(Collectors.toList());
         return ResponseEntity.ok(result);
