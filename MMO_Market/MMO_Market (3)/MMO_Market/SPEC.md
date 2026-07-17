@@ -168,7 +168,6 @@ Quản trị viên hệ thống cấp cao nhất.
 ### FR-15 Administration
 - Thống kê doanh thu (Revenue).
 - Cấu hình hệ thống động (SystemConfiguration).
-- Quản lý danh mục (Category).
 - Ghi nhận và xem nhật ký hoạt động (AuditLog).
 
 ---

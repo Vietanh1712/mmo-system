@@ -308,8 +308,8 @@ public class ComplaintServiceImpl implements ComplaintService {
                 .build();
         notificationRepository.save(sellerNotif);
 
-        // 3. Gửi thông báo cho toàn bộ Staff & Admin
-        List<User> staffAndAdmins = userRepository.findStaffAndAdmins();
+        // 3. Gửi thông báo cho Staff có quyền xử lý khiếu nại (HANDLE_DISPUTES)
+        List<User> staffAndAdmins = userRepository.findUsersByPermission("HANDLE_DISPUTES");
         for (User staff : staffAndAdmins) {
             if (staff.getId().equals(customer.getId())) {
                 continue;

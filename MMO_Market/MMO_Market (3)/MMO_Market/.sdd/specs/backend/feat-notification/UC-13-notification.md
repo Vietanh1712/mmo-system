@@ -1,8 +1,8 @@
-# UC-13 — Thông Báo Hệ Thống (System Notifications)
+# UC-13 — Thông Báo Tài Khoản (Account Notifications)
 
-> **Feature:** `feat-notification` | **Phiên bản:** 1.0 | **Trạng thái:** Published
-> **Tham chiếu FR:** FR-NOTI-01 đến FR-NOTI-07
-> **Cập nhật:** 2026-06-30
+> **Feature:** `feat-notification` | **Phiên bản:** 2.0 | **Trạng thái:** Published
+> **Tham chiếu FR:** FR-NOTI-01 đến FR-NOTI-05
+> **Cập nhật:** 2026-07-16
 
 ---
 
@@ -11,10 +11,10 @@
 | Thuộc tính | Nội dung |
 |:---|:---|
 | **Mã Use Case** | UC-13 |
-| **Tên** | Thông Báo Hệ Thống (System Notifications) |
+| **Tên** | Thông Báo Tài Khoản (Account Notifications) |
 | **Tác nhân chính** | Người dùng (User), Hệ thống (System) |
-| **Mô tả ngắn** | Hệ thống tự động gửi thông báo biến động số dư ví, cập nhật trạng thái đơn hàng, kết quả kiểm duyệt tới người dùng đích hoặc toàn bộ người dùng hệ thống (Global) thông qua cơ chế phân phối thời gian thực và lưu trữ. |
-| **Độ ưu tiên** | Trung bình (P1) — cải thiện tương tác người dùng và tính minh bạch thông tin |
+| **Mô tả ngắn** | Hệ thống tự động đẩy thông báo biến động số dư ví, cập nhật trạng thái đơn hàng, kết quả kiểm duyệt tới người dùng đích hoặc hiển thị thông báo broadcast hệ thống lên chuông thông báo cá nhân của người dùng, hỗ trợ đánh dấu đã đọc. |
+| **Độ ưu tiên** | Cao (P0) — Cung cấp phản hồi trạng thái hoạt động tức thì cho người dùng |
 
 ---
 
@@ -24,51 +24,49 @@
 
 | Tác nhân | Vai trò |
 |:---|:---|
-| **Người dùng (User)** | Nhận thông báo, xem danh sách thông báo và đánh dấu đã đọc |
-| **Hệ thống (System)** | Tự động kích hoạt tạo thông báo dựa trên các sự kiện nghiệp vụ |
+| **Người dùng (User)** | Nhận thông báo cá nhân/broadcast hệ thống, xem danh sách thông báo và đánh dấu đã đọc |
+| **Hệ thống (System)** | Tự động kích hoạt tạo thông báo dựa trên các sự kiện nghiệp vụ (KYC_APPROVED, TOPUP_SUCCESS, WITHDRAWAL_COMPLETED, ORDER_PAID...) |
 
 ### 2.2 Điều Kiện Tiền Quyết (Preconditions)
 
 - Người dùng đã đăng nhập tài khoản.
-- Có các sự kiện nghiệp vụ xảy ra (nạp tiền, rút tiền, khiếu nại, duyệt KYC, v.v.).
 
 ### 2.3 Hậu Điều Kiện (Postconditions)
 
-- **Thành công:** Thông báo mới được lưu vào bảng `Notifications` (status `is_read = 0`), hiển thị lên chuông thông báo của User đích.
+- **Thành công:** Thông báo mới hiển thị lên danh sách thông báo của User, số đếm chưa đọc trên biểu tượng Chuông tăng lên. Khi user đánh dấu đọc, trạng thái chuyển thành `isRead = 1`.
 
 ---
 
 ## 3. Luồng Xử Lý
 
-### 3.1 Luồng Chính — Gửi và Xem thông báo (Happy Path)
+### 3.1 Luồng Chính — Xem và Đọc thông báo cá nhân (Happy Path)
 
 ```
-Bước 1  [System]:     Giao dịch nạp tiền thành công, kích hoạt sự kiện TOPUP_SUCCESS
+Bước 1  [System]:     Giao dịch nạp tiền thành công, kích hoạt sự kiện ví
 Bước 2  [Backend]:    Tạo bản ghi mới trong bảng Notifications:
-                       { user_id: 42, message: "Tài khoản của bạn đã được cộng 50,000đ", is_read: 0, is_global: 0 }
+                       { user_id: 42, title: "Nạp tiền thành công", content: "Tài khoản của bạn đã được cộng 50,000đ", type: "wallet", isRead: 0, severity: "SUCCESS" }
                        Kiểm tra User 42 đang online
-                       Đẩy thông báo real-time qua WebSocket/SSE
-Bước 3  [User]:       Đang duyệt web, nghe tiếng chuông và số đếm đỏ trên chuông tăng lên 1
-Bước 4  [User]:       Nhấp vào biểu tượng Chuông thông báo
-Bước 5  [Frontend]:   GET /api/v1/notifications
-Bước 6  [Backend]:    Truy vấn bảng Notifications lấy các thông báo của user_id = 42 và các thông báo global (is_global = 1)
+                       Cập nhật badge số thông báo chưa đọc
+Bước 3  [User]:       Nhấp vào biểu tượng Chuông thông báo trên Header hoặc menu Sidebar
+Bước 4  [Frontend]:   Chuyển hướng đến trang /account/notifications và gọi GET /api/v1/notifications
+Bước 5  [Backend]:    Truy vấn bảng Notifications lấy các thông báo của user_id = 42 và các thông báo broadcast hệ thống (do Admin/Staff gửi)
                        Trả về danh sách sắp xếp theo thời gian mới nhất
-Bước 7  [Frontend]:   Hiển thị danh sách thông báo
-Bước 8  [User]:       Nhấp vào thông báo cụ thể để xem chi tiết đơn hàng/ví
-Bước 9  [Frontend]:   POST /api/v1/notifications/{notiId}/read
-Bước 10 [Backend]:    Cập nhật Notifications.is_read = 1
-                       Trả về: status = 200, message = "READ"
-Bước 11 [Frontend]:   Giảm số lượng thông báo chưa đọc trên biểu tượng chuông
+Bước 6  [Frontend]:   Hiển thị danh sách thông báo lên màn hình với phân loại màu sắc theo severity (INFO, WARNING, DANGER, SUCCESS)
+Bước 7  [User]:       Nhấp vào một thông báo chưa đọc cụ thể để xem chi tiết
+Bước 8  [Frontend]:   POST /api/v1/notifications/{notiId}/read
+Bước 9  [Backend]:    Cập nhật Notifications.isRead = 1
+                       Trả về: status = 200, success = true
+Bước 10 [Frontend]:   Chuyển trạng thái hiển thị của thông báo đó thành "Đã đọc", giảm số lượng thông báo chưa đọc trên badge chuông
 ```
 
-### 3.2 Luồng Gửi Thông Báo Toàn Hệ Thống (Global Notification)
+### 3.2 Luồng Đánh dấu đọc tất cả (Mark All As Read)
 
 ```
-Bước 1  [Admin]:      Tạo thông báo bảo trì hệ thống từ trang quản trị
-Bước 2  [Frontend]:   POST /api/admin/notifications/global { message: "Hệ thống sẽ bảo trì từ 2h-4h sáng ngày mai." }
-Bước 3  [Backend]:    Lưu bản ghi Notifications với user_id = NULL, is_global = 1
-                       Gửi thông báo real-time qua kênh broadcast tới toàn bộ client đang kết nối
-Bước 4  [Mọi User]:   Nhận được thông báo hiển thị trên chuông
+Bước 1  [User]:       Ở trang thông báo cá nhân, nhấn nút "Đánh dấu tất cả đã đọc"
+Bước 2  [Frontend]:   POST /api/v1/notifications/mark-all-read
+Bước 3  [Backend]:    Cập nhật isRead = 1 cho tất cả các thông báo cá nhân chưa đọc của user hiện tại
+                       Trả về: status = 200, success = true
+Bước 4  [Frontend]:   Cập nhật lại giao diện, đặt badge chuông về 0 và chuyển trạng thái các item thành đã đọc
 ```
 
 ---
@@ -77,44 +75,39 @@ Bước 4  [Mọi User]:   Nhận được thông báo hiển thị trên chuôn
 
 | Mã | Quy tắc | Chi tiết |
 |:---|:---|:---|
-| BR-13-01 | Lưu trữ vĩnh viễn | Thông báo không được xóa vật lý (`isDelete = 1` nếu người dùng ẩn, mặc định giữ lại để tra cứu lịch sử) |
-| BR-13-02 | Tải bất đồng bộ | Quá trình tạo thông báo trong hệ thống nên chạy bất đồng bộ để tránh làm chậm luồng xử lý giao dịch chính |
+| BR-13-01 | Phân tách loại thông báo | Thông báo cá nhân liên quan ví, đơn hàng có link điều hướng `targetUrl` đến trang tương ứng để tăng trải nghiệm người dùng |
+| BR-13-02 | Xóa mềm | Khi người dùng xóa thông báo, hệ thống chỉ cập nhật cờ `isDelete = 1`, không xóa vật lý |
 
 ---
 
 ## 5. Quy Tắc Kiểm Tra Đầu Vào
 
-### POST /api/admin/notifications/global
-
-| Trường | Kiểm tra | Lỗi khi vi phạm |
-|:---|:---|:---|
-| `message` | Bắt buộc, không rỗng, tối đa 500 ký tự | "Nội dung thông báo không được để trống" |
+### POST /api/v1/notifications/{id}/read
+- `id` phải tồn tại trong bảng `Notifications` và thuộc sở hữu của người dùng hiện tại (trừ trường hợp thông báo broadcast).
 
 ---
 
 ## 6. Sơ Đồ Tuần Tự (Sequence Diagram)
 
-### Luồng Phân Phối Thông Báo
+### Luồng Đọc Thông Báo Cá Nhân
 
 ```mermaid
 sequenceDiagram
-    participant S as Hệ thống (Sự kiện)
+    actor U as Người dùng
+    participant FE as Frontend (notifications.html)
+    participant NC as NotificationController
     participant NS as NotificationService
     participant NR as NotificationRepository
-    participant WSS as WebSocketServer
-    participant FE as Frontend User
 
-    S->>NS: triggerNotification(userId, message, isGlobal)
-    NS->>NR: save(Notification{isRead=0})
-    NR-->>NS: Notification
-    
-    alt isGlobal = true
-        NS->>WSS: broadcastToAll(Notification)
-        WSS->>FE: Push Notification (All)
-    else isGlobal = false
-        NS->>WSS: sendToUser(userId, Notification)
-        WSS->>FE: Push Notification (Specific User)
-    end
+    U->>FE: Click vào thông báo chưa đọc
+    FE->>NC: POST /api/v1/notifications/{id}/read
+    NC->>NS: markAsRead(userId, id)
+    NS->>NR: findById(id)
+    Note over NS, NR: Kiểm tra quyền sở hữu userId == notif.userId
+    NS->>NR: save(Notification{isRead=true})
+    NS-->>NC: success
+    NC-->>FE: HTTP 200 OK (success: true)
+    FE-->>U: Cập nhật giao diện đã đọc, giảm badge chuông
 ```
 
 ---
@@ -123,25 +116,18 @@ sequenceDiagram
 
 | Phương thức | Endpoint | Mô tả |
 |:---|:---|:---|
-| `GET` | `/api/v1/notifications` | Lấy danh sách thông báo của tôi |
-| `POST` | `/api/v1/notifications/{id}/read` | Đánh dấu đã đọc thông báo |
-| `POST` | `/api/admin/notifications/global` | Gửi thông báo toàn hệ thống (Admin) |
+| `GET` | `/api/v1/notifications` | Lấy danh sách thông báo của tôi (cá nhân + broadcast) |
+| `POST` | `/api/v1/notifications/{id}/read` | Đánh dấu đã đọc thông báo cá nhân |
+| `POST` | `/api/v1/notifications/mark-all-read` | Đánh dấu đọc tất cả thông báo cá nhân |
 
 ---
 
 ## 8. Tiêu Chí Chấp Nhận (Acceptance Criteria)
 
-### AC-13-01 — Đánh dấu đã đọc thông báo thành công
-
-- **Cho trước:** Người dùng có thông báo ID `12` đang ở trạng thái chưa đọc (`is_read = 0`)
-- **Khi:** Gọi POST `/api/v1/notifications/12/read`
+### AC-13-01 — Đánh dấu đã đọc thành công và giảm số đếm badge
+- **Cho trước:** Người dùng đang có badge chuông hiển thị số 3 chưa đọc.
+- **Khi:** Người dùng nhấn vào một thông báo có ID 15 của họ.
 - **Thì:**
-  - Trạng thái thông báo trong DB chuyển thành `is_read = 1`
-  - HTTP 200 OK
-
----
-
-## 9. Ngoài Phạm Vi (Out of Scope)
-
-- ❌ Gửi thông báo qua tin nhắn SMS điện thoại.
-- ❌ Gửi thông báo đẩy trên ứng dụng di động qua Firebase Cloud Messaging (FCM).
+  - Database cập nhật `isRead = 1` cho thông báo 15.
+  - Số đếm badge chuông giảm xuống còn 2.
+  - HTTP trả về 200 OK.
