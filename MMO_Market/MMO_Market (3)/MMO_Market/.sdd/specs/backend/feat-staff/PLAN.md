@@ -208,6 +208,10 @@ Bổ sung cột STT (Sequence Number) được tính toán theo phân trang (`cu
   - Cung cấp REST API endpoint `PUT /api/v1/shop-registrations/{id}/update-status?status=...` để lưu giá trị trạng thái hoạt động mới được chọn vào cột `shop_status` trong bảng `Users`.
   - Triển khai logic AJAX đồng bộ trong `staff-shop-registration-update-status.js` để gửi yêu cầu lưu và điều hướng quay lại danh sách.
 
+## 16. Loại bỏ cột Lý do khỏi bảng danh sách cờ cảnh báo (phiên bản 3.0)
+- **`flags.html`**:
+  - Gỡ bỏ cột "Lý do" (cột tiêu đề `<th>Lý do</th>` và ô dữ liệu `<td th:text="${flag.reason}"></td>`) khỏi bảng hiển thị danh sách cờ cảnh báo để giao diện hiển thị tinh gọn hơn, tránh việc lý do dài gây vỡ khung bảng. Lý do chi tiết vẫn được hiển thị tại trang chi tiết cờ cảnh báo (`flag-detail.html`) và có thể chỉnh sửa tại đây.
+
 
 
 
