@@ -739,10 +739,13 @@
             const titleEl = document.querySelector('.product-detail__title');
             if (titleEl) titleEl.innerText = selectedProduct.name;
 
-            const iconEl = document.querySelector('.hero-product__visual .product-card__img-icon');
-            if (iconEl) {
-                iconEl.className = `fa ${selectedProduct.icon} product-card__img-icon`;
-                iconEl.style.color = selectedProduct.color;
+            const visualEl = document.querySelector('.hero-product__visual');
+            if (visualEl) {
+                if (selectedProduct.imageUrl && !selectedProduct.imageUrl.includes('placeholder.com')) {
+                    visualEl.innerHTML = `<img src="${selectedProduct.imageUrl}" class="product-card__img-real" alt="${selectedProduct.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">`;
+                } else {
+                    visualEl.innerHTML = `<i class="fa ${selectedProduct.icon} product-card__img-icon" style="color: ${selectedProduct.color}; font-size: 110px;"></i>`;
+                }
             }
 
             if (selectedProduct.variants && selectedProduct.variants.length > 0) {
@@ -1177,10 +1180,14 @@
                     const card = document.createElement('a');
                     card.href = `/products/${product.productId}`;
                     card.className = 'product-card';
+                    let mediaHtml = `<i class="fa ${iconInfo.icon} product-card__img-icon" style="color:${iconInfo.color};"></i>`;
+                    if (product.imageUrl && !product.imageUrl.includes('placeholder.com')) {
+                        mediaHtml = `<img src="${product.imageUrl}" class="product-card__img-real" alt="${product.productName}" style="width:100%; height:100%; object-fit:cover;">`;
+                    }
+
                     card.innerHTML = `
                         <div class="product-card__image-container">
-                            <i class="fa ${iconInfo.icon} product-card__img-icon" style="color:${iconInfo.color};"></i>
-
+                            ${mediaHtml}
                         </div>
                         <div class="product-card__body">
                             <div class="product-card__stock">Tồn: ${stockText}</div>
