@@ -6,7 +6,7 @@
 > **CSS Script:** `static/css/customer/style.css`
 > **JS Script:** `static/js/seller-product-form.js`
 > **Version:** 1.0 | **Status:** Draft
-> **Backend ref:** `feat-product/UC-05-product-discovery.md`
+> **Backend ref:** `feat-product/UC-06-shop-product-management.md`
 
 ---
 

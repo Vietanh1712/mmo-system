@@ -43,12 +43,13 @@
 
 ```
 Bước 1  [User]:       Truy cập mục "Trợ giúp & Hỗ trợ", chọn "Gửi yêu cầu mới"
-Bước 2  [Frontend]:   Hiển thị mẫu điền yêu cầu (Tiêu đề, Nội dung chi tiết)
-Bước 3  [User]:       Nhập Tiêu đề "Không nhận được OTP email đăng ký", nhập Nội dung "Tôi đăng ký tài khoản từ 10 phút trước nhưng chưa nhận được mã kích hoạt", bấm gửi
-Bước 4  [Frontend]:   POST /api/support-tickets { subject, message }
-Bước 5  [Backend]:    Validate: các trường không được trống
-                       Tạo bản ghi mới trong SupportTickets với status = 'OPEN'
-                       Trả về: status = 200, ticketId, status = "OPEN"
+Bước 2  [Frontend]:   Hiển thị mẫu điền yêu cầu (Danh mục hỗ trợ, Tiêu đề, Nội dung chi tiết)
+Bước 3  [User]:       Chọn danh mục "TECHNICAL", nhập Tiêu đề "Không nhận được OTP email đăng ký", nhập Nội dung "Tôi đăng ký tài khoản từ 10 phút trước nhưng chưa nhận được mã kích hoạt", bấm gửi
+Bước 4  [Frontend]:   POST /api/support-tickets { category, title, description }
+Bước 5  [Backend]:    Validate: các trường không được trống và đúng phân quyền CUSTOMER/SELLER
+                       Tạo bản ghi mới trong SupportTickets với status = 'Open'
+                       Gửi thông báo xác nhận cho User và thông báo hỗ trợ mới cho tất cả Staff/Admin
+                       Trả về: status = 200, ticket details (status = "Open")
 Bước 6  [Frontend]:   Hiển thị thông báo gửi yêu cầu hỗ trợ thành công kèm mã Ticket.
 ```
 
@@ -56,14 +57,14 @@ Bước 6  [Frontend]:   Hiển thị thông báo gửi yêu cầu hỗ trợ th
 
 ```
 Bước 1  [Staff]:      Vào màn hình Admin/Staff, chọn mục "Hỗ trợ khách hàng"
-Bước 2  [Frontend]:   GET /api/staff/support-tickets?status=OPEN
-Bước 3  [Backend]:    Trả về danh sách các ticket hỗ trợ chưa được giải quyết
-Bước 4  [Staff]:      Nhấp xem chi tiết ticket, liên hệ giải đáp cho User qua email/điện thoại
-Bước 5  [Staff]:      Sau khi giải đáp xong, nhấn nút "Đánh dấu đã giải quyết" (Resolved)
-Bước 6  [Frontend]:   POST /api/staff/support-tickets/{ticketId}/resolve
-Bước 7  [Backend]:    Cập nhật SupportTickets.status = 'RESOLVED'
-                       Gửi email/thông báo thông báo ticket đã được xử lý cho User
-                       Trả về: status = 200, message = "RESOLVED"
+Bước 2  [Frontend]:   GET /api/support-tickets/all (Có JWT token của Staff)
+Bước 3  [Backend]:    Trả về danh sách tất cả các ticket hỗ trợ toàn hệ thống
+Bước 4  [Staff]:      Nhấp xem chi tiết ticket, liên hệ giải đáp cho User qua email/điện thoại hoặc hệ thống
+Bước 5  [Staff]:      Sau khi giải đáp xong, nhập Resolution và nhấn nút "Đóng / Đã giải quyết" (Resolved)
+Bước 6  [Frontend]:   PUT /api/support-tickets/{ticketId}/status { status: "Resolved", resolution: "..." }
+Bước 7  [Backend]:    Cập nhật SupportTickets.status = 'Resolved' và lưu resolution
+                       Gửi thông báo cập nhật trạng thái hỗ trợ cho User
+                       Trả về: status = 200, ticket details (status = "Resolved")
 ```
 
 ---
@@ -72,8 +73,9 @@ Bước 7  [Backend]:    Cập nhật SupportTickets.status = 'RESOLVED'
 
 | Mã | Quy tắc | Chi tiết |
 |:---|:---|:---|
-| BR-17-01 | Phân quyền Staff | Chỉ tài khoản có vai trò `STAFF` hoặc `ADMIN` mới được phép truy cập danh sách và cập nhật trạng thái ticket |
-| BR-17-02 | Trạng thái đóng | Khi ticket đã chuyển sang `CLOSED` hoặc `RESOLVED`, người dùng không thể chỉnh sửa nội dung |
+| BR-17-01 | Phân quyền Staff | Chỉ tài khoản có vai trò `STAFF` hoặc `ADMIN` mới được phép truy cập danh sách toàn hệ thống và cập nhật trạng thái/phản hồi giải pháp |
+| BR-17-02 | Trạng thái đóng | Khi ticket đã chuyển sang `Resolved`, người dùng không thể tự chỉnh sửa nội dung |
+| BR-17-03 | Quyền bảo mật | API xem chi tiết `/api/support-tickets/{id}` chỉ cho phép chủ nhân của ticket hoặc tài khoản Staff/Admin truy cập |
 
 ---
 
@@ -83,8 +85,9 @@ Bước 7  [Backend]:    Cập nhật SupportTickets.status = 'RESOLVED'
 
 | Trường | Kiểm tra | Lỗi khi vi phạm |
 |:---|:---|:---|
-| `subject` | Bắt buộc, không rỗng, tối đa 200 ký tự | "Tiêu đề yêu cầu không được rỗng" |
-| `message` | Bắt buộc, không rỗng, tối đa 2000 ký tự | "Nội dung yêu cầu không được rỗng" |
+| `category` | Bắt buộc, không rỗng, thuộc danh mục | "Danh mục hỗ trợ không hợp lệ" |
+| `title` | Bắt buộc, không rỗng, tối đa 200 ký tự | "Tiêu đề yêu cầu không được rỗng" |
+| `description` | Bắt buộc, không rỗng, tối đa 2000 ký tự | "Nội dung yêu cầu không được rỗng" |
 
 ---
 
@@ -100,13 +103,13 @@ sequenceDiagram
     participant SS as SupportTicketService
     participant STR as SupportTicketRepository
 
-    U->>FE: Nhập tiêu đề, nội dung, bấm gửi
+    U->>FE: Nhập danh mục, tiêu đề, nội dung, bấm gửi
     FE->>SC: POST /api/support-tickets
-    SC->>SS: createTicket(dto, userId)
-    SS->>STR: save(SupportTicket{status='OPEN'})
+    SC->>SS: createTicket(category, title, description, userId)
+    SS->>STR: save(SupportTicket{status='Open'})
     STR-->>SS: SupportTicket
-    SS-->>SC: success
-    SC-->>FE: HTTP 200 OK (OPEN)
+    SS-->>SC: success (Open)
+    SC-->>FE: HTTP 200 OK
     FE-->>U: Hiển thị mã ticket hỗ trợ
 ```
 
@@ -116,21 +119,24 @@ sequenceDiagram
 
 | Phương thức | Endpoint | Mô tả |
 |:---|:---|:---|
-| `POST` | `/api/support-tickets` | Gửi yêu cầu hỗ trợ mới |
-| `GET` | `/api/staff/support-tickets` | Lấy danh sách ticket (Staff) |
-| `POST` | `/api/staff/support-tickets/{id}/resolve` | Đánh dấu đã giải quyết (Staff) |
+| `POST` | `/api/support-tickets` | Gửi yêu cầu hỗ trợ mới (Customer/Seller) |
+| `GET` | `/api/support-tickets` | Xem lịch sử danh sách ticket của bản thân |
+| `GET` | `/api/support-tickets/all` | Lấy danh sách ticket toàn hệ thống (Staff/Admin) |
+| `GET` | `/api/support-tickets/{id}` | Xem chi tiết ticket |
+| `PUT` | `/api/support-tickets/{id}/status` | Cập nhật trạng thái và giải pháp (Staff/Admin) |
 
 ---
 
 ## 8. Tiêu Chí Chấp Nhận (Acceptance Criteria)
 
-### AC-17-01 — Gửi yêu cầu hỗ trợ thành công tạo bản ghi OPEN
+### AC-17-01 — Gửi yêu cầu hỗ trợ thành công tạo bản ghi Open
 
-- **Cho trước:** Người dùng đã đăng nhập hệ thống
+- **Cho trước:** Người dùng đã đăng nhập hệ thống với vai trò CUSTOMER hoặc SELLER
 - **Khi:** Thực hiện gọi POST `/api/support-tickets` với đầy đủ thông tin hợp lệ
 - **Thì:**
-  - Hệ thống tạo 1 bản ghi mới trong bảng `SupportTickets` ở trạng thái `OPEN`
-  - HTTP 200 OK
+  - Hệ thống tạo 1 bản ghi mới trong bảng `SupportTickets` ở trạng thái `Open`
+  - Gửi thông báo đến người gửi và các nhân viên hỗ trợ.
+  - HTTP 200 OK trả về thông tin chi tiết ticket.
 
 ---
 

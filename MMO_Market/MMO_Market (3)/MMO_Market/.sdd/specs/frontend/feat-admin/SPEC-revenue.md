@@ -1,6 +1,7 @@
 # SPEC — Admin Revenue Statistics Page
 > **Route:** `/admin/users` (Tab: Revenue) | **Template:** `templates/admin/users.html`
 > **JS Script:** `static/js/admin-console.js`
+> **Backend ref:** `feat-admin/UC-15-system-administration.md`
 
 ---
 

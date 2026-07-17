@@ -41,6 +41,9 @@ public class WithdrawalService {
     @Autowired
     private NotificationRepository notificationRepository;
 
+    @Autowired
+    private com.mmo.feature.seller.service.ShopLevelService shopLevelService;
+
     /**
      * Thực hiện yêu cầu rút tiền của Seller bọc trong Transaction.
      */
@@ -55,6 +58,10 @@ public class WithdrawalService {
 
         if (seller.getWithdrawalLocked() != null && seller.getWithdrawalLocked()) {
             throw new IllegalArgumentException("Ví của bạn đang bị khóa do vi phạm. Không thể thực hiện rút tiền lúc này.");
+        }
+
+        if (seller.getBalanceVnd() != null && seller.getBalanceVnd() < 0) {
+            throw new IllegalArgumentException("Ví của bạn đang có số dư âm. Vui lòng nạp tiền thanh toán nợ hoặc hoàn thành đơn hàng mới để khôi phục tính năng rút tiền.");
         }
 
         // Load configurations dynamically
@@ -170,5 +177,41 @@ public class WithdrawalService {
             return "customer";
         }
         return roleValue.toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * Cập nhật trạng thái yêu cầu rút tiền của Seller và thực hiện hoàn tiền nếu bị từ chối.
+     */
+    @Transactional
+    public void updateWithdrawalStatus(Long id, String newStatus, Long reviewerId, String rejectionReason) {
+        Withdrawal withdrawal = withdrawalRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Yêu cầu rút tiền không tồn tại."));
+
+        if (!"Pending".equalsIgnoreCase(withdrawal.getStatus())) {
+            throw new IllegalStateException("Yêu cầu rút tiền này đã được xử lý từ trước.");
+        }
+
+        User reviewer = userRepository.findByIdAndIsDeleteFalse(reviewerId)
+                .orElseThrow(() -> new IllegalArgumentException("Nhân viên duyệt không hợp lệ."));
+
+        withdrawal.setStatus(newStatus);
+        withdrawal.setReviewedBy(reviewer);
+        withdrawal.setReviewedAt(java.time.LocalDateTime.now());
+        if (rejectionReason != null) {
+            withdrawal.setRejectionReason(rejectionReason);
+        }
+
+        if ("Rejected".equalsIgnoreCase(newStatus) || "Failed".equalsIgnoreCase(newStatus)) {
+            // Hoàn lại tiền cho Seller (bao gồm số tiền rút và phí rút)
+            User seller = withdrawal.getSeller();
+            long refundAmount = withdrawal.getAmountVnd() + (withdrawal.getFeeVnd() != null ? withdrawal.getFeeVnd() : 0L);
+            seller.setBalanceVnd(seller.getBalanceVnd() + refundAmount);
+            userRepository.save(seller);
+            
+            // Cập nhật trạng thái khóa/mở khóa shop sau khi hoàn tiền rút bị từ chối
+            shopLevelService.updateShopLockStatus(seller.getId());
+        }
+
+        withdrawalRepository.save(withdrawal);
     }
 }

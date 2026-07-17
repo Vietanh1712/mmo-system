@@ -60,9 +60,16 @@ Triển khai tính năng **ghi lại hoàn tiền từ khiếu nại vào lịch
 
 | # | File | Type | Change | Description |
 |---|------|------|--------|-------------|
-| 1 | `ComplaintServiceImpl.java` | **[MODIFY]** | Tính hoàn tiền pro-rata, ghi giao dịch ví cho cả hai bên, và gửi Notification khi kết thúc khiếu nại. | Phân xử tài chính và tạo thông báo hệ thống |
+| 1 | `ComplaintServiceImpl.java` | **[MODIFY]** | Tính hoàn tiền pro-rata, ghi giao dịch ví cho cả hai bên, và gửi Notification khi kết thúc khiếu nại. Hỗ trợ khấu trừ tiền phạt trực tiếp từ Seller đối với đơn đã Completed (ví âm). | Phân xử tài chính và tạo thông báo hệ thống |
 | 2 | `WalletService.java` | **[MODIFY]** | Cập nhật logic tính `totalTopup` trong `getWalletStats` gồm cả `REFUND`. | Thống kê số dư chính xác ở Backend |
 | 3 | `account-transactions.js` | **[MODIFY]** | Cập nhật logic tính `summary.topup` gồm cả `REFUND`. | Thống kê số dư chính xác ở Frontend |
+| 4 | `ShopLevelService.java` | **[MODIFY]** | Thêm phương thức `updateShopLockStatus` tự động Khóa shop (Level 0/1) hoặc Khóa rút tiền (Level 2) khi ví bị âm, và khôi phục khi số dư không còn âm. | Quản lý trạng thái khóa/mở khóa gian hàng tập trung |
+| 5 | `TopupService.java` | **[MODIFY]** | Gọi `shopLevelService.updateShopLockStatus` ngay sau khi nạp tiền thành công. | Tự động mở khóa shop khi xóa nợ |
+| 6 | `WithdrawalService.java` | **[MODIFY]** | Chặn rút tiền khi ví của Seller có số dư âm. Gọi `updateShopLockStatus` khi hoàn trả tiền rút bị từ chối. | Bảo vệ dòng tiền và cập nhật trạng thái khi từ chối rút |
+| 7 | `SellerController.java` | **[MODIFY]** | Chặn đăng sản phẩm mới, thêm biến thể hoặc cập nhật biến thể đối với Shop Level 0/1 nếu ví âm. Khắc phục lỗi scope biến trật tự khai báo. | Kiểm soát quyền đăng bán của gian hàng ví âm |
+| 8 | `ProductSpecification.java` | **[MODIFY]** | Lọc bỏ sản phẩm của người bán có shopStatus là 'Locked', 'Banned' hoặc 'Pending' trong các truy vấn catalog. | Tự động ẩn sản phẩm của shop bị khóa |
+| 9 | `ProductRepository.java` | **[MODIFY]** | Cập nhật Native Query `findTopBestSellingProducts` để lọc bỏ sản phẩm của shop bị khóa/banned/pending. | Ẩn sản phẩm nổi bật/bán chạy của shop bị khóa |
+| 10| `ProductService.java` | **[MODIFY]** | Cập nhật fallback `getFeaturedProducts` lọc bỏ sản phẩm của shop bị khóa/banned/pending qua stream filter. | Đồng bộ cơ chế ẩn sản phẩm fallback trang chủ |
 
 ---
 

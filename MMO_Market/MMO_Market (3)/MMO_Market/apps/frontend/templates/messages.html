@@ -49,7 +49,6 @@
                     <button type="button" class="messages-main__action-btn" title="Tùy chọn" onclick="toggleDropdown(event)"><i class="fa fa-ellipsis-v"></i></button>
                     <div id="chat-dropdown" class="chat-dropdown" style="display: none;">
                         <a href="#" onclick="clearHistory(event)"><i class="fa fa-trash"></i> Xóa lịch sử chat</a>
-                        <a href="#" id="toggle-block-btn" onclick="toggleBlockContact(event)"><i class="fa fa-ban"></i> Chặn liên hệ</a>
                         <a href="#" onclick="toggleSearchMessages(event)"><i class="fa fa-search"></i> Tìm tin nhắn</a>
                     </div>
                 </div>
@@ -617,47 +616,9 @@
             });
         }
 
-        async function toggleBlockContact(e) {
-            e.preventDefault();
-            
-            let chat = activeChatList.find(c => c.contactId === currentSelectedChatId);
-            if (!chat) {
-                const mockKey = Object.keys(CHAT_DATA).find(k => 
-                    CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 14)
-                );
-                if (mockKey) chat = CHAT_DATA[mockKey];
-            }
-            if (!chat) return;
-
-            const isBlocked = chat.isBlocked;
-            const actionText = isBlocked ? 'mở chặn' : 'chặn';
-            
-            showConfirm(`Bạn có chắc chắn muốn ${actionText} liên hệ ${chat.name}?`, async (confirmed) => {
-                if (confirmed) {
-                    try {
-                        const endpoint = isBlocked ? `/v1/chats/${currentSelectedChatId}/unblock` : `/v1/chats/${currentSelectedChatId}/block`;
-                        const res = await authFetch(endpoint, { method: 'POST' });
-                        if (res.ok) {
-                            chat.isBlocked = !isBlocked;
-                            updateChatUIState(chat);
-                            showAlert(`Đã ${actionText} liên hệ ${chat.name} thành công.`);
-                        } else {
-                            showAlert(`Không thể thực hiện ${actionText} trên máy chủ.`);
-                        }
-                    } catch (err) {
-                        console.error('Error toggling block:', err);
-                        showAlert(`Lỗi khi ${actionText} liên hệ.`);
-                    }
-                }
-            });
-        }
-
-
-
         function updateChatUIState(chat) {
             if (!chat) return;
 
-            const toggleBlockBtn = document.getElementById('toggle-block-btn');
             const toggleMuteBtn = document.getElementById('toggle-mute-btn');
             const attachBtn = document.querySelector('.messages-input-row__attach');
             const viewComplaintBtn = document.getElementById('view-complaint-btn');
@@ -679,7 +640,6 @@
                         viewComplaintBtn.style.display = 'none';
                     }
                 }
-                if (toggleBlockBtn) toggleBlockBtn.style.display = 'none';
                 if (toggleMuteBtn) toggleMuteBtn.style.display = 'none';
                 if (attachBtn) {
                     attachBtn.disabled = false;
@@ -709,90 +669,33 @@
                 return;
             }
 
-            if (toggleBlockBtn) toggleBlockBtn.style.display = 'block';
-
-            if (toggleBlockBtn) {
-                if (chat.isBlocked) {
-                    toggleBlockBtn.innerHTML = '<i class="fa fa-unlock"></i> Mở chặn liên hệ';
-                } else {
-                    toggleBlockBtn.innerHTML = '<i class="fa fa-ban"></i> Chặn liên hệ';
-                }
-            }
-
             const input = document.getElementById('message-input');
             const sendBtn = document.querySelector('.messages-input-row__send');
             const emojiBtn = document.querySelector('.messages-input-row__emoji');
             
             let banner = document.getElementById('chat-blocked-banner');
 
-            if (chat.isBlocked || chat.isBlockedByContact) {
-                if (input) {
-                    input.disabled = true;
-                    input.value = '';
-                    input.placeholder = chat.isBlocked ? "Bạn đã chặn liên hệ này." : "Liên hệ này đã chặn bạn.";
-                }
-                if (sendBtn) {
-                    sendBtn.disabled = true;
-                    sendBtn.style.opacity = '0.5';
-                    sendBtn.style.cursor = 'not-allowed';
-                }
-                if (attachBtn) {
-                    attachBtn.disabled = true;
-                    attachBtn.style.opacity = '0.5';
-                    attachBtn.style.cursor = 'not-allowed';
-                }
-                if (emojiBtn) {
-                    emojiBtn.style.pointerEvents = 'none';
-                    emojiBtn.style.opacity = '0.5';
-                }
+            if (input) {
+                input.disabled = false;
+                input.placeholder = "Nhập tin nhắn...";
+            }
+            if (sendBtn) {
+                sendBtn.disabled = false;
+                sendBtn.style.opacity = '';
+                sendBtn.style.cursor = '';
+            }
+            if (attachBtn) {
+                attachBtn.disabled = false;
+                attachBtn.style.opacity = '';
+                attachBtn.style.cursor = '';
+            }
+            if (emojiBtn) {
+                emojiBtn.style.pointerEvents = '';
+                emojiBtn.style.opacity = '';
+            }
 
-                if (!banner) {
-                    banner = document.createElement('div');
-                    banner.id = 'chat-blocked-banner';
-                    banner.style.background = '#fef2f2';
-                    banner.style.border = '1px solid #fee2e2';
-                    banner.style.color = '#991b1b';
-                    banner.style.padding = '8px 14px';
-                    banner.style.borderRadius = '8px';
-                    banner.style.fontSize = '12px';
-                    banner.style.textAlign = 'center';
-                    banner.style.marginBottom = '10px';
-                    banner.style.fontFamily = 'inherit';
-                    
-                    const footer = document.querySelector('.messages-main__footer');
-                    if (footer) {
-                        footer.insertBefore(banner, footer.firstChild);
-                    }
-                }
-                
-                if (chat.isBlocked) {
-                    banner.innerHTML = `Bạn đã chặn liên hệ này. <a href="#" onclick="toggleBlockContact(event)" style="color: #b91c1c; font-weight: 700; text-decoration: underline; margin-left: 5px;">Mở chặn</a> để tiếp tục gửi tin nhắn.`;
-                } else {
-                    banner.innerHTML = `Bạn đã bị liên hệ này chặn. Không thể gửi tin nhắn.`;
-                }
-            } else {
-                if (input) {
-                    input.disabled = false;
-                    input.placeholder = "Nhập tin nhắn...";
-                }
-                if (sendBtn) {
-                    sendBtn.disabled = false;
-                    sendBtn.style.opacity = '';
-                    sendBtn.style.cursor = '';
-                }
-                if (attachBtn) {
-                    attachBtn.disabled = false;
-                    attachBtn.style.opacity = '';
-                    attachBtn.style.cursor = '';
-                }
-                if (emojiBtn) {
-                    emojiBtn.style.pointerEvents = '';
-                    emojiBtn.style.opacity = '';
-                }
-
-                if (banner) {
-                    banner.remove();
-                }
+            if (banner) {
+                banner.remove();
             }
         }
 

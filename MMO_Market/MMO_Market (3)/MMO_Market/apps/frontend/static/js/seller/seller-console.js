@@ -49,6 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
         initComplaints();
     } else if (path.endsWith('/complaint-detail') || path.endsWith('/complaints/detail')) {
         initComplaintDetail();
+    } else if (path.endsWith('/preorders')) {
+        initPreOrders();
     }
 });
 
@@ -1832,3 +1834,90 @@ async function initWithdrawalDetail() {
         showToast(err.message, 'error');
     }
 }
+
+// ==============================================================================
+// PREORDERS MANAGEMENT
+// ==============================================================================
+async function initPreOrders() {
+    const tbody = document.querySelector('#preOrdersTable tbody');
+    if (!tbody) return;
+
+    try {
+        const token = sessionStorage.getItem('accessToken');
+        const res = await fetch('/api/v1/pre-orders/seller', {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!res.ok) throw new Error('Không thể tải danh sách đơn đặt trước.');
+        const orders = await res.json();
+
+        if (!orders || orders.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 40px; color: var(--seller-muted);"><i class="fa fa-inbox" style="font-size: 24px; display: block; margin-bottom: 8px;"></i> Không có đơn đặt trước nào.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = orders.map(o => {
+            const statusClass = (o.status === 'Chờ xử lý' || o.status === 'PENDING') ? 'pending' 
+                              : (o.status === 'Hoàn thành' || o.status === 'COMPLETED') ? 'ok' 
+                              : 'locked';
+
+            return `
+                <tr>
+                    <td>#PO-${o.id}</td>
+                    <td>${o.customerEmail}</td>
+                    <td>${o.productName}</td>
+                    <td class="text-center">${o.quantity}</td>
+                    <td>${o.notes || ''}</td>
+                    <td><span class="badge ${statusClass}">${translateStatus(o.status)}</span></td>
+                    <td>${o.createdAt ? new Date(o.createdAt).toLocaleString('vi-VN') : ''}</td>
+                    <td class="text-right">
+                        ${(o.status === 'PENDING' || o.status === 'Chờ xử lý') ? `
+                        <button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px; margin-right: 4px;" onclick="updatePreOrderStatus(${o.id}, 'COMPLETED')">
+                            <i class="fa fa-check"></i> Hoàn thành
+                        </button>
+                        <button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px; color: var(--seller-danger); border-color: var(--seller-danger);" onclick="updatePreOrderStatus(${o.id}, 'CANCELLED')">
+                            <i class="fa fa-times"></i> Hủy
+                        </button>
+                        ` : ''}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="color: var(--seller-danger);"><i class="fa fa-exclamation-triangle"></i> ${err.message}</td></tr>`;
+        showToast(err.message, 'error');
+    }
+}
+
+async function updatePreOrderStatus(id, status) {
+    if (!confirm('Bạn có chắc chắn muốn cập nhật trạng thái đơn này?')) return;
+    
+    try {
+        const token = sessionStorage.getItem('accessToken');
+        const res = await fetch(`/api/v1/pre-orders/seller/${id}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ status: status })
+        });
+        
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.message || 'Cập nhật thất bại.');
+        }
+        
+        showToast('Cập nhật trạng thái thành công!');
+        initPreOrders();
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+}
+
+window.initPreOrders = initPreOrders;
+window.updatePreOrderStatus = updatePreOrderStatus;

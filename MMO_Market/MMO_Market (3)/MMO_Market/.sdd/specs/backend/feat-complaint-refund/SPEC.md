@@ -37,9 +37,9 @@ Khi Staff xử lý phán quyết khiếu nại (Complaints) bằng cách chấp 
 | **FR-REFUND-02** | THE SYSTEM SHALL compute the days used ($D_{used}$) and days remaining ($D_{remaining} = D_{total} - D_{used}$) from transaction creation to complaint creation. |
 | **FR-REFUND-03** | THE SYSTEM SHALL calculate refund amount for Buyer: $A_{refund} = \lceil A_{total} / D_{total} \times D_{remaining} \rceil$. |
 | **FR-REFUND-04** | THE SYSTEM SHALL compute payout amount for Seller: $A_{payout} = A_{total} - A_{refund}$, and Seller net payout: $A_{net\_payout} = A_{payout} - Commission_{actual}$. |
-| **FR-REFUND-05** | THE SYSTEM SHALL add $A_{refund}$ to Customer's `balanceVnd` and create a `WalletTransaction` of type `REFUND` with reference `REFUND-CMP-{complaintId}-TX-{transactionId}`. |
-| **FR-REFUND-06** | THE SYSTEM SHALL add $A_{net\_payout}$ to Seller's `balanceVnd` and create a `WalletTransaction` of type `PAYMENT` with reference `PAYOUT-CMP-RESOLVED-{complaintId}-TX-{transactionId}`. |
-| **FR-REFUND-07** | THE SYSTEM SHALL create success Notifications (type = `WALLET`) notifying both Customer and Seller of their respective refund and payout amounts. |
+| **FR-REFUND-05** | WHEN the original transaction status was "Held", THE SYSTEM SHALL credit $A_{refund}$ to Buyer's balance and credit $A_{net\_payout}$ to Seller's balance, recording `REFUND` and `PAYMENT` ledger transactions. |
+| **FR-REFUND-06** | WHEN the original transaction status was "Completed", THE SYSTEM SHALL credit $A_{refund}$ to Buyer's balance and debit $A_{refund}$ from Seller's balance (allowing negative balance), recording `REFUND` ledger transactions for both. |
+| **FR-REFUND-07** | THE SYSTEM SHALL create success Notifications (type = `WALLET`) notifying both Customer and Seller of their respective refund and payout/deduction amounts. |
 
 ### 3.2 Từ chối khiếu nại (Status = "Rejected") — Giải ngân toàn bộ cho Seller
 | ID | EARS Requirement |
@@ -47,6 +47,16 @@ Khi Staff xử lý phán quyết khiếu nại (Complaints) bằng cách chấp 
 | **FR-REFUND-08** | WHEN a Staff rejects a complaint as "Rejected", THE SYSTEM SHALL calculate full Seller payout: $A_{net\_payout} = A_{total} - Commission_{original}$. |
 | **FR-REFUND-09** | THE SYSTEM SHALL update Seller's `balanceVnd` by adding $A_{net\_payout}$ and create a `WalletTransaction` of type `PAYMENT` with reference `PAYOUT-CMP-REJECTED-{complaintId}-TX-{transactionId}`. |
 | **FR-REFUND-10** | THE SYSTEM SHALL create success Notifications (type = `WALLET`) notifying Seller of full payout, and Customer of complaint rejection with the resolution reason. |
+
+### 3.4 Quản lý ví âm và Khóa/Mở khóa theo phân cấp Shop Level
+| ID | EARS Requirement |
+|:---|:---|
+| **FR-LOCK-01** | WHEN a Seller's `balanceVnd` becomes negative (< 0) AND their `shopLevel` is 0 or 1, THE SYSTEM SHALL automatically set their `shopStatus` to "Locked". |
+| **FR-LOCK-02** | WHEN a Seller's `balanceVnd` becomes negative (< 0) AND their `shopLevel` is 2, THE SYSTEM SHALL automatically set their `withdrawalLocked` to `true` but keep their `shopStatus` as "Active". |
+| **FR-LOCK-03** | WHEN a Seller's `balanceVnd` becomes non-negative (>= 0) AND their `shopStatus` is "Locked", THE SYSTEM SHALL automatically restore their `shopStatus` to "Active". |
+| **FR-LOCK-04** | WHEN a Seller's `balanceVnd` becomes non-negative (>= 0) AND their `shopLevel` is 2 AND `withdrawalLocked` is `true`, THE SYSTEM SHALL automatically set `withdrawalLocked` to `false`. |
+| **FR-LOCK-05** | WHEN a Seller has a negative balance AND their `shopLevel` is 0 or 1, THE SYSTEM SHALL block them from listing new products, creating new variants, or updating variant info. |
+| **FR-LOCK-06** | WHEN a Seller's `shopStatus` is "Locked", "Banned", or "Pending", THE SYSTEM SHALL exclude all their products from public search results, catalog listings, and featured products sections. |
 
 ### 3.3 Thống kê trong Wallet History
 | ID | EARS Requirement |

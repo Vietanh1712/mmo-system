@@ -47,6 +47,12 @@
             <span>Quản lý kho</span>
         </a>
         <a class="seller-sidebar__menu-link"
+           th:classappend="${activeMenu == 'preorders'} ? ' seller-sidebar__menu-link--active' : ''"
+           th:href="@{/seller/preorders}">
+            <i class="fa fa-calendar-check-o" aria-hidden="true"></i>
+            <span>Đơn đặt trước</span>
+        </a>
+        <a class="seller-sidebar__menu-link"
            th:classappend="${activeMenu == 'transactions'} ? ' seller-sidebar__menu-link--active' : ''"
            th:href="@{/seller/transactions}">
             <i class="fa fa-exchange" aria-hidden="true"></i>

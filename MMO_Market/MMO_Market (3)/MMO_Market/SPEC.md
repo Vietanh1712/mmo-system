@@ -154,7 +154,7 @@ Quản trị viên hệ thống cấp cao nhất.
 
 ### FR-12 Chat
 - Gửi tin nhắn trực tiếp giữa các người dùng (Chat).
-- Tính năng chặn (ChatBlock) và tắt thông báo (ChatMute).
+- Tính năng tắt thông báo (ChatMute).
 - Trao đổi (Chat) giữa Customer, Seller và Staff.
 
 ### FR-13 Notification
@@ -355,12 +355,6 @@ Quản trị viên hệ thống cấp cao nhất.
 | receiver_id | BIGINT | FK -> Users |
 | message | VARCHAR | Nội dung |
 
-### ChatBlock
-| Attribute | Type | Description |
-| --------- | ---- | ----------- |
-| id | BIGINT | Primary key |
-| blocker_id | BIGINT | FK -> Users |
-| blocked_id | BIGINT | FK -> Users |
 
 ### ChatMute
 | Attribute | Type | Description |
@@ -486,7 +480,7 @@ Quản trị viên hệ thống cấp cao nhất.
 
 Hiện tại repository chưa có tài liệu chính thức xác định đầy đủ phạm vi ngoài hệ thống. Danh sách dưới đây được tổng hợp từ các chức năng chưa xuất hiện trong source code và cần được Product Owner xác nhận.
 
-- Giao tiếp thời gian thực (Chat Realtime): Mặc dù Backend đã có Module Chat lưu trữ tin nhắn (REST API `ChatController`, Models `Chat`, `ChatBlock`), tuy nhiên không có bất kỳ cấu hình WebSocket nào (như STOMP, SignalR/Hub) được tìm thấy, chứng tỏ ứng dụng chưa có giao tiếp thời gian thực. `Cần xác nhận`
+- Giao tiếp thời gian thực (Chat Realtime): Mặc dù Backend đã có Module Chat lưu trữ tin nhắn (REST API `ChatController`, Models `Chat`), tuy nhiên không có bất kỳ cấu hình WebSocket nào (như STOMP, SignalR/Hub) được tìm thấy, chứng tỏ ứng dụng chưa có giao tiếp thời gian thực. `Cần xác nhận`
 - Danh sách yêu thích (Wishlist): Frontend có thể hiển thị, nhưng Backend không hề có Entity/Model `Wishlist` hay `WishlistController`. Chức năng này không được hỗ trợ xử lý trên DB. `Cần xác nhận`
 
 *(Lưu ý: Các module từng bị cho là Mock như ShopRegistration, Notification nay đã có bằng chứng hiện diện đầy đủ qua Repository, Service và Controller thực tế).*
@@ -509,7 +503,7 @@ Hiện tại repository chưa có tài liệu chính thức xác định đầy 
 | FR-09 | Withdrawal | Seller, Staff | /seller/withdrawals | /api/seller/withdrawals | SellerController | WithdrawalService | WithdrawalRepository | Withdrawals | Implemented | SellerController.java, trg_CheckWithdrawalMin |
 | FR-10 | Complaint & Support | Customer, Staff | /account/tickets | /api/complaints | ComplaintController, SupportTicketController | ComplaintService | ComplaintRepository | Complaints, SupportTickets | Implemented | ComplaintController.java, Complaints DB |
 | FR-11 | Feedback & Flag | Customer | /account/orders/{id}/feedback | /api/reviews | ReviewController | ReviewService | ReviewRepository | Reviews, ShopFlags | Implemented | ReviewController.java, Reviews table |
-| FR-12 | Chat | Customer, Seller, Staff | /messages | /api/chat | ChatController, StaffChatRestController | ChatService | ChatRepository | Chats, ChatBlocks, ChatMutes | Implemented | ChatController.java, Chats table |
+| FR-12 | Chat | Customer, Seller, Staff | /messages | /api/chat | ChatController, StaffChatRestController | ChatService | ChatRepository | Chats, ChatMutes | Implemented | ChatController.java, Chats table |
 | FR-13 | Notification | Customer, Seller | /notifications | /api/notifications | NotificationController | NotificationService | NotificationRepository | Notifications | Implemented | NotificationController.java, Notifications DB |
 | FR-14 | Staff Management | Admin | /admin/users | /api/admin/staff | StaffController | StaffService | UserRepository | Users, UserPermissions, Permissions | Implemented | StaffController.java, Permissions DB |
 | FR-15 | Administration | Admin | /admin | /api/admin/system-config | SystemConfigurationController | SystemConfigService | SystemConfigRepository | SystemConfigurations, AuditLogs | Implemented | SystemConfigurationController.java |

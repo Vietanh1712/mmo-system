@@ -28,9 +28,9 @@ Triển khai luồng hỗ trợ kỹ thuật và giải quyết khiếu nại gi
 ### 3.2. Repositories (Spring Data JPA)
 
 - **`SupportTicketRepository`**:
-  - `findByUser_IdAndIsDeleteFalseOrderByCreatedAtDesc(userId)`: Lấy các ticket cá nhân của người dùng.
-  - `findAllByIsDeleteFalseOrderByCreatedAtDesc()`: Lấy toàn bộ ticket hệ thống phục vụ Staff/Admin.
-  - `findByIdAndIsDeleteFalse(id)`: Lấy chi tiết ticket.
+  - `findByUserAndIsDeleteFalseOrderByCreatedAtDesc(user)`: Lấy các ticket cá nhân của người dùng.
+  - `findByIsDeleteFalseOrderByCreatedAtDesc()`: Lấy toàn bộ ticket hệ thống hoạt động phục vụ Staff/Admin.
+  - `findById(id)`: Lấy chi tiết ticket.
 
 ### 3.3. DTOs
 
@@ -42,13 +42,15 @@ Triển khai luồng hỗ trợ kỹ thuật và giải quyết khiếu nại gi
 - **`SupportTicketService`**:
   - `createTicket(userId, category, title, description)`:
     - Tìm kiếm User, kiểm tra sự tồn tại.
-    - Lưu ticket mới với trạng thái ban đầu là `OPEN`.
+    - Lưu ticket mới với trạng thái ban đầu là `Open`.
+    - Gửi thông báo xác nhận thành công cho người dùng và thông báo cho toàn bộ Staff/Admin để xử lý.
   - `getUserTickets(userId)`: Lấy lịch sử ticket của người dùng.
   - `getAllTickets()`: Lấy toàn bộ ticket hệ thống (chỉ cho phép Staff/Admin).
   - `getTicketById(id)`: Lấy chi tiết ticket.
   - `updateTicketStatus(id, status, resolution)`:
-    - Xác thực trạng thái mới hợp lệ (`OPEN`, `RESOLVED`, `CLOSED`).
+    - Xác thực trạng thái mới hợp lệ (`Open`, `Processing`, `Resolved`).
     - Lưu nội dung xử lý của Staff và cập nhật trạng thái.
+    - Gửi thông báo biến động trạng thái cho người dùng.
 
 ### 3.5. Controllers & Security
 

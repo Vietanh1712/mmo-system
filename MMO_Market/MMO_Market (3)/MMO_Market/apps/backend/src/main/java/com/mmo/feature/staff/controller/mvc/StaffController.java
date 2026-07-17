@@ -50,6 +50,9 @@ public class StaffController {
     private StaffDashboardService staffDashboardService;
 
     @Autowired
+    private com.mmo.feature.wallet.service.WithdrawalService withdrawalService;
+
+    @Autowired
     private NotificationRepository notificationRepository;
 
 
@@ -231,10 +234,11 @@ public class StaffController {
             @RequestParam String status,
             RedirectAttributes redirectAttributes
     ) {
+        Long reviewerId = (Long) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        withdrawalService.updateWithdrawalStatus(id, status, reviewerId, null);
+
         Withdrawal withdrawal = withdrawalRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Withdrawal request not found"));
-        withdrawal.setStatus(status);
-        withdrawalRepository.save(withdrawal);
 
         // Gửi thông báo cho Seller
         String title = "Cập nhật yêu cầu rút tiền";
@@ -268,12 +272,14 @@ public class StaffController {
     @PostMapping("/withdrawals/reject")
     public String rejectWithdrawal(
             @RequestParam Long id,
+            @RequestParam(required = false) String reason,
             RedirectAttributes redirectAttributes
     ) {
+        Long reviewerId = (Long) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        withdrawalService.updateWithdrawalStatus(id, "Rejected", reviewerId, reason);
+
         Withdrawal withdrawal = withdrawalRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Withdrawal request not found"));
-        withdrawal.setStatus("Rejected");
-        withdrawalRepository.save(withdrawal);
 
         // Gửi thông báo từ chối cho Seller
         Notification notif = Notification.builder()

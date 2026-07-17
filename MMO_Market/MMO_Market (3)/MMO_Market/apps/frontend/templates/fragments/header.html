@@ -134,6 +134,42 @@
 
             const token = sessionStorage.getItem("accessToken");
             const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user");
+
+            if (token && token !== "null" && token !== "undefined") {
+                fetch('/api/v1/profile', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                .then(res => { if (res.ok) return res.json(); })
+                .then(profile => {
+                    if (profile) {
+                        const currentUserStr = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user");
+                        if (currentUserStr) {
+                            const u = JSON.parse(currentUserStr);
+                            u.balanceVnd = profile.balanceVnd;
+                            u.fullName = profile.fullName;
+                            u.role = profile.role;
+                            u.shopStatus = profile.shopStatus;
+                            
+                            sessionStorage.setItem("user", JSON.stringify(u));
+                            sessionStorage.setItem("userInfo", JSON.stringify(u));
+                            localStorage.setItem("user", JSON.stringify(u));
+                            localStorage.setItem("userInfo", JSON.stringify(u));
+
+                            const balanceEl = document.querySelector('.user-profile__balance');
+                            if (balanceEl) {
+                                const formatted = typeof formatCurrency === 'function'
+                                    ? formatCurrency(profile.balanceVnd)
+                                    : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(profile.balanceVnd);
+                                const currentRole = parseHeaderRole(profile.role);
+                                const isSystemRole = currentRole === 'Admin' || currentRole === 'Staff';
+                                balanceEl.textContent = isSystemRole ? (currentRole === 'Admin' ? 'Quản trị viên' : 'Nhân viên') : formatted;
+                            }
+                        }
+                    }
+                })
+                .catch(err => console.error("Error syncing profile:", err));
+            }
+
             const authArea = document.getElementById('headerAuthArea');
             const dropdown = document.getElementById('userDropdown');
 

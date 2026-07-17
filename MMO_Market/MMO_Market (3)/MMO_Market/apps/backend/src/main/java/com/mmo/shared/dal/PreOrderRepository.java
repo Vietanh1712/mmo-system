@@ -11,4 +11,7 @@ import java.util.List;
 public interface PreOrderRepository extends JpaRepository<PreOrder, Long> {
     List<PreOrder> findByCustomerAndIsDeleteFalse(User customer);
     List<PreOrder> findByCustomerAndIsDeleteFalseOrderByCreatedAtDesc(User customer);
+    
+    @org.springframework.data.jpa.repository.Query("SELECT p FROM PreOrder p WHERE p.product.seller = :seller AND p.isDelete = false ORDER BY p.createdAt DESC")
+    List<PreOrder> findBySellerOrderByCreatedAtDesc(@org.springframework.data.repository.query.Param("seller") User seller);
 }

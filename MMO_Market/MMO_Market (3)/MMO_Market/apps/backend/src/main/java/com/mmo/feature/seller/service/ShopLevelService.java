@@ -80,6 +80,9 @@ public class ShopLevelService {
                             ? java.time.Duration.between(seller.getCreatedAt(), LocalDateTime.now()).toDays()
                             : -1);
         }
+
+        // Cập nhật trạng thái khóa/mở khóa dựa trên cấp độ và số dư mới
+        updateShopLockStatus(sellerId);
     }
 
     /**
@@ -103,6 +106,48 @@ public class ShopLevelService {
             }
         }
         log.info("Đánh giá Shop Level hoàn tất. Số Seller được xử lý: {}", updated);
+    }
+
+    @Transactional
+    public void updateShopLockStatus(Long sellerId) {
+        User seller = userRepository.findByIdAndIsDeleteFalse(sellerId).orElse(null);
+        if (seller == null) {
+            return;
+        }
+
+        if (seller.getRole() == null || !seller.getRole().toLowerCase().contains("seller")) {
+            return;
+        }
+
+        long balance = seller.getBalanceVnd() != null ? seller.getBalanceVnd() : 0L;
+        int level = seller.getShopLevel() != null ? seller.getShopLevel() : 1;
+
+        if (balance < 0) {
+            if (level == 0 || level == 1) {
+                if (!"Locked".equalsIgnoreCase(seller.getShopStatus())) {
+                    seller.setShopStatus("Locked");
+                    userRepository.save(seller);
+                    log.info("Ví âm (balance={}) đối với Shop Level {}: Tự động KHÓA shop Seller ID {}", balance, level, sellerId);
+                }
+            } else if (level == 2) {
+                if (seller.getWithdrawalLocked() == null || !seller.getWithdrawalLocked()) {
+                    seller.setWithdrawalLocked(true);
+                    userRepository.save(seller);
+                    log.info("Ví âm (balance={}) đối với Shop Level 2: Tự động KHÓA rút tiền Seller ID {}", balance, sellerId);
+                }
+            }
+        } else {
+            if ("Locked".equalsIgnoreCase(seller.getShopStatus())) {
+                seller.setShopStatus("Active");
+                userRepository.save(seller);
+                log.info("Ví hết âm (balance={}): Tự động MỞ KHÓA shop Seller ID {}", balance, sellerId);
+            }
+            if (level == 2 && Boolean.TRUE.equals(seller.getWithdrawalLocked())) {
+                seller.setWithdrawalLocked(false);
+                userRepository.save(seller);
+                log.info("Ví hết âm (balance={}) đối với Shop Level 2: Tự động MỞ KHÓA rút tiền Seller ID {}", balance, sellerId);
+            }
+        }
     }
 
     // Giữ lại method cũ để không phá vỡ các caller còn sót

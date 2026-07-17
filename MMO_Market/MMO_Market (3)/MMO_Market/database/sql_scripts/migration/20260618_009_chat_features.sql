@@ -1,4 +1,4 @@
-﻿USE MMO_System_Schema;
+USE MMO_System_Schema;
 GO
 
 -- Migration: Add chat delete/block/mute features
@@ -20,20 +20,6 @@ BEGIN
 END
 GO
 
--- Create ChatBlocks table
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('ChatBlocks') AND type = 'U')
-BEGIN
-    CREATE TABLE ChatBlocks (
-        id BIGINT IDENTITY(1,1) PRIMARY KEY,
-        blocker_id BIGINT NOT NULL,
-        blocked_id BIGINT NOT NULL,
-        created_at DATETIME DEFAULT GETDATE(),
-        CONSTRAINT FK_ChatBlocks_Blocker FOREIGN KEY (blocker_id) REFERENCES Users(id) ON DELETE NO ACTION,
-        CONSTRAINT FK_ChatBlocks_Blocked FOREIGN KEY (blocked_id) REFERENCES Users(id) ON DELETE NO ACTION,
-        CONSTRAINT UQ_ChatBlocks UNIQUE (blocker_id, blocked_id)
-    );
-END
-GO
 
 -- Create ChatMutes table
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('ChatMutes') AND type = 'U')
