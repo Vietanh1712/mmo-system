@@ -86,7 +86,6 @@
                             ngay</button>
                         <button class="btn-pdp-cart" id="cartActionButton" onclick="addToCart()"><i class="fa fa-shopping-cart"></i> Thêm vào
                             giỏ</button>
-                        <button class="btn-pdp-buy" id="preorderActionButton" onclick="openPreOrderModal()" style="background:var(--brand-accent);border:none;margin-top:10px;"><i class="fa fa-clock-o"></i> Đặt hàng trước</button>
                     </div>
                 </div>
             </div>
@@ -1474,93 +1473,7 @@
                 window.location.href = `/messages?sellerId=14`;
             }
         }
-        // Pre-order Modal Logic
-        function openPreOrderModal() {
-            if (!sessionStorage.getItem('accessToken')) {
-                window.location.href = '/login';
-                return;
-            }
-            document.getElementById('preOrderModal').style.display = 'flex';
-            document.getElementById('poProductName').value = selectedProduct.name;
-            document.getElementById('poQuantity').value = 1;
-            document.getElementById('poNotes').value = '';
-        }
-
-        function closePreOrderModal() {
-            document.getElementById('preOrderModal').style.display = 'none';
-        }
-
-        function openPreOrderRequest() {
-            openPreOrderModal();
-        }
-
-        async function submitPreOrder(event) {
-            event.preventDefault();
-            const btn = document.getElementById('btnSubmitPO');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang gửi...';
-            btn.disabled = true;
-
-            try {
-                const payload = {
-                    sellerId: selectedProduct.sellerId || 14,
-                    productId: selectedProduct.id,
-                    productName: selectedProduct.name,
-                    expectedPriceVnd: currentVariantPrice,
-                    quantity: document.getElementById('poQuantity').value,
-                    notes: document.getElementById('poNotes').value
-                };
-
-                const res = await fetch('/api/v1/pre-orders', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${sessionStorage.getItem('accessToken')}`
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.message || 'Lỗi đặt trước');
-
-                showSuccessToast('Đã gửi yêu cầu đặt hàng trước thành công!');
-                closePreOrderModal();
-            } catch (err) {
-                alert('Lỗi: ' + err.message);
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
-        }
     </script>
-
-    <!-- Pre-order Modal -->
-    <div id="preOrderModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-        <div style="background:#fff; width:450px; border-radius:12px; overflow:hidden; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-            <div style="background:var(--brand-accent); color:#fff; padding:15px 20px; font-weight:600; font-size:18px; display:flex; justify-content:space-between; align-items:center;">
-                <span><i class="fa fa-clock-o"></i> Đặt hàng trước</span>
-                <span style="cursor:pointer;" onclick="closePreOrderModal()">&times;</span>
-            </div>
-            <form style="padding:20px;" onsubmit="submitPreOrder(event)">
-                <div style="margin-bottom:15px;">
-                    <label style="display:block; margin-bottom:5px; font-weight:500;">Sản phẩm</label>
-                    <input type="text" id="poProductName" readonly style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; background:#f9f9f9;">
-                </div>
-                <div style="margin-bottom:15px;">
-                    <label style="display:block; margin-bottom:5px; font-weight:500;">Số lượng</label>
-                    <input type="number" id="poQuantity" min="1" value="1" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
-                </div>
-                <div style="margin-bottom:20px;">
-                    <label style="display:block; margin-bottom:5px; font-weight:500;">Ghi chú (Tùy chọn)</label>
-                    <textarea id="poNotes" rows="3" placeholder="Yêu cầu thêm..." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;"></textarea>
-                </div>
-                <div style="text-align:right;">
-                    <button type="button" onclick="closePreOrderModal()" style="padding:10px 20px; border:none; background:#eee; border-radius:6px; cursor:pointer; margin-right:10px;">Hủy</button>
-                    <button type="submit" id="btnSubmitPO" style="padding:10px 20px; border:none; background:var(--brand-accent); color:#fff; border-radius:6px; cursor:pointer;">Gửi yêu cầu</button>
-                </div>
-            </form>
-        </div>
-    </div>
 </body>
 
 </html>
