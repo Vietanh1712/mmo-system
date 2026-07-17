@@ -545,16 +545,47 @@ window.closeAssetModal = closeAssetModal;
 // 5. PRODUCT ADD
 // ==============================================================================
 async function initProductAdd() {
-    const select = document.getElementById('category');
-    if (!select) return;
+    const mainSelect = document.getElementById('mainCategory');
+    const subSelect = document.getElementById('subCategory');
+    
+    // Fallback logic if the HTML was not updated
+    const fallbackSelect = document.getElementById('category');
+    
+    if (!mainSelect && !fallbackSelect) return;
+
+    let categoryData = [];
 
     try {
         // Load categories
         const res = await sellerFetch('/categories');
         if (res.ok) {
-            const categories = await res.json();
-            select.innerHTML = '<option value="">-- Chọn danh mục --</option>' + 
-                               categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            categoryData = await res.json();
+            
+            if (mainSelect) {
+                mainSelect.innerHTML = '<option value="">-- Chọn danh mục chính --</option>' + 
+                                   categoryData.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                
+                mainSelect.addEventListener('change', (e) => {
+                    const parentId = e.target.value;
+                    if (!parentId) {
+                        subSelect.innerHTML = '<option value="">-- Chọn danh mục chính trước --</option>';
+                        subSelect.disabled = true;
+                        return;
+                    }
+                    const parent = categoryData.find(c => c.id == parentId);
+                    if (parent && parent.subCategories && parent.subCategories.length > 0) {
+                        subSelect.innerHTML = '<option value="">-- Chọn danh mục con --</option>' + 
+                                              parent.subCategories.map(sub => `<option value="${sub.id}">${sub.name}</option>`).join('');
+                        subSelect.disabled = false;
+                    } else {
+                        subSelect.innerHTML = '<option value="">-- Không có danh mục con --</option>';
+                        subSelect.disabled = true;
+                    }
+                });
+            } else if (fallbackSelect) {
+                fallbackSelect.innerHTML = '<option value="">-- Chọn danh mục --</option>' + 
+                                   categoryData.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            }
         }
 
 
@@ -746,17 +777,46 @@ async function initProductEdit() {
         return;
     }
 
-    const select = document.getElementById('category');
+    const mainSelect = document.getElementById('mainCategory');
+    const subSelect = document.getElementById('subCategory');
+    const fallbackSelect = document.getElementById('category');
+    
     const form = document.querySelector('.profile-edit-form');
     const tbody = document.querySelector('.seller-table tbody') || document.querySelector('.admin-table tbody');
     if (!form || !tbody) return;
+
+    let categoryData = [];
 
     try {
         // Load categories
         const catRes = await sellerFetch('/categories');
         if (catRes.ok) {
-            const categories = await catRes.json();
-            select.innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            categoryData = await catRes.json();
+            if (mainSelect) {
+                mainSelect.innerHTML = '<option value="">-- Chọn danh mục chính --</option>' + 
+                                   categoryData.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                                   
+                mainSelect.addEventListener('change', (e) => {
+                    const parentId = e.target.value;
+                    if (!parentId) {
+                        subSelect.innerHTML = '<option value="">-- Chọn danh mục chính trước --</option>';
+                        subSelect.disabled = true;
+                        return;
+                    }
+                    const parent = categoryData.find(c => c.id == parentId);
+                    if (parent && parent.subCategories && parent.subCategories.length > 0) {
+                        subSelect.innerHTML = '<option value="">-- Chọn danh mục con --</option>' + 
+                                              parent.subCategories.map(sub => `<option value="${sub.id}">${sub.name}</option>`).join('');
+                        subSelect.disabled = false;
+                    } else {
+                        subSelect.innerHTML = '<option value="">-- Không có danh mục con --</option>';
+                        subSelect.disabled = true;
+                    }
+                });
+            } else if (fallbackSelect) {
+                fallbackSelect.innerHTML = '<option value="">-- Chọn danh mục --</option>' + 
+                                   categoryData.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            }
         }
 
         // Load Product Detail
@@ -772,7 +832,31 @@ async function initProductEdit() {
         if (document.getElementById('userGuide')) {
             document.getElementById('userGuide').value = p.userGuide || '';
         }
-        select.value = p.categoryId;
+        if (fallbackSelect) {
+            fallbackSelect.value = p.categoryId;
+        } else if (mainSelect && categoryData.length > 0) {
+            let selectedMainCat = '';
+            let selectedSubCat = '';
+            
+            categoryData.forEach(main => {
+                if (main.id == p.categoryId) {
+                    selectedMainCat = main.id;
+                } else if (main.subCategories) {
+                    main.subCategories.forEach(sub => {
+                        if (sub.id == p.categoryId) {
+                            selectedMainCat = main.id;
+                            selectedSubCat = sub.id;
+                        }
+                    });
+                }
+            });
+            
+            mainSelect.value = selectedMainCat;
+            mainSelect.dispatchEvent(new Event('change'));
+            if (selectedSubCat) {
+                subSelect.value = selectedSubCat;
+            }
+        }
 
         // Activate variants new link
         const addVarBtn = document.querySelector('a[href*="/seller/variants/new"]');
