@@ -39,12 +39,56 @@ public class ChatController {
 
     @GetMapping("/unread-count")
     public ResponseEntity<?> getUnreadCount(@AuthenticationPrincipal Long userId) {
+        userStatusService.updateActiveTime(userId);
         Optional<User> currentUserOpt = userRepository.findById(userId);
         if (currentUserOpt.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "User not found"));
         }
-        long count = chatRepository.countUnreadRoomsForReceiver(currentUserOpt.get());
-        return ResponseEntity.ok(Map.of("unreadCount", count));
+        User currentUser = currentUserOpt.get();
+
+        long unreadRooms = 0;
+
+        // 1. Count normal chats with unread messages
+        List<Chat> allChats = chatRepository.findAllChatsForContactList(currentUser);
+        Map<Long, Chat> contactLatestChat = new HashMap<>();
+        for (Chat chat : allChats) {
+            User contact = chat.getSender().getId().equals(userId) ? chat.getReceiver() : chat.getSender();
+            Long contactId = contact.getId();
+            Chat existing = contactLatestChat.get(contactId);
+            if (existing == null || chat.getCreatedAt().isAfter(existing.getCreatedAt())) {
+                contactLatestChat.put(contactId, chat);
+            }
+        }
+
+        for (Map.Entry<Long, Chat> entry : contactLatestChat.entrySet()) {
+            if (entry.getKey().equals(userId)) continue;
+            Chat latestChat = entry.getValue();
+            boolean isCurrentUserSender = latestChat.getSender().getId().equals(userId);
+            boolean isDeletedByUser = isCurrentUserSender
+                    ? Boolean.TRUE.equals(latestChat.getSenderDeleted())
+                    : Boolean.TRUE.equals(latestChat.getReceiverDeleted());
+            if (isDeletedByUser) continue;
+
+            User contactUser = latestChat.getSender().getId().equals(userId) ? latestChat.getReceiver() : latestChat.getSender();
+            long unreadCount = chatRepository.countUnreadFrom(contactUser, currentUser);
+            if (unreadCount > 0) {
+                unreadRooms++;
+            }
+        }
+
+        // 2. Count active complaints with unread messages
+        List<com.mmo.shared.model.Complaint> activeComplaints = complaintRepository.findActiveComplaintsForUser(currentUser);
+        for (com.mmo.shared.model.Complaint comp : activeComplaints) {
+            List<Chat> compChats = chatRepository.findByComplaintAndIsDeleteFalseOrderByCreatedAtAsc(comp);
+            long unread = compChats.stream()
+                .filter(c -> !c.getSender().getId().equals(userId) && (c.getIsRead() == null || Boolean.FALSE.equals(c.getIsRead())))
+                .count();
+            if (unread > 0) {
+                unreadRooms++;
+            }
+        }
+
+        return ResponseEntity.ok(Map.of("unreadCount", unreadRooms));
     }
 
     // 0. Get contact info by userId (for chat header when no existing chat)
