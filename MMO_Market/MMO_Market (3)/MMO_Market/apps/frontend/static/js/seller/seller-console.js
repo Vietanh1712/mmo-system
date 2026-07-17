@@ -541,21 +541,82 @@ window.viewAssets = viewAssets;
 window.closeAssetModal = closeAssetModal;
 
 
+// Helper to setup category selectors
+async function setupCategorySelectors(mainSelect, subSelect, currentCategoryId = null) {
+    try {
+        const res = await sellerFetch('/categories');
+        if (!res.ok) return;
+        
+        const categories = await res.json();
+        
+        // Populate mainCategory
+        mainSelect.innerHTML = '<option value="">-- Chọn danh mục chính --</option>' + 
+                              categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        
+        // Change handler
+        const updateSubCategories = (selectedParentId, selectValue = null) => {
+            const parentCat = categories.find(c => c.id == selectedParentId);
+            if (parentCat && parentCat.subCategories && parentCat.subCategories.length > 0) {
+                subSelect.innerHTML = '<option value="">-- Chọn danh mục con --</option>' +
+                                     parentCat.subCategories.map(sub => `<option value="${sub.id}">${sub.name}</option>`).join('');
+                subSelect.disabled = false;
+                if (selectValue) {
+                    subSelect.value = selectValue;
+                }
+            } else {
+                subSelect.innerHTML = '<option value="">-- Không có danh mục con --</option>';
+                subSelect.disabled = true;
+            }
+        };
+        
+        mainSelect.addEventListener('change', () => {
+            updateSubCategories(mainSelect.value);
+        });
+        
+        // If initializing with an existing category ID (edit mode)
+        if (currentCategoryId) {
+            let foundParent = null;
+            let foundSub = null;
+            
+            for (const cat of categories) {
+                if (cat.id == currentCategoryId) {
+                    foundParent = cat;
+                    break;
+                }
+                if (cat.subCategories) {
+                    const sub = cat.subCategories.find(s => s.id == currentCategoryId);
+                    if (sub) {
+                        foundParent = cat;
+                        foundSub = sub;
+                        break;
+                    }
+                }
+            }
+            
+            if (foundParent) {
+                mainSelect.value = foundParent.id;
+                if (foundSub) {
+                    updateSubCategories(foundParent.id, foundSub.id);
+                } else {
+                    updateSubCategories(foundParent.id);
+                }
+            }
+        }
+    } catch (err) {
+        console.error('Error setupCategorySelectors:', err);
+    }
+}
+
 // ==============================================================================
 // 5. PRODUCT ADD
 // ==============================================================================
 async function initProductAdd() {
-    const select = document.getElementById('category');
-    if (!select) return;
+    const mainSelect = document.getElementById('mainCategory');
+    const subSelect = document.getElementById('subCategory');
+    if (!mainSelect || !subSelect) return;
 
     try {
-        // Load categories
-        const res = await sellerFetch('/categories');
-        if (res.ok) {
-            const categories = await res.json();
-            select.innerHTML = '<option value="">-- Chọn danh mục --</option>' + 
-                               categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-        }
+        await setupCategorySelectors(mainSelect, subSelect);
 
 
         // Setup Variants UI
@@ -651,7 +712,7 @@ async function initProductAdd() {
                 e.preventDefault();
                 const name = document.getElementById('productName').value.trim();
                 const description = document.getElementById('description').value.trim();
-                const categoryId = select.value;
+                const categoryId = subSelect.value || mainSelect.value;
                 const typeEl = document.querySelector('input[name="productType"]:checked');
                 const productType = typeEl ? typeEl.value : null;
 
@@ -746,23 +807,20 @@ async function initProductEdit() {
         return;
     }
 
-    const select = document.getElementById('category');
+    const mainSelect = document.getElementById('mainCategory');
+    const subSelect = document.getElementById('subCategory');
     const form = document.querySelector('.profile-edit-form');
     const tbody = document.querySelector('.seller-table tbody') || document.querySelector('.admin-table tbody');
-    if (!form || !tbody) return;
+    if (!form || !tbody || !mainSelect || !subSelect) return;
 
     try {
-        // Load categories
-        const catRes = await sellerFetch('/categories');
-        if (catRes.ok) {
-            const categories = await catRes.json();
-            select.innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-        }
-
         // Load Product Detail
         const pRes = await sellerFetch(`/products/${productId}`);
         if (!pRes.ok) throw new Error('Không thể tải thông tin sản phẩm.');
         const p = await pRes.json();
+
+        // Setup categories
+        await setupCategorySelectors(mainSelect, subSelect, p.categoryId);
 
         // Populate fields
         const subtitleEl = document.querySelector('.seller-card__subtitle') || document.querySelector('.view-header p');
@@ -772,7 +830,6 @@ async function initProductEdit() {
         if (document.getElementById('userGuide')) {
             document.getElementById('userGuide').value = p.userGuide || '';
         }
-        select.value = p.categoryId;
 
         // Activate variants new link
         const addVarBtn = document.querySelector('a[href*="/seller/variants/new"]');
@@ -828,7 +885,7 @@ async function initProductEdit() {
                     name: document.getElementById('productName').value.trim(),
                     description: document.getElementById('description').value.trim(),
                     userGuide: document.getElementById('userGuide') ? document.getElementById('userGuide').value.trim() : '',
-                    categoryId: select.value
+                    categoryId: subSelect.value || mainSelect.value
                 };
 
                 try {
