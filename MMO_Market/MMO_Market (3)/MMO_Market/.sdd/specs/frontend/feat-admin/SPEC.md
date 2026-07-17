@@ -17,14 +17,14 @@ Các tệp tin thực tế trong dự án:
 - **Trang quản trị duy nhất (`/admin/users`)**:
   * View: `templates/admin/users.html`
   * Script: `static/js/admin-console.js`
-- **Các phân vùng view phụ (được render động bằng JS)**:
-  * `dashboard`: Thống kê tài chính.
-  * `audit-logs`: Vết lịch sử thao tác nhạy cảm.
-  * `revenue`: Phân bổ doanh thu.
-  * `add-staff`: Thêm nhân sự Staff.
-  * `system-config` / `commissions`: Thiết lập biểu phí.
-  * `permissions`: Phân quyền RBAC cho Staff.
-  * `notifications`: Gửi thông báo hệ thống.
+- **Các phân vùng view phụ & tài liệu chi tiết (được render động bằng JS)**:
+  * `dashboard` (Bảng điều khiển): Thống kê tài chính & SVG chart ([SPEC-dashboard.md](file:///c:/SU26/SWP/mmo-market1/MMO_Market/MMO_Market%20%283%29/MMO_Market/.sdd/specs/frontend/feat-admin/SPEC-dashboard.md))
+  * `audit-logs` (Nhật ký hệ thống): Kiểm toán hoạt động ([SPEC-audit-logs.md](file:///c:/SU26/SWP/mmo-market1/MMO_Market/MMO_Market%20%283%29/MMO_Market/.sdd/specs/frontend/feat-admin/SPEC-audit-logs.md))
+  * `revenue` (Doanh thu & Dòng tiền): Dòng tiền giao dịch ([SPEC-revenue.md](file:///c:/SU26/SWP/mmo-market1/MMO_Market/MMO_Market%20%283%29/MMO_Market/.sdd/specs/frontend/feat-admin/SPEC-revenue.md))
+  * `accounts` / `add-staff` (Quản lý tài khoản): Khóa/mở khóa & CRUD Staff ([SPEC-users.md](file:///c:/SU26/SWP/mmo-market1/MMO_Market/MMO_Market%20%283%29/MMO_Market/.sdd/specs/frontend/feat-admin/SPEC-users.md))
+  * `system-config` / `commissions` (Cấu hình hệ thống & Phí): Thiết lập thông số và biểu phí ([SPEC-config.md](file:///c:/SU26/SWP/mmo-market1/MMO_Market/MMO_Market%20%283%29/MMO_Market/.sdd/specs/frontend/feat-admin/SPEC-config.md))
+  * `permissions` (Phân quyền nhân viên): Gán/thu hồi quyền Staff ([SPEC-permissions.md](file:///c:/SU26/SWP/mmo-market1/MMO_Market%20%283%29/MMO_Market/.sdd/specs/frontend/feat-admin/SPEC-permissions.md))
+  * `notifications` (Quản lý thông báo & Bảo trì): Soạn thông báo & bảo trì hệ thống ([SPEC-notifications.md](file:///c:/SU26/SWP/mmo-market1/MMO_Market%20%283%29/MMO_Market/.sdd/specs/frontend/feat-admin/SPEC-notifications.md))
 
 ---
 

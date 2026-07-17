@@ -115,8 +115,8 @@ public class ShopRegistrationService {
                 .build();
         notificationRepository.save(customerNotif);
 
-        // 2. Tạo thông báo cho toàn bộ Staff & Admin
-        List<User> staffAndAdmins = userRepository.findStaffAndAdmins();
+        // 2. Tạo thông báo cho Staff có quyền duyệt mở Shop (MANAGE_SHOPS)
+        List<User> staffAndAdmins = userRepository.findUsersByPermission("MANAGE_SHOPS");
         for (User staff : staffAndAdmins) {
             if (staff.getId().equals(user.getId())) {
                 continue;

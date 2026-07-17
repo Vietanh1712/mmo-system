@@ -140,8 +140,8 @@ public class WithdrawalService {
                 .build();
         notificationRepository.save(sellerNotif);
 
-        // 2. Tạo thông báo cho toàn bộ Staff & Admin
-        List<User> staffAndAdmins = userRepository.findStaffAndAdmins();
+        // 2. Tạo thông báo cho Staff có quyền duyệt rút tiền (APPROVE_WITHDRAWALS)
+        List<User> staffAndAdmins = userRepository.findUsersByPermission("APPROVE_WITHDRAWALS");
         for (User staff : staffAndAdmins) {
             if (staff.getId().equals(seller.getId())) {
                 continue;
