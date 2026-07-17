@@ -69,9 +69,7 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
            "c.receiver = :receiver AND " +
            "(c.isRead IS NULL OR c.isRead = false) AND " +
            "(c.isDelete IS NULL OR c.isDelete = false) AND " +
-           "(c.receiverDeleted IS NULL OR c.receiverDeleted = false) AND " +
-           "(c.chatType = 'Normal' OR c.chatType IS NULL) AND " +
-           "c.complaint IS NULL")
+           "(c.receiverDeleted IS NULL OR c.receiverDeleted = false)")
     long countUnreadRoomsForReceiver(@Param("receiver") User receiver);
 
     @Modifying
