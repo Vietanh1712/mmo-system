@@ -48,13 +48,13 @@
 Bước 1  [User]:       Truy cập mục "Thông tin cá nhân", chọn "Xác thực KYC"
 Bước 2  [Frontend]:   GET /api/v1/kyc/me để kiểm tra trạng thái hiện tại
 Bước 3  [Backend]:    Trả về trạng thái chưa KYC (status: NOT_SUBMITTED)
-Bước 4  [User]:       Nhập Họ tên, Số định danh CCCD và tải lên 3 ảnh:
-                       - Mặt trước CCCD
-                       - Mặt sau CCCD
+Bước 4  [User]:       Nhập Họ tên, Ngày sinh, Địa chỉ, Chọn loại giấy tờ, Số định danh (CCCD/Hộ chiếu) và tải lên 3 ảnh:
+                       - Mặt trước giấy tờ
+                       - Mặt sau giấy tờ
                        - Ảnh selfie chân dung
 Bước 5  [Frontend]:   Tải các tệp ảnh qua API upload, sau đó gửi yêu cầu:
-                       POST /api/v1/kyc { fullName, citizenId, frontImage, backImage, selfieImage }
-Bước 6  [Backend]:    Validate: citizenId từ 9 đến 12 chữ số
+                       POST /api/v1/kyc { fullName, dateOfBirth, address, idNumber, idType, frontImage, backImage, selfieImage }
+Bước 6  [Backend]:    Validate: idNumber từ 9 đến 12 chữ số
                        Lưu hồ sơ vào bảng KYCRequests với status = 'Pending'
                        Trả về: status = 200, message = "SUBMITTED"
 Bước 7  [Frontend]:   Hiển thị thông báo gửi hồ sơ thành công, trạng thái "Đang chờ duyệt"
@@ -93,7 +93,7 @@ Bước 7  [Backend]:    Validate reason không rỗng
 | Mã | Quy tắc | Chi tiết |
 |:---|:---|:---|
 | BR-03-01 | Chỉ gửi 1 yêu cầu | Không được gửi yêu cầu mới khi có hồ sơ đang ở trạng thái `Pending` |
-| BR-03-02 | citizenId từ 9-12 số | Bắt buộc kiểm tra độ dài mã định danh công dân |
+| BR-03-02 | idNumber từ 9-12 số | Bắt buộc kiểm tra độ dài mã định danh công dân |
 | BR-03-03 | Quyền Staff | Chỉ các tài khoản có vai trò `Staff` hoặc `Admin` mới gọi được API duyệt |
 
 ---
@@ -105,7 +105,10 @@ Bước 7  [Backend]:    Validate reason không rỗng
 | Trường | Kiểm tra | Lỗi khi vi phạm |
 |:---|:---|:---|
 | `fullName` | Bắt buộc, tối đa 100 ký tự | "Họ tên không được rỗng" |
-| `citizenId` | Bắt buộc, định dạng số 9-12 ký tự | "Số CCCD/CMND không hợp lệ" |
+| `dateOfBirth` | Bắt buộc, định dạng hợp lệ | "Ngày sinh không hợp lệ" |
+| `address` | Bắt buộc, không rỗng | "Địa chỉ không được rỗng" |
+| `idType` | Bắt buộc, chọn loại giấy tờ hợp lệ | "Vui lòng chọn loại giấy tờ" |
+| `idNumber` | Bắt buộc, định dạng số 9-12 ký tự | "Số giấy tờ không hợp lệ" |
 | `frontImage` | Bắt buộc tệp ảnh hợp lệ | "Ảnh mặt trước là bắt buộc" |
 
 ---
