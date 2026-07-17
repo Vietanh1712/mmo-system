@@ -37,9 +37,11 @@ Trong giao dịch C2C sản phẩm số, người mua có thể nhận được 
 | **FR-COMP-02** | THE SYSTEM SHALL validate that the Customer is the buyer of the transaction, and that the transaction status is not already `Disputed`, `Cancelled`, or `Refunded`. |
 | **FR-COMP-03** | THE SYSTEM SHALL set the transaction status to `Disputed` to lock transaction escrow balance immediately upon complaint creation. |
 | **FR-COMP-04** | THE SYSTEM SHALL require `evidence` (image/video URL) to be non-empty when creating a complaint, throwing an error otherwise. |
-| **FR-COMP-05** | WHEN a Staff accepts a complaint for dispute resolution, THE SYSTEM SHALL update complaint status to `In_Progress` and send a system message to activate the chat room. |
-| **FR-COMP-06** | WHEN a Staff updates the complaint status to `Resolved`, `Completed` or `Rejected`, THE SYSTEM SHALL save `resolution` text, update the status, and record the resolver ID. |
-| **FR-COMP-07** | THE SYSTEM SHALL allow Staff to assign a `flagLevel` (None, Alert, Warning) and `flagReason` to the seller's shop during resolution. |
+| **FR-COMP-05** | WHEN a Customer retrieves their complaints, THE SYSTEM SHALL return only complaints where they are the owner (`customer_id = currentUserId`). |
+| **FR-COMP-06** | WHEN a Staff/Admin retrieves complaints or views detail, THE SYSTEM SHALL bypass the ownership check and return the full detailed info. |
+| **FR-COMP-07** | WHEN a Staff updates the complaint status (to `InProgress`, `RESOLVED`, or `REJECTED`), THE SYSTEM SHALL save `resolution` text, update the status, and record the resolver ID. |
+| **FR-COMP-08** | THE SYSTEM SHALL allow the Seller to view complaints raised against their shop via `/api/seller/complaints/**` (see feat-seller SPEC). |
+| **FR-COMP-09** | THE SYSTEM SHALL allow Staff to assign a `flagLevel` (None, Alert, Warning) and `flagReason` to the seller's shop during resolution. |
 
 ---
 
@@ -47,10 +49,10 @@ Trong giao dịch C2C sản phẩm số, người mua có thể nhận được 
 
 | Rule | Mô tả |
 |---|---|
-| **BR-COMP-01** | Chỉ có tài khoản mua hàng (Customer) mới được tạo khiếu nại đơn hàng. |
-| **BR-COMP-02** | Bằng chứng (evidence) là **bắt buộc** khi tạo đơn khiếu nại để hạn chế các khiếu nại rác. |
-| **BR-COMP-03** | Soft delete: Không xóa vật lý bản ghi `Complaints`, luôn dùng cờ `isDelete = 0`. |
-| **BR-COMP-04** | Trạng thái vòng đời khiếu nại: `PENDING_REVIEW` (Tạo mới) $\rightarrow$ `In_Progress` (Đang đối chất) $\rightarrow$ `Resolved` (Chấp nhận khiếu nại, hoàn tiền) hoặc `Rejected` (Từ chối khiếu nại, giải ngân Seller) / `Completed` (Đã hoàn tất). |
+| **BR-COMP-01** | Chỉ người mua (Customer) mới được tạo khiếu nại, không phải Seller hay Staff. |
+| **BR-COMP-02** | Một giao dịch chỉ có thể có một khiếu nại hoạt động tại một thời điểm, và bằng chứng (evidence) là bắt buộc. |
+| **BR-COMP-03** | Soft delete: không xóa vật lý bản ghi `Complaints` (luôn lọc `isDelete = 0`). |
+| **BR-COMP-04** | Trạng thái vòng đời khiếu nại: `PENDING_REVIEW` (Tạo mới) $\rightarrow$ `In_Progress` (Đang đối chất) $\rightarrow$ `RESOLVED` (Chấp nhận khiếu nại, hoàn tiền) hoặc `REJECTED` (Từ chối, giải ngân) / `Completed` (Đã hoàn tất). Bắt buộc phải có `resolution` khi chuyển sang RESOLVED/REJECTED. |
 
 ---
 

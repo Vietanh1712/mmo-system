@@ -25,7 +25,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Boolean existsByEmailAndIsDeleteFalse(String email);
     long countByIsDeleteFalse();
 
-    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND (UPPER(u.shopStatus) = 'ACTIVE' OR UPPER(u.shopStatus) = 'APPROVED' OR UPPER(u.shopStatus) = 'BANNED' OR UPPER(u.shopStatus) = 'LOCKED')")
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND u.shopStatus IS NOT NULL AND UPPER(u.shopStatus) NOT IN ('PENDING', 'REJECTED')")
     long countTotalShops();
 
     @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND (UPPER(u.shopStatus) = 'ACTIVE' OR UPPER(u.shopStatus) = 'APPROVED')")
@@ -34,6 +34,17 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND (UPPER(u.shopStatus) = 'BANNED' OR UPPER(u.shopStatus) = 'LOCKED')")
     long countBannedShops();
 
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND (UPPER(u.shopStatus) = 'BANNED' OR UPPER(u.shopStatus) = 'PERMANENT_BANNED')")
+    long countPermanentBannedShops();
+
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND (UPPER(u.shopStatus) = 'LOCKED' OR UPPER(u.shopStatus) = 'INDEFINITE_LOCKED')")
+    long countIndefiniteLockedShops();
+
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND (UPPER(u.shopStatus) = 'SUSPENDED' OR UPPER(u.shopStatus) = 'TEMP_LOCKED')")
+    long countTemporarySuspendedShops();
+
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND (UPPER(u.shopStatus) = 'WITHDRAWN' OR UPPER(u.shopStatus) = 'DELETED')")
+    long countWithdrawnShops();
     @org.springframework.data.jpa.repository.Query("SELECT COALESCE(SUM(u.depositVnd), 0) FROM User u WHERE u.isDelete = false")
     long sumTotalDeposit();
 

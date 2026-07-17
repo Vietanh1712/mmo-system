@@ -64,15 +64,27 @@
                     </div>
                     <div class="ds-card staff-stat-card green">
                         <p class="staff-stat-card__label">Shop đang hoạt động</p>
-                        <p class="staff-stat-card__value" id="stat-pending-shops">0</p>
+                        <p class="staff-stat-card__value" id="stat-active-shops">0</p>
                     </div>
-                    <div class="ds-card staff-stat-card yellow">
-                        <p class="staff-stat-card__label">Shop bị khóa</p>
-                        <p class="staff-stat-card__value" id="stat-approved-shops">0</p>
+                    <div class="ds-card staff-stat-card green" style="border-left: 4px solid #10b981 !important;">
+                        <p class="staff-stat-card__label">Tổng tiền cọc</p>
+                        <p class="staff-stat-card__value" id="stat-total-deposit">0</p>
                     </div>
                     <div class="ds-card staff-stat-card red">
-                        <p class="staff-stat-card__label">Tổng tiền cọc</p>
-                        <p class="staff-stat-card__value" id="stat-rejected-shops">0</p>
+                        <p class="staff-stat-card__label">Shop khóa vĩnh viễn</p>
+                        <p class="staff-stat-card__value" id="stat-banned-shops">0</p>
+                    </div>
+                    <div class="ds-card staff-stat-card yellow">
+                        <p class="staff-stat-card__label">Shop khóa vô thời hạn</p>
+                        <p class="staff-stat-card__value" id="stat-locked-shops">0</p>
+                    </div>
+                    <div class="ds-card staff-stat-card orange" style="border-left: 4px solid #e67e22 !important;">
+                        <p class="staff-stat-card__label">Shop khóa có thời hạn</p>
+                        <p class="staff-stat-card__value" id="stat-suspended-shops">0</p>
+                    </div>
+                    <div class="ds-card staff-stat-card gray" style="border-left: 4px solid #7f8c8d !important;">
+                        <p class="staff-stat-card__label">Xóa Shop</p>
+                        <p class="staff-stat-card__value" id="stat-withdrawn-shops">0</p>
                     </div>
                 </div>
 
@@ -101,17 +113,16 @@
                             <thead>
                             <tr>
                                 <th class="ds-table-center" style="width: 60px;">STT</th>
-                                <th>Mã yêu cầu</th>
+                                <th>Mã shop</th>
                                 <th>Tên Shop</th>
                                 <th class="ds-table-center">Trạng thái Shop</th>
                                 <th class="ds-table-right">Tiền cọc (VNĐ)</th>
                                 <th class="ds-table-right">Số dư (VNĐ)</th>
-                                <th>Ngày gửi</th>
                                 <th class="ds-table-center">Thao tác</th>
                             </tr>
                             </thead>
                             <tbody id="shopRegistrationsTableBody">
-                                <tr><td colspan="8" class="ds-table-center">Đang tải dữ liệu...</td></tr>
+                                <tr><td colspan="7" class="ds-table-center">Đang tải dữ liệu...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -121,50 +132,6 @@
         </div>
     </div>
 </main>
-
-<!-- Modal Review -->
-<dialog class="ds-modal" id="reviewModal">
-    <div class="ds-modal-content">
-        <div class="ds-modal-header">
-            <h3 class="ds-modal-title" id="modalTitle">Chi tiết đăng ký Shop</h3>
-            <button class="ds-btn ds-btn-icon" id="closeReviewModal" type="button" aria-label="Đóng"><i class="fa fa-times"></i></button>
-        </div>
-        <div class="ds-modal-body">
-            <div class="ds-form-field">
-                <label class="ds-label">Mã yêu cầu</label>
-                <input class="ds-input" id="modalShopCode" readonly>
-            </div>
-            <div class="ds-form-field">
-                <label class="ds-label">Tên Shop</label>
-                <input class="ds-input" id="modalShopName" readonly>
-            </div>
-            <div class="ds-form-field">
-                <label class="ds-label">Danh mục kinh doanh</label>
-                <input class="ds-input" id="modalShopCategory" readonly>
-            </div>
-            <div class="ds-form-field">
-                <label class="ds-label">Email liên hệ</label>
-                <input class="ds-input" id="modalShopEmail" readonly>
-            </div>
-            <div class="ds-form-field">
-                <label class="ds-label">Số điện thoại</label>
-                <input class="ds-input" id="modalShopPhone" readonly>
-            </div>
-            <div class="ds-form-field">
-                <label class="ds-label">Mô tả Shop</label>
-                <textarea class="ds-textarea" id="modalShopDesc" rows="3" readonly></textarea>
-            </div>
-            <div class="ds-form-field" id="rejectionReasonFieldGroup">
-                <label class="ds-label" id="rejectionReasonLabel">Lý do từ chối</label>
-                <textarea class="ds-textarea" id="reviewReason" rows="3" placeholder="Nhập lý do nếu từ chối..."></textarea>
-            </div>
-        </div>
-        <div class="ds-modal-footer" id="modalFooterActions">
-            <button class="ds-btn ds-btn-danger" id="rejectBtn" type="button">Từ chối</button>
-            <button class="ds-btn ds-btn-success" id="approveBtn" type="button">Chấp thuận</button>
-        </div>
-    </div>
-</dialog>
 
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 <script th:src="@{/js/customer/auth.js}"></script>

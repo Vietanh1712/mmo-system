@@ -7,6 +7,8 @@ import com.mmo.shared.dal.ComplaintRepository;
 import com.mmo.shared.dal.KycRequestRepository;
 import com.mmo.shared.dal.ShopFlagRepository;
 import com.mmo.shared.dal.WithdrawalRepository;
+import com.mmo.shared.dal.TransactionRepository;
+import com.mmo.shared.dal.SellerRegistrationRepository;
 import com.mmo.shared.dto.StaffDashboardDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,12 @@ public class StaffDashboardServiceImpl implements StaffDashboardService {
         @Autowired
         private KycRequestRepository kycRequestRepository;
 
+        @Autowired
+        private TransactionRepository transactionRepository;
+
+        @Autowired
+        private SellerRegistrationRepository sellerRegistrationRepository;
+
         @Override
         public StaffDashboardDTO getDashboardData() {
 
@@ -42,12 +50,20 @@ public class StaffDashboardServiceImpl implements StaffDashboardService {
                 long pendingKyc = kycRequestRepository
                                 .countByStatusAndIsDeleteFalse(com.mmo.shared.model.KycStatus.PENDING);
 
+                long pendingTransactions = transactionRepository.countByStatusesAndNotDeleted(java.util.List.of(
+                                "Pending", "pending", "Processing", "processing"
+                ));
+
+                long totalShops = sellerRegistrationRepository.countByIsDeleteFalse();
+
                 return StaffDashboardDTO.builder()
                                 .openComplaints(openComplaints)
                                 .pendingKyc(pendingKyc)
                                 .pendingWithdrawals(pendingWithdrawals)
                                 .shopFlags(shopFlags)
                                 .totalComplaints(totalComplaints)
+                                .pendingTransactions(pendingTransactions)
+                                .totalShops(totalShops)
                                 .build();
         }
 }

@@ -35,10 +35,7 @@
             });
         }
 
-        const modal = document.getElementById('reviewModal');
-        document.getElementById('closeReviewModal').addEventListener('click', () => modal.close());
-        document.getElementById('approveBtn').addEventListener('click', () => submitReview(true));
-        document.getElementById('rejectBtn').addEventListener('click', () => submitReview(false));
+
     });
 
     async function loadRegistrationStats() {
@@ -47,14 +44,20 @@
             if (response.ok) {
                 const stats = await response.json();
                 const totalEl = document.getElementById('stat-total-shops');
-                const pendingEl = document.getElementById('stat-pending-shops');
-                const approvedEl = document.getElementById('stat-approved-shops');
-                const rejectedEl = document.getElementById('stat-rejected-shops');
+                const activeEl = document.getElementById('stat-active-shops');
+                const depositEl = document.getElementById('stat-total-deposit');
+                const bannedEl = document.getElementById('stat-banned-shops');
+                const lockedEl = document.getElementById('stat-locked-shops');
+                const suspendedEl = document.getElementById('stat-suspended-shops');
+                const withdrawnEl = document.getElementById('stat-withdrawn-shops');
 
                 if (totalEl) totalEl.textContent = stats.totalShops || 0;
-                if (pendingEl) pendingEl.textContent = stats.activeShops || 0;
-                if (approvedEl) approvedEl.textContent = stats.bannedShops || 0;
-                if (rejectedEl) rejectedEl.textContent = formatVnd(stats.totalDeposit || 0);
+                if (activeEl) activeEl.textContent = stats.activeShops || 0;
+                if (depositEl) depositEl.textContent = formatVnd(stats.totalDeposit || 0) + ' đ';
+                if (bannedEl) bannedEl.textContent = stats.permanentBannedShops || 0;
+                if (lockedEl) lockedEl.textContent = stats.indefiniteLockedShops || 0;
+                if (suspendedEl) suspendedEl.textContent = stats.temporarySuspendedShops || 0;
+                if (withdrawnEl) withdrawnEl.textContent = stats.withdrawnShops || 0;
             }
         } catch (error) {
             console.error("Lỗi tải thống kê đăng ký Shop", error);
@@ -63,7 +66,7 @@
 
     async function loadRegistrations(page = 0) {
         const tbody = document.getElementById('shopRegistrationsTableBody');
-        tbody.innerHTML = '<tr><td colspan="8" class="ds-table-center">Đang tải...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="ds-table-center">Đang tải...</td></tr>';
 
         const shopStatusSelect = document.getElementById('shopAccountStatusFilter');
         const shopStatus = shopStatusSelect ? shopStatusSelect.value : '';
@@ -86,10 +89,10 @@
                 renderTable(registrationsList, data.number, data.size);
                 renderPagination(data);
             } else {
-                tbody.innerHTML = '<tr><td colspan="8" class="ds-table-center">Lỗi khi tải dữ liệu</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="ds-table-center">Lỗi khi tải dữ liệu</td></tr>';
             }
         } catch (error) {
-            tbody.innerHTML = '<tr><td colspan="8" class="ds-table-center">Lỗi kết nối</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="ds-table-center">Lỗi kết nối</td></tr>';
         }
     }
 
@@ -98,82 +101,43 @@
         tbody.innerHTML = '';
 
         if (!content || content.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="ds-table-center">Không có yêu cầu nào.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="ds-table-center">Không có yêu cầu nào.</td></tr>';
             return;
         }
 
         content.forEach((item, index) => {
             const stt = page * size + index + 1;
-            let formattedDate = '-';
-            try {
-                if (item.submittedAt) {
-                    formattedDate = new Date(item.submittedAt).toLocaleDateString('vi-VN');
-                }
-            } catch(e) {}
 
             const shopStatusBadge = getShopStatusBadge(item.shopStatus);
             const depositFormatted = formatVnd(item.depositVnd);
             const balanceFormatted = formatVnd(item.balanceVnd);
 
-            const emailPhone = [item.supportEmail, item.supportPhone].filter(val => val && val !== 'undefined').join(' - ');
-            const emailPhoneHtml = emailPhone ? `<div class="ds-entity-subtitle">${emailPhone}</div>` : '';
-
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="ds-table-center">${stt}</td>
-                <td>${item.code}</td>
+                <td>${item.code || item.id}</td>
                 <td>
                     <div class="ds-entity-title">${item.shopName || ''}</div>
-                    ${emailPhoneHtml}
                 </td>
                 <td class="ds-table-center">${shopStatusBadge}</td>
                 <td class="ds-table-right">${depositFormatted}</td>
                 <td class="ds-table-right">${balanceFormatted}</td>
-                <td>${formattedDate}</td>
+
                 <td class="ds-table-center">
-                    <label class="ds-switch" title="Bật/Tắt trạng thái hoạt động">
-                        <input type="checkbox" class="shop-status-toggle" data-id="${item.id}" ${item.shopStatus && (item.shopStatus.toUpperCase() === 'ACTIVE' || item.shopStatus.toUpperCase() === 'APPROVED') ? 'checked' : ''}>
-                        <span class="ds-slider"></span>
-                    </label>
+                    <div class="ds-table-actions">
+                        <a class="ds-btn ds-btn-sm ds-btn-outline" href="/staff/shop-registrations/update-status?id=${item.id}" style="font-size: 11px; padding: 4px 8px; border-radius: 4px;" title="Cập nhật trạng thái">
+                            Cập nhật trạng thái
+                        </a>
+                        <a class="ds-icon-btn ds-icon-btn-view" href="/staff/shop-registrations/detail?id=${item.id}" title="Xem chi tiết" aria-label="Xem chi tiết">
+                            <svg class="ds-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="width: 16px; height: 16px;">
+                                <path d="M2.25 12C3.73 8.12 7.49 5.25 12 5.25C16.51 5.25 20.27 8.12 21.75 12C20.27 15.88 16.51 18.75 12 18.75C7.49 18.75 3.73 15.88 2.25 12Z" stroke="currentColor" stroke-width="2"/>
+                                <path d="M12 15.25C13.79 15.25 15.25 13.79 15.25 12C15.25 10.21 13.79 8.75 12 8.75C10.21 8.75 8.75 10.21 8.75 12C8.75 13.79 10.21 15.25 12 15.25Z" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </a>
+                    </div>
                 </td>
             `;
             tbody.appendChild(tr);
-        });
-
-        document.querySelectorAll('.review-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const btnTarget = e.target.closest('.review-btn');
-                currentRegistrationId = btnTarget.getAttribute('data-id');
-                const item = registrationsList.find(x => x.id == currentRegistrationId);
-                if (item) {
-                    openReviewModal(item);
-                }
-            });
-        });
-
-        document.querySelectorAll('.shop-status-toggle').forEach(toggle => {
-            toggle.addEventListener('change', async (e) => {
-                const checkbox = e.target;
-                const regId = checkbox.getAttribute('data-id');
-                const isActive = checkbox.checked;
-                
-                try {
-                    const response = await authFetch(`/v1/shop-registrations/${regId}/toggle-status?active=${isActive}`, {
-                        method: 'PUT'
-                    });
-                    
-                    if (response.ok) {
-                        loadRegistrations(page); // reload current page
-                    } else {
-                        const res = await response.json();
-                        alert(res.description || 'Lỗi khi cập nhật trạng thái Shop.');
-                        checkbox.checked = !isActive;
-                    }
-                } catch (err) {
-                    alert('Lỗi kết nối máy chủ.');
-                    checkbox.checked = !isActive;
-                }
-            });
         });
     }
 
@@ -182,8 +146,15 @@
         const stUpper = shopStatus.toUpperCase();
         if (stUpper === 'PENDING') return '<span class="ds-badge ds-badge-warning">Chờ kích hoạt</span>';
         if (stUpper === 'ACTIVE' || stUpper === 'APPROVED') return '<span class="ds-badge ds-badge-success">Hoạt động</span>';
-        if (stUpper === 'BANNED' || stUpper === 'LOCKED') return '<span class="ds-badge ds-badge-warning">Đang bị khóa</span>';
+
         if (stUpper === 'REJECTED') return '<span class="ds-badge ds-badge-danger">Bị từ chối</span>';
+        
+        // 4 new statuses mapping
+        if (stUpper === 'WITHDRAWN' || stUpper === 'DELETED') return '<span class="ds-badge ds-badge-danger">Đã xóa (rút tiền cọc)</span>';
+        if (stUpper === 'SUSPENDED' || stUpper === 'TEMP_LOCKED') return '<span class="ds-badge ds-badge-warning">Khóa xóa có thời hạn</span>';
+        if (stUpper === 'LOCKED' || stUpper === 'INDEFINITE_LOCKED') return '<span class="ds-badge ds-badge-warning">Khóa xóa vô thời hạn</span>';
+        if (stUpper === 'BANNED' || stUpper === 'PERMANENT_BANNED') return '<span class="ds-badge ds-badge-danger">Khóa Shop vĩnh viễn</span>';
+        
         return `<span class="ds-badge ds-badge-info">${shopStatus}</span>`;
     }
 
@@ -194,43 +165,8 @@
 
 
 
-    function openReviewModal(item) {
-        document.getElementById('modalShopCode').value = item.code || '';
-        document.getElementById('modalShopName').value = item.shopName || '';
-        document.getElementById('modalShopCategory').value = item.category || '';
-        document.getElementById('modalShopEmail').value = item.supportEmail || '';
-        document.getElementById('modalShopPhone').value = item.supportPhone || '';
-        document.getElementById('modalShopDesc').value = item.description || '';
 
-        const stUpper = (item.status || '').toUpperCase();
-        const footerActions = document.getElementById('modalFooterActions');
-        const reasonGroup = document.getElementById('rejectionReasonFieldGroup');
-        const reasonInput = document.getElementById('reviewReason');
-        const reasonLabel = document.getElementById('rejectionReasonLabel');
 
-        if (stUpper === 'PENDING') {
-            if (footerActions) footerActions.style.display = 'flex';
-            if (reasonGroup) reasonGroup.style.display = 'block';
-            if (reasonInput) {
-                reasonInput.value = '';
-                reasonInput.removeAttribute('readonly');
-            }
-            if (reasonLabel) reasonLabel.textContent = 'Lý do từ chối (nếu từ chối)';
-        } else if (stUpper === 'APPROVED') {
-            if (footerActions) footerActions.style.display = 'none';
-            if (reasonGroup) reasonGroup.style.display = 'none';
-        } else if (stUpper === 'REJECTED') {
-            if (footerActions) footerActions.style.display = 'none';
-            if (reasonGroup) reasonGroup.style.display = 'block';
-            if (reasonInput) {
-                reasonInput.value = item.rejectionReason || 'Không ghi rõ lý do.';
-                reasonInput.setAttribute('readonly', 'true');
-            }
-            if (reasonLabel) reasonLabel.textContent = 'Lý do đã từ chối';
-        }
-
-        document.getElementById('reviewModal').showModal();
-    }
 
     function renderPagination(data) {
         if (typeof window.mountStaffPagination === 'function') {
@@ -246,35 +182,7 @@
         }
     }
 
-    async function submitReview(isApproved) {
-        if (!currentRegistrationId) return;
 
-        const reasonInput = document.getElementById('reviewReason');
-        const reason = reasonInput ? reasonInput.value.trim() : '';
-        if (!isApproved && !reason) {
-            alert('Vui lòng nhập lý do từ chối.');
-            return;
-        }
-
-        try {
-            const response = await authFetch(`/v1/shop-registrations/${currentRegistrationId}/review`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ approved: isApproved, reason: reason })
-            });
-
-            if (response.ok) {
-                document.getElementById('reviewModal').close();
-                loadRegistrations(0);
-                loadRegistrationStats();
-            } else {
-                const res = await response.json();
-                alert(res.description || 'Lỗi xử lý yêu cầu.');
-            }
-        } catch (error) {
-            alert('Lỗi kết nối máy chủ.');
-        }
-    }
 
     async function loadShopAccountStatuses() {
         const select = document.getElementById('shopAccountStatusFilter');
@@ -298,10 +206,16 @@
                         label = 'Chờ kích hoạt';
                     } else if (stUpper === 'ACTIVE' || stUpper === 'APPROVED') {
                         label = 'Hoạt động';
-                    } else if (stUpper === 'BANNED' || stUpper === 'LOCKED') {
-                        label = 'Đang bị khóa';
                     } else if (stUpper === 'REJECTED') {
                         label = 'Bị từ chối';
+                    } else if (stUpper === 'WITHDRAWN' || stUpper === 'DELETED') {
+                        label = 'Đã xóa (rút tiền cọc)';
+                    } else if (stUpper === 'SUSPENDED' || stUpper === 'TEMP_LOCKED') {
+                        label = 'Khóa xóa có thời hạn';
+                    } else if (stUpper === 'LOCKED' || stUpper === 'INDEFINITE_LOCKED') {
+                        label = 'Khóa xóa vô thời hạn';
+                    } else if (stUpper === 'BANNED' || stUpper === 'PERMANENT_BANNED') {
+                        label = 'Khóa Shop vĩnh viễn';
                     }
                     
                     if (!addedValues.has(label)) {

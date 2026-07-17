@@ -83,9 +83,9 @@ Triển khai quy trình khiếu nại đơn hàng (Complaints / Dispute) theo đ
 - **Màn hình khiếu nại của Người mua:**
   - File: `templates/account/order-detail.html`. Hiển thị thêm hộp thoại Chat Tranh Chấp cho phép nhắn tin thương lượng trực tiếp với Seller khi trạng thái đơn là `DISPUTED`.
 - **Màn hình phân xử của Staff:**
-  - File: `templates/staff/complaints-arbitration.html`.
+  - File: `templates/staff/complaints.html` & `complaint-detail.html` và JS `static/js/staff/staff-complaints.js`, `staff-complaint-detail.js`.
   - Staff xem mô tả lỗi, xem bằng chứng và xem lịch sử cuộc trò chuyện thương lượng giữa Buyer và Seller (chế độ Read-only).
-  - Staff chọn phương án xử lý (Hoàn tiền / Giải ngân) và tick chọn gắn cờ cảnh cáo shop người bán (`ShopFlag`).
+  - Staff chọn phương án xử lý phân quyết khiếu nại (InProgress - Đang xử lý, Resolved - Chấp nhận/Hoàn tiền, Rejected - Từ chối/Giải ngân), nhập ghi chú giải quyết (`resolution`), và có thể tích chọn gắn cờ phạt shop vi phạm (`ShopFlag`).
 
 ---
 
