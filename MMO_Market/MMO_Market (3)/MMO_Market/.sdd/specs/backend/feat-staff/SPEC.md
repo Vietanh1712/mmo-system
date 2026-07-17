@@ -27,6 +27,10 @@ Hỗ trợ Staff kiểm duyệt KYC, phê duyệt/từ chối các yêu cầu m�
 | **FR-STF-04** | WHEN a Staff toggles a shop's active status, THE SYSTEM SHALL change the user's shop status between `Active` and `Banned`. |
 | **FR-STF-05** | WHEN a Staff updates a Shop Flag, THE SYSTEM SHALL save the new severity level (Warning, Critical, Danger), status, and reason. |
 | **FR-STF-06** | WHEN a Staff resolves a complaint, THE SYSTEM SHALL update the complaint status based on the selected value from the dropdown select element (`InProgress`, `Resolved`, `Rejected`), and update the corresponding escrow ledger. |
+| **FR-STF-07** | WHEN a Staff requests their own permissions, THE SYSTEM SHALL query the database for user permissions and return a list of assigned permission strings. |
+| **FR-STF-08** | WHEN an Admin retrieves staff permissions, THE SYSTEM SHALL query all permissions or specific permissions assigned to a given Staff ID. |
+| **FR-STF-09** | WHEN an Admin assigns permissions, THE SYSTEM SHALL create mappings between specified Staff IDs and Permission names. |
+| **FR-STF-10** | WHEN an Admin revokes permissions, THE SYSTEM SHALL remove mappings between a specified Staff ID and Permission names. |
 
 ---
 
@@ -93,6 +97,14 @@ CREATE TABLE ShopFlags (
 *   `PUT /api/v1/shop-registrations/{id}/review`: Duyệt hoặc từ chối yêu cầu mở shop (`approved`, `reason`).
 *   `PUT /api/v1/shop-registrations/{id}/toggle-status`: Bật/Tắt trạng thái hoạt động của Shop (Banned / Active).
 *   `PUT /api/v1/shop-registrations/{id}/update-status`: Cập nhật trạng thái cụ thể của Shop (`status`).
+
+### 6.3 Các API REST phân quyền Staff & Admin
+*   `GET /api/staff/my-permissions`: Lấy danh sách quyền hạn của Staff hiện tại đang đăng nhập.
+*   `GET /api/admin/staff-permissions/permissions`: Lấy danh sách tất cả các quyền hạn hiện có (chỉ dành cho Admin).
+*   `GET /api/admin/staff-permissions/staffs/{staffId}`: Lấy danh sách quyền hạn đã được gán cho một Staff cụ thể (chỉ dành cho Admin).
+*   `GET /api/admin/staff-permissions/all-assigned`: Lấy toàn bộ danh sách gán quyền của tất cả Staff (chỉ dành cho Admin).
+*   `POST /api/admin/staff-permissions/assign`: Gán thêm các quyền hạn mới cho danh sách Staff (chỉ dành cho Admin).
+*   `POST /api/admin/staff-permissions/revoke`: Thu hồi các quyền hạn của một Staff cụ thể (chỉ dành cho Admin).
 
 ---
 
