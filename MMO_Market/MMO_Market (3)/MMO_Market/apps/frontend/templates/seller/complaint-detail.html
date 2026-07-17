@@ -20,34 +20,58 @@
             <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('complaints')}"></aside>
 
             <section class="admin-workspace ds-page-shell" style="padding-right: 120px;">
-                <div class="view-header">
-                    <div>
-                        <h2>Phản hồi khiếu nại</h2>
-                        <p id="complaintSubtitle">Đang tải thông tin...</p>
-                    </div>
-                    <span class="ds-badge ds-badge-warning" id="complaintStatusBadge"><i class="fa fa-spinner fa-spin"></i> Đang tải</span>
+                <div style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                    <a href="/seller/complaints" style="color: var(--ds-primary); font-weight: 600; text-decoration: none; font-size: 14px; display: inline-flex; align-items: center; gap: 4px;">
+                        <i class="fa fa-arrow-left"></i> Quay lại danh sách
+                    </a>
                 </div>
 
-                <div class="admin-card">
-                    <div class="card-header-flex">
-                        <h3>Thông tin khiếu nại</h3>
+                <div style="display: flex; flex-direction: column; gap: 24px; max-width: 900px;">
+                    <div class="ds-card">
+                        <div class="ds-card-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--ds-border); padding-bottom: 14px;">
+                            <div>
+                                <h1 class="ds-card-title" id="complaintTitle">Chi tiết Khiếu nại</h1>
+                                <p class="ds-caption" id="complaintSubtitle">-</p>
+                            </div>
+                            <span class="ds-badge" id="complaintStatusBadge">Đang tải...</span>
+                        </div>
+                        <div style="padding: 24px;">
+                            <dl class="seller-info-grid" id="complaint-details-dl">
+                                <!-- Populated by JS -->
+                            </dl>
+                            <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                                <a href="/messages?sellerView=true" id="chatDisputeBtn" class="ds-btn ds-btn-primary" style="display: none; align-items: center; gap: 8px;">
+                                    <i class="fa fa-comments"></i> Nhắn tin đối chất thương lượng
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                    <div style="padding: 20px 24px;">
-                        <!-- Detail info: populated by JS -->
-                        <dl class="seller-info-grid">
-                            <dt>Khách hàng</dt><dd>—</dd>
-                            <dt>Mã đơn hàng</dt><dd>—</dd>
-                            <dt>Sản phẩm</dt><dd>—</dd>
-                            <dt>Đơn giá</dt><dd>—</dd>
-                            <dt>Nội dung khiếu nại</dt><dd>—</dd>
-                            <dt>Ảnh minh chứng</dt><dd>—</dd>
-                            <dt>Hướng giải quyết</dt><dd>—</dd>
-                        </dl>
-                    </div>
-                </div>
 
-                <div style="margin-top: 16px; display: flex; gap: 8px;">
-                    <a class="ds-btn ds-btn-outline" th:href="@{/seller/complaints}">Quay lại danh sách</a>
+                    <div class="ds-card">
+                        <div class="ds-card-header">
+                            <h2 class="ds-card-title">Mô tả khiếu nại & Bằng chứng</h2>
+                        </div>
+                        <div style="padding: 24px;">
+                            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px; font-size: 13.5px; line-height: 1.5; color: #1e293b;" id="c-description">
+                                -
+                            </div>
+                            <div id="c-evidence-section" hidden style="margin-top: 16px;">
+                                <strong style="font-size: 13px; color: #64748b; display: block; margin-bottom: 6px;">Hình ảnh/Tệp chứng cứ:</strong>
+                                <img src="" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--ds-border); max-height: 240px; object-fit: contain;" id="c-evidence-img" alt="Bằng chứng khiếu nại" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ds-card" id="staffResolutionCard" hidden style="border-left: 4px solid var(--ds-primary);">
+                        <div class="ds-card-header">
+                            <h2 class="ds-card-title" style="color: var(--ds-primary);">Phán quyết của Staff Ban quản trị</h2>
+                        </div>
+                        <div style="padding: 24px;">
+                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px; font-size: 13.5px; line-height: 1.5; color: #166534;" id="c-resolution">
+                                -
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
         </div>
