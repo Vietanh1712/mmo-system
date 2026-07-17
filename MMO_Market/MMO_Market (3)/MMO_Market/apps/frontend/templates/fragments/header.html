@@ -33,7 +33,7 @@
         try {
             if (window && window.location && String(window.location.pathname).toLowerCase().startsWith('/seller')) {
                 document.body.classList.remove('is-system-user');
-                ['headerCartButton','headerNotifButton','topupNavItem','topupDropdownItem','transactionsDropdownItem','preordersDropdownItem','cartDropdownItem','sellerDashboardDropdownItem']
+                ['headerCartButton','headerNotifButton','headerMessageButton','topupNavItem','topupDropdownItem','transactionsDropdownItem','preordersDropdownItem','cartDropdownItem','sellerDashboardDropdownItem']
                     .forEach(id => {
                         const el = document.getElementById(id);
                         if (el) el.style.display = '';
@@ -210,10 +210,12 @@
                         // Make sure key customer header controls are visible
                         const headerCartBtn = document.getElementById('headerCartButton');
                         const headerNotifBtn = document.getElementById('headerNotifButton');
+                        const headerMsgBtn = document.getElementById('headerMessageButton');
                         const topupNav = document.getElementById('topupNavItem');
                         const topupDropdown = document.getElementById('topupDropdownItem');
                         if (headerCartBtn) headerCartBtn.style.display = '';
                         if (headerNotifBtn) headerNotifBtn.style.display = '';
+                        if (headerMsgBtn) headerMsgBtn.style.display = '';
                         if (topupNav) topupNav.style.display = '';
                         if (topupDropdown) topupDropdown.style.display = '';
 
@@ -284,6 +286,10 @@
                                 <i class="fa fa-bell"></i>
                                 <span class="header-cart-button__badge header-cart-button__badge--danger" id="headerNotifCount" style="display: none;">0</span>
                             </button>
+                            <button class="header-cart-button" type="button" id="headerMessageButton" title="Tin nhắn" aria-label="Tin nhắn" onclick="goToMessages()">
+                                <i class="fa fa-envelope"></i>
+                                <span class="header-cart-button__badge header-cart-button__badge--danger" id="headerMessageCount" style="display: none;">0</span>
+                            </button>
                             <button class="header-cart-button" type="button" id="headerCartButton" title="Giỏ hàng của tôi" aria-label="Giỏ hàng của tôi" onclick="checkAuthAndRedirect('/cart')">
                                 <i class="fa fa-shopping-cart"></i>
                                 <span class="header-cart-button__badge" id="headerCartCount">0</span>
@@ -307,6 +313,7 @@
                     }
                     refreshHeaderCartBadge();
                     refreshHeaderNotifBadge();
+                    refreshHeaderMessageBadge();
                 } catch (error) {
                     console.error("Lỗi khi parse thông tin user:", error);
                     sessionStorage.removeItem('userInfo');
@@ -535,13 +542,48 @@
             }
         }
 
+        async function refreshHeaderMessageBadge() {
+            const badge = document.getElementById('headerMessageCount');
+            if (!badge) return;
+            const token = sessionStorage.getItem("accessToken");
+            if (!token || token === "null" || token === "undefined") {
+                badge.innerText = '0';
+                badge.style.display = 'none';
+                return;
+            }
+            try {
+                const response = await fetch('/api/v1/chats/unread-count', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const unreadCount = data.unreadCount || 0;
+                    badge.innerText = unreadCount > 99 ? '99+' : String(unreadCount);
+                    badge.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
+                } else {
+                    badge.innerText = '0';
+                    badge.style.display = 'none';
+                }
+            } catch (error) {
+                badge.innerText = '0';
+                badge.style.display = 'none';
+            }
+        }
+
         window.initHeader = initHeader;
         window.refreshHeaderCartBadge = refreshHeaderCartBadge;
         window.refreshHeaderNotifBadge = refreshHeaderNotifBadge;
+        window.refreshHeaderMessageBadge = refreshHeaderMessageBadge;
         window.addEventListener('storage', () => {
             refreshHeaderCartBadge();
             refreshHeaderNotifBadge();
+            refreshHeaderMessageBadge();
         });
+
+        // Periodically refresh message badge every 15 seconds if token exists
+        if (sessionStorage.getItem("accessToken")) {
+            setInterval(refreshHeaderMessageBadge, 15000);
+        }
 
         const HEADER_SEARCH_SUGGESTIONS = [
             'Netflix',

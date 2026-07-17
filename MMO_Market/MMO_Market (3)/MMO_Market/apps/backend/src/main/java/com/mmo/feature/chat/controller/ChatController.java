@@ -37,6 +37,16 @@ public class ChatController {
         this.complaintRepository = complaintRepository;
     }
 
+    @GetMapping("/unread-count")
+    public ResponseEntity<?> getUnreadCount(@AuthenticationPrincipal Long userId) {
+        Optional<User> currentUserOpt = userRepository.findById(userId);
+        if (currentUserOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "User not found"));
+        }
+        long count = chatRepository.countUnreadRoomsForReceiver(currentUserOpt.get());
+        return ResponseEntity.ok(Map.of("unreadCount", count));
+    }
+
     // 0. Get contact info by userId (for chat header when no existing chat)
     @GetMapping("/contact/{contactId}/info")
     public ResponseEntity<?> getContactInfo(@AuthenticationPrincipal Long userId,
