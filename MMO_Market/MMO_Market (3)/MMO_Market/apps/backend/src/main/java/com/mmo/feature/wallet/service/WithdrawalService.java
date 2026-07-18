@@ -7,6 +7,7 @@ import com.mmo.shared.dal.SystemConfigurationRepository;
 import com.mmo.shared.dal.UserRepository;
 import com.mmo.shared.dal.WithdrawalRepository;
 import com.mmo.shared.dal.NotificationRepository;
+import com.mmo.shared.dal.WalletTransactionRepository;
 import com.mmo.shared.model.SellerBankInfo;
 import com.mmo.shared.model.User;
 import com.mmo.shared.model.Withdrawal;
@@ -22,6 +23,12 @@ import java.util.List;
 
 @Service
 public class WithdrawalService {
+
+    @Autowired
+    private WalletService walletService;
+
+    @Autowired
+    private WalletTransactionRepository walletTransactionRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -134,6 +141,18 @@ public class WithdrawalService {
         w.setIsDelete(false);
         Withdrawal saved = withdrawalRepository.save(w);
 
+        // Record wallet transaction
+        walletService.recordTransaction(
+                seller,
+                "WITHDRAWAL",
+                -totalDeduction,
+                "PENDING",
+                "Yêu cầu rút tiền về ngân hàng " + bank.getBankName() + " - Số TK: " + bank.getAccountNumber(),
+                "WD" + saved.getId(),
+                seller.getBalanceVnd(),
+                saved.getId()
+        );
+
         // 1. Tạo thông báo cho Seller
         Notification sellerNotif = Notification.builder()
                 .userId(seller.getId())
@@ -208,8 +227,36 @@ public class WithdrawalService {
             seller.setBalanceVnd(seller.getBalanceVnd() + refundAmount);
             userRepository.save(seller);
             
+            // Record refund wallet transaction
+            walletService.recordTransaction(
+                    seller,
+                    "REFUND",
+                    refundAmount,
+                    "SUCCESS",
+                    "Hoàn tiền yêu cầu rút tiền ID " + withdrawal.getId() + " bị từ chối. Lý do: " + (rejectionReason != null ? rejectionReason : "Không có lý do"),
+                    "RF" + withdrawal.getId(),
+                    seller.getBalanceVnd(),
+                    withdrawal.getId()
+            );
+
+            // Cập nhật trạng thái giao dịch rút tiền gốc thành FAILED
+            walletTransactionRepository.findByReferenceIdAndType(withdrawal.getId(), "WITHDRAWAL")
+                    .ifPresent(t -> {
+                        t.setStatus("FAILED");
+                        walletTransactionRepository.save(t);
+                    });
+
             // Cập nhật trạng thái khóa/mở khóa shop sau khi hoàn tiền rút bị từ chối
             shopLevelService.updateShopLockStatus(seller.getId());
+        }
+
+        if ("Approved".equalsIgnoreCase(newStatus) || "Completed".equalsIgnoreCase(newStatus)) {
+            // Cập nhật trạng thái giao dịch rút tiền gốc thành SUCCESS
+            walletTransactionRepository.findByReferenceIdAndType(withdrawal.getId(), "WITHDRAWAL")
+                    .ifPresent(t -> {
+                        t.setStatus("SUCCESS");
+                        walletTransactionRepository.save(t);
+                    });
         }
 
         withdrawalRepository.save(withdrawal);

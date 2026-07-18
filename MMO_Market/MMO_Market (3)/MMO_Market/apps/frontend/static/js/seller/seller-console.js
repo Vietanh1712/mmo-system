@@ -77,6 +77,7 @@ function translateStatus(status) {
         'active': 'Đang bán',
         'inactive': 'Tạm ẩn',
         'rejected': 'Bị từ chối',
+        'approved': 'Đã duyệt',
         'open': 'Chờ xử lý',
         'in_progress': 'Đang giải quyết',
         'inprogress': 'Đang giải quyết',
@@ -84,6 +85,16 @@ function translateStatus(status) {
         'closed': 'Đã đóng'
     };
     return map[statusLower] || status;
+}
+
+function getBadgeClassForStatus(status) {
+    if (!status) return 'pending';
+    const statusLower = status.toLowerCase().trim();
+    if (statusLower === 'completed' || statusLower === 'approved') return 'ok';
+    if (statusLower === 'pending') return 'pending';
+    if (statusLower === 'held') return 'held';
+    if (statusLower === 'rejected' || statusLower === 'failed' || statusLower === 'locked') return 'critical';
+    return 'pending';
 }
 
 async function sellerFetch(url, options = {}) {
@@ -1262,7 +1273,7 @@ async function initWithdrawals() {
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Chưa có yêu cầu rút tiền nào.</td></tr>';
         } else {
             tbody.innerHTML = withdrawals.map(w => {
-                const badgeClass = w.status === 'Completed' ? 'ok' : 'pending';
+                const badgeClass = getBadgeClassForStatus(w.status);
                 return `
                     <tr>
                         <td>#WD-${w.id}</td>
@@ -1883,7 +1894,7 @@ async function initWithdrawalDetail() {
         // Populate header details
         document.querySelector('.seller-card__subtitle').textContent = `Lệnh #WD-${w.id}`;
 
-        const badgeClass = w.status === 'Completed' ? 'ok' : 'pending';
+        const badgeClass = getBadgeClassForStatus(w.status);
         let extraStatusInfo = '';
         if (w.status === 'Failed' || w.status === 'Rejected') {
             extraStatusInfo = `
@@ -1927,7 +1938,7 @@ async function initWithdrawalDetail() {
         }
 
         // Render proof receipt section
-        const proofSection = card.querySelector('.proof-placeholder');
+        const proofSection = document.querySelector('.proof-placeholder');
         if (proofSection) {
             if (w.proofFile) {
                 proofSection.innerHTML = `

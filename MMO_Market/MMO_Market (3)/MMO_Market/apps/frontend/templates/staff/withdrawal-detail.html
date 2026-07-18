@@ -142,24 +142,38 @@
                                 <div th:if="${withdrawal.status == 'Pending'}" style="display: flex; flex-direction: column; gap: 16px;">
                                     <input type="hidden" name="status" value="Approved">
                                     
-                                    <div class="ds-form-field">
+                                    <!-- Lý do từ chối: mặc định ẩn, chỉ hiện khi bấm từ chối -->
+                                    <div class="ds-form-field" id="reject-reason-container" style="display: none; margin-bottom: 12px;">
                                         <label class="ds-label">
-                                            Lý do từ chối (chỉ điền khi từ chối)
+                                            Lý do từ chối
                                         </label>
-                                        <textarea class="ds-input" name="reason" rows="3" placeholder="Nhập lý do từ chối yêu cầu rút tiền..."></textarea>
+                                        <textarea class="ds-input" name="reason" id="reject-reason-input" rows="3" placeholder="Nhập lý do từ chối yêu cầu rút tiền..." style="border: 1px solid var(--ds-border, #cbd5e1); border-radius: 8px; padding: 10px; font-family: inherit; font-size: 14px; width: 100%; transition: border-color 0.2s;"></textarea>
                                     </div>
 
-                                    <div class="ds-cluster" style="gap: 8px;">
+                                    <!-- Nhóm nút mặc định -->
+                                    <div class="ds-cluster" id="default-actions-container" style="gap: 8px; display: flex;">
                                         <button class="ds-btn ds-btn-success"
-                                                type="submit" style="flex: 1;">
+                                                type="submit" style="flex: 1; background-color: #10a37f; border-color: #10a37f; font-weight: 600;">
                                             <i class="fa fa-check"></i> Phê duyệt
                                         </button>
 
-                                        <!-- Từ chối -->
+                                        <button class="ds-btn ds-btn-danger"
+                                                type="button" id="btn-show-reject" style="flex: 1; background-color: #ef4444; border-color: #ef4444; font-weight: 600;">
+                                            <i class="fa fa-times"></i> Từ chối
+                                        </button>
+                                    </div>
+
+                                    <!-- Nhóm nút khi thực hiện từ chối (mặc định ẩn) -->
+                                    <div class="ds-cluster" id="reject-actions-container" style="gap: 8px; display: none;">
                                         <button class="ds-btn ds-btn-danger"
                                                 type="submit"
-                                                th:formaction="@{/staff/withdrawals/reject}" style="flex: 1;">
-                                            <i class="fa fa-times"></i> Từ chối
+                                                th:formaction="@{/staff/withdrawals/reject}" style="flex: 1; background-color: #ef4444; border-color: #ef4444; font-weight: 600;">
+                                            <i class="fa fa-times"></i> Xác nhận từ chối
+                                        </button>
+                                        
+                                        <button class="ds-btn"
+                                                type="button" id="btn-cancel-reject" style="flex: 1; font-weight: 600; border: 1px solid #cbd5e1; background: #fff; color: #475569; border-radius: 8px; cursor: pointer; transition: background 0.2s;">
+                                            Hủy
                                         </button>
                                     </div>
                                 </div>
@@ -209,6 +223,32 @@
             if (tokenInput) {
                 tokenInput.value = token;
             }
+        }
+
+        // Tương tác nút từ chối
+        const btnShowReject = document.getElementById('btn-show-reject');
+        const btnCancelReject = document.getElementById('btn-cancel-reject');
+        const rejectReasonContainer = document.getElementById('reject-reason-container');
+        const defaultActionsContainer = document.getElementById('default-actions-container');
+        const rejectActionsContainer = document.getElementById('reject-actions-container');
+        const rejectReasonInput = document.getElementById('reject-reason-input');
+
+        if (btnShowReject) {
+            btnShowReject.addEventListener('click', function() {
+                rejectReasonContainer.style.display = 'block';
+                rejectActionsContainer.style.display = 'flex';
+                defaultActionsContainer.style.display = 'none';
+                if (rejectReasonInput) rejectReasonInput.focus();
+            });
+        }
+
+        if (btnCancelReject) {
+            btnCancelReject.addEventListener('click', function() {
+                rejectReasonContainer.style.display = 'none';
+                rejectActionsContainer.style.display = 'none';
+                defaultActionsContainer.style.display = 'flex';
+                if (rejectReasonInput) rejectReasonInput.value = '';
+            });
         }
     });
 </script>
