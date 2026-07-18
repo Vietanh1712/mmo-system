@@ -300,8 +300,14 @@
 
             document.getElementById('chat-header-name').textContent = chat.name;
             document.getElementById('chat-header-avatar').textContent = chat.avatar;
-            document.getElementById('context-product-name').textContent = chat.product || 'Tin nhắn trực tuyến';
-            document.getElementById('context-product-price').textContent = chat.price || '—';
+            const contextProductNameEl = document.getElementById('context-product-name');
+            if (contextProductNameEl) {
+                contextProductNameEl.textContent = chat.product || 'Tin nhắn trực tuyến';
+            }
+            const contextProductPriceEl = document.getElementById('context-product-price');
+            if (contextProductPriceEl) {
+                contextProductPriceEl.textContent = chat.price || '—';
+            }
 
             const statusEl = document.getElementById('chat-header-status');
             if (chat.online) {
@@ -323,10 +329,13 @@
         }
 
         async function loadChatHistory(id) {
+            if (id !== currentSelectedChatId) return;
             try {
                 const res = await authFetch(`/v1/chats/${id}`);
+                if (id !== currentSelectedChatId) return;
                 if (res.ok) {
                     const data = await res.json();
+                    if (id !== currentSelectedChatId) return;
                     // Backend returns { messages: [...], contextProductId: N }
                     const dbMessages = Array.isArray(data) ? data : (data.messages || []);
                     const contextProductId = Array.isArray(data) ? null : data.contextProductId;
@@ -352,8 +361,10 @@
                         currentContextProduct = null; // reset first
                         try {
                             const prodRes = await fetch(`/api/search/products/${contextProductId}`);
+                            if (id !== currentSelectedChatId) return;
                             if (prodRes.ok) {
                                 const prod = await prodRes.json();
+                                if (id !== currentSelectedChatId) return;
                                 currentContextProduct = {
                                     id: prod.id || contextProductId,
                                     name: prod.name,
@@ -369,12 +380,14 @@
                         currentContextProduct = null; // no product context
                     }
 
+                    if (id !== currentSelectedChatId) return;
                     renderMessages(dbMessages);
                     return;
                 }
             } catch (err) {
                 console.error('Cannot load messages from database:', err);
             }
+            if (id !== currentSelectedChatId) return;
             // Empty state if no messages
             renderMessages([]);
         }

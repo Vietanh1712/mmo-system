@@ -130,6 +130,14 @@
             align-items: center;
             justify-content: center;
             font-size: 36px;
+            overflow: hidden;
+        }
+
+        .cart-item__thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
         .cart-item__tag {
@@ -676,7 +684,9 @@
                     <input class="cart-item__checkbox" type="checkbox" ${item.selected !== false ? 'checked' : ''} onchange="toggleSelected(${index}, this.checked)">
                 </div>
                 <div class="cart-item__thumb">
-                    <i class="fa ${item.icon}" style="color: ${item.iconColor}"></i>
+                    ${item.imageUrl && !item.imageUrl.includes('placeholder.com')
+                        ? `<img src="${item.imageUrl}" alt="${item.productName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">`
+                        : `<i class="fa ${item.icon}" style="color: ${item.iconColor}"></i>`}
                 </div>
                 <div class="cart-item__info">
                     <div class="cart-item__tag"><i class="fa fa-tag"></i>${getProductTag(item)}</div>

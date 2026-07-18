@@ -407,7 +407,7 @@ public class SellerController {
                 
                 String imgUrl = (String) vData.get("imageUrl");
                 if (imgUrl == null || imgUrl.trim().isEmpty()) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "Biến thể phải có ít nhất 1 hình ảnh minh họa."));
+                    imgUrl = saved.getProductImageUrl();
                 }
                 pv.setImageUrl(imgUrl);
                 
@@ -568,13 +568,13 @@ public class SellerController {
             if (prodIdObj == null || variantName == null || variantName.trim().isEmpty() || priceObj == null) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Thông tin tên biến thể và giá bán không được để trống."));
             }
-            if (imageUrl == null || imageUrl.trim().isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Biến thể phải có ít nhất 1 hình ảnh minh họa."));
-            }
-
             Long productId = Long.valueOf(prodIdObj.toString());
             Product p = productRepository.findByIdAndIsDeleteFalse(productId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sản phẩm."));
+
+            if (imageUrl == null || imageUrl.trim().isEmpty()) {
+                imageUrl = p.getProductImageUrl();
+            }
 
             if (!p.getSeller().getId().equals(seller.getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền thao tác trên sản phẩm này."));

@@ -12,6 +12,7 @@ public class OrderDto {
     private String productName;
     private String variantLabel;
     private String sellerName;
+    private Long sellerId;
     private Long amount;
     private String status;
     private String paymentStatus;
