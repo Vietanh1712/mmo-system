@@ -573,6 +573,21 @@ async function initProductAdd() {
                         return;
                     }
                     const parent = categoryData.find(c => c.id == parentId);
+                    
+                    // Auto-select ProductType based on Category Name
+                    if (parent) {
+                        const name = parent.name.toLowerCase();
+                        if (name.includes('tài khoản') || name.includes('account')) {
+                            document.getElementById('typeAccount').checked = true;
+                        } else if (name.includes('key') || name.includes('mã')) {
+                            document.getElementById('typeKey').checked = true;
+                        } else if (name.includes('thẻ') || name.includes('card')) {
+                            document.getElementById('typeGameCard').checked = true;
+                        } else {
+                            document.getElementById('typeService').checked = true;
+                        }
+                    }
+
                     if (parent && parent.subCategories && parent.subCategories.length > 0) {
                         subSelect.innerHTML = '<option value="">-- Chọn danh mục con --</option>' + 
                                               parent.subCategories.map(sub => `<option value="${sub.id}">${sub.name}</option>`).join('');
@@ -682,7 +697,15 @@ async function initProductAdd() {
                 e.preventDefault();
                 const name = document.getElementById('productName').value.trim();
                 const description = document.getElementById('description').value.trim();
-                const categoryId = select.value;
+                let categoryId = '';
+                if (subSelect && !subSelect.disabled && subSelect.value) {
+                    categoryId = subSelect.value;
+                } else if (mainSelect && mainSelect.value) {
+                    categoryId = mainSelect.value;
+                } else if (fallbackSelect) {
+                    categoryId = fallbackSelect.value;
+                }
+
                 const typeEl = document.querySelector('input[name="productType"]:checked');
                 const productType = typeEl ? typeEl.value : null;
 
