@@ -46,7 +46,7 @@
 | 2.4 | 2026-07-11 | Thêm Menu thả xuống (Dropdown) collapsible "Quản lý đơn từ" trong Sidebar của Staff, nhóm 3 mục: Khiếu nại, Giao dịch và Rút tiền để tối ưu hóa không gian hiển thị của thanh bên. |
 | 2.5 | 2026-07-11 | Triển khai trang tổng quan `/staff/documents` (documents-dashboard.html) cho phân hệ Quản lý đơn từ, hiển thị các số liệu thống kê (Khiếu nại đang mở, Yêu cầu rút tiền chờ duyệt, Giao dịch chờ duyệt) và thẻ truy cập nhanh. Tách tiêu đề "Quản lý đơn từ" trong Sidebar thành liên kết trực tiếp trỏ đến trang tổng quan này. Trên trang Dashboard tổng quan chính `/staff/dashboard`, loại bỏ 2 thẻ "Quản lý khiếu nại" và "Quản lý rút tiền" riêng lẻ và thay thế bằng thẻ truy cập nhanh đến "Quản lý đơn từ" tương ứng. |
 | 2.6 | 2026-07-11 | Cập nhật các chỉ số trên trang Dashboard tổng quan chính `/staff/dashboard`: Thay thế thẻ thống kê "Khiếu nại đang mở" bằng "Tổng số Shop" (được đếm tự động từ database) và xóa bỏ hoàn toàn thẻ thống kê "Yêu cầu rút tiền". |
-| 2.7 | 2026-07-17 | Xóa cột "Lý do" khỏi bảng danh sách cờ cảnh báo (flags.html) để làm gọn giao diện hiển thị, lý do chi tiết vẫn hiển thị đầy đủ trong trang chi tiết cờ cảnh báo (flag-detail.html). |
+| 2.7 | 2026-07-17 | Xóa cột "Lý do" khỏi bảng danh sách cờ cảnh báo (flags.html); Đồng thời tích hợp mục "Phiếu Hỗ Trợ" (Support Tickets) vào trong nhóm menu thả xuống và trang tổng quan "Quản lý đơn từ" (documents-dashboard.html). |
 
 
 

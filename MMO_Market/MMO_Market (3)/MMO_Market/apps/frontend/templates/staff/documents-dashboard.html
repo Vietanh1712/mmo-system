@@ -15,7 +15,7 @@
                 <div class="staff-page-header">
                     <div>
                         <h1 class="ds-page-title">Tổng quan quản lý đơn từ</h1>
-                        <p class="ds-page-subtitle">Theo dõi và xử lý các hồ sơ khiếu nại, lịch sử giao dịch và yêu cầu rút tiền.</p>
+                        <p class="ds-page-subtitle">Theo dõi và xử lý các hồ sơ khiếu nại, lịch sử giao dịch, yêu cầu rút tiền và phiếu hỗ trợ.</p>
                     </div>
                     <span class="ds-badge ds-badge-info">Documents Dashboard</span>
                 </div>
@@ -36,6 +36,11 @@
                         <p class="staff-stat-card__value" th:text="${dashboard.pendingTransactions}"></p>
                         <p class="staff-stat-card__hint">Đang xử lý / Tạm giữ</p>
                     </div>
+                    <div class="ds-card staff-stat-card green">
+                        <p class="staff-stat-card__label">Phiếu hỗ trợ chờ xử lý</p>
+                        <p class="staff-stat-card__value" th:text="${dashboard.pendingTickets}"></p>
+                        <p class="staff-stat-card__hint">Yêu cầu hỗ trợ chưa giải quyết</p>
+                    </div>
                 </div>
 
                 <div class="ds-card">
@@ -47,6 +52,11 @@
                             <div class="staff-quick-card__icon staff-quick-card__icon--danger"><i class="fa fa-exclamation-circle"></i></div>
                             <h3>Quản lý khiếu nại</h3>
                             <p>Xem danh sách và giải quyết khiếu nại, tranh chấp giữa người mua và người bán.</p>
+                        </a>
+                        <a class="ds-card staff-quick-card" href="/staff/support-tickets">
+                            <div class="staff-quick-card__icon staff-quick-card__icon--success"><i class="fa fa-ticket"></i></div>
+                            <h3>Phiếu hỗ trợ</h3>
+                            <p>Xem danh sách và phản hồi các yêu cầu hỗ trợ, thắc mắc từ người dùng.</p>
                         </a>
                         <a class="ds-card staff-quick-card" href="/staff/transactions">
                             <div class="staff-quick-card__icon staff-quick-card__icon--muted"><i class="fa fa-exchange"></i></div>

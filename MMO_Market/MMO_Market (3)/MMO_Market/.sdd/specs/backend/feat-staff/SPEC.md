@@ -31,6 +31,7 @@ Hỗ trợ Staff kiểm duyệt KYC, phê duyệt/từ chối các yêu cầu m�
 | **FR-STF-08** | WHEN an Admin retrieves staff permissions, THE SYSTEM SHALL query all permissions or specific permissions assigned to a given Staff ID. |
 | **FR-STF-09** | WHEN an Admin assigns permissions, THE SYSTEM SHALL create mappings between specified Staff IDs and Permission names. |
 | **FR-STF-10** | WHEN an Admin revokes permissions, THE SYSTEM SHALL remove mappings between a specified Staff ID and Permission names. |
+| **FR-STF-11** | WHEN a Staff retrieves the documents dashboard, THE SYSTEM SHALL calculate and display the number of pending support tickets. |
 
 ---
 
