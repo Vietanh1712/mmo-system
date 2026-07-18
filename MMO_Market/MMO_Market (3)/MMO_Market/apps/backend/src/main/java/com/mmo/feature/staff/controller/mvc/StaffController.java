@@ -240,7 +240,8 @@ public class StaffController {
             @RequestParam String status,
             RedirectAttributes redirectAttributes
     ) {
-        Long reviewerId = (Long) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Object principal243 = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long reviewerId = (principal243 instanceof Long) ? (Long) principal243 : null;
         withdrawalService.updateWithdrawalStatus(id, status, reviewerId, null);
 
         Withdrawal withdrawal = withdrawalRepository.findById(id)
@@ -281,7 +282,8 @@ public class StaffController {
             @RequestParam(required = false) String reason,
             RedirectAttributes redirectAttributes
     ) {
-        Long reviewerId = (Long) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Object principal284 = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long reviewerId = (principal284 instanceof Long) ? (Long) principal284 : null;
         withdrawalService.updateWithdrawalStatus(id, "Rejected", reviewerId, reason);
 
         Withdrawal withdrawal = withdrawalRepository.findById(id)
