@@ -76,37 +76,26 @@
             <article class="ds-card date-standard-card ds-stack-md">
                 <div>
                     <h2 class="ds-heading-md">Date Range Filter</h2>
-                    <p class="ds-caption">Dùng hai datepicker custom cho filter từ ngày / đến ngày.</p>
+                    <p class="ds-caption">Sử dụng data-ds-daterange="true" để chọn khoảng thời gian trên cùng 1 input.</p>
                 </div>
 
-                <div class="ds-form-grid">
-                    <div class="ds-form-field">
-                        <label class="ds-label" for="dateFromDisplay">Từ ngày</label>
-                        <div class="ds-datepicker" data-ds-datepicker>
-                            <input type="hidden" name="dateFrom" data-ds-date-value>
-                            <div class="ds-datepicker-field">
-                                <input id="dateFromDisplay" class="ds-datepicker-input" type="text" placeholder="dd/mm/yyyy" data-ds-date-display>
-                                <button type="button" class="ds-datepicker-button" data-ds-date-toggle aria-label="Chọn từ ngày">▣</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="ds-form-field">
-                        <label class="ds-label" for="dateToDisplay">Đến ngày</label>
-                        <div class="ds-datepicker" data-ds-datepicker>
-                            <input type="hidden" name="dateTo" data-ds-date-value>
-                            <div class="ds-datepicker-field">
-                                <input id="dateToDisplay" class="ds-datepicker-input" type="text" placeholder="dd/mm/yyyy" data-ds-date-display>
-                                <button type="button" class="ds-datepicker-button" data-ds-date-toggle aria-label="Chọn đến ngày">▣</button>
-                            </div>
+                <div class="ds-form-field">
+                    <label class="ds-label" for="dateRangeDisplay">Khoảng thời gian</label>
+                    <div class="ds-datepicker" data-ds-datepicker data-ds-daterange="true">
+                        <input type="hidden" name="dateRange" data-ds-date-value>
+                        <div class="ds-datepicker-field">
+                            <input id="dateRangeDisplay" class="ds-datepicker-input" type="text" placeholder="dd/mm/yyyy - dd/mm/yyyy" data-ds-date-display>
+                            <button type="button" class="ds-datepicker-button" data-ds-date-toggle aria-label="Chọn khoảng ngày">▣</button>
                         </div>
                     </div>
                 </div>
 
-                <pre class="date-code"><code>&lt;div class="ds-form-grid"&gt;
-  &lt;!-- dateFrom --&gt;
-  &lt;div class="ds-datepicker" data-ds-datepicker&gt;...&lt;/div&gt;
-  &lt;!-- dateTo --&gt;
-  &lt;div class="ds-datepicker" data-ds-datepicker&gt;...&lt;/div&gt;
+                <pre class="date-code"><code>&lt;div class="ds-datepicker" data-ds-datepicker data-ds-daterange="true"&gt;
+  &lt;input type="hidden" name="dateRange" data-ds-date-value&gt;
+  &lt;div class="ds-datepicker-field"&gt;
+    &lt;input class="ds-datepicker-input" placeholder="dd/mm/yyyy - dd/mm/yyyy" data-ds-date-display&gt;
+    &lt;button class="ds-datepicker-button" data-ds-date-toggle&gt;▣&lt;/button&gt;
+  &lt;/div&gt;
 &lt;/div&gt;</code></pre>
             </article>
         </section>

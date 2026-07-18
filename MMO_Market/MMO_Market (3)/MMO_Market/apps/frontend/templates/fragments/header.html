@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<header class="header" th:fragment="header">
+    <!-- Global Toast CSS + JS (loaded once for all pages) -->
+    <link rel="stylesheet" th:href="@{/css/components/toast.css}">
+    <script th:src="@{/js/components/toast.js}"></script>
+    <style>
+        body.is-system-user .product-card__cart-btn,
+        body.is-system-user #headerCartButton,
+        body.is-system-user #buyActionButton,
+        body.is-system-user #cartActionButton,
+        body.is-system-user .btn-pdp-buy,
+        body.is-system-user .btn-pdp-cart,
+        body.is-system-user #cartDropdownItem,
+        body.is-system-user #preordersDropdownItem,
+        body.is-system-user #transactionsDropdownItem,
+        body.is-system-user #topupDropdownItem,
+        body.is-system-user #topupNavItem,
+        body.is-system-user .support-contact-grid,
+        body.is-system-user #contact-title,
+        body.is-system-user #contact-title + p,
+        body.is-system-user [data-sidebar-visibility="buyer-only"],
+        body.is-system-user .account-sidebar__wallet,
+        body.is-system-user .account-sidebar__role-slot,
+        body.is-system-user [data-account-role="customer-or-seller-only"] {
+            display: none !important;
+        }
+    </style>
+    <script>
+        // Immediately ensure seller pages show customer header elements.
+        try {
+            if (window && window.location && String(window.location.pathname).toLowerCase().startsWith('/seller')) {
+                document.body.classList.remove('is-system-user');
+                ['headerCartButton','headerNotifButton','topupNavItem','topupDropdownItem','transactionsDropdownItem','preordersDropdownItem','cartDropdownItem','sellerDashboardDropdownItem']
+                    .forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.style.display = '';
+                    });
+            }
+        } catch (e) {
+            // ignore
+        }
+    </script>
+    <div class="header__top">
+        <a href="/" class="header__logo">
+            <i class="fa fa-diamond"></i>
+            MMO <span>Market</span>
+        </a>
+
+        <div class="header__search-area">
+            <form class="search-form" action="/search" method="get" autocomplete="off">
+                <input type="text" name="q" id="header-search-input" placeholder="Tìm kiếm sản phẩm..." th:value="${searchQuery != null ? searchQuery : ''}">
+                <button type="submit">
+                    <i class="fa fa-search"></i>
+                </button>
+                <ul class="header-search-suggestions" id="headerSearchSuggestions"></ul>
+            </form>
+        </div>
+
+        <div class="header__auth" id="headerAuthArea" style="visibility: hidden;">
+            <a th:href="@{/login}" class="auth-btn btn-login">Đăng nhập</a>
+            <a th:href="@{/register}" class="auth-btn btn-register">Đăng ký</a>
+        </div>
+    </div>
+
+    <div id="userDropdown" class="user-profile-dropdown">
+        <div class="dropdown-item" onclick="checkAuthAndRedirect('/profile')">
+            <i class="fa fa-user"></i> Thông tin cá nhân
+        </div>
+        <div class="dropdown-item" id="messagesDropdownItem" onclick="goToMessages()">
+            <i class="fa fa-envelope"></i> Tin nhắn
+        </div>
+        <div class="dropdown-item" id="transactionsDropdownItem" onclick="checkAuthAndRedirect('/wallet/transactions')">
+            <i class="fa fa-history"></i> Lịch sử giao dịch
+        </div>
+        <div class="dropdown-item" id="preordersDropdownItem" onclick="checkAuthAndRedirect('/pre-orders')">
+            <i class="fa fa-hourglass-half"></i> Đơn đặt trước
+        </div>
+        <div class="dropdown-item" id="cartDropdownItem" onclick="checkAuthAndRedirect('/cart')">
+            <i class="fa fa-shopping-cart"></i> Giỏ hàng của tôi
+        </div>
+        <div class="dropdown-item" id="topupDropdownItem" onclick="checkAuthAndRedirect('/wallet/topup')">
+            <i class="fa fa-credit-card"></i> Nạp tiền
+        </div>
+        <div class="dropdown-item" id="adminWorkbenchDropdownItem" style="display: none;" onclick="navigateHeaderRoute('/admin/users')">
+            <i class="fa fa-briefcase"></i> Công việc
+        </div>
+        <div class="dropdown-item" id="staffWorkDropdownItem" style="display: none;" onclick="navigateHeaderRoute('/staff/dashboard')">
+            <i class="fa fa-briefcase"></i> Công việc
+        </div>
+        <div class="dropdown-item" id="sellerDashboardDropdownItem" style="display: none;" onclick="navigateHeaderRoute('/seller/dashboard')">
+            <i class="fa fa-dashboard"></i> Seller Dashboard
+        </div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item dropdown-item--logout" onclick="if(typeof logout === 'function') logout(); else { sessionStorage.clear(); localStorage.removeItem('accessToken'); localStorage.removeItem('refreshToken'); localStorage.removeItem('loginTimestamp'); localStorage.removeItem('userInfo'); localStorage.removeItem('user'); window.location.href='/login'; }">
+            <i class="fa fa-sign-out"></i> Đăng xuất
+        </div>
+    </div>
+
+    <nav class="nav">
+        <ul class="nav__list" id="mainNavList">
+            <li class="nav__item" onclick="navigateHeaderRoute('/')">Trang chủ</li>
+            <li class="nav__item" onclick="navigateHeaderRoute('/products')">Sản phẩm</li>
+            <li class="nav__item" id="topupNavItem" onclick="checkAuthAndRedirect('/wallet/topup')">Nạp tiền</li>
+            <li class="nav__item" onclick="navigateHeaderRoute('/support')">Hỗ trợ</li>
+            <li class="nav__item" onclick="navigateHeaderRoute('/support#faq')">Câu hỏi thường gặp</li>
+        </ul>
+    </nav>
+
+    <script th:inline="javascript">
+        const SESSION_TIMEOUT_MS = 15 * 60 * 1000;
+        const HEADER_STORAGE_KEYS = ['accessToken', 'refreshToken', 'loginTimestamp', 'userInfo', 'user'];
+
+        function initHeader() {
+            if (!sessionStorage.getItem('accessToken') && localStorage.getItem('accessToken')) {
+                HEADER_STORAGE_KEYS.forEach(key => {
+                    const value = localStorage.getItem(key);
+                    if (value) {
+                        sessionStorage.setItem(key, value);
+                    }
+                });
+            } else if (sessionStorage.getItem('accessToken')) {
+                HEADER_STORAGE_KEYS.forEach(key => {
+                    const value = sessionStorage.getItem(key);
+                    if (value) {
+                        localStorage.setItem(key, value);
+                    }
+                });
+            } else {
+                HEADER_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
+            }
+
+            const token = sessionStorage.getItem("accessToken");
+            const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user");
+            const authArea = document.getElementById('headerAuthArea');
+            const dropdown = document.getElementById('userDropdown');
+
+            if (token && token !== "null" && token !== "undefined") {
+                const loginTimestamp = sessionStorage.getItem("loginTimestamp");
+                const currentTime = Date.now();
+
+                if (!loginTimestamp) {
+                    sessionStorage.setItem("loginTimestamp", currentTime.toString());
+                    localStorage.setItem("loginTimestamp", currentTime.toString());
+                } else if (currentTime - parseInt(loginTimestamp) > SESSION_TIMEOUT_MS) {
+                    console.warn("Phiên đăng nhập đã hết hạn. Đang đăng xuất...");
+                    sessionStorage.clear();
+                    HEADER_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
+                    window.location.href = '/login';
+                    return;
+                } else {
+                    sessionStorage.setItem("loginTimestamp", currentTime.toString());
+                    localStorage.setItem("loginTimestamp", currentTime.toString());
+                }
+            }
+
+            if (token && token !== "null" && token !== "undefined" &&
+                userString && userString !== "null" && userString !== "undefined" && authArea) {
+                try {
+                    const user = JSON.parse(userString);
+                    const fullName = user.fullName || 'Người dùng';
+                    const initial = fullName.charAt(0).toUpperCase();
+                    const currentRole = parseHeaderRole(user.role);
+                    const isSystemRole = currentRole === 'Admin' || currentRole === 'Staff';
+                    const currentPath = window.location.pathname.toLowerCase();
+
+                    const forceCustomerHeader = currentPath.startsWith('/seller');
+
+
+                    if (forceCustomerHeader) {
+                        document.body.classList.remove('is-system-user');
+                        // Make sure key customer header controls are visible
+                        const headerCartBtn = document.getElementById('headerCartButton');
+                        const headerNotifBtn = document.getElementById('headerNotifButton');
+                        const topupNav = document.getElementById('topupNavItem');
+                        const topupDropdown = document.getElementById('topupDropdownItem');
+                        if (headerCartBtn) headerCartBtn.style.display = '';
+                        if (headerNotifBtn) headerNotifBtn.style.display = '';
+                        if (topupNav) topupNav.style.display = '';
+                        if (topupDropdown) topupDropdown.style.display = '';
+
+                        // Explicitly ensure the dropdown contains all customer links
+                        // (transactions, preorders, cart, topup, seller dashboard).
+                        ['transactionsDropdownItem','preordersDropdownItem','cartDropdownItem','topupDropdownItem','sellerDashboardDropdownItem']
+                            .forEach(id => {
+                                const el = document.getElementById(id);
+                                if (el) el.style.display = 'flex';
+                            });
+                    } else {
+                        if (isSystemRole) {
+                            document.body.classList.add('is-system-user');
+                        }
+                    }
+
+                    if (isSystemRole && !forceCustomerHeader) {
+                        const forbiddenPaths = ['/cart', '/checkout', '/wallet/topup', '/wallet/transactions', '/pre-orders', '/account/orders', '/account/kyc'];
+                        if (forbiddenPaths.some(path => currentPath === path || currentPath.startsWith(path + '/'))) {
+                            alert('Quản trị viên và nhân viên không có quyền truy cập chức năng này.');
+                            window.location.replace('/');
+                            return;
+                        }
+                    }
+
+                    const adminWorkbenchItem = document.getElementById('adminWorkbenchDropdownItem');
+                    const staffWorkItem = document.getElementById('staffWorkDropdownItem');
+                    const sellerDropdownItem = document.getElementById('sellerDashboardDropdownItem');
+                    const topupDropdownItem = document.getElementById('topupDropdownItem');
+                    const topupNavItem = document.getElementById('topupNavItem');
+
+                    if (currentRole === 'Admin' || currentRole === 'Staff') {
+                        // Hide topup for Admin/Staff unless we're on seller pages
+                        // where header should remain customer-like.
+                        if (!forceCustomerHeader) {
+                            if (topupDropdownItem) topupDropdownItem.style.display = 'none';
+                            if (topupNavItem) topupNavItem.style.display = 'none';
+                        } else {
+                            if (topupDropdownItem) topupDropdownItem.style.display = '';
+                            if (topupNavItem) topupNavItem.style.display = '';
+                        }
+                    }
+
+                    if (currentRole === 'Admin' && adminWorkbenchItem) {
+                        adminWorkbenchItem.style.display = 'flex';
+                    }
+
+                    if (currentRole === 'Staff' && staffWorkItem) {
+                        staffWorkItem.style.display = 'flex';
+                    }
+
+                    // Show seller dashboard link in header only when not forcing
+                    // the customer header mode for seller pages (avoid duplication)
+                    if (!forceCustomerHeader && headerIsSellerRole(user.role) && sellerDropdownItem) {
+                        sellerDropdownItem.style.display = 'flex';
+                    }
+
+                    const userBalance = user.balanceVnd || 0;
+                    const balance = typeof formatCurrency === 'function'
+                        ? formatCurrency(userBalance)
+                        : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(userBalance);
+
+                    const balanceText = isSystemRole ? (currentRole === 'Admin' ? 'Quản trị viên' : 'Nhân viên') : balance;
+
+                    authArea.innerHTML = `
+                        <div class="header__account-actions">
+                            <button class="header-cart-button" type="button" id="headerNotifButton" title="Thông báo" aria-label="Thông báo" onclick="checkAuthAndRedirect('/account/notifications')">
+                                <i class="fa fa-bell"></i>
+                                <span class="header-cart-button__badge header-cart-button__badge--danger" id="headerNotifCount" style="display: none;">0</span>
+                            </button>
+                            <button class="header-cart-button" type="button" id="headerCartButton" title="Giỏ hàng của tôi" aria-label="Giỏ hàng của tôi" onclick="checkAuthAndRedirect('/cart')">
+                                <i class="fa fa-shopping-cart"></i>
+                                <span class="header-cart-button__badge" id="headerCartCount">0</span>
+                            </button>
+                            <div class="user-profile" id="userProfileToggle" style="cursor: pointer;">
+                                <div class="user-profile__info">
+                                    <p class="user-profile__name">${fullName}</p>
+                                    <p class="user-profile__balance">${balanceText}</p>
+                                </div>
+                                <div class="user-profile__avatar">${initial}</div>
+                            </div>
+                        </div>
+                    `;
+
+                    const toggleBtn = document.getElementById('userProfileToggle');
+                    if (toggleBtn) {
+                        toggleBtn.addEventListener('click', (event) => {
+                            event.stopPropagation();
+                            dropdown.classList.toggle('active');
+                        });
+                    }
+                    refreshHeaderCartBadge();
+                    refreshHeaderNotifBadge();
+                } catch (error) {
+                    console.error("Lỗi khi parse thông tin user:", error);
+                    sessionStorage.removeItem('userInfo');
+                    sessionStorage.removeItem('user');
+                    localStorage.removeItem('userInfo');
+                    localStorage.removeItem('user');
+                    authArea.innerHTML = `
+                        <a href="/login" class="auth-btn btn-login">Đăng nhập</a>
+                        <a href="/register" class="auth-btn btn-register">Đăng ký</a>
+                    `;
+                }
+            } else if (authArea && !authArea.querySelector('.btn-login')) {
+                authArea.innerHTML = `
+                    <a href="/login" class="auth-btn btn-login">Đăng nhập</a>
+                    <a href="/register" class="auth-btn btn-register">Đăng ký</a>
+                `;
+            }
+
+            if (authArea) {
+                authArea.style.visibility = 'visible';
+            }
+            highlightMainNav();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initHeader);
+        } else {
+            initHeader();
+        }
+
+        window.addEventListener('click', () => {
+            const dropdown = document.getElementById('userDropdown');
+            if (dropdown && dropdown.classList.contains('active')) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+        function checkAuthAndRedirect(url) {
+            const token = sessionStorage.getItem("accessToken");
+            if (!token || token === "null" || token === "undefined") {
+                window.location.href = '/login';
+            } else {
+                navigateHeaderRoute(url);
+            }
+        }
+
+        function navigateHeaderRoute(target) {
+            const url = new URL(target, window.location.href);
+            const currentUrl = new URL(window.location.href);
+            const isCurrentRoute = url.pathname === currentUrl.pathname &&
+                url.search === currentUrl.search &&
+                url.hash === currentUrl.hash;
+
+            document.getElementById('userDropdown')?.classList.remove('active');
+            if (isCurrentRoute) {
+                return;
+            }
+
+            if (window.AccountNavigation?.navigate(url.href)) {
+                return;
+            }
+            window.location.href = url.href;
+        }
+
+        function goToMessages() {
+            const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user");
+            if (!userString) {
+                window.location.href = '/login';
+                return;
+            }
+            try {
+                const user = JSON.parse(userString);
+                const role = parseHeaderRole(user.role);
+                if (role === 'Admin' || role === 'Staff') {
+                    navigateHeaderRoute('/staff/chat');
+                } else {
+                    navigateHeaderRoute('/messages');
+                }
+            } catch (e) {
+                navigateHeaderRoute('/messages');
+            }
+        }
+
+        function parseHeaderRole(roleValue) {
+            if (!roleValue) return 'Customer';
+            try {
+                const parsed = JSON.parse(roleValue);
+                return parsed.role || 'Customer';
+            } catch (error) {
+                const role = String(roleValue).replaceAll('"', '').trim().toLowerCase();
+                if (role.includes('admin')) return 'Admin';
+                if (role.includes('staff')) return 'Staff';
+                if (role.includes('seller')) return 'Seller';
+                return 'Customer';
+            }
+        }
+
+        function headerIsSellerRole(roleValue) {
+            if (!roleValue) return false;
+            const raw = String(roleValue).toLowerCase();
+            if (raw.includes('seller')) return true;
+            try {
+                const parsed = JSON.parse(roleValue);
+                return String(parsed.role || '').toLowerCase().includes('seller');
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function highlightMainNav() {
+            const currentPath = window.location.pathname;
+            const navItemsList = document.querySelectorAll('#mainNavList .nav__item');
+            const navRouteMap = {
+                'Trang chủ': '/',
+                'Sản phẩm': '/products',
+                'Nạp tiền': '/wallet/topup',
+                'Hỗ trợ': '/support',
+                'Câu hỏi thường gặp': '/support'
+            };
+
+            navItemsList.forEach(item => {
+                const label = item.innerText.trim();
+                const targetPath = navRouteMap[label];
+                if (!targetPath) return;
+
+                const isActive = targetPath === '/'
+                    ? currentPath === '/'
+                    : currentPath.startsWith(targetPath);
+                item.classList.toggle('nav__item--active', isActive);
+            });
+        }
+
+        function getCartStorageKey() {
+            try {
+                const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user") || localStorage.getItem("userInfo") || localStorage.getItem("user");
+                if (userString && userString !== "null" && userString !== "undefined") {
+                    const user = JSON.parse(userString);
+                    if (user) {
+                        let role = 'Customer';
+                        if (user.role) {
+                            role = parseHeaderRole(user.role);
+                        }
+                        const id = user.id || user.email || 'unknown';
+                        return `mmoCart_${role}_${id}`;
+                    }
+                }
+            } catch (error) {
+                console.error("Error determining cart key:", error);
+            }
+            return 'mmoCart_guest';
+        }
+        window.getCartStorageKey = getCartStorageKey;
+
+        function getNotifStorageKey() {
+            try {
+                const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user") || localStorage.getItem("userInfo") || localStorage.getItem("user");
+                if (userString && userString !== "null" && userString !== "undefined") {
+                    const user = JSON.parse(userString);
+                    if (user && user.id) {
+                        return `mmoReadNotifs_${user.id}`;
+                    }
+                }
+            } catch (error) {
+                console.error("Error determining notif key:", error);
+            }
+            return 'mmoReadNotifs_guest';
+        }
+        window.getNotifStorageKey = getNotifStorageKey;
+
+        function refreshHeaderCartBadge() {
+            const badge = document.getElementById('headerCartCount');
+            if (!badge) return;
+            try {
+                const cart = JSON.parse(localStorage.getItem(getCartStorageKey()) || '[]');
+                const count = cart.reduce((sum, item) => sum + Number(item.quantity || 1), 0);
+                badge.innerText = count > 99 ? '99+' : String(count);
+                badge.style.display = count > 0 ? 'inline-flex' : 'none';
+            } catch (error) {
+                badge.innerText = '0';
+                badge.style.display = 'none';
+            }
+        }
+
+        async function refreshHeaderNotifBadge() {
+            const badge = document.getElementById('headerNotifCount');
+            if (!badge) return;
+            const token = sessionStorage.getItem("accessToken");
+            if (!token || token === "null" || token === "undefined") {
+                badge.innerText = '0';
+                badge.style.display = 'none';
+                return;
+            }
+            try {
+                let list = null;
+                if (typeof authFetch === 'function') {
+                    const response = await authFetch('/v1/notifications');
+                    if (response.ok) {
+                        list = await response.json();
+                    }
+                } else {
+                    const response = await fetch('/api/v1/notifications', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (response.ok) {
+                        list = await response.json();
+                    }
+                }
+
+                if (list) {
+                    const readIds = JSON.parse(localStorage.getItem(getNotifStorageKey()) || '[]');
+                    const unreadCount = list.filter(n => {
+                        if (n.isBroadcast) {
+                            return !readIds.includes(n.originalTimestamp);
+                        }
+                        return n.status === 'UNREAD';
+                    }).length;
+                    badge.innerText = unreadCount > 99 ? '99+' : String(unreadCount);
+                    badge.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
+                } else {
+                    badge.innerText = '0';
+                    badge.style.display = 'none';
+                }
+            } catch (error) {
+                badge.innerText = '0';
+                badge.style.display = 'none';
+            }
+        }
+
+        window.initHeader = initHeader;
+        window.refreshHeaderCartBadge = refreshHeaderCartBadge;
+        window.refreshHeaderNotifBadge = refreshHeaderNotifBadge;
+        window.addEventListener('storage', () => {
+            refreshHeaderCartBadge();
+            refreshHeaderNotifBadge();
+        });
+
+        const HEADER_SEARCH_SUGGESTIONS = [
+            'Netflix',
+            'ChatGPT Plus',
+            'Facebook',
+            'Youtube Premium',
+            'Gmail',
+            'Tool Facebook',
+            'Tài khoản Facebook',
+            'Spotify Premium',
+            'Canva Pro',
+            'Trust Wallet'
+        ];
+
+        function normalizeHeaderSearchText(value) {
+            return (value || '')
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/\bclone\s*fb\b/g, 'facebook')
+                .replace(/\bfb\b/g, 'facebook')
+                .trim();
+        }
+
+        function renderHeaderSearchSuggestions(keyword) {
+            const list = document.getElementById('headerSearchSuggestions');
+            if (!list) return;
+
+            const normalizedKeyword = normalizeHeaderSearchText(keyword);
+            const matches = normalizedKeyword
+                ? HEADER_SEARCH_SUGGESTIONS.filter(item => normalizeHeaderSearchText(item).includes(normalizedKeyword))
+                : HEADER_SEARCH_SUGGESTIONS.slice(0, 6);
+
+            const suggestions = matches.length > 0 ? matches : [
+                `${keyword} giá rẻ`,
+                `Tài khoản ${keyword}`,
+                `Mua ${keyword} tự động`
+            ];
+
+            list.innerHTML = suggestions.slice(0, 8).map(item => `
+                <li class="header-search-suggestions__item" onclick="selectHeaderSuggestion('${String(item).replace(/'/g, "\\'")}')">
+                    <i class="fa fa-search"></i>
+                    <span>${item}</span>
+                </li>
+            `).join('');
+            list.classList.add('is-open');
+        }
+
+        function selectHeaderSuggestion(value) {
+            const input = document.getElementById('header-search-input');
+            const list = document.getElementById('headerSearchSuggestions');
+            if (input) input.value = value;
+            if (list) list.classList.remove('is-open');
+            window.location.href = `/search?q=${encodeURIComponent(value)}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.getElementById('header-search-input');
+            const list = document.getElementById('headerSearchSuggestions');
+            if (!input || !list) return;
+
+            input.addEventListener('focus', () => renderHeaderSearchSuggestions(input.value));
+            input.addEventListener('input', () => renderHeaderSearchSuggestions(input.value));
+            document.addEventListener('click', (event) => {
+                if (!event.target.closest('.header__search-area')) {
+                    list.classList.remove('is-open');
+                }
+            });
+        });
+    </script>
+</header>
+
+</body>
+</html>

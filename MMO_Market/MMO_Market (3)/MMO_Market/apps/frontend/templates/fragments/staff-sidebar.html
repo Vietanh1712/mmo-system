@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<aside class="staff-sidebar" th:fragment="staffSidebar(active)">
+        <p class="staff-sidebar__title">Trung tâm Staff</p>
+        <p class="staff-sidebar__subtitle">Quản lý vận hành MMO Market</p>
+        <nav class="staff-sidebar__nav ds-stack-sm">
+            <a class="staff-sidebar__link"
+               th:classappend="${active == 'dashboard'} ? ' is-active' : ''"
+               href="/staff/dashboard">
+                <i class="fa fa-dashboard"></i> Tổng quan
+            </a>
+
+            <a class="staff-sidebar__link"
+               th:classappend="${active == 'kyc'} ? ' is-active' : ''"
+               href="/staff/kyc"
+               data-required-permission="APPROVE_KYC">
+                <i class="fa fa-id-card"></i> Định danh KYC
+            </a>
+            <a class="staff-sidebar__link"
+               th:classappend="${active == 'shop-registrations'} ? ' is-active' : ''"
+               href="/staff/shop-registrations"
+               data-required-permission="MANAGE_SHOPS">
+                 <i class="fa fa-shopping-bag"></i> Quản lý Shops
+            </a>
+            
+            <!-- Collapsible Dropdown for Quản lý đơn từ -->
+            <div class="staff-sidebar__dropdown" th:classappend="${active == 'complaints' or active == 'transactions' or active == 'withdrawals' or active == 'support-tickets' or active == 'documents'} ? 'is-open' : ''">
+                <div class="staff-sidebar__dropdown-header">
+                    <a class="staff-sidebar__link staff-sidebar__dropdown-link-main"
+                       th:classappend="${active == 'documents'} ? ' is-active' : ''"
+                       href="/staff/documents">
+                        <i class="fa fa-file-text"></i>
+                        <span>Quản lý đơn từ</span>
+                    </a>
+                    <button class="staff-sidebar__dropdown-toggle" type="button" aria-label="Toggle Dropdown">
+                        <i class="fa fa-chevron-down staff-sidebar__dropdown-arrow"></i>
+                    </button>
+                </div>
+                <div class="staff-sidebar__dropdown-menu">
+                    <a class="staff-sidebar__link staff-sidebar__dropdown-item"
+                       th:classappend="${active == 'complaints'} ? ' is-active' : ''"
+                       href="/staff/complaints"
+                       data-required-permission="HANDLE_DISPUTES">
+                        <i class="fa fa-exclamation-circle"></i> Khiếu nại
+                    </a>
+                    <a class="staff-sidebar__link staff-sidebar__dropdown-item"
+                       th:classappend="${active == 'support-tickets'} ? ' is-active' : ''"
+                       href="/staff/support-tickets">
+                        <i class="fa fa-ticket"></i> Phiếu Hỗ Trợ
+                    </a>
+                    <a class="staff-sidebar__link staff-sidebar__dropdown-item"
+                       th:classappend="${active == 'transactions'} ? ' is-active' : ''"
+                       href="/staff/transactions">
+                        <i class="fa fa-exchange"></i> Giao dịch
+                    </a>
+                    <a class="staff-sidebar__link staff-sidebar__dropdown-item"
+                       th:classappend="${active == 'withdrawals'} ? ' is-active' : ''"
+                       href="/staff/withdrawals"
+                       data-required-permission="APPROVE_WITHDRAWALS">
+                        <i class="fa fa-money"></i> Rút tiền
+                    </a>
+                </div>
+            </div>
+
+            <a class="staff-sidebar__link"
+               th:classappend="${active == 'flags'} ? ' is-active' : ''"
+               href="/staff/flags"
+               data-required-permission="FLAG_SELLER">
+                <i class="fa fa-flag"></i> Cờ cảnh báo
+            </a>
+            <a class="staff-sidebar__link"
+               th:classappend="${active == 'chat'} ? ' is-active' : ''"
+               href="/staff/chat"
+               data-required-permission="MANAGE_SUPPORT">
+                <i class="fa fa-comments"></i> Chat người dùng
+            </a>
+            <div class="staff-sidebar__divider"></div>
+            <a class="staff-sidebar__link staff-sidebar__link--logout"
+               href="javascript:void(0)"
+               onclick="if(typeof logout === 'function') logout(); else { sessionStorage.clear(); localStorage.removeItem('accessToken'); localStorage.removeItem('refreshToken'); localStorage.removeItem('loginTimestamp'); localStorage.removeItem('userInfo'); localStorage.removeItem('user'); window.location.href='/login'; }">
+                <i class="fa fa-sign-out"></i> Đăng xuất
+            </a>
+        </nav>
+</aside>
+</body>
+</html>

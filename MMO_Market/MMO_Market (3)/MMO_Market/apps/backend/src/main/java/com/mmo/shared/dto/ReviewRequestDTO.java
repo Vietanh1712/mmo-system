@@ -1,0 +1,17 @@
+package com.mmo.shared.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ReviewRequestDTO {
+    private Integer rating;
+    private String comment;
+    private String mediaUrl;
+    private Long transactionId;
+}

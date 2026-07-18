@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý đánh giá - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/features/home.css}">
+    <link rel="stylesheet" th:href="@{/css/customer/profile.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/seller/seller.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="ds-container-fluid admin-shell" style="max-width: 1500px; margin: 0 auto;">
+        <div class="admin-layout ds-two-column">
+            <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('reviews')}"></aside>
+
+            <section class="admin-workspace ds-page-shell" style="padding-right: 120px;">
+                <div class="view-header">
+                    <div>
+                        <h2>Quản lý đánh giá</h2>
+                        <p>Đọc đánh giá từ khách hàng về sản phẩm của bạn</p>
+                    </div>
+                    <span class="ds-badge ds-badge-info">Reviews</span>
+                </div>
+
+                <div class="stats-grid-4">
+                    <div class="stat-card-modern blue">
+                        <span class="stat-card-label">Điểm trung bình shop</span>
+                        <div class="stat-card-value" id="avgRating">—</div>
+                        <div class="stat-card-trend">Trung bình đánh giá</div>
+                    </div>
+                    <div class="stat-card-modern blue" id="cardTotalReviews" style="cursor:pointer;">
+                        <span class="stat-card-label">Tổng đánh giá</span>
+                        <div class="stat-card-value" id="totalReviews">0</div>
+                        <div class="stat-card-trend">Từ tất cả sản phẩm</div>
+                    </div>
+                    <div class="stat-card-modern green" id="cardFiveStars" style="cursor:pointer;">
+                        <span class="stat-card-label">5 sao</span>
+                        <div class="stat-card-value" id="fiveStarCount">0</div>
+                        <div class="stat-card-trend">Đánh giá xuất sắc</div>
+                    </div>
+                    <div class="stat-card-modern red" id="cardLowStars" style="cursor:pointer;">
+                        <span class="stat-card-label">1–2 sao</span>
+                        <div class="stat-card-value" id="lowStarCount">0</div>
+                        <div class="stat-card-trend">Cần theo dõi</div>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <div class="card-header-flex ds-cluster-between">
+                        <h3>Danh sách đánh giá</h3>
+                        <select id="ratingFilter" class="ds-select" style="min-width: 200px; padding: 6px 10px; font-size: 13px;">
+                            <option value="all">Tất cả đánh giá</option>
+                            <option value="5">5 sao ★★★★★</option>
+                            <option value="4">4 sao ★★★★</option>
+                            <option value="3">3 sao ★★★</option>
+                            <option value="2">2 sao ★★</option>
+                            <option value="1">1 sao ★</option>
+                            <option value="low">1-2 sao (Cần theo dõi)</option>
+                        </select>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã</th>
+                                    <th>Sản phẩm</th>
+                                    <th>Khách hàng</th>
+                                    <th>Điểm</th>
+                                    <th>Nội dung</th>
+                                    <th>Ngày</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reviews-tbody">
+                                <tr><td colspan="6" style="text-align:center; padding: 30px;"><i class="fa fa-spinner fa-spin"></i> Đang tải dữ liệu...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    <script th:src="@{/js/customer/auth.js}"></script>
+    <script th:src="@{/js/seller/seller-console.js}"></script>
+</body>
+</html>

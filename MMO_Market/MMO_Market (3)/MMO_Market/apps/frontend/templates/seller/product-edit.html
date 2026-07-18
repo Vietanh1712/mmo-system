@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chỉnh sửa sản phẩm - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/features/home.css}">
+    <link rel="stylesheet" th:href="@{/css/customer/profile.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/seller/seller.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="ds-container-fluid admin-shell" style="max-width: 1500px; margin: 0 auto;">
+        <div class="admin-layout ds-two-column">
+            <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('inventory')}"></aside>
+
+            <section class="admin-workspace ds-page-shell" style="padding-right: 120px;">
+                <div class="view-header">
+                    <div>
+                        <h2>Chỉnh sửa sản phẩm</h2>
+                        <p>Sản phẩm #101 — Netflix Premium</p>
+                    </div>
+                    <a class="ds-btn ds-btn-outline" th:href="@{/seller/inventory}" style="text-decoration: none;">← Quảy lại kho</a>
+                </div>
+
+                <form class="profile-edit-form seller-form-panel" novalidate>
+                    <div class="profile-edit-form__group">
+                        <label for="productName">Tên sản phẩm</label>
+                        <input id="productName" type="text" value="Tài khoản Netflix Premium">
+                    </div>
+                    <div class="profile-edit-form__group">
+                        <label for="category">Danh mục</label>
+                        <select id="category" style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;">
+                            <option selected>Streaming</option>
+                            <option>Phần mềm</option>
+                            <option>Game</option>
+                        </select>
+                    </div>
+                    <div class="profile-edit-form__group">
+                        <label for="description">Mô tả</label>
+                        <textarea id="description" style="min-height: 100px; padding: 11px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+                    <div class="profile-edit-form__group">
+                        <label for="userGuide">Hướng dẫn sử dụng sản phẩm</label>
+                        <textarea id="userGuide" style="min-height: 100px; padding: 11px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+
+                    <div class="profile-actions">
+                        <button class="profile-button profile-button--primary" type="button" disabled>Lưu sản phẩm</button>
+                    </div>
+                </form>
+
+                <div class="admin-card">
+                    <div class="card-header-flex ds-cluster-between">
+                        <h3>Biến thể sản phẩm</h3>
+                        <a class="ds-btn ds-btn-primary" th:href="@{/seller/variants/new}" style="text-decoration: none;">+ Thêm biến thể</a>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Tên biến thể</th>
+                                    <th class="text-right">Giá (VNĐ)</th>
+                                    <th class="text-right">Tồn kho</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-right">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1 tháng — 1 màn hình</td>
+                                    <td class="text-right">89.000</td>
+                                    <td class="text-right">25</td>
+                                    <td><span class="ds-badge ds-badge-success">Active</span></td>
+                                    <td class="text-right">
+                                        <div th:replace="~{fragments/seller-actions :: variantRowActions(@{/seller/variants/edit})}"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>3 tháng — 1 màn hình</td>
+                                    <td class="text-right">249.000</td>
+                                    <td class="text-right">15</td>
+                                    <td><span class="ds-badge ds-badge-success">Active</span></td>
+                                    <td class="text-right">
+                                        <div th:replace="~{fragments/seller-actions :: variantRowActions(@{/seller/variants/edit})}"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>1 năm — 4K HDR</td>
+                                    <td class="text-right">890.000</td>
+                                    <td class="text-right">7</td>
+                                    <td><span class="ds-badge ds-badge-success">Active</span></td>
+                                    <td class="text-right">
+                                        <div th:replace="~{fragments/seller-actions :: variantRowActions(@{/seller/variants/edit})}"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    <script th:src="@{/js/customer/auth.js}"></script>
+    <script th:src="@{/js/seller/seller-console.js}"></script>
+</body>
+</html>

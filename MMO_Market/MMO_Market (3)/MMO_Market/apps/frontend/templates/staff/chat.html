@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Chat người dùng')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/features/messages.css}">
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('chat')}"></aside>
+
+            <section class="ds-section">
+                <div class="staff-page-header">
+                    <div>
+                        <h1 class="ds-page-title">Chat với người dùng</h1>
+                        <p class="ds-page-subtitle">Hỗ trợ trực tiếp khách hàng và seller qua hội thoại.</p>
+                    </div>
+                </div>
+
+                <div class="staff-chat-layout">
+                    <div class="ds-card staff-chat-list">
+                        <div class="staff-chat-list__header">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                                <h2 style="margin: 0; font-size: 1.25rem; font-weight: bold; color: var(--ds-text-primary); font-family: inherit;">Messages</h2>
+                                <span id="staff-unread-badge" style="display: none; background: #f97316; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px; white-space: nowrap;"></span>
+                            </div>
+                            <div class="staff-chat-search-wrap">
+                                <i class="fa fa-search"></i>
+                                <input type="search" placeholder="Tìm người dùng...">
+                            </div>
+                        </div>
+                        <div class="staff-chat-list__items">
+                            <!-- Dynamic content loaded by JS -->
+                        </div>
+                    </div>
+
+                    <div class="ds-card staff-chat-panel">
+                        <div class="staff-chat-panel__header ds-cluster-between">
+                            <div class="ds-entity">
+                                <span class="ds-avatar ds-avatar-sm ds-avatar-primary"></span>
+                                <div>
+                                    <div class="ds-entity-title">Chọn người dùng</div>
+                                    <div class="ds-entity-subtitle">Bắt đầu hội thoại</div>
+                                </div>
+                            </div>
+                            <div class="staff-chat-header-actions" style="position: relative; display: flex; align-items: center; gap: 8px;">
+                                <a href="#" id="view-staff-complaint-btn" class="messages-main__header-link-btn" style="display: none;" target="_blank"><i class="fa fa-gavel"></i> Chi tiết khiếu nại</a>
+                                <button type="button" class="staff-chat-action-btn" title="Tùy chọn" onclick="toggleChatDropdown(event)"><i class="fa fa-ellipsis-v"></i></button>
+                                <div id="staff-chat-dropdown" class="staff-chat-dropdown" style="display: none;">
+                                    <a href="#" onclick="clearStaffChatHistory(event)"><i class="fa fa-trash"></i> Xóa lịch sử chat</a>
+                                    <a href="#" id="toggle-staff-block-btn" onclick="toggleStaffBlock(event)"><i class="fa fa-ban"></i> Chặn liên hệ</a>
+                                    <a href="#" onclick="toggleStaffSearchMessages(event)"><i class="fa fa-search"></i> Tìm tin nhắn</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Inline Search Bar inside current conversation for Staff -->
+                        <div id="staff-message-search-container" style="display: none; padding: 10px 16px; background: #f1f5f9; border-bottom: 1px solid var(--ds-border, #cbd5e1); align-items: center; gap: 8px; box-sizing: border-box;">
+                            <i class="fa fa-search" style="color: #64748b; font-size: 14px;"></i>
+                            <input type="text" id="staff-message-search-input" placeholder="Tìm tin nhắn trong cuộc trò chuyện..." style="flex: 1; border: none; background: transparent; outline: none; font-size: 13.5px; font-family: inherit;" oninput="performStaffMessageSearch(this.value)">
+                            <button type="button" onclick="closeStaffMessageSearch()" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 4px; display: inline-flex;" title="Đóng tìm kiếm">
+                                <i class="fa fa-times"></i>
+                            </button>
+                        </div>
+
+                        <div class="staff-chat-messages" id="staffChatMessages">
+                            <!-- Dynamic content loaded by JS -->
+                        </div>
+
+                        <div class="staff-chat-footer">
+                            <div id="staff-attachment-preview" style="display: none; padding: 8px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px; align-items: center; gap: 10px; box-sizing: border-box;">
+                                <div id="staff-attachment-content" style="flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; font-size: 13px;"></div>
+                                <button type="button" onclick="cancelStaffAttachment()" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 4px;" title="Xóa đính kèm">
+                                    <i class="fa fa-times" style="font-size: 16px;"></i>
+                                </button>
+                            </div>
+
+                            <form class="staff-chat-compose" id="staffChatForm">
+                                <button type="button" class="staff-input-attach" title="Đính kèm tệp" onclick="document.getElementById('staff-file-input').click()"><i class="fa fa-plus"></i></button>
+                                <div class="staff-input-field">
+                                    <input id="staffChatInput" type="text" placeholder="Nhập tin nhắn..." autocomplete="off">
+                                </div>
+                                <button type="submit" class="staff-input-send" aria-label="Gửi"><i class="fa fa-paper-plane"></i></button>
+                            </form>
+
+                            <div class="staff-input-sub">
+                                <a href="#" onclick="event.preventDefault(); document.getElementById('staff-image-input').click();"><i class="fa fa-image"></i> Send Image</a>
+                                <a href="#" onclick="event.preventDefault(); document.getElementById('staff-file-input').click();"><i class="fa fa-paperclip"></i> Attach Files</a>
+                                <input type="file" id="staff-image-input" accept="image/*" style="display: none;" onchange="handleStaffImageUpload(event)">
+                                <input type="file" id="staff-file-input" accept="*/*" style="display: none;" onchange="handleStaffFileUpload(event)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/customer/auth.js}"></script>
+<script th:src="@{/js/staff/staff-ui.js}"></script>
+<script th:src="@{/js/staff/staff-chat.js}"></script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Quản lý khiếu nại')}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('complaints')}"></aside>
+
+            <section class="ds-section">
+                <div class="staff-page-header">
+                    <div>
+                        <h1 class="ds-page-title">Quản lý khiếu nại</h1>
+                        <p class="ds-page-subtitle">Theo dõi, lọc và chuyển sang trang xử lý chi tiết từng khiếu nại.</p>
+                    </div>
+                </div>
+
+                <div class="staff-stat-grid">
+                    <div class="ds-card staff-stat-card blue">
+                        <p class="staff-stat-card__label">Tổng khiếu nại</p>
+                        <p class="staff-stat-card__value" id="stat-total-complaints">0</p>
+                    </div>
+                    <div class="ds-card staff-stat-card yellow">
+                        <p class="staff-stat-card__label">Đang xử lý</p>
+                        <p class="staff-stat-card__value" id="stat-inprogress-complaints">0</p>
+                    </div>
+                    <div class="ds-card staff-stat-card green">
+                        <p class="staff-stat-card__label">Đã giải quyết</p>
+                        <p class="staff-stat-card__value" id="stat-resolved-complaints">0</p>
+                    </div>
+                    <div class="ds-card staff-stat-card red">
+                        <p class="staff-stat-card__label">Từ chối</p>
+                        <p class="staff-stat-card__value" id="stat-rejected-complaints">0</p>
+                    </div>
+                </div>
+
+                <div class="ds-card">
+                    <div class="ds-filter-panel">
+                        <h2 class="ds-card-title">Bộ lọc khiếu nại</h2>
+                        <div class="ds-filter-grid">
+                            <input class="ds-input" type="search" id="staff-search-input" placeholder="Tìm mã khiếu nại, người gửi, đối tượng...">
+                            <select class="ds-input" id="staff-status-select">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="InProgress">Đang xử lý</option>
+                                <option value="Resolved">Đã giải quyết</option>
+                                <option value="Rejected">Từ chối</option>
+                            </select>
+                            <select class="ds-input" id="staff-category-select">
+                                <option value="">Loại khiếu nại</option>
+                                <option value="Sản phẩm">Sản phẩm</option>
+                                <option value="Giao dịch">Giao dịch</option>
+                                <option value="Shop">Shop</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                        </div>
+                        <div class="ds-filter-actions">
+                            <button class="ds-btn ds-btn-secondary" type="button" onclick="resetStaffFilters()">Làm mới bộ lọc</button>
+                            <button class="ds-btn ds-btn-primary" type="button" onclick="applyStaffFilters()">Tìm kiếm</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ds-card">
+                    <div class="ds-table-wrap">
+                        <table class="ds-table">
+                            <thead>
+                            <tr>
+                                <th>Mã</th>
+                                <th>Người gửi</th>
+                                <th>Đối tượng</th>
+                                <th>Loại</th>
+                                <th class="ds-table-center">Trạng thái</th>
+                                <th>Ngày tạo</th>
+                                <th class="ds-table-center">Thao tác</th>
+                            </tr>
+                            </thead>
+                            <tbody id="staff-complaints-body">
+                            <tr>
+                                <td colspan="7" class="ds-table-center">Đang tải dữ liệu...</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="complaintsPagination"></div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/customer/auth.js}"></script>
+<script th:src="@{/js/staff/staff-ui.js}"></script>
+<script th:src="@{/js/staff/staff-complaints.js}"></script>
+</body>
+</html>

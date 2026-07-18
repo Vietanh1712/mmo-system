@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phản hồi khiếu nại - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/features/home.css}">
+    <link rel="stylesheet" th:href="@{/css/customer/profile.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/seller/seller.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="ds-container-fluid admin-shell" style="max-width: 1500px; margin: 0 auto;">
+        <div class="admin-layout ds-two-column">
+            <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('complaints')}"></aside>
+
+            <section class="admin-workspace ds-page-shell" style="padding-right: 120px;">
+                <div class="view-header">
+                    <div>
+                        <h2>Phản hồi khiếu nại</h2>
+                        <p id="complaintSubtitle">Đang tải thông tin...</p>
+                    </div>
+                    <span class="ds-badge ds-badge-warning" id="complaintStatusBadge"><i class="fa fa-spinner fa-spin"></i> Đang tải</span>
+                </div>
+
+                <div class="admin-card">
+                    <div class="card-header-flex">
+                        <h3>Thông tin khiếu nại</h3>
+                    </div>
+                    <div style="padding: 20px 24px;">
+                        <!-- Detail info: populated by JS -->
+                        <dl class="seller-info-grid">
+                            <dt>Khách hàng</dt><dd>—</dd>
+                            <dt>Mã đơn hàng</dt><dd>—</dd>
+                            <dt>Sản phẩm</dt><dd>—</dd>
+                            <dt>Đơn giá</dt><dd>—</dd>
+                            <dt>Nội dung khiếu nại</dt><dd>—</dd>
+                            <dt>Ảnh minh chứng</dt><dd>—</dd>
+                            <dt>Hướng giải quyết</dt><dd>—</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div style="margin-top: 16px; display: flex; gap: 8px;">
+                    <a class="ds-btn ds-btn-outline" th:href="@{/seller/complaints}">Quay lại danh sách</a>
+                </div>
+            </section>
+        </div>
+    </main>
+    <script th:src="@{/js/customer/auth.js}"></script>
+    <script th:src="@{/js/seller/seller-console.js}"></script>
+</body>
+</html>
