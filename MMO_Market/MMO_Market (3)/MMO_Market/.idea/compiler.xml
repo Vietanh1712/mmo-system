@@ -7,8 +7,11 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="MMO_Market" />
+        <module name="mmo-market-parent" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="MMO_Market" target="17" />
+    </bytecodeTargetLevel>
   </component>
 </project>
