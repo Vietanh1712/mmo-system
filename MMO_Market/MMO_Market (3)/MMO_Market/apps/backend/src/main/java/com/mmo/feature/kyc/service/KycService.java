@@ -5,11 +5,13 @@ import com.mmo.shared.dto.KycReviewRequest;
 import com.mmo.shared.dto.KycResponseDto;
 import com.mmo.shared.dal.KycRequestRepository;
 import com.mmo.shared.dal.UserRepository;
+import com.mmo.shared.dal.NotificationRepository;
 import lombok.extern.slf4j.Slf4j;
 import com.mmo.shared.model.IdType;
 import com.mmo.shared.model.KycRequest;
 import com.mmo.shared.model.KycStatus;
 import com.mmo.shared.model.User;
+import com.mmo.shared.model.Notification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +34,9 @@ public class KycService {
 
     @Autowired
     private KycStorageService kycStorageService;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private static final int CODE_LENGTH = 12;
@@ -97,6 +102,38 @@ public class KycService {
                 .build();
 
         KycRequest savedRequest = kycRequestRepository.save(request);
+
+        // 1. Tạo thông báo cho Customer
+        Notification customerNotif = Notification.builder()
+                .userId(user.getId())
+                .title("Yêu cầu KYC đã được gửi")
+                .content(String.format("Yêu cầu xác minh danh tính (KYC) mã %s của bạn đã được gửi thành công và đang chờ nhân viên kiểm duyệt.", savedRequest.getRequestCode()))
+                .type("KYC")
+                .severity("INFO")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/account/kyc")
+                .build();
+        notificationRepository.save(customerNotif);
+
+        // 2. Tạo thông báo cho Staff có quyền duyệt KYC (APPROVE_KYC)
+        List<User> staffAndAdmins = userRepository.findUsersByPermission("APPROVE_KYC");
+        for (User staff : staffAndAdmins) {
+            if (staff.getId().equals(user.getId())) {
+                continue;
+            }
+            Notification staffNotif = Notification.builder()
+                    .userId(staff.getId())
+                    .title("Yêu cầu xác minh KYC mới")
+                    .content(String.format("Có yêu cầu xác minh KYC mới mã %s từ %s (%s).", savedRequest.getRequestCode(), user.getFullName(), user.getEmail()))
+                    .type("KYC")
+                    .severity("WARNING")
+                    .isRead(false)
+                    .isDelete(false)
+                    .targetUrl("/staff/kyc/detail?id=" + savedRequest.getId())
+                    .build();
+            notificationRepository.save(staffNotif);
+        }
 
         return mapToDto(savedRequest);
     }
@@ -226,6 +263,34 @@ public class KycService {
         }
 
         KycRequest updated = kycRequestRepository.save(request);
+
+        // Tạo thông báo kết quả duyệt cho Customer
+        User user = updated.getUser();
+        String title = "";
+        String content = "";
+        String severity = "INFO";
+        if (updated.getStatus() == KycStatus.APPROVED) {
+            title = "Yêu cầu KYC đã được phê duyệt";
+            content = String.format("Yêu cầu xác minh danh tính (KYC) mã %s của bạn đã được phê duyệt thành công. Bạn đã có thể tiến hành đăng ký mở Shop bán hàng.", updated.getRequestCode());
+            severity = "SUCCESS";
+        } else if (updated.getStatus() == KycStatus.REJECTED) {
+            title = "Yêu cầu KYC bị từ chối";
+            content = String.format("Yêu cầu xác minh danh tính (KYC) mã %s của bạn đã bị từ chối. Lý do: %s", updated.getRequestCode(), updated.getRejectionReason() != null ? updated.getRejectionReason() : "Hồ sơ không hợp lệ");
+            severity = "DANGER";
+        }
+
+        Notification resultNotif = Notification.builder()
+                .userId(user.getId())
+                .title(title)
+                .content(content)
+                .type("KYC")
+                .severity(severity)
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/account/kyc")
+                .build();
+        notificationRepository.save(resultNotif);
+
         return mapToDto(updated);
     }
 

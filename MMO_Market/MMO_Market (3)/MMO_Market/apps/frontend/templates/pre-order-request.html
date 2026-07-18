@@ -124,6 +124,7 @@
             price: /*[[${price}]]*/ 0,
             icon: /*[[${icon}]]*/ 'fa-shopping-basket',
             iconColor: /*[[${iconColor}]]*/ '#ea580c',
+            imageUrl: /*[[${imageUrl}]]*/ '',
             stock: /*[[${stock}]]*/ 0
         };
 
@@ -152,6 +153,7 @@
             price: parseNumber(readParam('price', fallbackProduct.price), fallbackProduct.price || 0),
             icon: readParam('icon', fallbackProduct.icon || 'fa-shopping-basket'),
             iconColor: readParam('iconColor', fallbackProduct.iconColor || '#ea580c'),
+            imageUrl: readParam('imageUrl', fallbackProduct.imageUrl || ''),
             stock: parseNumber(readParam('stock', fallbackProduct.stock), fallbackProduct.stock || 0)
         };
 
@@ -185,8 +187,13 @@
             }
 
             const thumb = document.getElementById('productThumb');
-            thumb.innerHTML = `<i class="fa ${preorderProduct.icon}"></i>`;
-            thumb.style.color = preorderProduct.iconColor;
+            if (preorderProduct.imageUrl && !preorderProduct.imageUrl.includes('placeholder.com')) {
+                thumb.innerHTML = `<img src="${preorderProduct.imageUrl}" alt="${preorderProduct.productName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">`;
+                thumb.style.color = '';
+            } else {
+                thumb.innerHTML = `<i class="fa ${preorderProduct.icon}"></i>`;
+                thumb.style.color = preorderProduct.iconColor;
+            }
 
             document.getElementById('productNameText').innerText = preorderProduct.productName || 'Sản phẩm';
             document.getElementById('sellerNameText').innerText = preorderProduct.sellerName || 'Seller';

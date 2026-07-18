@@ -4,8 +4,10 @@ import com.mmo.shared.model.Category;
 
 import com.mmo.shared.dal.SupportTicketRepository;
 import com.mmo.shared.dal.UserRepository;
+import com.mmo.shared.dal.NotificationRepository;
 import com.mmo.shared.model.SupportTicket;
 import com.mmo.shared.model.User;
+import com.mmo.shared.model.Notification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,9 @@ public class SupportTicketService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private NotificationRepository notificationRepository;
+
     @Transactional
     public SupportTicket createTicket(Long userId, String category, String title, String description) {
         User user = userRepository.findById(userId)
@@ -35,7 +40,41 @@ public class SupportTicketService {
                 .isDelete(false)
                 .build();
 
-        return supportTicketRepository.save(ticket);
+        SupportTicket savedTicket = supportTicketRepository.save(ticket);
+
+        // 1. Tạo thông báo xác nhận gửi ticket thành công cho Customer/Seller
+        Notification customerNotif = Notification.builder()
+                .userId(user.getId())
+                .title("Yêu cầu hỗ trợ đã được gửi thành công")
+                .content(String.format("Yêu cầu hỗ trợ #TKT-%d về \"%s\" của bạn đã được gửi thành công và đang chờ xử lý.", savedTicket.getId(), savedTicket.getTitle()))
+                .type("SYSTEM")
+                .severity("INFO")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/account/tickets")
+                .build();
+        notificationRepository.save(customerNotif);
+
+        // 2. Tạo thông báo cho Staff có quyền quản lý hỗ trợ (MANAGE_SUPPORT)
+        List<User> staffAndAdmins = userRepository.findUsersByPermission("MANAGE_SUPPORT");
+        for (User staff : staffAndAdmins) {
+            if (staff.getId().equals(user.getId())) {
+                continue;
+            }
+            Notification staffNotif = Notification.builder()
+                    .userId(staff.getId())
+                    .title("Có yêu cầu hỗ trợ mới")
+                    .content(String.format("Yêu cầu hỗ trợ mới #TKT-%d: \"%s\" từ %s (%s) cần xử lý.", savedTicket.getId(), savedTicket.getTitle(), user.getFullName(), user.getEmail()))
+                    .type("SYSTEM")
+                    .severity("WARNING")
+                    .isRead(false)
+                    .isDelete(false)
+                    .targetUrl("/staff/support-tickets/detail?id=" + savedTicket.getId())
+                    .build();
+            notificationRepository.save(staffNotif);
+        }
+
+        return savedTicket;
     }
 
     public List<SupportTicket> getUserTickets(Long userId) {
@@ -72,6 +111,28 @@ public class SupportTicketService {
         ticket.setStatus(status);
         ticket.setResolution(resolution);
         
-        return supportTicketRepository.save(ticket);
+        SupportTicket savedTicket = supportTicketRepository.save(ticket);
+
+        // Tạo thông báo cập nhật cho người gửi (Customer/Seller)
+        String statusLabel = "Đang xử lý";
+        String severity = "INFO";
+        if (status.equals("Resolved")) {
+            statusLabel = "Đã giải quyết";
+            severity = "SUCCESS";
+        }
+        
+        Notification updateNotif = Notification.builder()
+                .userId(savedTicket.getUser().getId())
+                .title("Cập nhật trạng thái yêu cầu hỗ trợ")
+                .content(String.format("Yêu cầu hỗ trợ #TKT-%d về \"%s\" đã được cập nhật trạng thái: %s.", savedTicket.getId(), savedTicket.getTitle(), statusLabel))
+                .type("SYSTEM")
+                .severity(severity)
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/account/tickets")
+                .build();
+        notificationRepository.save(updateNotif);
+
+        return savedTicket;
     }
 }

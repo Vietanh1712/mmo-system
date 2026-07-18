@@ -1,8 +1,8 @@
-# UC-07 — Nạp Tiền Vào Ví (Wallet Top-up)
+# UC-07 — Nạp Tiền Vào Ví (Wallet Top-up & Webhook)
 
-> **Feature:** `feat-wallet` | **Phiên bản:** 1.0 | **Trạng thái:** Published
+> **Feature:** `feat-wallet` | **Phiên bản:** 2.0 | **Trạng thái:** Published
 > **Tham chiếu FR:** FR-WALL-01 đến FR-WALL-03
-> **Cập nhật:** 2026-06-30
+> **Cập nhật:** 2026-07-16
 
 ---
 
@@ -11,9 +11,9 @@
 | Thuộc tính | Nội dung |
 |:---|:---|
 | **Mã Use Case** | UC-07 |
-| **Tên** | Nạp Tiền Vào Ví (Wallet Top-up) |
+| **Tên** | Nạp Tiền Vào Ví Qua SePay (Wallet Top-up) |
 | **Tác nhân chính** | Người dùng (Customer), SePay Webhook |
-| **Mô tả ngắn** | Người dùng yêu cầu nạp tiền, hệ thống sinh mã VietQR động. Khi người dùng chuyển tiền thành công, cổng thanh toán SePay gửi Webhook đến hệ thống để tự động xác thực giao dịch chuyển tiền và cộng số dư khả dụng cho ví của người dùng. |
+| **Mô tả ngắn** | Frontend tự sinh mã VietQR với nội dung chuyển khoản chuyên biệt `MMO TOPUP {userId}`. Khi người dùng thanh toán qua ngân hàng, SePay sẽ gửi Webhook về hệ thống. Backend dùng Regex bóc tách nội dung giao dịch để nhận diện User và tự động cộng số dư vào ví. |
 | **Độ ưu tiên** | Cao (P0) — đảm bảo luồng dòng tiền nạp vào hệ thống được thông suốt và chính xác |
 
 ---
@@ -24,133 +24,100 @@
 
 | Tác nhân | Vai trò |
 |:---|:---|
-| **Người dùng (Customer)** | Nhập số tiền nạp, quét mã VietQR và thực hiện chuyển khoản |
-| **SePay Webhook** | Gửi thông tin giao dịch ngân hàng thực tế về hệ thống |
-| **WalletService** | Xử lý tăng số dư và ghi nhận lịch sử giao dịch ví |
+| **Người dùng (Customer)** | Nhập số tiền, quét mã QR và chuyển khoản đúng nội dung |
+| **SePay Webhook** | Gửi HTTP POST báo có giao dịch mới (chuyển tiền tới) qua endpoint webhook |
+| **TopupService** | Xử lý bóc tách Regex, cộng tiền và ghi nhận `TopupTransaction`, `WalletTransaction` |
 
 ### 2.2 Điều Kiện Tiền Quyết (Preconditions)
 
-- Người dùng đã đăng nhập hệ thống và tài khoản đã xác thực OTP email.
-- Số tiền nạp tối thiểu đạt mức quy định (ví dụ: 10,000 VNĐ).
+- Người dùng đã đăng nhập hệ thống.
+- Số dư chuyển vào nằm trong khoảng `MIN_DEPOSIT_LIMIT_VND` (mặc định 10.000 VNĐ) và `MAX_DEPOSIT_LIMIT_VND` (mặc định 50.000.000 VNĐ).
 
 ### 2.3 Hậu Điều Kiện (Postconditions)
 
-- **Thành công:** `available_balance` của User tăng thêm bằng đúng số tiền nạp, tạo bản ghi `TopupTransactions` và `WalletTransactions` với trạng thái thành công.
+- **Thành công:** Tiền trong ví của User (`balance_vnd`) tăng thêm bằng số tiền nạp. Hệ thống lưu thành công bản ghi ở bảng `TopupTransaction` (trạng thái Success) và sổ cái ví `WalletTransaction` (loại TOPUP).
 
 ---
 
 ## 3. Luồng Xử Lý
 
-### 3.1 Luồng Chính — Nạp Tiền Tự Động Qua QR (Happy Path)
+### 3.1 Luồng Chính — Nạp Tiền Tự Động Bằng VietQR & Webhook
 
 ```
-Bước 1  [Customer]:   Vào trang Ví cá nhân, chọn "Nạp tiền"
-Bước 2  [Frontend]:   Hiển thị ô nhập số tiền nạp
-Bước 3  [Customer]:   Nhập số tiền (ví dụ: 100,000 VNĐ) và bấm "Tạo mã QR"
-Bước 4  [Frontend]:   POST /api/wallet/topup/request { amount }
-Bước 5  [Backend]:    Tạo mã giao dịch tạm thời (ví dụ: "MMO12345") liên kết với userId
-                       Tạo URL VietQR động theo cấu trúc định dạng SePay
-                       Trả về: status = 200, qrUrl, transferCode, amount
-Bước 6  [Frontend]:   Hiển thị mã VietQR động và hướng dẫn chuyển khoản
-Bước 7  [Customer]:   Dùng ứng dụng ngân hàng quét mã QR, thực hiện chuyển tiền
-Bước 8  [SePay]:      Ngân hàng báo có, SePay phát hiện biến động số dư và gửi Webhook
-Bước 9  [Backend]:    POST /api/wallet/topup/webhook (chứa mã giao dịch, số tiền, nội dung)
-Bước 10 [Backend]:    Validate API Key/Signature của SePay Webhook
-                       Validate Idempotence: kiểm tra transaction_code trong DB xem đã được xử lý chưa
-                       Nếu chưa xử lý:
-                         - Tìm User liên kết dựa trên mã nội dung chuyển khoản ("MMO12345")
-                         - @Transactional:
-                           - Khóa Pessimistic Lock thông tin User để chống race condition
-                           - Cập nhật User.availableBalance = User.availableBalance + amount
-                           - Lưu TopupTransactions (status = 'Success')
-                           - Lưu WalletTransactions (type = 'TOPUP')
-                           - Tạo thông báo số dư thành công gửi cho User
-                       Trả về HTTP 200 OK cho SePay Webhook
-Bước 11 [Frontend]:   (Sử dụng WebSocket hoặc Polling) Nhận được tin nhắn cập nhật số dư, hiển thị thông báo nạp thành công
+Bước 1  [Frontend]:   Truy cập /wallet/topup, gọi GET /api/sepay/config để lấy thông tin Ngân hàng thụ hưởng tĩnh.
+Bước 2  [User]:       Nhập số tiền muốn nạp và bấm "Tạo yêu cầu nạp".
+Bước 3  [Frontend]:   Tự động sinh chuỗi mã VietQR dựa trên số tiền và cú pháp nội dung là "MMO TOPUP {userId}".
+Bước 4  [User]:       Quét mã QR bằng App Ngân hàng và thực hiện chuyển tiền.
+Bước 5  [SePay]:      Phát hiện tài khoản ngân hàng thụ hưởng có biến động, gọi Webhook.
+Bước 6  [Backend]:    POST /api/sepay/webhook (kèm Header Apikey để xác thực).
+Bước 7  [Backend]:    Kiểm tra Authorization Header trùng khớp với `sepay.webhook.token`.
+Bước 8  [Backend]:    `TopupService` kiểm tra:
+                       - `transferType` phải là "in" (Nạp tiền).
+                       - Mã `sepayCode` (ID của webhook) chưa tồn tại trong bảng `TopupTransaction`.
+Bước 9  [Backend]:    Bóc tách nội dung chuyển khoản (`content`) bằng Regex `MMO[\s-]*TOPUP[\s-]*(\d+)` để lấy `{userId}`.
+Bước 10 [Backend]:    Lấy User từ DB. Kiểm tra số tiền chuyển phải nằm trong giới hạn MIN và MAX.
+Bước 11 [Backend]:    Cộng tiền vào `user.balanceVnd`.
+Bước 12 [Backend]:    Lưu thông tin giao dịch vào `TopupTransaction` và `WalletTransaction`.
+Bước 13 [Backend]:    Trả về HTTP 200 OK để SePay biết đã xử lý thành công.
 ```
 
-### 3.2 Luồng Phụ A — Webhook Gửi Trùng (Idempotency)
+### 3.2 Luồng Phụ — Chống lặp (Idempotency Check)
 
 ```
-Bước 9  [Backend]:    Nhận cuộc gọi webhook lần 2 cho cùng mã giao dịch đã xử lý trước đó
-Bước 10 [Backend]:    Kiểm tra DB thấy mã giao dịch đã có trạng thái 'Success'
-                       Hệ thống bỏ qua không cộng tiền lần nữa (Idempotency)
-                       Trả về HTTP 200 OK ngay lập tức để báo SePay dừng gửi lại
+Bước 6  [Backend]:    Nhận Webhook từ SePay.
+Bước 8  [Backend]:    Tra cứu mã `sepayCode` (ID) trong bảng `TopupTransaction`. Phát hiện đã tồn tại (do Webhook bị retry hoặc gọi trùng).
+Bước 9  [Backend]:    Trả về `true` (Thành công) nhưng KHÔNG thực hiện cộng tiền thêm lần nào nữa, ngăn ngừa nạp đúp tiền.
 ```
 
 ---
 
-## 4. Quy Tắc Nghiệp Vụ
+## 4. Quy Tắc Nghiệp Vụ (Business Rules)
 
 | Mã | Quy tắc | Chi tiết |
 |:---|:---|:---|
-| BR-07-01 | Số dư dạng BIGINT | Toàn bộ tính toán tiền tệ và lưu trữ phải dùng kiểu số nguyên lớn (VNĐ), không dùng số thực |
-| BR-07-02 | Khóa Pessimistic Lock | Khi cộng số dư khả dụng, bắt buộc thực hiện Pessimistic Lock hàng dữ liệu user để tránh lỗi ghi đè đồng thời |
-| BR-07-03 | Kiểm tra mã giao dịch duy nhất | Mã giao dịch từ SePay Webhook phải được kiểm tra tính duy nhất để tránh lỗi nạp đúp tiền |
+| BR-07-01 | Webhook Token | Giao dịch chỉ được chấp nhận nếu header Authorization có chứa chuỗi `"Apikey " + sepayWebhookToken`. Nhân viên/Admin bị cấm gọi API config `GET /api/sepay/config`. |
+| BR-07-02 | Định dạng Regex | Bắt buộc phải parse thành công số ID của người dùng từ chuỗi `MMO TOPUP <UserId>` bất kể có khoảng trắng hay dấu gạch nối (`-`). |
+| BR-07-03 | Nạp tiền sai cú pháp | Nếu Webhook không khớp Regex, hệ thống bỏ qua và trả về HTTP 400. Admin phải tự xử lý thủ công các giao dịch treo này ngoài hệ thống. |
+| BR-07-04 | Hạn mức cấu hình | Check cấu hình `MIN_DEPOSIT_LIMIT_VND` và `MAX_DEPOSIT_LIMIT_VND` trước khi cộng. Vượt quá sẽ từ chối. |
 
 ---
 
-## 5. Quy Tắc Kiểm Tra Đầu Vào
-
-### POST /api/wallet/topup/request
-
-| Trường | Kiểm tra | Lỗi khi vi phạm |
-|:---|:---|:---|
-| `amount` | Bắt buộc, số nguyên, `>= 10000` | "Số tiền nạp tối thiểu là 10,000 VNĐ" |
-
----
-
-## 6. Sơ Đồ Tuần Tự (Sequence Diagram)
-
-### Luồng Xử Lý Webhook Nạp Tiền
+## 5. Sơ Đồ Tuần Tự (Sequence Diagram)
 
 ```mermaid
 sequenceDiagram
-    participant SP as SePay Webhook
+    participant FE as Frontend
+    participant SC as SePay
     participant TC as TopupController
-    participant WS as WalletService
-    participant TTR as TopupTransactionRepository
-    participant UR as UserRepository
-    participant WTR as WalletTransactionRepository
+    participant TS as TopupService
+    participant DB as Database
 
-    SP->>TC: POST /api/wallet/topup/webhook {amount, code, transaction_code}
-    TC->>WS: processTopupWebhook(dto)
-    WS->>TTR: existsByTransactionCode(transaction_code)
-    TTR-->>WS: false (chưa xử lý)
-    
-    WS->>UR: findByIdForUpdate(userId) (Pessimistic Lock)
-    UR-->>WS: User
-    WS->>UR: updateBalance(userId, available_balance + amount)
-    WS->>TTR: save(TopupTransaction{status='Success'})
-    WS->>WTR: save(WalletTransaction{type='TOPUP'})
-    WS-->>TC: success
-    TC-->>SP: HTTP 200 OK (Processed)
+    FE->>TC: GET /api/sepay/config
+    TC-->>FE: HTTP 200 {bankId, accNo, accName}
+    Note over FE: User quét mã tự sinh và thanh toán
+    SC->>TC: POST /api/sepay/webhook {content, amount, id, transferType: 'in'}
+    TC->>TS: processSepayWebhook(request)
+    TS->>DB: Check sepayCode exists?
+    alt Đã tồn tại
+        TS-->>TC: true
+        TC-->>SC: HTTP 200 OK (Idempotency)
+    else Chưa tồn tại
+        TS->>TS: Regex extract userId from content
+        TS->>DB: Find User by userId
+        TS->>DB: Check MIN/MAX Deposit Config
+        TS->>DB: UPDATE Users SET balance_vnd = balance_vnd + amount
+        TS->>DB: INSERT TopupTransaction (Success)
+        TS->>DB: INSERT WalletTransaction (TOPUP)
+        TS-->>TC: true
+        TC-->>SC: HTTP 200 OK
+    end
 ```
 
 ---
 
-## 7. Tham Chiếu API
+## 6. Tham Chiếu API
 
 | Phương thức | Endpoint | Mô tả |
 |:---|:---|:---|
-| `POST` | `/api/wallet/topup/request` | Yêu cầu mã QR nạp tiền |
-| `POST` | `/api/wallet/topup/webhook` | Cổng tiếp nhận Webhook SePay |
-
----
-
-## 8. Tiêu Chí Chấp Nhận (Acceptance Criteria)
-
-### AC-07-01 — Không nạp đúp tiền khi SePay gọi Webhook nhiều lần
-
-- **Cho trước:** Giao dịch nạp tiền mã `TX999` trị giá 100,000đ đã được xử lý cộng tiền thành công cho tài khoản `User C`
-- **Khi:** SePay gửi lại POST `/api/wallet/topup/webhook` cho giao dịch `TX999` lần thứ hai
-- **Thì:**
-  - Hệ thống không cộng thêm tiền vào tài khoản `User C`
-  - Hệ thống trả về HTTP 200 OK phản hồi thành công
-
----
-
-## 9. Ngoài Phạm Vi (Out of Scope)
-
-- ❌ Nạp tiền bằng thẻ cào điện thoại.
-- ❌ Nạp tiền bằng tin nhắn SMS.
+| `GET` | `/api/sepay/config` | Frontend lấy cấu hình bank để gen QR. (Cấm Role Staff/Admin) |
+| `POST` | `/api/sepay/webhook` | Cổng nhận webhook từ SePay khi có biến động số dư |

@@ -65,6 +65,13 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
            "c.complaint IS NULL")
     long countUnreadFrom(@Param("sender") User sender, @Param("receiver") User receiver);
 
+    @Query("SELECT COUNT(DISTINCT c.sender) FROM Chat c WHERE " +
+           "c.receiver = :receiver AND " +
+           "(c.isRead IS NULL OR c.isRead = false) AND " +
+           "(c.isDelete IS NULL OR c.isDelete = false) AND " +
+           "(c.receiverDeleted IS NULL OR c.receiverDeleted = false)")
+    long countUnreadRoomsForReceiver(@Param("receiver") User receiver);
+
     @Modifying
     @Transactional
     @Query("UPDATE Chat c SET c.isRead = true WHERE " +

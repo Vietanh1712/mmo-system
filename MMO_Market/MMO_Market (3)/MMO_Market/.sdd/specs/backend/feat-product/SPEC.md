@@ -29,17 +29,20 @@ Người bán cần đăng bán các tài nguyên số (account, key game, giftc
 
 ## 3. FUNCTIONAL REQUIREMENTS (Cú pháp EARS)
 
-### 3.1 Đăng bán sản phẩm (Digital Assets Encryption)
+### 3.1 Đăng bán sản phẩm (Digital Assets Encryption & Shop Level Constraints)
 | ID | EARS Requirement |
 |:---|:---|
 | FR-PROD-01 | WHEN a Seller uploads digital asset codes, THE SYSTEM SHALL encrypt the asset content using AES-256 before storing it. |
 | FR-PROD-02 | THE SYSTEM SHALL prevent non-owner sellers from viewing or modifying a product's digital assets. |
+| FR-PROD-03 | WHEN a Seller with Shop Level 1 or 0 has a negative wallet balance (`balanceVnd < 0`), THE SYSTEM SHALL block them from creating new products, creating new variants, or updating variant details. |
+| FR-PROD-04 | WHEN a Seller is at Shop Level 1 (New Shop), THE SYSTEM SHALL restrict the price of any of their variants to a maximum of 200,000 VND. |
+| FR-PROD-05 | WHEN a Seller is at Shop Level 0 (Warning), THE SYSTEM SHALL limit their active products display count to a maximum of 5 products. |
 
 ### 3.2 Khám phá sản phẩm & Follow Shop
 | ID | EARS Requirement |
 |:---|:---|
-| FR-PROD-03 | WHEN a Guest searches products, THE SYSTEM SHALL return active products (`isDelete = 0`) matching keywords and category filters. |
-| FR-PROD-04 | WHEN a Customer follows a Seller, THE SYSTEM SHALL check if a follow record exists; IF it exists, THE SYSTEM SHALL toggle `isDelete = 0` (soft-deleted recovery). |
+| FR-PROD-06 | WHEN a Guest searches or views products, THE SYSTEM SHALL only return active products (`isDelete = 0`) where the Seller's account is active and the Seller's `shopStatus` is NOT `Locked`, `Banned`, or `Pending`. |
+| FR-PROD-07 | WHEN a Customer follows a Seller, THE SYSTEM SHALL check if a follow record exists; IF it exists, THE SYSTEM SHALL toggle `isDelete = 0` (soft-deleted recovery). |
 
 ---
 
@@ -120,7 +123,60 @@ CREATE TABLE Reviews (
       "name": "Netflix Giftcode 100k",
       "categoryId": 2,
       "price": 95000,
-      "description": "Mã giftcode Netflix chính hãng"
+      "description": "Mã giftcode Netflix chính hãng",
+      "variants": [
+        {
+          "variantName": "Gói 1 tháng",
+          "priceVnd": 95000,
+          "imageUrl": "https://example.com/image.png"
+        }
+      ]
     }
     ```
 *   **Response (200 OK):** Product details.
+
+### `POST /api/seller/variants`
+*   **Headers:** `Authorization: Bearer <Seller_JWT>`
+*   **Request Body:**
+    ```json
+    {
+      "productId": 1,
+      "variantName": "Gói 3 tháng",
+      "priceVnd": 270000,
+      "imageUrl": "https://example.com/image3.png",
+      "status": "Active"
+    }
+    ```
+*   **Response (200 OK):** Variant created details.
+
+### `PUT /api/seller/variants/{id}`
+*   **Headers:** `Authorization: Bearer <Seller_JWT>`
+*   **Request Body:**
+    ```json
+    {
+      "variantName": "Gói 3 tháng giá rẻ",
+      "priceVnd": 250000,
+      "imageUrl": "https://example.com/image3_new.png",
+      "status": "Active"
+    }
+    ```
+*   **Response (200 OK):** Variant updated status.
+
+### `POST /api/seller/digital-assets`
+*   **Headers:** `Authorization: Bearer <Seller_JWT>`
+*   **Request Body:**
+    ```json
+    {
+      "variantId": 1,
+      "assetType": "KEY",
+      "assets": [
+        {
+          "keyCode": "NFTX-1M-ABCD-EFGH"
+        },
+        {
+          "keyCode": "NFTX-1M-IJKL-MNOP"
+        }
+      ]
+    }
+    ```
+*   **Response (200 OK):** Assets created count.

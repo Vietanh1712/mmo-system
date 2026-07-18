@@ -16,10 +16,12 @@ import com.mmo.shared.dal.ComplaintRepository;
 import com.mmo.shared.dal.TransactionRepository;
 import com.mmo.shared.dal.WithdrawalRepository;
 import com.mmo.shared.dal.ShopFlagRepository;
+import com.mmo.shared.dal.NotificationRepository;
 import com.mmo.shared.model.ShopFlag;
 import com.mmo.shared.model.Transaction;
 import com.mmo.shared.model.Withdrawal;
 import com.mmo.shared.model.Complaint;
+import com.mmo.shared.model.Notification;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -47,12 +49,24 @@ public class StaffController {
     @Autowired
     private StaffDashboardService staffDashboardService;
 
+    @Autowired
+    private com.mmo.feature.wallet.service.WithdrawalService withdrawalService;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
+
 
 
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
         model.addAttribute("dashboard", staffDashboardService.getDashboardData());
         return "staff/dashboard";
+    }
+
+    @GetMapping("/documents")
+    public String documentsDashboard(Model model) {
+        model.addAttribute("dashboard", staffDashboardService.getDashboardData());
+        return "staff/documents-dashboard";
     }
 
     @GetMapping("/complaints")
@@ -226,10 +240,34 @@ public class StaffController {
             @RequestParam String status,
             RedirectAttributes redirectAttributes
     ) {
+        Object principal243 = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long reviewerId = (principal243 instanceof Long) ? (Long) principal243 : null;
+        withdrawalService.updateWithdrawalStatus(id, status, reviewerId, null);
+
         Withdrawal withdrawal = withdrawalRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Withdrawal request not found"));
-        withdrawal.setStatus(status);
-        withdrawalRepository.save(withdrawal);
+
+        // Gửi thông báo cho Seller
+        String title = "Cập nhật yêu cầu rút tiền";
+        String content = String.format("Yêu cầu rút tiền số tiền %s VNĐ của bạn đã chuyển sang trạng thái: %s.", String.format("%,d", withdrawal.getAmountVnd()), "Approved".equalsIgnoreCase(status) || "Completed".equalsIgnoreCase(status) ? "Đã duyệt" : status);
+        String severity = "Approved".equalsIgnoreCase(status) || "Completed".equalsIgnoreCase(status) ? "SUCCESS" : "INFO";
+        if ("Rejected".equalsIgnoreCase(status)) {
+            title = "Yêu cầu rút tiền bị từ chối";
+            content = String.format("Yêu cầu rút tiền số tiền %s VNĐ của bạn đã bị từ chối.", String.format("%,d", withdrawal.getAmountVnd()));
+            severity = "DANGER";
+        }
+
+        Notification notif = Notification.builder()
+                .userId(withdrawal.getSeller().getId())
+                .title(title)
+                .content(content)
+                .type("WALLET")
+                .severity(severity)
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/wallet/transactions")
+                .build();
+        notificationRepository.save(notif);
 
         redirectAttributes.addFlashAttribute(
                 "success",
@@ -241,12 +279,28 @@ public class StaffController {
     @PostMapping("/withdrawals/reject")
     public String rejectWithdrawal(
             @RequestParam Long id,
+            @RequestParam(required = false) String reason,
             RedirectAttributes redirectAttributes
     ) {
+        Object principal284 = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long reviewerId = (principal284 instanceof Long) ? (Long) principal284 : null;
+        withdrawalService.updateWithdrawalStatus(id, "Rejected", reviewerId, reason);
+
         Withdrawal withdrawal = withdrawalRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Withdrawal request not found"));
-        withdrawal.setStatus("Rejected");
-        withdrawalRepository.save(withdrawal);
+
+        // Gửi thông báo từ chối cho Seller
+        Notification notif = Notification.builder()
+                .userId(withdrawal.getSeller().getId())
+                .title("Yêu cầu rút tiền bị từ chối")
+                .content(String.format("Yêu cầu rút tiền số tiền %s VNĐ của bạn đã bị từ chối.", String.format("%,d", withdrawal.getAmountVnd())))
+                .type("WALLET")
+                .severity("DANGER")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/wallet/transactions")
+                .build();
+        notificationRepository.save(notif);
 
         redirectAttributes.addFlashAttribute(
                 "warning",
@@ -373,4 +427,15 @@ public class StaffController {
     public String shopRegistrations() {
         return "staff/shop-registrations";
     }
+
+    @GetMapping("/shop-registrations/detail")
+    public String shopRegistrationDetail() {
+        return "staff/shop-registration-detail";
+    }
+
+    @GetMapping("/shop-registrations/update-status")
+    public String shopRegistrationUpdateStatus() {
+        return "staff/shop-registration-update-status";
+    }
 }
+

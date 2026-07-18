@@ -2,6 +2,15 @@
     let myPermissions = [];
 
     function showToast(message, type) {
+        if (type === 'danger' && typeof window.showErrorToast === 'function') {
+            window.showErrorToast(message);
+            return;
+        }
+        if (type === 'success' && typeof window.showSuccessToast === 'function') {
+            window.showSuccessToast(message);
+            return;
+        }
+
         let container = document.getElementById('staffToastContainer');
         if (!container) {
             container = document.createElement('div');
@@ -215,5 +224,16 @@
     document.addEventListener('DOMContentLoaded', function () {
         loadMyPermissions();
         bindActionButtons();
+
+        // Dropdown toggle handler
+        document.querySelectorAll('.staff-sidebar__dropdown-toggle').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const dropdown = btn.closest('.staff-sidebar__dropdown');
+                if (dropdown) {
+                    dropdown.classList.toggle('is-open');
+                }
+            });
+        });
     });
 })();

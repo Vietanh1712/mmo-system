@@ -5,18 +5,17 @@
 > **CSS Script:** `static/css/customer/style.css`
 > **JS Script:** `static/js/profile.js`
 > **Version:** 1.0 | **Status:** Draft
-> **Backend ref:** `feat-auth/UC-02-user-profile.md`
+> **Backend ref:** `feat-auth/UC-01-authentication.md`
 
 ---
 
 ## 1. TỔNG QUAN TRANG
 
-Trang quản lý hồ sơ cá nhân cho phép người dùng thay đổi thông tin định danh (họ tên, số điện thoại, địa chỉ) và thực hiện đổi mật khẩu đăng nhập tài khoản.
+Trang quản lý hồ sơ cá nhân cho phép người dùng thay đổi thông tin cá nhân cơ bản (họ tên, số điện thoại, địa chỉ, giới tính, số CCCD/CMND, ngày sinh).
 
 **Cấu trúc trang:**
 1. **Sidebar điều hướng:** Menu quản lý tài khoản bên trái (Hồ sơ, Rút tiền, KYC, Đơn hàng, Ví).
 2. **Profile Panel (Thành phần chính):** Form chỉnh sửa thông tin cá nhân hiện tại.
-3. **Change Password Panel:** Form nhập mật khẩu cũ và mật khẩu mới để cập nhật bảo mật.
 
 ---
 
@@ -43,36 +42,88 @@ Trang quản lý hồ sơ cá nhân cho phép người dùng thay đổi thông 
 
 ## 3. LAYOUT TỔNG THỂ & MOCKUP
 
+Trang Profile hỗ trợ 2 trạng thái: **Chế độ xem (View Mode)** và **Chế độ chỉnh sửa (Edit Mode)** (khi có URL param `?mode=edit`).
+
+### 3.1 Chế độ xem (View Mode)
 ```
-┌────────────────────────────────────────────────────────┐
-│ [Logo] MMO Market                              [User]  │
-├────────────────────────────────────────────────────────┤
-│  ┌───────────┐  ┌────────────────────────────────────┐ │
-│  │  Sidebar  │  │  HỒ SƠ CÁ NHÂN                     │ │
-│  │  - Hồ sơ  │  │  Họ và tên: [ Nguyễn Văn A     ]   │ │
-│  │  - Ví tiền│  │  Số điện thoại: [ 0987654321   ]   │ │
-│  │  - KYC    │  │  [ CẬP NHẬT ]                      │ │
-│  │  - Orders │  ├────────────────────────────────────┤ │
-│  └───────────┘  │  ĐỔI MẬT KHẨU                      │ │
-│                 │  Mật khẩu cũ: [ ****** ]           │ │
-│                 │  Mật khẩu mới: [ ****** ]          │ │
-│                 │  [ ĐỔI MẬT KHẨU ]                  │ │
-│                 └────────────────────────────────────┘ │
-└────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ [Logo] MMO Market                         [Search]      [User]  │
+├─────────────────────────────────────────────────────────────────┤
+│  ┌──────────────────────┐  ┌─────────────────────────────────┐  │
+│  │ (N) Nguyễn Văn Khách │  │ Thông tin cá nhân               │  │
+│  │     cus...mail.com   │  │ Xem và cập nhật thông tin...    │  │
+│  │                      │  ├─────────────────────────────────┤  │
+│  │ Số dư: 934.000 đ [Nạp]  │ Họ và tên     Nguyễn Văn Khách  │  │
+│  ├──────────────────────┤  │ Ngày sinh     15/05/1996        │  │
+│  │ TÀI KHOẢN            │  │ Giới tính     Nam               │  │
+│  │ - Thông tin cá nhân  │  │ Email         cus***@gmail.com  │  │
+│  │ - Định danh KYC      │  │ Số điện thoại ******4321        │  │
+│  │ - Bảo mật & đổi MK   │  │ Số CCCD/CMND  *******1234       │  │
+│  │ - Đăng ký mở Shop    │  │ Địa chỉ       Hà Nội            │  │
+│  │                      │  │ Vai trò       Customer          │  │
+│  │ VÍ & GIAO DỊCH       │  │ Số dư ví      934.000 đ         │  │
+│  │ - Ví của tôi         │  │                                 │  │
+│  │ - Nạp tiền           │  │ [ Chỉnh sửa thông tin ]         │  │
+│  │ - Lịch sử giao dịch  │  └─────────────────────────────────┘  │
+│  │                      │                                       │
+│  │ MUA HÀNG             │                                       │
+│  │ - Đơn hàng của tôi   │                                       │
+│  │ - Thông báo          │                                       │
+│  │ - Ticket của tôi     │                                       │
+│  └──────────────────────┘                                       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 3.2 Chế độ chỉnh sửa (Edit Mode)
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ┌──────────────────────┐  ┌─────────────────────────────────┐  │
+│  │ (User Card)          │  │ Cập nhật hồ sơ                  │  │
+│  │                      │  │ Email, vai trò và số dư ví...   │  │
+│  │ (Menu Sidebar)       │  ├─────────────────────────────────┤  │
+│  │                      │  │ Họ và tên                       │  │
+│  │                      │  │ [ Nguyễn Văn Khách            ] │  │
+│  │                      │  │ Giới tính                       │  │
+│  │                      │  │ (o) Nam   () Nữ   () Khác       │  │
+│  │                      │  │ Email                           │  │
+│  │                      │  │ [ customer01@gmail.com      ]X│  │
+│  │                      │  │ Số điện thoại                   │  │
+│  │                      │  │ [ 0987654321                  ] │  │
+│  │                      │  │ Số CCCD/CMND                    │  │
+│  │                      │  │ [ 001096001234                ] │  │
+│  │                      │  │ Ngày sinh                       │  │
+│  │                      │  │ [ 15/05/1996                ]📅 │  │
+│  │                      │  │ Địa chỉ                         │  │
+│  │                      │  │ [ Hà Nội                      ] │  │
+│  │                      │  │                                 │  │
+│  │                      │  │ [ Lưu thay đổi ] [ Hủy ]        │  │
+│  └──────────────────────┘  └─────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## 4. CÁC THÀNH PHẦN GIAO DIỆN CHÍNH
 
-### 4.1 Form Chỉnh Sửa Hồ Sơ — `.profile-form`
-* Gồm các trường: Họ và tên (`#fullName`), Số điện thoại (`#phone`), Địa chỉ (`#address`), Email (chỉ đọc, `#email` mang thuộc tính `disabled`).
-* Các trường input có chiều cao `46px`, bo góc `var(--ds-radius-md)`. Khi focus có viền xanh thương hiệu.
-* Nút cập nhật `.btn-update-profile` có hiệu ứng di chuột chuyển màu xanh đậm hơn.
+### 4.1 Layout Chung
+* **User Card (Bên trái, trên Sidebar):** Hiển thị Avatar (chữ cái đầu), Họ tên, Email, Số dư hiện tại và nút "Nạp" tiền nhanh.
+* **Menu Sidebar:** Chia làm 3 nhóm chính: TÀI KHOẢN, VÍ & GIAO DỊCH, MUA HÀNG. Đánh dấu sáng (`active`) mục "Thông tin cá nhân".
 
-### 4.2 Form Đổi Mật Khẩu — `.password-change-form`
-* Gồm các trường: Mật khẩu cũ (`#oldPassword`), Mật khẩu mới (`#newPassword`), Xác nhận mật khẩu mới (`#confirmNewPassword`).
-* Tích hợp icon hiển thị/ẩn mật khẩu ở mỗi ô input.
+### 4.2 Chế độ xem (View Mode) — `.profile-view`
+* Các thông tin nhạy cảm như Email, Số điện thoại, Số CCCD/CMND được ẩn đi một phần (ví dụ: `cus***@gmail.com`, `******4321`, `*******1234`).
+* Hiển thị thêm các trường hệ thống không cho phép tự ý sửa: **Vai trò** (Customer, Seller) và **Số dư ví**.
+* Nút xanh `[ Chỉnh sửa thông tin ]` sẽ chuyển trang sang trạng thái có thêm parameter `?mode=edit`.
+
+### 4.3 Form Chỉnh Sửa Hồ Sơ — `.profile-form` (Edit Mode)
+* Gồm các trường nhập liệu theo thứ tự: 
+  1. Họ và tên (`#fullName`)
+  2. Giới tính (`#gender` - dạng Radio Button: Nam, Nữ, Khác)
+  3. Email (`#email` - nền xám xỉn, mang thuộc tính `disabled`)
+  4. Số điện thoại (`#phone`)
+  5. Số CCCD/CMND (`#nationalId`)
+  6. Ngày sinh (`#dateOfBirth` - dạng Datepicker có icon lịch)
+  7. Địa chỉ (`#address`)
+* Nút `[ Lưu thay đổi ]` `.btn-update-profile` màu xanh để submit form. Nút `[ Hủy ]` màu trắng để quay lại chế độ xem (bỏ `?mode=edit`).
 
 ---
 
@@ -87,16 +138,8 @@ Trang quản lý hồ sơ cá nhân cho phép người dùng thay đổi thông 
    * Lắng nghe click nút "Cập nhật". Kiểm tra định dạng số điện thoại (`^0[0-9]{9}$`).
    * Gửi API:
      * **Endpoint:** `PUT /api/v1/profile`
-     * **Payload:** `{ "fullName": "Nguyen Van A", "phone": "0987654321", "address": "Hanoi" }`
+     * **Payload:** `{ "fullName": "Nguyen Van A", "phone": "0987654321", "address": "Hanoi", "gender": "Nam", "nationalId": "001090123456", "dateOfBirth": "2000-01-01" }`
    * **Thành công (HTTP 200):** Hiển thị Toast thông báo cập nhật hồ sơ thành công.
-3. **Thực hiện đổi mật khẩu:**
-    * Kiểm tra mật khẩu mới trùng khớp mật khẩu xác nhận, có độ dài tối thiểu 6 ký tự, chứa ít nhất 1 chữ cái viết hoa và ít nhất 1 ký tự đặc biệt.
-   * Gửi API:
-     * **Endpoint:** `POST /api/v1/profile/change-password`
-     * **Payload:** `{ "oldPassword": "...", "newPassword": "..." }`
-   * **Thành công (HTTP 200):** Hiển thị Toast thông báo đổi mật khẩu thành công và xóa sạch các ô input mật khẩu.
-   * **Thất bại (HTTP 400):** Hiển thị thông báo lỗi cụ thể dưới input tương ứng.
-
 ---
 
 ## 6. RESPONSIVE
@@ -108,7 +151,7 @@ Trang quản lý hồ sơ cá nhân cho phép người dùng thay đổi thông 
 
 ## 7. ACCESSIBILITY
 
-- Sử dụng `aria-required="true"` cho các ô nhập liệu bắt buộc như Họ tên, Mật khẩu cũ/mới.
+- Sử dụng `aria-required="true"` cho các ô nhập liệu bắt buộc như Họ tên.
 - Input email mang thuộc tính `aria-disabled="true"`.
 
 ---

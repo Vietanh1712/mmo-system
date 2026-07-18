@@ -61,6 +61,31 @@ function formatVND(value) {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value) || 0);
 }
 
+function translateStatus(status) {
+    if (!status) return '-';
+    const statusLower = status.toLowerCase().trim();
+    const map = {
+        'pending': 'Chờ xử lý',
+        'held': 'Tạm giữ (Bảo lãnh)',
+        'paid': 'Đã thanh toán',
+        'delivered': 'Đã giao',
+        'completed': 'Hoàn tất',
+        'cancelled': 'Đã hủy',
+        'disputed': 'Tranh chấp',
+        'refunded': 'Đã hoàn tiền',
+        'failed': 'Thất bại',
+        'active': 'Đang bán',
+        'inactive': 'Tạm ẩn',
+        'rejected': 'Bị từ chối',
+        'open': 'Chờ xử lý',
+        'in_progress': 'Đang giải quyết',
+        'inprogress': 'Đang giải quyết',
+        'resolved': 'Đã giải quyết',
+        'closed': 'Đã đóng'
+    };
+    return map[statusLower] || status;
+}
+
 async function sellerFetch(url, options = {}) {
     const token = sessionStorage.getItem('accessToken');
     const headers = {
@@ -80,7 +105,25 @@ async function sellerFetch(url, options = {}) {
 
 // Show feedback message
 function showToast(message, type = 'success') {
-    // Create element if not exists
+    // If the global design system toast is loaded, delegate to it
+    if (type === 'success' && typeof window.showSuccessToast === 'function') {
+        window.showSuccessToast(message);
+        return;
+    }
+    if ((type === 'error' || type === 'danger') && typeof window.showErrorToast === 'function') {
+        window.showErrorToast(message);
+        return;
+    }
+    if (type === 'warning' && typeof window.showWarningToast === 'function') {
+        window.showWarningToast(message);
+        return;
+    }
+    if (type === 'info' && typeof window.showInfoToast === 'function') {
+        window.showInfoToast(message);
+        return;
+    }
+
+    // Fallback to local element if global system is not present
     let toast = document.getElementById('seller-toast');
     if (!toast) {
         toast = document.createElement('div');
@@ -99,7 +142,13 @@ function showToast(message, type = 'success') {
         `;
         document.body.appendChild(toast);
     }
-    toast.style.backgroundColor = type === 'success' ? '#22c55e' : '#ef4444';
+    
+    let bgColor = '#10a37f'; // success (DESIGN.md)
+    if (type === 'error' || type === 'danger') bgColor = '#ef4444'; // danger (DESIGN.md)
+    else if (type === 'warning') bgColor = '#f59e0b'; // warning (DESIGN.md)
+    else if (type === 'primary') bgColor = '#ea580c'; // primary (DESIGN.md)
+    
+    toast.style.backgroundColor = bgColor;
     toast.textContent = message;
     toast.style.opacity = '1';
     setTimeout(() => {
@@ -228,7 +277,7 @@ async function initDashboard() {
                         <td>${t.productName}</td>
                         <td>${t.customerEmail}</td>
                         <td class="text-right">${formatVND(t.amountVnd)}</td>
-                        <td><span class="badge ${badgeClass}">${t.status}</span></td>
+                        <td><span class="badge ${badgeClass}">${translateStatus(t.status)}</span></td>
                     </tr>
                 `;
             }).join('');
@@ -347,11 +396,11 @@ async function initInventory() {
                         ? `<span style="color: #f59e0b; font-weight: 600;">${p.totalStock}</span>`
                         : p.totalStock;
 
-                    let statusBadgeHtml = `<span class="badge ${statusClass}">${p.status}</span>`;
+                    let statusBadgeHtml = `<span class="badge ${statusClass}">${translateStatus(p.status)}</span>`;
                     if (p.totalStock === 0 && p.status === 'Active') {
                         statusBadgeHtml = `<span class="badge locked"><i class="fa fa-lock"></i> Hết hàng</span>`;
                     } else if (p.status !== 'Active') {
-                        statusBadgeHtml = `<span class="badge locked"><i class="fa fa-pause"></i> Inactive</span>`;
+                        statusBadgeHtml = `<span class="badge locked"><i class="fa fa-pause"></i> Tạm ẩn</span>`;
                     }
 
                     // Fallback product image
@@ -541,67 +590,108 @@ window.viewAssets = viewAssets;
 window.closeAssetModal = closeAssetModal;
 
 
+// Helper to setup category selectors
+async function setupCategorySelectors(mainSelect, subSelect, currentCategoryId = null) {
+    try {
+        const res = await sellerFetch('/categories');
+        if (!res.ok) return;
+        
+        const categories = await res.json();
+        
+        // Sort main categories: push "Khác" and "Dịch vụ khác" to the end
+        categories.sort((a, b) => {
+            const nameA = (a.name || '').toLowerCase().trim();
+            const nameB = (b.name || '').toLowerCase().trim();
+            const isKhacA = nameA === 'khác' || nameA === 'dịch vụ khác';
+            const isKhacB = nameB === 'khác' || nameB === 'dịch vụ khác';
+            if (isKhacA && !isKhacB) return 1;
+            if (!isKhacA && isKhacB) return -1;
+            return 0;
+        });
+
+        // Also sort subCategories for each category
+        categories.forEach(parent => {
+            if (parent.subCategories && parent.subCategories.length > 0) {
+                parent.subCategories.sort((a, b) => {
+                    const nameA = (a.name || '').toLowerCase().trim();
+                    const nameB = (b.name || '').toLowerCase().trim();
+                    const isKhacA = nameA === 'khác' || nameA === 'dịch vụ khác';
+                    const isKhacB = nameB === 'khác' || nameB === 'dịch vụ khác';
+                    if (isKhacA && !isKhacB) return 1;
+                    if (!isKhacA && isKhacB) return -1;
+                    return 0;
+                });
+            }
+        });
+        
+        // Populate mainCategory
+        mainSelect.innerHTML = '<option value="">-- Chọn danh mục chính --</option>' + 
+                              categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        
+        // Change handler
+        const updateSubCategories = (selectedParentId, selectValue = null) => {
+            const parentCat = categories.find(c => c.id == selectedParentId);
+            if (parentCat && parentCat.subCategories && parentCat.subCategories.length > 0) {
+                subSelect.innerHTML = '<option value="">-- Chọn danh mục con --</option>' +
+                                     parentCat.subCategories.map(sub => `<option value="${sub.id}">${sub.name}</option>`).join('');
+                subSelect.disabled = false;
+                if (selectValue) {
+                    subSelect.value = selectValue;
+                }
+            } else {
+                subSelect.innerHTML = '<option value="">-- Không có danh mục con --</option>';
+                subSelect.disabled = true;
+            }
+        };
+        
+        mainSelect.addEventListener('change', () => {
+            updateSubCategories(mainSelect.value);
+        });
+        
+        // If initializing with an existing category ID (edit mode)
+        if (currentCategoryId) {
+            let foundParent = null;
+            let foundSub = null;
+            
+            for (const cat of categories) {
+                if (cat.id == currentCategoryId) {
+                    foundParent = cat;
+                    break;
+                }
+                if (cat.subCategories) {
+                    const sub = cat.subCategories.find(s => s.id == currentCategoryId);
+                    if (sub) {
+                        foundParent = cat;
+                        foundSub = sub;
+                        break;
+                    }
+                }
+            }
+            
+            if (foundParent) {
+                mainSelect.value = foundParent.id;
+                if (foundSub) {
+                    updateSubCategories(foundParent.id, foundSub.id);
+                } else {
+                    updateSubCategories(foundParent.id);
+                }
+            }
+        }
+    } catch (err) {
+        console.error('Error setupCategorySelectors:', err);
+    }
+}
+
 // ==============================================================================
 // 5. PRODUCT ADD
 // ==============================================================================
 async function initProductAdd() {
     const mainSelect = document.getElementById('mainCategory');
     const subSelect = document.getElementById('subCategory');
-    
-    // Fallback logic if the HTML was not updated
-    const fallbackSelect = document.getElementById('category');
-    
-    if (!mainSelect && !fallbackSelect) return;
-
-    let categoryData = [];
+    if (!mainSelect || !subSelect) return;
 
     try {
-        // Load categories
-        const res = await sellerFetch('/categories');
-        if (res.ok) {
-            categoryData = await res.json();
-            
-            if (mainSelect) {
-                mainSelect.innerHTML = '<option value="">-- Chọn danh mục chính --</option>' + 
-                                   categoryData.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-                
-                mainSelect.addEventListener('change', (e) => {
-                    const parentId = e.target.value;
-                    if (!parentId) {
-                        subSelect.innerHTML = '<option value="">-- Chọn danh mục chính trước --</option>';
-                        subSelect.disabled = true;
-                        return;
-                    }
-                    const parent = categoryData.find(c => c.id == parentId);
-                    
-                    // Auto-select ProductType based on Category Name
-                    if (parent) {
-                        const name = parent.name.toLowerCase();
-                        if (name.includes('tài khoản') || name.includes('account')) {
-                            document.getElementById('typeAccount').checked = true;
-                        } else if (name.includes('key') || name.includes('mã')) {
-                            document.getElementById('typeKey').checked = true;
-                        } else if (name.includes('thẻ') || name.includes('card')) {
-                            document.getElementById('typeGameCard').checked = true;
-                        } else {
-                            document.getElementById('typeService').checked = true;
-                        }
-                    }
-
-                    if (parent && parent.subCategories && parent.subCategories.length > 0) {
-                        subSelect.innerHTML = '<option value="">-- Chọn danh mục con --</option>' + 
-                                              parent.subCategories.map(sub => `<option value="${sub.id}">${sub.name}</option>`).join('');
-                        subSelect.disabled = false;
-                    } else {
-                        subSelect.innerHTML = '<option value="">-- Không có danh mục con --</option>';
-                        subSelect.disabled = true;
-                    }
-                });
-            } else if (fallbackSelect) {
-                fallbackSelect.innerHTML = '<option value="">-- Chọn danh mục --</option>' + 
-                                   categoryData.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            }
-        }
+        await setupCategorySelectors(mainSelect, subSelect);
 
 
         // Setup Variants UI
@@ -630,53 +720,11 @@ async function initProductAdd() {
                         <input type="number" class="variant-price-input" placeholder="VD: 50000" min="0" required autocomplete="off">
                     </div>
                 </div>
-                <div class="profile-edit-form__group" style="margin-bottom: 0;">
-                    <label>Hình ảnh minh họa <span style="color: #ef4444;">*</span></label>
-                    <div class="variant-img-upload">
-                        <img class="variant-img-preview" alt="Xem trước ảnh">
-                        <div class="variant-img-btn">
-                            <input type="file" class="variant-file-input" accept="image/*" required>
-                            <label class="variant-img-label">
-                                <i class="fa fa-image"></i> Chọn ảnh
-                            </label>
-                        </div>
-                    </div>
-                </div>
             `;
 
             // Delete action
             div.querySelector('.variant-card__delete').addEventListener('click', () => {
                 div.remove();
-            });
-
-            // Image upload action
-            const fileInput = div.querySelector('.variant-file-input');
-            const preview = div.querySelector('.variant-img-preview');
-            fileInput.addEventListener('change', async (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = async function(event) {
-                        const base64Data = event.target.result;
-                        preview.src = base64Data;
-                        preview.classList.add('active');
-                        try {
-                            const uploadRes = await sellerFetch('/upload-image', {
-                                method: 'POST',
-                                body: JSON.stringify({ image: base64Data })
-                            });
-                            const uploadData = await uploadRes.json();
-                            if (uploadRes.ok) {
-                                div.dataset.imageUrl = uploadData.url; // Store url here
-                            } else {
-                                showToast(uploadData.message || 'Lỗi tải ảnh', 'error');
-                            }
-                        } catch (err) {
-                            showToast('Lỗi kết nối tải ảnh', 'error');
-                        }
-                    };
-                    reader.readAsDataURL(file);
-                }
             });
 
             variantsContainer.appendChild(div);
@@ -697,15 +745,7 @@ async function initProductAdd() {
                 e.preventDefault();
                 const name = document.getElementById('productName').value.trim();
                 const description = document.getElementById('description').value.trim();
-                let categoryId = '';
-                if (subSelect && !subSelect.disabled && subSelect.value) {
-                    categoryId = subSelect.value;
-                } else if (mainSelect && mainSelect.value) {
-                    categoryId = mainSelect.value;
-                } else if (fallbackSelect) {
-                    categoryId = fallbackSelect.value;
-                }
-
+                const categoryId = subSelect.value || mainSelect.value;
                 const typeEl = document.querySelector('input[name="productType"]:checked');
                 const productType = typeEl ? typeEl.value : null;
 
@@ -722,20 +762,17 @@ async function initProductAdd() {
                 for (let card of variantCards) {
                     const varName = card.querySelector('.variant-name-input').value.trim();
                     const varPrice = card.querySelector('.variant-price-input').value.trim();
-                    const varImgUrl = card.dataset.imageUrl;
 
                     if (!varName) return showToast('Có biến thể chưa nhập tên.', 'error');
                     if (!varPrice) return showToast('Có biến thể chưa nhập giá bán.', 'error');
-                    if (!varImgUrl) return showToast('Biến thể "' + varName + '" chưa có hình ảnh minh họa.', 'error');
 
                     variants.push({
                         variantName: varName,
-                        priceVnd: varPrice,
-                        imageUrl: varImgUrl
+                        priceVnd: varPrice
                     });
                 }
 
-                let mainProductImageUrl = variants.length > 0 ? variants[0].imageUrl : '';
+                let mainProductImageUrl = '';
                 
                 const productImageInput = document.getElementById('productImage');
                 if (productImageInput && productImageInput.files.length > 0) {
@@ -754,10 +791,12 @@ async function initProductAdd() {
                             const uploadData = await uploadRes.json();
                             mainProductImageUrl = uploadData.url;
                         } else {
-                            showToast('Không thể tải lên ảnh sản phẩm, dùng ảnh biến thể thay thế.', 'error');
+                            showToast('Không thể tải lên ảnh sản phẩm.', 'error');
+                            return;
                         }
                     } catch (e) {
                         console.error(e);
+                        return;
                     }
                 }
 
@@ -802,50 +841,20 @@ async function initProductEdit() {
 
     const mainSelect = document.getElementById('mainCategory');
     const subSelect = document.getElementById('subCategory');
-    const fallbackSelect = document.getElementById('category');
-    
     const form = document.querySelector('.profile-edit-form');
     const tbody = document.querySelector('.seller-table tbody') || document.querySelector('.admin-table tbody');
-    if (!form || !tbody) return;
+    if (!form || !tbody || !mainSelect || !subSelect) return;
 
     let categoryData = [];
 
     try {
-        // Load categories
-        const catRes = await sellerFetch('/categories');
-        if (catRes.ok) {
-            categoryData = await catRes.json();
-            if (mainSelect) {
-                mainSelect.innerHTML = '<option value="">-- Chọn danh mục chính --</option>' + 
-                                   categoryData.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-                                   
-                mainSelect.addEventListener('change', (e) => {
-                    const parentId = e.target.value;
-                    if (!parentId) {
-                        subSelect.innerHTML = '<option value="">-- Chọn danh mục chính trước --</option>';
-                        subSelect.disabled = true;
-                        return;
-                    }
-                    const parent = categoryData.find(c => c.id == parentId);
-                    if (parent && parent.subCategories && parent.subCategories.length > 0) {
-                        subSelect.innerHTML = '<option value="">-- Chọn danh mục con --</option>' + 
-                                              parent.subCategories.map(sub => `<option value="${sub.id}">${sub.name}</option>`).join('');
-                        subSelect.disabled = false;
-                    } else {
-                        subSelect.innerHTML = '<option value="">-- Không có danh mục con --</option>';
-                        subSelect.disabled = true;
-                    }
-                });
-            } else if (fallbackSelect) {
-                fallbackSelect.innerHTML = '<option value="">-- Chọn danh mục --</option>' + 
-                                   categoryData.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            }
-        }
-
         // Load Product Detail
         const pRes = await sellerFetch(`/products/${productId}`);
         if (!pRes.ok) throw new Error('Không thể tải thông tin sản phẩm.');
         const p = await pRes.json();
+
+        // Setup categories
+        await setupCategorySelectors(mainSelect, subSelect, p.categoryId);
 
         // Populate fields
         const subtitleEl = document.querySelector('.seller-card__subtitle') || document.querySelector('.view-header p');
@@ -854,31 +863,6 @@ async function initProductEdit() {
         document.getElementById('description').value = p.description || '';
         if (document.getElementById('userGuide')) {
             document.getElementById('userGuide').value = p.userGuide || '';
-        }
-        if (fallbackSelect) {
-            fallbackSelect.value = p.categoryId;
-        } else if (mainSelect && categoryData.length > 0) {
-            let selectedMainCat = '';
-            let selectedSubCat = '';
-            
-            categoryData.forEach(main => {
-                if (main.id == p.categoryId) {
-                    selectedMainCat = main.id;
-                } else if (main.subCategories) {
-                    main.subCategories.forEach(sub => {
-                        if (sub.id == p.categoryId) {
-                            selectedMainCat = main.id;
-                            selectedSubCat = sub.id;
-                        }
-                    });
-                }
-            });
-            
-            mainSelect.value = selectedMainCat;
-            mainSelect.dispatchEvent(new Event('change'));
-            if (selectedSubCat) {
-                subSelect.value = selectedSubCat;
-            }
         }
 
         // Activate variants new link
@@ -898,7 +882,7 @@ async function initProductEdit() {
                         <td>${v.variantName}</td>
                         <td class="text-right">${formatVND(v.priceVnd)}</td>
                         <td class="text-right">${v.stock}</td>
-                        <td><span class="badge ${statusClass}">${v.status}</span></td>
+                        <td><span class="badge ${statusClass}">${translateStatus(v.status)}</span></td>
                         <td class="text-right">
                             <div class="row-actions">
                                 <a class="icon-button" href="/seller/variants/edit?id=${v.id}" title="Sửa biến thể"><i class="fa fa-pencil"></i></a>
@@ -935,7 +919,7 @@ async function initProductEdit() {
                     name: document.getElementById('productName').value.trim(),
                     description: document.getElementById('description').value.trim(),
                     userGuide: document.getElementById('userGuide') ? document.getElementById('userGuide').value.trim() : '',
-                    categoryId: select.value
+                    categoryId: subSelect.value || mainSelect.value
                 };
 
                 try {
@@ -1000,8 +984,14 @@ async function initVariantForm() {
 
             // Set global productType and refresh layout
             window.productType = productType;
-            if (typeof updateProductDisplay === 'function') updateProductDisplay(productType);
+            if (typeof updateProductDisplay === 'function') updateProductDisplay(productType, v.productName);
             if (typeof renderAssetFields === 'function') renderAssetFields(productType);
+
+            // Update title to Edit variant mode
+            const titleEl = document.querySelector('.seller-card__title');
+            if (titleEl) {
+                titleEl.textContent = 'Cập nhật biến thể & nhập kho tài sản số';
+            }
 
             // Load existing assets
             const assetsRes = await sellerFetch(`/variants/${variantId}/assets`);
@@ -1058,7 +1048,7 @@ async function initVariantForm() {
         if (cancelBtn) cancelBtn.href = backUrl;
 
         // Submitting variant form
-        const saveBtn = form.querySelector('.profile-button--primary');
+        const saveBtn = form.querySelector('.profile-actions .profile-button--primary') || form.querySelector('button[type="submit"]') || form.querySelector('.profile-button--primary');
         if (saveBtn) {
             saveBtn.removeAttribute('disabled');
             saveBtn.addEventListener('click', async (e) => {
@@ -1186,7 +1176,7 @@ async function initTransactions() {
                     <td>${t.customerEmail}</td>
                     <td class="text-right">${formatVND(t.amountVnd)}</td>
                     <td class="text-right text-success">+${formatVND(t.netEarningVnd)}</td>
-                    <td><span class="badge ${badgeClass}">${t.status}</span></td>
+                    <td><span class="badge ${badgeClass}">${translateStatus(t.status)}</span></td>
                     <td>${t.createdAt.replace('T', ' ').substring(0, 16)}</td>
                 </tr>
             `;
@@ -1265,7 +1255,7 @@ async function initWithdrawals() {
         }
         const trends = document.querySelectorAll('.stats-grid-4 .stat-card-trend');
         if (trends.length >= 2) {
-            trends[1].textContent = `${pendingCount} lệnh Pending`;
+            trends[1].textContent = `${pendingCount} lệnh đang xử lý`;
         }
 
         if (withdrawals.length === 0) {
@@ -1279,7 +1269,7 @@ async function initWithdrawals() {
                         <td class="text-right">${formatVND(w.amountVnd)}</td>
                         <td>${w.bankName} (${w.accountNumber})</td>
                         <td>${w.createdAt.replace('T', ' ').substring(0, 10)}</td>
-                        <td><span class="badge ${badgeClass}">${w.status}</span></td>
+                        <td><span class="badge ${badgeClass}">${translateStatus(w.status)}</span></td>
                         <td class="text-right">
                             <div class="row-actions">
                                 <a class="icon-button" href="/seller/withdrawals/detail?id=${w.id}" title="Xem chi tiết"><i class="fa fa-eye"></i></a>
@@ -1777,7 +1767,7 @@ async function initComplaints() {
                     <td>${c.customerEmail}</td>
                     <td>${c.description.length > 40 ? c.description.substring(0, 40) + '...' : c.description}</td>
                     <td class="text-right">${formatVND(c.amountVnd)}</td>
-                    <td><span class="badge ${badgeClass}">${c.status}</span></td>
+                    <td><span class="badge ${badgeClass}">${translateStatus(c.status)}</span></td>
                     <td>${c.createdAt.replace('T', ' ').substring(0, 10)}</td>
                     <td class="text-right">
                         <div class="row-actions">
@@ -1822,7 +1812,7 @@ async function initComplaintDetail() {
         const badge = document.getElementById('complaintStatusBadge');
         if (badge) {
             badge.className = `ds-badge ${badgeClass}`;
-            badge.textContent = c.status;
+            badge.textContent = translateStatus(c.status);
         }
 
         const dl = document.getElementById('complaint-details-dl');
@@ -1863,7 +1853,7 @@ async function initComplaintDetail() {
         const chatBtn = document.getElementById('chatDisputeBtn');
         if (chatBtn) {
             chatBtn.style.display = 'inline-flex';
-            chatBtn.href = \`/messages?sellerView=true\`;
+            chatBtn.href = `/messages?sellerView=true&complaintId=${c.id}`;
         }
 
     } catch (err) {
@@ -1921,7 +1911,7 @@ async function initWithdrawalDetail() {
                 <dt>Tổng trừ ví</dt>
                 <dd style="font-weight:600;">${formatVND(w.amountVnd + (w.feeVnd || 0))}</dd>
                 <dt>Trạng thái</dt>
-                <dd><span class="badge ${badgeClass}">${w.status}</span></dd>
+                <dd><span class="badge ${badgeClass}">${translateStatus(w.status)}</span></dd>
                 ${extraStatusInfo}
                 <dt>Ngân hàng</dt>
                 <dd>${w.bankName}</dd>
