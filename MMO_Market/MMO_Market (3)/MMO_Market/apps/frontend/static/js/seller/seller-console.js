@@ -813,6 +813,8 @@ async function initProductEdit() {
     const tbody = document.querySelector('.seller-table tbody') || document.querySelector('.admin-table tbody');
     if (!form || !tbody || !mainSelect || !subSelect) return;
 
+    let categoryData = [];
+
     try {
         // Load Product Detail
         const pRes = await sellerFetch(`/products/${productId}`);
@@ -1754,49 +1756,67 @@ async function initComplaintDetail() {
         return;
     }
 
-    const card = document.querySelector('.seller-card');
-    if (!card) return;
-
     try {
         const res = await sellerFetch(`/complaints/${complaintId}`);
         if (!res.ok) throw new Error('Không thể tải chi tiết khiếu nại.');
         const c = await res.json();
 
-        // 1. Populate details info grid
-        document.querySelector('.seller-card__title').textContent = `Chi tiết khiếu nại #CP-${c.id}`;
+        const titleEl = document.getElementById('complaintTitle');
+        if (titleEl) titleEl.textContent = `Chi tiết khiếu nại #CP-${c.id}`;
         
-        let badgeClass = 'open';
-        if (c.status === 'Resolved' || c.status === 'Closed') badgeClass = 'resolved';
-        else if (c.status === 'In_Progress') badgeClass = 'pending';
+        const subtitleEl = document.getElementById('complaintSubtitle');
+        if (subtitleEl) subtitleEl.textContent = `Mã giao dịch: #TX-${c.transactionId}`;
+        
+        let badgeClass = 'ds-badge-neutral';
+        if (c.status === 'Resolved' || c.status === 'Closed') badgeClass = 'ds-badge-success';
+        else if (c.status === 'In_Progress') badgeClass = 'ds-badge-warning';
 
-        const headerRight = card.querySelector('.seller-card__header').lastElementChild;
-        if (headerRight && headerRight.classList.contains('badge')) {
-            headerRight.className = `badge ${badgeClass}`;
-            headerRight.textContent = c.status;
+        const badge = document.getElementById('complaintStatusBadge');
+        if (badge) {
+            badge.className = `ds-badge ${badgeClass}`;
+            badge.textContent = c.status;
         }
 
-        // Map data to DL info list
-        const dl = card.querySelector('.seller-info-grid');
+        const dl = document.getElementById('complaint-details-dl');
         if (dl) {
             dl.innerHTML = `
                 <dt>Khách hàng</dt>
-                <dd>${c.customerName} (${c.customerEmail})</dd>
-                <dt>Mã đơn hàng</dt>
-                <dd>#TX-${c.transactionId}</dd>
+                <dd>${c.customerName || 'N/A'} (${c.customerEmail || 'N/A'})</dd>
                 <dt>Sản phẩm</dt>
-                <dd>${c.productName} (${c.variantName})</dd>
+                <dd>${c.productName || 'N/A'} (${c.variantName || 'N/A'})</dd>
                 <dt>Đơn giá</dt>
                 <dd>${formatVND(c.amountVnd)}</dd>
-                <dt>Nội dung khiếu nại</dt>
-                <dd>${c.description}</dd>
-                <dt>Ảnh minh chứng</dt>
-                <dd>${c.evidence ? `<a href="${c.evidence}" target="_blank" style="color:var(--seller-danger); text-decoration: underline;">Xem ảnh chứng cứ</a>` : 'Không có'}</dd>
-                <dt>Hướng giải quyết</dt>
-                <dd>${c.resolution || 'Chưa có phương án xử lý cuối cùng'}</dd>
+                <dt>Thời gian</dt>
+                <dd>${new Date(c.createdAt).toLocaleString('vi-VN')}</dd>
             `;
         }
 
+        const descEl = document.getElementById('c-description');
+        if (descEl) descEl.textContent = c.description || '-';
+        
+        if (c.evidence) {
+            const evSec = document.getElementById('c-evidence-section');
+            if (evSec) {
+                evSec.hidden = false;
+                const evImg = document.getElementById('c-evidence-img');
+                if (evImg) evImg.src = c.evidence;
+            }
+        }
 
+        if (c.resolution) {
+            const resCard = document.getElementById('staffResolutionCard');
+            if (resCard) {
+                resCard.hidden = false;
+                const resEl = document.getElementById('c-resolution');
+                if (resEl) resEl.textContent = c.resolution;
+            }
+        }
+
+        const chatBtn = document.getElementById('chatDisputeBtn');
+        if (chatBtn) {
+            chatBtn.style.display = 'inline-flex';
+            chatBtn.href = \`/messages?sellerView=true\`;
+        }
 
     } catch (err) {
         showToast(err.message, 'error');

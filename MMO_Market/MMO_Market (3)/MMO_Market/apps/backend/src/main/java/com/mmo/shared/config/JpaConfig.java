@@ -7,8 +7,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @Configuration
-@EnableJpaRepositories(basePackages = {"com.mmo.shared.dal"})
-@EntityScan(basePackages = {"com.mmo.shared.model"})
+@EnableJpaRepositories(basePackages = {"com.mmo"})
+@EntityScan(basePackages = {"com.mmo"})
 @EnableTransactionManagement
 public class JpaConfig {
 }
