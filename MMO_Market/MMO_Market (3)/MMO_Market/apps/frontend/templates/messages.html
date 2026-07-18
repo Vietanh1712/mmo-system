@@ -35,7 +35,8 @@
         </div>
     </main>
 
-    <th:block th:fragment="chatUI">
+    <th:block th:if="false">
+        <th:block th:fragment="chatUI">
         <!-- Sidebar -->
         <aside class="messages-sidebar" aria-label="Danh sách tin nhắn">
             <div class="messages-sidebar__header">
@@ -113,6 +114,7 @@
                 </div>
             </footer>
         </section>
+    </th:block>
     </th:block>
 
     <footer th:if="${isSellerView == null || !isSellerView}" th:replace="fragments/footer :: footer"></footer>
