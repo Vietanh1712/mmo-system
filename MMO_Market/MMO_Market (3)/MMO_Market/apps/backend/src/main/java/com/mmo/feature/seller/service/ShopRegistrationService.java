@@ -9,9 +9,13 @@ import com.mmo.shared.dto.ShopRegistrationReviewDto;
 import com.mmo.shared.dal.KycRequestRepository;
 import com.mmo.shared.dal.SellerRegistrationRepository;
 import com.mmo.shared.dal.UserRepository;
+import com.mmo.shared.dal.NotificationRepository;
 import com.mmo.shared.model.KycStatus;
 import com.mmo.shared.model.SellerRegistration;
 import com.mmo.shared.model.User;
+import com.mmo.shared.model.SellerBankInfo;
+import com.mmo.shared.dal.SellerBankInfoRepository;
+import com.mmo.shared.model.Notification;
 import com.mmo.shared.dal.SystemConfigurationRepository;
 import com.mmo.feature.wallet.service.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,10 +43,16 @@ public class ShopRegistrationService {
     private KycRequestRepository kycRequestRepository;
 
     @Autowired
+    private SellerBankInfoRepository sellerBankInfoRepository;
+
+    @Autowired
     private SystemConfigurationRepository systemConfigurationRepository;
 
     @Autowired
     private WalletService walletService;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     @Transactional
     public ShopRegistrationResponseDto submitRegistration(Long userId, ShopRegistrationRequestDto request) {
@@ -64,29 +74,6 @@ public class ShopRegistrationService {
             throw new IllegalStateException("Bạn đã có Shop đang hoạt động.");
         }
 
-        long fee = systemConfigurationRepository.findByConfigKey("SHOP_OPENING_FEE_VND")
-                .map(config -> {
-                    try {
-                        return Long.parseLong(config.getConfigValue());
-                    } catch (NumberFormatException e) {
-                        return 50000L;
-                    }
-                })
-                .orElse(50000L);
-
-        if (user.getBalanceVnd() == null) {
-            user.setBalanceVnd(0L);
-        }
-
-        if (user.getBalanceVnd() < fee) {
-            throw new IllegalStateException("INSUFFICIENT_FUNDS:" + fee);
-        }
-
-        user.setBalanceVnd(user.getBalanceVnd() - fee);
-        userRepository.save(user);
-
-        walletService.recordTransaction(user, "PAYMENT", -fee, "SUCCESS", "Thanh toán phí đăng ký mở Shop", "SHOP-REG-" + user.getId(), user.getBalanceVnd());
-
         registration.setUser(user);
         registration.setShopName(request.getShopName());
         registration.setDescription(request.getDescription());
@@ -96,6 +83,39 @@ public class ShopRegistrationService {
         registration.setStatus("PENDING");
 
         SellerRegistration saved = sellerRegistrationRepository.save(registration);
+
+        // 1. Tạo thông báo cho Customer
+        Notification customerNotif = Notification.builder()
+                .userId(user.getId())
+                .title("Đăng ký mở Shop thành công")
+                .content(String.format("Yêu cầu đăng ký mở Shop \"%s\" của bạn đã được gửi thành công và đang chờ duyệt.", saved.getShopName()))
+                .type("SYSTEM")
+                .severity("INFO")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/account/register-shop")
+                .build();
+        notificationRepository.save(customerNotif);
+
+        // 2. Tạo thông báo cho toàn bộ Staff & Admin
+        List<User> staffAndAdmins = userRepository.findStaffAndAdmins();
+        for (User staff : staffAndAdmins) {
+            if (staff.getId().equals(user.getId())) {
+                continue;
+            }
+            Notification staffNotif = Notification.builder()
+                    .userId(staff.getId())
+                    .title("Yêu cầu mở Shop mới")
+                    .content(String.format("Có yêu cầu mở Shop mới \"%s\" từ %s (%s) cần phê duyệt.", saved.getShopName(), user.getFullName(), user.getEmail()))
+                    .type("SYSTEM")
+                    .severity("WARNING")
+                    .isRead(false)
+                    .isDelete(false)
+                    .targetUrl("/staff/shop-registrations")
+                    .build();
+            notificationRepository.save(staffNotif);
+        }
+
         return mapToDto(saved);
     }
 
@@ -108,6 +128,15 @@ public class ShopRegistrationService {
                 .map(this::mapToDto)
                 .orElse(null);
     }
+
+    @Transactional(readOnly = true)
+    public ShopRegistrationResponseDto getRegistrationById(Long id) {
+        SellerRegistration registration = sellerRegistrationRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy yêu cầu đăng ký Shop."));
+        return mapToDto(registration);
+    }
+
+
 
     @Transactional(readOnly = true)
     public List<ShopRegistrationResponseDto> getAllPendingRegistrations() {
@@ -147,15 +176,23 @@ public class ShopRegistrationService {
     public Map<String, Long> getRegistrationStats() {
         Map<String, Long> stats = new HashMap<>();
 
-        long total = sellerRegistrationRepository.countByIsDeleteFalse();
-        long pending = sellerRegistrationRepository.countByStatusIgnoreCaseAndIsDeleteFalse("PENDING");
-        long approved = sellerRegistrationRepository.countByStatusIgnoreCaseAndIsDeleteFalse("APPROVED");
-        long rejected = sellerRegistrationRepository.countByStatusIgnoreCaseAndIsDeleteFalse("REJECTED");
+        long totalShops = userRepository.countTotalShops();
+        long activeShops = userRepository.countActiveShops();
+        long bannedShops = userRepository.countBannedShops();
+        long totalDeposit = userRepository.sumTotalDeposit();
+        long permanentBannedShops = userRepository.countPermanentBannedShops();
+        long indefiniteLockedShops = userRepository.countIndefiniteLockedShops();
+        long temporarySuspendedShops = userRepository.countTemporarySuspendedShops();
+        long withdrawnShops = userRepository.countWithdrawnShops();
 
-        stats.put("total", total);
-        stats.put("pending", pending);
-        stats.put("approved", approved);
-        stats.put("rejected", rejected);
+        stats.put("totalShops", totalShops);
+        stats.put("activeShops", activeShops);
+        stats.put("bannedShops", bannedShops);
+        stats.put("totalDeposit", totalDeposit);
+        stats.put("permanentBannedShops", permanentBannedShops);
+        stats.put("indefiniteLockedShops", indefiniteLockedShops);
+        stats.put("temporarySuspendedShops", temporarySuspendedShops);
+        stats.put("withdrawnShops", withdrawnShops);
         return stats;
     }
 
@@ -184,26 +221,63 @@ public class ShopRegistrationService {
         }
 
         SellerRegistration updated = sellerRegistrationRepository.save(registration);
+
+        // Tạo thông báo kết quả cho Customer/Seller
+        User user = updated.getUser();
+        String title = "";
+        String content = "";
+        String severity = "INFO";
+        String targetUrl = "/account/register-shop";
+        if ("APPROVED".equals(updated.getStatus())) {
+            title = "Yêu cầu mở Shop đã được duyệt";
+            content = String.format("Chúc mừng! Yêu cầu đăng ký mở Shop \"%s\" của bạn đã được phê duyệt thành công. Vui lòng đăng nhập lại để kích hoạt giao diện bán hàng.", updated.getShopName());
+            severity = "SUCCESS";
+            targetUrl = "/seller/dashboard";
+        } else if ("REJECTED".equals(updated.getStatus())) {
+            title = "Yêu cầu mở Shop bị từ chối";
+            content = String.format("Yêu cầu đăng ký mở Shop \"%s\" của bạn bị từ chối. Lý do: %s", updated.getShopName(), updated.getRejectionReason() != null ? updated.getRejectionReason() : "Hồ sơ không hợp lệ");
+            severity = "DANGER";
+        }
+
+        Notification resultNotif = Notification.builder()
+                .userId(user.getId())
+                .title(title)
+                .content(content)
+                .type("SYSTEM")
+                .severity(severity)
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl(targetUrl)
+                .build();
+        notificationRepository.save(resultNotif);
+
         return mapToDto(updated);
     }
 
     private ShopRegistrationResponseDto mapToDto(SellerRegistration registration) {
         User user = registration.getUser();
+        SellerBankInfo bank = null;
+        if (user != null) {
+            bank = sellerBankInfoRepository.findByUserAndIsDeleteFalse(user).orElse(null);
+        }
         return ShopRegistrationResponseDto.builder()
                 .id(registration.getId())
                 .status(registration.getStatus())
-                .code("SHOP-" + String.format("%06d", registration.getId() != null ? registration.getId() : 0))
+                .code("SHOP-" + (registration.getId() != null ? registration.getId() : ""))
                 .submittedAt(registration.getCreatedAt() != null ? registration.getCreatedAt().toString() : null)
                 .shopName(registration.getShopName())
                 .category(registration.getCategory())
                 .description(registration.getDescription())
-                .supportEmail(registration.getSupportEmail())
-                .supportPhone(registration.getSupportPhone())
+                .supportEmail(user != null ? user.getEmail() : null)
+                .supportPhone(user != null ? user.getPhone() : null)
                 .rejectionReason(registration.getRejectionReason())
                 .shopStatus(user != null ? user.getShopStatus() : null)
                 .depositVnd(user != null ? user.getDepositVnd() : 0L)
                 .balanceVnd(user != null ? user.getBalanceVnd() : 0L)
                 .ownerName(user != null ? user.getFullName() : null)
+                .bankAccountNumber(bank != null ? bank.getAccountNumber() : null)
+                .bankName(bank != null ? bank.getBankName() : null)
+                .bankBranch(bank != null ? bank.getBranch() : null)
                 .build();
     }
 
@@ -233,6 +307,40 @@ public class ShopRegistrationService {
             user.setShopStatus("Banned");
         }
         
+        userRepository.save(user);
+
+        // Gửi thông báo cho Seller
+        Notification statusNotif = Notification.builder()
+                .userId(user.getId())
+                .title(active ? "Hoạt động Shop đã được kích hoạt" : "Cảnh báo: Shop đã bị khóa")
+                .content(active ? String.format("Tài khoản Shop \"%s\" của bạn đã được kích hoạt hoạt động trở lại.", registration.getShopName()) 
+                               : String.format("Tài khoản Shop \"%s\" của bạn đã bị khóa tạm thời do vi phạm điều khoản quy định.", registration.getShopName()))
+                .type("SYSTEM")
+                .severity(active ? "SUCCESS" : "DANGER")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl(active ? "/seller/dashboard" : "/profile")
+                .build();
+        notificationRepository.save(statusNotif);
+
+        return mapToDto(registration);
+    }
+
+    @Transactional
+    public ShopRegistrationResponseDto updateShopStatus(Long registrationId, String shopStatus) {
+        SellerRegistration registration = sellerRegistrationRepository.findById(registrationId)
+                .orElseThrow(() -> new IllegalArgumentException("Yêu cầu mở Shop không tồn tại."));
+        
+        User user = registration.getUser();
+        if (user == null) {
+            throw new IllegalArgumentException("Người dùng liên kết không tồn tại.");
+        }
+        
+        if (shopStatus == null || shopStatus.isBlank()) {
+            throw new IllegalArgumentException("Trạng thái không hợp lệ.");
+        }
+        
+        user.setShopStatus(shopStatus);
         userRepository.save(user);
         return mapToDto(registration);
     }

@@ -37,6 +37,8 @@ public class TransactionController {
 
     @Autowired
     private com.mmo.shared.dal.ComplaintRepository complaintRepository;
+
+    @Autowired
     private DigitalAssetRepository digitalAssetRepository;
 
     @PostMapping("/purchase")

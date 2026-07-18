@@ -12,4 +12,5 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
     List<SupportTicket> findByUserAndIsDeleteFalseOrderByCreatedAtDesc(User user);
     List<SupportTicket> findByIsDeleteFalseOrderByCreatedAtDesc();
     List<SupportTicket> findByStatusAndIsDeleteFalseOrderByCreatedAtDesc(String status);
+    long countByStatusAndIsDeleteFalse(String status);
 }

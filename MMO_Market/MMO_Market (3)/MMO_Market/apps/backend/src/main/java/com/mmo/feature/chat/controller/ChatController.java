@@ -141,7 +141,6 @@ public class ChatController {
                     return map;
                 })
                 .collect(Collectors.toCollection(ArrayList::new));
-
         // Inject active complaints group chats
         List<com.mmo.shared.model.Complaint> activeComplaints = complaintRepository.findActiveComplaintsForUser(currentUser);
         for (com.mmo.shared.model.Complaint comp : activeComplaints) {
@@ -172,7 +171,6 @@ public class ChatController {
             map.put("isComplaint", true);
             responseList.add(map);
         }
-
         // Sort combined list by newest first
         responseList.sort((m1, m2) -> {
             java.time.LocalDateTime t1 = (java.time.LocalDateTime) m1.get("latestTime");

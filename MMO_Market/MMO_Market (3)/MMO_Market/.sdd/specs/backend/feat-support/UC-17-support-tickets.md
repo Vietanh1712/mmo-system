@@ -1,4 +1,4 @@
-# UC-17 — Yêu Cầu Hỗ Trợ (Support Tickets)
+# UC-17 — Yêu Cầu Hỗ Trợ (Phiếu hỗ trợ)
 
 > **Feature:** `feat-support` | **Phiên bản:** 1.0 | **Trạng thái:** Published
 > **Tham chiếu FR:** FR-SUP-01 đến FR-SUP-08
@@ -11,9 +11,9 @@
 | Thuộc tính | Nội dung |
 |:---|:---|
 | **Mã Use Case** | UC-17 |
-| **Tên** | Yêu Cầu Hỗ Trợ (Support Tickets) |
+| **Tên** | Yêu Cầu Hỗ Trợ (Phiếu hỗ trợ) |
 | **Tác nhân chính** | Người dùng (User), Nhân viên vận hành (Staff) |
-| **Mô tả ngắn** | Người dùng gặp sự cố kỹ thuật hoặc thắc mắc giao dịch thực hiện gửi yêu cầu hỗ trợ (Support Ticket). Nhân viên (Staff) xem danh sách các yêu cầu đang mở, trả lời giải đáp và đóng yêu cầu hỗ trợ. |
+| **Mô tả ngắn** | Người dùng gặp sự cố kỹ thuật hoặc thắc mắc giao dịch thực hiện gửi yêu cầu hỗ trợ (Phiếu hỗ trợ). Nhân viên (Staff) xem danh sách các yêu cầu đang mở, trả lời giải đáp và đóng yêu cầu hỗ trợ. |
 | **Độ ưu tiên** | Thấp (P2) — hỗ trợ chăm sóc khách hàng và tiếp nhận phản hồi |
 
 ---
@@ -25,7 +25,7 @@
 | Tác nhân | Vai trò |
 |:---|:---|
 | **Người dùng (User)** | Gửi yêu cầu hỗ trợ, xem trạng thái yêu cầu của bản thân |
-| **Nhân viên (Staff)** | Tiếp nhận yêu cầu, phản hồi giải đáp, thay đổi trạng thái ticket |
+| **Nhân viên (Staff)** | Tiếp nhận yêu cầu, phản hồi giải đáp, thay đổi trạng thái phiếu |
 
 ### 2.2 Điều Kiện Tiền Quyết (Preconditions)
 
@@ -33,7 +33,7 @@
 
 ### 2.3 Hậu Điều Kiện (Postconditions)
 
-- **Gửi ticket thành công:** Tạo bản ghi mới trong bảng `SupportTickets` ở trạng thái `OPEN`.
+- **Gửi phiếu hỗ trợ thành công:** Tạo bản ghi mới trong bảng `SupportTickets` ở trạng thái `OPEN`.
 
 ---
 
@@ -49,20 +49,20 @@ Bước 4  [Frontend]:   POST /api/support-tickets { subject, message }
 Bước 5  [Backend]:    Validate: các trường không được trống
                        Tạo bản ghi mới trong SupportTickets với status = 'OPEN'
                        Trả về: status = 200, ticketId, status = "OPEN"
-Bước 6  [Frontend]:   Hiển thị thông báo gửi yêu cầu hỗ trợ thành công kèm mã Ticket.
+Bước 6  [Frontend]:   Hiển thị thông báo gửi yêu cầu hỗ trợ thành công kèm mã phiếu.
 ```
 
-### 3.2 Luồng Giải Đáp & Đóng Ticket (Staff)
+### 3.2 Luồng Giải Đáp & Đóng Phiếu (Staff)
 
 ```
 Bước 1  [Staff]:      Vào màn hình Admin/Staff, chọn mục "Hỗ trợ khách hàng"
 Bước 2  [Frontend]:   GET /api/staff/support-tickets?status=OPEN
-Bước 3  [Backend]:    Trả về danh sách các ticket hỗ trợ chưa được giải quyết
-Bước 4  [Staff]:      Nhấp xem chi tiết ticket, liên hệ giải đáp cho User qua email/điện thoại
+Bước 3  [Backend]:    Trả về danh sách các phiếu hỗ trợ chưa được giải quyết
+Bước 4  [Staff]:      Nhấp xem chi tiết phiếu, liên hệ giải đáp cho User qua email/điện thoại
 Bước 5  [Staff]:      Sau khi giải đáp xong, nhấn nút "Đánh dấu đã giải quyết" (Resolved)
 Bước 6  [Frontend]:   POST /api/staff/support-tickets/{ticketId}/resolve
 Bước 7  [Backend]:    Cập nhật SupportTickets.status = 'RESOLVED'
-                       Gửi email/thông báo thông báo ticket đã được xử lý cho User
+                       Gửi email/thông báo thông báo phiếu đã được xử lý cho User
                        Trả về: status = 200, message = "RESOLVED"
 ```
 
@@ -72,8 +72,8 @@ Bước 7  [Backend]:    Cập nhật SupportTickets.status = 'RESOLVED'
 
 | Mã | Quy tắc | Chi tiết |
 |:---|:---|:---|
-| BR-17-01 | Phân quyền Staff | Chỉ tài khoản có vai trò `STAFF` hoặc `ADMIN` mới được phép truy cập danh sách và cập nhật trạng thái ticket |
-| BR-17-02 | Trạng thái đóng | Khi ticket đã chuyển sang `CLOSED` hoặc `RESOLVED`, người dùng không thể chỉnh sửa nội dung |
+| BR-17-01 | Phân quyền Staff | Chỉ tài khoản có vai trò `STAFF` hoặc `ADMIN` mới được phép truy cập danh sách và cập nhật trạng thái phiếu |
+| BR-17-02 | Trạng thái đóng | Khi phiếu đã chuyển sang `CLOSED` hoặc `RESOLVED`, người dùng không thể chỉnh sửa nội dung |
 
 ---
 
@@ -90,7 +90,7 @@ Bước 7  [Backend]:    Cập nhật SupportTickets.status = 'RESOLVED'
 
 ## 6. Sơ Đồ Tuần Tự (Sequence Diagram)
 
-### Luồng Gửi Ticket Hỗ Trợ
+### Luồng Gửi Phiếu Hỗ Trợ
 
 ```mermaid
 sequenceDiagram
@@ -107,7 +107,7 @@ sequenceDiagram
     STR-->>SS: SupportTicket
     SS-->>SC: success
     SC-->>FE: HTTP 200 OK (OPEN)
-    FE-->>U: Hiển thị mã ticket hỗ trợ
+    FE-->>U: Hiển thị mã phiếu hỗ trợ
 ```
 
 ---
@@ -117,7 +117,7 @@ sequenceDiagram
 | Phương thức | Endpoint | Mô tả |
 |:---|:---|:---|
 | `POST` | `/api/support-tickets` | Gửi yêu cầu hỗ trợ mới |
-| `GET` | `/api/staff/support-tickets` | Lấy danh sách ticket (Staff) |
+| `GET` | `/api/staff/support-tickets` | Lấy danh sách phiếu hỗ trợ (Staff) |
 | `POST` | `/api/staff/support-tickets/{id}/resolve` | Đánh dấu đã giải quyết (Staff) |
 
 ---

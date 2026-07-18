@@ -37,3 +37,8 @@ CREATE TABLE SupportTickets (
     }
     ```
 *   **Response (200 OK):** Thành công.
+
+---
+
+## 7. BẢN ĐỊA HÓA (LOCALIZATION)
+*   Việt hóa toàn bộ thuật ngữ hiển thị trên giao diện liên quan đến "Ticket" / "Ticket hỗ trợ" thành "Phiếu hỗ trợ" (ví dụ: "Ticket Hỗ Trợ" -> "Phiếu Hỗ Trợ", "Ticket của tôi" -> "Phiếu hỗ trợ của tôi", "Mã Ticket" -> "Mã Phiếu", v.v.) để tăng tính thân thiện và dễ hiểu đối với người dùng Việt Nam.

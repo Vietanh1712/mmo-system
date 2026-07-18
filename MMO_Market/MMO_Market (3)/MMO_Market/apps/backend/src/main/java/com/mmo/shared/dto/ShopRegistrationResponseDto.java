@@ -21,4 +21,8 @@ public class ShopRegistrationResponseDto {
     private Long depositVnd;
     private Long balanceVnd;
     private String ownerName;
+    private String bankAccountNumber;
+    private String bankName;
+    private String bankBranch;
 }
+

@@ -54,6 +54,9 @@ public class ComplaintServiceImpl implements ComplaintService {
     @Autowired
     private ChatRepository chatRepository;
 
+    @Autowired
+    private com.mmo.feature.seller.service.ShopLevelService shopLevelService;
+
     @Override
     public List<ComplaintDTO> getAllComplaints() {
 
@@ -257,20 +260,6 @@ public class ComplaintServiceImpl implements ComplaintService {
             throw new IllegalArgumentException("Không thể khiếu nại giao dịch đã bị hủy hoặc hoàn tiền.");
         }
 
-        // Kiểm tra xem khách hàng và người bán đã chat với nhau chưa
-        List<com.mmo.shared.model.Chat> chats = chatRepository.findActiveChatsBetweenUsers(customer, transaction.getSeller());
-        if (chats == null || chats.isEmpty()) {
-            throw new IllegalArgumentException("Vui lòng nhắn tin trao đổi với người bán trước khi tạo khiếu nại. Chỉ tạo khiếu nại khi hai bên không thể tự giải quyết.");
-        }
-
-        // Bắt buộc có lý do và bằng chứng
-        if (description == null || description.trim().isEmpty()) {
-            throw new IllegalArgumentException("Vui lòng cung cấp lý do khiếu nại.");
-        }
-        if (evidence == null || evidence.trim().isEmpty()) {
-            throw new IllegalArgumentException("Vui lòng cung cấp bằng chứng (hình ảnh/video) khiếu nại.");
-        }
-
         // Đóng băng tiền/giao dịch: Cập nhật trạng thái giao dịch thành 'Disputed'
         transaction.setStatus("Disputed");
         transactionRepository.save(transaction);
@@ -288,7 +277,54 @@ public class ComplaintServiceImpl implements ComplaintService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return complaintRepository.save(complaint);
+        Complaint saved = complaintRepository.save(complaint);
+
+        // 1. Gửi thông báo cho Customer (người khiếu nại)
+        Notification customerNotif = Notification.builder()
+                .userId(customer.getId())
+                .title("Đã nhận yêu cầu khiếu nại")
+                .content(String.format("Yêu cầu khiếu nại của bạn cho giao dịch #TXN-%d đã được tiếp nhận và đang chờ duyệt.", transaction.getId()))
+                .type("COMPLAINT")
+                .severity("INFO")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/account/complaints/detail?id=" + saved.getId())
+                .build();
+        notificationRepository.save(customerNotif);
+
+        // 2. Gửi thông báo cảnh báo cho Seller (người bị khiếu nại)
+        Notification sellerNotif = Notification.builder()
+                .userId(transaction.getSeller().getId())
+                .title("Giao dịch bị khiếu nại")
+                .content(String.format("Giao dịch #TXN-%d bán sản phẩm \"%s\" của bạn đã bị khách hàng khiếu nại. Số dư giao dịch tạm thời bị đóng băng. Vui lòng kiểm tra lại.", transaction.getId(), transaction.getProduct().getName()))
+                .type("COMPLAINT")
+                .severity("WARNING")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/seller/complaints")
+                .build();
+        notificationRepository.save(sellerNotif);
+
+        // 3. Gửi thông báo cho toàn bộ Staff & Admin
+        List<User> staffAndAdmins = userRepository.findStaffAndAdmins();
+        for (User staff : staffAndAdmins) {
+            if (staff.getId().equals(customer.getId())) {
+                continue;
+            }
+            Notification staffNotif = Notification.builder()
+                    .userId(staff.getId())
+                    .title("Có khiếu nại mới cần xử lý")
+                    .content(String.format("Giao dịch #TXN-%d giữa %s và %s đang bị khiếu nại cần xử lý.", transaction.getId(), customer.getFullName(), transaction.getSeller().getFullName()))
+                    .type("COMPLAINT")
+                    .severity("WARNING")
+                    .isRead(false)
+                    .isDelete(false)
+                    .targetUrl("/staff/complaints/detail?id=" + saved.getId())
+                    .build();
+            notificationRepository.save(staffNotif);
+        }
+
+        return saved;
     }
 
     @Override
@@ -321,6 +357,32 @@ public class ComplaintServiceImpl implements ComplaintService {
         systemMsg.setIsRead(false);
         systemMsg.setCreatedAt(LocalDateTime.now());
         chatRepository.save(systemMsg);
+
+        // Gửi thông báo cho Customer
+        Notification customerDisputeNotif = Notification.builder()
+                .userId(complaint.getCustomer().getId())
+                .title("Mở cuộc đối chất khiếu nại")
+                .content(String.format("Phòng chat đối chất cho khiếu nại #CMP-%d (giao dịch #TXN-%d) đã được nhân viên %s mở. Vui lòng vào thương lượng.", complaint.getId(), complaint.getTransaction().getId(), staff.getFullName()))
+                .type("COMPLAINT")
+                .severity("WARNING")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/account/complaints/detail?id=" + complaint.getId())
+                .build();
+        notificationRepository.save(customerDisputeNotif);
+
+        // Gửi thông báo cho Seller
+        Notification sellerDisputeNotif = Notification.builder()
+                .userId(complaint.getSeller().getId())
+                .title("Mở cuộc đối chất khiếu nại")
+                .content(String.format("Phòng chat đối chất cho khiếu nại #CMP-%d (giao dịch #TXN-%d) đã được nhân viên %s mở. Vui lòng vào giải trình.", complaint.getId(), complaint.getTransaction().getId(), staff.getFullName()))
+                .type("COMPLAINT")
+                .severity("WARNING")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/seller/complaints")
+                .build();
+        notificationRepository.save(sellerDisputeNotif);
 
         return complaint;
     }
@@ -355,21 +417,6 @@ public class ComplaintServiceImpl implements ComplaintService {
         return complaintRepository.findById(complaintId)
                 .filter(c -> c.getIsDelete() == null || !c.getIsDelete())
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khiếu nại."));
-    }
-
-    @Override
-    public List<com.mmo.shared.model.Chat> getComplaintChatHistory(Long complaintId, Long staffId) {
-        Complaint complaint = getComplaintByIdForStaff(complaintId);
-        if (complaint.getTransaction() == null) {
-            return java.util.Collections.emptyList();
-        }
-        User customer = complaint.getCustomer();
-        User seller = complaint.getSeller();
-        if (customer == null || seller == null) {
-            return java.util.Collections.emptyList();
-        }
-        // Staff views full chat history without deleted filters
-        return chatRepository.findNormalChatsBetween(customer, seller);
     }
 
     @Override
@@ -584,13 +631,27 @@ public class ComplaintServiceImpl implements ComplaintService {
             }
         }
 
+        // Tự động tính toán lại và cập nhật shop_level vào DB cho Seller
+        if ("Resolved".equalsIgnoreCase(status) || "Completed".equalsIgnoreCase(status)) {
+            User seller = complaint.getSeller();
+            if (seller != null) {
+                try {
+                    shopLevelService.evaluateSellerLevel(seller.getId());
+                } catch (Exception e) {
+                    log.error("Lỗi khi tự động đánh giá lại Shop Level cho Seller ID {}: {}", seller.getId(), e.getMessage());
+                }
+            }
+        }
+
         return complaintRepository.save(complaint);
     }
 
     @Override
-    public org.springframework.data.domain.Page<Complaint> searchComplaintsForStaff(String keyword, String status, int page, int size) {
-        org.springframework.data.domain.Pageable pageable = 
-                org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by("createdAt").descending());
+    public org.springframework.data.domain.Page<Complaint> searchComplaintsForStaff(String keyword, String status,
+            int page, int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size,
+                org.springframework.data.domain.Sort.by("createdAt").descending());
+
         Long complaintId = null;
         String searchKeyword = null;
         if (keyword != null && !keyword.trim().isEmpty()) {

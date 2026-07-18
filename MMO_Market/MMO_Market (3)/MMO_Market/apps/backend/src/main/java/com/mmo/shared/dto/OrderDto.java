@@ -23,7 +23,7 @@ public class OrderDto {
     private String reviewComment;
     private Long transactionId;
     private Integer quantity;
-    private java.util.Map<String, String> credentials;
     private Long complaintId;
+    private java.util.Map<String, String> credentials;
     private java.util.List<java.util.Map<String, String>> credentialsList;
 }

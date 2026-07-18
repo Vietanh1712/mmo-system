@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ticket của tôi - MMO Market</title>
+    <title>Phiếu hỗ trợ của tôi - MMO Market</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/features/home.css}">
@@ -24,12 +24,12 @@
                 <div class="tickets-hero ds-card">
                     <div class="tickets-hero__text">
                         <p class="ds-caption">Hỗ trợ</p>
-                        <h1 class="ds-heading-lg">Ticket của tôi</h1>
+                        <h1 class="ds-heading-lg">Phiếu hỗ trợ của tôi</h1>
                         <p class="ds-body">Theo dõi các yêu cầu hỗ trợ và khiếu nại bạn đã gửi đến hệ thống.</p>
                     </div>
                     <button type="button" class="ds-btn ds-btn-primary" onclick="openNewTicket()">
                         <i class="fa fa-plus" aria-hidden="true"></i>
-                        Tạo ticket mới
+                        Tạo phiếu hỗ trợ mới
                     </button>
                 </div>
 
@@ -39,7 +39,7 @@
                         <table class="tickets-table">
                             <thead>
                                 <tr>
-                                    <th>Mã Ticket</th>
+                                    <th>Mã Phiếu</th>
                                     <th>Danh mục</th>
                                     <th>Tiêu đề</th>
                                     <th>Phản hồi từ Staff</th>
@@ -55,7 +55,7 @@
                                             <p>Bạn chưa gửi yêu cầu hỗ trợ nào.</p>
                                             <button type="button" class="ds-btn ds-btn-primary" onclick="openNewTicket()">
                                                 <i class="fa fa-plus" aria-hidden="true"></i>
-                                                Tạo ticket đầu tiên
+                                                Tạo phiếu hỗ trợ đầu tiên
                                             </button>
                                         </div>
                                     </td>
@@ -77,7 +77,7 @@
             <button type="button" class="ticket-modal-close" onclick="closeNewTicket()" aria-label="Đóng">
                 <i class="fa fa-times"></i>
             </button>
-            <h3 class="ticket-modal-title">Tạo ticket hỗ trợ</h3>
+            <h3 class="ticket-modal-title">Tạo phiếu hỗ trợ</h3>
             <p class="ticket-modal-subtitle">Mô tả vấn đề để đội ngũ kỹ thuật hỗ trợ bạn.</p>
             <form id="new-ticket-form" onsubmit="submitNewTicket(event)">
                 <div class="ticket-field">
@@ -100,7 +100,7 @@
                               placeholder="Mô tả chi tiết lỗi hoặc thắc mắc của bạn..."></textarea>
                 </div>
                 <button type="submit" class="ticket-submit-btn">
-                    <i class="fa fa-paper-plane"></i> Gửi ticket hỗ trợ
+                    <i class="fa fa-paper-plane"></i> Gửi phiếu hỗ trợ
                 </button>
             </form>
         </div>
@@ -112,12 +112,12 @@
             <button type="button" class="ticket-modal-close" onclick="closeTicketDetail()" aria-label="Đóng">
                 <i class="fa fa-times"></i>
             </button>
-            <h3 class="ticket-modal-title">Chi tiết Ticket hỗ trợ</h3>
+            <h3 class="ticket-modal-title">Chi tiết phiếu hỗ trợ</h3>
             <p class="ticket-modal-subtitle">Thông tin chi tiết yêu cầu hỗ trợ của bạn.</p>
             
             <div class="ticket-detail-content">
                 <div class="ticket-detail-row">
-                    <span class="detail-label">Mã Ticket:</span>
+                    <span class="detail-label">Mã Phiếu:</span>
                     <strong id="dt-id" class="ticket-id">#0000</strong>
                 </div>
                 <div class="ticket-detail-row">
