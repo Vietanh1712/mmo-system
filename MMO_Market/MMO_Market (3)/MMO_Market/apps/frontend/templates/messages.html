@@ -549,7 +549,7 @@
             try {
                 // Include productId when customer initiates chat from a product page
                 const productIdToSend = (urlContextProduct && urlContextProduct.sellerId === currentSelectedChatId)
-                    ? String(urlContextProduct.id) : undefined;
+                    ? urlContextProduct.id : undefined;
 
                 const res = await authFetch(`/v1/chats/${currentSelectedChatId}`, {
                     method: 'POST',
@@ -724,6 +724,8 @@
             const emojiBtn = document.querySelector('.messages-input-row__emoji');
             
             let banner = document.getElementById('chat-blocked-banner');
+
+
 
             if (chat.isBlocked || chat.isBlockedByContact) {
                 if (input) {

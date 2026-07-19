@@ -118,3 +118,5 @@ Các tệp tin thực tế trong dự án (nằm dưới thư mục `apps/fronte
 | FR-STAF-49 | WHEN Staff views the `/staff/shop-registrations/update-status` page, THE SYSTEM SHALL render the interface to allow Staff to update registration requests, enter comments, and approve or reject shop activations. |
 | FR-STAF-50 | WHEN Staff accesses `/staff/documents`, THE SYSTEM SHALL render quick-link cards allowing immediate navigation to complaints list, transactions list, and withdrawals list. |
 | FR-STAF-51 | THE SYSTEM SHALL NOT display the "Lý do" (Reason) column in the Shop Flags table on `/staff/flags`. |
+| FR-STAF-52 | WHEN Staff views the `/staff/flags` page, THE SYSTEM SHALL display the statistic cards (`staff-stat-grid`) in a 3-column grid layout per row (`staff-stat-grid--3cols`) on desktop screens, responsive to 2 columns on tablet and 1 column on mobile screens. |
+| FR-STAF-53 | WHEN Staff views the `/staff/shop-registrations` page, THE SYSTEM SHALL display the statistic cards (`staff-stat-grid`) in a 4-column grid layout per row (`staff-stat-grid--4cols`) on desktop screens, responsive to 2 columns on tablet and 1 column on mobile screens. |

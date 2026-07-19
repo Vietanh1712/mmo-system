@@ -138,10 +138,6 @@ async function loadComplaintDetails() {
                 <dd id="detail-target">${escapeHtml(currentComplaint.target)}</dd>
             </div>
             <div class="staff-info-row">
-                <dt>Loại</dt>
-                <dd id="detail-category">${escapeHtml(currentComplaint.category)}</dd>
-            </div>
-            <div class="staff-info-row">
                 <dt>Số tiền liên quan</dt>
                 <dd id="detail-amount" class="ds-money" style="font-weight: 700;">${formatMoney(currentComplaint.amount)}</dd>
             </div>

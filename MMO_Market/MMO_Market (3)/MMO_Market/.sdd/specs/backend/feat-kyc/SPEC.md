@@ -32,13 +32,16 @@
 | FR-KYC-02 | WHILE a User has a 'Pending' KYC request, THE SYSTEM SHALL prevent them from submitting another KYC. |
 | FR-KYC-03 | WHEN a Staff approves the KYC request, THE SYSTEM SHALL set user verification status `isVerified = 1`. |
 | FR-KYC-04 | WHEN a Staff rejects the KYC request, THE SYSTEM SHALL update status to 'Rejected' and require a rejection reason. |
+| FR-KYC-05 | WHEN a Staff queries KYC requests with search input, THE SYSTEM SHALL search across request code, ID number, user full name, and email, while automatically stripping any leading '#' character. |
+| FR-KYC-06 | WHEN a KYC request is submitted or reviewed (Approved/Rejected), THE SYSTEM SHALL create and persist system notifications (`Notification`) for the customer and operating staff/admin. |
+| FR-KYC-07 | WHEN a Staff or user requests KYC statistics, THE SYSTEM SHALL aggregate and return total, pending, approved, and rejected counts. |
 
 ---
 
 ## 4. NON-FUNCTIONAL REQUIREMENTS
 | ID | Category | Requirement |
 |---|---|---|
-| NFR-KYC-01 | Security | Ảnh tài liệu KYC nhạy cảm phải được bảo vệ tránh rò rỉ. |
+| NFR-KYC-01 | Security | Ảnh tài liệu KYC nhạy cảm phải được bảo vệ tránh rò rỉ và chỉ cho phép chủ sở hữu hoặc Staff/Admin truy cập qua endpoint bảo mật. |
 | NFR-KYC-02 | Compliance | Mã số định danh `citizen_id` phải được chuẩn hóa độ dài từ 9 đến 12 ký tự số. |
 
 ---
@@ -94,14 +97,26 @@ CREATE TABLE KYCRequests (
 *   **Response (200 OK):** Trả về trạng thái hồ sơ KYC hiện tại của User đăng nhập.
 
 ### `GET /api/v1/staff/kyc`
-*   **Description**: Lấy danh sách hồ sơ KYC toàn hệ thống (phục vụ Staff).
+*   **Description**: Lấy danh sách hồ sơ KYC toàn hệ thống với bộ lọc đa trường (`requestCode`, `idNumber`, `fullName`, `email`, `status`, `idType`). Tự động xử lý bỏ ký tự `#` ở đầu `requestCode`.
 *   **Request Query Parameters:**
     *   `status`: String (PENDING, APPROVED, REJECTED - optional)
-    *   `requestCode`: String (optional)
+    *   `requestCode`: String (optional - hỗ trợ nhập mã hồ sơ có/không có dấu `#`, số giấy tờ, tên, email)
     *   `idType`: String (CCCD, CMND, PASSPORT, DRIVER_LICENSE - optional)
     *   `page`: int (default: 0)
     *   `size`: int (default: 10)
-*   **Response (200 OK):** Page object containing list of KYC requests sorted by ID ascending.
+*   **Response (200 OK):** Page object containing list of KYC requests sorted by creation date descending.
+
+### `GET /api/v1/staff/kyc/stats`
+*   **Description**: Lấy thống kê số lượng hồ sơ KYC (tổng số, chờ duyệt, đã duyệt, từ chối).
+*   **Response (200 OK):**
+    ```json
+    {
+      "total": 10,
+      "pending": 3,
+      "approved": 5,
+      "rejected": 2
+    }
+    ```
 
 ---
 

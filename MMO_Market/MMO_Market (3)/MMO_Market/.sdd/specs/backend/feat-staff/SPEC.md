@@ -32,6 +32,10 @@ Hỗ trợ Staff kiểm duyệt KYC, phê duyệt/từ chối các yêu cầu m�
 | **FR-STF-09** | WHEN an Admin assigns permissions, THE SYSTEM SHALL create mappings between specified Staff IDs and Permission names. |
 | **FR-STF-10** | WHEN an Admin revokes permissions, THE SYSTEM SHALL remove mappings between a specified Staff ID and Permission names. |
 | **FR-STF-11** | WHEN a Staff retrieves the documents dashboard, THE SYSTEM SHALL calculate and display the number of pending support tickets. |
+| **FR-STF-12** | WHEN a Staff searches KYC requests, THE SYSTEM SHALL perform a multi-field search across request code, ID number, user full name, and email, automatically stripping any leading '#' character. |
+| **FR-STF-13** | WHEN a Staff requests KYC statistics, THE SYSTEM SHALL return aggregated counts for total, pending, approved, and rejected KYC requests. |
+| **FR-STF-14** | WHEN a Staff changes KYC filter dropdown options, THE SYSTEM SHALL NOT auto-trigger search until the Staff clicks the Search button or presses Enter. |
+| **FR-STF-15** | WHEN a Staff manages shop statuses, THE SYSTEM SHALL support 5 distinct status values (`Active`, `Withdrawn`, `Suspended`, `Locked`, `Banned`). |
 
 ---
 
@@ -87,9 +91,10 @@ CREATE TABLE ShopFlags (
 
 
 ### 6.2 Các API REST của KYC & Shop
-*   `GET /api/v1/staff/kyc`: Lọc và phân trang các yêu cầu KYC (`status`, `requestCode`, `idType`).
+*   `GET /api/v1/staff/kyc`: Lọc và phân trang các yêu cầu KYC theo mã hồ sơ, số giấy tờ, tên, email (`status`, `requestCode`, `idType`). Tự động xử lý loại bỏ ký tự `#` ở đầu mã.
+*   `GET /api/v1/staff/kyc/stats`: Lấy thống kê số lượng hồ sơ KYC (tổng số, chờ duyệt, đã duyệt, từ chối).
 *   `GET /api/v1/staff/kyc/{id}`: Xem chi tiết yêu cầu KYC.
-*   `POST /api/v1/staff/kyc/{id}/review`: Phê duyệt hoặc từ chối yêu cầu KYC kèm bình luận (`status`, `comment`).
+*   `POST /api/v1/staff/kyc/{id}/review`: Phê duyệt hoặc từ chối yêu cầu KYC kèm lý do từ chối (`status`, `rejectionReason`, `version`).
 *   `GET /api/v1/shop-registrations`: Danh sách phân trang yêu cầu đăng ký shop.
 *   `GET /api/v1/shop-registrations/{id}`: Chi tiết yêu cầu đăng ký Shop.
 *   `GET /api/v1/shop-registrations/stats`: Thống kê 6 chỉ số của Shop (trả về JSON dạng Map gồm `totalShops`, `totalDeposit`, `permanentBannedShops`, `indefiniteLockedShops`, `temporarySuspendedShops`, `withdrawnShops`).
@@ -122,5 +127,5 @@ CREATE TABLE ShopFlags (
 ## 8. ACCEPTANCE CRITERIA (Tiêu chí nghiệm thu)
 *   **AC-STF-01 (Phân quyền truy cập)**: Chỉ có tài khoản có quyền `ROLE_STAFF` hoặc `ROLE_ADMIN` mới có thể truy cập thành công vào các route `/staff/**` và các API `/api/v1/staff/**`. Các role khác (như `CUSTOMER`, `SELLER`) sẽ bị chặn và trả về lỗi 403.
 *   **AC-STF-02 (Cập nhật trạng thái khiếu nại thống nhất)**: Khi Staff xem chi tiết khiếu nại, thay đổi trạng thái xử lý trên dropdown (`InProgress`, `Resolved`, `Rejected`) và nhấn nút "Cập nhật", hệ thống phải lưu chính xác trạng thái đã chọn và chuyển hướng thành công.
-*   **AC-STF-03 (Bảo toàn số thứ tự STT)**: Tất cả bảng dữ liệu của Staff (KYC, Giao dịch, Rút tiền, Cắm cờ, Duyệt Shop) hiển thị cột STT chính xác theo công thức liên tục qua các trang: `currentPage * pageSize + index + 1`.
+*   **AC-STF-03 (Bảo toàn số thứ tự STT)**: Tất cả bảng dữ liệu của Staff (KYC, Giao dịch, Rút tiền, Cắm cờ, Duyệt Shop, Khiếu nại) hiển thị cột STT chính xác theo công thức liên tục qua các trang: `currentPage * pageSize + index + 1`.
 *   **AC-STF-04 (Ẩn cột Lý do trong bảng cờ cảnh báo)**: Giao diện danh sách cờ cảnh báo (`/staff/flags`) không hiển thị cột "Lý do" để tránh làm vỡ layout của bảng do nội dung lý do quá dài. Nội dung lý do này chỉ hiển thị trong trang chi tiết cờ cảnh báo (`/staff/flags/detail`).

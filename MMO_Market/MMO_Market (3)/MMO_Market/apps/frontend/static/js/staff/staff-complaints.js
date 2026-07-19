@@ -102,7 +102,8 @@ function renderStaffComplaintsTable(list, isBackendDriven = true) {
         return;
     }
 
-    tbody.innerHTML = list.map(item => {
+    tbody.innerHTML = list.map((item, index) => {
+        const stt = currentPage * pageSize + index + 1;
         let badgeClass = 'ds-badge-warning';
         let statusText = 'Đang xử lý';
         
@@ -125,6 +126,7 @@ function renderStaffComplaintsTable(list, isBackendDriven = true) {
 
         return `
             <tr>
+                <td class="ds-table-center">${stt}</td>
                 <td>#${escapeHtml(item.id)}</td>
                 <td>
                     <div class="ds-entity">
@@ -136,7 +138,6 @@ function renderStaffComplaintsTable(list, isBackendDriven = true) {
                     </div>
                 </td>
                 <td>${escapeHtml(item.target)}</td>
-                <td>${escapeHtml(item.category)}</td>
                 <td class="ds-table-center"><span class="ds-badge ${badgeClass}">${statusText}</span></td>
                 <td>${escapeHtml(item.createdAt.split(' ')[0])}</td>
                 <td class="ds-table-center">
@@ -166,9 +167,10 @@ async function renderStaffComplaints() {
     if (!token) {
         loadMockComplaints();
         let list = allComplaints;
-        const search = document.getElementById('staff-search-input').value.trim().toLowerCase();
-        const status = document.getElementById('staff-status-select').value;
-        const category = document.getElementById('staff-category-select').value;
+        const searchInput = document.getElementById('staff-search-input');
+        const search = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        const statusSelect = document.getElementById('staff-status-select');
+        const status = statusSelect ? statusSelect.value : '';
 
         const filtered = list.filter(item => {
             const matchesSearch = !search ||
@@ -177,8 +179,7 @@ async function renderStaffComplaints() {
                 item.senderEmail.toLowerCase().includes(search) ||
                 item.target.toLowerCase().includes(search);
             const matchesStatus = !status || item.status === status;
-            const matchesCategory = !category || item.category === category;
-            return matchesSearch && matchesStatus && matchesCategory;
+            return matchesSearch && matchesStatus;
         });
 
         filtered.sort((a, b) => {
@@ -221,9 +222,10 @@ function applyStaffFilters() {
 }
 
 function resetStaffFilters() {
-    document.getElementById('staff-search-input').value = '';
-    document.getElementById('staff-status-select').value = '';
-    document.getElementById('staff-category-select').value = '';
+    const searchInput = document.getElementById('staff-search-input');
+    if (searchInput) searchInput.value = '';
+    const statusSelect = document.getElementById('staff-status-select');
+    if (statusSelect) statusSelect.value = '';
     currentPage = 0;
     renderStaffComplaints();
 }

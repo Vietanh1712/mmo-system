@@ -53,17 +53,37 @@ public class KycService {
         user.setAddress(address);
         if (dateOfBirth != null && !dateOfBirth.isBlank()) {
             try {
-                // Parse format DD/MM/YYYY
-                String[] parts = dateOfBirth.split("/");
-                if (parts.length == 3) {
-                    user.setDateOfBirth(java.time.LocalDate.of(
-                        Integer.parseInt(parts[2]),
-                        Integer.parseInt(parts[1]),
-                        Integer.parseInt(parts[0])
-                    ));
+                String dob = dateOfBirth.trim();
+                if (dob.contains("/")) {
+                    String[] parts = dob.split("/");
+                    if (parts.length == 3) {
+                        user.setDateOfBirth(java.time.LocalDate.of(
+                            Integer.parseInt(parts[2]),
+                            Integer.parseInt(parts[1]),
+                            Integer.parseInt(parts[0])
+                        ));
+                    }
+                } else if (dob.contains("-")) {
+                    String[] parts = dob.split("-");
+                    if (parts.length == 3) {
+                        if (parts[0].length() == 4) { // YYYY-MM-DD
+                            user.setDateOfBirth(java.time.LocalDate.of(
+                                Integer.parseInt(parts[0]),
+                                Integer.parseInt(parts[1]),
+                                Integer.parseInt(parts[2])
+                            ));
+                        } else { // DD-MM-YYYY
+                            user.setDateOfBirth(java.time.LocalDate.of(
+                                Integer.parseInt(parts[2]),
+                                Integer.parseInt(parts[1]),
+                                Integer.parseInt(parts[0])
+                            ));
+                        }
+                    }
                 }
             } catch (Exception e) {
-                throw new IllegalArgumentException("Ngày sinh không hợp lệ.");
+                log.warn("Lỗi parse ngày sinh: {}", dateOfBirth, e);
+                throw new IllegalArgumentException("Ngày sinh không hợp lệ. Vui lòng định dạng dd/mm/yyyy.");
             }
         }
         userRepository.save(user);
@@ -222,6 +242,12 @@ public class KycService {
             org.springframework.data.domain.Pageable pageable) {
         
         String cleanCode = (requestCode == null || requestCode.isBlank()) ? null : requestCode.trim();
+        if (cleanCode != null && cleanCode.startsWith("#")) {
+            cleanCode = cleanCode.substring(1).trim();
+        }
+        if (cleanCode != null && cleanCode.isBlank()) {
+            cleanCode = null;
+        }
         org.springframework.data.domain.Page<KycRequest> page = kycRequestRepository.searchKycRequests(status, cleanCode, idType, pageable);
         return page.map(this::mapToDto);
     }

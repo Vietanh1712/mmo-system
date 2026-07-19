@@ -8,6 +8,16 @@ document.addEventListener('DOMContentLoaded', () => {
         loadKycList();
         loadKycStats();
     });
+    const codeInput = document.getElementById('kycCodeFilter');
+    if (codeInput) {
+        codeInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                loadKycList();
+                loadKycStats();
+            }
+        });
+    }
+
     const resetBtn = document.getElementById('kycResetBtn');
     if (resetBtn) resetBtn.addEventListener('click', () => {
         const codeInput = document.getElementById('kycCodeFilter');

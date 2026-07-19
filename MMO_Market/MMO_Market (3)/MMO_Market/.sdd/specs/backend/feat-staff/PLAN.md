@@ -70,9 +70,12 @@ Triển khai giao diện vận hành MVC và REST API dành riêng cho nhân vi�
   - File: `templates/staff/flags.html` & `flag-detail.html`, cùng file JS quản lý.
 - **Trang Thống kê Dashboard:**
   - File: `templates/staff/dashboard.html` hiển thị biểu đồ và tổng quan hệ thống, bổ sung thẻ **Quản lý Shop** vào phần Truy cập nhanh.
+- **Trang Quản lý KYC (KYC Verification):**
+  - Script: `static/js/staff/staff-kyc.js` bỏ tự động kích hoạt tìm kiếm khi đổi tùy chọn bộ lọc (`change` event), chỉ thực hiện tìm kiếm khi Staff bấm nút "Tìm kiếm" hoặc nhấn `Enter`.
+- **Trang Quản lý Khiếu nại (Complaints):**
+  - File: `templates/staff/complaints.html` & Script: `static/js/staff/staff-complaints.js` hiển thị cột STT liên tục qua từng trang (`currentPage * pageSize + index + 1`).
 - **Trang Quản lý Duyệt Yêu Cầu Shop (Shops):**
-  - File: `templates/staff/shop-registrations.html` được thiết kế đồng bộ với KYC/Complaints với bảng thống kê 4 thẻ, bộ lọc tìm kiếm, bảng danh sách phân trang (có STT và Trạng thái) và Modal chi tiết duyệt shop.
-  - Script: `static/js/staff/staff-shop-registrations.js` gọi các API phân trang/tìm kiếm, thống kê số liệu, tích hợp phân trang chung và điều khiển Modal hiển thị dữ liệu chi tiết kiểm duyệt.
+  - File: `templates/staff/shop-registrations.html` & Script: `static/js/staff/staff-shop-registrations.js` quản lý 5 trạng thái gian hàng (`Active`, `Withdrawn`, `Suspended`, `Locked`, `Banned`).
 
 ---
 
