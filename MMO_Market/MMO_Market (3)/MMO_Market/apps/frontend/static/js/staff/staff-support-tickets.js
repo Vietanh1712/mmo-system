@@ -6,7 +6,7 @@ async function loadTickets() {
     try {
         const res = await authFetch('/support-tickets/all');
         if (!res.ok) {
-            throw new Error('Không thể tải danh sách ticket');
+            throw new Error('Không thể tải danh sách phiếu hỗ trợ');
         }
         ticketsList = await res.json();
         updateStats();
@@ -17,7 +17,7 @@ async function loadTickets() {
         document.getElementById('staff-tickets-body').innerHTML = `
             <tr>
                 <td colspan="7" style="text-align: center; padding: 24px; color: red;">
-                    Lỗi khi tải danh sách ticket từ máy chủ. Vui lòng kiểm tra đăng nhập.
+                    Lỗi khi tải danh sách phiếu hỗ trợ từ máy chủ. Vui lòng kiểm tra đăng nhập.
                 </td>
             </tr>
         `;
@@ -56,7 +56,7 @@ function renderTickets() {
         tbody.innerHTML = `
             <tr>
                 <td colspan="7" style="text-align: center; padding: 24px; color: var(--ds-text-subtle);">
-                    Không tìm thấy ticket nào phù hợp với bộ lọc.
+                    Không tìm thấy phiếu hỗ trợ nào phù hợp với bộ lọc.
                 </td>
             </tr>
         `;

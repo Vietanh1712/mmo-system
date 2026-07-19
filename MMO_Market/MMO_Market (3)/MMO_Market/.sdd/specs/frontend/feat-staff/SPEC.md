@@ -11,47 +11,56 @@ Nhân viên (Staff) kiểm duyệt hồ sơ KYC, xử lý các lệnh rút tiề
 ---
 
 ## 2. DANH SÁCH FILE THỰC TẾ & MAPPING
-Các tệp tin thực tế trong dự án:
+Các tệp tin thực tế trong dự án (nằm dưới thư mục `apps/frontend/`):
 
 - **Dashboard chính (`/staff/dashboard`)**:
   * View: `templates/staff/dashboard.html`
-  * Script: `static/js/staff-ui.js`
+  * Script: `static/js/staff/staff-ui.js`
 - **Duyệt KYC (`/staff/kyc`)**:
   * View: `templates/staff/kyc.html`
-  * Script: `static/js/staff-kyc.js`
+  * Script: `static/js/staff/staff-kyc.js`
 - **Chi tiết KYC (`/staff/kyc/detail`)**:
   * View: `templates/staff/kyc-detail.html`
-  * Script: `static/js/staff-kyc-detail.js`
+  * Script: `static/js/staff/staff-kyc-detail.js`
 - **Yêu cầu rút tiền (`/staff/withdrawals`)**:
   * View: `templates/staff/withdrawals.html`
-  * Script: `static/js/staff-ui.js`
+  * Script: `static/js/staff/staff-ui.js`
 - **Chi tiết rút tiền (`/staff/withdrawals/detail`)**:
   * View: `templates/staff/withdrawal-detail.html`
-  * Script: `static/js/staff-ui.js`
+  * Script: `static/js/staff/staff-ui.js`
 - **Khiếu nại tranh chấp (`/staff/complaints`)**:
   * View: `templates/staff/complaints.html`
-  * Script: `static/js/staff-complaints.js`
+  * Script: `static/js/staff/staff-complaints.js`
 - **Chi tiết khiếu nại (`/staff/complaints/detail`)**:
   * View: `templates/staff/complaint-detail.html`
-  * Script: `static/js/staff-complaint-detail.js`
+  * Script: `static/js/staff/staff-complaint-detail.js`
 - **Kênh chat phân xử (`/staff/chat`)**:
   * View: `templates/staff/chat.html`
-  * Script: `static/js/staff-chat.js`
+  * Script: `static/js/staff/staff-chat.js`
 - **Support Ticket (`/staff/support-tickets`)**:
   * View: `templates/staff/support-tickets.html`
-  * Script: `static/js/staff-support-tickets.js`
+  * Script: `static/js/staff/staff-support-tickets.js`
 - **Chi tiết Ticket (`/staff/support-tickets/detail`)**:
   * View: `templates/staff/support-ticket-detail.html`
-  * Script: `static/js/staff-support-ticket-detail.js`
+  * Script: `static/js/staff/staff-support-ticket-detail.js`
 - **Giao dịch toàn sàn (`/staff/transactions`)**:
   * View: `templates/staff/transactions.html`
-  * Script: `static/js/staff-ui.js`
+  * Script: `static/js/staff/staff-ui.js`
 - **Cảnh báo vi phạm Shop (`/staff/flags`)**:
   * View: `templates/staff/flags.html`
-  * Script: `static/js/staff-ui.js`
+  * Script: `static/js/staff/staff-ui.js`
 - **Quản lý Shop (`/staff/shop-registrations`)**:
   * View: `templates/staff/shop-registrations.html`
   * Script: `static/js/staff/staff-shop-registrations.js`
+- **Chi tiết đăng ký Shop (`/staff/shop-registrations/detail`)**:
+  * View: `templates/staff/shop-registration-detail.html`
+  * Script: `static/js/staff/staff-shop-registration-detail.js`
+- **Cập nhật trạng thái Shop (`/staff/shop-registrations/update-status`)**:
+  * View: `templates/staff/shop-registration-update-status.html`
+  * Script: `static/js/staff/staff-shop-registration-update-status.js`
+- **Tổng quan đơn từ (`/staff/documents`)**:
+  * View: `templates/staff/documents-dashboard.html`
+  * Script: `static/js/staff/staff-ui.js`
 
 ---
 
@@ -100,8 +109,12 @@ Các tệp tin thực tế trong dự án:
 | FR-STAF-40 | WHEN Staff views the Shop registration detail page (`/staff/shop-registrations/detail`), THE SYSTEM SHALL display the shop profile (excluding category), owner name, financial info (deposit, balance), owner contact info (email and phone) retrieved from the Users table, and the owner's bank info (account number, bank name, branch). |
 | FR-STAF-41 | WHEN Staff reviews a Shop registration request, THE SYSTEM SHALL display the decision panel (Approve / Reject buttons with a rejection reason text area) only if the request status is "PENDING". If the request is rejected, the system SHALL display the rejection reason. |
 | FR-STAF-42 | THE SYSTEM SHALL display the shop code in the format '#SHOP-{id}' (e.g. #SHOP-1 instead of #SHOP-000001) where the ID is the raw shop registration ID retrieved from the database. |
-| FR-STAF-43 | WHEN Staff clicks on the "Quản lý đơn từ" menu link, THE SYSTEM SHALL navigate to `/staff/documents` and display the documents overview page containing stats and quick access cards for complaints, transactions, and withdrawals. |
+| FR-STAF-43 | WHEN Staff clicks on the "Quản lý đơn từ" menu link, THE SYSTEM SHALL navigate to `/staff/documents` and display the documents overview page containing stats and quick access cards for complaints, transactions, withdrawals, and support tickets. |
 | FR-STAF-44 | THE SYSTEM SHALL display "Tổng số Shop" (Total Shops count from the database) as the first stats card and exclude "Yêu cầu rút tiền" (Withdrawal requests) stats card on the main staff dashboard page (`/staff/dashboard`). |
-| FR-STAF-45 | THE SYSTEM SHALL query and display the count of "Giao dịch chờ duyệt" (Pending transactions count from the database) alongside open complaints and pending withdrawals on the documents overview page (`/staff/documents`). |
-| FR-STAF-46 | THE SYSTEM SHALL group complaints, transactions, and withdrawals under a collapsible "Quản lý đơn từ" dropdown in the sidebar where clicking the header title navigates to `/staff/documents` and clicking the arrow toggle collapses or opens the menu. |
-
+| FR-STAF-45 | THE SYSTEM SHALL query and display the count of "Giao dịch chờ duyệt" (Pending transactions count from the database) alongside open complaints, pending withdrawals, and pending support tickets on the documents overview page (`/staff/documents`). |
+| FR-STAF-46 | THE SYSTEM SHALL group complaints, transactions, withdrawals, and support tickets under a collapsible "Quản lý đơn từ" dropdown in the sidebar where clicking the header title navigates to `/staff/documents` and clicking the arrow toggle collapses or opens the menu. |
+| FR-STAF-47 | WHEN Staff views the `/staff/support-tickets` page, THE SYSTEM SHALL query and display all user support tickets sorted by `createdAt` in descending order, showing their category, customer name, title, and current status. |
+| FR-STAF-48 | WHEN Staff views `/staff/support-tickets/detail`, THE SYSTEM SHALL query and render the ticket details, customer information, message timeline, and enable Staff to post replies to the customer. |
+| FR-STAF-49 | WHEN Staff views the `/staff/shop-registrations/update-status` page, THE SYSTEM SHALL render the interface to allow Staff to update registration requests, enter comments, and approve or reject shop activations. |
+| FR-STAF-50 | WHEN Staff accesses `/staff/documents`, THE SYSTEM SHALL render quick-link cards allowing immediate navigation to complaints list, transactions list, and withdrawals list. |
+| FR-STAF-51 | THE SYSTEM SHALL NOT display the "Lý do" (Reason) column in the Shop Flags table on `/staff/flags`. |

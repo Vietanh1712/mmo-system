@@ -73,7 +73,7 @@
                     onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})" onkeypress="if(event.key==='Enter')document.getElementById('contact').scrollIntoView({behavior:'smooth'})">
                     <div class="support-topic-card__icon-wrap"><i class="fa fa-life-ring"></i></div>
                     <h3 class="support-topic-card__title">Liên hệ hỗ trợ</h3>
-                    <p class="support-topic-card__desc">Ticket, chat trực tuyến và email — đội ngũ hỗ trợ 8h–22h hàng ngày.</p>
+                    <p class="support-topic-card__desc">Phiếu hỗ trợ, chat trực tuyến và email — đội ngũ hỗ trợ 8h–22h hàng ngày.</p>
                 </article>
             </div>
         </section>
@@ -111,7 +111,7 @@
                                 <span class="support-faq-item__question">Chọn "Nạp tiền tự động" nhưng vẫn chưa nhận được tiền thì sao?</span>
                                 <i class="fa fa-chevron-down support-faq-item__chevron"></i>
                             </button>
-                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Kiểm tra lại nội dung chuyển khoản đã đúng cú pháp hướng dẫn chưa. Nếu đã đúng mà sau <strong>5 phút</strong> vẫn chưa thấy số dư, hãy liên hệ hỗ trợ qua trang <strong>Hỗ trợ</strong>, gửi ticket hoặc email kèm ảnh biên lai giao dịch.</p></div>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Kiểm tra lại nội dung chuyển khoản đã đúng cú pháp hướng dẫn chưa. Nếu đã đúng mà sau <strong>5 phút</strong> vẫn chưa thấy số dư, hãy liên hệ hỗ trợ qua trang <strong>Hỗ trợ</strong>, gửi phiếu hỗ trợ hoặc email kèm ảnh biên lai giao dịch.</p></div>
                         </div>
 
                         <div class="support-faq-item" data-group="buyer" data-keywords="hết hàng email sản phẩm kho">
@@ -279,7 +279,7 @@
                                 <span class="support-faq-item__question">Làm sao liên hệ hỗ trợ khi gặp vấn đề (người bán)?</span>
                                 <i class="fa fa-chevron-down support-faq-item__chevron"></i>
                             </button>
-                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Vào trang <strong>Hỗ trợ</strong>, gửi ticket, chat trực tuyến hoặc email <strong>support@mmomarket.vn</strong>. Đội ngũ hỗ trợ 8h–22h hàng ngày.</p></div>
+                            <div class="support-faq-item__panel"><p class="support-faq-item__answer">Vào trang <strong>Hỗ trợ</strong>, gửi phiếu hỗ trợ, chat trực tuyến hoặc email <strong>support@mmomarket.vn</strong>. Đội ngũ hỗ trợ 8h–22h hàng ngày.</p></div>
                         </div>
 
                     </div>
@@ -301,9 +301,9 @@
                     <div class="support-contact-card__icon-wrap">
                         <i class="fa fa-ticket"></i>
                     </div>
-                    <h3 class="support-contact-card__title">Gửi ticket</h3>
+                    <h3 class="support-contact-card__title">Gửi phiếu hỗ trợ</h3>
                     <p class="support-contact-card__desc">Mô tả chi tiết vấn đề, đính kèm mã đơn hàng. Phản hồi trong 24 giờ làm việc.</p>
-                    <button type="button" class="support-contact-card__btn" onclick="openTicketForm()">Tạo ticket mới</button>
+                    <button type="button" class="support-contact-card__btn" onclick="openTicketForm()">Tạo phiếu mới</button>
                 </article>
 
                 <article class="support-contact-card">
@@ -351,7 +351,7 @@
             <button type="button" class="support-ticket-modal__close" onclick="closeTicketForm()" aria-label="Đóng">
                 <i class="fa fa-times"></i>
             </button>
-            <h3 id="ticket-modal-title" class="support-ticket-modal__title">Tạo ticket hỗ trợ</h3>
+            <h3 id="ticket-modal-title" class="support-ticket-modal__title">Tạo phiếu hỗ trợ</h3>
             <p class="support-ticket-modal__subtitle">Mô tả vấn đề để đội ngũ kỹ thuật hỗ trợ bạn.</p>
             <form id="support-ticket-form" onsubmit="submitTicketForm(event)">
                 <div class="support-ticket-field">
@@ -371,7 +371,7 @@
                     <label for="ticket-detail">Nội dung chi tiết</label>
                     <textarea id="ticket-detail" rows="5" required placeholder="Mô tả chi tiết lỗi hoặc thắc mắc của bạn..."></textarea>
                 </div>
-                <button type="submit" class="support-ticket-modal__submit">Gửi ticket hỗ trợ</button>
+                <button type="submit" class="support-ticket-modal__submit">Gửi phiếu hỗ trợ</button>
             </form>
         </div>
     </div>

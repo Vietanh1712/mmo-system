@@ -115,8 +115,13 @@ c:\Users\pc\MMO_new1\MMO_Market\MMO_Market (3)\MMO_Market\
 ### Nghiệp vụ Vận hành (Staff & Admin)
 *   **Duyệt KYC**: Xác minh giấy tờ tùy thân của User để cấp quyền bán hàng / nạp rút số lượng lớn.
 *   **Duyệt đăng ký Shop**: Phê duyệt hoặc từ chối hồ sơ đăng ký mở gian hàng của người dùng.
-*   **Quản lý Cờ (Flag Management)**: Khóa/Cảnh báo các Shop có hành vi gian lận.
-*   **Admin Setup**: Cấu hình phí giao dịch, phí hoa hồng (Commission rate), quản lý phân quyền Staff, quản trị cấu hình hệ thống.
+*   **Duyệt rút tiền (Withdrawal Approval)**: Xem xét, phê duyệt hoặc từ chối các yêu cầu rút tiền ngân hàng của Seller, cập nhật trạng thái và đính kèm biên lai chuyển khoản.
+*   **Giải quyết khiếu nại (Complaint Resolution)**: Phân xử các khiếu nại giao dịch giữa Buyer và Seller, kiểm tra lịch sử chat/bằng chứng, cập nhật trạng thái khiếu nại (InProgress, Resolved, Rejected) và giải phóng/hoàn trả số dư đang đóng băng trong ví Escrow.
+*   **Giám sát giao dịch (Transaction Monitoring)**: Giám sát lịch sử giao dịch toàn sàn, theo dõi luồng tiền và thời gian bảo lãnh (Escrow duration) của từng đơn hàng.
+*   **Tiếp nhận & Xử lý hỗ trợ (Support Ticket Handling)**: Tiếp nhận, quản lý và xử lý các thẻ yêu cầu hỗ trợ (Support Tickets) gửi từ người dùng.
+*   **Cập nhật trạng thái Shop (Shop Status Update)**: Cập nhật trạng thái hoạt động của Shop (Active, Withdrawn, Suspended, Locked, Banned) riêng biệt tùy thuộc vào tình trạng vi phạm chính sách của Shop.
+*   **Quản lý Cờ (Flag Management)**: Cắm cờ cảnh báo Shop vi phạm với các mức độ (Warning, Critical, Danger) hoặc gỡ bỏ cờ khi vi phạm đã được khắc phục.
+*   **Admin Setup**: Cấu hình phí giao dịch, phí hoa hồng (Commission rate), quản lý phân quyền Staff (cấp/thu hồi quyền hạn), quản trị cấu hình hệ thống và chế độ bảo trì.
 
 ---
 

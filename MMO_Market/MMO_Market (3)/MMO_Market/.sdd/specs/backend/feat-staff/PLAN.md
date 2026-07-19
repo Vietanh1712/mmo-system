@@ -208,6 +208,18 @@ Bổ sung cột STT (Sequence Number) được tính toán theo phân trang (`cu
   - Cung cấp REST API endpoint `PUT /api/v1/shop-registrations/{id}/update-status?status=...` để lưu giá trị trạng thái hoạt động mới được chọn vào cột `shop_status` trong bảng `Users`.
   - Triển khai logic AJAX đồng bộ trong `staff-shop-registration-update-status.js` để gửi yêu cầu lưu và điều hướng quay lại danh sách.
 
+## 16. Loại bỏ cột Lý do khỏi bảng danh sách cờ cảnh báo (phiên bản 3.0)
+- **`flags.html`**:
+  - Gỡ bỏ cột "Lý do" (cột tiêu đề `<th>Lý do</th>` và ô dữ liệu `<td th:text="${flag.reason}"></td>`) khỏi bảng hiển thị danh sách cờ cảnh báo để giao diện hiển thị tinh gọn hơn, tránh việc lý do dài gây vỡ khung bảng. Lý do chi tiết vẫn được hiển thị tại trang chi tiết cờ cảnh báo (`flag-detail.html`) và có thể chỉnh sửa tại đây.
+
+## 17. Tích hợp Phiếu hỗ trợ vào Quản lý đơn từ (phiên bản 3.1)
+- **Staff Sidebar & Documents Dashboard (`staff-sidebar.html`, `documents-dashboard.html`):**
+  - Di chuyển menu liên kết "Phiếu Hỗ Trợ" từ cấp cao nhất vào bên trong menu thả xuống (Dropdown) "Quản lý đơn từ".
+  - Cập nhật điều kiện hiển thị trạng thái mở (`is-open`) của Dropdown để tự động kích hoạt khi đang xem trang Phiếu hỗ trợ (`support-tickets`).
+  - Bổ sung thẻ thống kê số lượng phiếu hỗ trợ chờ xử lý (`dashboard.pendingTickets`) và thẻ truy cập nhanh cho "Phiếu hỗ trợ" trong bảng chức năng của Documents Dashboard.
+- **Staff Dashboard Service (`StaffDashboardServiceImpl.java` & `StaffDashboardDTO.java`):**
+  - Bổ sung logic đếm số phiếu hỗ trợ có trạng thái "Open" hoặc "Processing" chưa bị xóa (`isDelete = false`) thông qua `SupportTicketRepository` để truyền giá trị vào DTO hiển thị.
+
 
 
 

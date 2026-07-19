@@ -1,4 +1,4 @@
-# TASKS — Support Ticket Management (`feat-support`)
+# TASKS — Support Ticket Management (Phiếu hỗ trợ) (`feat-support`)
 
 > **Feature ID:** `feat-support`
 > **Phiên bản:** 1.0 | **Cập nhật:** 2026-06-27
@@ -21,7 +21,8 @@
 
 ## Phase 5: Controllers & Security
 
-- [x] **5.1** `SupportTicketController` — API gửi ticket hỗ trợ `/api/support-tickets` và API lấy danh sách cá nhân.
-- [x] **5.2** `SupportTicketController.getAllTickets()` — API lấy danh sách tất cả các ticket cho Staff/Admin tại `/api/support-tickets/all`.
+- [x] **5.1** `SupportTicketController` — API gửi phiếu hỗ trợ `/api/support-tickets` và API lấy danh sách cá nhân.
+- [x] **5.2** `SupportTicketController.getAllTickets()` — API lấy danh sách tất cả các phiếu hỗ trợ cho Staff/Admin tại `/api/support-tickets/all`.
 - [x] **5.3** `SupportTicketController.getTicketById()` — kiểm tra phân quyền sở hữu tránh lỗ hổng bảo mật IDOR.
 - [x] **5.4** `SupportTicketController.updateTicketStatus()` — API cập nhật trạng thái tại `/api/support-tickets/{id}/status` dành riêng cho Staff/Admin.
+

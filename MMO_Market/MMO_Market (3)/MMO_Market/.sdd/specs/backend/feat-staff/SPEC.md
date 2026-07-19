@@ -27,6 +27,11 @@ Hỗ trợ Staff kiểm duyệt KYC, phê duyệt/từ chối các yêu cầu m�
 | **FR-STF-04** | WHEN a Staff toggles a shop's active status, THE SYSTEM SHALL change the user's shop status between `Active` and `Banned`. |
 | **FR-STF-05** | WHEN a Staff updates a Shop Flag, THE SYSTEM SHALL save the new severity level (Warning, Critical, Danger), status, and reason. |
 | **FR-STF-06** | WHEN a Staff resolves a complaint, THE SYSTEM SHALL update the complaint status based on the selected value from the dropdown select element (`InProgress`, `Resolved`, `Rejected`), and update the corresponding escrow ledger. |
+| **FR-STF-07** | WHEN a Staff requests their own permissions, THE SYSTEM SHALL query the database for user permissions and return a list of assigned permission strings. |
+| **FR-STF-08** | WHEN an Admin retrieves staff permissions, THE SYSTEM SHALL query all permissions or specific permissions assigned to a given Staff ID. |
+| **FR-STF-09** | WHEN an Admin assigns permissions, THE SYSTEM SHALL create mappings between specified Staff IDs and Permission names. |
+| **FR-STF-10** | WHEN an Admin revokes permissions, THE SYSTEM SHALL remove mappings between a specified Staff ID and Permission names. |
+| **FR-STF-11** | WHEN a Staff retrieves the documents dashboard, THE SYSTEM SHALL calculate and display the number of pending support tickets. |
 
 ---
 
@@ -94,6 +99,14 @@ CREATE TABLE ShopFlags (
 *   `PUT /api/v1/shop-registrations/{id}/toggle-status`: Bật/Tắt trạng thái hoạt động của Shop (Banned / Active).
 *   `PUT /api/v1/shop-registrations/{id}/update-status`: Cập nhật trạng thái cụ thể của Shop (`status`).
 
+### 6.3 Các API REST phân quyền Staff & Admin
+*   `GET /api/staff/my-permissions`: Lấy danh sách quyền hạn của Staff hiện tại đang đăng nhập.
+*   `GET /api/admin/staff-permissions/permissions`: Lấy danh sách tất cả các quyền hạn hiện có (chỉ dành cho Admin).
+*   `GET /api/admin/staff-permissions/staffs/{staffId}`: Lấy danh sách quyền hạn đã được gán cho một Staff cụ thể (chỉ dành cho Admin).
+*   `GET /api/admin/staff-permissions/all-assigned`: Lấy toàn bộ danh sách gán quyền của tất cả Staff (chỉ dành cho Admin).
+*   `POST /api/admin/staff-permissions/assign`: Gán thêm các quyền hạn mới cho danh sách Staff (chỉ dành cho Admin).
+*   `POST /api/admin/staff-permissions/revoke`: Thu hồi các quyền hạn của một Staff cụ thể (chỉ dành cho Admin).
+
 ---
 
 ## 7. ERROR HANDLING (Xử lý lỗi)
@@ -110,3 +123,4 @@ CREATE TABLE ShopFlags (
 *   **AC-STF-01 (Phân quyền truy cập)**: Chỉ có tài khoản có quyền `ROLE_STAFF` hoặc `ROLE_ADMIN` mới có thể truy cập thành công vào các route `/staff/**` và các API `/api/v1/staff/**`. Các role khác (như `CUSTOMER`, `SELLER`) sẽ bị chặn và trả về lỗi 403.
 *   **AC-STF-02 (Cập nhật trạng thái khiếu nại thống nhất)**: Khi Staff xem chi tiết khiếu nại, thay đổi trạng thái xử lý trên dropdown (`InProgress`, `Resolved`, `Rejected`) và nhấn nút "Cập nhật", hệ thống phải lưu chính xác trạng thái đã chọn và chuyển hướng thành công.
 *   **AC-STF-03 (Bảo toàn số thứ tự STT)**: Tất cả bảng dữ liệu của Staff (KYC, Giao dịch, Rút tiền, Cắm cờ, Duyệt Shop) hiển thị cột STT chính xác theo công thức liên tục qua các trang: `currentPage * pageSize + index + 1`.
+*   **AC-STF-04 (Ẩn cột Lý do trong bảng cờ cảnh báo)**: Giao diện danh sách cờ cảnh báo (`/staff/flags`) không hiển thị cột "Lý do" để tránh làm vỡ layout của bảng do nội dung lý do quá dài. Nội dung lý do này chỉ hiển thị trong trang chi tiết cờ cảnh báo (`/staff/flags/detail`).

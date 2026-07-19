@@ -52,7 +52,7 @@ async function loadTickets() {
             </tr>
         `).join('');
     } catch (e) {
-        console.error('Lỗi tải ticket:', e);
+        console.error('Lỗi tải phiếu hỗ trợ:', e);
     }
 }
 
@@ -102,7 +102,7 @@ async function submitNewTicket(e) {
             loadTickets();
         } else {
             const err = await res.json().catch(() => ({}));
-            showErrorToast(err.message || 'Gửi ticket thất bại, vui lòng thử lại.');
+            showErrorToast(err.message || 'Gửi phiếu hỗ trợ thất bại, vui lòng thử lại.');
         }
     } catch (ex) {
         // authFetch tự xử lý 401 (redirect về login)
@@ -111,7 +111,7 @@ async function submitNewTicket(e) {
         showErrorToast('Lỗi kết nối, vui lòng thử lại.');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa fa-paper-plane"></i> Gửi ticket hỗ trợ';
+        btn.innerHTML = '<i class="fa fa-paper-plane"></i> Gửi phiếu hỗ trợ';
     }
 }
 
@@ -144,7 +144,7 @@ async function viewTicketDetail(id) {
         document.getElementById('ticket-detail-modal').classList.add('is-open');
         document.body.style.overflow = 'hidden';
     } catch (e) {
-        console.error('Lỗi lấy chi tiết ticket:', e);
+        console.error('Lỗi lấy chi tiết phiếu hỗ trợ:', e);
     }
 }
 

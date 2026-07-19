@@ -27,7 +27,7 @@ Các tệp tin thực tế trong dự án:
   * View: `templates/cart.html`
 - **Thanh toán đơn hàng (`/checkout`)**:
   * View: `templates/checkout.html`
-- **Trực tiếp gửi ticket hỗ trợ (`/support`)**:
+- **Trực tiếp gửi phiếu hỗ trợ (`/support`)**:
   * View: `templates/support.html`
   * Script: `static/js/support.js`
 - **Tin nhắn chat (`/messages`)**:

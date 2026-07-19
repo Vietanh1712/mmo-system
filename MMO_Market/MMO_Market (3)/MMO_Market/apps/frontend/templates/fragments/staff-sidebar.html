@@ -10,11 +10,7 @@
                href="/staff/dashboard">
                 <i class="fa fa-dashboard"></i> Tổng quan
             </a>
-            <a class="staff-sidebar__link"
-               th:classappend="${active == 'support-tickets'} ? ' is-active' : ''"
-               href="/staff/support-tickets">
-                <i class="fa fa-ticket"></i> Ticket Hỗ Trợ
-            </a>
+
             <a class="staff-sidebar__link"
                th:classappend="${active == 'kyc'} ? ' is-active' : ''"
                href="/staff/kyc"
@@ -29,7 +25,7 @@
             </a>
             
             <!-- Collapsible Dropdown for Quản lý đơn từ -->
-            <div class="staff-sidebar__dropdown" th:classappend="${active == 'complaints' or active == 'transactions' or active == 'withdrawals' or active == 'documents'} ? 'is-open' : ''">
+            <div class="staff-sidebar__dropdown" th:classappend="${active == 'complaints' or active == 'transactions' or active == 'withdrawals' or active == 'support-tickets' or active == 'documents'} ? 'is-open' : ''">
                 <div class="staff-sidebar__dropdown-header">
                     <a class="staff-sidebar__link staff-sidebar__dropdown-link-main"
                        th:classappend="${active == 'documents'} ? ' is-active' : ''"
@@ -47,6 +43,11 @@
                        href="/staff/complaints"
                        data-required-permission="HANDLE_DISPUTES">
                         <i class="fa fa-exclamation-circle"></i> Khiếu nại
+                    </a>
+                    <a class="staff-sidebar__link staff-sidebar__dropdown-item"
+                       th:classappend="${active == 'support-tickets'} ? ' is-active' : ''"
+                       href="/staff/support-tickets">
+                        <i class="fa fa-ticket"></i> Phiếu Hỗ Trợ
                     </a>
                     <a class="staff-sidebar__link staff-sidebar__dropdown-item"
                        th:classappend="${active == 'transactions'} ? ' is-active' : ''"
