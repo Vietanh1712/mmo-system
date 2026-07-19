@@ -190,6 +190,38 @@
     gap: 20px;
 }
 
+.staff-stat-grid--3cols {
+    grid-template-columns: repeat(3, 1fr) !important;
+}
+
+@media (max-width: 992px) {
+    .staff-stat-grid--3cols {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .staff-stat-grid--3cols {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.staff-stat-grid--4cols {
+    grid-template-columns: repeat(4, 1fr) !important;
+}
+
+@media (max-width: 1200px) {
+    .staff-stat-grid--4cols {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .staff-stat-grid--4cols {
+        grid-template-columns: 1fr !important;
+    }
+}
+
 .staff-stat-card {
     position: relative;
     overflow: hidden;
