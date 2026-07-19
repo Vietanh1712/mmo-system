@@ -45,11 +45,11 @@
 ```
 Bước 1  [Guest]:      Truy cập Trang chủ của MMO Market
 Bước 2  [Frontend]:   GET /api/v1/products/public (hoặc lọc danh mục)
-Bước 3  [Backend]:    Truy vấn DB lấy danh sách sản phẩm (chỉ lấy isDelete = 0 và enabled = 1)
+Bước 3  [Backend]:    Truy vấn DB lấy danh sách sản phẩm (chỉ lấy isDelete = 0 và seller.isDelete = 0 và seller.shopStatus NOT IN ('Locked', 'Banned', 'Pending'))
                        Trả về danh sách sản phẩm kèm tên shop, khoảng giá, và số lượng tồn kho
 Bước 4  [Guest]:      Nhập từ khóa "Netflix" vào ô tìm kiếm, bấm Enter
 Bước 5  [Frontend]:   GET /api/v1/products/search?query=Netflix
-Bước 6  [Backend]:    Tìm kiếm kết quả theo tên/mô tả sản phẩm, lọc các shop bị khóa (Flags)
+Bước 6  [Backend]:    Tìm kiếm kết quả theo tên/mô tả sản phẩm, lọc bỏ các shop bị khóa/banned/pending (shopStatus in Locked, Banned, Pending)
                        Trả về danh sách kết quả phù hợp
 Bước 7  [Guest]:      Nhấp vào một sản phẩm cụ thể để xem chi tiết
 Bước 8  [Frontend]:   GET /api/v1/products/{productId}
@@ -75,9 +75,9 @@ Bước 6  [Frontend]:   Đổi trạng thái nút thành "Đang theo dõi"
 
 | Mã | Quy tắc | Chi tiết |
 |:---|:---|:---|
-| BR-05-01 | Lọc Shop vi phạm | Không hiển thị sản phẩm của các Shop đang bị khóa hoặc tạm ngưng hoạt động |
+| BR-05-01 | Lọc Shop vi phạm | Không hiển thị sản phẩm của các Shop đang bị khóa (Locked do ví âm), bị cấm (Banned) hoặc chưa được duyệt (Pending) |
 | BR-05-02 | Tự theo dõi chính mình | Không cho phép Seller tự nhấn theo dõi Shop của chính bản thân |
-| BR-05-03 | Lọc sản phẩm đã xóa | Luôn áp dụng điều kiện `isDelete = 0` khi truy vấn danh sách sản phẩm |
+| BR-05-03 | Lọc sản phẩm đã xóa | Luôn áp dụng điều kiện `isDelete = 0` (của cả sản phẩm, biến thể và người bán) khi truy vấn danh sách sản phẩm |
 
 ---
 

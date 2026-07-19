@@ -1,8 +1,7 @@
 # UC-16 — Đặt Mua Trước (Pre-Order Engine)
 
 > **Feature:** `feat-preorder` | **Phiên bản:** 1.0 | **Trạng thái:** Published
-> **Tham chiếu FR:** FR-PRE-01 đến FR-PRE-10
-> **Cập nhật:** 2026-06-30
+> **Cập nhật:** 2026-07-16
 
 ---
 
@@ -13,8 +12,8 @@
 | **Mã Use Case** | UC-16 |
 | **Tên** | Đặt Mua Trước (Pre-Order Engine) |
 | **Tác nhân chính** | Người mua (Customer), Người bán (Seller) |
-| **Mô tả ngắn** | Khi kho hàng biến thể sản phẩm số bằng 0, người mua có thể gửi yêu cầu mua trước và đóng băng số tiền thanh toán. Khi người bán bổ sung kho hàng (tải lên tài sản số mới), hệ thống tự động giao hàng cho người mua theo thứ tự FIFO. |
-| **Độ ưu tiên** | Trung bình (P1) — tối ưu hóa doanh số khi hết hàng tạm thời |
+| **Mô tả ngắn** | Khi kho hàng sản phẩm số tạm thời hết hàng (bằng 0), người mua có thể gửi yêu cầu đặt trước (ghi rõ số lượng mong muốn, tổng giá dự kiến, ghi chú nhu cầu). Người bán tiếp nhận yêu cầu đặt trước để chủ động bổ sung nguồn hàng kỹ thuật số phù hợp. |
+| **Độ ưu tiên** | Trung bình (P1) — tối ưu hóa thu thập nhu cầu khi hết hàng tạm thời |
 
 ---
 
@@ -24,52 +23,36 @@
 
 | Tác nhân | Vai trò |
 |:---|:---|
-| **Người mua (Customer)** | Đăng ký mua trước, bị đóng băng số dư |
-| **Người bán (Seller)** | Tải lên tài sản số mới để bổ sung kho hàng |
-| **PreOrderEngine (System)** | Quét và tự động khớp đơn hàng mua trước khi có kho mới |
+| **Người mua (Customer)** | Đăng ký thông tin yêu cầu đặt hàng trước đối với sản phẩm hết hàng |
+| **Người bán (Seller)** | Theo dõi danh sách yêu cầu đặt trước của khách hàng để chuẩn bị hàng hóa và bổ sung tồn kho |
 
 ### 2.2 Điều Kiện Tiền Quyết (Preconditions)
 
-- Biến thể sản phẩm số đã kích hoạt tính năng Pre-order.
-- Số lượng tồn kho hiện tại của biến thể bằng `0`.
-- Số dư khả dụng của Buyer đủ thanh toán (`available_balance >= amount`).
+- Biến thể sản phẩm số hiện tại đang ở trạng thái hết hàng (`stock = 0`) hoặc chưa có sẵn trên sàn.
+- Người mua đã đăng nhập vào hệ thống (có Access Token hợp lệ).
 
 ### 2.3 Hậu Điều Kiện (Postconditions)
 
-- **Đăng ký thành công:** Tạo bản ghi trong `PreOrders` (status = 'Pending'), đóng băng ví của Buyer.
-- **Khớp hàng thành công:** Chuyển đổi trạng thái `PreOrders.status = 'Completed'`, tạo `Transaction` (status = 'Escrow'), trích xuất và bàn giao tài sản số, gửi thông báo.
+- Yêu cầu được ghi nhận thành công trong cơ sở dữ liệu (`PreOrders` có status mặc định là `'Pending'`).
+- Người bán nhận được thông tin để chuẩn bị hàng. Khách hàng theo dõi tiến trình qua danh sách đơn đặt trước.
 
 ---
 
 ## 3. Luồng Xử Lý
 
-### 3.1 Luồng Chính — Đăng ký và Tự động giao hàng (Happy Path)
+### 3.1 Luồng Chính — Đăng ký nhu cầu đặt mua trước (Happy Path)
 
 ```
-Bước 1  [Customer]:   Xem chi tiết biến thể sản phẩm, thấy số lượng tồn kho bằng 0, nhấn "Đặt mua trước"
-Bước 2  [Frontend]:   Hiển thị biểu mẫu xác nhận đặt trước (số lượng, tổng tiền)
-Bước 3  [Customer]:   Nhấn nút "Xác nhận đặt trước"
-Bước 4  [Frontend]:   POST /api/preorders/request { variantId, quantity }
-Bước 5  [Backend]:    Validate: available_balance của Buyer >= tổng giá trị
-                       - @Transactional:
-                         - Khóa Pessimistic Lock ví Buyer
-                         - Khấu trừ available_balance của Buyer và đưa vào hold_balance mua trước
-                         - Tạo bản ghi PreOrders ở trạng thái 'Pending'
-                       Trả về: status = 200, preorderId, status = "Pending"
-Bước 6  [Frontend]:   Hiển thị thông báo đăng ký mua trước thành công, số tiền đã tạm khóa
-Bước 7  [Seller]:     Tải lên danh sách mã code/tài khoản mới để bổ sung kho
-Bước 8  [Frontend-S]: POST /api/seller/products/assets/upload (Batch upload)
-Bước 9  [Backend]:    Lưu trữ tài sản số mới (DigitalAssets), tự động kích hoạt PreOrderEngine chạy bất đồng bộ
-Bước 10 [Engine]:     Quét danh sách PreOrders đang Pending của biến thể này sắp xếp theo created_at tăng dần (FIFO)
-                       Với mỗi PreOrder:
-                         - Lấy ra số lượng DigitalAssets mới tương ứng
-                         - @Transactional:
-                           - Chuyển số tiền từ hold_balance của Buyer sang ví tạm giữ Escrow của hệ thống
-                           - Gán transaction_id, cập nhật is_sold = 1 cho các DigitalAssets
-                           - Giải mã mã code bằng AES
-                           - Cập nhật PreOrders.status = 'Completed'
-                           - Tạo Transactions (status = 'Escrow')
-                           - Gửi thông báo bàn giao mã thẻ đã giải mã cho Buyer qua Notification
+Bước 1  [Customer]:   Xem trang chi tiết sản phẩm, thấy kho hàng bằng 0, nhấn nút "Đặt trước sản phẩm"
+Bước 2  [Frontend]:   Chuyển hướng sang trang đặt trước /pre-orders/new?productId={id}&price={price}...
+Bước 3  [Customer]:   Nhập số lượng (quantity) mong muốn, tổng giá dự kiến (expectedPriceVnd) và Ghi chú (notes) cho Seller
+Bước 4  [Customer]:   Nhấn nút "Gửi yêu cầu đặt trước"
+Bước 5  [Frontend]:   Gửi yêu cầu POST /api/v1/pre-orders với body: { productId, quantity, expectedPriceVnd, notes } kèm token
+Bước 6  [Backend]:    Validate thông tin đầu vào (quantity >= 1, expectedPriceVnd >= 1, kiểm tra tài khoản và sản phẩm tồn tại)
+Bước 7  [Backend]:    Tạo bản ghi trong bảng PreOrders với trạng thái mặc định 'Pending', gán customer_id từ token
+Bước 8  [Backend]:    Trả về thông tin PreOrderResponse vừa được lưu thành công (HTTP 201 Created)
+Bước 9  [Frontend]:   Ẩn form đăng ký, hiển thị hộp thoại thông báo thành công và cung cấp nút liên kết tới danh sách đơn đặt trước
+Bước 10 [Customer]:   Nhấn nút "Xem đơn đặt trước" để đi tới trang /pre-orders theo dõi danh sách
 ```
 
 ---
@@ -78,60 +61,46 @@ Bước 10 [Engine]:     Quét danh sách PreOrders đang Pending của biến t
 
 | Mã | Quy tắc | Chi tiết |
 |:---|:---|:---|
-| BR-16-01 | Ưu tiên thời gian (FIFO) | Việc trả hàng mua trước bắt buộc thực hiện đúng thứ tự thời gian đăng ký (đăng ký trước được nhận trước) |
-| BR-16-02 | Hoàn tiền khi hủy | Nếu người dùng thực hiện hủy yêu cầu mua trước khi chưa được giao hàng, hệ thống giải phóng hold_balance hoàn trả lại available_balance cho Buyer |
+| BR-16-01 | Ghi nhận nhu cầu | Luồng Pre-order hiện tại hoạt động theo cơ chế **Thu thập nhu cầu** (wishlist/request collector), hệ thống không thực hiện trừ tiền hoặc giữ tiền ví của người mua tại thời điểm tạo đơn đặt trước. |
+| BR-16-02 | Trạng thái mặc định | Mọi đơn đặt hàng trước khi được tạo mới luôn mang trạng thái mặc định ban đầu là `'Pending'`. |
 
 ---
 
-## 5. Quy Tắc Kiểm Tra Đầu Vào
+## 5. Quy Tắc Kiểm Tra Đầu Vào (Validation)
 
-### POST /api/preorders/request
+### POST /api/v1/pre-orders
 
 | Trường | Kiểm tra | Lỗi khi vi phạm |
 |:---|:---|:---|
-| `variantId` | Bắt buộc, `> 0` | "Biến thể không hợp lệ" |
-| `quantity` | Bắt buộc, `> 0` | "Số lượng mua trước không hợp lệ" |
+| `productId` | Bắt buộc, không được để trống | "Sản phẩm không được để trống." |
+| `quantity` | Bắt buộc, phải là số nguyên `min = 1` | "Số lượng phải lớn hơn 0." |
+| `expectedPriceVnd` | Bắt buộc, phải là số nguyên lớn `min = 1` | "Tổng giá đặt trước phải lớn hơn 0." |
+| `notes` | Tùy chọn, tối đa 2000 ký tự | "Ghi chú không được vượt quá 2000 ký tự" |
 
 ---
 
-## 6. Sơ Đồ Tuần Tự (Sequence Diagram)
-
-### Luồng Xử Lý Pre-Order Tự Động Khi Có Kho Mới
+## 6. Sơ Đồ Tuần Tự Tương Tác (Sequence Diagram)
 
 ```mermaid
 sequenceDiagram
-    actor S as Người bán (Seller)
-    participant FE as Frontend Seller
-    participant PAC as ProductAssetController
-    participant POE as PreOrderEngine
+    actor C as Khách hàng (Customer)
+    participant FE as Giao diện Frontend
+    participant POC as PreOrderController
+    participant POS as PreOrderService
     participant POR as PreOrderRepository
-    participant DAR as DigitalAssetRepository
-    participant TR as TransactionRepository
-    participant UR as UserRepository
+    participant DB as SQL Server
 
-    S->>FE: Tải lên mã code mới (Bổ sung kho)
-    FE->>PAC: POST /api/seller/products/assets/upload
-    PAC->>DAR: saveAll(NewAssets)
-    PAC-->>FE: HTTP 200 OK
-    
-    rect rgb(240, 248, 255)
-        Note over PAC, POE: Kích hoạt Engine chạy Asynchronous
-        PAC->>POE: triggerPreOrderEngine(variantId)
-        POE->>POR: findPendingPreOrdersFIFO(variantId)
-        POR-->>POE: List<PreOrder>
-        
-        loop Mỗi PreOrder
-            POE->>DAR: findAvailableAssets(variantId, qty)
-            DAR-->>POE: List<DigitalAsset>
-            
-            Note over POE, UR: Bắt đầu Transaction
-            POE->>UR: moveHoldToEscrow(buyerId, amount)
-            POE->>TR: save(Transaction{status='Escrow'})
-            POE->>DAR: updateIsSold(List, transId)
-            POE->>POR: updateStatus(preorderId, 'Completed')
-            POE->>POE: triggerNotification(buyerId, "Mã hàng của bạn đã được giao!")
-        end
-    end
+    C->>FE: Điền số lượng, tổng giá kỳ vọng, ghi chú & click "Gửi"
+    FE->>POC: POST /api/v1/pre-orders (JSON Payload + Token)
+    Note over POC: Xác thực Token của Customer
+    POC->>POS: createPreOrder(customerId, PreOrderRequest)
+    Note over POS: Kiểm tra tính hợp lệ đầu vào
+    POS->>POR: save(PreOrder)
+    POR->>DB: INSERT INTO PreOrders (status = 'Pending')
+    DB-->>POR: OK (PreOrder Saved)
+    POS-->>POC: PreOrderResponse
+    POC-->>FE: HTTP 201 Created (JSON Response)
+    FE-->>C: Hiển thị thông báo gửi yêu cầu đặt trước thành công
 ```
 
 ---
@@ -140,24 +109,16 @@ sequenceDiagram
 
 | Phương thức | Endpoint | Mô tả |
 |:---|:---|:---|
-| `POST` | `/api/preorders/request` | Yêu cầu đăng ký mua trước |
-| `POST` | `/api/preorders/{id}/cancel` | Hủy yêu cầu mua trước |
+| `POST` | `/api/v1/pre-orders` | Gửi yêu cầu đăng ký đặt mua sản phẩm trước |
+| `GET` | `/api/v1/pre-orders` | Xem danh sách các yêu cầu đặt trước cá nhân của Buyer |
 
 ---
 
 ## 8. Tiêu Chí Chấp Nhận (Acceptance Criteria)
 
-### AC-16-01 — Đăng ký thành công đóng băng tiền người mua
-
-- **Cho trước:** Biến thể `Netflix 1 tháng` có số lượng tồn kho là 0. `User G` có `available_balance = 100,000` VNĐ.
-- **Khi:** `User G` thực hiện gửi yêu cầu mua trước 1 sản phẩm trị giá 80,000 VNĐ
+### AC-16-01 — Gửi yêu cầu thành công lưu trữ dữ liệu
+- **Cho trước:** Người dùng `Customer A` đã đăng nhập và đang xem sản phẩm `Tài khoản Premium Netflix` hết hàng.
+- **Khi:** `Customer A` điền form đặt mua với số lượng `2`, tổng tiền `300000` VNĐ, ghi chú `"Giao tài khoản trong ngày"`.
 - **Thì:**
-  - Hệ thống tạo bản ghi `PreOrders` ở trạng thái `Pending`
-  - Ví của `User G` chuyển thành `available_balance = 20000` VNĐ và `hold_balance = 80000` VNĐ.
-
----
-
-## 9. Ngoài Phạm Vi (Out of Scope)
-
-- ❌ Hủy đăng ký mua trước tự động do quá hạn chờ (chỉ hỗ trợ khách hàng tự hủy thủ công).
-- ❌ Hỗ trợ mua trước các sản phẩm không có tùy chọn phân loại (non-variant).
+  - Hệ thống ghi nhận tạo mới 1 dòng dữ liệu trong bảng `PreOrders` với `status = 'Pending'`.
+  - Trả về mã phản hồi `201 Created` kèm theo dữ liệu đối tượng dạng DTO hiển thị đầy đủ thông tin vừa tạo.

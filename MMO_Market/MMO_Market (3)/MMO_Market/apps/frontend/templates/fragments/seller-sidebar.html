@@ -29,6 +29,12 @@
             <span>Tổng quan</span>
         </a>
         <a class="seller-sidebar__menu-link"
+           th:classappend="${activeMenu == 'messages'} ? ' seller-sidebar__menu-link--active' : ''"
+           th:href="@{/messages(sellerView=true)}">
+            <i class="fa fa-comments" aria-hidden="true"></i>
+            <span>Tin nhắn</span>
+        </a>
+        <a class="seller-sidebar__menu-link"
            th:classappend="${activeMenu == 'shop-info'} ? ' seller-sidebar__menu-link--active' : ''"
            th:href="@{/seller/shop-info}">
             <i class="fa fa-shopping-basket" aria-hidden="true"></i>
@@ -45,6 +51,12 @@
            th:href="@{/seller/inventory}">
             <i class="fa fa-cubes" aria-hidden="true"></i>
             <span>Quản lý kho</span>
+        </a>
+        <a class="seller-sidebar__menu-link"
+           th:classappend="${activeMenu == 'preorders'} ? ' seller-sidebar__menu-link--active' : ''"
+           th:href="@{/seller/preorders}">
+            <i class="fa fa-calendar-check-o" aria-hidden="true"></i>
+            <span>Đơn đặt trước</span>
         </a>
         <a class="seller-sidebar__menu-link"
            th:classappend="${activeMenu == 'transactions'} ? ' seller-sidebar__menu-link--active' : ''"

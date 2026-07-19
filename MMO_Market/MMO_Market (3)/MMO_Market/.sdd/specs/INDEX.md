@@ -27,6 +27,7 @@ Nằm trong thư mục `.sdd/specs/backend/`, quản lý chi tiết logic nghi�
 - **Staff Operations**: [feat-staff/SPEC.md](./backend/feat-staff/SPEC.md) (Các quyền duyệt kiểm duyệt hệ thống)
 - **Admin Revenue Reports**: [feat-admin/SPEC.md](./backend/feat-admin/SPEC.md) (Thống kê doanh số, biểu phí hoa hồng)
 - **File Upload Service**: [feat-upload/SPEC.md](./backend/feat-upload/SPEC.md) (Quản lý lưu trữ tệp đính kèm)
+- **Product Reviews & Ratings**: [feat-review/SPEC.md](./backend/feat-review/SPEC.md) (Đánh giá và phản hồi sản phẩm sau khi mua)
 
 ---
 
@@ -39,6 +40,7 @@ Nằm trong thư mục `.sdd/specs/frontend/`, mô tả chi tiết giao diện (
 - [SPEC-wallet.md](./frontend/feat-customer/SPEC-wallet.md): Trang quản lý ví, nạp tiền tự động qua QR.
 - [SPEC-orders.md](./frontend/feat-customer/SPEC-orders.md): Quản lý lịch sử đơn hàng đã mua, giải phóng Escrow sớm.
 - [SPEC-order-detail.md](./frontend/feat-customer/SPEC-order-detail.md): Xem mã thẻ số đã giải mã AES.
+- [SPEC-leave-feedback.md](./frontend/feat-customer/SPEC-leave-feedback.md): Viết nhận xét và đánh giá sao cho sản phẩm.
 
 ### Seller Dashboard (`feat-seller`)
 - [SPEC-dashboard.md](./frontend/feat-seller/SPEC-dashboard.md): Màn hình thống kê doanh số tổng quan cho Seller.

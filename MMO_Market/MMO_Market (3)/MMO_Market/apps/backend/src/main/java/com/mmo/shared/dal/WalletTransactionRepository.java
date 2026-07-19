@@ -13,4 +13,6 @@ public interface WalletTransactionRepository extends JpaRepository<WalletTransac
     Page<WalletTransaction> findByUser_IdAndIsDeleteFalseOrderByCreatedAtDesc(Long userId, Pageable pageable);
     
     List<WalletTransaction> findByUser_IdAndIsDeleteFalse(Long userId);
+
+    java.util.Optional<WalletTransaction> findByReferenceIdAndType(Long referenceId, String type);
 }

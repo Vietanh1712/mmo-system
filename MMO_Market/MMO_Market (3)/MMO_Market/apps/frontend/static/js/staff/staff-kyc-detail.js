@@ -104,6 +104,15 @@ async function reviewKyc(status) {
 }
 
 function showToast(message, type) {
+    if (type === 'danger' && typeof window.showErrorToast === 'function') {
+        window.showErrorToast(message);
+        return;
+    }
+    if (type === 'success' && typeof window.showSuccessToast === 'function') {
+        window.showSuccessToast(message);
+        return;
+    }
+
     let container = document.getElementById('staffToastContainer');
     if (!container) {
         container = document.createElement('div');

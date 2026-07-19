@@ -79,7 +79,10 @@ public class HomeController {
     }
 
     @GetMapping("/messages")
-    public String showMessagesPage() {
+    public String showMessagesPage(@RequestParam(required=false) Boolean sellerView, Model model) {
+        if (sellerView != null && sellerView) {
+            model.addAttribute("isSellerView", true);
+        }
         return "messages";
     }
 

@@ -252,7 +252,7 @@ class NotificationServiceTest {
     @Test
     void getUserNotificationsReturnsOnlyBroadcastsForAdminAndStaff() throws Exception {
         when(userRepository.findByIdAndIsDeleteFalse(1L)).thenReturn(Optional.of(adminUser));
-        when(objectMapper.readTree(anyString())).thenCallRealMethod();
+        when(notificationRepository.findAllByUserIdAndIsDeleteFalseOrderByCreatedAtDesc(1L)).thenReturn(new ArrayList<>());
 
         List<Notification> broadcasts = new ArrayList<>();
         broadcasts.add(Notification.builder()
@@ -270,7 +270,7 @@ class NotificationServiceTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("Notice", result.get(0).get("title"));
-        verify(notificationRepository, never()).findAllByUserIdAndIsDeleteFalseOrderByCreatedAtDesc(anyLong());
+        verify(notificationRepository).findAllByUserIdAndIsDeleteFalseOrderByCreatedAtDesc(1L);
     }
 
 

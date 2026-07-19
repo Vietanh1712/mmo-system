@@ -114,6 +114,14 @@
             justify-content: center;
             align-items: center;
             font-size: 40px;
+            overflow: hidden;
+        }
+
+        .checkout-product__icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
         .checkout-product__info {
@@ -166,6 +174,14 @@
             justify-content: center;
             align-items: center;
             font-size: 24px;
+            overflow: hidden;
+        }
+
+        .checkout-cart-item__icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
         .checkout-cart-item__name {
@@ -763,6 +779,7 @@
             const paramPrice = checkoutUrlParams.get('price');
             const paramIcon = checkoutUrlParams.get('icon');
             const paramIconColor = checkoutUrlParams.get('iconColor');
+            const paramImageUrl = checkoutUrlParams.get('imageUrl');
 
             // Override selectedProduct with URL params if available (ensures sync with product-detail selection)
             if (checkoutMode !== 'cart' && paramProductName) {
@@ -771,6 +788,7 @@
                     seller: paramSellerName || selectedProduct.seller,
                     icon: paramIcon || selectedProduct.icon,
                     color: paramIconColor || selectedProduct.color,
+                    imageUrl: paramImageUrl || '',
                     prices: {}
                 };
                 if (paramPrice) {
@@ -783,9 +801,14 @@
             document.getElementById('productName').innerText = selectedProduct.name;
             document.getElementById('productSeller').innerText = selectedProduct.seller;
             
-            const prodIconEl = document.getElementById('productIcon');
-            prodIconEl.className = `fa ${selectedProduct.icon}`;
-            prodIconEl.style.color = selectedProduct.color;
+            const prodIconContainer = document.querySelector('.checkout-product__icon');
+            if (prodIconContainer) {
+                if (selectedProduct.imageUrl && !selectedProduct.imageUrl.includes('placeholder.com')) {
+                    prodIconContainer.innerHTML = `<img src="${selectedProduct.imageUrl}" id="productIcon" alt="${selectedProduct.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">`;
+                } else {
+                    prodIconContainer.innerHTML = `<i class="fa ${selectedProduct.icon}" id="productIcon" style="color: ${selectedProduct.color}"></i>`;
+                }
+            }
 
             // Determine if duration variant
             const displayLabel = paramVariantLabel || (duration + " Tháng");
@@ -1177,6 +1200,7 @@
                         price: Number(item.price || 0),
                         icon: item.icon || 'fa-cube',
                         iconColor: item.iconColor || '#ea580c',
+                        imageUrl: item.imageUrl || '',
                         quantity: Math.max(1, Number(item.quantity || 1))
                     }));
             } catch (error) {
@@ -1192,7 +1216,9 @@
             container.innerHTML = checkoutItems.map(item => `
                 <div class="checkout-cart-item">
                     <div class="checkout-cart-item__icon">
-                        <i class="fa ${item.icon}" style="color: ${item.iconColor}"></i>
+                        ${item.imageUrl && !item.imageUrl.includes('placeholder.com')
+                            ? `<img src="${item.imageUrl}" alt="${item.productName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">`
+                            : `<i class="fa ${item.icon}" style="color: ${item.iconColor}"></i>`}
                     </div>
                     <div>
                         <div class="checkout-cart-item__name">${escapeHtml(item.productName)}</div>
