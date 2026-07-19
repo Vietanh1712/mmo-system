@@ -32,6 +32,8 @@ Hỗ trợ Staff kiểm duyệt KYC, phê duyệt/từ chối các yêu cầu m�
 | **FR-STF-09** | WHEN an Admin assigns permissions, THE SYSTEM SHALL create mappings between specified Staff IDs and Permission names. |
 | **FR-STF-10** | WHEN an Admin revokes permissions, THE SYSTEM SHALL remove mappings between a specified Staff ID and Permission names. |
 | **FR-STF-11** | WHEN a Staff retrieves the documents dashboard, THE SYSTEM SHALL calculate and display the number of pending support tickets. |
+| **FR-STF-12** | WHEN a Staff searches KYC requests, THE SYSTEM SHALL perform a multi-field search across request code, ID number, user full name, and email, automatically stripping any leading '#' character. |
+| **FR-STF-13** | WHEN a Staff requests KYC statistics, THE SYSTEM SHALL return aggregated counts for total, pending, approved, and rejected KYC requests. |
 
 ---
 
@@ -87,9 +89,10 @@ CREATE TABLE ShopFlags (
 
 
 ### 6.2 Các API REST của KYC & Shop
-*   `GET /api/v1/staff/kyc`: Lọc và phân trang các yêu cầu KYC (`status`, `requestCode`, `idType`).
+*   `GET /api/v1/staff/kyc`: Lọc và phân trang các yêu cầu KYC theo mã hồ sơ, số giấy tờ, tên, email (`status`, `requestCode`, `idType`). Tự động xử lý loại bỏ ký tự `#` ở đầu mã.
+*   `GET /api/v1/staff/kyc/stats`: Lấy thống kê số lượng hồ sơ KYC (tổng số, chờ duyệt, đã duyệt, từ chối).
 *   `GET /api/v1/staff/kyc/{id}`: Xem chi tiết yêu cầu KYC.
-*   `POST /api/v1/staff/kyc/{id}/review`: Phê duyệt hoặc từ chối yêu cầu KYC kèm bình luận (`status`, `comment`).
+*   `POST /api/v1/staff/kyc/{id}/review`: Phê duyệt hoặc từ chối yêu cầu KYC kèm lý do từ chối (`status`, `rejectionReason`, `version`).
 *   `GET /api/v1/shop-registrations`: Danh sách phân trang yêu cầu đăng ký shop.
 *   `GET /api/v1/shop-registrations/{id}`: Chi tiết yêu cầu đăng ký Shop.
 *   `GET /api/v1/shop-registrations/stats`: Thống kê 6 chỉ số của Shop (trả về JSON dạng Map gồm `totalShops`, `totalDeposit`, `permanentBannedShops`, `indefiniteLockedShops`, `temporarySuspendedShops`, `withdrawnShops`).

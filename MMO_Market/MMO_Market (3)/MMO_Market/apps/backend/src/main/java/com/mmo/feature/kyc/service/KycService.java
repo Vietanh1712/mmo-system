@@ -222,6 +222,12 @@ public class KycService {
             org.springframework.data.domain.Pageable pageable) {
         
         String cleanCode = (requestCode == null || requestCode.isBlank()) ? null : requestCode.trim();
+        if (cleanCode != null && cleanCode.startsWith("#")) {
+            cleanCode = cleanCode.substring(1).trim();
+        }
+        if (cleanCode != null && cleanCode.isBlank()) {
+            cleanCode = null;
+        }
         org.springframework.data.domain.Page<KycRequest> page = kycRequestRepository.searchKycRequests(status, cleanCode, idType, pageable);
         return page.map(this::mapToDto);
     }
