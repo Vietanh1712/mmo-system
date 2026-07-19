@@ -6,7 +6,13 @@
   <component name="ChangeListManager">
     <list default="true" id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-kyc.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-kyc.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/PLAN.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/PLAN.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/SPEC.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/SPEC.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/kyc/controller/api/KycController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/kyc/controller/api/KycController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/kyc/service/KycService.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/kyc/service/KycService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-kyc.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-kyc.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-complaints.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-complaints.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/complaints.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/complaints.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

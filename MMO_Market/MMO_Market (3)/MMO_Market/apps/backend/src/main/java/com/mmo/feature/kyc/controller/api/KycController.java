@@ -34,7 +34,7 @@ public class KycController {
     private KycStorageService kycStorageService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ROLE_CUSTOMER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER', 'ROLE_SELLER')")
     public ResponseEntity<?> submitKyc(
             Authentication authentication,
             @RequestParam("fullName") String fullName,

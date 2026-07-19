@@ -93,7 +93,7 @@ function renderStaffComplaintsTable(list, isBackendDriven = true) {
     if (list.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" style="text-align: center; padding: 24px; color: var(--ds-text-subtle);">
+                <td colspan="7" style="text-align: center; padding: 24px; color: var(--ds-text-subtle);">
                     Không tìm thấy khiếu nại nào phù hợp với bộ lọc.
                 </td>
             </tr>
@@ -102,7 +102,8 @@ function renderStaffComplaintsTable(list, isBackendDriven = true) {
         return;
     }
 
-    tbody.innerHTML = list.map(item => {
+    tbody.innerHTML = list.map((item, index) => {
+        const stt = currentPage * pageSize + index + 1;
         let badgeClass = 'ds-badge-warning';
         let statusText = 'Đang xử lý';
         
@@ -125,6 +126,7 @@ function renderStaffComplaintsTable(list, isBackendDriven = true) {
 
         return `
             <tr>
+                <td class="ds-table-center">${stt}</td>
                 <td>#${escapeHtml(item.id)}</td>
                 <td>
                     <div class="ds-entity">

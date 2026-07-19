@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
 const DEFAULT_KYC_STATE = { status: 'NOT_SUBMITTED' };
 
 let accountSidebar = null;
@@ -21,6 +21,14 @@ function bindKycEvents() {
     bindFileNamePreview('kycFrontFile', 'front');
     bindFileNamePreview('kycBackFile', 'back');
     bindFileNamePreview('kycSelfieFile', 'selfie');
+
+    const dobDisplay = document.getElementById('kycDateOfBirthDisplay');
+    if (dobDisplay) {
+        dobDisplay.addEventListener('input', () => {
+            const hidden = document.getElementById('kycDateOfBirth');
+            if (hidden) hidden.value = dobDisplay.value.trim();
+        });
+    }
 }
 
 async function loadKycPage() {
@@ -272,6 +280,12 @@ function prefillKycForm() {
     document.getElementById('kycConfirm').checked = false;
 }
 
+function getDobValue() {
+    const displayVal = document.getElementById('kycDateOfBirthDisplay')?.value.trim();
+    const hiddenVal = document.getElementById('kycDateOfBirth')?.value.trim();
+    return displayVal || hiddenVal || '';
+}
+
 async function submitKycForm(event) {
     event.preventDefault();
 
@@ -282,7 +296,7 @@ async function submitKycForm(event) {
     const formData = new FormData();
     formData.append('fullName', document.getElementById('kycFullName').value.trim());
     formData.append('idNumber', document.getElementById('kycDocumentNumber').value.trim());
-    formData.append('dateOfBirth', document.getElementById('kycDateOfBirth').value.trim());
+    formData.append('dateOfBirth', getDobValue());
     formData.append('idType', document.getElementById('kycDocumentTypeInput').value);
     formData.append('address', document.getElementById('kycAddress').value.trim());
     formData.append('frontImage', document.getElementById('kycFrontFile').files[0]);
@@ -326,7 +340,7 @@ function validateKycForm() {
 
     const fullName = document.getElementById('kycFullName').value.trim();
     const documentNumber = document.getElementById('kycDocumentNumber').value.trim();
-    const dateOfBirth = document.getElementById('kycDateOfBirth').value.trim();
+    const dateOfBirth = getDobValue();
     const documentType = document.getElementById('kycDocumentTypeInput').value;
     const address = document.getElementById('kycAddress').value.trim();
     const confirmed = document.getElementById('kycConfirm').checked;
