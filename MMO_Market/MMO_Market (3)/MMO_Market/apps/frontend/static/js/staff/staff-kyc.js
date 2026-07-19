@@ -17,20 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    const typeSelect = document.getElementById('kycTypeFilter');
-    if (typeSelect) {
-        typeSelect.addEventListener('change', () => {
-            loadKycList();
-            loadKycStats();
-        });
-    }
-    const statusSelect = document.getElementById('kycStatusFilter');
-    if (statusSelect) {
-        statusSelect.addEventListener('change', () => {
-            loadKycList();
-            loadKycStats();
-        });
-    }
+
     const resetBtn = document.getElementById('kycResetBtn');
     if (resetBtn) resetBtn.addEventListener('click', () => {
         const codeInput = document.getElementById('kycCodeFilter');
