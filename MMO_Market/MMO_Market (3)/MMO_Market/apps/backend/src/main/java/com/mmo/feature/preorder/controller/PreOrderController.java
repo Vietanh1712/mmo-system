@@ -37,4 +37,22 @@ public class PreOrderController {
         List<PreOrderResponse> response = preOrderService.getPreOrdersByCustomer(userId);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/seller")
+    public ResponseEntity<List<PreOrderResponse>> getSellerPreOrders(@AuthenticationPrincipal Long userId) {
+        List<PreOrderResponse> response = preOrderService.getPreOrdersBySeller(userId);
+        return ResponseEntity.ok(response);
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/seller/{id}/status")
+    public ResponseEntity<PreOrderResponse> updatePreOrderStatus(@AuthenticationPrincipal Long userId,
+                                                                 @org.springframework.web.bind.annotation.PathVariable("id") Long preOrderId,
+                                                                 @RequestBody java.util.Map<String, String> body) {
+        String newStatus = body.get("status");
+        if (newStatus == null || newStatus.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        PreOrderResponse response = preOrderService.updatePreOrderStatus(userId, preOrderId, newStatus.trim());
+        return ResponseEntity.ok(response);
+    }
 }

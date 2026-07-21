@@ -93,4 +93,9 @@ public class SellerPageController {
     public String complaintDetail() {
         return "seller/complaint-detail";
     }
+
+    @GetMapping("/preorders")
+    public String preOrders() {
+        return "seller/preorders";
+    }
 }

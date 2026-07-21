@@ -24,17 +24,14 @@
                     <div class="ds-card staff-stat-card green">
                         <p class="staff-stat-card__label">Tổng số Shop</p>
                         <p class="staff-stat-card__value" th:text="${dashboard.totalShops}"></p>
-                        <p class="staff-stat-card__hint">Cửa hàng đăng ký</p>
                     </div>
                     <div class="ds-card staff-stat-card yellow">
                         <p class="staff-stat-card__label">Hồ sơ KYC chờ duyệt</p>
                         <p class="staff-stat-card__value" th:text="${dashboard.pendingKyc}"></p>
-                        <p class="staff-stat-card__hint">5 hồ sơ quá 24h</p>
                     </div>
                     <div class="ds-card staff-stat-card red">
                         <p class="staff-stat-card__label">Cờ cảnh báo shop</p>
                         <p class="staff-stat-card__value" th:text="${dashboard.shopFlags}"></p>
-                        <p class="staff-stat-card__hint">2 mức nghiêm trọng</p>
                     </div>
                 </div>
 

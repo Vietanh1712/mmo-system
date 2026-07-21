@@ -31,6 +31,9 @@ public class TopupService {
     @Autowired
     private com.mmo.shared.dal.SystemConfigurationRepository systemConfigurationRepository;
 
+    @Autowired
+    private com.mmo.feature.seller.service.ShopLevelService shopLevelService;
+
     private static final Pattern TRANSFER_CONTENT_PATTERN = Pattern.compile("MMO[\\s-]*TOPUP[\\s-]*(\\d+)", Pattern.CASE_INSENSITIVE);
 
     @Transactional
@@ -116,6 +119,9 @@ public class TopupService {
         Long oldBalance = user.getBalanceVnd() != null ? user.getBalanceVnd() : 0L;
         user.setBalanceVnd(oldBalance + amount);
         userRepository.save(user);
+
+        // Cập nhật trạng thái khóa/mở khóa của shop sau khi số dư đổi
+        shopLevelService.updateShopLockStatus(user.getId());
 
         // 6. Create top-up transaction record
         TopupTransaction transaction = TopupTransaction.builder()

@@ -218,7 +218,16 @@ function renderOrderDetail(order) {
     const variantText = order.variantLabel ? ` (${order.variantLabel})` : '';
     document.getElementById('orderDetailCode').textContent = order.orderCode;
     document.getElementById('orderProductName').textContent = `${order.productName}${variantText}`;
-    document.getElementById('orderSellerName').textContent = `Người bán: ${order.sellerName}`;
+    
+    const sellerNameEl = document.getElementById('orderSellerName');
+    if (sellerNameEl) {
+        if (order.sellerId) {
+            sellerNameEl.innerHTML = `Người bán: <a href="/shop/${order.sellerId}" style="text-decoration: underline; color: var(--ds-primary, #2563eb); font-weight: 500;">${order.sellerName}</a>`;
+        } else {
+            sellerNameEl.textContent = `Người bán: ${order.sellerName}`;
+        }
+    }
+    
     setBadge('orderStatusBadge', formatOrderStatus(order.status), getOrderStatusBadgeClass(order.status));
     setBadge('orderPaymentBadge', formatPaymentStatus(order.paymentStatus), getPaymentBadgeClass(order.paymentStatus));
 

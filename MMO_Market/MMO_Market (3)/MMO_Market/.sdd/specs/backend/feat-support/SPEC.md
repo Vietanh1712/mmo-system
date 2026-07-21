@@ -50,11 +50,12 @@ Hệ thống sàn giao dịch C2C cần cơ chế xử lý các yêu cầu trợ
 CREATE TABLE SupportTickets (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     user_id BIGINT NOT NULL,
-    category VARCHAR(50) DEFAULT 'TECHNICAL', -- TECHNICAL, TRANSACTION, ACCOUNT, OTHER
-    subject NVARCHAR(255) NOT NULL,
-    message NVARCHAR(MAX) NOT NULL,
-    status VARCHAR(50) DEFAULT 'OPEN', -- OPEN, RESOLVED, CLOSED
+    category VARCHAR(50) NOT NULL, -- TECHNICAL, TRANSACTION, ACCOUNT, OTHER
+    title NVARCHAR(255) NOT NULL,
+    description NVARCHAR(MAX) NOT NULL,
+    status VARCHAR(50) DEFAULT 'Open', -- Open, Processing, Resolved
     resolution NVARCHAR(MAX) NULL,
+    isDelete BIT DEFAULT 0,
     created_at DATETIME DEFAULT GETDATE(),
     updated_at DATETIME DEFAULT GETDATE(),
     is_delete BIT DEFAULT 0,
@@ -68,42 +69,52 @@ CREATE TABLE SupportTickets (
 
 ### `POST /api/support-tickets`
 *   **Access:** `ROLE_CUSTOMER`, `ROLE_SELLER`
+*   **Description**: Người dùng gửi yêu cầu hỗ trợ mới.
 *   **Request Body (JSON):**
     ```json
     {
       "category": "TECHNICAL",
-      "subject": "Không nhận được OTP email",
-      "message": "Tôi đăng ký tài khoản từ 10 phút trước nhưng chưa nhận được mã."
+      "title": "Không nhận được OTP email",
+      "description": "Tôi đăng ký tài khoản từ 10 phút trước nhưng chưa nhận được mã."
     }
     ```
-*   **Response (200 OK):** Đối tượng `SupportTicket` vừa tạo.
+*   **Response (200 OK):** Thông tin phiếu hỗ trợ vừa tạo.
 
 ### `GET /api/support-tickets`
 *   **Access:** `ROLE_CUSTOMER`, `ROLE_SELLER`
-*   **Response (200 OK):** Danh sách phiếu hỗ trợ của cá nhân người dùng.
+*   **Description**: Người dùng xem danh sách phiếu hỗ trợ cá nhân của mình.
+*   **Response (200 OK):** Danh sách phiếu hỗ trợ.
 
 ### `GET /api/support-tickets/all`
 *   **Access:** `ROLE_STAFF`, `ROLE_ADMIN`
-*   **Response (200 OK):** Danh sách tất cả phiếu hỗ trợ trên toàn hệ thống.
+*   **Description**: Staff/Admin xem danh sách phiếu hỗ trợ toàn hệ thống.
+*   **Response (200 OK):** Danh sách tất cả phiếu hỗ trợ.
 
 ### `GET /api/support-tickets/{id}`
-*   **Access:** Chủ sở hữu ticket hoặc `ROLE_STAFF`, `ROLE_ADMIN`
+*   **Access:** Chủ sở hữu phiếu hỗ trợ hoặc `ROLE_STAFF`, `ROLE_ADMIN`
+*   **Description**: Xem chi tiết một phiếu hỗ trợ cụ thể.
 *   **Response (200 OK):** Chi tiết phiếu hỗ trợ.
 
 ### `PUT /api/support-tickets/{id}/status`
 *   **Access:** `ROLE_STAFF`, `ROLE_ADMIN`
+*   **Description**: Staff/Admin cập nhật trạng thái/phản hồi giải pháp cho phiếu hỗ trợ.
 *   **Request Body (JSON):**
     ```json
     {
-      "status": "RESOLVED",
-      "resolution": "Đã gửi lại mã OTP thủ công tới email người dùng."
+      "status": "Resolved",
+      "resolution": "Đã cấu hình lại dịch vụ SMTP, email đã được gửi thành công."
     }
     ```
-*   **Response (200 OK):** Phiếu hỗ trợ sau khi cập nhật.
+*   **Response (200 OK):** Thông tin phiếu hỗ trợ sau khi cập nhật.
 
 ---
 
-## 7. ERROR HANDLING (Xử lý lỗi)
+## 7. BẢN ĐỊA HÓA (LOCALIZATION)
+*   Việt hóa toàn bộ thuật ngữ hiển thị trên giao diện liên quan đến "Ticket" / "Ticket hỗ trợ" thành "Phiếu hỗ trợ" (ví dụ: "Ticket Hỗ Trợ" -> "Phiếu Hỗ Trợ", "Ticket của tôi" -> "Phiếu hỗ trợ của tôi", "Mã Ticket" -> "Mã Phiếu", v.v.) để tăng tính thân thiện và dễ hiểu đối với người dùng Việt Nam.
+
+---
+
+## 8. ERROR HANDLING (Xử lý lỗi)
 | HTTP Code | Error Code | Message | Lý do kích hoạt |
 |---|---|---|---|
 | 401 | UNAUTHORIZED | "Chưa đăng nhập" | Người dùng chưa xác thực |
@@ -112,7 +123,7 @@ CREATE TABLE SupportTickets (
 
 ---
 
-## 8. ACCEPTANCE CRITERIA (Tiêu chí nghiệm thu)
-* **AC-SUP-01**: Khách hàng tạo phiếu hỗ trợ mới thành công, hệ thống lưu trạng thái `OPEN` và hiển thị trong danh sách "Phiếu hỗ trợ của tôi".
-* **AC-SUP-02**: Nhân viên Staff xem được tất cả phiếu hỗ trợ, cập nhật phản hồi giải pháp và đổi trạng thái sang `RESOLVED` hoặc `CLOSED`.
+## 9. ACCEPTANCE CRITERIA (Tiêu chí nghiệm thu)
+* **AC-SUP-01**: Khách hàng tạo phiếu hỗ trợ mới thành công, hệ thống lưu trạng thái `Open` và hiển thị trong danh sách "Phiếu hỗ trợ của tôi".
+* **AC-SUP-02**: Nhân viên Staff xem được tất cả phiếu hỗ trợ, cập nhật phản hồi giải pháp và đổi trạng thái sang `Resolved` hoặc `Closed`.
 * **AC-SUP-03**: Người dùng A không thể truy cập URL xem chi tiết phiếu hỗ trợ của người dùng B (trả về HTTP 403).

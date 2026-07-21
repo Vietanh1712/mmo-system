@@ -689,9 +689,14 @@
                     const card = document.createElement('a');
                     card.href = `/products/${product.id}`;
                     card.className = 'product-card';
+                    let mediaHtml = `<i class="fa ${icon} product-card__img-icon" style="color:${color};"></i>`;
+                    if (product.imageUrl && !product.imageUrl.includes('placeholder.com')) {
+                        mediaHtml = `<img src="${product.imageUrl}" class="product-card__img-real" alt="${product.name}" style="width:100%; height:100%; object-fit:cover;">`;
+                    }
+                    
                     card.innerHTML = `
                         <div class="product-card__image-container">
-                            <i class="fa ${icon} product-card__img-icon" style="color:${color};"></i>
+                            ${mediaHtml}
                         </div>
                         <div class="product-card__body">
                             <div class="product-card__stock">Tồn: ${stockText}</div>

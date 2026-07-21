@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
-@RequestMapping("/")
 public class PreOrderPageController {
 
     @GetMapping("/pre-orders/new")
@@ -19,6 +18,7 @@ public class PreOrderPageController {
                                    @RequestParam(value = "icon", required = false) String icon,
                                    @RequestParam(value = "iconColor", required = false) String iconColor,
                                    @RequestParam(value = "stock", required = false) Integer stock,
+                                   @RequestParam(value = "imageUrl", required = false) String imageUrl,
                                    Model model) {
         model.addAttribute("productId", productId);
         model.addAttribute("productName", productName);
@@ -27,6 +27,7 @@ public class PreOrderPageController {
         model.addAttribute("icon", icon);
         model.addAttribute("iconColor", iconColor);
         model.addAttribute("stock", stock);
+        model.addAttribute("imageUrl", imageUrl);
         return "pre-order-request";
     }
 

@@ -34,6 +34,11 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
             GROUP BY product_id
         ) t ON t.product_id = p.id
         WHERE p.isDelete = 0
+          AND p.seller_id IN (
+              SELECT id FROM Users
+              WHERE isDelete = 0
+                AND (shop_status IS NULL OR shop_status NOT IN ('Locked', 'Banned', 'Pending'))
+          )
         ORDER BY COALESCE(t.sales_count, 0) DESC, p.created_at DESC
         """, nativeQuery = true)
     List<Product> findTopBestSellingProducts(Pageable pageable);

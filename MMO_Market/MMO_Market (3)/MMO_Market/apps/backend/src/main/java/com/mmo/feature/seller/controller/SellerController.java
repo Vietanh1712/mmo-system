@@ -91,9 +91,12 @@ public class SellerController {
 
         double disputeRate = totalSold > 0 ? (double) resolvedComplaints / totalSold : 0.0;
 
+        boolean isNewByAge = seller.getCreatedAt() != null &&
+                java.time.Duration.between(seller.getCreatedAt(), java.time.LocalDateTime.now()).toDays() < 30;
+
         if (disputeRate >= 0.02) {
             return 0; // Shop Cảnh Cáo (Level 0)
-        } else if (completedCount < 20) {
+        } else if (isNewByAge || completedCount < 20) {
             return 1; // Shop Mới (Level 1)
         } else {
             return 2; // Shop Uy Tín (Level 2)
@@ -222,12 +225,24 @@ public class SellerController {
         // Return only sub-categories
         List<Category> allCategories = categoryRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc();
         List<Map<String, Object>> result = allCategories.stream()
-                .filter(c -> c.getParent() != null)
-                .map(c -> {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("id", c.getId());
-                    map.put("name", c.getName());
-                    return map;
+                .filter(c -> c.getParent() == null)
+                .map(parent -> {
+                    Map<String, Object> parentMap = new HashMap<>();
+                    parentMap.put("id", parent.getId());
+                    parentMap.put("name", parent.getName());
+                    
+                    List<Map<String, Object>> subList = allCategories.stream()
+                            .filter(c -> c.getParent() != null && c.getParent().getId().equals(parent.getId()))
+                            .map(c -> {
+                                Map<String, Object> map = new HashMap<>();
+                                map.put("id", c.getId());
+                                map.put("name", c.getName());
+                                return map;
+                            })
+                            .collect(Collectors.toList());
+                    
+                    parentMap.put("subCategories", subList);
+                    return parentMap;
                 })
                 .collect(Collectors.toList());
         return ResponseEntity.ok(result);
@@ -317,6 +332,12 @@ public class SellerController {
             User seller = getSeller(userId);
             long activeProductsCount = productRepository.countBySellerIdAndIsDeleteFalse(seller.getId());
             int shopLevel = calculateShopLevel(seller);
+            
+            long balance = seller.getBalanceVnd() != null ? seller.getBalanceVnd() : 0L;
+            if (balance < 0 && (shopLevel == 0 || shopLevel == 1)) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Tài khoản của bạn đang có số dư âm. Vui lòng nạp tiền thanh toán nợ để tiếp tục đăng bán sản phẩm."));
+            }
+
             if (shopLevel == 0 && activeProductsCount >= 5) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Cửa hàng của bạn đang ở Level 0 (Cảnh cáo) do tỷ lệ lỗi khiếu nại >= 2%. Bạn chỉ được hiển thị tối đa 5 sản phẩm cùng lúc trên sàn. Hãy xóa bớt sản phẩm cũ hoặc khắc phục tỷ lệ khiếu nại để đăng bán thêm."));
             }
@@ -340,19 +361,17 @@ public class SellerController {
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy danh mục được chọn."));
 
             // Check shop level restrictions
-            if (seller.getShopLevel() != null) {
-                if (seller.getShopLevel() == 0) {
-                    if (activeProductsCount >= 5) {
-                        return ResponseEntity.badRequest().body(Map.of("message", "Shop của bạn đang trong trạng thái cảnh cáo. Chỉ được đăng tối đa 5 sản phẩm."));
-                    }
-                } else if (seller.getShopLevel() == 1) {
-                    for (Map<String, Object> vData : variantsList) {
-                        Object priceObj = vData.get("priceVnd");
-                        if (priceObj != null) {
-                            Long price = Long.valueOf(priceObj.toString());
-                            if (price > 200000) {
-                                return ResponseEntity.badRequest().body(Map.of("message", "Shop Mới (Level 1) chỉ được phép đăng bán sản phẩm có giá tối đa 200.000 VNĐ."));
-                            }
+            if (shopLevel == 0) {
+                if (activeProductsCount >= 5) {
+                    return ResponseEntity.badRequest().body(Map.of("message", "Shop của bạn đang trong trạng thái cảnh cáo. Chỉ được đăng tối đa 5 sản phẩm."));
+                }
+            } else if (shopLevel == 1) {
+                for (Map<String, Object> vData : variantsList) {
+                    Object priceObj = vData.get("priceVnd");
+                    if (priceObj != null) {
+                        Long price = Long.valueOf(priceObj.toString());
+                        if (price > 200000) {
+                            return ResponseEntity.badRequest().body(Map.of("message", "Shop Mới (Level 1) chỉ được phép đăng bán sản phẩm có giá tối đa 200.000 VNĐ."));
                         }
                     }
                 }
@@ -388,7 +407,7 @@ public class SellerController {
                 
                 String imgUrl = (String) vData.get("imageUrl");
                 if (imgUrl == null || imgUrl.trim().isEmpty()) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "Biến thể phải có ít nhất 1 hình ảnh minh họa."));
+                    imgUrl = saved.getProductImageUrl();
                 }
                 pv.setImageUrl(imgUrl);
                 
@@ -549,16 +568,29 @@ public class SellerController {
             if (prodIdObj == null || variantName == null || variantName.trim().isEmpty() || priceObj == null) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Thông tin tên biến thể và giá bán không được để trống."));
             }
-            if (imageUrl == null || imageUrl.trim().isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Biến thể phải có ít nhất 1 hình ảnh minh họa."));
-            }
-
             Long productId = Long.valueOf(prodIdObj.toString());
             Product p = productRepository.findByIdAndIsDeleteFalse(productId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sản phẩm."));
 
+            if (imageUrl == null || imageUrl.trim().isEmpty()) {
+                imageUrl = p.getProductImageUrl();
+            }
+
             if (!p.getSeller().getId().equals(seller.getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền thao tác trên sản phẩm này."));
+            }
+
+            int shopLevel = calculateShopLevel(seller);
+            long balance = seller.getBalanceVnd() != null ? seller.getBalanceVnd() : 0L;
+            if (balance < 0 && (shopLevel == 0 || shopLevel == 1)) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Tài khoản của bạn đang có số dư âm. Vui lòng nạp tiền thanh toán nợ để tiếp tục đăng bán sản phẩm."));
+            }
+
+            if (shopLevel == 1) {
+                Long price = Long.valueOf(priceObj.toString());
+                if (price > 200000) {
+                    return ResponseEntity.badRequest().body(Map.of("message", "Shop Mới (Level 1) chỉ được phép đăng bán sản phẩm có giá tối đa 200.000 VNĐ."));
+                }
             }
 
             ProductVariant v = new ProductVariant();
@@ -594,6 +626,21 @@ public class SellerController {
             Object stockObj = request.get("stock");
             String status = (String) request.get("status");
             String imageUrl = (String) request.get("imageUrl");
+
+            int shopLevel = calculateShopLevel(seller);
+
+            // Chặn cập nhật biến thể đối với Shop Level 0 & 1 khi ví âm
+            long balance = seller.getBalanceVnd() != null ? seller.getBalanceVnd() : 0L;
+            if (balance < 0 && (shopLevel == 0 || shopLevel == 1)) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Tài khoản của bạn đang có số dư âm. Vui lòng nạp tiền thanh toán nợ để tiếp tục đăng bán sản phẩm."));
+            }
+
+            if (shopLevel == 1 && priceObj != null) {
+                Long price = Long.valueOf(priceObj.toString());
+                if (price > 200000) {
+                    return ResponseEntity.badRequest().body(Map.of("message", "Shop Mới (Level 1) chỉ được phép đăng bán sản phẩm có giá tối đa 200.000 VNĐ."));
+                }
+            }
 
             if (variantName == null || variantName.trim().isEmpty() || priceObj == null) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Tên biến thể và giá bán không được để trống."));

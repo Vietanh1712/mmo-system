@@ -136,8 +136,8 @@ public class KycService {
                 .build();
         notificationRepository.save(customerNotif);
 
-        // 2. Tạo thông báo cho toàn bộ Staff & Admin
-        List<User> staffAndAdmins = userRepository.findStaffAndAdmins();
+        // 2. Tạo thông báo cho Staff có quyền duyệt KYC (APPROVE_KYC)
+        List<User> staffAndAdmins = userRepository.findUsersByPermission("APPROVE_KYC");
         for (User staff : staffAndAdmins) {
             if (staff.getId().equals(user.getId())) {
                 continue;

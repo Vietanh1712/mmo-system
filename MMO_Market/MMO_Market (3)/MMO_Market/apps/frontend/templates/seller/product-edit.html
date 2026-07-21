@@ -33,13 +33,19 @@
                         <label for="productName">Tên sản phẩm</label>
                         <input id="productName" type="text" value="Tài khoản Netflix Premium">
                     </div>
-                    <div class="profile-edit-form__group">
-                        <label for="category">Danh mục</label>
-                        <select id="category" style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;">
-                            <option selected>Streaming</option>
-                            <option>Phần mềm</option>
-                            <option>Game</option>
-                        </select>
+                    <div class="ds-two-column" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                        <div class="profile-edit-form__group" style="margin-bottom: 0;">
+                            <label for="mainCategory">Danh mục chính</label>
+                            <select id="mainCategory" style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;">
+                                <option value="">-- Chọn danh mục chính --</option>
+                            </select>
+                        </div>
+                        <div class="profile-edit-form__group" style="margin-bottom: 0;">
+                            <label for="subCategory">Danh mục con</label>
+                            <select id="subCategory" style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;" disabled>
+                                <option value="">-- Chọn danh mục chính trước --</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="profile-edit-form__group">
                         <label for="description">Mô tả</label>

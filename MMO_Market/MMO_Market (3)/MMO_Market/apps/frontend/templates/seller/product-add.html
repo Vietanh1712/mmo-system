@@ -360,16 +360,25 @@
                         <small class="profile-edit-form__hint">Tên sản phẩm hiển thị cho người mua. Tối đa 100 ký tự.</small>
                     </div>
 
-                    <div class="profile-edit-form__group">
-                        <label for="category">Danh mục <span style="color: #ef4444;">*</span></label>
-                        <select id="category" required style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;">
-                            <option value="">-- Chọn danh mục --</option>
-                            <option value="1">Streaming (Netflix, Spotify, ...)</option>
-                            <option value="2">Phần mềm (Adobe, Office, ...)</option>
-                            <option value="3">Tài khoản MXH (Instagram, Facebook, ...)</option>
-                            <option value="4">Game & VCoin (Roblox, Garena, ...)</option>
-                            <option value="5">Công cụ Auto (Tool, Bot, ...)</option>
-                        </select>
+                    <div class="ds-two-column" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                        <div class="profile-edit-form__group" style="margin-bottom: 0;">
+                            <label for="mainCategory">Danh mục chính <span style="color: #ef4444;">*</span></label>
+                            <select id="mainCategory" required style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;">
+                                <option value="">-- Chọn danh mục chính --</option>
+                                <option value="Email">Email</option>
+                                <option value="Tài khoản">Tài khoản</option>
+                                <option value="Phần mềm">Phần mềm</option>
+                                <option value="Tăng tương tác">Tăng tương tác</option>
+                                <option value="Dịch vụ phần mềm">Dịch vụ phần mềm</option>
+                                <option value="Blockchain">Blockchain</option>
+                            </select>
+                        </div>
+                        <div class="profile-edit-form__group" style="margin-bottom: 0;">
+                            <label for="subCategory">Danh mục con <span style="color: #ef4444;">*</span></label>
+                            <select id="subCategory" required style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;" disabled>
+                                <option value="">-- Chọn danh mục chính trước --</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="profile-edit-form__group">
@@ -435,7 +444,7 @@
                     <!-- Section 4: Variants -->
                     <div class="form-section-title">Biến thể sản phẩm <span style="color: #ef4444;">*</span></div>
                     <p class="profile-edit-form__hint" style="margin-bottom: 16px;">
-                        Thêm các lựa chọn / phân loại cho sản phẩm của bạn. Mỗi biến thể cần có tên, giá tiền và ít nhất 1 hình ảnh minh họa riêng biệt.
+                        Thêm các lựa chọn / phân loại cho sản phẩm của bạn. Mỗi biến thể cần có tên và giá tiền riêng biệt.
                     </p>
                     
                     <div id="variantsContainer">

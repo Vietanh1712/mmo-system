@@ -87,6 +87,14 @@ body {
     color: var(--accent);
     font-size: 28px;
     flex: 0 0 auto;
+    overflow: hidden;
+}
+
+.product-summary__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 .product-summary__name {
