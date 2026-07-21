@@ -1178,6 +1178,11 @@ async function initTransactions() {
                     <td class="text-right text-success">+${formatVND(t.netEarningVnd)}</td>
                     <td><span class="badge ${badgeClass}">${translateStatus(t.status)}</span></td>
                     <td>${t.createdAt.replace('T', ' ').substring(0, 16)}</td>
+                    <td class="text-right">
+                        ${(t.status === 'Disputed' || t.status === 'Khiếu nại')
+                            ? `<a class="icon-button" href="/seller/complaints" title="Xem khiếu nại"><i class="fa fa-warning"></i></a>`
+                            : `<span style="color: var(--ds-text-muted);">—</span>`}
+                    </td>
                 </tr>
             `;
         }).join('');
@@ -1975,8 +1980,9 @@ async function initPreOrders() {
         }
 
         tbody.innerHTML = orders.map(o => {
-            const statusClass = (o.status === 'Chờ xử lý' || o.status === 'PENDING') ? 'pending' 
-                              : (o.status === 'Hoàn thành' || o.status === 'COMPLETED') ? 'ok' 
+            const st = (o.status || '').toUpperCase();
+            const statusClass = (st === 'PENDING' || o.status === 'Chờ xử lý') ? 'pending' 
+                              : (st === 'COMPLETED' || o.status === 'Hoàn thành') ? 'ok' 
                               : 'locked';
 
             return `
@@ -1989,14 +1995,14 @@ async function initPreOrders() {
                     <td><span class="badge ${statusClass}">${translateStatus(o.status)}</span></td>
                     <td>${o.createdAt ? new Date(o.createdAt).toLocaleString('vi-VN') : ''}</td>
                     <td class="text-right">
-                        ${(o.status === 'PENDING' || o.status === 'Chờ xử lý') ? `
+                        ${(st === 'PENDING' || o.status === 'Chờ xử lý') ? `
                         <button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px; margin-right: 4px;" onclick="updatePreOrderStatus(${o.id}, 'COMPLETED')">
                             <i class="fa fa-check"></i> Hoàn thành
                         </button>
                         <button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px; color: var(--seller-danger); border-color: var(--seller-danger);" onclick="updatePreOrderStatus(${o.id}, 'CANCELLED')">
                             <i class="fa fa-times"></i> Hủy
                         </button>
-                        ` : ''}
+                        ` : '<span style="color: var(--ds-text-muted);">—</span>'}
                     </td>
                 </tr>
             `;
