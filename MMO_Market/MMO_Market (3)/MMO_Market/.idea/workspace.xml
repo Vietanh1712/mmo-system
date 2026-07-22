@@ -4,7 +4,38 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="" />
+    <list default="true" id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-admin/SPEC.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-admin/SPEC.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/SPEC.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/SPEC.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SPEC.md" beforeDir="false" afterPath="$PROJECT_DIR$/SPEC.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Specification.md" beforeDir="false" afterPath="$PROJECT_DIR$/Specification.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/product/controller/ProductSearchController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/product/controller/ProductSearchController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/product/service/CategoryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/product/service/CategoryService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/product/service/ProductSearchService.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/product/service/ProductSearchService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/seller/controller/SellerController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/seller/controller/SellerController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/staff/controller/mvc/StaffController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/staff/controller/mvc/StaffController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/config/DatabaseSeeder.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/config/DatabaseSeeder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/config/WebConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/config/WebConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/CategoryRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/CategoryRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/ProductRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/ProductRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/ProductSpecification.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/ProductSpecification.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dto/ProductResponseDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dto/ProductResponseDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/css/components/modal.css" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/css/components/modal.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/css/staff/staff.css" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/css/staff/staff.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/admin/admin-console.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/admin/admin-console.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/seller/seller-console.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/seller/seller-console.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/admin/users.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/admin/users.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/fragments/staff-sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/fragments/staff-sidebar.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/home.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/home.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/product-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/product-detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/products.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/products.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/search-results.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/search-results.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/seller/product-add.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/seller/product-add.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/seller/product-edit.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/seller/product-edit.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/shop.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/shop.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/dashboard.html" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -223,6 +254,7 @@
       <entry key="_C:/SU26/SWP/mmo-system/MMO_Market/MMO_Market (3)/MMO_Market" value="3EWlRNqVPYsSgSRh0jYGZPFRH3X" />
       <entry key="_C:/Users/pc/Downloads/MMO_Market" value="3EUOi3apsbWwdIoQdHdHnFqF4Pa" />
       <entry key="_C:/Users/pc/IdeaProjects/MMO_Market" value="3ELTrS0JIZMH30ZqfkiIKUzUnpE" />
+      <entry key="_C:/Users/pc/MMO_new1/MMO_Market/MMO_Market (3)/MMO_Market" value="3GqLtFMyVOYrPtUabywHukKMLJi" />
     </persistenceIdMap>
   </component>
   <component name="CopilotUserSelectedModel">
@@ -250,6 +282,18 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../../.." />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "linhntn2911"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/Vietanh1712/mmo-system.git",
+    "accountId": "1ee2d10c-384f-410f-bd13-e8d78ad0bb07"
+  }
+}]]></component>
   <component name="HighlightingSettingsPerFile">
     <setting file="jar://$MAVEN_REPOSITORY$/org/springframework/security/spring-security-config/6.1.5/spring-security-config-6.1.5-sources.jar!/org/springframework/security/config/annotation/authentication/configuration/AuthenticationConfiguration.java" root0="SKIP_INSPECTION" />
   </component>
@@ -375,7 +419,8 @@
     "Spring Boot.MMOMarketApplication.executor": "Debug",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "#15 on cuong2k3",
+    "copilot.chat.legacySessionMetadata.migrated": "true",
+    "git-widget-placeholder": "linh",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/SU26/SWP/mmo-system/MMO_Market/MMO_Market (3)/MMO_Market",
@@ -493,7 +538,6 @@
     <attachedChunks>
       <set>
         <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.24374.151" />
-        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-IU-261.24374.151" />
       </set>
     </attachedChunks>
   </component>

@@ -59,12 +59,15 @@ public class ProductResponseDTO {
             sellerId = product.getSeller().getId();
         }
 
-        String categoryName = "Other";
+        String categoryName = "Sản phẩm số";
         Long categoryId = 0L;
 
         if (product.getCategory() != null) {
-            categoryName = product.getCategory().getName() != null ?
-                product.getCategory().getName() : "Other";
+            if (product.getCategory().getParent() != null && product.getCategory().getParent().getName() != null) {
+                categoryName = product.getCategory().getParent().getName();
+            } else if (product.getCategory().getName() != null) {
+                categoryName = product.getCategory().getName();
+            }
             categoryId = product.getCategory().getId();
         }
 

@@ -620,17 +620,18 @@ async function setupCategorySelectors(mainSelect, subSelect, currentCategoryId =
             return 0;
         });
 
-        // Also sort subCategories for each category
+        // Sort subCategories for each category: by ID asc (oldest first), then push "Khác" to end
         categories.forEach(parent => {
             if (parent.subCategories && parent.subCategories.length > 0) {
                 parent.subCategories.sort((a, b) => {
                     const nameA = (a.name || '').toLowerCase().trim();
                     const nameB = (b.name || '').toLowerCase().trim();
-                    const isKhacA = nameA === 'khác' || nameA === 'dịch vụ khác';
-                    const isKhacB = nameB === 'khác' || nameB === 'dịch vụ khác';
+                    const isKhacA = nameA.includes('khác');
+                    const isKhacB = nameB.includes('khác');
                     if (isKhacA && !isKhacB) return 1;
                     if (!isKhacA && isKhacB) return -1;
-                    return 0;
+                    // Sort by ID ascending so earlier-created (lower ID) appears first
+                    return (a.id || 0) - (b.id || 0);
                 });
             }
         });
@@ -643,15 +644,18 @@ async function setupCategorySelectors(mainSelect, subSelect, currentCategoryId =
         const updateSubCategories = (selectedParentId, selectValue = null) => {
             const parentCat = categories.find(c => c.id == selectedParentId);
             if (parentCat && parentCat.subCategories && parentCat.subCategories.length > 0) {
-                subSelect.innerHTML = '<option value="">-- Chọn danh mục con --</option>' +
+                subSelect.innerHTML = '<option value="">-- Chọn danh mục phụ --</option>' +
                                      parentCat.subCategories.map(sub => `<option value="${sub.id}">${sub.name}</option>`).join('');
                 subSelect.disabled = false;
+                subSelect.setAttribute('required', 'required');
                 if (selectValue) {
                     subSelect.value = selectValue;
                 }
             } else {
-                subSelect.innerHTML = '<option value="">-- Không có danh mục con --</option>';
+                subSelect.innerHTML = '<option value="">-- Không có danh mục phụ --</option>';
                 subSelect.disabled = true;
+                subSelect.removeAttribute('required');
+                subSelect.value = '';
             }
         };
         
@@ -758,11 +762,10 @@ async function initProductAdd() {
                 const description = document.getElementById('description').value.trim();
                 const categoryId = subSelect.value || mainSelect.value;
                 const typeEl = document.querySelector('input[name="productType"]:checked');
-                const productType = typeEl ? typeEl.value : null;
+                const productType = typeEl ? typeEl.value : 'ACCOUNT';
 
                 if (!name) return showToast('Vui lòng nhập tên sản phẩm.', 'error');
                 if (!categoryId) return showToast('Vui lòng chọn danh mục.', 'error');
-                if (!productType) return showToast('Vui lòng chọn loại sản phẩm.', 'error');
 
                 const variantCards = variantsContainer.querySelectorAll('.variant-card');
                 if (variantCards.length === 0) {
@@ -1015,21 +1018,24 @@ async function initVariantForm() {
                             type: 'ACCOUNT',
                             username: ea.accountUsername,
                             password: ea.accountPassword || '',
-                            notes: ea.notes || ''
+                            notes: ea.notes || '',
+                            isUsed: ea.isUsed === true
                         };
                     } else if (productType === 'KEY') {
                         return {
                             id: ea.id,
                             type: 'KEY',
                             keyCode: ea.keyCode,
-                            notes: ea.notes || ''
+                            notes: ea.notes || '',
+                            isUsed: ea.isUsed === true
                         };
                     } else if (productType === 'GAME_CARD') {
                         return {
                             id: ea.id,
                             type: 'GAME_CARD',
                             cardCode: ea.cardCode,
-                            notes: ea.notes || ''
+                            notes: ea.notes || '',
+                            isUsed: ea.isUsed === true
                         };
                     }
                 }).filter(Boolean);

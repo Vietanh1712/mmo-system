@@ -40,8 +40,8 @@ Quản trị viên hệ thống (Admin) cần công cụ quản lý tập trung 
 ### 3.2 Quản trị người dùng & RBAC
 | ID | EARS Requirement |
 |:---|:---|
-| FR-ADMIN-02 | WHEN an Admin assigns permissions to staffs, THE SYSTEM SHALL link the user IDs and permission names in the database. |
-| FR-ADMIN-03 | WHEN an Admin revokes permissions from a staff, THE SYSTEM SHALL remove the links from the database. |
+| FR-ADMIN-02 | WHEN an Admin assigns permissions (including Category Management `MANAGE_CATEGORIES`) to staffs, THE SYSTEM SHALL link the user IDs and permission names in the database. |
+| FR-ADMIN-03 | WHEN an Admin revokes permissions (including `MANAGE_CATEGORIES`) from a staff, THE SYSTEM SHALL remove the links from the database. |
 | FR-ADMIN-04 | WHEN an Admin toggles account lock status for a user, THE SYSTEM SHALL set `isLocked = 1` or `0`, blocking access dynamically in security filters. |
 
 ### 3.3 Quản trị Thông báo hệ thống & Bảo trì

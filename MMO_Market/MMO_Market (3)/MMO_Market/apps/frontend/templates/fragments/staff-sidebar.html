@@ -64,6 +64,12 @@
             </div>
 
             <a class="staff-sidebar__link"
+               th:classappend="${active == 'categories'} ? ' is-active' : ''"
+               href="/staff/categories"
+               data-required-permission="MANAGE_CATEGORIES">
+                <i class="fa fa-folder-open"></i> Quản lý danh mục
+            </a>
+            <a class="staff-sidebar__link"
                th:classappend="${active == 'flags'} ? ' is-active' : ''"
                href="/staff/flags"
                data-required-permission="FLAG_SELLER">

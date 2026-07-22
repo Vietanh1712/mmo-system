@@ -34,19 +34,10 @@ public class ProductSpecification {
 
             // --- Category Filter ---
             if (categoryId != null) {
-                if (categoryId == 7L) {
-                    // "Khác": danh mục con có tên chứa "khác" (Loại Mail Khác, Tài Khoản Khác, ...)
-                    Predicate categoryKhac = criteriaBuilder.like(
-                            criteriaBuilder.lower(root.get("category").get("name")), "%khác%");
-                    Predicate parentKhac = criteriaBuilder.like(
-                            criteriaBuilder.lower(root.get("category").get("parent").get("name")), "%khác%");
-                    predicates.add(criteriaBuilder.or(categoryKhac, parentKhac));
-                } else {
-                    predicates.add(criteriaBuilder.or(
-                            criteriaBuilder.equal(root.get("category").get("id"), categoryId),
-                            criteriaBuilder.equal(root.get("category").get("parent").get("id"), categoryId)
-                    ));
-                }
+                predicates.add(criteriaBuilder.or(
+                        criteriaBuilder.equal(root.get("category").get("id"), categoryId),
+                        criteriaBuilder.equal(root.get("category").get("parent").get("id"), categoryId)
+                ));
             }
 
             // --- Join with ProductVariants for Price and Stock filters ---

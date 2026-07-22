@@ -223,7 +223,7 @@ public class SellerController {
     @GetMapping("/categories")
     public ResponseEntity<?> getCategories() {
         // Return only sub-categories
-        List<Category> allCategories = categoryRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc();
+        List<Category> allCategories = categoryRepository.findAllByIsDeleteFalseOrderByIdAsc();
         List<Map<String, Object>> result = allCategories.stream()
                 .filter(c -> c.getParent() == null)
                 .map(parent -> {
@@ -233,6 +233,7 @@ public class SellerController {
                     
                     List<Map<String, Object>> subList = allCategories.stream()
                             .filter(c -> c.getParent() != null && c.getParent().getId().equals(parent.getId()))
+                            .sorted((a, b) -> Long.compare(a.getId(), b.getId()))
                             .map(c -> {
                                 Map<String, Object> map = new HashMap<>();
                                 map.put("id", c.getId());

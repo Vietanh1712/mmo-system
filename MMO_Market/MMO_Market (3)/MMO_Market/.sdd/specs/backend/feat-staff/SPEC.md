@@ -36,6 +36,7 @@ Hỗ trợ Staff kiểm duyệt KYC, phê duyệt/từ chối các yêu cầu m�
 | **FR-STF-13** | WHEN a Staff requests KYC statistics, THE SYSTEM SHALL return aggregated counts for total, pending, approved, and rejected KYC requests. |
 | **FR-STF-14** | WHEN a Staff changes KYC filter dropdown options, THE SYSTEM SHALL NOT auto-trigger search until the Staff clicks the Search button or presses Enter. |
 | **FR-STF-15** | WHEN a Staff manages shop statuses, THE SYSTEM SHALL support 5 distinct status values (`Active`, `Withdrawn`, `Suspended`, `Locked`, `Banned`). |
+| **FR-STF-16** | WHEN a Staff accesses category management, THE SYSTEM SHALL allow Staff to view, search, create, update, and toggle active/deleted status (`is_delete`) of parent and child product categories. |
 
 ---
 
@@ -88,9 +89,14 @@ CREATE TABLE ShopFlags (
 *   `GET /staff/shop-registrations`: Xem danh sách tất cả các Shop và bộ lọc.
 *   `GET /staff/shop-registrations/detail`: Xem chi tiết thông tin đăng ký Shop.
 *   `GET /staff/shop-registrations/update-status`: Xem trang thay đổi trạng thái hoạt động riêng biệt của Shop.
+*   `GET /staff/categories`: Xem trang quản lý danh mục sản phẩm (Category Management).
 
 
 ### 6.2 Các API REST của KYC & Shop
+*   `GET /api/v1/staff/categories`: Danh sách phân trang danh mục sản phẩm kèm từ khóa và trạng thái (`keyword`, `isDelete`).
+*   `POST /api/v1/staff/categories`: Tạo mới danh mục (Cha hoặc Con).
+*   `PUT /api/v1/staff/categories/{id}`: Cập nhật thông tin danh mục (`name`, `parentId`, `description`).
+*   `PATCH /api/v1/staff/categories/{id}/toggle-status`: Chuyển đổi trạng thái Ẩn/Hiện của danh mục (`is_delete`).
 *   `GET /api/v1/staff/kyc`: Lọc và phân trang các yêu cầu KYC theo mã hồ sơ, số giấy tờ, tên, email (`status`, `requestCode`, `idType`). Tự động xử lý loại bỏ ký tự `#` ở đầu mã.
 *   `GET /api/v1/staff/kyc/stats`: Lấy thống kê số lượng hồ sơ KYC (tổng số, chờ duyệt, đã duyệt, từ chối).
 *   `GET /api/v1/staff/kyc/{id}`: Xem chi tiết yêu cầu KYC.

@@ -1,4 +1,6 @@
-/* MMO Market reusable modal shell. */
+.ds-modal-backdrop[hidden] {
+    display: none !important;
+}
 
 .ds-modal-backdrop {
     position: fixed;
