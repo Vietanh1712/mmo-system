@@ -73,6 +73,13 @@ Trang kiểm duyệt hồ sơ KYC cung cấp giao diện dành riêng cho nhân 
 * **Nút Phê Duyệt (`.btn-approve`):** Màu xanh lá, click hiển thị modal xác nhận nhanh "Phê duyệt hồ sơ này?".
 * **Nút Từ Chối (`.btn-reject`):** Màu đỏ, click hiển thị hộp thoại yêu cầu nhập bắt buộc lý do từ chối (rejection reason) từ Staff trước khi gửi.
 
+### 4.3 Nhãn Trạng Thái Cố Định (Status Badge)
+* **Vị trí hiển thị:** Đặt cố định ở góc trên bên phải của khung card "Thông tin người nộp" (`.ds-card-header` sử dụng `display: flex; justify-content: space-between; align-items: center;`).
+* **Trạng thái:**
+  * `PENDING`: Nhãn vàng "Chờ duyệt" (`ds-badge-warning`).
+  * `APPROVED`: Nhãn xanh "Đã duyệt" (`ds-badge-success`).
+  * `REJECTED`: Nhãn đỏ "Từ chối" (`ds-badge-danger`).
+
 ### 4.3 Khối Thông Tin Người Nộp — `.staff-info-list` (Cập nhật 2026-07-01)
 Phần "Thông tin người nộp" trên trang chi tiết KYC phải hiển thị đầy đủ các trường sau (lấy từ bảng `Users` và `KycRequest`):
 

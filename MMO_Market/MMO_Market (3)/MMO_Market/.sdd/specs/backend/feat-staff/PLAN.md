@@ -72,10 +72,12 @@ Triển khai giao diện vận hành MVC và REST API dành riêng cho nhân vi�
   - File: `templates/staff/dashboard.html` hiển thị biểu đồ và tổng quan hệ thống, bổ sung thẻ **Quản lý Shop** vào phần Truy cập nhanh.
 - **Trang Quản lý KYC (KYC Verification):**
   - Script: `static/js/staff/staff-kyc.js` bỏ tự động kích hoạt tìm kiếm khi đổi tùy chọn bộ lọc (`change` event), chỉ thực hiện tìm kiếm khi Staff bấm nút "Tìm kiếm" hoặc nhấn `Enter`.
+  - Template `templates/staff/kyc-detail.html`: Đặt nhãn trạng thái (`#kycStatusBadge` hiển thị "Đã duyệt", "Chờ duyệt", "Từ chối") cố định ở góc trên bên phải của thẻ thông tin người nộp (`.ds-card-header`).
 - **Trang Quản lý Khiếu nại (Complaints):**
   - File: `templates/staff/complaints.html` & Script: `static/js/staff/staff-complaints.js` hiển thị cột STT liên tục qua từng trang (`currentPage * pageSize + index + 1`).
 - **Trang Quản lý Duyệt Yêu Cầu Shop (Shops):**
   - File: `templates/staff/shop-registrations.html` & Script: `static/js/staff/staff-shop-registrations.js` quản lý 5 trạng thái gian hàng (`Active`, `Withdrawn`, `Suspended`, `Locked`, `Banned`).
+  - Template `templates/staff/shop-registration-detail.html`: Đặt nhãn trạng thái (`#shopStatusBadge` hiển thị "Đã duyệt", "Chờ duyệt", "Từ chối") cố định ở góc trên bên phải của thẻ thông tin Shop (`.ds-card-header`).
 
 ---
 
