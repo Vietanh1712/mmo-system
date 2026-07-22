@@ -1301,7 +1301,6 @@ async function initWithdrawals() {
         let minLimit = 50000;
         let maxLimit = 50000000;
         let feePercent = 1.5;
-        let minFee = 10000;
         let require2FA = true;
 
         try {
@@ -1310,8 +1309,7 @@ async function initWithdrawals() {
                 const configData = await configRes.json();
                 minLimit = configData.minWithdrawalLimit || minLimit;
                 maxLimit = configData.maxWithdrawalLimit || maxLimit;
-                feePercent = configData.withdrawalFeePercent || feePercent;
-                minFee = configData.minWithdrawFee || minFee;
+                feePercent = configData.withdrawalFeePercent !== undefined ? configData.withdrawalFeePercent : feePercent;
                 require2FA = configData.requireWithdraw2FA !== undefined ? configData.requireWithdraw2FA : require2FA;
             }
         } catch (e) {
@@ -1326,7 +1324,7 @@ async function initWithdrawals() {
         
         const hintEl = document.querySelector('.profile-edit-form__hint');
         if (hintEl) {
-            hintEl.textContent = `Hạn mức: ${formatVND(minLimit)} - ${formatVND(maxLimit)} · Phí: ${feePercent}% (tối thiểu ${formatVND(minFee)})`;
+            hintEl.textContent = `Hạn mức: ${formatVND(minLimit)} - ${formatVND(maxLimit)} · Phí rút tiền: ${feePercent}%`;
         }
 
         const inputEl = document.getElementById('withdrawAmount');
@@ -1355,10 +1353,7 @@ async function initWithdrawals() {
                     feeInfoEl.innerHTML = '';
                     return;
                 }
-                let fee = Math.floor(val * (feePercent / 100));
-                if (fee < minFee) {
-                    fee = minFee;
-                }
+                const fee = Math.floor(val * (feePercent / 100));
                 const total = val + fee;
                 feeInfoEl.innerHTML = `
                     <div style="display:flex; justify-content:space-between; margin-bottom:6px;">

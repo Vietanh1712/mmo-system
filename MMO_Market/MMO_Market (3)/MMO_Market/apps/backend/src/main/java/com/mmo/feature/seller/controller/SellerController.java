@@ -786,11 +786,6 @@ public class SellerController {
                         try { return Double.parseDouble(c.getConfigValue()); }
                         catch (NumberFormatException e) { return 1.5; }
                     }).orElse(1.5);
-            long minWithdrawFee = systemConfigurationRepository.findByConfigKey("MIN_WITHDRAW_FEE_VND")
-                    .map(c -> {
-                        try { return Long.parseLong(c.getConfigValue()); }
-                        catch (NumberFormatException e) { return 10000L; }
-                    }).orElse(10000L);
             long minWithdrawalLimit = systemConfigurationRepository.findByConfigKey("MIN_WITHDRAWAL_VND")
                     .map(c -> {
                         try { return Long.parseLong(c.getConfigValue()); }
@@ -801,11 +796,12 @@ public class SellerController {
                         try { return Long.parseLong(c.getConfigValue()); }
                         catch (NumberFormatException e) { return 50000000L; }
                     }).orElse(50000000L);
-            boolean requireWithdraw2FA = false; // Tắt yêu cầu OTP xác thực khi rút tiền
+            boolean requireWithdraw2FA = systemConfigurationRepository.findByConfigKey("REQUIRE_WITHDRAW_2FA")
+                    .map(c -> Boolean.parseBoolean(c.getConfigValue()))
+                    .orElse(false);
 
             return ResponseEntity.ok(Map.of(
                     "withdrawalFeePercent", withdrawalFeePercent,
-                    "minWithdrawFee", minWithdrawFee,
                     "minWithdrawalLimit", minWithdrawalLimit,
                     "maxWithdrawalLimit", maxWithdrawalLimit,
                     "requireWithdraw2FA", requireWithdraw2FA
