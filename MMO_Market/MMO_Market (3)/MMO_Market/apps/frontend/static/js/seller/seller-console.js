@@ -1181,7 +1181,8 @@ async function initTransactions() {
                     <td class="text-right">
                         ${(t.status === 'Disputed' || t.status === 'Khiếu nại')
                             ? `<a class="icon-button" href="/seller/complaints" title="Xem khiếu nại"><i class="fa fa-warning"></i></a>`
-                            : `<span style="color: var(--ds-text-muted);">—</span>`}
+                            : `<a class="icon-button" href="/messages?to=${t.customerEmail}" title="Nhắn tin"><i class="fa fa-envelope"></i></a>
+                               <a class="icon-button" href="#" title="Chi tiết" onclick="showToast('Tính năng đang phát triển', 'info'); return false;"><i class="fa fa-info-circle"></i></a>`}
                     </td>
                 </tr>
             `;
@@ -1996,13 +1997,15 @@ async function initPreOrders() {
                     <td>${o.createdAt ? new Date(o.createdAt).toLocaleString('vi-VN') : ''}</td>
                     <td class="text-right">
                         ${(st === 'PENDING' || o.status === 'Chờ xử lý') ? `
-                        <button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px; margin-right: 4px;" onclick="updatePreOrderStatus(${o.id}, 'COMPLETED')">
-                            <i class="fa fa-check"></i> Hoàn thành
+                        <button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px; margin-right: 4px; background: var(--seller-primary); color: white; border: none;" onclick="openDeliveryModal(${o.id})">
+                            <i class="fa fa-paper-plane"></i> Trả hàng
                         </button>
                         <button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px; color: var(--seller-danger); border-color: var(--seller-danger);" onclick="updatePreOrderStatus(${o.id}, 'CANCELLED')">
                             <i class="fa fa-times"></i> Hủy
                         </button>
-                        ` : '<span style="color: var(--ds-text-muted);">—</span>'}
+                        ` : `<button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px;" onclick="showToast('Nội dung trả: ${o.deliveryData ? o.deliveryData.replace(/\\n/g, ' ') : 'N/A'}', 'info')">
+                                <i class="fa fa-eye"></i> Xem trả hàng
+                             </button>`}
                     </td>
                 </tr>
             `;
@@ -2040,5 +2043,61 @@ async function updatePreOrderStatus(id, status) {
     }
 }
 
+let currentDeliveryPreOrderId = null;
+
+function openDeliveryModal(id) {
+    currentDeliveryPreOrderId = id;
+    const modal = document.getElementById('deliveryModal');
+    if (modal) {
+        document.getElementById('deliveryDataInput').value = '';
+        modal.style.display = 'flex';
+    }
+}
+
+function closeDeliveryModal() {
+    currentDeliveryPreOrderId = null;
+    const modal = document.getElementById('deliveryModal');
+    if (modal) modal.style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const btnSubmitDelivery = document.getElementById('btnSubmitDelivery');
+    if (btnSubmitDelivery) {
+        btnSubmitDelivery.addEventListener('click', async () => {
+            const data = document.getElementById('deliveryDataInput').value.trim();
+            if (!data) {
+                showToast('Vui lòng nhập nội dung trả hàng.', 'error');
+                return;
+            }
+            if (!currentDeliveryPreOrderId) return;
+            
+            try {
+                const token = sessionStorage.getItem('accessToken');
+                const res = await fetch(`/api/v1/pre-orders/seller/${currentDeliveryPreOrderId}/deliver`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ deliveryData: data })
+                });
+                
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.message || 'Trả hàng thất bại.');
+                }
+                
+                showToast('Đã trả hàng cho khách thành công!');
+                closeDeliveryModal();
+                initPreOrders();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        });
+    }
+});
+
 window.initPreOrders = initPreOrders;
 window.updatePreOrderStatus = updatePreOrderStatus;
+window.openDeliveryModal = openDeliveryModal;
+window.closeDeliveryModal = closeDeliveryModal;

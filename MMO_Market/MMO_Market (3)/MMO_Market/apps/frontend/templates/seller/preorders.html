@@ -65,6 +65,24 @@
 
     <footer th:replace="fragments/footer :: footer"></footer>
     
+    <!-- Modal Trả Hàng (Delivery Modal) -->
+    <div id="deliveryModal" class="asset-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="asset-modal-content" style="background: white; border-radius: 8px; width: 500px; max-width: 90%; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="margin: 0; font-size: 18px; color: var(--seller-ink);">Trả hàng cho khách</h3>
+                <button type="button" onclick="closeDeliveryModal()" style="background: transparent; border: none; font-size: 20px; cursor: pointer; color: var(--seller-muted);">&times;</button>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-weight: 500; margin-bottom: 8px; color: var(--seller-ink);">Nội dung trả hàng (Key, Tài khoản, Thẻ nạp, v.v.) <span style="color: #ef4444;">*</span></label>
+                <textarea id="deliveryDataInput" rows="5" style="width: 100%; padding: 12px; border: 1px solid var(--seller-border); border-radius: 6px; font-family: monospace; font-size: 14px;" placeholder="Ví dụ: \nUsername: admin\nPassword: 123456\nHoặc mã thẻ: XXXX-YYYY-ZZZZ"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="ds-btn ds-btn-outline" onclick="closeDeliveryModal()">Hủy</button>
+                <button type="button" class="ds-btn ds-btn-primary" id="btnSubmitDelivery" style="background: var(--seller-primary); color: white; border: none;">Xác nhận trả hàng</button>
+            </div>
+        </div>
+    </div>
+
     <div id="sellerToastContainer"></div>
 
     <script th:src="@{/js/seller/seller-console.js(v=1.2)}"></script>
