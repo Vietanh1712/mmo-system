@@ -134,21 +134,37 @@
                 <div class="admin-card admin-list-card">
                     <div class="ds-filter-panel">
                         <h2 class="ds-card-title">Bộ lọc nhật ký</h2>
-                        <div class="ds-filter-grid">
-                            <input id="logSearch" class="ds-input" type="search" placeholder="Tìm nhân viên, IP, mô tả...">
-                            <select id="logActionFilter" class="ds-input" aria-label="Loại hành động">
-                                <option value="">Tất cả hành động</option>
-                                <option value="KYC_Approve">Duyệt KYC</option>
-                                <option value="Fund_Withdraw">Duyệt rút tiền</option>
-                                <option value="Lock_User">Khóa tài khoản</option>
-                                <option value="Config_Update">Cập nhật cấu hình</option>
-                                <option value="Maintenance_Toggle">Bảo trì hệ thống</option>
+                        <div class="ds-filter-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                            <input id="logSearch" class="ds-input" type="search" placeholder="Tìm nhân viên, ID, mô tả...">
+                            <select id="logCategoryFilter" class="ds-input" aria-label="Nhóm tác vụ">
+                                <option value="">Tất cả nhóm tác vụ</option>
+                                <option value="FINANCE">💸 Tài chính & Rút tiền</option>
+                                <option value="COMPLAINT">⚖️ Xử lý Khiếu nại</option>
+                                <option value="SHOP">🏪 Quản lý Shop</option>
+                                <option value="USER_MGMT">👤 Quản trị Tài khoản & KYC</option>
+                                <option value="SUPPORT">🛡️ Hỗ trợ Khách hàng</option>
+                                <option value="SYSTEM">⚙️ Cấu hình & Bảo trì</option>
+                            </select>
+                            <select id="logActionFilter" class="ds-input" aria-label="Hành động cụ thể">
+                                <option value="">Tất cả hành động cụ thể</option>
+                            </select>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span class="ds-caption" style="white-space: nowrap; color: var(--ds-text-muted);">Từ:</span>
+                                <input id="logStartDate" class="ds-input" type="date">
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span class="ds-caption" style="white-space: nowrap; color: var(--ds-text-muted);">Đến:</span>
+                                <input id="logEndDate" class="ds-input" type="date">
+                            </div>
+                            <select id="logSortOrder" class="ds-input" aria-label="Sắp xếp">
+                                <option value="DESC">Mới nhất trước</option>
+                                <option value="ASC">Cũ nhất trước</option>
                             </select>
                         </div>
-                        <div class="ds-filter-actions">
+                        <div class="ds-filter-actions" style="margin-top: 12px;">
                             <button type="button" class="ds-btn ds-btn-secondary" id="auditResetFilter">Làm mới bộ lọc</button>
                             <button type="button" class="ds-btn ds-btn-primary" id="auditSearchBtn">Tìm kiếm</button>
-                            <button type="button" class="ds-btn ds-btn-outline" onclick="AdminConsole.mockExport('audit')"><i class="fa fa-file-excel-o"></i> Xuất Excel</button>
+                            <button type="button" class="ds-btn ds-btn-outline" onclick="AdminConsole.exportAuditLogs()"><i class="fa fa-file-excel-o"></i> Xuất Excel</button>
                         </div>
                     </div>
                     <div class="ds-table-wrap">
@@ -627,83 +643,66 @@
                 </div>
             </div>
 
+            <!-- 10. Audit Log Detail View -->
+            <div id="auditLogDetailView" class="admin-view">
+                <div class="view-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                    <div>
+                        <button type="button" class="ds-btn ds-btn-outline ds-btn-sm" style="margin-bottom: 12px;" onclick="switchAdminView('audit-logs')">
+                            <i class="fa fa-arrow-left"></i> Quay lại danh sách nhật ký
+                        </button>
+                        <h2 class="ds-heading-lg" id="auditDetTitle">Chi tiết nhật ký hoạt động #--</h2>
+                        <p class="ds-caption" id="auditDetSubtitle">Thời gian khởi tạo: --</p>
+                    </div>
+                </div>
+
+                <div class="ds-card" style="padding: 24px; max-width: 900px;">
+                    <div style="background: var(--ds-surface-muted); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-md); padding: 18px; margin-bottom: 24px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+                            <div>
+                                <span class="ds-caption" style="color: var(--ds-text-muted); display: block; margin-bottom: 4px;">Nhân viên thực hiện</span>
+                                <span style="font-weight: 600; color: var(--ds-text); display: flex; align-items: center; gap: 6px;">
+                                    <i class="fa fa-user-circle-o" style="color: var(--ds-primary);"></i>
+                                    <span id="auditDetOperator">--</span>
+                                </span>
+                            </div>
+                            <div>
+                                <span class="ds-caption" style="color: var(--ds-text-muted); display: block; margin-bottom: 4px;">Hành động nghiệp vụ</span>
+                                <span style="display: flex; align-items: center; gap: 6px; font-weight: 600; color: var(--ds-text);">
+                                    <span id="auditDetAction" class="ds-badge">--</span>
+                                </span>
+                            </div>
+                            <div>
+                                <span class="ds-caption" style="color: var(--ds-text-muted); display: block; margin-bottom: 4px;">Phân loại tác vụ</span>
+                                <span id="auditDetCategory" style="font-weight: 600; color: var(--ds-text);">--</span>
+                            </div>
+                            <div>
+                                <span class="ds-caption" style="color: var(--ds-text-muted); display: block; margin-bottom: 4px;">Mức độ ảnh hưởng</span>
+                                <span id="auditDetSeverity" class="ds-badge">--</span>
+                            </div>
+                            <div>
+                                <span class="ds-caption" style="color: var(--ds-text-muted); display: block; margin-bottom: 4px;">Đối tượng tác động</span>
+                                <span id="auditDetTargetValue" style="font-weight: 700; color: var(--ds-primary);">--</span>
+                            </div>
+                        </div>
+
+                        <div style="border-top: 1px solid var(--ds-border); margin-top: 16px; padding-top: 14px;">
+                            <span class="ds-caption" style="color: var(--ds-text-muted); display: block; margin-bottom: 6px;">Mô tả hoạt động</span>
+                            <span id="auditDetDesc" style="color: var(--ds-text); font-weight: 500; font-size: 14px; line-height: 1.5;">--</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 style="margin: 0 0 12px; font-size: 14px; font-weight: 700; color: var(--ds-text);">
+                            Chi tiết thay đổi dữ liệu (Diff)
+                        </h4>
+                        <div id="auditDetDiffWrap"></div>
+                    </div>
+                </div>
+            </div>
+
         </section>
     </div>
 </main>
-
-<!-- Log detail modal -->
-<div id="logDetailModal" class="ds-modal-backdrop ds-hidden" role="dialog" aria-modal="true">
-    <div class="ds-modal" style="max-width: 700px; width: 100%; max-height: 85vh; display: flex; flex-direction: column;">
-        <div class="ds-modal-header ds-cluster-between" style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <h3 class="ds-heading-md" style="margin: 0; font-weight: 700;">Chi tiết nhật ký hoạt động</h3>
-                <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 12px; color: var(--ds-text-muted);">
-                    <span id="logDetId" style="font-weight: 600;">ID: #--</span>
-                    <span>•</span>
-                    <span id="logDetTime">--/--/---- --:--</span>
-                </div>
-            </div>
-            <button type="button" class="ds-btn ds-btn-text" style="font-size: 20px; padding: 4px; border: none; background: transparent; cursor: pointer; color: var(--ds-text-subtle);" onclick="AdminConsole.closeLogDetail()">
-                <i class="fa fa-times"></i>
-            </button>
-        </div>
-        <div class="ds-modal-body ds-stack-md" style="padding: 20px; overflow-y: auto; flex: 1;">
-            <!-- Box thông tin chung -->
-            <div style="background: var(--ds-surface-muted); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-md); padding: 16px;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
-                    <div>
-                        <span class="ds-caption" style="color: var(--ds-text-muted); display: block; margin-bottom: 4px;">Nhân viên thực hiện</span>
-                        <span style="font-weight: 600; color: var(--ds-text); display: flex; align-items: center; gap: 6px;">
-                            <i class="fa fa-user-circle-o" style="color: var(--ds-primary);"></i>
-                            <span id="logDetOperator">--</span>
-                        </span>
-                    </div>
-                    <div>
-                        <span class="ds-caption" style="color: var(--ds-text-muted); display: block; margin-bottom: 4px;">Địa chỉ IP kết nối</span>
-                        <span style="font-weight: 600; color: var(--ds-text); display: flex; align-items: center; gap: 6px;">
-                            <i class="fa fa-desktop" style="color: var(--ds-text-subtle);"></i>
-                            <span id="logDetIp" style="font-family: monospace;">--</span>
-                        </span>
-                    </div>
-                    <div>
-                        <span class="ds-caption" style="color: var(--ds-text-muted); display: block; margin-bottom: 4px;">Hành động nghiệp vụ</span>
-                        <span style="display: flex; align-items: center; gap: 6px; font-weight: 600; color: var(--ds-text);">
-                            <span id="logDetAction" class="ds-badge">--</span>
-                        </span>
-                    </div>
-                    <div>
-                        <span class="ds-caption" style="color: var(--ds-text-muted); display: block; margin-bottom: 4px;">Phân loại tác vụ</span>
-                        <span id="logDetCategory" style="font-weight: 600; color: var(--ds-text);">--</span>
-                    </div>
-                    <div>
-                        <span class="ds-caption" style="color: var(--ds-text-muted); display: block; margin-bottom: 4px;">Mức độ ảnh hưởng</span>
-                        <span id="logDetSeverity" class="ds-badge">--</span>
-                    </div>
-                    <div>
-                        <span class="ds-caption" style="color: var(--ds-text-muted); display: block; margin-bottom: 4px;">Đối tượng tác động</span>
-                        <span id="logDetTargetValue" style="font-weight: 700; color: var(--ds-primary);">--</span>
-                    </div>
-                </div>
-                
-                <div style="border-top: 1px solid var(--ds-border); margin-top: 12px; padding-top: 12px;">
-                    <span class="ds-caption" style="color: var(--ds-text-muted); display: block; margin-bottom: 4px;">Mô tả hoạt động</span>
-                    <span id="logDetDesc" style="color: var(--ds-text); font-weight: 500; font-size: 13.5px;">--</span>
-                </div>
-            </div>
-            
-            <!-- Chi tiết thay đổi -->
-            <div style="margin-top: 8px;">
-                <h4 style="margin: 0 0 10px; font-size: 14px; font-weight: 700; color: var(--ds-text);">
-                    Chi tiết thay đổi dữ liệu
-                </h4>
-                <div id="logDetDiffWrap"></div>
-            </div>
-        </div>
-        <div class="ds-modal-footer">
-            <button type="button" class="ds-btn ds-btn-outline" style="min-width: 100px;" onclick="AdminConsole.closeLogDetail()">Đóng</button>
-        </div>
-    </div>
-</div>
 
 <!-- Create announcement modal -->
 <div id="createNotifModal" class="ds-modal-backdrop ds-hidden" role="dialog" aria-modal="true">

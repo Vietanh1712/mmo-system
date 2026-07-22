@@ -7,7 +7,7 @@
 
     const VIEWS = [
         'dashboard', 'audit-logs', 'revenue', 'add-staff', 'account-detail', 'system-config',
-        'commissions', 'accounts', 'permissions', 'notifications'
+        'commissions', 'accounts', 'permissions', 'notifications', 'audit-log-detail'
     ];
 
     const ALL_PERMISSIONS = [
@@ -129,12 +129,82 @@
     const ACTION_LABELS = {
         KYC_Approve: 'Duyệt KYC',
         Fund_Withdraw: 'Duyệt rút tiền',
+        Withdrawal_Reject: 'Từ chối rút tiền',
+        Complaint_Resolve: 'Giải quyết khiếu nại',
+        Dispute_Start: 'Mở đối chất khiếu nại',
+        Shop_Approve: 'Duyệt mở Shop',
+        Shop_Reject: 'Từ chối mở Shop',
+        Support_Resolve: 'Phản hồi hỗ trợ',
         Lock_User: 'Khóa tài khoản',
+        Unlock_User: 'Mở khóa tài khoản',
+        Role_Update: 'Phân quyền tài khoản',
+        Perm_Update: 'Cập nhật phân quyền',
         Config_Update: 'Cập nhật cấu hình',
         Maintenance_Toggle: 'Bảo trì hệ thống',
         Notification_Create: 'Tạo thông báo',
         Notification_Delete: 'Xóa thông báo'
     };
+
+    const ACTION_GROUPS = {
+        '': [
+            { value: '', label: 'Tất cả hành động cụ thể' },
+            { value: 'Fund_Withdraw', label: 'Duyệt rút tiền' },
+            { value: 'Withdrawal_Reject', label: 'Từ chối rút tiền' },
+            { value: 'Complaint_Resolve', label: 'Giải quyết khiếu nại' },
+            { value: 'Dispute_Start', label: 'Mở đối chất khiếu nại' },
+            { value: 'Shop_Approve', label: 'Phê duyệt mở Shop' },
+            { value: 'Shop_Reject', label: 'Từ chối mở Shop' },
+            { value: 'KYC_Approve', label: 'Duyệt KYC' },
+            { value: 'Lock_User', label: 'Khóa tài khoản' },
+            { value: 'Unlock_User', label: 'Mở khóa tài khoản' },
+            { value: 'Role_Update', label: 'Thay đổi vai trò / Cấp quyền' },
+            { value: 'Support_Resolve', label: 'Phản hồi / Đóng phiếu hỗ trợ' },
+            { value: 'Config_Update', label: 'Cập nhật cấu hình phí & sàn' },
+            { value: 'Maintenance_Toggle', label: 'Bật / Tắt bảo trì hệ thống' },
+            { value: 'Notification_Create', label: 'Phát thông báo hệ thống' },
+            { value: 'Notification_Delete', label: 'Xóa thông báo hệ thống' }
+        ],
+        FINANCE: [
+            { value: '', label: 'Tất cả hành động Tài chính' },
+            { value: 'Fund_Withdraw', label: 'Duyệt rút tiền' },
+            { value: 'Withdrawal_Reject', label: 'Từ chối rút tiền' }
+        ],
+        COMPLAINT: [
+            { value: '', label: 'Tất cả hành động Khiếu nại' },
+            { value: 'Complaint_Resolve', label: 'Giải quyết khiếu nại' },
+            { value: 'Dispute_Start', label: 'Mở đối chất khiếu nại' }
+        ],
+        SHOP: [
+            { value: '', label: 'Tất cả hành động về Shop' },
+            { value: 'Shop_Approve', label: 'Phê duyệt mở Shop' },
+            { value: 'Shop_Reject', label: 'Từ chối mở Shop' }
+        ],
+        USER_MGMT: [
+            { value: '', label: 'Tất cả hành động Tài khoản & KYC' },
+            { value: 'KYC_Approve', label: 'Duyệt KYC' },
+            { value: 'Lock_User', label: 'Khóa tài khoản' },
+            { value: 'Unlock_User', label: 'Mở khóa tài khoản' },
+            { value: 'Role_Update', label: 'Thay đổi vai trò / Cấp quyền' }
+        ],
+        SUPPORT: [
+            { value: '', label: 'Tất cả hành động Hỗ trợ' },
+            { value: 'Support_Resolve', label: 'Phản hồi / Đóng phiếu hỗ trợ' }
+        ],
+        SYSTEM: [
+            { value: '', label: 'Tất cả hành động Cấu hình & Bảo trì' },
+            { value: 'Config_Update', label: 'Cập nhật cấu hình phí & sàn' },
+            { value: 'Maintenance_Toggle', label: 'Bật / Tắt bảo trì hệ thống' },
+            { value: 'Notification_Create', label: 'Phát thông báo hệ thống' },
+            { value: 'Notification_Delete', label: 'Xóa thông báo hệ thống' }
+        ]
+    };
+
+    function updateActionDropdown(categoryKey) {
+        const actionEl = document.getElementById('logActionFilter');
+        if (!actionEl) return;
+        const actions = ACTION_GROUPS[categoryKey] || ACTION_GROUPS[''];
+        actionEl.innerHTML = actions.map(a => `<option value="${a.value}">${escapeHtml(a.label)}</option>`).join('');
+    }
 
     const TX_TYPE_LABELS = {
         Deposit: 'Nạp tiền',
@@ -237,15 +307,31 @@
         });
         document.getElementById('auditResetFilter')?.addEventListener('click', () => {
             const s = document.getElementById('logSearch');
-            const f = document.getElementById('logActionFilter');
+            const cat = document.getElementById('logCategoryFilter');
+            const sd = document.getElementById('logStartDate');
+            const ed = document.getElementById('logEndDate');
+            const sort = document.getElementById('logSortOrder');
             if (s) s.value = '';
-            if (f) f.value = '';
+            if (cat) cat.value = '';
+            updateActionDropdown('');
+            if (sd) sd.value = '';
+            if (ed) ed.value = '';
+            if (sort) sort.value = 'DESC';
             auditPage = 0;
             filterAuditLogs();
         });
         document.getElementById('logSearch')?.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') { e.preventDefault(); auditPage = 0; filterAuditLogs(); }
         });
+        document.getElementById('logCategoryFilter')?.addEventListener('change', function () {
+            updateActionDropdown(this.value);
+            auditPage = 0;
+            filterAuditLogs();
+        });
+        document.getElementById('logActionFilter')?.addEventListener('change', () => { auditPage = 0; filterAuditLogs(); });
+        document.getElementById('logSortOrder')?.addEventListener('change', () => { auditPage = 0; filterAuditLogs(); });
+        document.getElementById('logStartDate')?.addEventListener('change', () => { auditPage = 0; filterAuditLogs(); });
+        document.getElementById('logEndDate')?.addEventListener('change', () => { auditPage = 0; filterAuditLogs(); });
 
         document.getElementById('revenueSearchBtn')?.addEventListener('click', () => {
             revPage = 0;
@@ -573,6 +659,7 @@
     function resolveViewElementId(target) {
         if (target === 'accounts') return 'accountsView';
         if (target === 'add-staff' || target === 'account-detail') return 'accountFormView';
+        if (target === 'audit-log-detail') return 'auditLogDetailView';
         return `${target}View`;
     }
 
@@ -1375,10 +1462,14 @@
     /* ---------- API: Audit logs ---------- */
     async function filterAuditLogs() {
         const q = document.getElementById('logSearch')?.value || '';
+        const category = document.getElementById('logCategoryFilter')?.value || '';
         const action = document.getElementById('logActionFilter')?.value || '';
+        const startDate = document.getElementById('logStartDate')?.value || '';
+        const endDate = document.getElementById('logEndDate')?.value || '';
+        const sort = document.getElementById('logSortOrder')?.value || 'DESC';
 
         try {
-            const url = `/admin/audit-logs?search=${encodeURIComponent(q)}&action=${encodeURIComponent(action)}&page=${auditPage}&size=${auditPageSize}`;
+            const url = `/admin/audit-logs?search=${encodeURIComponent(q)}&category=${encodeURIComponent(category)}&action=${encodeURIComponent(action)}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}&sort=${encodeURIComponent(sort)}&page=${auditPage}&size=${auditPageSize}`;
             const response = await authFetch(url);
             if (!response.ok) {
                 throw new Error('Không thể tải nhật ký từ máy chủ.');
@@ -1403,7 +1494,7 @@
                         </div>
                     </td>
                 </tr>
-            `).join('') : '<tr><td colspan="8" class="ds-empty-state">Không có nhật ký phù hợp.</td></tr>';
+            `).join('') : '<tr><td colspan="7" class="ds-empty-state">Không có nhật ký phù hợp.</td></tr>';
 
             mountPagination('auditPagination', {
                 page: data.page,
@@ -1418,35 +1509,67 @@
             console.error(e);
             const body = document.getElementById('auditLogsBody');
             if (body) {
-                body.innerHTML = `<tr><td colspan="8" class="ds-empty-state" style="color: var(--ds-color-danger)">Lỗi: ${escapeHtml(e.message)}</td></tr>`;
+                body.innerHTML = `<tr><td colspan="7" class="ds-empty-state" style="color: var(--ds-color-danger)">Lỗi: ${escapeHtml(e.message)}</td></tr>`;
             }
         }
     }
+
+    window.AdminConsole.exportAuditLogs = async function () {
+        const q = document.getElementById('logSearch')?.value || '';
+        const category = document.getElementById('logCategoryFilter')?.value || '';
+        const action = document.getElementById('logActionFilter')?.value || '';
+        const startDate = document.getElementById('logStartDate')?.value || '';
+        const endDate = document.getElementById('logEndDate')?.value || '';
+        const sort = document.getElementById('logSortOrder')?.value || 'DESC';
+
+        try {
+            const url = `/admin/audit-logs/export?search=${encodeURIComponent(q)}&category=${encodeURIComponent(category)}&action=${encodeURIComponent(action)}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}&sort=${encodeURIComponent(sort)}`;
+            const response = await authFetch(url);
+            if (!response.ok) {
+                throw new Error('Không thể tải file xuất nhật ký từ máy chủ.');
+            }
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = `nhat-ky-he-thong-${new Date().toISOString().slice(0, 10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+        } catch (e) {
+            console.error(e);
+            if (typeof showToast === 'function') {
+                showToast(e.message || 'Lỗi khi xuất file Excel', true);
+            }
+        }
+    };
  
     window.AdminConsole.openLogDetail = function (id) {
         const log = auditFiltered.find(l => l.id === id);
         if (!log) return;
         
-        const idEl = document.getElementById('logDetId');
-        if (idEl) idEl.textContent = `ID: #${log.id}`;
+        const titleEl = document.getElementById('auditDetTitle');
+        if (titleEl) titleEl.textContent = `Chi tiết nhật ký hoạt động #${log.id}`;
         
-        document.getElementById('logDetTime').textContent = formatDateTime(log.timestamp);
-        document.getElementById('logDetOperator').textContent = log.operator;
+        const subEl = document.getElementById('auditDetSubtitle');
+        if (subEl) subEl.textContent = `Thời gian khởi tạo: ${formatDateTime(log.timestamp)}`;
         
-        const ipEl = document.getElementById('logDetIp');
-        if (ipEl) ipEl.textContent = log.ipAddress || 'Không rõ';
+        const opEl = document.getElementById('auditDetOperator');
+        if (opEl) opEl.textContent = log.operator || 'Hệ thống';
         
-        const actEl = document.getElementById('logDetAction');
+        const actEl = document.getElementById('auditDetAction');
         if (actEl) {
             actEl.textContent = actionLabel(log.action);
             actEl.className = `ds-badge ${auditBadgeClass(log.action)}`;
         }
         
-        document.getElementById('logDetDesc').textContent = log.desc;
+        const descEl = document.getElementById('auditDetDesc');
+        if (descEl) descEl.textContent = log.desc;
 
         // Populate Category and Severity
-        const categoryEl = document.getElementById('logDetCategory');
-        const severityEl = document.getElementById('logDetSeverity');
+        const categoryEl = document.getElementById('auditDetCategory');
+        const severityEl = document.getElementById('auditDetSeverity');
         
         let categoryText = 'Vận hành hệ thống';
         let severityText = 'Thấp';
@@ -1456,14 +1579,22 @@
             categoryText = 'Xác thực người dùng';
             severityText = 'Trung bình';
             severityClass = 'ds-badge-success';
-        } else if (log.action === 'Lock_User') {
-            categoryText = 'Quản trị tài khoản';
+        } else if (log.action === 'Lock_User' || log.action === 'Unlock_User' || log.action === 'Role_Update' || log.action === 'Perm_Update') {
+            categoryText = 'Quản trị tài khoản & Phân quyền';
             severityText = 'Cao';
             severityClass = 'ds-badge-danger';
-        } else if (log.action === 'Fund_Withdraw') {
+        } else if (log.action === 'Fund_Withdraw' || log.action === 'Withdrawal_Reject') {
             categoryText = 'Giao dịch tài chính';
             severityText = 'Cao';
             severityClass = 'ds-badge-danger';
+        } else if (log.action === 'Complaint_Resolve' || log.action === 'Dispute_Start') {
+            categoryText = 'Xử lý khiếu nại';
+            severityText = 'Cao';
+            severityClass = 'ds-badge-warning';
+        } else if (log.action === 'Shop_Approve' || log.action === 'Shop_Reject') {
+            categoryText = 'Quản lý Shop';
+            severityText = 'Trung bình';
+            severityClass = 'ds-badge-success';
         } else if (log.action === 'Config_Update') {
             categoryText = 'Cấu hình hệ thống';
             severityText = 'Trung bình';
@@ -1485,32 +1616,22 @@
         }
         
         // Extract target of the action
-        const targetValue = document.getElementById('logDetTargetValue');
+        const targetValue = document.getElementById('auditDetTargetValue');
         let valText = 'Hệ thống';
 
-        if (log.action === 'KYC_Approve') {
-            const match = log.desc.match(/cho\s+([^\s]+)/i);
+        if (log.action === 'KYC_Approve' || log.action === 'Lock_User' || log.action === 'Unlock_User') {
+            const match = log.desc ? log.desc.match(/(cho|Khóa|Mở\s+khóa)\s+([^\s]+)/i) : null;
             if (match) {
-                valText = match[1];
-            }
-        } else if (log.action === 'Lock_User') {
-            const match = log.desc.match(/Khóa\s+([^\s]+)/i);
-            if (match) {
-                valText = match[1];
-            }
-        } else if (log.action === 'Fund_Withdraw') {
-            // Find in cashFlow by timestamp
-            const logTime = new Date(log.timestamp).getTime();
-            const match = mock.cashFlow.find(tx => {
-                if (tx.type !== 'Withdrawal') return false;
-                const txTime = new Date(tx.timestamp).getTime();
-                return Math.abs(logTime - txTime) < 5 * 60 * 1000;
-            });
-            if (match) {
-                valText = match.email;
+                valText = match[2] || match[1];
             } else {
-                valText = 'Tài khoản người bán';
+                valText = 'Tài khoản người dùng';
             }
+        } else if (log.action === 'Complaint_Resolve' || log.action === 'Dispute_Start') {
+            valText = 'Đơn khiếu nại';
+        } else if (log.action === 'Shop_Approve' || log.action === 'Shop_Reject') {
+            valText = 'Cửa hàng (Shop)';
+        } else if (log.action === 'Fund_Withdraw' || log.action === 'Withdrawal_Reject') {
+            valText = 'Lệnh rút tiền';
         } else if (log.action === 'Config_Update') {
             valText = 'Cấu hình hệ thống';
         } else if (log.action === 'Maintenance_Toggle') {
@@ -1523,17 +1644,18 @@
             targetValue.textContent = valText;
         }
         
-        const diffWrap = document.getElementById('logDetDiffWrap');
+        const diffWrap = document.getElementById('auditDetDiffWrap');
         if (diffWrap) {
             diffWrap.innerHTML = renderLogDiff(log.diff, log);
         }
         
-        document.getElementById('logDetailModal').classList.remove('ds-hidden');
+        switchAdminView('audit-log-detail');
+        window.scrollTo(0, 0);
     };
- 
-     window.AdminConsole.closeLogDetail = function () {
-         document.getElementById('logDetailModal').classList.add('ds-hidden');
-     };
+
+    window.AdminConsole.closeLogDetail = function () {
+        switchAdminView('audit-logs');
+    };
 
     function renderLogDiff(diffJson) {
         if (!diffJson) return '<div style="color: var(--ds-text-muted); font-size: 13px; padding: 12px; background: var(--ds-surface-muted); border-radius: var(--ds-radius-sm); border: 1px dashed var(--ds-border); text-align: center;"><i class="fa fa-info-circle"></i> Không có chi tiết thay đổi dữ liệu.</div>';

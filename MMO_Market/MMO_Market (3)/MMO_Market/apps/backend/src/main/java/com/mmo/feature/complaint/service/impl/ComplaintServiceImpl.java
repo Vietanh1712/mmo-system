@@ -28,10 +28,18 @@ import com.mmo.shared.dal.ShopFlagRepository;
 import com.mmo.shared.model.ShopFlag;
 import com.mmo.shared.model.Chat;
 import com.mmo.shared.dal.ChatRepository;
+import com.mmo.shared.dal.AuditLogRepository;
+import com.mmo.shared.model.AuditLog;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
+import java.util.HashMap;
 
 @Service
 @Slf4j
 public class ComplaintServiceImpl implements ComplaintService {
+
+    @Autowired
+    private AuditLogRepository auditLogRepository;
 
     @Autowired
     private ComplaintRepository complaintRepository;
@@ -347,6 +355,13 @@ public class ComplaintServiceImpl implements ComplaintService {
         complaint.setStatus("In_Progress");
         complaint = complaintRepository.save(complaint);
 
+        // Ghi AuditLog
+        Map<String, Object> diff = new HashMap<>();
+        diff.put("status", "PENDING_REVIEW -> In_Progress");
+        diff.put("complaintId", complaintId);
+        diff.put("staffId", staffId);
+        saveAuditLog(staff, "Dispute_Start", "Mở cuộc đối chất khiếu nại #CMP-" + complaintId, diff);
+
         // Tạo tin nhắn đối chất hệ thống tự động để kích hoạt phòng chat
         Chat systemMsg = new Chat();
         systemMsg.setSender(staff);
@@ -438,6 +453,18 @@ public class ComplaintServiceImpl implements ComplaintService {
             complaint.setResolvedBy(staffUser);
         }
         complaint.setResolvedAt(LocalDateTime.now());
+
+        // Ghi AuditLog
+        if (staffUser != null) {
+            Map<String, Object> diff = new HashMap<>();
+            diff.put("complaintId", complaintId);
+            diff.put("status", status);
+            diff.put("resolution", resolution);
+            if (flagLevel != null && !"None".equalsIgnoreCase(flagLevel)) {
+                diff.put("flagLevel", flagLevel);
+            }
+            saveAuditLog(staffUser, "Complaint_Resolve", "Xác nhận xử lý khiếu nại #CMP-" + complaintId + " (" + status + ")", diff);
+        }
 
         // Xử lý tạo ShopFlag nếu Staff chọn gắn cờ
         if (flagLevel != null && !flagLevel.trim().isEmpty() && !"None".equalsIgnoreCase(flagLevel)) {
@@ -809,5 +836,21 @@ public class ComplaintServiceImpl implements ComplaintService {
             return Integer.parseInt(matcher.group(1));
         }
         return 30; // Mặc định 30 ngày
+    }
+
+    private void saveAuditLog(User operator, String action, String desc, Map<String, Object> diff) {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("desc", desc);
+            payload.put("diff", diff);
+            String jsonDetails = new ObjectMapper().writeValueAsString(payload);
+            auditLogRepository.save(AuditLog.builder()
+                    .userId(operator != null ? operator.getId() : 1L)
+                    .action(action)
+                    .details(jsonDetails)
+                    .build());
+        } catch (Exception e) {
+            log.error("Failed to save audit log: {}", e.getMessage());
+        }
     }
 }
