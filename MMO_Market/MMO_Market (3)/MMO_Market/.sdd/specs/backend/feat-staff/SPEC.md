@@ -36,6 +36,8 @@ Hỗ trợ Staff kiểm duyệt KYC, phê duyệt/từ chối các yêu cầu m�
 | **FR-STF-13** | WHEN a Staff requests KYC statistics, THE SYSTEM SHALL return aggregated counts for total, pending, approved, and rejected KYC requests. |
 | **FR-STF-14** | WHEN a Staff changes KYC filter dropdown options, THE SYSTEM SHALL NOT auto-trigger search until the Staff clicks the Search button or presses Enter. |
 | **FR-STF-15** | WHEN a Staff manages shop statuses, THE SYSTEM SHALL support 5 distinct status values (`Active`, `Withdrawn`, `Suspended`, `Locked`, `Banned`). |
+| **FR-STF-16** | WHEN a Staff views a KYC request detail page (`/staff/kyc/detail`), THE SYSTEM SHALL render the status badge ("Đã duyệt", "Chờ duyệt", "Từ chối") aligned to the top-right corner of the submitter information card header. |
+| **FR-STF-17** | WHEN a Staff views a shop registration detail page (`/staff/shop-registrations/detail`), THE SYSTEM SHALL render the status badge ("Đã duyệt", "Chờ duyệt", "Từ chối") aligned to the top-right corner of the shop information card header. |
 
 ---
 
