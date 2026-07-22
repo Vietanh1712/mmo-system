@@ -105,15 +105,23 @@ c:\Users\pc\MMO_new1\MMO_Market\MMO_Market (3)\MMO_Market\
 *   **Mua hàng (Purchase)**: Chọn sản phẩm -> Chọn biến thể -> Bấm mua -> Hệ thống kiểm tra số dư ví -> Nếu đủ tiền: Trừ ví, Giao thông tin sản phẩm tức thì, Đổi trạng thái đơn thành Completed. Nếu thiếu tiền: Báo lỗi.
 *   **Nạp tiền (Top-up)**: Nhập số tiền -> Tạo QR Code/Lệnh thanh toán -> Thanh toán qua Sepay -> Hệ thống nhận Callback từ Sepay -> Tự động cộng tiền vào ví.
 *   **Khiếu nại (Complaint)**: Tạo khiếu nại đơn hàng -> Tạm giữ tiền -> Chờ Seller phản hồi -> Staff phân xử (Hoàn tiền hoặc Chuyển cho Seller).
+*   **Đặt hàng trước (Pre-Order)**: Chọn sản phẩm -> Gửi yêu cầu đặt trước với số lượng và mức giá mong muốn -> Lưu vào bảng `PreOrders` chờ xử lý.
+*   **Đánh giá (Review) & Báo cáo (Shop Flag)**: Customer viết đánh giá (rating 1-5 sao và bình luận) sau khi giao dịch hoàn tất. Báo cáo (Flag) gian hàng nếu phát hiện vi phạm.
 
 ### Nghiệp vụ Người bán (Seller)
-*   **Quản lý sản phẩm**: Tạo sản phẩm -> Upload dữ liệu số -> Hệ thống mã hóa bảo mật -> Đăng bán.
+*   **Quản lý sản phẩm & Kho hàng**: Tạo sản phẩm -> Upload dữ liệu số -> Hệ thống mã hóa bảo mật -> Đăng bán. Khi có giao dịch nạp tài sản số (`DigitalAsset`), tồn kho biến thể (`ProductVariant.stock`) tự động tính toán lại dựa trên các key/account chưa dùng.
 *   **Rút tiền (Withdraw)**: Nhập số tiền (> 50.000) -> Kiểm tra số dư khả dụng -> Trừ số dư ví, Đưa vào trạng thái Pending -> Staff duyệt -> Cập nhật trạng thái Completed.
 
 ### Nghiệp vụ Vận hành (Staff & Admin)
 *   **Duyệt KYC**: Xác minh giấy tờ tùy thân của User để cấp quyền bán hàng / nạp rút số lượng lớn.
-*   **Quản lý Cờ (Flag Management)**: Khóa/Cảnh báo các Shop có hành vi gian lận.
-*   **Admin Setup**: Cấu hình phí giao dịch, phí hoa hồng (Commission rate), quản lý Role của Staff.
+*   **Duyệt đăng ký Shop**: Phê duyệt hoặc từ chối hồ sơ đăng ký mở gian hàng của người dùng.
+*   **Duyệt rút tiền (Withdrawal Approval)**: Xem xét, phê duyệt hoặc từ chối các yêu cầu rút tiền ngân hàng của Seller, cập nhật trạng thái và đính kèm biên lai chuyển khoản.
+*   **Giải quyết khiếu nại (Complaint Resolution)**: Phân xử các khiếu nại giao dịch giữa Buyer và Seller, kiểm tra lịch sử chat/bằng chứng, cập nhật trạng thái khiếu nại (InProgress, Resolved, Rejected) và giải phóng/hoàn trả số dư đang đóng băng trong ví Escrow.
+*   **Giám sát giao dịch (Transaction Monitoring)**: Giám sát lịch sử giao dịch toàn sàn, theo dõi luồng tiền và thời gian bảo lãnh (Escrow duration) của từng đơn hàng.
+*   **Tiếp nhận & Xử lý hỗ trợ (Support Ticket Handling)**: Tiếp nhận, quản lý và xử lý các thẻ yêu cầu hỗ trợ (Support Tickets) gửi từ người dùng.
+*   **Cập nhật trạng thái Shop (Shop Status Update)**: Cập nhật trạng thái hoạt động của Shop (Active, Withdrawn, Suspended, Locked, Banned) riêng biệt tùy thuộc vào tình trạng vi phạm chính sách của Shop.
+*   **Quản lý Cờ (Flag Management)**: Cắm cờ cảnh báo Shop vi phạm với các mức độ (Warning, Critical, Danger) hoặc gỡ bỏ cờ khi vi phạm đã được khắc phục.
+*   **Admin Setup**: Cấu hình phí giao dịch, phí hoa hồng (Commission rate), quản lý phân quyền Staff (cấp/thu hồi quyền hạn), quản trị cấu hình hệ thống và chế độ bảo trì.
 
 ---
 
@@ -121,33 +129,37 @@ c:\Users\pc\MMO_new1\MMO_Market\MMO_Market (3)\MMO_Market\
 
 Hệ thống được chia thành 4 Portal tương ứng với các nhóm người dùng chính:
 
-### 4.1. Guest + Customer + User (24 Screens)
+### 4.1. Guest + Customer + User (28 Screens)
 1.  **Homepage** (Trang chủ)
 2.  **Sign In** (Đăng nhập)
 3.  **Forgot Password** (Quên mật khẩu)
 4.  **Sign Up** (Đăng ký)
 5.  **OTP Verification** (Xác thực OTP)
-6.  **Contact** (Liên hệ)
-7.  **My Profile** (Hồ sơ cá nhân)
-8.  **Change Information** (Đổi thông tin)
-9.  **My KYC** (Hồ sơ định danh)
-10. **Send KYC** (Gửi yêu cầu định danh)
-11. **My Order** (Đơn hàng của tôi)
-12. **Feedback** (Đánh giá)
-13. **Order Detail** (Chi tiết đơn hàng)
-14. **My Wishlist** (Sản phẩm yêu thích)
-15. **My Complaint** (Khiếu nại của tôi)
-16. **Complaint Detail** (Chi tiết khiếu nại)
-17. **My Notification** (Thông báo)
-18. **Register Shop** (Đăng ký mở Shop)
-19. **Top Up** (Nạp tiền ví)
-20. **Category** (Danh mục sản phẩm)
-21. **Product Detail** (Chi tiết sản phẩm)
-22. **Confirm Order** (Xác nhận đặt hàng)
-23. **Chat** (Nhắn tin trực tiếp)
-24. **Shop** (Trang gian hàng Seller)
+6.  **Reset Password** (Đặt lại mật khẩu)
+7.  **Contact** (Liên hệ)
+8.  **My Profile** (Hồ sơ cá nhân)
+9.  **Change Information** (Đổi thông tin)
+10. **My KYC** (Hồ sơ định danh)
+11. **Send KYC** (Gửi yêu cầu định danh)
+12. **My Order** (Đơn hàng của tôi)
+13. **Feedback** (Đánh giá)
+14. **Order Detail** (Chi tiết đơn hàng)
+15. **My Wishlist** (Sản phẩm yêu thích - Dự phòng)
+16. **My Complaint** (Khiếu nại của tôi)
+17. **Complaint Detail** (Chi tiết khiếu nại)
+18. **My Notification** (Thông báo)
+19. **Register Shop** (Đăng ký mở Shop)
+20. **Top Up** (Nạp tiền ví)
+21. **Category** (Danh mục sản phẩm)
+22. **Product Detail** (Chi tiết sản phẩm)
+23. **Confirm Order** (Xác nhận đặt hàng)
+24. **Chat** (Nhắn tin trực tiếp)
+25. **Shop** (Trang gian hàng Seller)
+26. **Pre-order Request** (Tạo đơn đặt trước)
+27. **My Pre-orders** (Danh sách đặt trước của tôi)
+28. **Support Page** (Trang hỗ trợ chung)
 
-### 4.2. Seller (21 Screens)
+### 4.2. Seller (23 Screens)
 1.  **Shop Dashboard** (Tổng quan doanh thu, đơn hàng)
 2.  **Shop Info** (Cài đặt thông tin Shop)
 3.  **Close Shop** (Đóng cửa gian hàng)
@@ -169,8 +181,10 @@ Hệ thống được chia thành 4 Portal tương ứng với các nhóm ngư�
 19. **Complaint Detail** (Chi tiết/Phản hồi khiếu nại)
 20. **Review** (Quản lý đánh giá từ khách)
 21. **Chat** (Chat với Customer)
+22. **Shop Statistics** (Thống kê doanh thu Shop chi tiết)
+23. **Variant Form** (Mẫu nhập thông tin biến thể)
 
-### 4.3. Staff (12 Screens)
+### 4.3. Staff (18 Screens)
 1.  **Staff Dashboard** (Tổng quan vận hành)
 2.  **Withdrawal Management** (Danh sách yêu cầu rút tiền)
 3.  **Withdrawal Detail** (Chi tiết lệnh rút & Tải biên lai)
@@ -183,6 +197,12 @@ Hệ thống được chia thành 4 Portal tương ứng với các nhóm ngư�
 10. **Flag Management** (Danh sách Shop bị cắm cờ)
 11. **Flag Detail** (Cắm cờ vi phạm Shop/Sản phẩm)
 12. **Chat** (Hỗ trợ người dùng)
+13. **Documents Dashboard** (Dashboard tài liệu hệ thống)
+14. **Shop Registrations List** (Danh sách đơn  Shop)
+15. **Shop Registration Detail** (Chi tiết duyệt Shop)
+16. **Shop Registration Update Status** (Cập nhật trạng thái mở Shop)
+17. **Support Tickets List** (Danh sách thẻ yêu cầu hỗ trợ)
+18. **Support Ticket Detail** (Chi tiết xử lý thẻ hỗ trợ)
 
 ### 4.4. Admin (13 Screens)
 1.  **Admin Dashboard** (Tổng quan toàn hệ thống)
@@ -210,10 +230,13 @@ Quy trình ghi lại các quyết định kiến trúc quan trọng để địn
 *   **Bối cảnh**: Hệ thống C2C đòi hỏi tính nhất quán giao dịch cực cao, sử dụng các stored procedure và trigger phức tạp trên SQL Server.
 *   **Quyết định**: Áp dụng Database First. Schema SQL Server là nguồn chân lý duy nhất. JPA Entity phải được đồng bộ thủ công theo Database Schema, cấm `ddl-auto=update` sinh tự động.
 
-### ADR-02: Cơ chế Escrow (Giam tiền) 72 giờ
-*   **Trạng thái**: Active | **Ngày cập nhật**: 2026-06-18
-*   **Bối cảnh**: Bảo vệ Customer tránh bị lừa đảo khi mua sản phẩm số lỗi.
-*   **Quyết định**: Tiền thanh toán của Customer sẽ bị giam 72 giờ (quy định bởi `escrow_release_date` của Transaction). Chỉ sau thời gian này hoặc khi Customer xác nhận thủ công, số dư khả dụng của Seller mới tăng lên.
+### ADR-02: Cơ chế Escrow (Giam tiền) Động
+*   **Trạng thái**: Active | **Ngày cập nhật**: 2026-07-07
+*   **Bối cảnh**: Bảo vệ Customer tránh bị lừa đảo khi mua sản phẩm số lỗi, đồng thời áp dụng chính sách chặt chẽ hơn cho các shop mới hoặc shop có rủi ro tranh chấp cao.
+*   **Quyết định**: Tiền thanh toán của Customer sẽ bị giam giữ tạm thời (quy định bởi `escrow_release_date` của Transaction). Thời gian giam tiền được tính toán động:
+    *   **168 giờ (7 ngày)**: Áp dụng đối với Shop bị cảnh cáo (Level 0), Shop mới đăng dưới 20 đơn hàng thành công (Level 1), hoặc các shop có tỷ lệ khiếu nại đúng `>= 2%`.
+    *   **72 giờ (3 ngày)**: Áp dụng mặc định đối với các shop hoạt động bình thường, ổn định.
+    *   Chỉ sau thời gian này (hoặc khi Buyer chủ động xác nhận hoàn thành sớm), số dư khả dụng (`balance_vnd`) của Seller mới được cộng tiền thực tế.
 
 ---
 

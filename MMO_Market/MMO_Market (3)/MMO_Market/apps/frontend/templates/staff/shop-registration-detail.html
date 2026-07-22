@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Chi tiết đăng ký Shop')}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('shop-registrations')}"></aside>
+
+            <section class="ds-section">
+                <nav class="staff-breadcrumb">
+                    <a href="/staff/shop-registrations">Quản lý Shop</a>
+                    <span>/</span>
+                    <span id="shopRequestCodeDisplay">#SHOP-...</span>
+                </nav>
+
+                <div class="staff-page-header">
+                    <div>
+                        <h1 class="ds-page-title">Xem chi tiết Shop</h1>
+                        <p class="ds-page-subtitle" id="shopRequestCodeSubtitle">Mã Shop: -</p>
+                    </div>
+                    <span class="ds-badge ds-badge-warning" id="shopStatusBadge">Đang tải</span>
+                </div>
+
+                <div class="staff-detail-grid">
+                    <div class="ds-stack-md">
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Thông tin Shop</h2>
+                            </div>
+                            <div style="padding: 20px 24px;">
+                                <dl class="staff-info-list">
+                                    <div class="staff-info-row">
+                                        <dt>Mã Shop</dt>
+                                        <dd id="shopCode">-</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Tên Shop</dt>
+                                        <dd id="shopName">-</dd>
+                                    </div>
+
+                                    <div class="staff-info-row">
+                                        <dt>Mô tả Shop</dt>
+                                        <dd id="shopDescription" style="white-space: pre-line;">-</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
+
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Thông tin liên hệ & Chủ sở hữu</h2>
+                            </div>
+                            <div style="padding: 20px 24px;">
+                                <dl class="staff-info-list">
+                                    <div class="staff-info-row">
+                                        <dt>Chủ sở hữu</dt>
+                                        <dd id="shopOwnerName">-</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Email liên hệ</dt>
+                                        <dd id="shopEmail">-</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Số điện thoại</dt>
+                                        <dd id="shopPhone">-</dd>
+                                    </div>
+
+                                    <div class="staff-info-row" id="shopRejectionReasonRow" style="display: none;">
+                                        <dt>Lý do từ chối</dt>
+                                        <dd id="shopRejectionReason" style="color: var(--ds-danger, #e53e3e);">-</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
+
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Thông tin tài chính</h2>
+                            </div>
+                            <div style="padding: 20px 24px;">
+                                <dl class="staff-info-list">
+                                    <div class="staff-info-row">
+                                        <dt>Số tiền cọc</dt>
+                                        <dd id="shopDeposit" style="font-weight: bold; color: var(--ds-success, #2ecc71);">-</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Số dư khả dụng</dt>
+                                        <dd id="shopBalance" style="font-weight: bold;">-</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Số tài khoản</dt>
+                                        <dd id="shopBankAccountNumber" style="font-weight: bold; color: var(--ds-primary, #3498db);">-</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Tên ngân hàng</dt>
+                                        <dd id="shopBankName">-</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Chi nhánh</dt>
+                                        <dd id="shopBankBranch">-</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ds-card staff-action-card staff-sticky-column">
+                        <div class="ds-card-header">
+                            <h2 class="ds-card-title">Quyết định duyệt</h2>
+                        </div>
+                        <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px;">
+                            <div class="ds-alert ds-alert-warning">Hãy đối chiếu kỹ thông tin người dùng và nội dung đăng ký trước khi duyệt.</div>
+                            <div class="ds-form-field" id="rejectionReasonFieldGroup">
+                                <label class="ds-label" for="reviewReason">Lý do từ chối (bắt buộc khi từ chối)</label>
+                                <textarea class="ds-textarea" id="reviewReason" placeholder="Nhập lý do nếu từ chối..." style="min-height: 100px;"></textarea>
+                            </div>
+                            <div class="ds-cluster" style="gap: 8px;">
+                                <button class="ds-btn ds-btn-success" type="button" onclick="reviewShop(true)" style="flex: 1;">
+                                    <i class="fa fa-check"></i> Chấp thuận
+                                </button>
+                                <button class="ds-btn ds-btn-danger" type="button" onclick="reviewShop(false)" style="flex: 1;">
+                                    <i class="fa fa-times"></i> Từ chối
+                                </button>
+                            </div>
+                            <div style="border-top: 1px solid var(--ds-border); padding-top: 16px; margin-top: 4px;">
+                                <a class="ds-btn ds-btn-outline" href="/staff/shop-registrations" style="width: 100%;">
+                                    <i class="fa fa-arrow-left"></i> Quay lại danh sách
+                                </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/customer/auth.js}"></script>
+<script th:src="@{/js/staff/staff-shop-registration-detail.js}"></script>
+</body>
+</html>

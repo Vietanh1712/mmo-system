@@ -8,7 +8,9 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/features/home.css}">
     <link rel="stylesheet" th:href="@{/css/customer/profile.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
     <link rel="stylesheet" th:href="@{/css/seller/seller.css}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         .asset-list-table {
             width: 100%;
@@ -248,6 +250,26 @@
                             </div>
                         </div>
 
+                        <!-- Excel/CSV Import/Export Section -->
+                        <div class="asset-input-group" style="margin-top: 16px; border: 1px dashed var(--ds-border, #cbd5e1); background: #fbfdff; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="font-size: 24px; color: #16a34a;"><i class="fa fa-file-excel-o"></i></div>
+                                <div>
+                                    <h4 style="margin: 0; font-size: 13px; font-weight: 600; color: var(--seller-ink, #0f172a);">Nhập nhanh từ Excel / CSV</h4>
+                                    <p style="margin: 2px 0 0; font-size: 12px; color: var(--seller-muted, #64748b);">Tải file mẫu, điền dữ liệu rồi tải lên để nhập hàng loạt</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button type="button" onclick="downloadExcelTemplate()" class="profile-button profile-button--secondary" style="padding: 6px 12px; min-height: 32px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
+                                    <i class="fa fa-download"></i> Tải file mẫu
+                                </button>
+                                <label class="profile-button profile-button--primary" style="padding: 6px 12px; min-height: 32px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin: 0;">
+                                    <i class="fa fa-upload"></i> Chọn file dữ liệu
+                                    <input type="file" id="excelImportInput" accept=".xlsx, .xls, .csv" style="display: none;" onchange="importFromExcel(event)">
+                                </label>
+                            </div>
+                        </div>
+
                         <!-- Asset List -->
                         <div id="assetListContainer" style="display: none;">
                             <div class="form-section-title">Danh sách tài sản đã nhập (<span id="assetCount">0</span> tài sản)</div>
@@ -305,14 +327,14 @@
             setupEventListeners();
         });
 
-        function updateProductDisplay(pType) {
+        function updateProductDisplay(pType, productName = null) {
             if (pType) productType = pType;
             let label = 'Tài khoản (username & password)';
             if (pType === 'KEY') label = 'Mã Key (mã kích hoạt)';
             else if (pType === 'GAME_CARD') label = 'Thẻ nạp (mã thẻ)';
             else if (pType === 'SERVICE') label = 'Dịch vụ';
             
-            const nameStr = productData.name || 'Sản phẩm mới';
+            const nameStr = productName || productData.name || 'Sản phẩm mới';
             const displayEl = document.getElementById('productTypeDisplay');
             if (displayEl) {
                 displayEl.textContent = 'Sản phẩm: ' + nameStr + ' (' + label + ')';
@@ -339,43 +361,43 @@
             if (pType === 'ACCOUNT') {
                 innerHtml = `
                     ${removeBtnHtml}
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; padding-right: 24px;">
-                        <div>
-                            <label style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 500;">Tài khoản (username/email) <span style="color: #ef4444;">*</span></label>
-                            <input type="text" class="asset-input-username" placeholder="VD: user123 hoặc abc@gmail.com" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;">
+                    <div class="asset-input-grid" style="margin-bottom: 12px; padding-right: 24px;">
+                        <div class="profile-edit-form__group" style="margin-bottom: 0;">
+                            <label>Tài khoản (username/email) <span style="color: #ef4444;">*</span></label>
+                            <input type="text" class="asset-input-username" placeholder="VD: user123 hoặc abc@gmail.com">
                         </div>
-                        <div>
-                            <label style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 500;">Mật khẩu <span style="color: #ef4444;">*</span></label>
-                            <input type="text" class="asset-input-password" placeholder="Nhập mật khẩu" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;">
+                        <div class="profile-edit-form__group" style="margin-bottom: 0;">
+                            <label>Mật khẩu <span style="color: #ef4444;">*</span></label>
+                            <input type="text" class="asset-input-password" placeholder="Nhập mật khẩu">
                         </div>
                     </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 500;">Ghi chú</label>
-                        <input type="text" class="asset-input-notes" placeholder="VD: Tài khoản mới tạo, chưa liên kết SĐT" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;">
+                    <div class="profile-edit-form__group" style="margin-top: 12px; padding-right: 24px;">
+                        <label>Ghi chú</label>
+                        <input type="text" class="asset-input-notes" placeholder="VD: Tài khoản mới tạo, chưa liên kết SĐT">
                     </div>
                 `;
             } else if (pType === 'KEY') {
                 innerHtml = `
                     ${removeBtnHtml}
-                    <div style="margin-bottom: 12px; padding-right: 24px;">
-                        <label style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 500;">Danh sách Mã Key <span style="color: #ef4444;">*</span></label>
-                        <textarea class="asset-input-keycode" placeholder="Mỗi dòng 1 mã key..." style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; min-height: 100px;"></textarea>
+                    <div class="profile-edit-form__group" style="margin-bottom: 12px; padding-right: 24px;">
+                        <label>Danh sách Mã Key <span style="color: #ef4444;">*</span></label>
+                        <textarea class="asset-input-keycode" placeholder="Mỗi dòng 1 mã key..." style="min-height: 100px;"></textarea>
                     </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 500;">Ghi chú chung cho các mã trên</label>
-                        <input type="text" class="asset-input-notes" placeholder="VD: Hạn sử dụng 1 năm" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;">
+                    <div class="profile-edit-form__group" style="margin-bottom: 0; padding-right: 24px;">
+                        <label>Ghi chú chung cho các mã trên</label>
+                        <input type="text" class="asset-input-notes" placeholder="VD: Hạn sử dụng 1 năm">
                     </div>
                 `;
             } else if (pType === 'GAME_CARD') {
                 innerHtml = `
                     ${removeBtnHtml}
-                    <div style="margin-bottom: 12px; padding-right: 24px;">
-                        <label style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 500;">Danh sách Mã thẻ nạp <span style="color: #ef4444;">*</span></label>
-                        <textarea class="asset-input-cardcode" placeholder="Mỗi dòng 1 mã thẻ..." style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; min-height: 100px;"></textarea>
+                    <div class="profile-edit-form__group" style="margin-bottom: 12px; padding-right: 24px;">
+                        <label>Danh sách Mã thẻ nạp <span style="color: #ef4444;">*</span></label>
+                        <textarea class="asset-input-cardcode" placeholder="Mỗi dòng 1 mã thẻ..." style="min-height: 100px;"></textarea>
                     </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 500;">Ghi chú chung cho các thẻ trên</label>
-                        <input type="text" class="asset-input-notes" placeholder="VD: Mệnh giá 500k" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;">
+                    <div class="profile-edit-form__group" style="margin-bottom: 0; padding-right: 24px;">
+                        <label>Ghi chú chung cho các thẻ trên</label>
+                        <input type="text" class="asset-input-notes" placeholder="VD: Mệnh giá 500k">
                     </div>
                 `;
             }
@@ -522,7 +544,14 @@
             const count = document.getElementById('assetCount');
             const warning = document.getElementById('noAssetsWarning');
 
-            count.textContent = assets.length;
+            const usedCount = assets.filter(a => a.isUsed === true).length;
+            const availableCount = assets.length - usedCount;
+
+            if (usedCount > 0) {
+                count.textContent = `${assets.length} tài sản (${availableCount} còn hàng, ${usedCount} đã bán)`;
+            } else {
+                count.textContent = `${assets.length} tài sản`;
+            }
 
             if (assets.length === 0) {
                 container.style.display = 'none';
@@ -540,26 +569,33 @@
                 if (productType === 'ACCOUNT') {
                     col1Label = `<code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 12px;">${asset.username}</code>`;
                     col2Label = `Mật khẩu: <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 12px;">••••••</code>`;
-                    if (asset.notes) col2Label += `<br><small>${asset.notes}</small>`;
+                    if (asset.notes) col2Label += `<br><small style="color: #64748b;">${asset.notes}</small>`;
                 } else if (productType === 'KEY') {
                     col1Label = `<code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 12px;">${asset.keyCode}</code>`;
-                    col2Label = asset.notes ? `<small>${asset.notes}</small>` : '';
+                    col2Label = asset.notes ? `<small style="color: #64748b;">${asset.notes}</small>` : '';
                 } else if (productType === 'GAME_CARD') {
                     col1Label = `<code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 12px;">${asset.cardCode}</code>`;
-                    col2Label = asset.notes ? `<small>${asset.notes}</small>` : '';
+                    col2Label = asset.notes ? `<small style="color: #64748b;">${asset.notes}</small>` : '';
                 }
 
+                const isUsed = asset.isUsed === true;
+                const statusBadge = isUsed 
+                    ? `<span class="status-badge sold" style="background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;">Đã bán</span>`
+                    : `<span class="status-badge available" style="background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;">Còn hàng</span>`;
+
+                const actionButton = isUsed
+                    ? `<button type="button" class="delete-btn" disabled style="opacity: 0.35; cursor: not-allowed;" title="Tài sản đã bán không thể xóa"><i class="fa fa-trash"></i></button>`
+                    : `<button type="button" class="delete-btn" onclick="deleteAsset(${index})" title="Xóa"><i class="fa fa-trash"></i></button>`;
+
                 return `
-                    <tr>
+                    <tr style="${isUsed ? 'background-color: #f8fafc; opacity: 0.8;' : ''}">
                         <td>${index + 1}</td>
                         <td>${col1Label}</td>
                         <td>${col2Label}</td>
-                        <td><span class="status-badge available">Còn hàng</span></td>
+                        <td>${statusBadge}</td>
                         <td>
                             <div class="asset-row-actions">
-                                <button type="button" class="delete-btn" onclick="deleteAsset(${index})" title="Xóa">
-                                    <i class="fa fa-trash"></i>
-                                </button>
+                                ${actionButton}
                             </div>
                         </td>
                     </tr>
@@ -581,6 +617,10 @@
 
         async function deleteAsset(index) {
             const asset = assets[index];
+            if (asset.isUsed) {
+                alert('Tài sản đã được bán cho người mua, không thể xóa!');
+                return;
+            }
             if (confirm('Bạn chắc chắn muốn xóa tài sản này?')) {
                 if (asset.id) {
                     try {
@@ -595,6 +635,140 @@
                 assets.splice(index, 1);
                 updateAssetList();
             }
+        }
+
+        function downloadExcelTemplate() {
+            if (typeof XLSX === 'undefined') {
+                alert('Thư viện Excel đang tải, vui lòng thử lại sau giây lát.');
+                return;
+            }
+            
+            let headers = [];
+            let sampleRow = [];
+            let fileName = '';
+
+            if (productType === 'ACCOUNT') {
+                headers = ['Tài khoản (Username/Email)', 'Mật khẩu (Password)', 'Ghi chú (Notes)'];
+                sampleRow = ['viethung@gmail.com', 'hung123456', 'Tài khoản Premium hạn dùng 30 ngày'];
+                fileName = 'Mau_Nhap_Tai_Khoan.xlsx';
+            } else if (productType === 'KEY') {
+                headers = ['Mã Key (Activation Key)', 'Ghi chú (Notes)'];
+                sampleRow = ['WIN10-PRO-XXXXX-XXXXX-XXXXX', 'Key kích hoạt Windows 10 Pro'];
+                fileName = 'Mau_Nhap_Ma_Key.xlsx';
+            } else if (productType === 'GAME_CARD') {
+                headers = ['Mã Thẻ (Card Code)', 'Ghi chú (Notes)'];
+                sampleRow = ['ZING-100K-1234567890', 'Thẻ Zing 100.000đ'];
+                fileName = 'Mau_Nhap_The_Game.xlsx';
+            } else {
+                alert('Không hỗ trợ file mẫu cho loại sản phẩm này.');
+                return;
+            }
+
+            const data = [headers, sampleRow];
+            const worksheet = XLSX.utils.aoa_to_sheet(data);
+            
+            // Set column widths to be readable
+            worksheet['!cols'] = [
+                { wch: 30 },
+                { wch: 30 },
+                { wch: 40 }
+            ];
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'File Mau');
+            XLSX.writeFile(workbook, fileName);
+        }
+
+        function importFromExcel(event) {
+            if (typeof XLSX === 'undefined') {
+                alert('Thư viện Excel chưa được tải xong.');
+                return;
+            }
+
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    if (rows.length <= 1) {
+                        alert('File không có dữ liệu (chỉ có dòng tiêu đề hoặc trống).');
+                        return;
+                    }
+
+                    let importedCount = 0;
+                    let duplicateCount = 0;
+
+                    // Skip the first row (headers)
+                    for (let i = 1; i < rows.length; i++) {
+                        const row = rows[i];
+                        if (!row || row.length === 0) continue;
+
+                        if (productType === 'ACCOUNT') {
+                            const username = (row[0] || '').toString().trim();
+                            const password = (row[1] || '').toString().trim();
+                            const notes = (row[2] || '').toString().trim();
+
+                            if (username && password) {
+                                assets.push({ type: 'ACCOUNT', username, password, notes });
+                                importedCount++;
+                            }
+                        } else if (productType === 'KEY') {
+                            const keyCode = (row[0] || '').toString().trim();
+                            const notes = (row[1] || '').toString().trim();
+
+                            if (keyCode) {
+                                if (assets.some(a => a.keyCode === keyCode)) {
+                                    duplicateCount++;
+                                    continue;
+                                }
+                                assets.push({ type: 'KEY', keyCode, notes });
+                                importedCount++;
+                            }
+                        } else if (productType === 'GAME_CARD') {
+                            const cardCode = (row[0] || '').toString().trim();
+                            const notes = (row[1] || '').toString().trim();
+
+                            if (cardCode) {
+                                if (assets.some(a => a.cardCode === cardCode)) {
+                                    duplicateCount++;
+                                    continue;
+                                }
+                                assets.push({ type: 'GAME_CARD', cardCode, notes });
+                                importedCount++;
+                            }
+                        }
+                    }
+
+                    if (importedCount > 0) {
+                        let msg = `Đã nhập thành công ${importedCount} tài sản từ file Excel/CSV!`;
+                        if (duplicateCount > 0) {
+                            msg += ` (Bỏ qua ${duplicateCount} tài sản bị trùng lặp)`;
+                        }
+                        if (typeof showToast === 'function') {
+                            showToast(msg);
+                        } else {
+                            alert(msg);
+                        }
+                        updateAssetList();
+                    } else {
+                        alert('Không tìm thấy dòng dữ liệu hợp lệ trong file.');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Lỗi đọc file Excel/CSV: ' + err.message);
+                } finally {
+                    event.target.value = '';
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
         }
     </script>
 </body>

@@ -1,80 +1,85 @@
 # SPEC — Complaint Refund & Notification in Wallet History
 > **Feature ID:** `feat-complaint-refund`
 > **UC Coverage:** UC-14 (Complaint Management), UC-09 (Notifications)
-> **Version:** 1.1 | **Status:** Active
-> **Author:** Team | **Last Updated:** 2026-06-29
+> **Version:** 1.2 | **Status:** Active
+> **Author:** Team | **Last Updated:** 2026-07-16
 
 ---
 
 ## 1. CONTEXT & GOAL (BỐI CẢNH & MỤC TIÊU)
 
 ### 1.1 Bối cảnh
-Khi Staff xử lý khiếu nại (complaint) bằng cách hoàn tiền hoặc từ chối, hệ thống phải **tự động ghi lại giao dịch** vào lịch sử ví (WalletTransactions) và **gửi thông báo hệ thống (Notification)** cho người dùng để cung cấp tính minh bạch, cho phép người dùng theo dõi tất cả hoàn tiền/giải ngân và nhận thông báo ngay lập tức.
+Khi Staff xử lý phán quyết khiếu nại (Complaints) bằng cách chấp nhận hoàn tiền (`Resolved`/`Completed`) hoặc từ chối (`Rejected`), hệ thống phải **tự động phân bổ lại dòng tài chính**, ghi nhận lịch sử giao dịch ví (`WalletTransactions`) và **gửi thông báo đẩy (`Notification`)** cho cả hai bên (Buyer và Seller). 
 
 ### 1.2 Mục tiêu
-- Tự động ghi WalletTransaction khi complaint được resolved (hoàn tiền) hoặc rejected (từ chối).
-- Tự động gửi thông báo hệ thống (Notification) cho các bên liên quan (Buyer và Seller) khi trạng thái khiếu nại thay đổi.
-- Cập nhật số liệu thống kê ví (Tổng nạp) để bao gồm cả tiền hoàn (`REFUND`) trên cả backend và frontend.
-- Cung cấp tính traceable thông qua reference codes liên kết complaint → transaction.
+- Thực hiện hoàn tiền theo tỷ lệ thời gian sử dụng thực tế (Pro-rata) khi khiếu nại được chấp nhận.
+- Tự động ghi nhận `WalletTransaction` với loại tương ứng (`REFUND` cho Buyer và `PAYMENT` cho Seller) ngay khi Staff phê duyệt hoặc từ chối khiếu nại.
+- Gửi thông báo hệ thống để báo cáo số dư ví biến động và lý do phán quyết của Staff.
+- Tích hợp số tiền hoàn `REFUND` vào thống kê "Tổng nạp" (Total Topup) trên giao diện quản lý ví của khách hàng.
 
 ---
 
 ## 2. ACTOR (TÁC NHÂN)
 | Actor | Role | Điều kiện tiền quyết |
 |---|---|---|
-| **Staff** | Nhân viên vận hành | Tài khoản có vai trò `Staff` |
-| **Customer** | Người mua (Buyer) | Bất kỳ tài khoản nào đã tạo khiếu nại |
-| **Seller** | Người bán (Seller) | Tài khoản Seller có khiếu nại được xử lý |
+| **Staff** | Nhân viên vận hành | Cập nhật phán quyết trạng thái khiếu nại |
+| **Customer** | Người mua (Buyer) | Nhận tiền hoàn tỷ lệ khi khiếu nại thành công |
+| **Seller** | Người bán (Seller) | Nhận giải ngân (toàn bộ hoặc một phần) tùy thuộc kết quả phân xử |
 
 ---
 
 ## 3. FUNCTIONAL REQUIREMENTS (Cú pháp EARS)
 
-### 3.1 Ghi REFUND transaction & gửi Notification khi Complaint Resolved
+### 3.1 Chấp nhận khiếu nại (Status = "Resolved" hoặc "Completed") — Hoàn tiền tỷ lệ (Pro-rata)
 | ID | EARS Requirement |
 |:---|:---|
-| FR-COMPLAINT-REFUND-01 | WHEN a Staff resolves a complaint (status = "Resolved"), THE SYSTEM SHALL create a WalletTransaction with type="REFUND" recording the refund amount for the Customer (Buyer). |
-| FR-COMPLAINT-REFUND-02 | THE SYSTEM SHALL update Customer.balanceVnd by adding transaction.amountVnd. |
-| FR-COMPLAINT-REFUND-03 | THE SYSTEM SHALL record reference_code in format "REFUND-CMP-{complaintId}-TX-{transactionId}" for audit traceability. |
-| FR-COMPLAINT-REFUND-04 | WHEN a complaint is resolved, THE SYSTEM SHALL create a Notification with type="WALLET" for the Customer notifying them about the refund success. |
-| FR-COMPLAINT-REFUND-05 | WHEN a complaint is resolved, THE SYSTEM SHALL create a Notification with type="WALLET" for the Seller notifying them that the order has been refunded to the buyer. |
+| **FR-REFUND-01** | WHEN a Staff resolves a complaint as "Resolved" or "Completed", THE SYSTEM SHALL parse the subscription duration days ($D_{total}$) from the variant name (e.g. "1 year" $\rightarrow$ 365, "1 month" $\rightarrow$ 30). |
+| **FR-REFUND-02** | THE SYSTEM SHALL compute the days used ($D_{used}$) and days remaining ($D_{remaining} = D_{total} - D_{used}$) from transaction creation to complaint creation. |
+| **FR-REFUND-03** | THE SYSTEM SHALL calculate refund amount for Buyer: $A_{refund} = \lceil A_{total} / D_{total} \times D_{remaining} \rceil$. |
+| **FR-REFUND-04** | THE SYSTEM SHALL compute payout amount for Seller: $A_{payout} = A_{total} - A_{refund}$, and Seller net payout: $A_{net\_payout} = A_{payout} - Commission_{actual}$. |
+| **FR-REFUND-05** | WHEN the original transaction status was "Held", THE SYSTEM SHALL credit $A_{refund}$ to Buyer's balance and credit $A_{net\_payout}$ to Seller's balance, recording `REFUND` and `PAYMENT` ledger transactions. |
+| **FR-REFUND-06** | WHEN the original transaction status was "Completed", THE SYSTEM SHALL credit $A_{refund}$ to Buyer's balance and debit $A_{refund}$ from Seller's balance (allowing negative balance), recording `REFUND` ledger transactions for both. |
+| **FR-REFUND-07** | THE SYSTEM SHALL create success Notifications (type = `WALLET`) notifying both Customer and Seller of their respective refund and payout/deduction amounts. |
 
-### 3.2 Ghi PAYMENT transaction & gửi Notification khi Complaint Rejected
+### 3.2 Từ chối khiếu nại (Status = "Rejected") — Giải ngân toàn bộ cho Seller
 | ID | EARS Requirement |
 |:---|:---|
-| FR-COMPLAINT-REFUND-06 | WHEN a Staff rejects a complaint (status = "Rejected"), THE SYSTEM SHALL create a WalletTransaction with type="PAYMENT" recording the payout (amount - commission) for the Seller. |
-| FR-COMPLAINT-REFUND-07 | THE SYSTEM SHALL update Seller.balanceVnd by adding (transaction.amountVnd - commission). |
-| FR-COMPLAINT-REFUND-08 | THE SYSTEM SHALL record reference_code in format "PAYOUT-CMP-REJECTED-{complaintId}-TX-{transactionId}". |
-| FR-COMPLAINT-REFUND-09 | WHEN a complaint is rejected, THE SYSTEM SHALL create a Notification with type="WALLET" for the Seller notifying them that the payout has been successfully credited to their wallet. |
-| FR-COMPLAINT-REFUND-10 | WHEN a complaint is rejected, THE SYSTEM SHALL create a Notification with type="WALLET" for the Customer (Buyer) notifying them that the complaint has been rejected along with the resolution reason. |
+| **FR-REFUND-08** | WHEN a Staff rejects a complaint as "Rejected", THE SYSTEM SHALL calculate full Seller payout: $A_{net\_payout} = A_{total} - Commission_{original}$. |
+| **FR-REFUND-09** | THE SYSTEM SHALL update Seller's `balanceVnd` by adding $A_{net\_payout}$ and create a `WalletTransaction` of type `PAYMENT` with reference `PAYOUT-CMP-REJECTED-{complaintId}-TX-{transactionId}`. |
+| **FR-REFUND-10** | THE SYSTEM SHALL create success Notifications (type = `WALLET`) notifying Seller of full payout, and Customer of complaint rejection with the resolution reason. |
 
-### 3.3 Hiển thị & Thống kê trong Wallet History
+### 3.4 Quản lý ví âm và Khóa/Mở khóa theo phân cấp Shop Level
 | ID | EARS Requirement |
 |:---|:---|
-| FR-COMPLAINT-REFUND-11 | WHEN a Customer or Seller views wallet transaction history, THE SYSTEM SHALL include REFUND (hoàn tiền) or PAYMENT (giải ngân) transactions. |
-| FR-COMPLAINT-REFUND-12 | THE SYSTEM SHALL calculate and display REFUND transactions under the "Tổng nạp" (Total Topup) statistic on both backend and frontend. |
+| **FR-LOCK-01** | WHEN a Seller's `balanceVnd` becomes negative (< 0) AND their `shopLevel` is 0 or 1, THE SYSTEM SHALL automatically set their `shopStatus` to "Locked". |
+| **FR-LOCK-02** | WHEN a Seller's `balanceVnd` becomes negative (< 0) AND their `shopLevel` is 2, THE SYSTEM SHALL automatically set their `withdrawalLocked` to `true` but keep their `shopStatus` as "Active". |
+| **FR-LOCK-03** | WHEN a Seller's `balanceVnd` becomes non-negative (>= 0) AND their `shopStatus` is "Locked", THE SYSTEM SHALL automatically restore their `shopStatus` to "Active". |
+| **FR-LOCK-04** | WHEN a Seller's `balanceVnd` becomes non-negative (>= 0) AND their `shopLevel` is 2 AND `withdrawalLocked` is `true`, THE SYSTEM SHALL automatically set `withdrawalLocked` to `false`. |
+| **FR-LOCK-05** | WHEN a Seller has a negative balance AND their `shopLevel` is 0 or 1, THE SYSTEM SHALL block them from listing new products, creating new variants, or updating variant info. |
+| **FR-LOCK-06** | WHEN a Seller's `shopStatus` is "Locked", "Banned", or "Pending", THE SYSTEM SHALL exclude all their products from public search results, catalog listings, and featured products sections. |
+
+### 3.3 Thống kê trong Wallet History
+| ID | EARS Requirement |
+|:---|:---|
+| **FR-REFUND-11** | WHEN calculating user wallet stats, THE SYSTEM SHALL include both `TOPUP` and `REFUND` transaction amounts in the "Tổng nạp" (Total Topup) statistic. |
 
 ---
 
 ## 4. NON-FUNCTIONAL REQUIREMENTS
 | ID | Category | Requirement |
 |:---|:---|:---|
-| NFR-COMPLAINT-REFUND-01 | Atomicity | Complaint resolution must be atomic: complaint status + transaction creation + notification creation + balance update all succeed or all rollback (use @Transactional). |
-| NFR-COMPLAINT-REFUND-02 | Logging | All refund/payout operations must be logged via SLF4J with details: user ID, amount, balance_after, reference_code. |
-| NFR-COMPLAINT-REFUND-03 | Performance | WalletTransaction & Notification creation must complete < 1 second per complaint resolution. |
+| **NFR-REFUND-01** | Atomicity | Quy trình hoàn tiền và giải ngân bắt buộc phải nằm trong `@Transactional` (rollback toàn bộ nếu có bất kỳ lỗi nào xảy ra). |
+| **NFR-REFUND-02** | Traceability | Mọi mã tham chiếu giao dịch ví (`referenceCode`) phải tuân thủ đúng định dạng quy định để dễ dàng tra cứu kiểm toán. |
 
 ---
 
-## 5. DATA MODEL (Mô hình dữ liệu)
+## 5. Tiêu Chí Nghiệm Thu (Acceptance Criteria)
 
-### 5.1 WalletTransactions & Notifications Tables
-Cả hai bảng `WalletTransactions` và `Notifications` đều được giữ nguyên cấu trúc database hiện tại để lưu thông tin giao dịch hoàn tiền và thông báo cá nhân.
-
----
-
-##  acceptance criteria (Tiêu chí nghiệm thu)
-| ID | Scenario | Given (Bối cảnh) | When (Hành động) | Then (Kết quả) |
-|---|---|---|---|---|
-| AC-COMPLAINT-REFUND-01 | Hoàn tiền thành công | Staff ở trang khiếu nại detail | Bấm "Giải quyết" (Resolved) với lý do | Complaint.status = "Resolved", Customer.balanceVnd ↑, WalletTransaction (type="REFUND") được tạo, Notification được gửi cho cả Buyer và Seller, log ghi nhận |
-| AC-COMPLAINT-REFUND-02 | Từ chối khiếu nại thành công | Staff ở trang khiếu nại detail | Bấm "Từ chối" (Rejected) với lý do | Complaint.status = "Rejected", Seller.balanceVnd ↑, WalletTransaction (type="PAYMENT") được tạo, Notification được gửi cho cả Buyer và Seller, log ghi nhận |
-| AC-COMPLAINT-REFUND-03 | Thống kê số dư chính xác | Người dùng xem lịch sử giao dịch | Có giao dịch REFUND thành công | Thống kê "Tổng nạp" tăng thêm bằng số tiền hoàn của giao dịch đó |
+### AC-REFUND-01 — Tính toán hoàn tiền tỷ lệ
+- **Cho trước:** Đơn hàng trị giá 300,000 VNĐ cho gói biến thể "Netflix 6 tháng" (180 ngày). Khách hàng tạo khiếu nại sau 60 ngày sử dụng.
+- **Khi:** Staff phán quyết "Resolved" cho khiếu nại đó.
+- **Thì:**
+  - Số ngày còn lại là 120 ngày.
+  - Số tiền hoàn Buyer nhận: $300,000 / 180 \times 120 = 200,000$ VNĐ.
+  - Số tiền giải ngân cho Seller (trước hoa hồng): $100,000$ VNĐ.
+  - Hệ thống ghi nhận các giao dịch `REFUND` cho Buyer và `PAYMENT` cho Seller với mã tham chiếu tương ứng.

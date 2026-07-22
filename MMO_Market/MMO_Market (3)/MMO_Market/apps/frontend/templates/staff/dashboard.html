@@ -21,25 +21,17 @@
                 </div>
 
                 <div class="staff-stat-grid">
-                    <div class="ds-card staff-stat-card yellow">
-                        <p class="staff-stat-card__label">Khiếu nại đang mở</p>
-                        <p class="staff-stat-card__value" th:text="${dashboard.openComplaints}"></p>
-                        <p class="staff-stat-card__hint">12 ưu tiên cao</p>
+                    <div class="ds-card staff-stat-card green">
+                        <p class="staff-stat-card__label">Tổng số Shop</p>
+                        <p class="staff-stat-card__value" th:text="${dashboard.totalShops}"></p>
                     </div>
                     <div class="ds-card staff-stat-card yellow">
                         <p class="staff-stat-card__label">Hồ sơ KYC chờ duyệt</p>
                         <p class="staff-stat-card__value" th:text="${dashboard.pendingKyc}"></p>
-                        <p class="staff-stat-card__hint">5 hồ sơ quá 24h</p>
-                    </div>
-                    <div class="ds-card staff-stat-card blue">
-                        <p class="staff-stat-card__label">Yêu cầu rút tiền</p>
-                        <p class="staff-stat-card__value" th:text="${dashboard.pendingWithdrawals}"></p>
-                        <p class="staff-stat-card__hint">Tổng 245.800.000 đ</p>
                     </div>
                     <div class="ds-card staff-stat-card red">
                         <p class="staff-stat-card__label">Cờ cảnh báo shop</p>
                         <p class="staff-stat-card__value" th:text="${dashboard.shopFlags}"></p>
-                        <p class="staff-stat-card__hint">2 mức nghiêm trọng</p>
                     </div>
                 </div>
 
@@ -48,10 +40,10 @@
                         <h2 class="ds-card-title">Truy cập nhanh</h2>
                     </div>
                     <div class="staff-quick-grid">
-                        <a class="ds-card staff-quick-card" href="/staff/complaints">
-                            <div class="staff-quick-card__icon staff-quick-card__icon--danger"><i class="fa fa-exclamation-circle"></i></div>
-                            <h3>Quản lý khiếu nại</h3>
-                            <p>Xem danh sách và xử lý khiếu nại từ người mua/bán.</p>
+                        <a class="ds-card staff-quick-card" href="/staff/documents">
+                            <div class="staff-quick-card__icon staff-quick-card__icon--danger"><i class="fa fa-file-text"></i></div>
+                            <h3>Quản lý đơn từ</h3>
+                            <p>Xem tổng quan, xử lý khiếu nại, lịch sử giao dịch và phê duyệt rút tiền ngân hàng.</p>
                         </a>
                         <a class="ds-card staff-quick-card" href="/staff/kyc">
                             <div class="staff-quick-card__icon staff-quick-card__icon--warning"><i class="fa fa-id-card"></i></div>
@@ -63,10 +55,10 @@
                             <h3>Quản lý Shop</h3>
                             <p>Duyệt hoặc từ chối yêu cầu đăng ký mở shop của người dùng.</p>
                         </a>
-                        <a class="ds-card staff-quick-card" href="/staff/withdrawals">
-                            <div class="staff-quick-card__icon staff-quick-card__icon--info"><i class="fa fa-money"></i></div>
-                            <h3>Quản lý rút tiền</h3>
-                            <p>Phê duyệt yêu cầu rút tiền của seller.</p>
+                        <a class="ds-card staff-quick-card" href="/staff/categories">
+                            <div class="staff-quick-card__icon staff-quick-card__icon--info"><i class="fa fa-folder-open"></i></div>
+                            <h3>Quản lý danh mục</h3>
+                            <p>Tạo mới, chỉnh sửa và ẩn/hiện danh mục sản phẩm số.</p>
                         </a>
                         <a class="ds-card staff-quick-card" href="/staff/flags">
                             <div class="staff-quick-card__icon staff-quick-card__icon--muted"><i class="fa fa-flag"></i></div>

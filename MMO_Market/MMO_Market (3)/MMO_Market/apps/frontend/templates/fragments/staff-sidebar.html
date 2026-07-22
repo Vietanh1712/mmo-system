@@ -10,17 +10,7 @@
                href="/staff/dashboard">
                 <i class="fa fa-dashboard"></i> Tổng quan
             </a>
-            <a class="staff-sidebar__link"
-               th:classappend="${active == 'complaints'} ? ' is-active' : ''"
-               href="/staff/complaints"
-               data-required-permission="HANDLE_DISPUTES">
-                <i class="fa fa-exclamation-circle"></i> Khiếu nại
-            </a>
-            <a class="staff-sidebar__link"
-               th:classappend="${active == 'support-tickets'} ? ' is-active' : ''"
-               href="/staff/support-tickets">
-                <i class="fa fa-ticket"></i> Ticket Hỗ Trợ
-            </a>
+
             <a class="staff-sidebar__link"
                th:classappend="${active == 'kyc'} ? ' is-active' : ''"
                href="/staff/kyc"
@@ -31,18 +21,53 @@
                th:classappend="${active == 'shop-registrations'} ? ' is-active' : ''"
                href="/staff/shop-registrations"
                data-required-permission="MANAGE_SHOPS">
-                <i class="fa fa-shopping-bag"></i> Shops
+                 <i class="fa fa-shopping-bag"></i> Quản lý Shops
             </a>
+            
+            <!-- Collapsible Dropdown for Quản lý đơn từ -->
+            <div class="staff-sidebar__dropdown" th:classappend="${active == 'complaints' or active == 'transactions' or active == 'withdrawals' or active == 'support-tickets' or active == 'documents'} ? 'is-open' : ''">
+                <div class="staff-sidebar__dropdown-header">
+                    <a class="staff-sidebar__link staff-sidebar__dropdown-link-main"
+                       th:classappend="${active == 'documents'} ? ' is-active' : ''"
+                       href="/staff/documents">
+                        <i class="fa fa-file-text"></i>
+                        <span>Quản lý đơn từ</span>
+                    </a>
+                    <button class="staff-sidebar__dropdown-toggle" type="button" aria-label="Toggle Dropdown">
+                        <i class="fa fa-chevron-down staff-sidebar__dropdown-arrow"></i>
+                    </button>
+                </div>
+                <div class="staff-sidebar__dropdown-menu">
+                    <a class="staff-sidebar__link staff-sidebar__dropdown-item"
+                       th:classappend="${active == 'complaints'} ? ' is-active' : ''"
+                       href="/staff/complaints"
+                       data-required-permission="HANDLE_DISPUTES">
+                        <i class="fa fa-exclamation-circle"></i> Khiếu nại
+                    </a>
+                    <a class="staff-sidebar__link staff-sidebar__dropdown-item"
+                       th:classappend="${active == 'support-tickets'} ? ' is-active' : ''"
+                       href="/staff/support-tickets">
+                        <i class="fa fa-ticket"></i> Phiếu Hỗ Trợ
+                    </a>
+                    <a class="staff-sidebar__link staff-sidebar__dropdown-item"
+                       th:classappend="${active == 'transactions'} ? ' is-active' : ''"
+                       href="/staff/transactions">
+                        <i class="fa fa-exchange"></i> Giao dịch
+                    </a>
+                    <a class="staff-sidebar__link staff-sidebar__dropdown-item"
+                       th:classappend="${active == 'withdrawals'} ? ' is-active' : ''"
+                       href="/staff/withdrawals"
+                       data-required-permission="APPROVE_WITHDRAWALS">
+                        <i class="fa fa-money"></i> Rút tiền
+                    </a>
+                </div>
+            </div>
+
             <a class="staff-sidebar__link"
-               th:classappend="${active == 'transactions'} ? ' is-active' : ''"
-               href="/staff/transactions">
-                <i class="fa fa-exchange"></i> Giao dịch
-            </a>
-            <a class="staff-sidebar__link"
-               th:classappend="${active == 'withdrawals'} ? ' is-active' : ''"
-               href="/staff/withdrawals"
-               data-required-permission="APPROVE_WITHDRAWALS">
-                <i class="fa fa-money"></i> Rút tiền
+               th:classappend="${active == 'categories'} ? ' is-active' : ''"
+               href="/staff/categories"
+               data-required-permission="MANAGE_CATEGORIES">
+                <i class="fa fa-folder-open"></i> Quản lý danh mục
             </a>
             <a class="staff-sidebar__link"
                th:classappend="${active == 'flags'} ? ' is-active' : ''"

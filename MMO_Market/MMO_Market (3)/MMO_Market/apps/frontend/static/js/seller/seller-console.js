@@ -49,6 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
         initComplaints();
     } else if (path.endsWith('/complaint-detail') || path.endsWith('/complaints/detail')) {
         initComplaintDetail();
+    } else if (path.endsWith('/preorders')) {
+        initPreOrders();
     }
 });
 
@@ -57,6 +59,42 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==============================================================================
 function formatVND(value) {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value) || 0);
+}
+
+function translateStatus(status) {
+    if (!status) return '-';
+    const statusLower = status.toLowerCase().trim();
+    const map = {
+        'pending': 'Chờ xử lý',
+        'held': 'Tạm giữ (Bảo lãnh)',
+        'paid': 'Đã thanh toán',
+        'delivered': 'Đã giao',
+        'completed': 'Hoàn tất',
+        'cancelled': 'Đã hủy',
+        'disputed': 'Tranh chấp',
+        'refunded': 'Đã hoàn tiền',
+        'failed': 'Thất bại',
+        'active': 'Đang bán',
+        'inactive': 'Tạm ẩn',
+        'rejected': 'Bị từ chối',
+        'approved': 'Đã duyệt',
+        'open': 'Chờ xử lý',
+        'in_progress': 'Đang giải quyết',
+        'inprogress': 'Đang giải quyết',
+        'resolved': 'Đã giải quyết',
+        'closed': 'Đã đóng'
+    };
+    return map[statusLower] || status;
+}
+
+function getBadgeClassForStatus(status) {
+    if (!status) return 'pending';
+    const statusLower = status.toLowerCase().trim();
+    if (statusLower === 'completed' || statusLower === 'approved') return 'ok';
+    if (statusLower === 'pending') return 'pending';
+    if (statusLower === 'held') return 'held';
+    if (statusLower === 'rejected' || statusLower === 'failed' || statusLower === 'locked') return 'critical';
+    return 'pending';
 }
 
 async function sellerFetch(url, options = {}) {
@@ -78,7 +116,25 @@ async function sellerFetch(url, options = {}) {
 
 // Show feedback message
 function showToast(message, type = 'success') {
-    // Create element if not exists
+    // If the global design system toast is loaded, delegate to it
+    if (type === 'success' && typeof window.showSuccessToast === 'function') {
+        window.showSuccessToast(message);
+        return;
+    }
+    if ((type === 'error' || type === 'danger') && typeof window.showErrorToast === 'function') {
+        window.showErrorToast(message);
+        return;
+    }
+    if (type === 'warning' && typeof window.showWarningToast === 'function') {
+        window.showWarningToast(message);
+        return;
+    }
+    if (type === 'info' && typeof window.showInfoToast === 'function') {
+        window.showInfoToast(message);
+        return;
+    }
+
+    // Fallback to local element if global system is not present
     let toast = document.getElementById('seller-toast');
     if (!toast) {
         toast = document.createElement('div');
@@ -97,7 +153,13 @@ function showToast(message, type = 'success') {
         `;
         document.body.appendChild(toast);
     }
-    toast.style.backgroundColor = type === 'success' ? '#22c55e' : '#ef4444';
+    
+    let bgColor = '#10a37f'; // success (DESIGN.md)
+    if (type === 'error' || type === 'danger') bgColor = '#ef4444'; // danger (DESIGN.md)
+    else if (type === 'warning') bgColor = '#f59e0b'; // warning (DESIGN.md)
+    else if (type === 'primary') bgColor = '#ea580c'; // primary (DESIGN.md)
+    
+    toast.style.backgroundColor = bgColor;
     toast.textContent = message;
     toast.style.opacity = '1';
     setTimeout(() => {
@@ -226,7 +288,7 @@ async function initDashboard() {
                         <td>${t.productName}</td>
                         <td>${t.customerEmail}</td>
                         <td class="text-right">${formatVND(t.amountVnd)}</td>
-                        <td><span class="badge ${badgeClass}">${t.status}</span></td>
+                        <td><span class="badge ${badgeClass}">${translateStatus(t.status)}</span></td>
                     </tr>
                 `;
             }).join('');
@@ -345,11 +407,11 @@ async function initInventory() {
                         ? `<span style="color: #f59e0b; font-weight: 600;">${p.totalStock}</span>`
                         : p.totalStock;
 
-                    let statusBadgeHtml = `<span class="badge ${statusClass}">${p.status}</span>`;
+                    let statusBadgeHtml = `<span class="badge ${statusClass}">${translateStatus(p.status)}</span>`;
                     if (p.totalStock === 0 && p.status === 'Active') {
                         statusBadgeHtml = `<span class="badge locked"><i class="fa fa-lock"></i> Hết hàng</span>`;
                     } else if (p.status !== 'Active') {
-                        statusBadgeHtml = `<span class="badge locked"><i class="fa fa-pause"></i> Inactive</span>`;
+                        statusBadgeHtml = `<span class="badge locked"><i class="fa fa-pause"></i> Tạm ẩn</span>`;
                     }
 
                     // Fallback product image
@@ -539,21 +601,112 @@ window.viewAssets = viewAssets;
 window.closeAssetModal = closeAssetModal;
 
 
+// Helper to setup category selectors
+async function setupCategorySelectors(mainSelect, subSelect, currentCategoryId = null) {
+    try {
+        const res = await sellerFetch('/categories');
+        if (!res.ok) return;
+        
+        const categories = await res.json();
+        
+        // Sort main categories: push "Khác" and "Dịch vụ khác" to the end
+        categories.sort((a, b) => {
+            const nameA = (a.name || '').toLowerCase().trim();
+            const nameB = (b.name || '').toLowerCase().trim();
+            const isKhacA = nameA === 'khác' || nameA === 'dịch vụ khác';
+            const isKhacB = nameB === 'khác' || nameB === 'dịch vụ khác';
+            if (isKhacA && !isKhacB) return 1;
+            if (!isKhacA && isKhacB) return -1;
+            return 0;
+        });
+
+        // Sort subCategories for each category: by ID asc (oldest first), then push "Khác" to end
+        categories.forEach(parent => {
+            if (parent.subCategories && parent.subCategories.length > 0) {
+                parent.subCategories.sort((a, b) => {
+                    const nameA = (a.name || '').toLowerCase().trim();
+                    const nameB = (b.name || '').toLowerCase().trim();
+                    const isKhacA = nameA.includes('khác');
+                    const isKhacB = nameB.includes('khác');
+                    if (isKhacA && !isKhacB) return 1;
+                    if (!isKhacA && isKhacB) return -1;
+                    // Sort by ID ascending so earlier-created (lower ID) appears first
+                    return (a.id || 0) - (b.id || 0);
+                });
+            }
+        });
+        
+        // Populate mainCategory
+        mainSelect.innerHTML = '<option value="">-- Chọn danh mục chính --</option>' + 
+                              categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        
+        // Change handler
+        const updateSubCategories = (selectedParentId, selectValue = null) => {
+            const parentCat = categories.find(c => c.id == selectedParentId);
+            if (parentCat && parentCat.subCategories && parentCat.subCategories.length > 0) {
+                subSelect.innerHTML = '<option value="">-- Chọn danh mục phụ --</option>' +
+                                     parentCat.subCategories.map(sub => `<option value="${sub.id}">${sub.name}</option>`).join('');
+                subSelect.disabled = false;
+                subSelect.setAttribute('required', 'required');
+                if (selectValue) {
+                    subSelect.value = selectValue;
+                }
+            } else {
+                subSelect.innerHTML = '<option value="">-- Không có danh mục phụ --</option>';
+                subSelect.disabled = true;
+                subSelect.removeAttribute('required');
+                subSelect.value = '';
+            }
+        };
+        
+        mainSelect.addEventListener('change', () => {
+            updateSubCategories(mainSelect.value);
+        });
+        
+        // If initializing with an existing category ID (edit mode)
+        if (currentCategoryId) {
+            let foundParent = null;
+            let foundSub = null;
+            
+            for (const cat of categories) {
+                if (cat.id == currentCategoryId) {
+                    foundParent = cat;
+                    break;
+                }
+                if (cat.subCategories) {
+                    const sub = cat.subCategories.find(s => s.id == currentCategoryId);
+                    if (sub) {
+                        foundParent = cat;
+                        foundSub = sub;
+                        break;
+                    }
+                }
+            }
+            
+            if (foundParent) {
+                mainSelect.value = foundParent.id;
+                if (foundSub) {
+                    updateSubCategories(foundParent.id, foundSub.id);
+                } else {
+                    updateSubCategories(foundParent.id);
+                }
+            }
+        }
+    } catch (err) {
+        console.error('Error setupCategorySelectors:', err);
+    }
+}
+
 // ==============================================================================
 // 5. PRODUCT ADD
 // ==============================================================================
 async function initProductAdd() {
-    const select = document.getElementById('category');
-    if (!select) return;
+    const mainSelect = document.getElementById('mainCategory');
+    const subSelect = document.getElementById('subCategory');
+    if (!mainSelect || !subSelect) return;
 
     try {
-        // Load categories
-        const res = await sellerFetch('/categories');
-        if (res.ok) {
-            const categories = await res.json();
-            select.innerHTML = '<option value="">-- Chọn danh mục --</option>' + 
-                               categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-        }
+        await setupCategorySelectors(mainSelect, subSelect);
 
 
         // Setup Variants UI
@@ -582,53 +735,11 @@ async function initProductAdd() {
                         <input type="number" class="variant-price-input" placeholder="VD: 50000" min="0" required autocomplete="off">
                     </div>
                 </div>
-                <div class="profile-edit-form__group" style="margin-bottom: 0;">
-                    <label>Hình ảnh minh họa <span style="color: #ef4444;">*</span></label>
-                    <div class="variant-img-upload">
-                        <img class="variant-img-preview" alt="Xem trước ảnh">
-                        <div class="variant-img-btn">
-                            <input type="file" class="variant-file-input" accept="image/*" required>
-                            <label class="variant-img-label">
-                                <i class="fa fa-image"></i> Chọn ảnh
-                            </label>
-                        </div>
-                    </div>
-                </div>
             `;
 
             // Delete action
             div.querySelector('.variant-card__delete').addEventListener('click', () => {
                 div.remove();
-            });
-
-            // Image upload action
-            const fileInput = div.querySelector('.variant-file-input');
-            const preview = div.querySelector('.variant-img-preview');
-            fileInput.addEventListener('change', async (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = async function(event) {
-                        const base64Data = event.target.result;
-                        preview.src = base64Data;
-                        preview.classList.add('active');
-                        try {
-                            const uploadRes = await sellerFetch('/upload-image', {
-                                method: 'POST',
-                                body: JSON.stringify({ image: base64Data })
-                            });
-                            const uploadData = await uploadRes.json();
-                            if (uploadRes.ok) {
-                                div.dataset.imageUrl = uploadData.url; // Store url here
-                            } else {
-                                showToast(uploadData.message || 'Lỗi tải ảnh', 'error');
-                            }
-                        } catch (err) {
-                            showToast('Lỗi kết nối tải ảnh', 'error');
-                        }
-                    };
-                    reader.readAsDataURL(file);
-                }
             });
 
             variantsContainer.appendChild(div);
@@ -649,13 +760,12 @@ async function initProductAdd() {
                 e.preventDefault();
                 const name = document.getElementById('productName').value.trim();
                 const description = document.getElementById('description').value.trim();
-                const categoryId = select.value;
+                const categoryId = subSelect.value || mainSelect.value;
                 const typeEl = document.querySelector('input[name="productType"]:checked');
-                const productType = typeEl ? typeEl.value : null;
+                const productType = typeEl ? typeEl.value : 'ACCOUNT';
 
                 if (!name) return showToast('Vui lòng nhập tên sản phẩm.', 'error');
                 if (!categoryId) return showToast('Vui lòng chọn danh mục.', 'error');
-                if (!productType) return showToast('Vui lòng chọn loại sản phẩm.', 'error');
 
                 const variantCards = variantsContainer.querySelectorAll('.variant-card');
                 if (variantCards.length === 0) {
@@ -666,20 +776,17 @@ async function initProductAdd() {
                 for (let card of variantCards) {
                     const varName = card.querySelector('.variant-name-input').value.trim();
                     const varPrice = card.querySelector('.variant-price-input').value.trim();
-                    const varImgUrl = card.dataset.imageUrl;
 
                     if (!varName) return showToast('Có biến thể chưa nhập tên.', 'error');
                     if (!varPrice) return showToast('Có biến thể chưa nhập giá bán.', 'error');
-                    if (!varImgUrl) return showToast('Biến thể "' + varName + '" chưa có hình ảnh minh họa.', 'error');
 
                     variants.push({
                         variantName: varName,
-                        priceVnd: varPrice,
-                        imageUrl: varImgUrl
+                        priceVnd: varPrice
                     });
                 }
 
-                let mainProductImageUrl = variants.length > 0 ? variants[0].imageUrl : '';
+                let mainProductImageUrl = '';
                 
                 const productImageInput = document.getElementById('productImage');
                 if (productImageInput && productImageInput.files.length > 0) {
@@ -698,10 +805,12 @@ async function initProductAdd() {
                             const uploadData = await uploadRes.json();
                             mainProductImageUrl = uploadData.url;
                         } else {
-                            showToast('Không thể tải lên ảnh sản phẩm, dùng ảnh biến thể thay thế.', 'error');
+                            showToast('Không thể tải lên ảnh sản phẩm.', 'error');
+                            return;
                         }
                     } catch (e) {
                         console.error(e);
+                        return;
                     }
                 }
 
@@ -744,23 +853,22 @@ async function initProductEdit() {
         return;
     }
 
-    const select = document.getElementById('category');
+    const mainSelect = document.getElementById('mainCategory');
+    const subSelect = document.getElementById('subCategory');
     const form = document.querySelector('.profile-edit-form');
     const tbody = document.querySelector('.seller-table tbody') || document.querySelector('.admin-table tbody');
-    if (!form || !tbody) return;
+    if (!form || !tbody || !mainSelect || !subSelect) return;
+
+    let categoryData = [];
 
     try {
-        // Load categories
-        const catRes = await sellerFetch('/categories');
-        if (catRes.ok) {
-            const categories = await catRes.json();
-            select.innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-        }
-
         // Load Product Detail
         const pRes = await sellerFetch(`/products/${productId}`);
         if (!pRes.ok) throw new Error('Không thể tải thông tin sản phẩm.');
         const p = await pRes.json();
+
+        // Setup categories
+        await setupCategorySelectors(mainSelect, subSelect, p.categoryId);
 
         // Populate fields
         const subtitleEl = document.querySelector('.seller-card__subtitle') || document.querySelector('.view-header p');
@@ -770,7 +878,6 @@ async function initProductEdit() {
         if (document.getElementById('userGuide')) {
             document.getElementById('userGuide').value = p.userGuide || '';
         }
-        select.value = p.categoryId;
 
         // Activate variants new link
         const addVarBtn = document.querySelector('a[href*="/seller/variants/new"]');
@@ -789,7 +896,7 @@ async function initProductEdit() {
                         <td>${v.variantName}</td>
                         <td class="text-right">${formatVND(v.priceVnd)}</td>
                         <td class="text-right">${v.stock}</td>
-                        <td><span class="badge ${statusClass}">${v.status}</span></td>
+                        <td><span class="badge ${statusClass}">${translateStatus(v.status)}</span></td>
                         <td class="text-right">
                             <div class="row-actions">
                                 <a class="icon-button" href="/seller/variants/edit?id=${v.id}" title="Sửa biến thể"><i class="fa fa-pencil"></i></a>
@@ -826,7 +933,7 @@ async function initProductEdit() {
                     name: document.getElementById('productName').value.trim(),
                     description: document.getElementById('description').value.trim(),
                     userGuide: document.getElementById('userGuide') ? document.getElementById('userGuide').value.trim() : '',
-                    categoryId: select.value
+                    categoryId: subSelect.value || mainSelect.value
                 };
 
                 try {
@@ -891,8 +998,14 @@ async function initVariantForm() {
 
             // Set global productType and refresh layout
             window.productType = productType;
-            if (typeof updateProductDisplay === 'function') updateProductDisplay(productType);
+            if (typeof updateProductDisplay === 'function') updateProductDisplay(productType, v.productName);
             if (typeof renderAssetFields === 'function') renderAssetFields(productType);
+
+            // Update title to Edit variant mode
+            const titleEl = document.querySelector('.seller-card__title');
+            if (titleEl) {
+                titleEl.textContent = 'Cập nhật biến thể & nhập kho tài sản số';
+            }
 
             // Load existing assets
             const assetsRes = await sellerFetch(`/variants/${variantId}/assets`);
@@ -905,21 +1018,24 @@ async function initVariantForm() {
                             type: 'ACCOUNT',
                             username: ea.accountUsername,
                             password: ea.accountPassword || '',
-                            notes: ea.notes || ''
+                            notes: ea.notes || '',
+                            isUsed: ea.isUsed === true
                         };
                     } else if (productType === 'KEY') {
                         return {
                             id: ea.id,
                             type: 'KEY',
                             keyCode: ea.keyCode,
-                            notes: ea.notes || ''
+                            notes: ea.notes || '',
+                            isUsed: ea.isUsed === true
                         };
                     } else if (productType === 'GAME_CARD') {
                         return {
                             id: ea.id,
                             type: 'GAME_CARD',
                             cardCode: ea.cardCode,
-                            notes: ea.notes || ''
+                            notes: ea.notes || '',
+                            isUsed: ea.isUsed === true
                         };
                     }
                 }).filter(Boolean);
@@ -949,7 +1065,7 @@ async function initVariantForm() {
         if (cancelBtn) cancelBtn.href = backUrl;
 
         // Submitting variant form
-        const saveBtn = form.querySelector('.profile-button--primary');
+        const saveBtn = form.querySelector('.profile-actions .profile-button--primary') || form.querySelector('button[type="submit"]') || form.querySelector('.profile-button--primary');
         if (saveBtn) {
             saveBtn.removeAttribute('disabled');
             saveBtn.addEventListener('click', async (e) => {
@@ -1077,7 +1193,7 @@ async function initTransactions() {
                     <td>${t.customerEmail}</td>
                     <td class="text-right">${formatVND(t.amountVnd)}</td>
                     <td class="text-right text-success">+${formatVND(t.netEarningVnd)}</td>
-                    <td><span class="badge ${badgeClass}">${t.status}</span></td>
+                    <td><span class="badge ${badgeClass}">${translateStatus(t.status)}</span></td>
                     <td>${t.createdAt.replace('T', ' ').substring(0, 16)}</td>
                 </tr>
             `;
@@ -1156,21 +1272,21 @@ async function initWithdrawals() {
         }
         const trends = document.querySelectorAll('.stats-grid-4 .stat-card-trend');
         if (trends.length >= 2) {
-            trends[1].textContent = `${pendingCount} lệnh Pending`;
+            trends[1].textContent = `${pendingCount} lệnh đang xử lý`;
         }
 
         if (withdrawals.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Chưa có yêu cầu rút tiền nào.</td></tr>';
         } else {
             tbody.innerHTML = withdrawals.map(w => {
-                const badgeClass = w.status === 'Completed' ? 'ok' : 'pending';
+                const badgeClass = getBadgeClassForStatus(w.status);
                 return `
                     <tr>
                         <td>#WD-${w.id}</td>
                         <td class="text-right">${formatVND(w.amountVnd)}</td>
                         <td>${w.bankName} (${w.accountNumber})</td>
                         <td>${w.createdAt.replace('T', ' ').substring(0, 10)}</td>
-                        <td><span class="badge ${badgeClass}">${w.status}</span></td>
+                        <td><span class="badge ${badgeClass}">${translateStatus(w.status)}</span></td>
                         <td class="text-right">
                             <div class="row-actions">
                                 <a class="icon-button" href="/seller/withdrawals/detail?id=${w.id}" title="Xem chi tiết"><i class="fa fa-eye"></i></a>
@@ -1668,7 +1784,7 @@ async function initComplaints() {
                     <td>${c.customerEmail}</td>
                     <td>${c.description.length > 40 ? c.description.substring(0, 40) + '...' : c.description}</td>
                     <td class="text-right">${formatVND(c.amountVnd)}</td>
-                    <td><span class="badge ${badgeClass}">${c.status}</span></td>
+                    <td><span class="badge ${badgeClass}">${translateStatus(c.status)}</span></td>
                     <td>${c.createdAt.replace('T', ' ').substring(0, 10)}</td>
                     <td class="text-right">
                         <div class="row-actions">
@@ -1695,49 +1811,67 @@ async function initComplaintDetail() {
         return;
     }
 
-    const card = document.querySelector('.seller-card');
-    if (!card) return;
-
     try {
         const res = await sellerFetch(`/complaints/${complaintId}`);
         if (!res.ok) throw new Error('Không thể tải chi tiết khiếu nại.');
         const c = await res.json();
 
-        // 1. Populate details info grid
-        document.querySelector('.seller-card__title').textContent = `Chi tiết khiếu nại #CP-${c.id}`;
+        const titleEl = document.getElementById('complaintTitle');
+        if (titleEl) titleEl.textContent = `Chi tiết khiếu nại #CP-${c.id}`;
         
-        let badgeClass = 'open';
-        if (c.status === 'Resolved' || c.status === 'Closed') badgeClass = 'resolved';
-        else if (c.status === 'In_Progress') badgeClass = 'pending';
+        const subtitleEl = document.getElementById('complaintSubtitle');
+        if (subtitleEl) subtitleEl.textContent = `Mã giao dịch: #TX-${c.transactionId}`;
+        
+        let badgeClass = 'ds-badge-neutral';
+        if (c.status === 'Resolved' || c.status === 'Closed') badgeClass = 'ds-badge-success';
+        else if (c.status === 'In_Progress') badgeClass = 'ds-badge-warning';
 
-        const headerRight = card.querySelector('.seller-card__header').lastElementChild;
-        if (headerRight && headerRight.classList.contains('badge')) {
-            headerRight.className = `badge ${badgeClass}`;
-            headerRight.textContent = c.status;
+        const badge = document.getElementById('complaintStatusBadge');
+        if (badge) {
+            badge.className = `ds-badge ${badgeClass}`;
+            badge.textContent = translateStatus(c.status);
         }
 
-        // Map data to DL info list
-        const dl = card.querySelector('.seller-info-grid');
+        const dl = document.getElementById('complaint-details-dl');
         if (dl) {
             dl.innerHTML = `
                 <dt>Khách hàng</dt>
-                <dd>${c.customerName} (${c.customerEmail})</dd>
-                <dt>Mã đơn hàng</dt>
-                <dd>#TX-${c.transactionId}</dd>
+                <dd>${c.customerName || 'N/A'} (${c.customerEmail || 'N/A'})</dd>
                 <dt>Sản phẩm</dt>
-                <dd>${c.productName} (${c.variantName})</dd>
+                <dd>${c.productName || 'N/A'} (${c.variantName || 'N/A'})</dd>
                 <dt>Đơn giá</dt>
                 <dd>${formatVND(c.amountVnd)}</dd>
-                <dt>Nội dung khiếu nại</dt>
-                <dd>${c.description}</dd>
-                <dt>Ảnh minh chứng</dt>
-                <dd>${c.evidence ? `<a href="${c.evidence}" target="_blank" style="color:var(--seller-danger); text-decoration: underline;">Xem ảnh chứng cứ</a>` : 'Không có'}</dd>
-                <dt>Hướng giải quyết</dt>
-                <dd>${c.resolution || 'Chưa có phương án xử lý cuối cùng'}</dd>
+                <dt>Thời gian</dt>
+                <dd>${new Date(c.createdAt).toLocaleString('vi-VN')}</dd>
             `;
         }
 
+        const descEl = document.getElementById('c-description');
+        if (descEl) descEl.textContent = c.description || '-';
+        
+        if (c.evidence) {
+            const evSec = document.getElementById('c-evidence-section');
+            if (evSec) {
+                evSec.hidden = false;
+                const evImg = document.getElementById('c-evidence-img');
+                if (evImg) evImg.src = c.evidence;
+            }
+        }
 
+        if (c.resolution) {
+            const resCard = document.getElementById('staffResolutionCard');
+            if (resCard) {
+                resCard.hidden = false;
+                const resEl = document.getElementById('c-resolution');
+                if (resEl) resEl.textContent = c.resolution;
+            }
+        }
+
+        const chatBtn = document.getElementById('chatDisputeBtn');
+        if (chatBtn) {
+            chatBtn.style.display = 'inline-flex';
+            chatBtn.href = `/messages?sellerView=true&complaintId=${c.id}`;
+        }
 
     } catch (err) {
         showToast(err.message, 'error');
@@ -1766,7 +1900,7 @@ async function initWithdrawalDetail() {
         // Populate header details
         document.querySelector('.seller-card__subtitle').textContent = `Lệnh #WD-${w.id}`;
 
-        const badgeClass = w.status === 'Completed' ? 'ok' : 'pending';
+        const badgeClass = getBadgeClassForStatus(w.status);
         let extraStatusInfo = '';
         if (w.status === 'Failed' || w.status === 'Rejected') {
             extraStatusInfo = `
@@ -1794,7 +1928,7 @@ async function initWithdrawalDetail() {
                 <dt>Tổng trừ ví</dt>
                 <dd style="font-weight:600;">${formatVND(w.amountVnd + (w.feeVnd || 0))}</dd>
                 <dt>Trạng thái</dt>
-                <dd><span class="badge ${badgeClass}">${w.status}</span></dd>
+                <dd><span class="badge ${badgeClass}">${translateStatus(w.status)}</span></dd>
                 ${extraStatusInfo}
                 <dt>Ngân hàng</dt>
                 <dd>${w.bankName}</dd>
@@ -1810,7 +1944,7 @@ async function initWithdrawalDetail() {
         }
 
         // Render proof receipt section
-        const proofSection = card.querySelector('.proof-placeholder');
+        const proofSection = document.querySelector('.proof-placeholder');
         if (proofSection) {
             if (w.proofFile) {
                 proofSection.innerHTML = `
@@ -1832,3 +1966,90 @@ async function initWithdrawalDetail() {
         showToast(err.message, 'error');
     }
 }
+
+// ==============================================================================
+// PREORDERS MANAGEMENT
+// ==============================================================================
+async function initPreOrders() {
+    const tbody = document.querySelector('#preOrdersTable tbody');
+    if (!tbody) return;
+
+    try {
+        const token = sessionStorage.getItem('accessToken');
+        const res = await fetch('/api/v1/pre-orders/seller', {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!res.ok) throw new Error('Không thể tải danh sách đơn đặt trước.');
+        const orders = await res.json();
+
+        if (!orders || orders.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 40px; color: var(--seller-muted);"><i class="fa fa-inbox" style="font-size: 24px; display: block; margin-bottom: 8px;"></i> Không có đơn đặt trước nào.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = orders.map(o => {
+            const statusClass = (o.status === 'Chờ xử lý' || o.status === 'PENDING') ? 'pending' 
+                              : (o.status === 'Hoàn thành' || o.status === 'COMPLETED') ? 'ok' 
+                              : 'locked';
+
+            return `
+                <tr>
+                    <td>#PO-${o.id}</td>
+                    <td>${o.customerEmail}</td>
+                    <td>${o.productName}</td>
+                    <td class="text-center">${o.quantity}</td>
+                    <td>${o.notes || ''}</td>
+                    <td><span class="badge ${statusClass}">${translateStatus(o.status)}</span></td>
+                    <td>${o.createdAt ? new Date(o.createdAt).toLocaleString('vi-VN') : ''}</td>
+                    <td class="text-right">
+                        ${(o.status === 'PENDING' || o.status === 'Chờ xử lý') ? `
+                        <button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px; margin-right: 4px;" onclick="updatePreOrderStatus(${o.id}, 'COMPLETED')">
+                            <i class="fa fa-check"></i> Hoàn thành
+                        </button>
+                        <button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px; color: var(--seller-danger); border-color: var(--seller-danger);" onclick="updatePreOrderStatus(${o.id}, 'CANCELLED')">
+                            <i class="fa fa-times"></i> Hủy
+                        </button>
+                        ` : ''}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="color: var(--seller-danger);"><i class="fa fa-exclamation-triangle"></i> ${err.message}</td></tr>`;
+        showToast(err.message, 'error');
+    }
+}
+
+async function updatePreOrderStatus(id, status) {
+    if (!confirm('Bạn có chắc chắn muốn cập nhật trạng thái đơn này?')) return;
+    
+    try {
+        const token = sessionStorage.getItem('accessToken');
+        const res = await fetch(`/api/v1/pre-orders/seller/${id}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ status: status })
+        });
+        
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.message || 'Cập nhật thất bại.');
+        }
+        
+        showToast('Cập nhật trạng thái thành công!');
+        initPreOrders();
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+}
+
+window.initPreOrders = initPreOrders;
+window.updatePreOrderStatus = updatePreOrderStatus;

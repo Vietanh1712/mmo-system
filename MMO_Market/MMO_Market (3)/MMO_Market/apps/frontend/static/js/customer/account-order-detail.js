@@ -218,7 +218,16 @@ function renderOrderDetail(order) {
     const variantText = order.variantLabel ? ` (${order.variantLabel})` : '';
     document.getElementById('orderDetailCode').textContent = order.orderCode;
     document.getElementById('orderProductName').textContent = `${order.productName}${variantText}`;
-    document.getElementById('orderSellerName').textContent = `Người bán: ${order.sellerName}`;
+    
+    const sellerNameEl = document.getElementById('orderSellerName');
+    if (sellerNameEl) {
+        if (order.sellerId) {
+            sellerNameEl.innerHTML = `Người bán: <a href="/shop/${order.sellerId}" style="text-decoration: underline; color: var(--ds-primary, #2563eb); font-weight: 500;">${order.sellerName}</a>`;
+        } else {
+            sellerNameEl.textContent = `Người bán: ${order.sellerName}`;
+        }
+    }
+    
     setBadge('orderStatusBadge', formatOrderStatus(order.status), getOrderStatusBadgeClass(order.status));
     setBadge('orderPaymentBadge', formatPaymentStatus(order.paymentStatus), getPaymentBadgeClass(order.paymentStatus));
 
@@ -356,46 +365,65 @@ function getActiveSteps(order) {
 }
 
 function createAccessInfo(order) {
-    if (order.status === 'PENDING') return 'Đơn hàng đang chờ xử lý, thông tin nhận hàng chưa sẵn sàng.';
-    if (order.status === 'CANCELLED') return 'Đơn hàng đã hủy, không có thông tin nhận hàng.';
-    if (order.status === 'DISPUTED') return 'Thông tin nhận hàng đang được giữ để xử lý tranh chấp.';
+    if (order.status === 'PENDING') return '<div class="cred-status-msg cred-status-pending"><i class="fa fa-clock-o"></i> Đơn hàng đang chờ xử lý, thông tin nhận hàng chưa sẵn sàng.</div>';
+    if (order.status === 'CANCELLED') return '<div class="cred-status-msg cred-status-danger"><i class="fa fa-times-circle"></i> Đơn hàng đã hủy, không có thông tin nhận hàng.</div>';
+    if (order.status === 'DISPUTED') return '<div class="cred-status-msg cred-status-warning"><i class="fa fa-shield"></i> Thông tin nhận hàng đang được giữ để xử lý tranh chấp.</div>';
 
     let creds = order.credentials;
 
     if (creds) {
         const isKeyOnly = creds.password === '(Product Key)';
         return `
-            <div class="credentials-card" style="margin-top: 12px; padding: 16px; background: rgba(37, 99, 235, 0.04); border: 1.5px dashed rgba(37, 99, 235, 0.2); border-radius: 8px;">
-                <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                    <span style="font-size: 13.5px; color: var(--ds-text-muted, #64748b); font-weight: 500;">
-                        ${isKeyOnly ? 'Mã kích hoạt (Key):' : 'Tài khoản (Email/Username):'}
-                    </span>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <strong id="credUsername" style="font-family: monospace; font-size: 14.5px; color: var(--ds-text-primary, #1e293b);">${creds.username}</strong>
-                        <button class="ds-btn ds-btn-outline ds-btn-sm" style="padding: 4px 8px; font-size: 12px;" onclick="copyToClipboard('${creds.username}', '${isKeyOnly ? 'Mã kích hoạt' : 'Tài khoản'}')">
-                            <i class="fa fa-copy" aria-hidden="true"></i> Copy
+            <div class="cred-card">
+                <div class="cred-card__header">
+                    <span class="cred-card__icon"><i class="fa fa-key"></i></span>
+                    <span class="cred-card__title">Thông tin đăng nhập</span>
+                    <span class="cred-card__badge">Bảo mật</span>
+                </div>
+
+                <div class="cred-field">
+                    <span class="cred-field__label">${isKeyOnly ? 'Mã kích hoạt (Key):' : 'Tài khoản (Email/Username):'}</span>
+                    <div class="cred-field__row">
+                        <code class="cred-field__value" id="credUsername">${escapeHtml(creds.username)}</code>
+                        <button class="cred-copy-btn" onclick="copyToClipboard('${escapeHtml(creds.username).replace(/'/g, '&#039;')}', '${isKeyOnly ? 'M\u00e3 k\u00edch ho\u1ea1t' : 'T\u00e0i kho\u1ea3n'}', this)" title="Sao chép">
+                            <i class="fa fa-copy"></i><span>Copy</span>
                         </button>
                     </div>
                 </div>
+
                 ${isKeyOnly ? '' : `
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                    <span style="font-size: 13.5px; color: var(--ds-text-muted, #64748b); font-weight: 500;">Mật khẩu:</span>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <strong id="credPassword" style="font-family: monospace; font-size: 14.5px; color: var(--ds-text-primary, #1e293b);">${creds.password}</strong>
-                        <button class="ds-btn ds-btn-outline ds-btn-sm" style="padding: 4px 8px; font-size: 12px;" onclick="copyToClipboard('${creds.password}', 'Mật khẩu')">
-                            <i class="fa fa-copy" aria-hidden="true"></i> Copy
+                <div class="cred-field">
+                    <span class="cred-field__label">Mật khẩu:</span>
+                    <div class="cred-field__row">
+                        <code class="cred-field__value" id="credPassword">${escapeHtml(creds.password)}</code>
+                        <button class="cred-copy-btn" onclick="copyToClipboard('${escapeHtml(creds.password).replace(/'/g, '&#039;')}', 'M\u1eadt kh\u1ea9u', this)" title="Sao chép">
+                            <i class="fa fa-copy"></i><span>Copy</span>
                         </button>
                     </div>
                 </div>
                 `}
-                <div style="margin-top: 12px; font-size: 12px; color: #b45309; background-color: #fffbeb; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(217, 119, 6, 0.15);">
-                    <i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Vui lòng không thay đổi mật khẩu hoặc thông tin bảo mật để tránh ảnh hưởng đến thời gian bảo hành.
+
+                ${creds.note ? `
+                <div class="cred-field">
+                    <span class="cred-field__label">Ghi chú:</span>
+                    <div class="cred-field__row">
+                        <code class="cred-field__value" id="credNote">${escapeHtml(creds.note)}</code>
+                        <button class="cred-copy-btn" onclick="copyToClipboard('${escapeHtml(creds.note).replace(/'/g, '&#039;')}', 'Ghi ch\u00fa', this)" title="Sao chép">
+                            <i class="fa fa-copy"></i><span>Copy</span>
+                        </button>
+                    </div>
+                </div>
+                ` : ''}
+
+                <div class="cred-card__warning">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    Vui lòng không thay đổi mật khẩu hoặc thông tin bảo mật để tránh ảnh hưởng đến thời gian bảo hành.
                 </div>
             </div>
         `;
     }
 
-    return 'Thông tin nhận hàng sẽ được hiển thị tại đây khi sản phẩm được giao thành công.';
+    return '<div class="cred-status-msg"><i class="fa fa-info-circle"></i> Thông tin nhận hàng sẽ được hiển thị tại đây khi sản phẩm được giao thành công.</div>';
 }
 
 function getActionHint(order) {
@@ -477,12 +505,25 @@ function showOrderDetailMessage(message, type) {
     messageElement.classList.add(`ds-alert-${type}`);
 }
 
-window.copyToClipboard = async function (text, label) {
+window.copyToClipboard = async function (text, label, btn) {
     try {
         await navigator.clipboard.writeText(text);
-        showOrderDetailMessage(`Đã copy ${label} vào bộ nhớ tạm thành công.`, 'success');
+        // Animate button to show success
+        if (btn) {
+            const icon = btn.querySelector('i');
+            const span = btn.querySelector('span');
+            btn.classList.add('cred-copy-btn--success');
+            if (icon) icon.className = 'fa fa-check';
+            if (span) span.textContent = 'Đã copy!';
+            setTimeout(() => {
+                btn.classList.remove('cred-copy-btn--success');
+                if (icon) icon.className = 'fa fa-copy';
+                if (span) span.textContent = 'Copy';
+            }, 2000);
+        }
+        showSuccessToast(`Đã sao chép ${label} vào bộ nhớ tạm.`);
     } catch {
-        showOrderDetailMessage('Không thể copy tự động. Vui lòng chọn và sao chép thủ công.', 'warning');
+        showWarningToast('Không thể copy tự động. Vui lòng chọn và sao chép thủ công.');
     }
 };
 

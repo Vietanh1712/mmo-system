@@ -37,6 +37,8 @@ public class TransactionController {
 
     @Autowired
     private com.mmo.shared.dal.ComplaintRepository complaintRepository;
+
+    @Autowired
     private DigitalAssetRepository digitalAssetRepository;
 
     @PostMapping("/purchase")
@@ -74,11 +76,13 @@ public class TransactionController {
                     credentialsDTO = PurchaseResponse.CredentialsDTO.builder()
                             .username(asset.getKeyCode() != null ? asset.getKeyCode() : asset.getCardCode())
                             .password("(Product Key)")
+                            .note(asset.getNotes())
                             .build();
                 } else {
                     credentialsDTO = PurchaseResponse.CredentialsDTO.builder()
                             .username(asset.getAccountUsername())
                             .password(asset.getAccountPassword())
+                            .note(asset.getNotes())
                             .build();
                 }
             }
@@ -137,6 +141,7 @@ public class TransactionController {
                         .productName(t.getProduct() != null ? t.getProduct().getName() : "Sản phẩm đã xóa")
                         .variantLabel(t.getVariant() != null ? t.getVariant().getVariantName() : "")
                         .sellerName(t.getSeller() != null ? t.getSeller().getFullName() : "Người bán")
+                        .sellerId(t.getSeller() != null ? t.getSeller().getId() : null)
                         .amount(t.getAmountVnd())
                         .quantity(t.getQuantity())
                         .status(status)
@@ -187,6 +192,7 @@ public class TransactionController {
                     .productName(t.getProduct() != null ? t.getProduct().getName() : "Sản phẩm đã xóa")
                     .variantLabel(t.getVariant() != null ? t.getVariant().getVariantName() : "")
                     .sellerName(t.getSeller() != null ? t.getSeller().getFullName() : "Người bán")
+                    .sellerId(t.getSeller() != null ? t.getSeller().getId() : null)
                     .amount(t.getAmountVnd())
                     .quantity(t.getQuantity())
                     .status(status)
@@ -211,6 +217,9 @@ public class TransactionController {
                     } else {
                         creds.put("username", asset.getAccountUsername());
                         creds.put("password", asset.getAccountPassword());
+                    }
+                    if (asset.getNotes() != null && !asset.getNotes().trim().isEmpty()) {
+                        creds.put("note", asset.getNotes());
                     }
                     credsList.add(creds);
                 }

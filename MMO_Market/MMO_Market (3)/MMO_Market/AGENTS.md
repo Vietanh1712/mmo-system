@@ -22,7 +22,7 @@ Tài liệu này định hướng hành vi nghiệp vụ và quy tắc lập tr�
 *   **Phân chia số dư ví**: Ví người dùng phải tách biệt 2 trạng thái số dư:
     -   `available_balance` (Số dư khả dụng để mua hàng hoặc rút tiền).
     -   `hold_balance` (Số dư đóng băng do khiếu nại chưa phân định hoặc lệnh rút đang chờ xử lý).
-*   **Escrow (Giam tiền)**: Mọi đơn hàng mua sản phẩm số thành công phải bị giam tiền trong ví trung gian hệ thống trong 72 giờ (`escrow_release_date` trong database). Sau 72 giờ không có khiếu nại hoặc khi người mua bấm xác nhận, tiền mới được giải phóng cho Seller.
+*   **Escrow (Giam tiền)**: Mọi đơn hàng mua sản phẩm số thành công phải bị giam tiền trong ví trung gian hệ thống. Thời gian giam tiền được tính toán động (72 giờ mặc định; hoặc 168 giờ/7 ngày đối với shop mới dưới 20 đơn, shop bị cảnh cáo Level 0, hoặc shop có tỷ lệ khiếu nại đúng >= 2%). Sau thời gian này không có khiếu nại hoặc khi người mua xác nhận hoàn thành sớm, tiền mới được giải phóng cho ví khả dụng của Seller.
 *   **Tính an toàn dữ liệu số**: Nội dung sản phẩm số (giftcode, tài khoản, key game) bán trên sàn phải được mã hóa trước khi lưu trữ vào Database để chống rò rỉ dữ liệu.
 *   **Soft Delete**: Không xóa vật lý (`DELETE`) dòng dữ liệu quan trọng như Users, Products, Orders. Phải sử dụng cờ `isDelete = 1` và luôn lọc `isDelete = 0` khi truy vấn.
 *   **SQL Server Triggers**: Trigger bắt buộc phải xử lý set-based qua hai bảng ảo `inserted` và `deleted` để hỗ trợ batch update/insert. Cấm dùng row-by-row logic.

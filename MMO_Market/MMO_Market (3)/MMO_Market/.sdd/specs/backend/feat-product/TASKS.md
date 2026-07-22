@@ -24,11 +24,15 @@
 
 - [x] **4.1** `ProductService` — mã hóa đối xứng AES-256 các thông tin `DigitalAsset` trước khi ghi vào database nhằm bảo mật mã code sản phẩm.
 - [x] **4.2** `ProductSearchService` — xử lý lọc sản phẩm chỉ trả về các bản ghi hoạt động (`isDelete = 0`).
+- [x] **4.3** `ProductSpecification` — lọc bỏ và loại trừ sản phẩm của người bán có trạng thái `shopStatus` là `Locked`, `Banned`, hoặc `Pending`.
+- [x] **4.4** `ProductRepository` & `ProductService` — loại trừ sản phẩm của shop bị Locked, Banned hoặc Pending khỏi danh sách sản phẩm nổi bật/bán chạy và fallback trang chủ.
 
 ## Phase 5: Controllers & Security
 
 - [x] **5.1** `ProductSearchController` — các API tìm kiếm công khai và API follow Shop.
 - [x] **5.2** Cấu hình bảo vệ quyền cập nhật sản phẩm chỉ cho phép Seller sở hữu sản phẩm đó thực hiện.
+- [x] **5.3** `SellerController` (API `/products`, `/variants`, cập nhật biến thể) — chặn đăng bán đối với Shop Level 0/1 khi ví âm.
+- [x] **5.4** `SellerController` — kiểm tra giới hạn giá trần 200,000 VNĐ đối với Shop Level 1 và giới hạn tối đa 5 sản phẩm hiển thị đối với Shop Level 0.
 
 ## Phase 6: Testing
 

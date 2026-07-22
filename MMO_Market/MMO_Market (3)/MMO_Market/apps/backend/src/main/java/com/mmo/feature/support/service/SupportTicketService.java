@@ -90,7 +90,7 @@ public class SupportTicketService {
     public SupportTicket getTicketById(Long id) {
         return supportTicketRepository.findById(id)
                 .filter(t -> !t.getIsDelete())
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy ticket hỗ trợ với ID: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu hỗ trợ với ID: " + id));
     }
 
     @Transactional
@@ -99,7 +99,7 @@ public class SupportTicketService {
         
         // Chấp nhận trạng thái rút gọn: Open, Processing, Resolved
         if (!status.equals("Open") && !status.equals("Processing") && !status.equals("Resolved")) {
-            throw new IllegalArgumentException("Trạng thái ticket không hợp lệ.");
+            throw new IllegalArgumentException("Trạng thái phiếu hỗ trợ không hợp lệ.");
         }
         
         if (resolution != null && !resolution.trim().isEmpty()) {

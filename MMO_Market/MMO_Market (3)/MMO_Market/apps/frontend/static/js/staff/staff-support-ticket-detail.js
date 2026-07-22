@@ -12,7 +12,7 @@ function escapeHtml(value) {
 async function loadTicketDetails() {
     const id = sessionStorage.getItem('selectedSupportTicketId');
     if (!id) {
-        showErrorToast('Không tìm thấy mã ticket!');
+        showErrorToast('Không tìm thấy mã phiếu hỗ trợ!');
         window.location.href = '/staff/support-tickets';
         return;
     }
@@ -20,13 +20,13 @@ async function loadTicketDetails() {
     try {
         const res = await authFetch(`/support-tickets/${id}`);
         if (!res.ok) {
-            throw new Error('Lỗi lấy chi tiết ticket');
+            throw new Error('Lỗi lấy chi tiết phiếu hỗ trợ');
         }
         currentTicket = await res.json();
         populateFields();
     } catch (e) {
         console.error(e);
-        showErrorToast('Lỗi tải dữ liệu ticket từ máy chủ.');
+        showErrorToast('Lỗi tải dữ liệu phiếu hỗ trợ từ máy chủ.');
         window.location.href = '/staff/support-tickets';
     }
 }
@@ -36,7 +36,7 @@ function populateFields() {
 
     // Populate header & breadcrumbs
     document.getElementById('breadcrumb-ticket-id').textContent = `#ST-${currentTicket.id}`;
-    document.getElementById('header-ticket-subtitle').textContent = `Mã Ticket #ST-${currentTicket.id} — Danh mục: ${currentTicket.category}`;
+    document.getElementById('header-ticket-subtitle').textContent = `Mã Phiếu #ST-${currentTicket.id} — Danh mục: ${currentTicket.category}`;
     
     // Status badge
     const badge = document.getElementById('header-status-badge');
@@ -127,7 +127,7 @@ async function submitStaffAction() {
     const resolution = document.getElementById('ticketResolution').value.trim();
 
     if (status === 'Resolved' && !resolution) {
-        showWarningToast('Vui lòng nhập nội dung phản hồi trực tiếp khi giải quyết ticket!');
+        showWarningToast('Vui lòng nhập nội dung phản hồi trực tiếp khi giải quyết phiếu hỗ trợ!');
         return;
     }
 
@@ -139,14 +139,14 @@ async function submitStaffAction() {
 
         if (!res.ok) {
             const err = await res.json();
-            throw new Error(err.message || 'Lỗi cập nhật ticket');
+            throw new Error(err.message || 'Lỗi cập nhật phiếu hỗ trợ');
         }
 
-        showSuccessToast('Đã cập nhật trạng thái và phản hồi ticket thành công!');
+        showSuccessToast('Đã cập nhật trạng thái và phản hồi phiếu hỗ trợ thành công!');
         window.location.href = '/staff/support-tickets';
     } catch (e) {
         console.error(e);
-        showErrorToast('Lỗi cập nhật ticket: ' + e.message);
+        showErrorToast('Lỗi cập nhật phiếu hỗ trợ: ' + e.message);
     }
 }
 

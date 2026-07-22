@@ -1,0 +1,11 @@
+🔹 Shop Mới (Level 1): Giai đoạn thử thách nâng cấp Thời gian giam tiền (Escrow): Chia làm 2 giai đoạn để kiểm soát rủi ro shop rác lừa đảo:20 đơn hàng đầu tiên: Hệ thống tự động kích hoạt chế độ bảo vệ, giam tiền cố định trong 7 ngày kể từ khi đơn hàng hoàn thành thành công.Từ đơn hàng thứ 21 trở đi: Sau khi vượt qua số đơn thử thách, thời gian giam tiền tự động giảm về 3 ngày tiêu chuẩn của sàn.Tính năng rút tiền: Được rút tiền tự do sau khi hết thời gian giam tương ứng (hết 7 ngày đối với 20 đơn đầu, hết 3 ngày đối với các đơn sau).
+
+🔹 Shop Uy Tín (Level 2): Quyền lợi tối đaThời gian giam tiền (Escrow): Giữ đúng 3 ngày tiêu chuẩn của sàn đối với tất cả các đơn hàng.Tính năng rút tiền: Được rút tiền tự do sau khi hết 3 ngày giam.
+
+🔹 Shop Cảnh Cáo (Level 0): Chế độ thắt chặt (Không khóa cứng)Thời gian giam tiền (Escrow): Tự động tăng thời gian giam tiền lên 7 ngày đối với mọi đơn hàng mới phát sinh kể từ khi bị xuống Level 0.Cơ chế thoát án phạt: Khi Shop xử lý xong các ticket khiếu nại tồn đọng và tiếp tục bán các đơn mới an toàn để kéo Tỷ lệ khiếu nại tổng thể xuống $< 2\%$, hệ thống sẽ tự động đưa Shop trở lại Level cũ.
+
+Một shop sẽ bị hệ thống tự động giáng xuống Level 0 (Shop Cảnh Cáo) ngay khi vi phạm điều kiện về hạn mức rủi ro sau:Thời điểm kích hoạt: Khi Tỷ lệ khiếu nại (tỷ lệ lỗi) tổng thể của shop đạt từ $2\%$ trở lên ($\ge 2\%$).
+
+Các kịch bản thực tế dẫn đến bị giáng xuống Level 0:Đối với Shop Uy Tín (Level 2):Shop đã hoạt động lâu năm, bán được nhiều đơn ngon lành. Nhưng dạo gần đây nguồn tài khoản nhập về gặp sự cố hàng loạt, dẫn đến việc khách hàng liên tục gửi khiếu nại lên sàn và được Staff duyệt lỗi thuộc về Seller.Chỉ cần hệ thống quét qua và tính toán thấy công thức tỷ lệ lỗi chạm ngưỡng $\ge 2\%$, shop sẽ lập tức mất danh hiệu Uy Tín và bị hạ thẳng xuống Level 0.
+
+Đối với Shop Mới (Level 1):Shop vừa mới lập, đang trong giai đoạn bán 20 đơn hàng đầu tiên để thử thách.Nếu ngay từ những đơn hàng đầu này mà Shop đã làm ăn gian dối hoặc để xảy ra lỗi tài khoản bị die dồn dập, khiến số đơn bị khách kiện đúng vượt mức $2\%$ so với tổng số đơn đã hoàn thành, hệ thống cũng sẽ đẩy shop từ Level 1 xuống thẳng Level 0 để thắt chặt quản lý dòng tiền (tăng thời gian giam tiền lên 7 ngày).

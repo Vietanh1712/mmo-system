@@ -185,7 +185,7 @@
                         <select id="category-filter" class="filter-select">
                             <option value="">Tất cả danh mục</option>
                             <option value="1">Email</option>
-                            <option value="2" selected>Tài khoản Premium</option>
+                            <option value="2" selected>Tài khoản</option>
                             <option value="3">Phần mềm</option>
                             <option value="4">Tăng tương tác</option>
                             <option value="5">Dịch vụ phần mềm</option>
@@ -664,6 +664,7 @@
                 selectedProduct = {
                     id: apiData.id,
                     name: apiData.name,
+                    imageUrl: apiData.imageUrl,
                     icon: getProductIconAndColor(apiData.name).icon,
                     color: getProductIconAndColor(apiData.name).color,
                     seller: apiData.sellerName,
@@ -717,7 +718,7 @@
                 } else if (nameLower.includes('logo') || nameLower.includes('thiết kế') || nameLower.includes('design') || nameLower.includes('banner')) {
                     selectedProduct.categoryName = "Dịch vụ khác";
                 } else {
-                    selectedProduct.categoryName = "Tài khoản Premium";
+                    selectedProduct.categoryName = "Tài khoản";
                 }
             }
 
@@ -739,10 +740,13 @@
             const titleEl = document.querySelector('.product-detail__title');
             if (titleEl) titleEl.innerText = selectedProduct.name;
 
-            const iconEl = document.querySelector('.hero-product__visual .product-card__img-icon');
-            if (iconEl) {
-                iconEl.className = `fa ${selectedProduct.icon} product-card__img-icon`;
-                iconEl.style.color = selectedProduct.color;
+            const visualEl = document.querySelector('.hero-product__visual');
+            if (visualEl) {
+                if (selectedProduct.imageUrl && !selectedProduct.imageUrl.includes('placeholder.com')) {
+                    visualEl.innerHTML = `<img src="${selectedProduct.imageUrl}" class="product-card__img-real" alt="${selectedProduct.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">`;
+                } else {
+                    visualEl.innerHTML = `<i class="fa ${selectedProduct.icon} product-card__img-icon" style="color: ${selectedProduct.color}; font-size: 110px;"></i>`;
+                }
             }
 
             if (selectedProduct.variants && selectedProduct.variants.length > 0) {
@@ -1177,10 +1181,14 @@
                     const card = document.createElement('a');
                     card.href = `/products/${product.productId}`;
                     card.className = 'product-card';
+                    let mediaHtml = `<i class="fa ${iconInfo.icon} product-card__img-icon" style="color:${iconInfo.color};"></i>`;
+                    if (product.imageUrl && !product.imageUrl.includes('placeholder.com')) {
+                        mediaHtml = `<img src="${product.imageUrl}" class="product-card__img-real" alt="${product.productName}" style="width:100%; height:100%; object-fit:cover;">`;
+                    }
+
                     card.innerHTML = `
                         <div class="product-card__image-container">
-                            <i class="fa ${iconInfo.icon} product-card__img-icon" style="color:${iconInfo.color};"></i>
-
+                            ${mediaHtml}
                         </div>
                         <div class="product-card__body">
                             <div class="product-card__stock">Tồn: ${stockText}</div>
@@ -1370,7 +1378,8 @@
                     sellerName: selectedProduct.seller,
                     price: currentVariantPrice,
                     icon: selectedProduct.icon,
-                    iconColor: selectedProduct.color
+                    iconColor: selectedProduct.color,
+                    imageUrl: selectedProduct.imageUrl || ''
                 });
                 window.location.href = `/checkout?${params.toString()}`;
             }
@@ -1391,7 +1400,8 @@
                 price: currentVariantPrice,
                 icon: selectedProduct.icon,
                 iconColor: selectedProduct.color,
-                stock: selectedProduct.stock
+                stock: selectedProduct.stock,
+                imageUrl: selectedProduct.imageUrl || ''
             });
             window.location.href = `/pre-orders/new?${params.toString()}`;
         }
@@ -1412,6 +1422,7 @@
                 price: currentVariantPrice,
                 icon: selectedProduct.icon,
                 iconColor: selectedProduct.color,
+                imageUrl: selectedProduct.imageUrl || '',
                 quantity: 1
             };
             const cartKey = typeof window.getCartStorageKey === 'function' ? window.getCartStorageKey() : 'mmoCart';

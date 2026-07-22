@@ -50,6 +50,9 @@ public class StaffController {
     private StaffDashboardService staffDashboardService;
 
     @Autowired
+    private com.mmo.feature.wallet.service.WithdrawalService withdrawalService;
+
+    @Autowired
     private NotificationRepository notificationRepository;
 
 
@@ -58,6 +61,22 @@ public class StaffController {
     public String dashboard(Model model) {
         model.addAttribute("dashboard", staffDashboardService.getDashboardData());
         return "staff/dashboard";
+    }
+
+    @GetMapping("/categories")
+    public String categories() {
+        return "staff/categories";
+    }
+
+    @GetMapping("/categories/detail")
+    public String categoryDetail() {
+        return "staff/category-detail";
+    }
+
+    @GetMapping("/documents")
+    public String documentsDashboard(Model model) {
+        model.addAttribute("dashboard", staffDashboardService.getDashboardData());
+        return "staff/documents-dashboard";
     }
 
     @GetMapping("/complaints")
@@ -231,10 +250,12 @@ public class StaffController {
             @RequestParam String status,
             RedirectAttributes redirectAttributes
     ) {
+        Object principal243 = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long reviewerId = (principal243 instanceof Long) ? (Long) principal243 : null;
+        withdrawalService.updateWithdrawalStatus(id, status, reviewerId, null);
+
         Withdrawal withdrawal = withdrawalRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Withdrawal request not found"));
-        withdrawal.setStatus(status);
-        withdrawalRepository.save(withdrawal);
 
         // Gửi thông báo cho Seller
         String title = "Cập nhật yêu cầu rút tiền";
@@ -268,12 +289,15 @@ public class StaffController {
     @PostMapping("/withdrawals/reject")
     public String rejectWithdrawal(
             @RequestParam Long id,
+            @RequestParam(required = false) String reason,
             RedirectAttributes redirectAttributes
     ) {
+        Object principal284 = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long reviewerId = (principal284 instanceof Long) ? (Long) principal284 : null;
+        withdrawalService.updateWithdrawalStatus(id, "Rejected", reviewerId, reason);
+
         Withdrawal withdrawal = withdrawalRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Withdrawal request not found"));
-        withdrawal.setStatus("Rejected");
-        withdrawalRepository.save(withdrawal);
 
         // Gửi thông báo từ chối cho Seller
         Notification notif = Notification.builder()
@@ -413,4 +437,15 @@ public class StaffController {
     public String shopRegistrations() {
         return "staff/shop-registrations";
     }
+
+    @GetMapping("/shop-registrations/detail")
+    public String shopRegistrationDetail() {
+        return "staff/shop-registration-detail";
+    }
+
+    @GetMapping("/shop-registrations/update-status")
+    public String shopRegistrationUpdateStatus() {
+        return "staff/shop-registration-update-status";
+    }
 }
+

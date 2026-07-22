@@ -1,11 +1,11 @@
 # SPEC — Quản Lý Thành Viên & Staff (Admin User & Staff Management Page)
 
 > **Feature ID:** `feat-admin` | **Page:** `Admin Console (Accounts & Staff Form Sub-views)`
-> **Route:** `/admin/users#accounts` | **Template:** `templates/admin/users.html`
+> **Route:** `/admin/users` | **Template:** `templates/admin/users.html`
 > **CSS Script:** `static/css/admin/admin.css`
-> **JS Script:** `static/js/admin-console.js`
+> **JS Script:** `static/js/admin-console.js` | **Prefix:** `ausr-`
 > **Version:** 2.0 | **Status:** Active
-> **Backend ref:** `feat-admin/SPEC.md`
+> **Backend ref:** `feat-admin/UC-15-system-administration.md`
 > **Last Updated:** 2026-07-16
 
 ---

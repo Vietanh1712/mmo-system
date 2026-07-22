@@ -7,6 +7,11 @@ Triển khai danh mục sản phẩm số (Product Catalog), tìm kiếm lọc p
 - Cho phép khách xem hàng và tìm kiếm nâng cao (theo từ khóa, giá cả, danh mục, xếp hạng).
 - Theo dõi/bỏ theo dõi cửa hàng (Follow Shop) để cập nhật tin tức.
 - Viết đánh giá kèm sao (1-5) và bình luận từ Khách hàng. Đảm bảo ràng buộc nghiệp vụ: chỉ những tài khoản đã mua sản phẩm thành công (đơn hàng ở trạng thái `Completed` hoặc `Held`) mới được phép đánh giá, và mỗi giao dịch mua chỉ được đánh giá một lần.
+- Kiểm soát phân quyền đăng bán dựa trên **Shop Level và Số dư ví**:
+  - Chặn đăng bán sản phẩm mới, thêm biến thể hoặc cập nhật biến thể đối với Shop Level 0 và 1 nếu số dư ví âm.
+  - Giới hạn giá trần biến thể tối đa 200,000 VNĐ cho Shop Level 1 (Shop Mới).
+  - Giới hạn tối đa 5 sản phẩm active hiển thị đồng thời cho Shop Level 0 (Cảnh cáo).
+- Tự động ẩn sản phẩm của các shop bị Locked (khóa do ví âm), Banned (bị cấm), hoặc Pending (chờ duyệt) khỏi catalog công khai và các danh sách sản phẩm nổi bật/fallback trang chủ.
 
 ## 2. Kiến trúc & Công nghệ
 
@@ -62,9 +67,9 @@ Triển khai danh mục sản phẩm số (Product Catalog), tìm kiếm lọc p
 
 - **`ProductService`**:
   - CRUD sản phẩm và biến thể.
-  - `getFeaturedProducts(limit)`: Trích xuất các sản phẩm nổi bật dựa trên số lượng đơn hàng hoàn thành thực tế từ DB.
-- **`ProductSearchService`**:
-  - `searchProducts(...)`: Tìm kiếm phân trang lọc nâng cao theo từ khóa, mức giá, danh mục, xếp hạng.
+  - `getFeaturedProducts(limit)`: Trích xuất các sản phẩm nổi bật dựa trên số lượng đơn hàng hoàn thành thực tế từ DB, tự động lọc bỏ các shop có trạng thái Locked, Banned hoặc Pending.
+- **`ProductSearchService`** (Sử dụng `ProductSpecification`):
+  - `searchProducts(...)`: Tìm kiếm phân trang lọc nâng cao theo từ khóa, mức giá, danh mục, xếp hạng. Tự động loại trừ các shop bị Locked, Banned hoặc Pending.
 
 ### 3.5. Controllers & Security
 
@@ -79,6 +84,13 @@ Triển khai danh mục sản phẩm số (Product Catalog), tìm kiếm lọc p
   - API cần xác thực JWT:
     - `POST /products/{productId}/reviews`: Gửi đánh giá mới. Validate quyền sở hữu và trạng thái hoàn thành của đơn hàng.
     - `POST /seller/{sellerId}/follow`: Theo dõi / bỏ theo dõi cửa hàng.
+
+- **`SellerController`** (`/api/seller`):
+  - API cần xác thực JWT và vai trò Seller:
+    - `POST /products`: Đăng sản phẩm mới và tạo các biến thể ban đầu. Kiểm tra giới hạn ví âm của Level 0/1, giới hạn số lượng sản phẩm hoạt động của Level 0 (< 5), và giới hạn giá biến thể của Level 1 (<= 200,000 VNĐ).
+    - `POST /variants`: Thêm biến thể cho sản phẩm hiện có. Kiểm tra giới hạn ví âm và giới hạn giá Level 1.
+    - `PUT /variants/{id}`: Cập nhật thông tin biến thể. Kiểm tra giới hạn ví âm và giới hạn giá Level 1.
+    - `POST /digital-assets`: Nhập kho tài nguyên kỹ thuật số theo lô. Tính toán lại tồn kho khả dụng cho biến thể (trừ loại dịch vụ SERVICE).
 
 ---
 
@@ -100,3 +112,7 @@ Triển khai danh mục sản phẩm số (Product Catalog), tìm kiếm lọc p
 - Chỉ cho phép đánh giá khi giao dịch mua sản phẩm này ở trạng thái `Completed` hoặc `Held` và giao dịch đó chưa từng được đánh giá trước đây.
 - Khi người dùng bấm Theo dõi / Bỏ theo dõi, hệ thống không insert dòng mới liên tục mà thực hiện kiểm tra bản ghi cũ trong DB (bao gồm cả dòng đã xóa mềm `isDelete = 1`) để toggle cờ nhằm tránh vi phạm ràng buộc UNIQUE của cơ sở dữ liệu.
 - Giá của sản phẩm và biến thể bắt buộc là kiểu số nguyên lớn `Long` / `BIGINT`.
+- Chặn hành động đăng bán sản phẩm mới, thêm biến thể hoặc cập nhật biến thể của các Shop Level 0/1 có số dư ví âm.
+- Giới hạn giá trần biến thể tối đa 200,000 VNĐ cho Shop Level 1 và chặn đăng bán nếu vi phạm.
+- Giới hạn tối đa 5 sản phẩm hiển thị hoạt động đồng thời cho Shop Level 0 và chặn đăng bán nếu vượt quá.
+- Lọc bỏ và ẩn toàn bộ sản phẩm của các shop bị Locked (khóa ví âm), Banned (cấm hoạt động) hoặc Pending (chờ duyệt) khỏi kết quả tìm kiếm, catalog, trang chủ và các danh sách sản phẩm nổi bật/bán chạy.

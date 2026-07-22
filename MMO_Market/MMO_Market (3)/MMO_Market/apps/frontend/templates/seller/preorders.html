@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn đặt trước - MMO Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/css/features/home.css}">
+    <link rel="stylesheet" th:href="@{/css/customer/profile.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/seller/seller.css}">
+    <link rel="stylesheet" th:href="@{/css/components/toast.css}">
+</head>
+<body>
+    <header th:replace="fragments/header :: header"></header>
+
+    <main class="ds-container-fluid admin-shell" style="max-width: 1500px; margin: 0 auto;">
+        <div class="admin-layout ds-two-column">
+            <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('preorders')}"></aside>
+
+            <section class="admin-workspace ds-page-shell" style="padding-right: 120px;">
+                <div class="view-header">
+                    <div>
+                        <h2>Quản lý đơn đặt trước</h2>
+                        <p>Theo dõi và xử lý các yêu cầu đặt trước sản phẩm từ khách hàng.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="ds-btn ds-btn-outline" onclick="initPreOrders()">
+                            <i class="fa fa-refresh"></i> Làm mới
+                        </button>
+                    </div>
+                </div>
+
+                <div class="admin-card seller-transactions-card">
+                    <div class="table-wrap">
+                        <table class="admin-table seller-table" id="preOrdersTable">
+                            <thead>
+                                <tr>
+                                    <th>Mã Đơn</th>
+                                    <th>Khách hàng</th>
+                                    <th>Sản phẩm</th>
+                                    <th class="text-center">Số lượng</th>
+                                    <th>Ghi chú</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ngày đặt</th>
+                                    <th class="text-right">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Dữ liệu sẽ được load qua AJAX trong seller-console.js -->
+                                <tr>
+                                    <td colspan="8" class="text-center">
+                                        <i class="fa fa-spinner fa-spin" style="margin-right: 8px;"></i> Đang tải dữ liệu...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer th:replace="fragments/footer :: footer"></footer>
+    
+    <div id="sellerToastContainer"></div>
+
+    <script th:src="@{/js/seller/seller-console.js}"></script>
+</body>
+</html>

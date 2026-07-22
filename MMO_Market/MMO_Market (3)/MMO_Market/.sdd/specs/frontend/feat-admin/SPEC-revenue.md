@@ -5,7 +5,7 @@
 > **CSS Script:** `static/css/admin/admin.css`
 > **JS Script:** `static/js/admin-console.js`
 > **Version:** 2.0 | **Status:** Active
-> **Backend ref:** `feat-admin/SPEC.md`
+> **Backend ref:** `feat-admin/UC-15-system-administration.md`
 > **Last Updated:** 2026-07-16
 
 ---

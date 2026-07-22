@@ -30,12 +30,43 @@ public class ProductSearchService {
     @Autowired
     private TransactionRepository transactionRepository;
 
+    @Autowired
+    private com.mmo.shared.dal.CategoryRepository categoryRepository;
+
     public Page<ProductSearchResultDTO> searchProducts(
             String keyword, Long categoryId, Long minPrice, Long maxPrice,
             String stockStatus, Long sellerId, List<Integer> ratings, Pageable pageable) {
+        return searchProducts(keyword, categoryId, null, minPrice, maxPrice, stockStatus, sellerId, ratings, pageable);
+    }
+
+    public Page<ProductSearchResultDTO> searchProducts(
+            String keyword, Long categoryId, String subCategory, Long minPrice, Long maxPrice,
+            String stockStatus, Long sellerId, List<Integer> ratings, Pageable pageable) {
+
+        Long effectiveCategoryId = categoryId;
+
+        if (subCategory != null && !subCategory.trim().isEmpty()) {
+            String subTrim = subCategory.trim();
+            try {
+                effectiveCategoryId = Long.parseLong(subTrim);
+            } catch (NumberFormatException e) {
+                Optional<Category> found = categoryRepository.findByName(subTrim);
+                if (found.isPresent()) {
+                    effectiveCategoryId = found.get().getId();
+                } else {
+                    List<Category> allCats = categoryRepository.findAllByIsDeleteFalseOrderByIdAsc();
+                    for (Category cat : allCats) {
+                        if (cat.getName() != null && cat.getName().equalsIgnoreCase(subTrim)) {
+                            effectiveCategoryId = cat.getId();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
 
         Specification<Product> spec = ProductSpecification.withDynamicQuery(
-                keyword, categoryId, minPrice, maxPrice, stockStatus, sellerId, ratings);
+                keyword, effectiveCategoryId, minPrice, maxPrice, stockStatus, sellerId, ratings);
 
         Page<Product> productPage = productRepository.findAll(spec, pageable);
         
@@ -67,7 +98,11 @@ public class ProductSearchService {
         dto.setImageUrl(product.getImage());
 
         if (product.getCategory() != null) {
-            dto.setCategoryName(product.getCategory().getName());
+            if (product.getCategory().getParent() != null && product.getCategory().getParent().getName() != null) {
+                dto.setCategoryName(product.getCategory().getParent().getName());
+            } else if (product.getCategory().getName() != null) {
+                dto.setCategoryName(product.getCategory().getName());
+            }
         }
 
         if (product.getSeller() != null) {

@@ -28,9 +28,9 @@ Triển khai luồng hỗ trợ kỹ thuật và giải quyết khiếu nại gi
 ### 3.2. Repositories (Spring Data JPA)
 
 - **`SupportTicketRepository`**:
-  - `findByUser_IdAndIsDeleteFalseOrderByCreatedAtDesc(userId)`: Lấy các ticket cá nhân của người dùng.
-  - `findAllByIsDeleteFalseOrderByCreatedAtDesc()`: Lấy toàn bộ ticket hệ thống phục vụ Staff/Admin.
-  - `findByIdAndIsDeleteFalse(id)`: Lấy chi tiết ticket.
+  - `findByUserAndIsDeleteFalseOrderByCreatedAtDesc(user)`: Lấy các ticket cá nhân của người dùng.
+  - `findByIsDeleteFalseOrderByCreatedAtDesc()`: Lấy toàn bộ ticket hệ thống hoạt động phục vụ Staff/Admin.
+  - `findById(id)`: Lấy chi tiết ticket.
 
 ### 3.3. DTOs
 
@@ -42,13 +42,15 @@ Triển khai luồng hỗ trợ kỹ thuật và giải quyết khiếu nại gi
 - **`SupportTicketService`**:
   - `createTicket(userId, category, title, description)`:
     - Tìm kiếm User, kiểm tra sự tồn tại.
-    - Lưu ticket mới với trạng thái ban đầu là `OPEN`.
+    - Lưu ticket mới với trạng thái ban đầu là `Open`.
+    - Gửi thông báo xác nhận thành công cho người dùng và thông báo cho toàn bộ Staff/Admin để xử lý.
   - `getUserTickets(userId)`: Lấy lịch sử ticket của người dùng.
   - `getAllTickets()`: Lấy toàn bộ ticket hệ thống (chỉ cho phép Staff/Admin).
   - `getTicketById(id)`: Lấy chi tiết ticket.
   - `updateTicketStatus(id, status, resolution)`:
-    - Xác thực trạng thái mới hợp lệ (`OPEN`, `RESOLVED`, `CLOSED`).
+    - Xác thực trạng thái mới hợp lệ (`Open`, `Processing`, `Resolved`).
     - Lưu nội dung xử lý của Staff và cập nhật trạng thái.
+    - Gửi thông báo biến động trạng thái cho người dùng.
 
 ### 3.5. Controllers & Security
 
@@ -76,3 +78,13 @@ Triển khai luồng hỗ trợ kỹ thuật và giải quyết khiếu nại gi
 
 - API xem chi tiết `/api/support-tickets/{id}` bắt buộc phải kiểm tra quyền sở hữu (Ownership Validation) để tránh lỗ hổng IDOR (không cho phép user A đọc ticket của user B).
 - Chỉ những tài khoản có vai trò `STAFF` hoặc `ADMIN` mới có quyền truy cập endpoint `/all` và cập nhật status.
+
+---
+
+## 6. Cải tiến và Bản địa hóa Thuật ngữ (Phiên bản 1.1)
+
+Thay đổi toàn bộ thuật ngữ hiển thị trên giao diện người dùng (Thymeleaf templates) và mã xử lý (JavaScript) từ "Ticket" / "Ticket hỗ trợ" sang "Phiếu hỗ trợ" để thống nhất ngôn ngữ tiếng Việt:
+- **Sidebar & Menu:** Đổi "Ticket Hỗ Trợ" thành "Phiếu Hỗ Trợ" trên sidebar của Staff, và "Ticket của tôi" thành "Phiếu hỗ trợ của tôi" trên sidebar của Customer.
+- **Giao diện Customer (`tickets.html`, `support.html`):** Thay đổi toàn bộ nhãn hiển thị, tiêu đề bảng, thông điệp phản hồi toast từ "Ticket" sang "Phiếu hỗ trợ".
+- **Giao diện Staff (`support-tickets.html`, `support-ticket-detail.html`):** Việt hóa tiêu đề, breadcrumbs và các nhãn mã ticket thành "Phiếu hỗ trợ" và "Mã Phiếu".
+- **API Backend (`SupportTicketController.java`, `SupportTicketService.java`):** Việt hóa các thông báo lỗi trả về từ API và các Exception message (như "Không tìm thấy phiếu hỗ trợ với ID").

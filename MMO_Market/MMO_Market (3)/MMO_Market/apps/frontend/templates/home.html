@@ -327,7 +327,7 @@
                     <h3 class="category-box__title">Phần mềm</h3>
                     <p class="category-box__desc">Các công cụ, tool hỗ trợ cho công việc.</p>
                 </a>
-                <a href="/products?categoryId=7" class="category-box category-box--other">
+                <a href="/products?categoryId=66" class="category-box category-box--other">
                     <div class="category-box__icon-wrapper"><i class="fa fa-cubes"></i></div>
                     <h3 class="category-box__title">Khác</h3>
                     <p class="category-box__desc">Các sản phẩm, dịch vụ số không thuộc danh mục trên.</p>
@@ -356,7 +356,7 @@
                     <h3 class="category-box__title">Blockchain</h3>
                     <p class="category-box__desc">Các sản phẩm, dịch vụ liên quan đến tiền ảo, NFT.</p>
                 </a>
-                <a href="/products?categoryId=7" class="category-box category-box--other-service">
+                <a href="/products?categoryId=67" class="category-box category-box--other-service">
                     <div class="category-box__icon-wrapper"><i class="fa fa-ellipsis-h"></i></div>
                     <h3 class="category-box__title">Dịch vụ khác</h3>
                     <p class="category-box__desc">Các dịch vụ số độc đáo và đa dạng khác.</p>
@@ -557,8 +557,8 @@
             engagement: '4',
             software_service: '5',
             blockchain: '6',
-            other: '7',
-            other_service: '7'
+            other: '66',
+            other_service: '67'
         };
 
         // 3. Xử lý nút TÌM KIẾM (cho phép chỉ chọn danh mục con, không bắt buộc từ khóa)
@@ -689,9 +689,14 @@
                     const card = document.createElement('a');
                     card.href = `/products/${product.id}`;
                     card.className = 'product-card';
+                    let mediaHtml = `<i class="fa ${icon} product-card__img-icon" style="color:${color};"></i>`;
+                    if (product.imageUrl && !product.imageUrl.includes('placeholder.com')) {
+                        mediaHtml = `<img src="${product.imageUrl}" class="product-card__img-real" alt="${product.name}" style="width:100%; height:100%; object-fit:cover;">`;
+                    }
+                    
                     card.innerHTML = `
                         <div class="product-card__image-container">
-                            <i class="fa ${icon} product-card__img-icon" style="color:${color};"></i>
+                            ${mediaHtml}
                         </div>
                         <div class="product-card__body">
                             <div class="product-card__stock">Tồn: ${stockText}</div>

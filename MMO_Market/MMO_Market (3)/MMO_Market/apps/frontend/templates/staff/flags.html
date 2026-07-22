@@ -19,7 +19,7 @@
                     </div>
                 </div>
 
-                <div class="staff-stat-grid">
+                <div class="staff-stat-grid staff-stat-grid--3cols">
                     <div class="ds-card staff-stat-card">
                         <p class="staff-stat-card__label">Tổng cờ</p>
                         <p class="staff-stat-card__value" th:text="${totalFlags}"></p>
@@ -114,7 +114,6 @@
                                 <th class="ds-table-center" style="width: 60px;">STT</th>
                                 <th>Mã cờ</th>
                                 <th>Shop</th>
-                                <th>Lý do</th>
                                 <th class="ds-table-center">Mức độ</th>
                                 <th>Staff</th>
                                 <th class="ds-table-center">Trạng thái</th>
@@ -137,8 +136,6 @@
                                             </div>
                                         </div>
                                     </div>
-                                </td>
-                                <td th:text="${flag.reason}">
                                 </td>
                                 <td class="ds-table-center">
                                     <span class="ds-badge"

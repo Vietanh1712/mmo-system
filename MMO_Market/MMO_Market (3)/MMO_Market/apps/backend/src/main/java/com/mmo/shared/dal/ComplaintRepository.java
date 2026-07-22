@@ -37,7 +37,6 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     @Query("SELECT COUNT(c) FROM Complaint c WHERE c.seller = :seller AND c.isDelete = false AND YEAR(c.createdAt) = :year AND MONTH(c.createdAt) = :month")
     long countComplaintsBySellerAndMonth(@Param("seller") User seller, @Param("year") int year, @Param("month") int month);
 
-
     long countByStatusAndIsDeleteFalse(String status);
 
     long countByIsDeleteFalse();
