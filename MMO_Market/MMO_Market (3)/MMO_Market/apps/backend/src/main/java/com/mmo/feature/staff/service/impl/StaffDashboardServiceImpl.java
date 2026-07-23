@@ -9,6 +9,7 @@ import com.mmo.shared.dal.ShopFlagRepository;
 import com.mmo.shared.dal.WithdrawalRepository;
 import com.mmo.shared.dal.TransactionRepository;
 import com.mmo.shared.dal.SellerRegistrationRepository;
+import com.mmo.shared.dal.SupportTicketRepository;
 import com.mmo.shared.dto.StaffDashboardDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,12 @@ public class StaffDashboardServiceImpl implements StaffDashboardService {
         @Autowired
         private SellerRegistrationRepository sellerRegistrationRepository;
 
+        @Autowired
+        private SupportTicketRepository supportTicketRepository;
+
+        @Autowired
+        private com.mmo.shared.dal.TopupTransactionRepository topupTransactionRepository;
+
         @Override
         public StaffDashboardDTO getDashboardData() {
 
@@ -56,6 +63,12 @@ public class StaffDashboardServiceImpl implements StaffDashboardService {
 
                 long totalShops = sellerRegistrationRepository.countByIsDeleteFalse();
 
+                long pendingTickets = supportTicketRepository.countByStatusAndIsDeleteFalse("Open")
+                                + supportTicketRepository.countByStatusAndIsDeleteFalse("Processing");
+
+                long pendingTopups = topupTransactionRepository.countByStatusIgnoreCase("Failed")
+                                + topupTransactionRepository.countByStatusIgnoreCase("Pending");
+
                 return StaffDashboardDTO.builder()
                                 .openComplaints(openComplaints)
                                 .pendingKyc(pendingKyc)
@@ -64,6 +77,8 @@ public class StaffDashboardServiceImpl implements StaffDashboardService {
                                 .totalComplaints(totalComplaints)
                                 .pendingTransactions(pendingTransactions)
                                 .totalShops(totalShops)
+                                .pendingTickets(pendingTickets)
+                                .pendingTopups(pendingTopups)
                                 .build();
         }
 }

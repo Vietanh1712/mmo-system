@@ -190,6 +190,38 @@
     gap: 20px;
 }
 
+.staff-stat-grid--3cols {
+    grid-template-columns: repeat(3, 1fr) !important;
+}
+
+@media (max-width: 992px) {
+    .staff-stat-grid--3cols {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .staff-stat-grid--3cols {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.staff-stat-grid--4cols {
+    grid-template-columns: repeat(4, 1fr) !important;
+}
+
+@media (max-width: 1200px) {
+    .staff-stat-grid--4cols {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .staff-stat-grid--4cols {
+        grid-template-columns: 1fr !important;
+    }
+}
+
 .staff-stat-card {
     position: relative;
     overflow: hidden;
@@ -892,6 +924,28 @@
     position: sticky;
     top: 110px;
     align-self: start;
+}
+
+/* Combobox Custom Dropdown Menu Styling */
+.ds-combobox-menu {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    background: #ffffff;
+}
+
+.ds-combobox-item {
+    padding: 8px 14px;
+    font-size: 13px;
+    color: #334155;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.ds-combobox-item:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    font-weight: 500;
 }
 
 @media (max-width: 992px) {

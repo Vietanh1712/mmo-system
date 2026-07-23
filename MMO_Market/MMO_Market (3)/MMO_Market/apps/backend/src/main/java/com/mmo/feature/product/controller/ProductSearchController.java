@@ -81,6 +81,7 @@ public class ProductSearchController {
     public ResponseEntity<Page<ProductSearchResultDTO>> searchProducts(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String subCategory,
             @RequestParam(required = false) Long minPrice,
             @RequestParam(required = false) Long maxPrice,
             @RequestParam(required = false) String stockStatus, // e.g., "In Stock"
@@ -89,7 +90,7 @@ public class ProductSearchController {
             @PageableDefault(size = 12, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
 
         Page<ProductSearchResultDTO> results = productSearchService.searchProducts(
-                keyword, categoryId, minPrice, maxPrice, stockStatus, sellerId, rating, pageable);
+                keyword, categoryId, subCategory, minPrice, maxPrice, stockStatus, sellerId, rating, pageable);
 
         return ResponseEntity.ok(results);
     }
@@ -403,7 +404,10 @@ public class ProductSearchController {
     }
 
     @GetMapping("/categories")
-    public ResponseEntity<List<Category>> getCategories() {
+    public ResponseEntity<List<Category>> getCategories(@RequestParam(required = false) Boolean parentOnly) {
+        if (Boolean.TRUE.equals(parentOnly)) {
+            return ResponseEntity.ok(categoryRepository.findByParentIsNullAndIsDeleteFalse());
+        }
         return ResponseEntity.ok(categoryRepository.findByIsDeleteFalse());
     }
 }

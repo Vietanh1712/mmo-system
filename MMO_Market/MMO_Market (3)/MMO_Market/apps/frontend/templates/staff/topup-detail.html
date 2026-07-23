@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Chi tiết nạp tiền')}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('topups')}"></aside>
+
+            <section class="ds-section">
+                <!-- Breadcrumb đồng bộ chuẩn Staff -->
+                <nav class="staff-breadcrumb">
+                    <a href="/staff/topups">Nạp tiền</a>
+                    <span>/</span>
+                    <span id="breadcrumbTopupId">#TOPUP-...</span>
+                </nav>
+
+                <!-- Page Header đồng bộ chuẩn Staff -->
+                <div class="staff-page-header">
+                    <div>
+                        <h1 class="ds-page-title">Chi tiết giao dịch nạp tiền</h1>
+                        <p class="ds-page-subtitle" id="topupDetailSubtitle">Mã giao dịch #TOPUP-...</p>
+                    </div>
+                    <span id="headerStatusBadge"></span>
+                </div>
+
+                <!-- Detail Grid đồng bộ chuẩn Staff (staff-detail-grid) -->
+                <div class="staff-detail-grid">
+                    <div class="ds-stack-md">
+                        <!-- Thẻ 1: Thông tin nạp tiền & SePay -->
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Thông tin giao dịch &amp; SePay</h2>
+                            </div>
+                            <div style="padding: 20px 24px;">
+                                <dl class="staff-info-list">
+                                    <div class="staff-info-row">
+                                        <dt>Mã hệ thống</dt>
+                                        <dd id="detailTopupId">-</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Mã SePay / Tham chiếu</dt>
+                                        <dd><span class="ds-badge ds-badge-info" style="font-family: monospace;" id="detailSepayCode">-</span></dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Số tiền nạp</dt>
+                                        <dd class="ds-money" style="color: #059669; font-size: 16px; font-weight: 700;" id="detailAmount">- đ</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Phương thức</dt>
+                                        <dd>Chuyển khoản QR SePay (Tự động)</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Thời gian tạo</dt>
+                                        <dd id="detailCreatedAt">-</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
+
+                        <!-- Thẻ 2: Thông tin người nạp tiền -->
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Thông tin người nạp tiền</h2>
+                            </div>
+                            <div style="padding: 20px 24px;">
+                                <dl class="staff-info-list">
+                                    <div class="staff-info-row">
+                                        <dt>User ID</dt>
+                                        <dd id="detailUserId">-</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Tài khoản / Họ tên</dt>
+                                        <dd id="detailUserFullName">-</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Email liên hệ</dt>
+                                        <dd style="color: #2563eb;" id="detailUserEmail">-</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Số dư trước khi nạp</dt>
+                                        <dd id="detailBalanceBefore">-</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Số dư sau khi nạp</dt>
+                                        <dd class="ds-money" style="color: #059669; font-weight: 700;" id="detailBalanceAfter">-</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
+
+                        <!-- Thẻ 3: Đối chiếu nội dung gốc & Ghi chú Staff -->
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Đối chiếu nội dung &amp; Nhật ký xử lý</h2>
+                            </div>
+                            <div style="padding: 20px 24px;">
+                                <div style="margin-bottom: 16px;">
+                                    <label style="display: block; font-weight: 600; font-size: 13.5px; color: #475569; margin-bottom: 6px;">
+                                        Nội dung chuyển khoản gốc (Raw Content):
+                                    </label>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 6px; font-family: monospace; font-size: 13.5px; color: #0f172a; word-break: break-all;">
+                                        <span id="detailRawContent">-</span>
+                                        <button type="button" class="ds-btn ds-btn-secondary" style="padding: 2px 8px; font-size: 12px; margin-left: 8px;" onclick="copyRawContent()">Sao chép</button>
+                                    </div>
+                                </div>
+
+                                <div id="detailFailureReasonContainer" style="display: none; background: #fef2f2; border: 1px solid #fca5a5; padding: 12px 16px; border-radius: 6px; color: #991b1b; font-size: 13.5px; margin-bottom: 16px;">
+                                    <strong>Lý do thất bại ban đầu:</strong> <span id="detailFailureReason">-</span>
+                                </div>
+
+                                <div id="detailStaffNoteContainer" style="display: none; background: #ecfdf5; border: 1px solid #6ee7b7; padding: 12px 16px; border-radius: 6px; color: #065f46; font-size: 13.5px;">
+                                    <div><strong>Staff kích hoạt thủ công:</strong> <span id="detailProcessedStaff">-</span></div>
+                                    <div style="margin-top: 4px;"><strong>Ghi chú xử lý:</strong> <span id="detailStaffNote">-</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Thao tác hành động đồng bộ -->
+                        <div class="ds-card">
+                            <div style="padding: 16px 24px; display: flex; align-items: center; justify-content: space-between;">
+                                <a href="/staff/topups" class="ds-btn ds-btn-secondary">
+                                    <i class="fa fa-arrow-left"></i> Quay lại danh sách
+                                </a>
+                                <button class="ds-btn ds-btn-primary" type="button" id="detailRetryBtn" style="background: #f59e0b; border-color: #f59e0b; display: none;">
+                                    <i class="fa fa-refresh"></i> Thử lại &amp; Kích hoạt nạp tiền
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/customer/auth.js}"></script>
+<script th:src="@{/js/staff/staff-ui.js}"></script>
+<script>
+    let rawContentValue = '';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const topupId = urlParams.get('id');
+        if (!topupId) {
+            window.location.href = '/staff/topups';
+            return;
+        }
+
+        try {
+            const response = await authFetch('/v1/staff/topups/' + topupId);
+            if (!response.ok) {
+                alert('Không tìm thấy thông tin giao dịch nạp tiền.');
+                window.location.href = '/staff/topups';
+                return;
+            }
+            const data = await response.json();
+            
+            document.getElementById('breadcrumbTopupId').textContent = `#TOPUP-${data.id}`;
+            document.getElementById('topupDetailSubtitle').textContent = `Mã giao dịch #TOPUP-${data.id} — ${data.sepayCode || 'Nạp tiền SePay'}`;
+            
+            document.getElementById('detailTopupId').textContent = '#' + data.id;
+            document.getElementById('detailSepayCode').textContent = data.sepayCode || '-';
+            document.getElementById('detailAmount').textContent = (data.amountVnd != null ? data.amountVnd.toLocaleString('vi-VN') : '0') + ' đ';
+            document.getElementById('detailCreatedAt').textContent = data.createdAt ? data.createdAt.replace('T', ' ').substring(0, 19) : '-';
+
+            // Header Status Badge đồng bộ với withdrawal-detail và transaction-detail
+            const badgeEl = document.getElementById('headerStatusBadge');
+            const stUpper = data.status ? data.status.toUpperCase() : '';
+            if (stUpper === 'SUCCESS') {
+                badgeEl.className = 'ds-badge ds-badge-success';
+                badgeEl.textContent = 'Thành công';
+            } else if (stUpper === 'FAILED') {
+                badgeEl.className = 'ds-badge ds-badge-danger';
+                badgeEl.textContent = 'Thất bại';
+            } else {
+                badgeEl.className = 'ds-badge ds-badge-warning';
+                badgeEl.textContent = 'Chờ xử lý';
+            }
+
+            // User Details
+            document.getElementById('detailUserId').textContent = data.userId ? '#' + data.userId : 'Chưa gắn User';
+            document.getElementById('detailUserFullName').textContent = data.userFullName || 'Chưa nhận diện người nạp';
+            document.getElementById('detailUserEmail').textContent = data.userEmail || '-';
+            document.getElementById('detailBalanceBefore').textContent = data.balanceBefore != null ? data.balanceBefore.toLocaleString('vi-VN') + ' đ' : '-';
+            document.getElementById('detailBalanceAfter').textContent = data.balanceAfter != null ? data.balanceAfter.toLocaleString('vi-VN') + ' đ' : '-';
+
+            // Raw Transfer Content
+            rawContentValue = data.transferContent || '';
+            document.getElementById('detailRawContent').textContent = rawContentValue || '(Không có nội dung chuyển khoản)';
+
+            if (data.failureReason) {
+                document.getElementById('detailFailureReasonContainer').style.display = 'block';
+                document.getElementById('detailFailureReason').textContent = data.failureReason;
+            }
+
+            if (data.staffNote || data.processedByStaffName) {
+                document.getElementById('detailStaffNoteContainer').style.display = 'block';
+                document.getElementById('detailProcessedStaff').textContent = data.processedByStaffName || ('Staff ID #' + data.processedByStaffId);
+                document.getElementById('detailStaffNote').textContent = data.staffNote || '(Không có ghi chú)';
+            }
+
+            // Retry Button
+            if (stUpper === 'FAILED' || stUpper === 'PENDING') {
+                const btn = document.getElementById('detailRetryBtn');
+                btn.style.display = 'inline-flex';
+                btn.addEventListener('click', () => {
+                    window.location.href = '/staff/topups?retryId=' + data.id;
+                });
+            }
+
+        } catch (error) {
+            console.error('Lỗi tải chi tiết nạp tiền:', error);
+        }
+    });
+
+    function copyRawContent() {
+        if (!rawContentValue) return;
+        navigator.clipboard.writeText(rawContentValue).then(() => {
+            alert('Đã sao chép nội dung chuyển khoản gốc!');
+        }).catch(err => {
+            console.error('Lỗi sao chép:', err);
+        });
+    }
+</script>
+</body>
+</html>

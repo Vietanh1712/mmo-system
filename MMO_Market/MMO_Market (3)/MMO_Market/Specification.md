@@ -16,8 +16,8 @@ Tất cả tài khoản được lưu trữ tập trung tại bảng `Users`, h�
 | **Guest** | Khách vãng lai chưa xác thực. Chỉ được quyền xem danh mục sản phẩm, bài viết công khai và tiến hành đăng ký tài khoản. |
 | **Customer** | Khách mua hàng. Có quyền nạp tiền VNĐ vào ví, đặt mua sản phẩm, gửi đánh giá phản hồi và tạo khiếu nại tranh chấp đơn hàng. |
 | **Seller** | Người bán hàng (Được nâng cấp từ tài khoản Customer sau khi hồ sơ KYC đạt trạng thái `Approved`). Có quyền đăng bán sản phẩm, thiết lập loại hàng, quản lý kho, giải trình khiếu nại và rút tiền doanh thu về tài khoản ngân hàng. |
-| **Staff** | Nhân viên kiểm duyệt (Trọng tài hệ thống). Có quyền duyệt/từ chối yêu cầu KYC, thẩm định phê duyệt lệnh rút tiền mặt, cắm cờ (`Flags`) cảnh cáo các shop vi phạm và đưa ra phán quyết đóng hồ sơ khiếu nại. |
-| **Admin** | Quản trị viên tối cao. Thực hiện thiết lập tỷ lệ phần trăm hoa hồng (`Commissions`) sàn thu từ người bán và truy vấn nhật ký hệ thống (`AuditLogs`). |
+| **Staff** | Nhân viên kiểm duyệt (Trọng tài hệ thống). Có quyền duyệt/từ chối yêu cầu KYC, thẩm định phê duyệt lệnh rút tiền mặt, cắm cờ (`Flags`) cảnh cáo các shop vi phạm, đưa ra phán quyết đóng hồ sơ khiếu nại và quản lý danh mục sản phẩm (`Categories`). |
+| **Admin** | Quản trị viên tối cao. Thực hiện thiết lập tỷ lệ phần trăm hoa hồng (`Commissions`), phân quyền hoạt động cho Staff (bao gồm gán/thu hồi quyền `MANAGE_CATEGORIES`) và truy vấn nhật ký hệ thống (`AuditLogs`). |
 
 ---
 

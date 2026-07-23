@@ -19,7 +19,7 @@
                     </div>
                 </div>
 
-                <div class="staff-stat-grid">
+                <div class="staff-stat-grid staff-stat-grid--3cols">
                     <div class="ds-card staff-stat-card">
                         <p class="staff-stat-card__label">Tổng cờ</p>
                         <p class="staff-stat-card__value" th:text="${totalFlags}"></p>
@@ -61,31 +61,18 @@
                                         placeholder="Tìm shop, mã cờ..."
                                         th:value="${keyword}">
 
-                                <select
-                                        class="ds-input"
-                                        name="level">
-                                    <option value="ALL"
-                                            th:selected="${selectedLevel == null}">
-                                        Tất cả mức độ
-                                    </option>
-                                    <option th:each="l:${levels}"
-                                            th:value="${l}"
-                                            th:text="${l == 'Warning' ? 'Cảnh cáo' : (l == 'Danger' ? 'Nguy hiểm' : (l == 'Critical' ? 'Phê bình' : (l == 'Suspension' ? 'Đình chỉ' : (l == 'Ban' ? 'Cấm' : l))))}"
-                                            th:selected="${l == selectedLevel}">
-                                    </option>
+                                <select class="ds-input" name="level">
+                                    <option value="ALL" th:selected="${selectedLevel == null or selectedLevel == '' or selectedLevel == 'ALL'}">Tất cả mức độ</option>
+                                    <option value="Warning" th:selected="${selectedLevel == 'Warning'}">Cảnh cáo</option>
+                                    <option value="Danger" th:selected="${selectedLevel == 'Danger'}">Nguy hiểm</option>
+                                    <option value="Critical" th:selected="${selectedLevel == 'Critical'}">Phê bình</option>
+                                    <option value="Suspension" th:selected="${selectedLevel == 'Suspension'}">Tạm dừng</option>
+                                    <option value="Ban" th:selected="${selectedLevel == 'Ban'}">Cấm</option>
                                 </select>
-                                <select
-                                        class="ds-input"
-                                        name="status">
-                                    <option value="ALL"
-                                            th:selected="${selectedStatus == null}">
-                                        Tất cả trạng thái
-                                    </option>
-                                    <option th:each="s:${statuses}"
-                                            th:value="${s}"
-                                            th:text="${#strings.toLowerCase(s) == 'effect' ? 'Hiệu lực' : (#strings.toLowerCase(s) == 'removed' or #strings.toLowerCase(s) == 'remove' ? 'Đã gỡ' : s)}"
-                                            th:selected="${s == selectedStatus}">
-                                    </option>
+                                <select class="ds-input" name="status">
+                                    <option value="ALL" th:selected="${selectedStatus == null or selectedStatus == '' or selectedStatus == 'ALL'}">Tất cả trạng thái</option>
+                                    <option value="Effect" th:selected="${selectedStatus == 'Effect'}">Đang hiệu lực</option>
+                                    <option value="Removed" th:selected="${selectedStatus == 'Removed'}">Đã gỡ bỏ</option>
                                 </select>
                                 <div class="withdrawal-filter-actions">
 
@@ -114,7 +101,6 @@
                                 <th class="ds-table-center" style="width: 60px;">STT</th>
                                 <th>Mã cờ</th>
                                 <th>Shop</th>
-                                <th>Lý do</th>
                                 <th class="ds-table-center">Mức độ</th>
                                 <th>Staff</th>
                                 <th class="ds-table-center">Trạng thái</th>
@@ -137,8 +123,6 @@
                                             </div>
                                         </div>
                                     </div>
-                                </td>
-                                <td th:text="${flag.reason}">
                                 </td>
                                 <td class="ds-table-center">
                                     <span class="ds-badge"

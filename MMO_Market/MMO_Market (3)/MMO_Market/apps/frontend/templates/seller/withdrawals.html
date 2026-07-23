@@ -25,7 +25,7 @@
                         <h2>Quản lý rút tiền</h2>
                         <p>Rút tiền về tài khoản ngân hàng — tối thiểu 50.000 VNĐ</p>
                     </div>
-                    <span class="ds-badge ds-badge-success">Withdrawals</span>
+                    <span class="ds-badge ds-badge-success">Rút tiền</span>
                 </div>
 
                 <div class="stats-grid-4">
@@ -83,33 +83,8 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>#WD-301</td>
-                                    <td style="text-align: right;">2.000.000 ₫</td>
-                                    <td>Vietcombank</td>
-                                    <td>04/06/2026</td>
-                                    <td><span class="ds-badge ds-badge-warning"><i class="fa fa-clock-o"></i> Pending</span></td>
-                                    <td style="text-align: right;">
-                                        <div th:replace="~{fragments/seller-actions :: withdrawalRowActions(@{/seller/withdrawals/detail})}"></div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>#WD-298</td>
-                                    <td style="text-align: right;">5.000.000 ₫</td>
-                                    <td>Vietcombank</td>
-                                    <td>28/05/2026</td>
-                                    <td><span class="ds-badge ds-badge-success"><i class="fa fa-check"></i> Completed</span></td>
-                                    <td style="text-align: right;">
-                                        <div th:replace="~{fragments/seller-actions :: withdrawalRowActions(@{/seller/withdrawals/detail})}"></div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>#WD-290</td>
-                                    <td style="text-align: right;">1.500.000 ₫</td>
-                                    <td>Vietcombank</td>
-                                    <td>15/05/2026</td>
-                                    <td><span class="ds-badge ds-badge-success"><i class="fa fa-check"></i> Completed</span></td>
-                                    <td style="text-align: right;">
-                                        <div th:replace="~{fragments/seller-actions :: withdrawalRowActions(@{/seller/withdrawals/detail})}"></div>
+                                    <td colspan="6" style="text-align: center; padding: 20px;">
+                                        <i class="fa fa-spinner fa-spin"></i> Đang tải dữ liệu...
                                     </td>
                                 </tr>
                             </tbody>
@@ -119,6 +94,22 @@
             </section>
         </div>
     </main>
+    <!-- Confirm Withdrawal Modal -->
+    <div id="confirmWithdrawModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 8px; width: 400px; max-width: 90%; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="margin: 0; font-size: 18px; color: #1e293b;">Xác nhận rút tiền</h3>
+                <button type="button" onclick="document.getElementById('confirmWithdrawModal').style.display='none'" style="background: transparent; border: none; font-size: 20px; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+            <div style="margin-bottom: 24px; font-size: 14px; color: #475569; line-height: 1.5;" id="confirmWithdrawText">
+                Xác nhận tạo yêu cầu rút tiền?
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="ds-btn ds-btn-outline" onclick="document.getElementById('confirmWithdrawModal').style.display='none'" style="padding: 8px 16px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; cursor: pointer;">Hủy</button>
+                <button type="button" class="ds-btn ds-btn-primary" id="btnConfirmWithdrawal" style="padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">Xác nhận</button>
+            </div>
+        </div>
+    </div>
     <script th:src="@{/js/customer/auth.js}"></script>
     <script th:src="@{/js/seller/seller-console.js(v=1.2)}"></script>
 </body>

@@ -73,6 +73,13 @@ Trang kiểm duyệt hồ sơ KYC cung cấp giao diện dành riêng cho nhân 
 * **Nút Phê Duyệt (`.btn-approve`):** Màu xanh lá, click hiển thị modal xác nhận nhanh "Phê duyệt hồ sơ này?".
 * **Nút Từ Chối (`.btn-reject`):** Màu đỏ, click hiển thị hộp thoại yêu cầu nhập bắt buộc lý do từ chối (rejection reason) từ Staff trước khi gửi.
 
+### 4.3 Nhãn Trạng Thái Cố Định (Status Badge)
+* **Vị trí hiển thị:** Đặt cố định ở góc trên bên phải của khung card "Thông tin người nộp" (`.ds-card-header` sử dụng `display: flex; justify-content: space-between; align-items: center;`).
+* **Trạng thái:**
+  * `PENDING`: Nhãn vàng "Chờ duyệt" (`ds-badge-warning`).
+  * `APPROVED`: Nhãn xanh "Đã duyệt" (`ds-badge-success`).
+  * `REJECTED`: Nhãn đỏ "Từ chối" (`ds-badge-danger`).
+
 ### 4.3 Khối Thông Tin Người Nộp — `.staff-info-list` (Cập nhật 2026-07-01)
 Phần "Thông tin người nộp" trên trang chi tiết KYC phải hiển thị đầy đủ các trường sau (lấy từ bảng `Users` và `KycRequest`):
 
@@ -95,20 +102,26 @@ Phần "Thông tin người nộp" trên trang chi tiết KYC phải hiển th�
 ## 5. LUỒNG XỬ LÝ JS & AJAX
 
 ### 5.1 Trang danh sách KYC (`/staff/kyc`):
-* Gọi API: `GET /api/v1/staff/kyc?status=Pending&page=0` để chèn dữ liệu vào bảng danh sách. Click một dòng sẽ điều hướng sang `/staff/kyc/{kycId}`.
+* Gọi API: `GET /v1/staff/kyc/stats` để tải thống kê 4 ô chỉ số (Tổng số, Chờ duyệt, Đã duyệt, Từ chối).
+* Gọi API: `GET /v1/staff/kyc?status=&requestCode=&idType=&page=0&size=10` để chèn dữ liệu vào bảng danh sách.
+* Hỗ trợ tìm kiếm theo mã hồ sơ (tự động bỏ ký tự `#` ở đầu), số giấy tờ, tên, email; hỗ trợ bấm phím `Enter` trong ô tìm kiếm hoặc thay đổi dropdown bộ lọc để tự động tải lại danh sách.
+* Click nút xem chi tiết sẽ điều hướng sang `/staff/kyc/detail?id={kycId}`.
 
-### 5.2 Trang chi tiết KYC (`/staff/kyc/{kycId}`):
-1. **Phê duyệt hồ sơ:**
-   * Staff click "Phê duyệt" và xác nhận:
-     * **Endpoint:** `POST /api/v1/staff/kyc/approve/{kycId}`
-     * **Headers:** `Authorization: Bearer <token>`
-   * **Thành công (HTTP 200):** Chuyển hướng quay lại danh sách chờ duyệt `/staff/kyc`, hiển thị Toast báo thành công nâng cấp tài khoản người dùng.
-2. **Từ chối hồ sơ:**
-   * Staff click "Từ chối", nhập lý do "Ảnh selfie mờ không rõ khuôn mặt" và bấm gửi:
-     * **Endpoint:** `POST /api/v1/staff/kyc/reject/{kycId}`
+### 5.2 Trang chi tiết KYC (`/staff/kyc/detail?id={kycId}`):
+1. **Phê duyệt hoặc từ chối hồ sơ:**
+   * Staff click "Phê duyệt" hoặc "Từ chối" (bắt buộc nhập lý do khi từ chối):
+     * **Endpoint:** `POST /api/v1/staff/kyc/{kycId}/review`
      * **Headers:** `Content-Type: application/json`, `Authorization: Bearer <token>`
-     * **Payload:** `{ "reason": "Ảnh selfie mờ không rõ khuôn mặt" }`
-   * **Thành công (HTTP 200):** Quay lại trang danh sách, gửi thông báo báo lỗi KYC cho người dùng đích.
+     * **Payload:** 
+       ```json
+       {
+         "status": "APPROVED", // hoặc "REJECTED"
+         "rejectionReason": "Lý do từ chối (nếu REJECTED)",
+         "version": 0
+       }
+       ```
+   * **Thành công (HTTP 200):** Chuyển hướng quay lại danh sách `/staff/kyc`, hiển thị thông báo kết quả xử lý.
+   * **Xung đột phiên (HTTP 409):** Đã được kiểm duyệt bởi nhân viên khác, hiển thị thông báo nạp lại trang.
 
 ---
 

@@ -64,3 +64,6 @@ Các tệp tin thực tế trong dự án:
 |---|---|
 | FR-SELL-01 | WHEN a Seller requests withdrawal, THE SYSTEM SHALL require input amount >= 50,000 VND and a valid OTP code. |
 | FR-SELL-02 | WHEN a Seller deletes a product, THE SYSTEM SHALL call the soft-delete API to mark `isDelete = 1`. |
+| FR-SELL-03 | WHEN Staff suspends a shop, THE SYSTEM SHALL display the "Tạm ngưng" badge and status description on the Seller's Shop Info page (`/seller/shop-info`), accompanied by a highlighted alert card containing a real-time countdown timer ("Tự động mở lại sau") showing remaining Days, Hours, Minutes, and Seconds until automatic reinstatement. |
+| FR-SELL-04 | THE SYSTEM SHALL NOT display the manual "Tạm đóng cửa hàng" toggle button on `/seller/shop-info`. |
+| FR-SELL-05 | THE SYSTEM SHALL display all shop operating status badges and sidebar status texts in 100% Vietnamese (Hoạt động, Tạm ngưng, Tạm khóa, Khóa vĩnh viễn, Đã đóng Shop, Chờ duyệt) across the Seller Console and Customer Profile pages (`/profile`). |

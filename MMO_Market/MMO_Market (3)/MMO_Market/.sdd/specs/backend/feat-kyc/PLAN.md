@@ -29,26 +29,35 @@ Triển khai luồng xác thực định danh KYC (Know Your Customer) phía ng�
   - `findByUser_IdAndIsDeleteFalseOrderByCreatedAtDesc(userId)`: Lấy lịch sử KYC của user.
   - `findAllByIsDeleteFalse(pageable)`: Lấy toàn bộ danh sách KYC phân trang phục vụ Staff.
   - `findByStatusAndIsDeleteFalse(status, pageable)`: Lọc danh sách KYC theo trạng thái phân trang.
-  - `searchKycRequests(status, requestCode, idType, pageable)`: Tìm kiếm và lọc động yêu cầu KYC theo status, requestCode, và idType phục vụ Staff.
+- `KycRequestRepository`:
+  - `findByIdAndIsDeleteFalse(id)`: Lấy chi tiết hồ sơ.
+  - `findByUser_IdAndIsDeleteFalseOrderByCreatedAtDesc(userId)`: Lấy lịch sử KYC của user.
+  - `findAllByIsDeleteFalse(pageable)`: Lấy toàn bộ danh sách KYC phân trang phục vụ Staff.
+  - `findByStatusAndIsDeleteFalse(status, pageable)`: Lọc danh sách KYC theo trạng thái phân trang.
+  - `searchKycRequests(status, requestCode, idType, pageable)`: Tìm kiếm và lọc động yêu cầu KYC đa trường (khớp `requestCode`, `idNumber`, `user.fullName`, `user.email`) phục vụ Staff.
   - `existsByActiveUserId(activeUserId)`: Kiểm tra xem user có yêu cầu KYC nào đang xử lý/hoàn thành không.
 
 ### 3.3. DTOs
 
 - Request: `KycReviewRequest` (chứa `status`, `rejectionReason`, `version` của Staff gửi lên).
-- Response: `KycResponseDto` (chứa `id`, `idNumber`, `idType`, `requestCode`, `status`, `rejectionReason`, `version`, `createdAt`, `updatedAt`). Mapping tại Service.
+- Response: `KycResponseDto` (chứa `id`, `idNumber`, `idType`, `requestCode`, `status`, `rejectionReason`, `version`, `createdAt`, `updatedAt`, `fullName`, `email`, `address`, `dateOfBirth`). Mapping tại Service.
 
 ### 3.4. Services (Business Logic)
 
 - **`KycService`**:
+  - `getAllKycRequests(status, requestCode, idType, pageable)`: Chuẩn hóa `cleanCode` bằng cách loại bỏ ký tự `#` ở đầu nếu có, sau đó tìm kiếm đa trường qua `KycRequestRepository.searchKycRequests`.
+  - `getKycStatistics()`: Trả về Map tổng số lượng hồ sơ theo từng trạng thái (`total`, `pending`, `approved`, `rejected`).
   - `submitKyc(userId, fullName, dateOfBirth, address, idNumber, idType, front, back, selfie)`:
     - Tìm và cập nhật trực tiếp thông tin cá nhân `fullName`, `address`, `dateOfBirth` sang bảng `Users`.
     - Kiểm tra nếu tồn tại `existsByActiveUserId(userId)` thì ném lỗi `IllegalStateException` chặn gửi trùng lặp.
     - Lưu file qua `KycStorageService`.
     - Tạo và lưu `KycRequest` với `status = KycStatus.PENDING` và gán `activeUserId = userId`.
+    - Tạo thông báo hệ thống (`Notification`) gửi tới Customer và toàn thể Staff/Admin.
   - `reviewKycRequest(id, reviewerId, reviewRequest)`:
     - Kiểm tra `@Version` khớp giữa DTO và DB, nếu lệch ném `ObjectOptimisticLockingFailureException`.
     - Chỉ cho phép duyệt khi trạng thái hiện tại là `PENDING`.
     - Nếu `REJECTED`: Gán `activeUserId = null` để giải phóng trạng thái active, cho phép user gửi lại yêu cầu mới. Lưu lý do từ chối.
+    - Tạo thông báo hệ thống (`Notification`) kết quả duyệt gửi cho Customer.
   - `getKycDocument(kycId, docType, userId, isStaff)`: Lấy file ảnh tương ứng. Kiểm tra bảo mật nếu không phải Staff/Admin và không phải chủ nhân hồ sơ thì chặn truy cập.
 
 - **`KycStorageService`**:
@@ -62,7 +71,8 @@ Triển khai luồng xác thực định danh KYC (Know Your Customer) phía ng�
   - `GET /me`: Customer xem lịch sử KYC (`@PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER', 'ROLE_SELLER')")`).
   - `GET /{id}/documents/{docType}`: Tải ảnh hồ sơ định dạng nhạy cảm (`@PreAuthorize` phân quyền chi tiết).
 - **`StaffKycController`** (`/api/v1/staff/kyc`):
-  - `GET /`: Lấy danh sách hồ sơ (`@PreAuthorize("hasAnyAuthority('ROLE_STAFF', 'ROLE_ADMIN')")`).
+  - `GET /`: Lấy danh sách hồ sơ với tìm kiếm đa trường và cắt bỏ ký tự `#` (`@PreAuthorize("hasAnyAuthority('ROLE_STAFF', 'ROLE_ADMIN')")`).
+  - `GET /stats`: Lấy thống kê số lượng hồ sơ KYC (`@PreAuthorize("hasAnyAuthority('ROLE_STAFF', 'ROLE_ADMIN')")`).
   - `GET /{id}`: Xem chi tiết hồ sơ (`@PreAuthorize("hasAnyAuthority('ROLE_STAFF', 'ROLE_ADMIN')")`).
   - `POST /{id}/review`: Phê duyệt/từ chối hồ sơ (`@PreAuthorize("hasAnyAuthority('ROLE_STAFF', 'ROLE_ADMIN')")`).
 

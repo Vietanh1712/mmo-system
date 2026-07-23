@@ -247,6 +247,20 @@
 
         // Redirect to chat with current seller
         function goToShopChat() {
+            const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user");
+            if (userString) {
+                try {
+                    const user = JSON.parse(userString);
+                    if (user && Number(user.id) === Number(SELLER_ID)) {
+                        if (typeof showWarningToast === 'function') {
+                            showWarningToast("Bạn không thể nhắn tin cho chính mình.");
+                        } else {
+                            alert("Bạn không thể nhắn tin cho chính mình.");
+                        }
+                        return;
+                    }
+                } catch(e){}
+            }
             window.location.href = `/messages?sellerId=${SELLER_ID}`;
         }
 
@@ -464,18 +478,18 @@
 
         // Mock product mapping matching root catalog design patterns
         const MOCK_DATASET = [
-            { id: 1, sellerId: 1, name: "Tài khoản Netflix Premium 4K UHD 1 Tháng (Xem riêng 1 thiết bị, bảo hành 1 đổi 1)", price: 65000, stock: 156, categoryId: 2, categoryName: "Tài khoản Premium", averageRating: 5.0 },
-            { id: 2, sellerId: 2, name: "Tài khoản Netflix Premium 4K UHD Gói 1 Năm (Chính chủ gia hạn ổn định)", price: 650000, stock: 42, categoryId: 2, categoryName: "Tài khoản Premium", averageRating: 4.9 },
-            { id: 3, sellerId: 3, name: "Tài khoản ChatGPT Plus (OpenAI GPT-4o) Chính Chủ Sẵn 20$ Hạn 1 Tháng", price: 150000, stock: 89, categoryId: 2, categoryName: "Tài khoản Premium", averageRating: 4.8 },
-            { id: 4, sellerId: 4, name: "Spotify Premium 1 Năm Giá Siêu Rẻ (Nâng cấp Family email của bạn)", price: 250000, stock: 45, categoryId: 2, categoryName: "Tài khoản Premium", averageRating: 4.7 },
+            { id: 1, sellerId: 1, name: "Tài khoản Netflix Premium 4K UHD 1 Tháng (Xem riêng 1 thiết bị, bảo hành 1 đổi 1)", price: 65000, stock: 156, categoryId: 2, categoryName: "Tài khoản", averageRating: 5.0 },
+            { id: 2, sellerId: 2, name: "Tài khoản Netflix Premium 4K UHD Gói 1 Năm (Chính chủ gia hạn ổn định)", price: 650000, stock: 42, categoryId: 2, categoryName: "Tài khoản", averageRating: 4.9 },
+            { id: 3, sellerId: 3, name: "Tài khoản ChatGPT Plus (OpenAI GPT-4o) Chính Chủ Sẵn 20$ Hạn 1 Tháng", price: 150000, stock: 89, categoryId: 2, categoryName: "Tài khoản", averageRating: 4.8 },
+            { id: 4, sellerId: 4, name: "Spotify Premium 1 Năm Giá Siêu Rẻ (Nâng cấp Family email của bạn)", price: 250000, stock: 45, categoryId: 2, categoryName: "Tài khoản", averageRating: 4.7 },
             { id: 5, sellerId: 5, name: "Key Windows 11 Pro Bản Quyền Vĩnh Viễn (Kèm hướng dẫn active chi tiết)", price: 99000, stock: 999, categoryId: 3, categoryName: "Phần mềm", averageRating: 5.0 },
-            { id: 6, sellerId: 6, name: "Youtube Premium Không Quảng Cáo 6 Tháng (Add Family bao chạy mượt)", price: 120000, stock: 230, categoryId: 2, categoryName: "Tài khoản Premium", averageRating: 4.9 },
-            { id: 7, sellerId: 7, name: "Gói Canva Pro 1 Năm (Nâng cấp trực tiếp tài khoản cá nhân chính chủ)", price: 180000, stock: 350, categoryId: 2, categoryName: "Tài khoản Premium", averageRating: 4.8 },
+            { id: 6, sellerId: 6, name: "Youtube Premium Không Quảng Cáo 6 Tháng (Add Family bao chạy mượt)", price: 120000, stock: 230, categoryId: 2, categoryName: "Tài khoản", averageRating: 4.9 },
+            { id: 7, sellerId: 7, name: "Gói Canva Pro 1 Năm (Nâng cấp trực tiếp tài khoản cá nhân chính chủ)", price: 180000, stock: 350, categoryId: 2, categoryName: "Tài khoản", averageRating: 4.8 },
             { id: 8, sellerId: 8, name: "Tài khoản Gmail Ngoại Cổ (Đăng ký từ 2015-2018, thích hợp làm Ads/Kênh)", price: 12000, stock: 1200, categoryId: 1, categoryName: "Email", averageRating: 4.6 },
-            { id: 9, sellerId: 9, name: "NordVPN Premium 2 Năm (Bảo mật cao, tốc độ cao, hỗ trợ nhiều thiết bị)", price: 350000, stock: 0, categoryId: 2, categoryName: "Tài khoản Premium", averageRating: 4.8 },
+            { id: 9, sellerId: 9, name: "NordVPN Premium 2 Năm (Bảo mật cao, tốc độ cao, hỗ trợ nhiều thiết bị)", price: 350000, stock: 0, categoryId: 2, categoryName: "Tài khoản", averageRating: 4.8 },
             { id: 10, sellerId: 10, name: "Tài khoản TikTok phân khúc US sẵn Quỹ Tác Giả (Follower thực > 10K)", price: 1250000, stock: 8, categoryId: 5, categoryName: "Tài khoản MXH", averageRating: 4.9 },
             { id: 11, sellerId: 2, name: "Trust Wallet / MetaMask tạo sẵn (Có 12 từ khóa khôi phục, an toàn)", price: 50000, stock: 99, categoryId: 7, categoryName: "Khác", averageRating: 4.5 },
-            { id: 12, sellerId: 12, name: "Thiết kế Banner MMO / Cover Facebook chuyên nghiệp trọn gói", price: 300000, stock: 50, categoryId: 6, categoryName: "Dịch vụ", averageRating: 4.6 }
+            { id: 12, sellerId: 12, name: "Thiết kế Banner MMO / Cover Facebook chuyên nghiệp trọn gói", price: 300000, stock: 50, categoryId: 6, categoryName: "Dịch vụ phần mềm", averageRating: 4.6 }
         ];
 
         // Fetch mock objects if SQL database is empty (ensures high-fidelity sandbox)

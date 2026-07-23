@@ -69,6 +69,7 @@ function translateStatus(status) {
         'held': 'Tạm giữ (Bảo lãnh)',
         'paid': 'Đã thanh toán',
         'delivered': 'Đã giao',
+        'processing': 'Đang xử lý',
         'completed': 'Hoàn tất',
         'cancelled': 'Đã hủy',
         'disputed': 'Tranh chấp',
@@ -77,6 +78,7 @@ function translateStatus(status) {
         'active': 'Đang bán',
         'inactive': 'Tạm ẩn',
         'rejected': 'Bị từ chối',
+        'approved': 'Đã duyệt',
         'open': 'Chờ xử lý',
         'in_progress': 'Đang giải quyết',
         'inprogress': 'Đang giải quyết',
@@ -84,6 +86,16 @@ function translateStatus(status) {
         'closed': 'Đã đóng'
     };
     return map[statusLower] || status;
+}
+
+function getBadgeClassForStatus(status) {
+    if (!status) return 'pending';
+    const statusLower = status.toLowerCase().trim();
+    if (statusLower === 'completed' || statusLower === 'approved') return 'ok';
+    if (statusLower === 'pending') return 'pending';
+    if (statusLower === 'held') return 'held';
+    if (statusLower === 'rejected' || statusLower === 'failed' || statusLower === 'locked') return 'critical';
+    return 'pending';
 }
 
 async function sellerFetch(url, options = {}) {
@@ -158,7 +170,16 @@ function showToast(message, type = 'success') {
 
 // ==============================================================================
 // 1. GENERAL LAYOUT & SIDEBAR
-// ==============================================================================
+function formatShopStatusVi(st) {
+    const s = String(st || 'Active').toUpperCase();
+    if (s === 'SUSPENDED' || s === 'TEMP_LOCKED' || s === 'TEMPORARILY_CLOSED') return 'Tạm ngưng';
+    if (s === 'LOCKED' || s === 'INDEFINITE_LOCKED' || s === 'CLOSED') return 'Tạm khóa';
+    if (s === 'BANNED' || s === 'PERMANENT_BANNED') return 'Khóa vĩnh viễn';
+    if (s === 'WITHDRAWN') return 'Đã đóng Shop';
+    if (s === 'PENDING') return 'Chờ duyệt';
+    return 'Hoạt động';
+}
+
 async function initSellerLayout() {
     try {
         const res = await sellerFetch('/shop-info');
@@ -171,7 +192,7 @@ async function initSellerLayout() {
         const avatarEl = document.querySelector('.seller-sidebar__avatar');
 
         if (nameEl) nameEl.textContent = data.shopName || 'Cửa hàng của tôi';
-        if (statusEl) statusEl.textContent = `Trạng thái: ${data.shopStatus || 'Active'}`;
+        if (statusEl) statusEl.textContent = `Trạng thái: ${formatShopStatusVi(data.shopStatus)}`;
         if (avatarEl && data.shopName) {
             avatarEl.textContent = data.shopName.charAt(0).toUpperCase();
         }
@@ -609,17 +630,18 @@ async function setupCategorySelectors(mainSelect, subSelect, currentCategoryId =
             return 0;
         });
 
-        // Also sort subCategories for each category
+        // Sort subCategories for each category: by ID asc (oldest first), then push "Khác" to end
         categories.forEach(parent => {
             if (parent.subCategories && parent.subCategories.length > 0) {
                 parent.subCategories.sort((a, b) => {
                     const nameA = (a.name || '').toLowerCase().trim();
                     const nameB = (b.name || '').toLowerCase().trim();
-                    const isKhacA = nameA === 'khác' || nameA === 'dịch vụ khác';
-                    const isKhacB = nameB === 'khác' || nameB === 'dịch vụ khác';
+                    const isKhacA = nameA.includes('khác');
+                    const isKhacB = nameB.includes('khác');
                     if (isKhacA && !isKhacB) return 1;
                     if (!isKhacA && isKhacB) return -1;
-                    return 0;
+                    // Sort by ID ascending so earlier-created (lower ID) appears first
+                    return (a.id || 0) - (b.id || 0);
                 });
             }
         });
@@ -632,15 +654,18 @@ async function setupCategorySelectors(mainSelect, subSelect, currentCategoryId =
         const updateSubCategories = (selectedParentId, selectValue = null) => {
             const parentCat = categories.find(c => c.id == selectedParentId);
             if (parentCat && parentCat.subCategories && parentCat.subCategories.length > 0) {
-                subSelect.innerHTML = '<option value="">-- Chọn danh mục con --</option>' +
+                subSelect.innerHTML = '<option value="">-- Chọn danh mục phụ --</option>' +
                                      parentCat.subCategories.map(sub => `<option value="${sub.id}">${sub.name}</option>`).join('');
                 subSelect.disabled = false;
+                subSelect.setAttribute('required', 'required');
                 if (selectValue) {
                     subSelect.value = selectValue;
                 }
             } else {
-                subSelect.innerHTML = '<option value="">-- Không có danh mục con --</option>';
+                subSelect.innerHTML = '<option value="">-- Không có danh mục phụ --</option>';
                 subSelect.disabled = true;
+                subSelect.removeAttribute('required');
+                subSelect.value = '';
             }
         };
         
@@ -747,11 +772,10 @@ async function initProductAdd() {
                 const description = document.getElementById('description').value.trim();
                 const categoryId = subSelect.value || mainSelect.value;
                 const typeEl = document.querySelector('input[name="productType"]:checked');
-                const productType = typeEl ? typeEl.value : null;
+                const productType = typeEl ? typeEl.value : 'ACCOUNT';
 
                 if (!name) return showToast('Vui lòng nhập tên sản phẩm.', 'error');
                 if (!categoryId) return showToast('Vui lòng chọn danh mục.', 'error');
-                if (!productType) return showToast('Vui lòng chọn loại sản phẩm.', 'error');
 
                 const variantCards = variantsContainer.querySelectorAll('.variant-card');
                 if (variantCards.length === 0) {
@@ -1004,21 +1028,24 @@ async function initVariantForm() {
                             type: 'ACCOUNT',
                             username: ea.accountUsername,
                             password: ea.accountPassword || '',
-                            notes: ea.notes || ''
+                            notes: ea.notes || '',
+                            isUsed: ea.isUsed === true
                         };
                     } else if (productType === 'KEY') {
                         return {
                             id: ea.id,
                             type: 'KEY',
                             keyCode: ea.keyCode,
-                            notes: ea.notes || ''
+                            notes: ea.notes || '',
+                            isUsed: ea.isUsed === true
                         };
                     } else if (productType === 'GAME_CARD') {
                         return {
                             id: ea.id,
                             type: 'GAME_CARD',
                             cardCode: ea.cardCode,
-                            notes: ea.notes || ''
+                            notes: ea.notes || '',
+                            isUsed: ea.isUsed === true
                         };
                     }
                 }).filter(Boolean);
@@ -1268,7 +1295,7 @@ async function initWithdrawals() {
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Chưa có yêu cầu rút tiền nào.</td></tr>';
         } else {
             tbody.innerHTML = withdrawals.map(w => {
-                const badgeClass = w.status === 'Completed' ? 'ok' : 'pending';
+                const badgeClass = getBadgeClassForStatus(w.status);
                 return `
                     <tr>
                         <td>#WD-${w.id}</td>
@@ -1290,7 +1317,7 @@ async function initWithdrawals() {
         let minLimit = 50000;
         let maxLimit = 50000000;
         let feePercent = 1.5;
-        let minFee = 10000;
+        let minFee = 5000; // Thêm minFee mặc định
         let require2FA = true;
 
         try {
@@ -1299,8 +1326,7 @@ async function initWithdrawals() {
                 const configData = await configRes.json();
                 minLimit = configData.minWithdrawalLimit || minLimit;
                 maxLimit = configData.maxWithdrawalLimit || maxLimit;
-                feePercent = configData.withdrawalFeePercent || feePercent;
-                minFee = configData.minWithdrawFee || minFee;
+                feePercent = configData.withdrawalFeePercent !== undefined ? configData.withdrawalFeePercent : feePercent;
                 require2FA = configData.requireWithdraw2FA !== undefined ? configData.requireWithdraw2FA : require2FA;
             }
         } catch (e) {
@@ -1315,7 +1341,7 @@ async function initWithdrawals() {
         
         const hintEl = document.querySelector('.profile-edit-form__hint');
         if (hintEl) {
-            hintEl.textContent = `Hạn mức: ${formatVND(minLimit)} - ${formatVND(maxLimit)} · Phí: ${feePercent}% (tối thiểu ${formatVND(minFee)})`;
+            hintEl.textContent = `Hạn mức: ${formatVND(minLimit)} - ${formatVND(maxLimit)} · Phí rút tiền: ${feePercent}%`;
         }
 
         const inputEl = document.getElementById('withdrawAmount');
@@ -1344,10 +1370,7 @@ async function initWithdrawals() {
                     feeInfoEl.innerHTML = '';
                     return;
                 }
-                let fee = Math.floor(val * (feePercent / 100));
-                if (fee < minFee) {
-                    fee = minFee;
-                }
+                const fee = Math.floor(val * (feePercent / 100));
                 const total = val + fee;
                 feeInfoEl.innerHTML = `
                     <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
@@ -1392,9 +1415,6 @@ async function initWithdrawals() {
                 }
 
                 let fee = Math.floor(amount * (feePercent / 100));
-                if (fee < minFee) {
-                    fee = minFee;
-                }
                 const totalDeducted = amount + fee;
 
                 if (dashData.balanceVnd < totalDeducted) {
@@ -1437,21 +1457,57 @@ async function initWithdrawals() {
                         showToast(err.message, 'error');
                     }
                 } else {
-                    const confirmNo2fa = confirm(`Xác nhận tạo yêu cầu rút tiền ${formatVND(amount)}? Phí rút là ${formatVND(fee)}. Tổng số tiền trừ khỏi ví: ${formatVND(totalDeducted)}.`);
-                    if (!confirmNo2fa) return;
+                    const modalEl = document.getElementById('confirmWithdrawModal');
+                    const modalTextEl = document.getElementById('confirmWithdrawText');
+                    const btnConfirm = document.getElementById('btnConfirmWithdrawal');
 
-                    try {
-                        const postRes = await sellerFetch('/withdrawals', {
-                            method: 'POST',
-                            body: JSON.stringify({ amountVnd: amount })
+                    if (modalEl && modalTextEl && btnConfirm) {
+                        modalTextEl.innerHTML = `Xác nhận tạo yêu cầu rút tiền <strong>${formatVND(amount)}</strong>?<br><br>Phí rút là: <strong style="color:#ef4444">${formatVND(fee)}</strong><br>Tổng số tiền trừ khỏi ví: <strong style="color:#2563eb">${formatVND(totalDeducted)}</strong>`;
+                        modalEl.style.display = 'flex';
+
+                        // Remove old listeners to avoid multiple submissions
+                        const newBtnConfirm = btnConfirm.cloneNode(true);
+                        btnConfirm.parentNode.replaceChild(newBtnConfirm, btnConfirm);
+
+                        newBtnConfirm.addEventListener('click', async () => {
+                            newBtnConfirm.disabled = true;
+                            newBtnConfirm.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
+
+                            try {
+                                const postRes = await sellerFetch('/withdrawals', {
+                                    method: 'POST',
+                                    body: JSON.stringify({ amountVnd: amount })
+                                });
+                                const postData = await postRes.json();
+                                if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
+                                
+                                showToast(postData.message || 'Đã tạo yêu cầu rút tiền thành công!');
+                                setTimeout(() => window.location.reload(), 1500);
+                            } catch (err) {
+                                showToast(err.message, 'error');
+                                newBtnConfirm.disabled = false;
+                                newBtnConfirm.innerHTML = 'Xác nhận';
+                                modalEl.style.display = 'none';
+                            }
                         });
-                        const postData = await postRes.json();
-                        if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
+                    } else {
+                        // Fallback to native confirm if modal HTML is missing
+                        const confirmNo2fa = confirm(`Xác nhận tạo yêu cầu rút tiền ${formatVND(amount)}? Phí rút là ${formatVND(fee)}. Tổng số tiền trừ khỏi ví: ${formatVND(totalDeducted)}.`);
+                        if (!confirmNo2fa) return;
 
-                        showToast(postData.message || 'Đã tạo yêu cầu rút tiền thành công!');
-                        setTimeout(() => window.location.reload(), 1500);
-                    } catch (err) {
-                        showToast(err.message, 'error');
+                        try {
+                            const postRes = await sellerFetch('/withdrawals', {
+                                method: 'POST',
+                                body: JSON.stringify({ amountVnd: amount })
+                            });
+                            const postData = await postRes.json();
+                            if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
+                            
+                            showToast(postData.message || 'Đã tạo yêu cầu rút tiền thành công!');
+                            setTimeout(() => window.location.reload(), 1500);
+                        } catch (err) {
+                            showToast(err.message, 'error');
+                        }
                     }
                 }
             });
@@ -1889,7 +1945,7 @@ async function initWithdrawalDetail() {
         // Populate header details
         document.querySelector('.seller-card__subtitle').textContent = `Lệnh #WD-${w.id}`;
 
-        const badgeClass = w.status === 'Completed' ? 'ok' : 'pending';
+        const badgeClass = getBadgeClassForStatus(w.status);
         let extraStatusInfo = '';
         if (w.status === 'Failed' || w.status === 'Rejected') {
             extraStatusInfo = `
@@ -1933,14 +1989,33 @@ async function initWithdrawalDetail() {
         }
 
         // Render proof receipt section
-        const proofSection = card.querySelector('.proof-placeholder');
+        const proofSection = document.querySelector('.proof-placeholder');
         if (proofSection) {
             if (w.proofFile) {
-                proofSection.innerHTML = `
-                    <a href="/images/${w.proofFile}" target="_blank" style="display:block; text-align:center;">
-                        <img src="/images/${w.proofFile}" alt="Biên lai rút tiền" style="max-width:100%; max-height:300px; border-radius:8px; border:1px solid var(--seller-border);"/>
-                    </a>
-                `;
+                // Determine URL for proofFile (it might already start with '/' e.g., '/uploads/...')
+                let proofUrl = w.proofFile;
+                if (!proofUrl.startsWith('http') && !proofUrl.startsWith('/')) {
+                    proofUrl = '/uploads/' + proofUrl;
+                }
+                console.log("Seller proofUrl parsed:", proofUrl);
+                
+                let isImage = proofUrl.toLowerCase().endsWith('.jpg') || proofUrl.toLowerCase().endsWith('.jpeg') || proofUrl.toLowerCase().endsWith('.png');
+                
+                if (isImage) {
+                    proofSection.innerHTML = `
+                        <a href="${proofUrl}" target="_blank" style="display:block; text-align:center;">
+                            <img src="${proofUrl}" alt="Biên lai rút tiền" style="max-width:100%; max-height:300px; border-radius:8px; border:1px solid var(--seller-border);"/>
+                        </a>
+                    `;
+                } else {
+                    proofSection.innerHTML = `
+                        <div style="padding: 16px; text-align: center; background: #f8fafc; border:1px solid var(--seller-border); border-radius:8px;">
+                            <a href="${proofUrl}" target="_blank" class="ds-btn" style="display: inline-block; padding: 8px 16px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 4px;">
+                                <i class="fa fa-file"></i> Tải xuống hóa đơn/chứng từ
+                            </a>
+                        </div>
+                    `;
+                }
             } else {
                 proofSection.innerHTML = `
                     <div style="text-align:center; padding: 20px; background:#f8fafc; border:1px dashed var(--seller-border); border-radius:8px; color:var(--seller-muted);">

@@ -70,9 +70,16 @@ Triển khai giao diện vận hành MVC và REST API dành riêng cho nhân vi�
   - File: `templates/staff/flags.html` & `flag-detail.html`, cùng file JS quản lý.
 - **Trang Thống kê Dashboard:**
   - File: `templates/staff/dashboard.html` hiển thị biểu đồ và tổng quan hệ thống, bổ sung thẻ **Quản lý Shop** vào phần Truy cập nhanh.
+- **Trang Quản lý KYC (KYC Verification):**
+  - Script: `static/js/staff/staff-kyc.js` bỏ tự động kích hoạt tìm kiếm khi đổi tùy chọn bộ lọc (`change` event), chỉ thực hiện tìm kiếm khi Staff bấm nút "Tìm kiếm" hoặc nhấn `Enter`.
+  - Template `templates/staff/kyc-detail.html`: Đặt nhãn trạng thái (`#kycStatusBadge` hiển thị "Đã duyệt", "Chờ duyệt", "Từ chối") cố định ở góc trên bên phải của thẻ thông tin người nộp (`.ds-card-header`).
+- **Trang Quản lý Khiếu nại (Complaints):**
+  - File: `templates/staff/complaints.html` & Script: `static/js/staff/staff-complaints.js` hiển thị cột STT liên tục qua từng trang (`currentPage * pageSize + index + 1`).
 - **Trang Quản lý Duyệt Yêu Cầu Shop (Shops):**
-  - File: `templates/staff/shop-registrations.html` được thiết kế đồng bộ với KYC/Complaints với bảng thống kê 4 thẻ, bộ lọc tìm kiếm, bảng danh sách phân trang (có STT và Trạng thái) và Modal chi tiết duyệt shop.
-  - Script: `static/js/staff/staff-shop-registrations.js` gọi các API phân trang/tìm kiếm, thống kê số liệu, tích hợp phân trang chung và điều khiển Modal hiển thị dữ liệu chi tiết kiểm duyệt.
+  - File: `templates/staff/shop-registrations.html` & Script: `static/js/staff/staff-shop-registrations.js` quản lý 5 trạng thái gian hàng với nhãn chuẩn hóa: `Active` ("Hoạt động"), `Suspended` ("Tạm ngưng"), `Locked` ("Tạm khóa"), `Withdrawn` ("Đã đóng Shop (Hoàn cọc)"), `Banned` ("Khóa vĩnh viễn"). Các thẻ thống kê hiển thị: "Shop tạm khóa", "Shop tạm ngưng", "Đã đóng Shop (Hoàn cọc)".
+  - Template `templates/staff/shop-registration-detail.html`: Đặt nhãn trạng thái (`#shopStatusBadge` hiển thị "Đã duyệt", "Chờ duyệt", "Từ chối") cố định ở góc trên bên phải của thẻ thông tin Shop (`.ds-card-header`). Tích hợp Modal tạm ngưng có thời hạn (`suspendShopModal` hỗ trợ chọn Ngày, Giờ, Phút `suspendedUntil`), hiển thị khung đếm ngược thời gian thực (Real-time countdown timer) ở cả thẻ thông tin Shop và thẻ Cập nhật trạng thái (`#cardSuspendedAlert`). Cơ chế tự động khôi phục về trạng thái Hoạt động (`Active`) khi hết thời hạn tạm ngưng via `@Scheduled` job hoặc lazy evaluation khi xem thông tin.
+- **Trang Quản lý Phiếu Hỗ Trợ (Support Tickets - UC-17):**
+  - File: `templates/staff/support-tickets.html` & `support-ticket-detail.html` cùng Script tương ứng tiếp nhận phiếu hỗ trợ, phản hồi giải pháp và chuyển đổi trạng thái (`OPEN`, `IN_PROGRESS`, `RESOLVED`, `CLOSED`).
 
 ---
 
@@ -207,6 +214,29 @@ Bổ sung cột STT (Sequence Number) được tính toán theo phân trang (`cu
 - **Triển khai REST API cập nhật trạng thái (`ShopRegistrationController.java` & `ShopRegistrationService.java`)**:
   - Cung cấp REST API endpoint `PUT /api/v1/shop-registrations/{id}/update-status?status=...` để lưu giá trị trạng thái hoạt động mới được chọn vào cột `shop_status` trong bảng `Users`.
   - Triển khai logic AJAX đồng bộ trong `staff-shop-registration-update-status.js` để gửi yêu cầu lưu và điều hướng quay lại danh sách.
+
+## 16. Loại bỏ cột Lý do khỏi bảng danh sách cờ cảnh báo (phiên bản 3.0)
+- **`flags.html`**:
+  - Gỡ bỏ cột "Lý do" (cột tiêu đề `<th>Lý do</th>` và ô dữ liệu `<td th:text="${flag.reason}"></td>`) khỏi bảng hiển thị danh sách cờ cảnh báo để giao diện hiển thị tinh gọn hơn, tránh việc lý do dài gây vỡ khung bảng. Lý do chi tiết vẫn được hiển thị tại trang chi tiết cờ cảnh báo (`flag-detail.html`) và có thể chỉnh sửa tại đây.
+
+## 18. Nâng cấp bộ lọc & đếm số liệu thống kê giao dịch và shop (phiên bản 3.2)
+- **Đồng bộ Lọc cố định & Quét từ đồng nghĩa**:
+  - Đồng bộ hóa 100% tất cả bộ lọc trạng thái (Shop, Giao dịch, Rút tiền, Cờ cảnh báo, Khiếu nại) trên phân hệ Staff sang kiểu Lọc Cố Định (Predefined / Fixed Options) tương tự Admin.
+  - Tự động quy đổi trạng thái lọc giao dịch trong `StaffController` và `TransactionRepository` sang danh sách tập hợp từ đồng nghĩa và chữ hoa/thường (`t.status IN (:statuses)`).
+  - Tính toán các thẻ thống kê Quản lý Shop trực tiếp trên danh sách `SellerRegistration` kết hợp đầy đủ các từ khóa biến thể (`TEMPORARILY_CLOSED`, `CLOSED`, `TEMP_SUSPENDED`, `INDEFINITE_LOCKED`, `PERMANENT_BANNED`).
+
+## 19. Triển khai phân hệ Quản lý nạp tiền & Kích hoạt nạp tiền thủ công (phiên bản 3.3)
+- **Ghi vết giao dịch nạp tiền thất bại (Failed Topup Tracking)**:
+  - Cập nhật `TopupService.processSepayWebhook`: Khi webhook SePay gặp lỗi (gõ sai/thiếu cú pháp `MMO-TOPUP-<userId>`, không tìm thấy User ID, hoặc dưới/quá hạn mức tối thiểu), hệ thống tự động lưu vết bản ghi `TopupTransaction` ở trạng thái `Failed` ghi nhận mã SePay, nội dung chuyển khoản gốc (`transferContent`) và lý do thất bại (`failureReason`).
+- **Giao diện Quản lý nạp tiền & Chi tiết (`topups.html`, `topup-detail.html`, `staff-topups.js`)**:
+  - Xây dựng giao diện danh sách nạp tiền `/staff/topups` kèm 4 thẻ thống kê: Tổng giao dịch nạp, Thành công, Thất bại (Cần xử lý), Tổng tiền nạp thành công.
+  - Xây dựng trang chi tiết `/staff/topups/detail` hiển thị đầy đủ: Mã GD, Mã SePay, Số tiền, Trạng thái, Thông tin người dùng, Số dư trước/sau khi nạp, Raw Content nội dung chuyển khoản, lý do thất bại và nhật ký Staff duyệt thủ công.
+  - Tích hợp Modal popup `retryTopupModal` cho phép Staff nhập User ID cần cộng tiền, tùy chọn bỏ qua hạn mức tối thiểu và nhập ghi chú xử lý.
+## 20. Bổ sung chỉ số Nạp tiền cần xử lý vào Dashboard đơn từ (phiên bản 3.6)
+- **`StaffDashboardDTO.java` & `StaffDashboardServiceImpl.java`**:
+  - Thêm thuộc tính `pendingTopups` vào DTO trả về của API tổng quan.
+  - Tích hợp `TopupTransactionRepository.countByStatusIgnoreCase("Failed") + topupTransactionRepository.countByStatusIgnoreCase("Pending")` đếm tổng số lượng giao dịch nạp tiền thất bại/chờ xử lý từ Database.
+  - Cập nhật giao diện `/staff/documents` bổ sung thẻ thống kê "Nạp tiền cần xử lý".
 
 
 

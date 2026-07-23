@@ -50,12 +50,12 @@
                                     </div>
                                      <div class="staff-info-row">
                                          <dt>Trạng thái</dt>
-                                         <dd>
-                                             <span class="ds-badge"
-                                                   th:classappend="${#strings.toLowerCase(withdrawal.status) == 'approved' ? 'ds-badge-success' : (#strings.toLowerCase(withdrawal.status) == 'rejected' ? 'ds-badge-danger' : 'ds-badge-warning')}"
-                                                   th:text="${#strings.toLowerCase(withdrawal.status) == 'pending' ? 'Chờ duyệt' : (#strings.toLowerCase(withdrawal.status) == 'approved' ? 'Hoàn tất' : (#strings.toLowerCase(withdrawal.status) == 'rejected' ? 'Từ chối' : withdrawal.status))}">
-                                             </span>
-                                         </dd>
+                                        <dd>
+                                            <span class="ds-badge"
+                                                 th:classappend="${#strings.toLowerCase(withdrawal.status) == 'approved' || #strings.toLowerCase(withdrawal.status) == 'completed' ? 'ds-badge-success' : (#strings.toLowerCase(withdrawal.status) == 'rejected' ? 'ds-badge-danger' : (#strings.toLowerCase(withdrawal.status) == 'processing' ? 'ds-badge-info' : 'ds-badge-warning'))}"
+                                                 th:text="${#strings.toLowerCase(withdrawal.status) == 'pending' ? 'Chờ duyệt' : (#strings.toLowerCase(withdrawal.status) == 'processing' ? 'Đang xử lý' : (#strings.toLowerCase(withdrawal.status) == 'approved' || #strings.toLowerCase(withdrawal.status) == 'completed' ? 'Hoàn tất' : (#strings.toLowerCase(withdrawal.status) == 'rejected' ? 'Từ chối' : withdrawal.status)))}">
+                                            </span>
+                                        </dd>
                                      </div>
                                     <div class="staff-info-row">
                                         <dt>Số tiền rút</dt>
@@ -128,8 +128,14 @@
                                  class="ds-alert ds-alert-warning"
                                  th:text="${warning}">
                             </div>
+
+                            <div th:if="${error}"
+                                 class="ds-alert ds-alert-danger"
+                                 style="background-color: #fee2e2; border: 1px solid #ef4444; color: #b91c1c; padding: 12px; border-radius: 8px; margin-bottom: 16px;"
+                                 th:text="${error}">
+                            </div>
                             <form th:action="@{/staff/withdrawals/update-status}"
-                                  method="post" style="display: flex; flex-direction: column; gap: 16px;">
+                                  method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 16px;">
 
                                 <input type="hidden"
                                        name="id"
@@ -138,34 +144,123 @@
                                        name="token"
                                        id="form-token-input">
 
-                                <div class="ds-form-field">
-                                    <label class="ds-label">
-                                        Trạng thái
-                                    </label>
+                                <!-- Nếu trạng thái là Pending: Hiển thị form tiếp nhận hoặc từ chối -->
+                                <div th:if="${withdrawal.status == 'Pending'}" style="display: flex; flex-direction: column; gap: 16px;">
+                                    <input type="hidden" name="status" value="Processing">
+                                    
+                                    <!-- Lý do từ chối: mặc định ẩn, chỉ hiện khi bấm từ chối -->
+                                    <div class="ds-form-field" id="reject-reason-container" style="display: none; margin-bottom: 12px;">
+                                        <label class="ds-label">
+                                            Lý do từ chối
+                                        </label>
+                                        <textarea class="ds-input" name="reason" id="reject-reason-input" rows="3" placeholder="Nhập lý do từ chối yêu cầu rút tiền..." style="border: 1px solid var(--ds-border, #cbd5e1); border-radius: 8px; padding: 10px; font-family: inherit; font-size: 14px; width: 100%; transition: border-color 0.2s;"></textarea>
+                                    </div>
 
-                                     <select class="ds-select"
-                                             name="status" style="background-color: #f8fafc; font-weight: 600;">
-                                         <option th:each="s : ${statuses}"
-                                                 th:value="${s}"
-                                                 th:text="${#strings.toLowerCase(s) == 'pending' ? 'Chờ duyệt' : (#strings.toLowerCase(s) == 'approved' ? 'Hoàn tất' : (#strings.toLowerCase(s) == 'rejected' ? 'Từ chối' : s))}"
-                                                 th:selected="${withdrawal.status == s}">
-                                         </option>
-                                     </select>
+                                    <!-- Nhóm nút mặc định -->
+                                    <div class="ds-cluster" id="default-actions-container" style="gap: 8px; display: flex;">
+                                        <button class="ds-btn ds-btn-success"
+                                                type="submit" style="flex: 1; background-color: #f59e0b; border-color: #f59e0b; font-weight: 600;">
+                                            <i class="fa fa-hand-paper"></i> Tiếp nhận xử lý
+                                        </button>
+
+                                        <button class="ds-btn ds-btn-danger"
+                                                type="button" id="btn-show-reject" style="flex: 1; background-color: #ef4444; border-color: #ef4444; font-weight: 600;">
+                                            <i class="fa fa-times"></i> Từ chối
+                                        </button>
+                                    </div>
+
+                                    <!-- Nhóm nút khi thực hiện từ chối (mặc định ẩn) -->
+                                    <div class="ds-cluster" id="reject-actions-container" style="gap: 8px; display: none;">
+                                        <button class="ds-btn ds-btn-danger"
+                                                type="submit"
+                                                th:formaction="@{/staff/withdrawals/reject}" style="flex: 1; background-color: #ef4444; border-color: #ef4444; font-weight: 600;">
+                                            <i class="fa fa-times"></i> Xác nhận từ chối
+                                        </button>
+                                        
+                                        <button class="ds-btn"
+                                                type="button" id="btn-cancel-reject" style="flex: 1; font-weight: 600; border: 1px solid #cbd5e1; background: #fff; color: #475569; border-radius: 8px; cursor: pointer; transition: background 0.2s;">
+                                            Hủy
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div class="ds-cluster" style="gap: 8px;">
-                                    <button class="ds-btn ds-btn-success"
-                                            type="submit" style="flex: 1;">
-                                        <i class="fa fa-check"></i> Phê duyệt
-                                    </button>
+                                <!-- Nếu trạng thái là Processing: Hiển thị form upload hóa đơn -->
+                                <div th:if="${withdrawal.status == 'Processing'}" style="display: flex; flex-direction: column; gap: 16px;">
+                                    <input type="hidden" name="status" value="Completed">
+                                    
+                                    <div class="ds-alert ds-alert-warning" style="background-color: #fffbeb; border: 1px solid #fcd34d; color: #b45309; padding: 12px; border-radius: 8px;">
+                                        <i class="fa fa-info-circle"></i> Vui lòng thực hiện chuyển khoản <b><span th:text="${#numbers.formatInteger(withdrawal.amountVnd, 0, 'COMMA')}"></span> đ</b> tới STK <b><span th:text="${withdrawal.bankInfo.accountNumber}"></span></b> qua ứng dụng ngân hàng ngoài hệ thống, sau đó đính kèm hình ảnh bill chuyển khoản để hoàn tất.
+                                    </div>
 
-                                    <!-- Từ chối -->
-                                    <button class="ds-btn ds-btn-danger"
-                                            type="submit"
-                                            th:formaction="@{/staff/withdrawals/reject}" style="flex: 1;">
-                                        <i class="fa fa-times"></i> Từ chối
-                                    </button>
+                                    <div class="ds-form-field">
+                                        <label class="ds-label">Đính kèm hóa đơn chuyển khoản <span style="color:red">*</span></label>
+                                        <input type="file" class="ds-input" name="proofFile" accept="image/*,application/pdf" required style="border: 1px solid var(--ds-border, #cbd5e1); border-radius: 8px; padding: 10px; width: 100%; box-sizing: border-box;">
+                                    </div>
+
+                                    <div class="ds-cluster" style="gap: 8px; display: flex;">
+                                        <button class="ds-btn ds-btn-success"
+                                                type="submit" style="flex: 1; background-color: #10a37f; border-color: #10a37f; font-weight: 600;">
+                                            <i class="fa fa-check"></i> Hoàn tất chuyển tiền
+                                        </button>
+                                        
+                                        <!-- Cho phép từ chối nếu có trục trặc -->
+                                        <button class="ds-btn ds-btn-danger"
+                                                type="button" id="btn-show-reject" style="flex: 1; background-color: #ef4444; border-color: #ef4444; font-weight: 600;">
+                                            <i class="fa fa-times"></i> Hủy & Từ chối
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="ds-form-field" id="reject-reason-container" style="display: none; margin-top: 12px;">
+                                        <label class="ds-label">Lý do từ chối</label>
+                                        <textarea class="ds-input" name="reason" id="reject-reason-input" rows="3" placeholder="Nhập lý do từ chối yêu cầu rút tiền..." style="border: 1px solid var(--ds-border, #cbd5e1); border-radius: 8px; padding: 10px; width: 100%;"></textarea>
+                                        <div class="ds-cluster" style="gap: 8px; display: flex; margin-top: 8px;">
+                                            <button class="ds-btn ds-btn-danger"
+                                                    type="submit"
+                                                    th:formaction="@{/staff/withdrawals/reject}" style="flex: 1; background-color: #ef4444; border-color: #ef4444; font-weight: 600;">
+                                                <i class="fa fa-times"></i> Xác nhận từ chối
+                                            </button>
+                                            <button class="ds-btn"
+                                                    type="button" id="btn-cancel-reject" style="flex: 1; font-weight: 600; border: 1px solid #cbd5e1; background: #fff; color: #475569; border-radius: 8px;">
+                                                Quay lại
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <!-- Nếu đã xử lý (Completed hoặc Rejected): Chỉ hiển thị trạng thái hiện tại -->
+                                <div th:if="${withdrawal.status != 'Pending' && withdrawal.status != 'Processing'}" style="display: flex; flex-direction: column; gap: 16px;">
+                                    <div class="ds-form-field">
+                                        <label class="ds-label">Trạng thái hiện tại</label>
+                                        <div th:if="${withdrawal.status == 'Approved' || withdrawal.status == 'Completed'}" 
+                                             class="ds-alert ds-alert-success" 
+                                             style="font-weight: bold; text-align: center; font-size: 15px; margin: 0; background: #e6fcf5; color: #0ca678; border-color: #c3fae8;">
+                                             <i class="fa fa-check-circle"></i> ĐÃ HOÀN TẤT
+                                        </div>
+                                        <div th:if="${withdrawal.status == 'Rejected'}" 
+                                             class="ds-alert ds-alert-danger" 
+                                             style="font-weight: bold; text-align: center; font-size: 15px; margin: 0; background: #fff5f5; color: #fa5252; border-color: #ffe3e3;">
+                                             <i class="fa fa-times-circle"></i> ĐÃ TỪ CHỐI
+                                        </div>
+                                    </div>
+                                    
+                                    <div th:if="${withdrawal.proofFile != null}" class="ds-form-field">
+                                        <label class="ds-label">Chứng từ đính kèm</label>
+                                        <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; max-width: 100%;">
+                                            <a th:href="${#strings.startsWith(withdrawal.proofFile, '/') || #strings.startsWith(withdrawal.proofFile, 'http') ? withdrawal.proofFile : '/uploads/' + withdrawal.proofFile}" target="_blank">
+                                                <img th:if="${#strings.endsWith(withdrawal.proofFile, '.jpg') || #strings.endsWith(withdrawal.proofFile, '.jpeg') || #strings.endsWith(withdrawal.proofFile, '.png')}" th:src="${#strings.startsWith(withdrawal.proofFile, '/') || #strings.startsWith(withdrawal.proofFile, 'http') ? withdrawal.proofFile : '/uploads/' + withdrawal.proofFile}" alt="Chứng từ chuyển khoản" style="max-width: 100%; height: auto; display: block; margin: 0 auto; max-height: 400px; object-fit: contain; background: #f8fafc;" />
+                                            </a>
+                                            <div th:unless="${#strings.endsWith(withdrawal.proofFile, '.jpg') || #strings.endsWith(withdrawal.proofFile, '.jpeg') || #strings.endsWith(withdrawal.proofFile, '.png')}" style="padding: 16px; text-align: center; background: #f8fafc;">
+                                                <a th:href="${#strings.startsWith(withdrawal.proofFile, '/') || #strings.startsWith(withdrawal.proofFile, 'http') ? withdrawal.proofFile : '/uploads/' + withdrawal.proofFile}" target="_blank" class="ds-btn" style="display: inline-block;"><i class="fa fa-file"></i> Tải xuống hóa đơn/chứng từ</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="ds-form-field" th:if="${withdrawal.rejectionReason != null && !#strings.isEmpty(withdrawal.rejectionReason)}">
+                                    <label class="ds-label">Lý do từ chối</label>
+                                    <div class="ds-input" style="background-color: #f8fafc; min-height: 50px; font-weight: 500;" th:text="${withdrawal.rejectionReason}"></div>
+                                </div>
+
                             </form>
                             <div style="border-top: 1px solid var(--ds-border); padding-top: 16px; margin-top: 4px;">
                                 <a class="ds-btn ds-btn-outline" href="/staff/withdrawals" style="width: 100%;">
@@ -191,6 +286,32 @@
             if (tokenInput) {
                 tokenInput.value = token;
             }
+        }
+
+        // Tương tác nút từ chối
+        const btnShowReject = document.getElementById('btn-show-reject');
+        const btnCancelReject = document.getElementById('btn-cancel-reject');
+        const rejectReasonContainer = document.getElementById('reject-reason-container');
+        const defaultActionsContainer = document.getElementById('default-actions-container');
+        const rejectActionsContainer = document.getElementById('reject-actions-container');
+        const rejectReasonInput = document.getElementById('reject-reason-input');
+
+        if (btnShowReject) {
+            btnShowReject.addEventListener('click', function() {
+                rejectReasonContainer.style.display = 'block';
+                rejectActionsContainer.style.display = 'flex';
+                defaultActionsContainer.style.display = 'none';
+                if (rejectReasonInput) rejectReasonInput.focus();
+            });
+        }
+
+        if (btnCancelReject) {
+            btnCancelReject.addEventListener('click', function() {
+                rejectReasonContainer.style.display = 'none';
+                rejectActionsContainer.style.display = 'none';
+                defaultActionsContainer.style.display = 'flex';
+                if (rejectReasonInput) rejectReasonInput.value = '';
+            });
         }
     });
 </script>

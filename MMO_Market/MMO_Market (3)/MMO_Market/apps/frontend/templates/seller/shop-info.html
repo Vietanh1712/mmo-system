@@ -68,7 +68,24 @@
                 <div class="ds-form-grid shop-settings__form-offset">
                     <div class="ds-form-field">
                         <label class="ds-label" for="bankName">Ngân hàng</label>
-                        <input class="ds-input" id="bankName" maxlength="100" placeholder="Tên ngân hàng">
+                        <input class="ds-input" id="bankName" list="bankList" placeholder="Nhập hoặc chọn ngân hàng...">
+                        <datalist id="bankList">
+                            <option value="Vietcombank"></option>
+                            <option value="Techcombank"></option>
+                            <option value="MB Bank"></option>
+                            <option value="ACB"></option>
+                            <option value="TP Bank"></option>
+                            <option value="VietinBank"></option>
+                            <option value="BIDV"></option>
+                            <option value="Agribank"></option>
+                            <option value="VPBank"></option>
+                            <option value="Sacombank"></option>
+                            <option value="VIB"></option>
+                            <option value="HDBank"></option>
+                            <option value="SHB"></option>
+                            <option value="OCB"></option>
+                            <option value="MSB"></option>
+                        </datalist>
                     </div>
                     <div class="ds-form-field">
                         <label class="ds-label" for="accountNumber">Số tài khoản</label>
@@ -105,9 +122,15 @@
                         <strong id="shopStatusTitle">Shop đang hoạt động</strong>
                         <span id="shopStatusDescription">Sản phẩm đang hiển thị và khách hàng có thể tạo đơn mới.</span>
                     </div>
-                    <button class="ds-btn ds-btn-outline" id="toggleShopStatusButton" type="button">Tạm đóng cửa hàng</button>
                 </div>
-                <p class="ds-caption shop-settings__status-note">Trạng thái tạm đóng hiện được lưu trên giao diện. Backend chưa cung cấp API thay đổi trạng thái Shop.</p>
+
+                <div class="shop-suspended-countdown-alert" id="sellerSuspendedAlert" style="display: none; margin-top: 14px; padding: 14px 16px; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px; align-items: flex-start; gap: 12px;">
+                    <i class="fa fa-clock-o" style="color: #d97706; font-size: 20px; margin-top: 2px;"></i>
+                    <div>
+                        <div style="font-weight: 700; color: #b45309; font-size: 14px;" id="sellerSuspendedUntilText">Thời hạn tạm ngưng: Đến --</div>
+                        <div style="color: #1d4ed8; font-weight: 700; font-size: 15px; margin-top: 4px;" id="sellerSuspendedCountdown">Tự động mở lại sau: --</div>
+                    </div>
+                </div>
             </section>
         </section>
     </div>

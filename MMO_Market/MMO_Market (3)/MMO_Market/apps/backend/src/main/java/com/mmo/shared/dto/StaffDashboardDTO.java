@@ -21,4 +21,8 @@ public class StaffDashboardDTO {
     private long pendingTransactions;
 
     private long totalShops;
+
+    private long pendingTickets;
+
+    private long pendingTopups;
 }

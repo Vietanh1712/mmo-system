@@ -534,8 +534,18 @@ BEGIN
         UPDATE Users
         SET shop_status = i.status,
             role = CASE
-                WHEN i.status = 'Approved' AND JSON_VALUE(Users.role, '$.role') = 'Customer' THEN '{"role": "Customer_Seller"}'
-                WHEN i.status = 'Rejected' AND JSON_VALUE(Users.role, '$.role') = 'Customer_Seller' THEN '{"role": "Customer"}'
+                WHEN i.status = 'Approved' THEN
+                    CASE
+                        WHEN ISJSON(Users.role) = 1 AND JSON_VALUE(Users.role, '$.role') = 'Customer' THEN '{"role": "Customer_Seller"}'
+                        WHEN Users.role = 'Customer' THEN 'Customer_Seller'
+                        ELSE Users.role
+                    END
+                WHEN i.status = 'Rejected' THEN
+                    CASE
+                        WHEN ISJSON(Users.role) = 1 AND JSON_VALUE(Users.role, '$.role') = 'Customer_Seller' THEN '{"role": "Customer"}'
+                        WHEN Users.role = 'Customer_Seller' THEN 'Customer'
+                        ELSE Users.role
+                    END
                 ELSE Users.role
             END
         FROM Users

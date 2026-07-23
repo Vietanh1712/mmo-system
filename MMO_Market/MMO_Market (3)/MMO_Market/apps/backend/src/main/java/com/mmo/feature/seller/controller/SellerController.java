@@ -144,17 +144,36 @@ public class SellerController {
     public ResponseEntity<?> getShopInfo(@AuthenticationPrincipal Long userId) {
         try {
             User seller = getSeller(userId);
-            SellerRegistration reg = sellerRegistrationRepository.findByUserAndIsDeleteFalse(seller).orElse(null);
-            SellerBankInfo bank = sellerBankInfoRepository.findByUserAndIsDeleteFalse(seller).orElse(null);
+            SellerRegistration reg = sellerRegistrationRepository.findFirstByUserAndIsDeleteFalseOrderByIdDesc(seller).orElse(null);
+            SellerBankInfo bank = sellerBankInfoRepository.findFirstByUserAndIsDeleteFalseOrderByIdDesc(seller).orElse(null);
+
+            if (seller.getShopStatus() != null &&
+                    ("Suspended".equalsIgnoreCase(seller.getShopStatus()) || "TEMP_LOCKED".equalsIgnoreCase(seller.getShopStatus())) &&
+                    seller.getSuspendedUntil() != null &&
+                    java.time.LocalDateTime.now().isAfter(seller.getSuspendedUntil())) {
+                seller.setShopStatus("Active");
+                seller.setSuspendedUntil(null);
+                userRepository.save(seller);
+            }
+
+            String effectiveStatus = seller.getShopStatus();
+            if (effectiveStatus == null || effectiveStatus.isBlank()) {
+                if (reg != null && reg.getStatus() != null) {
+                    effectiveStatus = reg.getStatus();
+                } else {
+                    effectiveStatus = "Active";
+                }
+            }
 
             Map<String, Object> result = new HashMap<>();
             result.put("fullName", seller.getFullName());
-            result.put("shopStatus", seller.getShopStatus());
+            result.put("shopStatus", effectiveStatus);
+            result.put("suspendedUntil", seller.getSuspendedUntil() != null ? seller.getSuspendedUntil().toString() : null);
             result.put("shopName", reg != null ? reg.getShopName() : "Cửa hàng của tôi");
             result.put("description", reg != null ? reg.getDescription() : "");
             result.put("bankName", bank != null ? bank.getBankName() : "");
             result.put("accountNumber", bank != null ? bank.getAccountNumber() : "");
-            result.put("accountHolder", seller.getFullName().toUpperCase());
+            result.put("accountHolder", seller.getFullName() != null ? seller.getFullName().toUpperCase() : "");
             result.put("branch", bank != null ? bank.getBranch() : "");
             result.put("shopLevel", seller.getShopLevel() != null ? seller.getShopLevel() : 1);
 
@@ -179,7 +198,7 @@ public class SellerController {
                 return ResponseEntity.badRequest().body(Map.of("message", "Tên cửa hàng không được để trống."));
             }
 
-            SellerRegistration reg = sellerRegistrationRepository.findByUserAndIsDeleteFalse(seller)
+            SellerRegistration reg = sellerRegistrationRepository.findFirstByUserAndIsDeleteFalseOrderByIdDesc(seller)
                     .orElse(new SellerRegistration());
             reg.setUser(seller);
             reg.setShopName(shopName);
@@ -187,7 +206,7 @@ public class SellerController {
             sellerRegistrationRepository.save(reg);
 
             if (bankName != null && !bankName.trim().isEmpty() && accountNumber != null && !accountNumber.trim().isEmpty()) {
-                SellerBankInfo bank = sellerBankInfoRepository.findByUserAndIsDeleteFalse(seller)
+                SellerBankInfo bank = sellerBankInfoRepository.findFirstByUserAndIsDeleteFalseOrderByIdDesc(seller)
                         .orElse(new SellerBankInfo());
                 bank.setUser(seller);
                 bank.setBankName(bankName);
@@ -202,11 +221,46 @@ public class SellerController {
         }
     }
 
+    // 3.1 Toggle / Update Shop Operating Status for Seller
+    @PutMapping("/shop-status")
+    public ResponseEntity<?> toggleSellerShopStatus(@AuthenticationPrincipal Long userId, @RequestBody(required = false) Map<String, String> request) {
+        try {
+            User seller = getSeller(userId);
+            String currentStatus = seller.getShopStatus();
+            if (currentStatus != null && ("Banned".equalsIgnoreCase(currentStatus) || "PERMANENT_BANNED".equalsIgnoreCase(currentStatus) || "Locked".equalsIgnoreCase(currentStatus) || "INDEFINITE_LOCKED".equalsIgnoreCase(currentStatus))) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Cửa hàng của bạn đang bị khóa do vi phạm quy định. Không thể tự thay đổi trạng thái."));
+            }
+
+            String requestedStatus = (request != null) ? request.get("status") : null;
+            String newStatus;
+            if (requestedStatus != null && !requestedStatus.isBlank()) {
+                if ("Suspended".equalsIgnoreCase(requestedStatus) || "TEMPORARILY_CLOSED".equalsIgnoreCase(requestedStatus)) {
+                    newStatus = "Suspended";
+                } else if ("Active".equalsIgnoreCase(requestedStatus)) {
+                    newStatus = "Active";
+                } else {
+                    newStatus = "Active".equalsIgnoreCase(currentStatus) ? "Suspended" : "Active";
+                }
+            } else {
+                newStatus = "Active".equalsIgnoreCase(currentStatus) ? "Suspended" : "Active";
+            }
+
+            seller.setShopStatus(newStatus);
+            seller.setSuspendedUntil(null);
+            userRepository.save(seller);
+
+            String message = "Active".equalsIgnoreCase(newStatus) ? "Cửa hàng của bạn đã hoạt động trở lại!" : "Cửa hàng đã được chuyển sang trạng thái tạm đóng.";
+            return ResponseEntity.ok(Map.of("message", message, "shopStatus", newStatus));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
     // 4. Load Categories for dropdown filter/product creation
     @GetMapping("/categories")
     public ResponseEntity<?> getCategories() {
         // Return only sub-categories
-        List<Category> allCategories = categoryRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc();
+        List<Category> allCategories = categoryRepository.findAllByIsDeleteFalseOrderByIdAsc();
         List<Map<String, Object>> result = allCategories.stream()
                 .filter(c -> c.getParent() == null)
                 .map(parent -> {
@@ -216,6 +270,7 @@ public class SellerController {
                     
                     List<Map<String, Object>> subList = allCategories.stream()
                             .filter(c -> c.getParent() != null && c.getParent().getId().equals(parent.getId()))
+                            .sorted((a, b) -> Long.compare(a.getId(), b.getId()))
                             .map(c -> {
                                 Map<String, Object> map = new HashMap<>();
                                 map.put("id", c.getId());
@@ -768,11 +823,6 @@ public class SellerController {
                         try { return Double.parseDouble(c.getConfigValue()); }
                         catch (NumberFormatException e) { return 1.5; }
                     }).orElse(1.5);
-            long minWithdrawFee = systemConfigurationRepository.findByConfigKey("MIN_WITHDRAW_FEE_VND")
-                    .map(c -> {
-                        try { return Long.parseLong(c.getConfigValue()); }
-                        catch (NumberFormatException e) { return 10000L; }
-                    }).orElse(10000L);
             long minWithdrawalLimit = systemConfigurationRepository.findByConfigKey("MIN_WITHDRAWAL_VND")
                     .map(c -> {
                         try { return Long.parseLong(c.getConfigValue()); }
@@ -783,11 +833,10 @@ public class SellerController {
                         try { return Long.parseLong(c.getConfigValue()); }
                         catch (NumberFormatException e) { return 50000000L; }
                     }).orElse(50000000L);
-            boolean requireWithdraw2FA = false; // Tắt yêu cầu OTP xác thực khi rút tiền
+            boolean requireWithdraw2FA = false;
 
             return ResponseEntity.ok(Map.of(
                     "withdrawalFeePercent", withdrawalFeePercent,
-                    "minWithdrawFee", minWithdrawFee,
                     "minWithdrawalLimit", minWithdrawalLimit,
                     "maxWithdrawalLimit", maxWithdrawalLimit,
                     "requireWithdraw2FA", requireWithdraw2FA

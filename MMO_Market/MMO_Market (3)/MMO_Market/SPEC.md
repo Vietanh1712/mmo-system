@@ -18,7 +18,7 @@
 - Quản lý gian hàng (Shop) và các sản phẩm/tài sản số.
 - Nạp tiền (Top-up) vào ví và giao dịch thanh toán.
 - Đặt hàng, đặt trước (Pre-order), giao tài sản số và cơ chế khóa quỹ (Escrow).
-- Quản lý khiếu nại (Complaint) và yêu cầu hỗ trợ (Support Ticket).
+- Quản lý khiếu nại (Complaint) và yêu cầu hỗ trợ (Phiếu hỗ trợ).
 - Quản lý việc rút tiền (Withdrawal) từ ví của người bán.
 - Cảnh báo gian hàng (Flag Shop) và đánh giá (Review) sản phẩm.
 - Nhắn tin (Chat) và nhận thông báo (Notification).
@@ -46,7 +46,7 @@ Người dùng đã đăng ký tài khoản hợp lệ.
 - Đặt mua sản phẩm số, đặt trước (Pre-Order), xem chi tiết đơn hàng.
 - Theo dõi gian hàng (Follow Shop).
 - Đánh giá sản phẩm đã mua.
-- Gửi khiếu nại đối với đơn hàng gặp sự cố, tạo thẻ hỗ trợ (Support Ticket).
+- Gửi khiếu nại đối với đơn hàng gặp sự cố, tạo phiếu hỗ trợ (Support Ticket).
 - Nhắn tin với người bán.
 - Gửi cờ báo cáo gian hàng (Flag Shop).
 - Nhận và quản lý thông báo từ hệ thống.
@@ -70,7 +70,8 @@ Nhân viên vận hành hệ thống.
 - Xem và duyệt/từ chối yêu cầu KYC (KycRequest) và Seller Registration.
 - Xem và xử lý các khiếu nại (Complaint) từ Customer và Seller.
 - Xem, duyệt/từ chối các yêu cầu rút tiền (Withdrawal) của Seller.
-- Xử lý các cờ báo cáo (Flag) gian hàng và thẻ hỗ trợ (Support Ticket).
+- Xử lý các cờ báo cáo (Flag) gian hàng và phiếu hỗ trợ (Support Ticket).
+- Quản lý danh mục sản phẩm (Category Management - xem, tìm kiếm, tạo mới, chỉnh sửa, ẩn/hiện danh mục cha/con).
 - Trao đổi (Chat) với người dùng trong luồng giải quyết khiếu nại/hỗ trợ.
 - Xem quyền hạn cá nhân (MyPermissions).
 
@@ -79,7 +80,7 @@ Quản trị viên hệ thống cấp cao nhất.
 
 **Permissions**
 - Quản lý danh sách người dùng, xem thống kê (AdminUserManagement).
-- Quản lý phân quyền (Role, Permission) cho Staff.
+- Quản lý phân quyền (Role, Permission - bao gồm quyền Quản lý danh mục `MANAGE_CATEGORIES`) cho Staff.
 - Cấu hình hệ thống (SystemConfiguration).
 - Quản lý mức phí, doanh thu (AdminRevenue).
 - Xem nhật ký hoạt động (Audit log).
@@ -141,10 +142,10 @@ Quản trị viên hệ thống cấp cao nhất.
 - Staff xem, duyệt/từ chối yêu cầu rút tiền.
 - Upload bằng chứng chuyển tiền khi duyệt hoàn tất.
 
-### FR-10 Complaint & Support Ticket
+### FR-10 Complaint & Support Ticket (Phiếu hỗ trợ)
 - Customer tạo khiếu nại cho đơn hàng thuộc sở hữu.
 - Tạm dừng giải phóng quỹ (Escrow) nếu khiếu nại mở trong 72 giờ đầu.
-- Gửi yêu cầu hỗ trợ chung (SupportTicket).
+- Gửi yêu cầu hỗ trợ chung (SupportTicket - Phiếu hỗ trợ).
 - Staff ra quyết định giải quyết (Customer thắng: hoàn tiền, Seller thắng: giải phóng tiền).
 
 ### FR-11 Feedback, Review and Flag
@@ -462,7 +463,7 @@ Quản trị viên hệ thống cấp cao nhất.
 - Không được xử lý trùng yêu cầu.
 
 ### Complaint & Support Ticket
-- User có thể tạo complaint cho order hợp lệ hoặc gửi Ticket hỗ trợ chung.
+- User có thể tạo complaint cho order hợp lệ hoặc gửi Phiếu hỗ trợ chung.
 - Staff có thể xem, tương tác Chat và xử lý yêu cầu.
 
 ### Chat & Notification
@@ -507,6 +508,7 @@ Hiện tại repository chưa có tài liệu chính thức xác định đầy 
 | FR-14 | Staff Management | Admin | /admin/users | /api/admin/staff | StaffController | StaffService | UserRepository | Users, UserPermissions, Permissions | Implemented | StaffController.java, Permissions DB |
 | FR-15 | Administration | Admin | /admin | /api/admin/system-config | SystemConfigurationController | SystemConfigService | SystemConfigRepository | SystemConfigurations, AuditLogs | Implemented | SystemConfigurationController.java |
 | FR-16 | PreOrder | Customer | /pre-orders | /api/pre-orders | PreOrderController | PreOrderService | PreOrderRepository | PreOrders | Implemented | PreOrderController.java, PreOrders table |
+| FR-17 | Category Management | Staff, Admin | /staff/categories | /api/v1/staff/categories | StaffController, StaffCategoryApiController | CategoryService | CategoryRepository | Categories | Implemented | StaffCategoryApiController.java, Categories table |
 
 ## Appendix B – Screen Inventory
 
@@ -526,6 +528,7 @@ Hiện tại repository chưa có tài liệu chính thức xác định đầy 
 | Inventory | Seller | /seller/inventory.html | /seller/inventory | SellerPageController | Quản lý kho | Implemented |
 | Withdrawals | Seller | /seller/withdrawals.html | /seller/withdrawals | SellerPageController | Rút tiền | Implemented |
 | Staff Dashboard | Staff | /staff/dashboard.html | /staff/dashboard | StaffController | Bảng điều khiển Staff | Implemented |
+| Staff Categories | Staff | /staff/categories.html | /staff/categories | StaffController | Quản lý danh mục sản phẩm | Implemented |
 | Admin Users | Admin | /admin/users.html | /admin/users | AdminPageController | Quản lý người dùng | Implemented |
 
 ## Appendix C – API and Route Inventory

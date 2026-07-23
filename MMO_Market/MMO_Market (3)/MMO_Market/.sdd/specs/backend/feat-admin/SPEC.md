@@ -1,8 +1,8 @@
 # SPEC — System Administration & RBAC
 > **Feature ID:** `feat-admin`
 > **UC Coverage:** UC-15 (System Administration)
-> **Version:** 2.0 | **Status:** Active
-> **Author:** Team | **Last Updated:** 2026-07-16
+> **Version:** 2.1 | **Status:** Active
+> **Author:** Team | **Last Updated:** 2026-07-23
 
 ---
 
@@ -40,8 +40,8 @@ Quản trị viên hệ thống (Admin) cần công cụ quản lý tập trung 
 ### 3.2 Quản trị người dùng & RBAC
 | ID | EARS Requirement |
 |:---|:---|
-| FR-ADMIN-02 | WHEN an Admin assigns permissions to staffs, THE SYSTEM SHALL link the user IDs and permission names in the database. |
-| FR-ADMIN-03 | WHEN an Admin revokes permissions from a staff, THE SYSTEM SHALL remove the links from the database. |
+| FR-ADMIN-02 | WHEN an Admin assigns permissions (including Category Management `MANAGE_CATEGORIES`) to staffs, THE SYSTEM SHALL link the user IDs and permission names in the database. |
+| FR-ADMIN-03 | WHEN an Admin revokes permissions (including `MANAGE_CATEGORIES`) from a staff, THE SYSTEM SHALL remove the links from the database. |
 | FR-ADMIN-04 | WHEN an Admin toggles account lock status for a user, THE SYSTEM SHALL set `isLocked = 1` or `0`, blocking access dynamically in security filters. |
 
 ### 3.3 Quản trị Thông báo hệ thống & Bảo trì
@@ -55,7 +55,7 @@ Quản trị viên hệ thống (Admin) cần công cụ quản lý tập trung 
 | ID | EARS Requirement |
 |:---|:---|
 | FR-ADMIN-08 | WHEN an Admin modifies system settings, THE SYSTEM SHALL update the configuration value in SystemConfigurations, record the editor and timestamp, and write an audit log. |
-| FR-ADMIN-09 | THE SYSTEM SHALL write a record to `AuditLogs` for every administrative action, recording the user ID, action type, IP address, description, and json difference payload. |
+| FR-ADMIN-09 | THE SYSTEM SHALL write a record to `AuditLogs` for every administrative action, recording the user ID, category, action type, description, and json difference payload. |
 
 ---
 
@@ -125,7 +125,7 @@ erDiagram
 
 ### 6.1 Báo cáo doanh thu & Dòng tiền
 #### `GET /api/admin/revenue/summary`
-*   **Description**: Lấy thống kê tổng quan doanh thu toàn sàn từ hoa hồng, phí mở Shop, và phí rút tiền.
+*   **Description**: Lấy thống kê tổng quan doanh thu toàn sàn từ hoa hồng C2C (`C2C_Purchase`), phí mở Shop (`Shop_Opening`), và phí rút tiền (`Withdrawal`).
 *   **Response (200 OK):**
     ```json
     {
@@ -138,11 +138,11 @@ erDiagram
 
 #### `GET /api/admin/revenue/transactions`
 *   **Description**: Lấy danh sách giao dịch dòng tiền (Cashflow).
-*   **Query Params**: `keyword`, `type`, `startDate`, `endDate`, `page`, `size`
+*   **Query Params**: `keyword`, `type`, `status`, `startDate`, `endDate`, `sort`, `page`, `size`
 *   **Response (200 OK)**
 
 #### `GET /api/admin/revenue/export`
-*   **Description**: Xuất danh sách giao dịch dòng tiền dưới dạng tệp tin CSV.
+*   **Description**: Xuất danh sách giao dịch dòng tiền dưới dạng tệp tin CSV (BOM UTF-8 đính kèm JWT Bearer Token).
 *   **Response (200 OK, text/csv)**
 
 ### 6.2 Phân quyền RBAC
@@ -224,7 +224,17 @@ erDiagram
 *   **Response (200 OK)**
 
 ### 6.4 Cấu hình hệ thống
+#### `GET /api/admin/system-config`
+*   **Description**: Lấy toàn bộ các cấu hình hệ thống hiện tại.
+*   **Response (200 OK):** Trả về đối tượng `SystemConfigDTO` chứa thông tin cấu hình chung và biểu phí.
+
 #### `PUT /api/admin/system-config/general`
+*   **Description**: Cập nhật cấu hình hệ thống chung. Toàn bộ giá trị này được lưu trực tiếp vào CSDL SQL Server bảng `SystemConfigurations` và tác động thời gian thực tới Backend Java:
+    - `sessionTimeout` (`SESSION_TIMEOUT_MINS`): Áp dụng vào `JwtTokenProvider.java` quy định thời hạn hiệu lực của token đăng nhập.
+    - `otpTimeout` (`OTP_TIMEOUT_MINS`): Áp dụng vào `EmailService.java` & `AuthenticationService.java` quy định thời hạn sống của mã OTP.
+    - `maxLoginRetries` (`MAX_LOGIN_RETRIES`) & `lockDurationMins` (`LOCK_DURATION_MINS`): Áp dụng vào `AuthenticationService.java` để tự động khóa tài khoản khi gõ sai mật khẩu quá số lần.
+    - `escrowHoldHours` (`ESCROW_HOLD_HOURS`): Áp dụng vào `TransactionService.java` quy định thời gian giam tiền bảo lãnh đơn hàng.
+    - `requireWithdraw2FA` (`REQUIRE_WITHDRAW_2FA`): Áp dụng vào `WithdrawalService.java` để bắt buộc kiểm tra 2FA.
 *   **Request Body (JSON):**
     ```json
     {
@@ -241,6 +251,7 @@ erDiagram
 *   **Response (200 OK)**
 
 #### `PUT /api/admin/system-config/commissions`
+*   **Description**: Cập nhật biểu phí hoa hồng C2C, phí rút tiền, phí mở Shop và các hạn mức giao dịch. Lưu trực tiếp vào CSDL SQL Server và có hiệu lực ngay lập tức.
 *   **Request Body (JSON):**
     ```json
     {
@@ -256,7 +267,20 @@ erDiagram
 *   **Response (200 OK)**
 
 ### 6.5 Quản trị người dùng
+#### `GET /api/admin/users`
+*   **Description**: Lấy danh sách tài khoản người dùng hỗ trợ phân trang và bộ lọc tập trung 6 tham số. Cột "Xác thực" được loại bỏ trên giao diện phản hồi.
+*   **Query Params:**
+    - `search` (String, tùy chọn): Tìm kiếm từ khóa theo Email, Họ tên, SĐT.
+    - `role` (String, tùy chọn): Lọc theo vai trò (`ALL`, `CUSTOMER`, `SELLER`, `STAFF`, `ADMIN`).
+    - `status` (String, tùy chọn): Lọc theo trạng thái (`ALL`, `ACTIVE`, `LOCKED`).
+    - `startDate` (String, tùy chọn): Lọc người dùng tạo từ ngày (`YYYY-MM-DD`).
+    - `endDate` (String, tùy chọn): Lọc người dùng tạo đến ngày (`YYYY-MM-DD`).
+    - `sortOrder` (String, tùy chọn): Sắp xếp (`NEWEST`, `OLDEST`).
+    - `page` (int, default: 0), `size` (int, default: 10).
+*   **Response (200 OK):** Trả về `Page<UserResponseDTO>`.
+
 #### `POST /api/admin/user-management/users/{userId}/toggle-lock`
+*   **Description**: Khóa hoặc mở khóa tài khoản người dùng ngay lập tức.
 *   **Response (200 OK)**
 
 ---
@@ -274,3 +298,5 @@ erDiagram
 |---|---|---|---|---|
 | AC-ADMIN-01 | Khóa tài khoản thành công | Admin ở trang quản lý người dùng | Chọn user A và bấm "Khóa tài khoản" | Hệ thống set isLocked = 1, ghi audit log, JWT Filter chặn mọi truy cập của user A ngay lập tức |
 | AC-ADMIN-02 | Phát thông báo và kích hoạt bảo trì | Admin ở trang quản trị thông báo | Nhập tiêu đề "Bảo trì nâng cấp", chọn type "maintenance" và kích hoạt bảo trì | Thông báo được lưu vào DB, cấu hình MAINTENANCE_MODE đổi thành TRUE, và ghi nhận audit log |
+| AC-ADMIN-03 | Lọc tài khoản linh hoạt 6 trường | Admin ở trang quản lý người dùng | Chọn bộ lọc Từ khóa, Vai trò, Trạng thái, Khoảng ngày và Sắp xếp | Backend trả về đúng danh sách đã lọc và loại bỏ thông tin Xác thực không cần thiết |
+| AC-ADMIN-04 | Đấu nối Cấu hình hệ thống thực tế | Admin thay đổi Thời gian đăng nhập (SESSION_TIMEOUT_MINS) | Bấm "Lưu cấu hình" | Backend ghi vào CSDL SQL Server, JwtTokenProvider áp dụng ngay lập tức thời hạn token mới |

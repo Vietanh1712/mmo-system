@@ -96,6 +96,7 @@ Bước 6  [Backend]:    Validate OTP và cập nhật mật khẩu mới (BCryp
 | BR-01-02 | OTP hết hạn sau 5 phút | Giao dịch xác thực quá 5 phút sẽ bị hủy và phải yêu cầu mã mới |
 | BR-01-03 | Email duy nhất | Không cho phép 2 tài khoản sử dụng chung 1 email |
 | BR-01-04 | Kích hoạt tài khoản | Tài khoản `enabled = 0` không thể thực hiện đăng nhập |
+| BR-01-05 | Giới hạn gửi lại OTP | Yêu cầu thời gian chờ (cooldown) đếm ngược 60 giây giữa các lần gửi lại mã OTP để ngăn chặn spam |
 
 ---
 

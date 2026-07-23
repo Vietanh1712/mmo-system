@@ -7,6 +7,7 @@ import com.mmo.shared.dal.SystemConfigurationRepository;
 import com.mmo.shared.dal.UserRepository;
 import com.mmo.shared.dal.WithdrawalRepository;
 import com.mmo.shared.dal.NotificationRepository;
+import com.mmo.shared.dal.WalletTransactionRepository;
 import com.mmo.shared.model.SellerBankInfo;
 import com.mmo.shared.model.User;
 import com.mmo.shared.model.Withdrawal;
@@ -20,8 +21,23 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.List;
 
+import com.mmo.shared.dal.AuditLogRepository;
+import com.mmo.shared.model.AuditLog;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class WithdrawalService {
+
+    @Autowired
+    private AuditLogRepository auditLogRepository;
+
+    @Autowired
+    private WalletService walletService;
+
+    @Autowired
+    private WalletTransactionRepository walletTransactionRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -71,12 +87,6 @@ public class WithdrawalService {
                     catch (NumberFormatException e) { return 1.5; }
                 }).orElse(1.5);
 
-        long minWithdrawFee = systemConfigurationRepository.findByConfigKey("MIN_WITHDRAW_FEE_VND")
-                .map(c -> {
-                    try { return Long.parseLong(c.getConfigValue()); }
-                    catch (NumberFormatException e) { return 10000L; }
-                }).orElse(10000L);
-
         long minWithdrawalLimit = systemConfigurationRepository.findByConfigKey("MIN_WITHDRAWAL_VND")
                 .map(c -> {
                     try { return Long.parseLong(c.getConfigValue()); }
@@ -89,7 +99,7 @@ public class WithdrawalService {
                     catch (NumberFormatException e) { return 50000000L; }
                 }).orElse(50000000L);
 
-        boolean requireWithdraw2FA = false; // Tắt yêu cầu OTP xác thực khi rút tiền
+        boolean requireWithdraw2FA = false;
 
         // Validate amounts
         if (amount < minWithdrawalLimit) {
@@ -99,11 +109,8 @@ public class WithdrawalService {
             throw new IllegalArgumentException("Số tiền rút tối đa phải là " + String.format("%,d", maxWithdrawalLimit) + " VNĐ.");
         }
 
-        // Calculate fee
-        long fee = (long) (amount * (withdrawalFeePercent / 100.0));
-        if (fee < minWithdrawFee) {
-            fee = minWithdrawFee;
-        }
+        // Calculate fee purely based on percentage
+        long fee = withdrawalFeePercent > 0 ? (long) (amount * (withdrawalFeePercent / 100.0)) : 0L;
 
         long totalDeduction = amount + fee;
         if (seller.getBalanceVnd() == null || seller.getBalanceVnd() < totalDeduction) {
@@ -118,7 +125,7 @@ public class WithdrawalService {
             authenticationService.verifyWithdrawalOtp(seller.getId(), otp.trim());
         }
 
-        SellerBankInfo bank = sellerBankInfoRepository.findByUserAndIsDeleteFalse(seller)
+        SellerBankInfo bank = sellerBankInfoRepository.findFirstByUserAndIsDeleteFalseOrderByIdDesc(seller)
                 .orElseThrow(() -> new IllegalArgumentException("Vui lòng cấu hình thông tin ngân hàng trước khi rút tiền."));
 
         // Deduct total balance (amount + fee) and save
@@ -133,6 +140,18 @@ public class WithdrawalService {
         w.setStatus("Pending");
         w.setIsDelete(false);
         Withdrawal saved = withdrawalRepository.save(w);
+
+        // Record wallet transaction
+        walletService.recordTransaction(
+                seller,
+                "WITHDRAWAL",
+                -totalDeduction,
+                "PENDING",
+                "Yêu cầu rút tiền về ngân hàng " + bank.getBankName() + " - Số TK: " + bank.getAccountNumber(),
+                "WD" + saved.getId(),
+                seller.getBalanceVnd(),
+                saved.getId()
+        );
 
         // 1. Tạo thông báo cho Seller
         Notification sellerNotif = Notification.builder()
@@ -183,12 +202,21 @@ public class WithdrawalService {
      * Cập nhật trạng thái yêu cầu rút tiền của Seller và thực hiện hoàn tiền nếu bị từ chối.
      */
     @Transactional
-    public void updateWithdrawalStatus(Long id, String newStatus, Long reviewerId, String rejectionReason) {
+    public void updateWithdrawalStatus(Long id, String newStatus, Long reviewerId, String rejectionReason, String proofFile) {
         Withdrawal withdrawal = withdrawalRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Yêu cầu rút tiền không tồn tại."));
 
-        if (!"Pending".equalsIgnoreCase(withdrawal.getStatus())) {
+        String currentStatus = withdrawal.getStatus();
+        if (!"Pending".equalsIgnoreCase(currentStatus) && !"Processing".equalsIgnoreCase(currentStatus)) {
             throw new IllegalStateException("Yêu cầu rút tiền này đã được xử lý từ trước.");
+        }
+
+        // Validate state transition
+        if ("Processing".equalsIgnoreCase(newStatus) && !"Pending".equalsIgnoreCase(currentStatus)) {
+            throw new IllegalStateException("Chỉ lệnh Pending mới có thể chuyển sang Processing.");
+        }
+        if ("Completed".equalsIgnoreCase(newStatus) && !"Processing".equalsIgnoreCase(currentStatus)) {
+            throw new IllegalStateException("Lệnh phải ở trạng thái Processing mới có thể Hoàn tất.");
         }
 
         User reviewer = userRepository.findByIdAndIsDeleteFalse(reviewerId)
@@ -200,6 +228,9 @@ public class WithdrawalService {
         if (rejectionReason != null) {
             withdrawal.setRejectionReason(rejectionReason);
         }
+        if (proofFile != null && !proofFile.isEmpty()) {
+            withdrawal.setProofFile(proofFile);
+        }
 
         if ("Rejected".equalsIgnoreCase(newStatus) || "Failed".equalsIgnoreCase(newStatus)) {
             // Hoàn lại tiền cho Seller (bao gồm số tiền rút và phí rút)
@@ -208,10 +239,64 @@ public class WithdrawalService {
             seller.setBalanceVnd(seller.getBalanceVnd() + refundAmount);
             userRepository.save(seller);
             
+            // Record refund wallet transaction
+            walletService.recordTransaction(
+                    seller,
+                    "REFUND",
+                    refundAmount,
+                    "COMPLETED",
+                    "Hoàn tiền do yêu cầu rút tiền bị từ chối/thất bại",
+                    "RF" + withdrawal.getId(),
+                    seller.getBalanceVnd(),
+                    withdrawal.getId()
+            );
+
+            // Cập nhật trạng thái giao dịch rút tiền gốc thành FAILED
+            walletTransactionRepository.findByReferenceIdAndType(withdrawal.getId(), "WITHDRAWAL")
+                    .ifPresent(t -> {
+                        t.setStatus("FAILED");
+                        walletTransactionRepository.save(t);
+                    });
+
             // Cập nhật trạng thái khóa/mở khóa shop sau khi hoàn tiền rút bị từ chối
             shopLevelService.updateShopLockStatus(seller.getId());
+        } else if ("Completed".equalsIgnoreCase(newStatus) || "Approved".equalsIgnoreCase(newStatus)) {
+            // Cập nhật trạng thái giao dịch rút tiền gốc thành COMPLETED
+            walletTransactionRepository.findByReferenceIdAndType(withdrawal.getId(), "WITHDRAWAL")
+                    .ifPresent(t -> {
+                        t.setStatus("COMPLETED");
+                        walletTransactionRepository.save(t);
+                    });
         }
-
+        
         withdrawalRepository.save(withdrawal);
+
+        // Ghi AuditLog
+        Map<String, Object> diff = new HashMap<>();
+        diff.put("withdrawalId", id);
+        diff.put("status", newStatus);
+        diff.put("amountVnd", withdrawal.getAmountVnd());
+        diff.put("feeVnd", withdrawal.getFeeVnd());
+        if (rejectionReason != null) {
+            diff.put("rejectionReason", rejectionReason);
+        }
+        String action = ("Approved".equalsIgnoreCase(newStatus) || "Completed".equalsIgnoreCase(newStatus)) ? "Fund_Withdraw" : "Withdrawal_Reject";
+        saveAuditLog(reviewer, action, "Xử lý yêu cầu rút tiền #WD-" + id + " (" + newStatus + ")" + (rejectionReason != null ? ": " + rejectionReason : ""), diff);
+    }
+
+    private void saveAuditLog(User operator, String action, String desc, Map<String, Object> diff) {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("desc", desc);
+            payload.put("diff", diff);
+            String jsonDetails = new ObjectMapper().writeValueAsString(payload);
+            auditLogRepository.save(AuditLog.builder()
+                    .userId(operator != null ? operator.getId() : 1L)
+                    .action(action)
+                    .details(jsonDetails)
+                    .build());
+        } catch (Exception e) {
+            log.error("Failed to save audit log: {}", e.getMessage());
+        }
     }
 }

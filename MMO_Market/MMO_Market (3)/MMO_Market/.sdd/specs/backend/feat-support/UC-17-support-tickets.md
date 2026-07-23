@@ -1,4 +1,4 @@
-# UC-17 — Yêu Cầu Hỗ Trợ (Support Tickets)
+# UC-17 — Yêu Cầu Hỗ Trợ (Phiếu hỗ trợ)
 
 > **Feature:** `feat-support` | **Phiên bản:** 1.0 | **Trạng thái:** Published
 > **Tham chiếu FR:** FR-SUP-01 đến FR-SUP-08
@@ -11,9 +11,9 @@
 | Thuộc tính | Nội dung |
 |:---|:---|
 | **Mã Use Case** | UC-17 |
-| **Tên** | Yêu Cầu Hỗ Trợ (Support Tickets) |
+| **Tên** | Yêu Cầu Hỗ Trợ (Phiếu hỗ trợ) |
 | **Tác nhân chính** | Người dùng (User), Nhân viên vận hành (Staff) |
-| **Mô tả ngắn** | Người dùng gặp sự cố kỹ thuật hoặc thắc mắc giao dịch thực hiện gửi yêu cầu hỗ trợ (Support Ticket). Nhân viên (Staff) xem danh sách các yêu cầu đang mở, trả lời giải đáp và đóng yêu cầu hỗ trợ. |
+| **Mô tả ngắn** | Người dùng gặp sự cố kỹ thuật hoặc thắc mắc giao dịch thực hiện gửi yêu cầu hỗ trợ (Phiếu hỗ trợ). Nhân viên (Staff) xem danh sách các yêu cầu đang mở, trả lời giải đáp và đóng yêu cầu hỗ trợ. |
 | **Độ ưu tiên** | Thấp (P2) — hỗ trợ chăm sóc khách hàng và tiếp nhận phản hồi |
 
 ---
@@ -25,7 +25,7 @@
 | Tác nhân | Vai trò |
 |:---|:---|
 | **Người dùng (User)** | Gửi yêu cầu hỗ trợ, xem trạng thái yêu cầu của bản thân |
-| **Nhân viên (Staff)** | Tiếp nhận yêu cầu, phản hồi giải đáp, thay đổi trạng thái ticket |
+| **Nhân viên (Staff)** | Tiếp nhận yêu cầu, phản hồi giải đáp, thay đổi trạng thái phiếu |
 
 ### 2.2 Điều Kiện Tiền Quyết (Preconditions)
 
@@ -33,7 +33,7 @@
 
 ### 2.3 Hậu Điều Kiện (Postconditions)
 
-- **Gửi ticket thành công:** Tạo bản ghi mới trong bảng `SupportTickets` ở trạng thái `OPEN`.
+- **Gửi phiếu hỗ trợ thành công:** Tạo bản ghi mới trong bảng `SupportTickets` ở trạng thái `OPEN`.
 
 ---
 
@@ -43,6 +43,7 @@
 
 ```
 Bước 1  [User]:       Truy cập mục "Trợ giúp & Hỗ trợ", chọn "Gửi yêu cầu mới"
+<<<<<<< HEAD
 Bước 2  [Frontend]:   Hiển thị mẫu điền yêu cầu (Danh mục hỗ trợ, Tiêu đề, Nội dung chi tiết)
 Bước 3  [User]:       Chọn danh mục "TECHNICAL", nhập Tiêu đề "Không nhận được OTP email đăng ký", nhập Nội dung "Tôi đăng ký tài khoản từ 10 phút trước nhưng chưa nhận được mã kích hoạt", bấm gửi
 Bước 4  [Frontend]:   POST /api/support-tickets { category, title, description }
@@ -50,16 +51,16 @@ Bước 5  [Backend]:    Validate: các trường không được trống và đ
                        Tạo bản ghi mới trong SupportTickets với status = 'Open'
                        Gửi thông báo xác nhận cho User và thông báo hỗ trợ mới cho tất cả Staff/Admin
                        Trả về: status = 200, ticket details (status = "Open")
-Bước 6  [Frontend]:   Hiển thị thông báo gửi yêu cầu hỗ trợ thành công kèm mã Ticket.
+Bước 6  [Frontend]:   Hiển thị thông báo gửi yêu cầu hỗ trợ thành công kèm mã phiếu.
 ```
 
-### 3.2 Luồng Giải Đáp & Đóng Ticket (Staff)
+### 3.2 Luồng Giải Đáp & Đóng Phiếu (Staff)
 
 ```
 Bước 1  [Staff]:      Vào màn hình Admin/Staff, chọn mục "Hỗ trợ khách hàng"
 Bước 2  [Frontend]:   GET /api/support-tickets/all (Có JWT token của Staff)
-Bước 3  [Backend]:    Trả về danh sách tất cả các ticket hỗ trợ toàn hệ thống
-Bước 4  [Staff]:      Nhấp xem chi tiết ticket, liên hệ giải đáp cho User qua email/điện thoại hoặc hệ thống
+Bước 3  [Backend]:    Trả về danh sách tất cả các phiếu hỗ trợ toàn hệ thống
+Bước 4  [Staff]:      Nhấp xem chi tiết phiếu hỗ trợ, liên hệ giải đáp cho User qua email/điện thoại hoặc hệ thống
 Bước 5  [Staff]:      Sau khi giải đáp xong, nhập Resolution và nhấn nút "Đóng / Đã giải quyết" (Resolved)
 Bước 6  [Frontend]:   PUT /api/support-tickets/{ticketId}/status { status: "Resolved", resolution: "..." }
 Bước 7  [Backend]:    Cập nhật SupportTickets.status = 'Resolved' và lưu resolution
@@ -74,8 +75,8 @@ Bước 7  [Backend]:    Cập nhật SupportTickets.status = 'Resolved' và lư
 | Mã | Quy tắc | Chi tiết |
 |:---|:---|:---|
 | BR-17-01 | Phân quyền Staff | Chỉ tài khoản có vai trò `STAFF` hoặc `ADMIN` mới được phép truy cập danh sách toàn hệ thống và cập nhật trạng thái/phản hồi giải pháp |
-| BR-17-02 | Trạng thái đóng | Khi ticket đã chuyển sang `Resolved`, người dùng không thể tự chỉnh sửa nội dung |
-| BR-17-03 | Quyền bảo mật | API xem chi tiết `/api/support-tickets/{id}` chỉ cho phép chủ nhân của ticket hoặc tài khoản Staff/Admin truy cập |
+| BR-17-02 | Trạng thái đóng | Khi phiếu hỗ trợ đã chuyển sang `Resolved`, người dùng không thể tự chỉnh sửa nội dung |
+| BR-17-03 | Quyền bảo mật | API xem chi tiết `/api/support-tickets/{id}` chỉ cho phép chủ nhân của phiếu hỗ trợ hoặc tài khoản Staff/Admin truy cập |
 
 ---
 
@@ -93,7 +94,7 @@ Bước 7  [Backend]:    Cập nhật SupportTickets.status = 'Resolved' và lư
 
 ## 6. Sơ Đồ Tuần Tự (Sequence Diagram)
 
-### Luồng Gửi Ticket Hỗ Trợ
+### Luồng Gửi Phiếu Hỗ Trợ
 
 ```mermaid
 sequenceDiagram
@@ -110,7 +111,7 @@ sequenceDiagram
     STR-->>SS: SupportTicket
     SS-->>SC: success (Open)
     SC-->>FE: HTTP 200 OK
-    FE-->>U: Hiển thị mã ticket hỗ trợ
+    FE-->>U: Hiển thị mã phiếu hỗ trợ
 ```
 
 ---
@@ -120,9 +121,9 @@ sequenceDiagram
 | Phương thức | Endpoint | Mô tả |
 |:---|:---|:---|
 | `POST` | `/api/support-tickets` | Gửi yêu cầu hỗ trợ mới (Customer/Seller) |
-| `GET` | `/api/support-tickets` | Xem lịch sử danh sách ticket của bản thân |
-| `GET` | `/api/support-tickets/all` | Lấy danh sách ticket toàn hệ thống (Staff/Admin) |
-| `GET` | `/api/support-tickets/{id}` | Xem chi tiết ticket |
+| `GET` | `/api/support-tickets` | Xem lịch sử danh sách phiếu hỗ trợ của bản thân |
+| `GET` | `/api/support-tickets/all` | Lấy danh sách phiếu hỗ trợ toàn hệ thống (Staff/Admin) |
+| `GET` | `/api/support-tickets/{id}` | Xem chi tiết phiếu hỗ trợ |
 | `PUT` | `/api/support-tickets/{id}/status` | Cập nhật trạng thái và giải pháp (Staff/Admin) |
 
 ---
