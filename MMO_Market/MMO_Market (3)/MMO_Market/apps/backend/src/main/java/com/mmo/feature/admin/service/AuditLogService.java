@@ -41,14 +41,35 @@ public class AuditLogService {
     }
 
     @Transactional(readOnly = true)
-    public Map<String, Object> getAuditLogs(Long operatorId, String search, String action, int page, int size) {
+    public Map<String, Object> getAuditLogs(Long operatorId, String search, String action, String category, String startDateStr, String endDateStr, String sort, int page, int size) {
         // Enforce role authorization (Admin or Staff can view logs)
         User operator = requireAdminOrStaff(operatorId);
 
-        Pageable pageable = PageRequest.of(page, size);
+        java.time.LocalDateTime startAt = null;
+        java.time.LocalDateTime endAt = null;
+
+        if (startDateStr != null && !startDateStr.isBlank()) {
+            try {
+                startAt = java.time.LocalDate.parse(startDateStr.trim()).atStartOfDay();
+            } catch (Exception ignored) {}
+        }
+        if (endDateStr != null && !endDateStr.isBlank()) {
+            try {
+                endAt = java.time.LocalDate.parse(endDateStr.trim()).atTime(23, 59, 59);
+            } catch (Exception ignored) {}
+        }
+
+        org.springframework.data.domain.Sort.Direction direction = "ASC".equalsIgnoreCase(sort) 
+                ? org.springframework.data.domain.Sort.Direction.ASC 
+                : org.springframework.data.domain.Sort.Direction.DESC;
+
+        Pageable pageable = PageRequest.of(page, size, org.springframework.data.domain.Sort.by(direction, "createdAt"));
         Page<AuditLog> logPage = auditLogRepository.searchLogs(
+                (category == null || category.isBlank()) ? null : category,
                 (action == null || action.isBlank()) ? null : action,
                 (search == null || search.isBlank()) ? null : search.trim(),
+                startAt,
+                endAt,
                 pageable
         );
 
@@ -184,13 +205,34 @@ public class AuditLogService {
     }
 
     @Transactional(readOnly = true)
-    public byte[] exportAuditLogsCsv(Long operatorId, String search, String action) {
+    public byte[] exportAuditLogsCsv(Long operatorId, String search, String action, String category, String startDateStr, String endDateStr, String sort) {
         User operator = requireAdminOrStaff(operatorId);
 
-        Pageable pageable = PageRequest.of(0, 5000);
+        java.time.LocalDateTime startAt = null;
+        java.time.LocalDateTime endAt = null;
+
+        if (startDateStr != null && !startDateStr.isBlank()) {
+            try {
+                startAt = java.time.LocalDate.parse(startDateStr.trim()).atStartOfDay();
+            } catch (Exception ignored) {}
+        }
+        if (endDateStr != null && !endDateStr.isBlank()) {
+            try {
+                endAt = java.time.LocalDate.parse(endDateStr.trim()).atTime(23, 59, 59);
+            } catch (Exception ignored) {}
+        }
+
+        org.springframework.data.domain.Sort.Direction direction = "ASC".equalsIgnoreCase(sort) 
+                ? org.springframework.data.domain.Sort.Direction.ASC 
+                : org.springframework.data.domain.Sort.Direction.DESC;
+
+        Pageable pageable = PageRequest.of(0, 5000, org.springframework.data.domain.Sort.by(direction, "createdAt"));
         Page<AuditLog> logPage = auditLogRepository.searchLogs(
+                (category == null || category.isBlank()) ? null : category,
                 (action == null || action.isBlank()) ? null : action,
                 (search == null || search.isBlank()) ? null : search.trim(),
+                startAt,
+                endAt,
                 pageable
         );
 

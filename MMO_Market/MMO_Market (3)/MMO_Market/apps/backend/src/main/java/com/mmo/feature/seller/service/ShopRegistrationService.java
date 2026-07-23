@@ -33,9 +33,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.mmo.shared.dal.AuditLogRepository;
+import com.mmo.shared.model.AuditLog;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+
 @Service
 @EnableScheduling
+@Slf4j
 public class ShopRegistrationService {
+
+    @Autowired
+    private AuditLogRepository auditLogRepository;
 
     @Autowired
     private SellerRegistrationRepository sellerRegistrationRepository;
@@ -292,7 +301,35 @@ public class ShopRegistrationService {
                 .build();
         notificationRepository.save(resultNotif);
 
+        // Ghi AuditLog
+        Map<String, Object> diff = new HashMap<>();
+        diff.put("registrationId", registrationId);
+        diff.put("shopName", updated.getShopName());
+        diff.put("status", updated.getStatus());
+        if (updated.getRejectionReason() != null) {
+            diff.put("reason", updated.getRejectionReason());
+        }
+        String action = review.isApproved() ? "Shop_Approve" : "Shop_Reject";
+        String actionDesc = (review.isApproved() ? "Duyệt mở shop thành công: " : "Từ chối đăng ký mở shop: ") + updated.getShopName();
+        saveAuditLog(user, action, actionDesc, diff);
+
         return mapToDto(updated);
+    }
+
+    private void saveAuditLog(User operator, String action, String desc, Map<String, Object> diff) {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("desc", desc);
+            payload.put("diff", diff);
+            String jsonDetails = new ObjectMapper().writeValueAsString(payload);
+            auditLogRepository.save(AuditLog.builder()
+                    .userId(operator != null ? operator.getId() : 1L)
+                    .action(action)
+                    .details(jsonDetails)
+                    .build());
+        } catch (Exception e) {
+            log.error("Failed to save audit log: {}", e.getMessage());
+        }
     }
 
     private ShopRegistrationResponseDto mapToDto(SellerRegistration registration) {

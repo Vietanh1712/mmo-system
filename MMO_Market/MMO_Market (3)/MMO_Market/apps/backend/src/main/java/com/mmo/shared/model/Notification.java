@@ -42,6 +42,9 @@ public class Notification {
     @Column(name = "target_url", length = 500)
     private String targetUrl; // URL link for user redirection
 
+    @Column(length = 20)
+    private String status = "PUBLISHED"; // DRAFT, PUBLISHED
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
@@ -58,6 +61,9 @@ public class Notification {
         }
         if (severity == null) {
             severity = "INFO";
+        }
+        if (status == null) {
+            status = "PUBLISHED";
         }
     }
 }

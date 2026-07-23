@@ -21,8 +21,17 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.List;
 
+import com.mmo.shared.dal.AuditLogRepository;
+import com.mmo.shared.model.AuditLog;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class WithdrawalService {
+
+    @Autowired
+    private AuditLogRepository auditLogRepository;
 
     @Autowired
     private WalletService walletService;
@@ -78,12 +87,6 @@ public class WithdrawalService {
                     catch (NumberFormatException e) { return 1.5; }
                 }).orElse(1.5);
 
-        long minWithdrawFee = systemConfigurationRepository.findByConfigKey("MIN_WITHDRAW_FEE_VND")
-                .map(c -> {
-                    try { return Long.parseLong(c.getConfigValue()); }
-                    catch (NumberFormatException e) { return 10000L; }
-                }).orElse(10000L);
-
         long minWithdrawalLimit = systemConfigurationRepository.findByConfigKey("MIN_WITHDRAWAL_VND")
                 .map(c -> {
                     try { return Long.parseLong(c.getConfigValue()); }
@@ -96,7 +99,9 @@ public class WithdrawalService {
                     catch (NumberFormatException e) { return 50000000L; }
                 }).orElse(50000000L);
 
-        boolean requireWithdraw2FA = false; // Tắt yêu cầu OTP xác thực khi rút tiền
+        boolean requireWithdraw2FA = systemConfigurationRepository.findByConfigKey("REQUIRE_WITHDRAW_2FA")
+                .map(c -> Boolean.parseBoolean(c.getConfigValue()))
+                .orElse(false);
 
         // Validate amounts
         if (amount < minWithdrawalLimit) {
@@ -106,11 +111,8 @@ public class WithdrawalService {
             throw new IllegalArgumentException("Số tiền rút tối đa phải là " + String.format("%,d", maxWithdrawalLimit) + " VNĐ.");
         }
 
-        // Calculate fee
-        long fee = (long) (amount * (withdrawalFeePercent / 100.0));
-        if (fee < minWithdrawFee) {
-            fee = minWithdrawFee;
-        }
+        // Calculate fee purely based on percentage
+        long fee = withdrawalFeePercent > 0 ? (long) (amount * (withdrawalFeePercent / 100.0)) : 0L;
 
         long totalDeduction = amount + fee;
         if (seller.getBalanceVnd() == null || seller.getBalanceVnd() < totalDeduction) {
@@ -260,5 +262,33 @@ public class WithdrawalService {
         }
 
         withdrawalRepository.save(withdrawal);
+
+        // Ghi AuditLog
+        Map<String, Object> diff = new HashMap<>();
+        diff.put("withdrawalId", id);
+        diff.put("status", newStatus);
+        diff.put("amountVnd", withdrawal.getAmountVnd());
+        diff.put("feeVnd", withdrawal.getFeeVnd());
+        if (rejectionReason != null) {
+            diff.put("rejectionReason", rejectionReason);
+        }
+        String action = ("Approved".equalsIgnoreCase(newStatus) || "Completed".equalsIgnoreCase(newStatus)) ? "Fund_Withdraw" : "Withdrawal_Reject";
+        saveAuditLog(reviewer, action, "Xử lý yêu cầu rút tiền #WD-" + id + " (" + newStatus + ")" + (rejectionReason != null ? ": " + rejectionReason : ""), diff);
+    }
+
+    private void saveAuditLog(User operator, String action, String desc, Map<String, Object> diff) {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("desc", desc);
+            payload.put("diff", diff);
+            String jsonDetails = new ObjectMapper().writeValueAsString(payload);
+            auditLogRepository.save(AuditLog.builder()
+                    .userId(operator != null ? operator.getId() : 1L)
+                    .action(action)
+                    .details(jsonDetails)
+                    .build());
+        } catch (Exception e) {
+            log.error("Failed to save audit log: {}", e.getMessage());
+        }
     }
 }
