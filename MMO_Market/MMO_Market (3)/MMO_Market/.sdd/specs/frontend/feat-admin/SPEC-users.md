@@ -40,11 +40,14 @@ Giao diện Quản lý thành viên cho phép Admin tra cứu thông tin toàn b
 ├────────────────────────────────────────────────────────────────────────┤
 │  QUẢN LÝ TÀI KHOẢN                                     [+ Thêm Staff]  │
 │                                                                        │
-│  BỘ LỌC TÀI KHOẢN                                                      │
-│  ┌───────────────────────────────┐ ┌────────────────────────────────┐  │
-│  │[🔍 Tìm email, họ tên, sđt... ] │ │[Tất cả vai trò               ▾]│  │
-│  └───────────────────────────────┘ └────────────────────────────────┘  │
-│  [ Làm mới bộ lọc ]  [ Tìm kiếm ]                                      │
+│  BỘ LỌC TÀI KHOẢN (6 TRƯỜNG TẬP TRUNG)                                 │
+│  ┌────────────────────────┐ ┌───────────────┐ ┌─────────────────────┐  │
+│  │[🔍 Tìm email, họ tên...]│ │[Tất cả v.trò ▾]│ │[Tất cả t.thái     ▾]│  │
+│  └────────────────────────┘ └───────────────┘ └─────────────────────┘  │
+│  ┌────────────────────────┐ ┌───────────────┐ ┌─────────────────────┐  │
+│  │[📅 Từ ngày            ]│ │[📅 Đến ngày   ]│ │[⚡ Sắp xếp         ▾]│  │
+│  └────────────────────────┘ └───────────────┘ └─────────────────────┘  │
+│  [ Xóa bộ lọc ]  [ 🔍 Tìm kiếm ]                                       │
 │                                                                        │
 │  ┌─────┬──────┬─────────────────┬──────────┬──────────┬────────┬──────┐│
 │  │ STT │ Mã   │ Thành viên      │ Vai trò  │ Wallet   │ T.Thái │ T.Tác││
@@ -81,7 +84,8 @@ Giao diện Quản lý thành viên cho phép Admin tra cứu thông tin toàn b
 ## 4. CÁC THÀNH PHẦN GIAO DIỆN CHÍNH
 
 ### 4.1 Danh sách thành viên — `#usersBody`
-* Bảng hiển thị thông tin STT, ID người dùng, Cột Thành viên (chứa ảnh đại diện avatar tròn cỡ nhỏ sinh từ chữ cái đầu tiên của họ tên, email, tên hiển thị), Vai trò (badge màu sắc), Cờ xác thực KYC, Số dư ví, Ngày tạo, Nút Toggle Switch trạng thái hoạt động của tài khoản (xanh lá nếu active, xám nếu bị khóa), và Nút hành động "Sửa" hoặc "Xóa".
+* Bảng hiển thị thông tin: **STT**, **Mã người dùng**, **Thành viên** (chứa ảnh đại diện avatar tròn, email, tên hiển thị), **Vai trò** (badge màu sắc), **Ví tiền mặt**, **Trạng thái** (Toggle switch hoạt động/khóa), và **Thao tác** (Biểu tượng con mắt cho Xem/Sửa, Nút Khóa/Mở khóa).
+* *Lưu ý:* Cột "Xác thực" đã được loại bỏ theo yêu cầu thiết kế để đơn giản hóa giao diện.
 
 ### 4.2 Form thêm/sửa Staff — `#accountForm`
 * Form điền thông tin đăng nhập (Email, Mật khẩu) và thông tin cá nhân (Họ tên, SĐT, CCCD, Ngày sinh, Giới tính, Địa chỉ).
