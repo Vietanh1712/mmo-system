@@ -56,7 +56,9 @@ Triển khai quy trình đăng ký gian hàng trực tuyến (Shop) dành cho ng
   - `GET /me`: Lấy thông tin đăng ký shop cá nhân.
 - **`SellerController`** (MVC `@RequestMapping("/seller")`):
   - Render giao diện Seller Console (`/dashboard`, `/products`, `/orders`, `/wallet`, `/settings`).
-  - Được bảo vệ bằng `@PreAuthorize("hasRole('SELLER')")` tại class level hoặc method level.
+  - API `GET /api/v1/seller/shop-info`: Trả về thông tin Shop, cấp độ Shop, ngân hàng và mốc thời gian tạm ngưng `suspendedUntil`. Tự động khôi phục trạng thái `Active` khi quá hạn.
+  - API `PUT /api/v1/seller/shop-status`: Cho phép thay đổi trạng thái hoạt động `Active` / `Suspended` (rào chắn đối với Shop bị hạn chế `Banned` / `Locked`).
+  - Áp dụng phương thức repository an toàn `findFirstByUserAndIsDeleteFalseOrderByIdDesc` cho `SellerRegistrationRepository` và `SellerBankInfoRepository` tránh lỗi `NonUniqueResultException` khi có nhiều bản ghi lịch sử.
 
 ---
 

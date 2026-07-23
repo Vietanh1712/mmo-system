@@ -21,6 +21,11 @@ Staff là lực lượng hỗ trợ vận hành hệ thống MMO Market. Họ c�
 - **FR-STAF-03**: WHEN Staff processes a Dispute (Complaint), THE SYSTEM SHALL allow Staff to view chat history between Customer and Seller, and view the delivered Digital Asset.
 - **FR-STAF-04**: WHEN Staff resolves a Dispute in favor of the Customer, THE SYSTEM SHALL refund the escrow balance to the Customer and update Order status to `REFUNDED`.
 - **FR-STAF-05**: WHEN Staff resolves a Dispute in favor of the Seller, THE SYSTEM SHALL release the escrow balance to the Seller and update Order status to `COMPLETED`.
+- **FR-STAF-06**: WHEN Staff views the detailed KYC request page, THE SYSTEM SHALL display the verification status badge at the top-right corner of the submitter information card header.
+- **FR-STAF-07**: WHEN Staff views the detailed Shop registration page, THE SYSTEM SHALL display the store approval status badge at the top-right corner of the shop information card header.
+- **FR-STAF-08**: WHEN Staff manages shop account statuses, THE SYSTEM SHALL support 5 distinct status options with Vietnamese labels: Active ("Hoạt động"), Suspended ("Tạm ngưng"), Locked ("Tạm khóa"), Banned ("Khóa vĩnh viễn"), and Withdrawn ("Đã đóng Shop (Hoàn cọc)").
+- **FR-STAF-09**: WHEN Staff processes support tickets (UC-17), THE SYSTEM SHALL allow Staff to view ticket lists, respond with solutions, and update ticket statuses (`OPEN`, `IN_PROGRESS`, `RESOLVED`, `CLOSED`).
+- **FR-STAF-10**: WHEN Staff selects "Tạm ngưng" (Suspended) status for a shop, THE SYSTEM SHALL open a popup to specify expiration date, hour, and minute (`suspendedUntil`), and automatically reinstate the shop to Active status upon expiration with real-time countdown timer display.
 
 ---
 

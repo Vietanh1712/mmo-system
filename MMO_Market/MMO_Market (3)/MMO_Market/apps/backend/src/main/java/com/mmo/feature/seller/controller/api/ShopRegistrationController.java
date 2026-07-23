@@ -118,9 +118,10 @@ public class ShopRegistrationController {
     @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<ShopRegistrationResponseDto> updateShopStatus(
             @PathVariable Long id,
-            @RequestParam String status) {
+            @RequestParam String status,
+            @RequestParam(required = false) String suspendedUntil) {
         try {
-            ShopRegistrationResponseDto response = shopRegistrationService.updateShopStatus(id, status);
+            ShopRegistrationResponseDto response = shopRegistrationService.updateShopStatus(id, status, suspendedUntil);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(ShopRegistrationResponseDto.builder().status("ERROR").description(e.getMessage()).build());

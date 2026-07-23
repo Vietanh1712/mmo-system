@@ -84,7 +84,7 @@ public class WalletController {
         try {
             User user = userRepository.findByIdAndIsDeleteFalse(userId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng."));
-            SellerBankInfo bank = sellerBankInfoRepository.findByUserAndIsDeleteFalse(user).orElse(null);
+            SellerBankInfo bank = sellerBankInfoRepository.findFirstByUserAndIsDeleteFalseOrderByIdDesc(user).orElse(null);
 
             Map<String, Object> result = new HashMap<>();
             result.put("bankName", bank != null ? bank.getBankName() : "");
@@ -111,7 +111,7 @@ public class WalletController {
                 return ResponseEntity.badRequest().body(Map.of("message", "Tên ngân hàng và số tài khoản không được để trống."));
             }
 
-            SellerBankInfo bank = sellerBankInfoRepository.findByUserAndIsDeleteFalse(user)
+            SellerBankInfo bank = sellerBankInfoRepository.findFirstByUserAndIsDeleteFalseOrderByIdDesc(user)
                     .orElse(new SellerBankInfo());
             bank.setUser(user);
             bank.setBankName(bankName);

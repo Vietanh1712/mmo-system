@@ -49,6 +49,9 @@ Người dùng đã hoàn thành KYC thành công có nhu cầu kinh doanh sản
 | **FR-SELL-14** | THE SYSTEM SHALL allow a Seller to view complaints raised against them, view complaint details (with chat history), and send chat messages within an active complaint. |
 | **FR-SELL-15** | THE SYSTEM SHALL allow a Seller to view all reviews left on their products (read-only). |
 | **FR-SELL-16** | THE SYSTEM SHALL allow a Seller to view all shop flags (violations) recorded against their shop (read-only). |
+| **FR-SELL-17** | WHEN a Seller queries `GET /api/v1/seller/shop-info`, THE SYSTEM SHALL return current shop status, shop level, bank info, and suspension deadline (`suspendedUntil`), automatically resetting `shopStatus` to `Active` when `suspendedUntil` has expired. |
+| **FR-SELL-18** | WHEN a Seller requests `PUT /api/v1/seller/shop-status`, THE SYSTEM SHALL allow toggling between `Active` and `Suspended`, while denying status changes if the shop status is `Banned` or `Locked`. |
+| **FR-SELL-19** | THE SYSTEM SHALL use safest-record query methods (`findFirstByUserAndIsDeleteFalseOrderByIdDesc`) when reading seller registrations or bank info to prevent duplicate result exceptions. |
 
 ---
 

@@ -125,7 +125,7 @@ public class WithdrawalService {
             authenticationService.verifyWithdrawalOtp(seller.getId(), otp.trim());
         }
 
-        SellerBankInfo bank = sellerBankInfoRepository.findByUserAndIsDeleteFalse(seller)
+        SellerBankInfo bank = sellerBankInfoRepository.findFirstByUserAndIsDeleteFalseOrderByIdDesc(seller)
                 .orElseThrow(() -> new IllegalArgumentException("Vui lòng cấu hình thông tin ngân hàng trước khi rút tiền."));
 
         // Deduct total balance (amount + fee) and save

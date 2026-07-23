@@ -75,15 +75,15 @@
                         <p class="staff-stat-card__value" id="stat-banned-shops">0</p>
                     </div>
                     <div class="ds-card staff-stat-card yellow">
-                        <p class="staff-stat-card__label">Shop khóa vô thời hạn</p>
+                        <p class="staff-stat-card__label">Shop tạm khóa</p>
                         <p class="staff-stat-card__value" id="stat-locked-shops">0</p>
                     </div>
                     <div class="ds-card staff-stat-card orange" style="border-left: 4px solid #e67e22 !important;">
-                        <p class="staff-stat-card__label">Shop khóa có thời hạn</p>
+                        <p class="staff-stat-card__label">Shop tạm ngưng</p>
                         <p class="staff-stat-card__value" id="stat-suspended-shops">0</p>
                     </div>
                     <div class="ds-card staff-stat-card gray" style="border-left: 4px solid #7f8c8d !important;">
-                        <p class="staff-stat-card__label">Xóa Shop</p>
+                        <p class="staff-stat-card__label">Đã đóng Shop (Hoàn cọc)</p>
                         <p class="staff-stat-card__value" id="stat-withdrawn-shops">0</p>
                     </div>
                 </div>
@@ -95,9 +95,11 @@
                             <input class="ds-input" type="text" id="shopKeywordFilter" placeholder="Tìm theo mã, tên shop, email...">
                             <select class="ds-input" id="shopAccountStatusFilter">
                                 <option value="">Trạng thái Shop (Tất cả)</option>
-                                <option value="PENDING">Chờ kích hoạt</option>
-                                <option value="ACTIVE">Đang hoạt động</option>
-                                <option value="BANNED">Đang bị khóa</option>
+                                <option value="Active">Hoạt động</option>
+                                <option value="Suspended">Tạm ngưng</option>
+                                <option value="Locked">Tạm khóa</option>
+                                <option value="Banned">Khóa vĩnh viễn</option>
+                                <option value="Withdrawn">Đã đóng Shop (Hoàn cọc)</option>
                             </select>
                         </div>
                         <div class="ds-filter-actions">

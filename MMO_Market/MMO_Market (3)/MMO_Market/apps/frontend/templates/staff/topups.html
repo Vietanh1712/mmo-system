@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Quản lý nạp tiền')}"></th:block>
+    <style>
+        .topup-modal-backdrop {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        .topup-modal-backdrop.is-open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .topup-modal {
+            background: #ffffff;
+            border-radius: var(--ds-radius-md, 12px);
+            width: 100%;
+            max-width: 520px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            overflow: hidden;
+            transform: translateY(10px);
+            transition: transform 0.2s ease;
+        }
+        .topup-modal-backdrop.is-open .topup-modal {
+            transform: translateY(0);
+        }
+        .topup-modal-header {
+            padding: 18px 24px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .topup-modal-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #0f172a;
+            margin: 0;
+        }
+        .topup-modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #64748b;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+        .topup-modal-body {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .topup-modal-info {
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 13.5px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .topup-modal-footer {
+            padding: 16px 24px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('topups')}"></aside>
+
+            <section class="ds-section">
+                <div class="staff-page-header">
+                    <div>
+                        <h1 class="ds-page-title">Quản lý nạp tiền</h1>
+                        <p class="ds-page-subtitle">Theo dõi, đối chiếu và can thiệp kích hoạt thủ công các giao dịch nạp tiền từ cổng SePay.</p>
+                    </div>
+                </div>
+
+                <!-- Stat Cards -->
+                <div class="staff-stat-grid staff-stat-grid--4cols">
+                    <div class="ds-card staff-stat-card blue">
+                        <p class="staff-stat-card__label">Tổng giao dịch nạp</p>
+                        <p class="staff-stat-card__value" id="stat-total-topups">0</p>
+                    </div>
+                    <div class="ds-card staff-stat-card green">
+                        <p class="staff-stat-card__label">Thành công</p>
+                        <p class="staff-stat-card__value" id="stat-success-topups">0</p>
+                    </div>
+                    <div class="ds-card staff-stat-card red">
+                        <p class="staff-stat-card__label">Thất bại (Cần xử lý)</p>
+                        <p class="staff-stat-card__value" id="stat-failed-topups">0</p>
+                    </div>
+                    <div class="ds-card staff-stat-card yellow" style="border-left: 4px solid #f59e0b !important;">
+                        <p class="staff-stat-card__label">Chờ xử lý</p>
+                        <p class="staff-stat-card__value" id="stat-pending-topups">0</p>
+                    </div>
+                </div>
+
+                <!-- Filter Panel -->
+                <div class="ds-card">
+                    <div class="ds-filter-panel">
+                        <h2 class="ds-card-title">Bộ lọc nạp tiền</h2>
+                        <div class="ds-filter-grid">
+                            <input class="ds-input" type="text" id="topupKeywordFilter" placeholder="Tìm theo mã GD, mã SePay, nội dung CK, User ID...">
+                            <select class="ds-input" id="topupStatusFilter">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="Success">Thành công</option>
+                                <option value="Failed">Thất bại</option>
+                                <option value="Pending">Chờ xử lý</option>
+                            </select>
+                        </div>
+                        <div class="ds-filter-actions">
+                            <button class="ds-btn ds-btn-secondary" type="button" id="topupResetBtn">Làm mới bộ lọc</button>
+                            <button class="ds-btn ds-btn-primary" type="button" id="topupSearchBtn">Tìm kiếm</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table List -->
+                <div class="ds-card">
+                    <div class="ds-table-wrap">
+                        <table class="ds-table">
+                            <thead>
+                            <tr>
+                                <th class="ds-table-center" style="width: 60px;">STT</th>
+                                <th>Mã GD</th>
+                                <th>Mã SePay</th>
+                                <th>Người nạp</th>
+                                <th class="ds-table-right">Số tiền</th>
+                                <th>Nội dung chuyển khoản</th>
+                                <th class="ds-table-center">Trạng thái</th>
+                                <th>Ngày tạo</th>
+                                <th class="ds-table-center" style="width: 110px;">Thao tác</th>
+                            </tr>
+                            </thead>
+                            <tbody id="topupsTableBody">
+                            <tr>
+                                <td colspan="9" class="ds-table-center">Đang tải dữ liệu...</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="topupsPagination"></div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<!-- Modal Thử lại / Kích hoạt nạp tiền thủ công -->
+<div class="topup-modal-backdrop" id="retryTopupModal">
+    <div class="topup-modal">
+        <div class="topup-modal-header">
+            <h3 class="topup-modal-title"><i class="fa fa-refresh" style="color: #f59e0b; margin-right: 8px;"></i> Duyệt & Kích hoạt nạp tiền thủ công</h3>
+            <button class="topup-modal-close" onclick="closeRetryModal()">&times;</button>
+        </div>
+        <div class="topup-modal-body">
+            <div class="topup-modal-info">
+                <div><strong>Mã giao dịch nạp:</strong> <span id="modalTopupId">-</span></div>
+                <div><strong>Mã SePay:</strong> <span id="modalSepayCode" style="font-family: monospace; color: #2563eb;">-</span></div>
+                <div><strong>Số tiền nạp:</strong> <span id="modalAmount" style="font-weight: 700; color: #059669;">-</span></div>
+                <div><strong>Nội dung CK gốc:</strong> <span id="modalRawContent" style="font-family: monospace; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">-</span></div>
+                <div id="modalFailureReasonBox" style="color: #dc2626; margin-top: 4px;"><strong>Lý do thất bại:</strong> <span id="modalFailureReason">-</span></div>
+            </div>
+
+            <div>
+                <label for="modalTargetUserId" style="display: block; font-weight: 600; font-size: 13.5px; margin-bottom: 6px; color: #1e293b;">
+                    User ID cần cộng tiền <span style="color: #dc2626;">*</span>
+                </label>
+                <input type="number" id="modalTargetUserId" class="ds-input" style="width: 100%; box-sizing: border-box;" placeholder="Nhập chính xác ID người dùng (VD: 17)">
+                <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">Đối chiếu kỹ ID tài khoản khách hàng trước khi bấm duyệt cộng tiền.</small>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="modalSkipMinCheck" style="width: 16px; height: 16px; cursor: pointer;">
+                <label for="modalSkipMinCheck" style="font-size: 13.5px; color: #334155; cursor: pointer; user-select: none;">
+                    Bỏ qua kiểm tra hạn mức nạp tối thiểu (Duyệt nạp số tiền nhỏ)
+                </label>
+            </div>
+
+            <div>
+                <label for="modalStaffNote" style="display: block; font-weight: 600; font-size: 13.5px; margin-bottom: 6px; color: #1e293b;">
+                    Ghi chú xử lý của Staff <span style="color: #dc2626;">*</span>
+                </label>
+                <textarea id="modalStaffNote" class="ds-input" style="width: 100%; height: 75px; box-sizing: border-box; resize: vertical; padding: 8px 12px;" placeholder="Ví dụ: Khách gõ nhầm nội dung chuyển khoản, đã đối chiếu bill chuyển tiền ngân hàng khớp 100%."></textarea>
+            </div>
+        </div>
+        <div class="topup-modal-footer">
+            <button class="ds-btn ds-btn-secondary" type="button" onclick="closeRetryModal()">Hủy bỏ</button>
+            <button class="ds-btn ds-btn-primary" type="button" id="confirmRetryBtn" style="background: #059669; border-color: #059669;">
+                <i class="fa fa-check-circle"></i> Xác nhận kích hoạt
+            </button>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/customer/auth.js}"></script>
+<script th:src="@{/js/staff/staff-ui.js}"></script>
+<script th:src="@{/js/staff/staff-topups.js}"></script>
+</body>
+</html>
