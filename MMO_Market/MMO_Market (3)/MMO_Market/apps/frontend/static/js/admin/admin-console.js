@@ -289,8 +289,18 @@
         document.getElementById('accountsResetFilter')?.addEventListener('click', () => {
             const search = document.getElementById('searchInput');
             const role = document.getElementById('roleFilter');
+            const status = document.getElementById('accountStatusFilter');
+            const startDate = document.getElementById('accountStartDate');
+            const endDate = document.getElementById('accountEndDate');
+            const sort = document.getElementById('accountSortOrder');
+
             if (search) search.value = '';
             if (role) role.value = '';
+            if (status) status.value = '';
+            if (startDate) startDate.value = '';
+            if (endDate) endDate.value = '';
+            if (sort) sort.value = 'DESC';
+
             currentPage = 0;
             loadUsers();
         });
@@ -999,8 +1009,21 @@
                 params.set('name', keyword);
             }
         }
-        const roleVal = document.getElementById('roleFilter').value;
+        const roleVal = document.getElementById('roleFilter')?.value;
         if (roleVal) params.set('role', roleVal);
+
+        const statusVal = document.getElementById('accountStatusFilter')?.value;
+        if (statusVal) params.set('status', statusVal);
+
+        const startDate = document.getElementById('accountStartDate')?.value;
+        if (startDate) params.set('startDate', startDate);
+
+        const endDate = document.getElementById('accountEndDate')?.value;
+        if (endDate) params.set('endDate', endDate);
+
+        const sortOrder = document.getElementById('accountSortOrder')?.value || 'DESC';
+        params.set('sort', sortOrder);
+
         try {
             const response = await authFetch(`${ENDPOINT}/users?${params.toString()}`);
             const data = await response.json();
@@ -1014,7 +1037,7 @@
             loadDashboard();
         } catch (error) {
             document.getElementById('usersBody').innerHTML =
-                `<tr><td colspan="9" class="ds-empty-state">${escapeHtml(error.message)}</td></tr>`;
+                `<tr><td colspan="8" class="ds-empty-state">${escapeHtml(error.message)}</td></tr>`;
             showToast(error.message, true);
         }
     }
@@ -1022,7 +1045,7 @@
     function renderUsers(list) {
         const tbody = document.getElementById('usersBody');
         if (!list.length) {
-            tbody.innerHTML = '<tr><td colspan="9" class="ds-empty-state">Không tìm thấy tài khoản.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="ds-empty-state">Không tìm thấy tài khoản phù hợp.</td></tr>';
             return;
         }
         tbody.innerHTML = list.map((user, index) => {
@@ -1049,7 +1072,6 @@
                         </div>
                     </td>
                     <td class="ds-table-center"><span class="ds-badge ${roleBadgeClass(role)}">${escapeHtml(roleLabel(role))}</span></td>
-                    <td class="ds-table-center"><span class="ds-badge ${user.isVerified ? 'ds-badge-success' : 'ds-badge-warning'}">${user.isVerified ? 'Đã xác thực' : 'Chưa xác thực'}</span></td>
                     <td><span class="ds-money">${balance}</span></td>
                     <td>${createdAt}</td>
                     <td class="ds-table-center">${statusToggleCell(user, self)}</td>
@@ -2134,6 +2156,67 @@
             }
         } catch (error) {
             showToast('Lỗi kết nối khi lưu cấu hình.', true);
+        }
+    };
+
+    async function loadCommissionsForm() {
+        try {
+            const response = await authFetch('/admin/system-config');
+            if (!response.ok) {
+                showToast('Không thể tải cấu hình phí & hoa hồng từ máy chủ.', true);
+                return;
+            }
+            const data = await response.json();
+            const cm = data.commissions;
+
+            mock.systemConfig = data.systemConfig;
+            mock.commissions = cm;
+            saveMock();
+
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.value = val;
+            };
+            setVal('commBasePercent', cm.basePercent ?? 5.0);
+            setVal('commWithdrawPercent', cm.withdrawalPercent ?? 1.5);
+            setVal('commShopOpeningFee', formatNumberWithDots(cm.shopOpeningFee ?? 50000));
+            setVal('commMinWithdrawLimit', formatNumberWithDots(cm.minWithdrawLimit ?? 50000));
+            setVal('commMaxWithdrawLimit', formatNumberWithDots(cm.maxWithdrawLimit ?? 50000000));
+            setVal('commMinDepositLimit', formatNumberWithDots(cm.minDepositLimit ?? 10000));
+            setVal('commMaxDepositLimit', formatNumberWithDots(cm.maxDepositLimit ?? 50000000));
+        } catch (error) {
+            showToast('Lỗi kết nối khi tải cấu hình hoa hồng.', true);
+        }
+    }
+
+    window.AdminConsole.saveCommissions = async function () {
+        const payload = {
+            basePercent: Number(document.getElementById('commBasePercent')?.value || 0),
+            withdrawalPercent: Number(document.getElementById('commWithdrawPercent')?.value || 0),
+            shopOpeningFee: stripDots(document.getElementById('commShopOpeningFee')?.value),
+            minWithdrawLimit: stripDots(document.getElementById('commMinWithdrawLimit')?.value),
+            maxWithdrawLimit: stripDots(document.getElementById('commMaxWithdrawLimit')?.value),
+            minDepositLimit: stripDots(document.getElementById('commMinDepositLimit')?.value),
+            maxDepositLimit: stripDots(document.getElementById('commMaxDepositLimit')?.value)
+        };
+        try {
+            const response = await authFetch('/admin/system-config/commissions', {
+                method: 'PUT',
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                mock.commissions = {
+                    ...mock.commissions,
+                    ...payload
+                };
+                saveMock();
+                showToast(data.message || 'Đã lưu cấu hình phí & hoa hồng.');
+            } else {
+                showToast(data.message || 'Không thể lưu cấu hình phí & hoa hồng.', true);
+            }
+        } catch (error) {
+            showToast('Lỗi kết nối khi lưu cấu hình hoa hồng.', true);
         }
     };
 

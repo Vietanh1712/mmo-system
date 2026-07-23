@@ -5,13 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3774095d-75a5-4e85-8d90-c44869881034" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/frontend/feat-admin/SPEC-notifications.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/frontend/feat-admin/SPEC-notifications.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/notification/controller/NotificationController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/notification/controller/NotificationController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/notification/service/NotificationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/notification/service/NotificationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/NotificationRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/NotificationRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/model/Notification.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/model/Notification.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/feature/notification/service/NotificationServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/feature/notification/service/NotificationServiceTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/admin/admin-console.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/admin/admin-console.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/apps/frontend/templates/admin/users.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/admin/users.html" afterDir="false" />
     </list>
@@ -580,7 +573,7 @@
       <workItem from="1781534531153" duration="1036000" />
       <workItem from="1784736789890" duration="242000" />
       <workItem from="1784737042955" duration="3177000" />
-      <workItem from="1784794332570" duration="3672000" />
+      <workItem from="1784794332570" duration="4250000" />
     </task>
     <servers />
   </component>
