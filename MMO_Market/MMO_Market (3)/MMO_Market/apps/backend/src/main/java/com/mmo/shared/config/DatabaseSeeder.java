@@ -9,6 +9,7 @@ import com.mmo.shared.model.Permission;
 import com.mmo.shared.model.Product;
 import com.mmo.shared.model.User;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,15 +26,18 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     public DatabaseSeeder(PermissionRepository permissionRepository,
                           UserRepository userRepository,
                           CategoryRepository categoryRepository,
-                          ProductRepository productRepository) {
+                          ProductRepository productRepository,
+                          JdbcTemplate jdbcTemplate) {
         this.permissionRepository = permissionRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.productRepository = productRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override

@@ -150,9 +150,9 @@
         if (stUpper === 'REJECTED') return '<span class="ds-badge ds-badge-danger">Bị từ chối</span>';
         
         // 4 new statuses mapping
-        if (stUpper === 'WITHDRAWN' || stUpper === 'DELETED') return '<span class="ds-badge ds-badge-danger">Xóa Shop (Rút tiền cọc)</span>';
-        if (stUpper === 'SUSPENDED' || stUpper === 'TEMP_LOCKED') return '<span class="ds-badge ds-badge-warning">Khóa có thời hạn</span>';
-        if (stUpper === 'LOCKED' || stUpper === 'INDEFINITE_LOCKED') return '<span class="ds-badge ds-badge-warning">Khóa vô thời hạn</span>';
+        if (stUpper === 'WITHDRAWN' || stUpper === 'DELETED') return '<span class="ds-badge ds-badge-danger">Đã đóng Shop (Hoàn cọc)</span>';
+        if (stUpper === 'SUSPENDED' || stUpper === 'TEMP_LOCKED') return '<span class="ds-badge ds-badge-warning">Tạm ngưng</span>';
+        if (stUpper === 'LOCKED' || stUpper === 'INDEFINITE_LOCKED') return '<span class="ds-badge ds-badge-warning">Tạm khóa</span>';
         if (stUpper === 'BANNED' || stUpper === 'PERMANENT_BANNED') return '<span class="ds-badge ds-badge-danger">Khóa vĩnh viễn</span>';
         
         return `<span class="ds-badge ds-badge-info">${shopStatus}</span>`;
@@ -209,11 +209,11 @@
                     } else if (stUpper === 'REJECTED') {
                         label = 'Bị từ chối';
                     } else if (stUpper === 'WITHDRAWN' || stUpper === 'DELETED') {
-                        label = 'Xóa Shop (Rút tiền cọc)';
+                        label = 'Đã đóng Shop (Hoàn cọc)';
                     } else if (stUpper === 'SUSPENDED' || stUpper === 'TEMP_LOCKED') {
-                        label = 'Khóa có thời hạn';
+                        label = 'Tạm ngưng';
                     } else if (stUpper === 'LOCKED' || stUpper === 'INDEFINITE_LOCKED') {
-                        label = 'Khóa vô thời hạn';
+                        label = 'Tạm khóa';
                     } else if (stUpper === 'BANNED' || stUpper === 'PERMANENT_BANNED') {
                         label = 'Khóa vĩnh viễn';
                     }
