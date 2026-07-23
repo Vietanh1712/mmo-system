@@ -1479,6 +1479,20 @@
         // Chat Shop Handler
         function chatShop() {
             if (selectedProduct && selectedProduct.sellerId) {
+                const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user");
+                if (userString) {
+                    try {
+                        const user = JSON.parse(userString);
+                        if (user && Number(user.id) === Number(selectedProduct.sellerId)) {
+                            if (typeof window.showWarningToast === 'function') {
+                                window.showWarningToast("Bạn không thể nhắn tin cho chính mình.");
+                            } else {
+                                alert("Bạn không thể nhắn tin cho chính mình.");
+                            }
+                            return;
+                        }
+                    } catch(e){}
+                }
                 window.location.href = `/messages?sellerId=${selectedProduct.sellerId}&productId=${selectedProduct.id}`;
             } else {
                 window.location.href = `/messages?sellerId=14`;

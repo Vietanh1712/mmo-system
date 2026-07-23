@@ -423,6 +423,7 @@
                 const cb = document.querySelector(`input[name="rating-filter"][value="${val}"]`);
                 if (cb) cb.checked = true;
             });
+        }
         async function initCategoryFilterDropdown() {
             const catSelect = document.getElementById('category-filter');
             if (!catSelect) return;

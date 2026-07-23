@@ -247,6 +247,20 @@
 
         // Redirect to chat with current seller
         function goToShopChat() {
+            const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user");
+            if (userString) {
+                try {
+                    const user = JSON.parse(userString);
+                    if (user && Number(user.id) === Number(SELLER_ID)) {
+                        if (typeof showWarningToast === 'function') {
+                            showWarningToast("Bạn không thể nhắn tin cho chính mình.");
+                        } else {
+                            alert("Bạn không thể nhắn tin cho chính mình.");
+                        }
+                        return;
+                    }
+                } catch(e){}
+            }
             window.location.href = `/messages?sellerId=${SELLER_ID}`;
         }
 
