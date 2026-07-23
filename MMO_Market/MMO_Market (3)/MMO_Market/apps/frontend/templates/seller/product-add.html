@@ -387,6 +387,46 @@
                         <small class="profile-edit-form__hint">Kích thước khuyến nghị: 600x600px. Tối đa 2MB.</small>
                     </div>
 
+                    <!-- Section 2: Product Type Selection (Hidden, Auto-selected via JS) -->
+                    <div id="productTypeSection" style="display: none;">
+                        <div class="form-section-title">Loại sản phẩm <span style="color: #ef4444;">*</span></div>
+                        <p class="profile-edit-form__hint">Chọn loại sản phẩm để xác định các thông tin kho cần nhập</p>
+    
+                        <div class="product-type-selector">
+                            <div class="product-type-option">
+                                <input type="radio" id="typeAccount" name="productType" value="ACCOUNT" required checked>
+                                <label for="typeAccount">
+                                    <div class="product-type-icon"><i class="fa fa-user-circle"></i></div>
+                                    <div class="product-type-name">Tài khoản</div>
+                                </label>
+                            </div>
+    
+                            <div class="product-type-option">
+                                <input type="radio" id="typeKey" name="productType" value="KEY">
+                                <label for="typeKey">
+                                    <div class="product-type-icon"><i class="fa fa-key"></i></div>
+                                    <div class="product-type-name">Mã Key</div>
+                                </label>
+                            </div>
+    
+                            <div class="product-type-option">
+                                <input type="radio" id="typeGameCard" name="productType" value="GAME_CARD">
+                                <label for="typeGameCard">
+                                    <div class="product-type-icon"><i class="fa fa-credit-card"></i></div>
+                                    <div class="product-type-name">Thẻ nạp</div>
+                                </label>
+                            </div>
+    
+                            <div class="product-type-option">
+                                <input type="radio" id="typeService" name="productType" value="SERVICE">
+                                <label for="typeService">
+                                    <div class="product-type-icon"><i class="fa fa-wrench"></i></div>
+                                    <div class="product-type-name">Dịch vụ</div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Section 3: Description -->
                     <div class="form-section-title">Mô tả</div>
 
@@ -430,7 +470,7 @@
     </main>
 
     <script th:src="@{/js/customer/auth.js}"></script>
-    <script th:src="@{/js/seller/seller-console.js}"></script>
+    <script th:src="@{/js/seller/seller-console.js(v=1.2)}"></script>
     <script>
 
 

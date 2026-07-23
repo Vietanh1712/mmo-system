@@ -144,7 +144,7 @@ function startBalancePolling(topupAmount) {
 
     pollingInterval = setInterval(async () => {
         try {
-            const response = await authFetch('/v1/profile');
+            const response = await authFetch('/v1/profile?t=' + new Date().getTime());
             if (response.ok) {
                 const profile = await response.json();
                 const currentBalance = profile.balanceVnd || 0;
@@ -162,6 +162,10 @@ function startBalancePolling(topupAmount) {
                     if (badge) {
                         badge.textContent = 'Thành công';
                         badge.className = 'ds-badge ds-badge-success';
+                    }
+
+                    if (accountSidebar && topupProfile) {
+                        accountSidebar.render(topupProfile);
                     }
 
                     // Cập nhật số dư mới vào sessionStorage và localStorage

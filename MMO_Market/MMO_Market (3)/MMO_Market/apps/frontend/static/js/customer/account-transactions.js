@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
 
 let accountSidebar = null;
 let walletTransactions = [];
@@ -239,6 +239,7 @@ function renderTransactions() {
             <td>${formatTransactionType(transaction.type)}</td>
             <td class="transactions-description">${escapeHtml(transaction.description || getDefaultDescription(transaction.type))}</td>
             <td><span class="transactions-amount ${getAmountClass(transaction)}">${formatSignedMoney(transaction)}</span></td>
+            <td><span class="transactions-balance">${typeof formatMoney === 'function' ? formatMoney(transaction.balanceAfter || 0) : (transaction.balanceAfter || 0) + 'đ'}</span></td>
             <td class="ds-table-center">
                 <span class="ds-badge ${getStatusBadgeClass(transaction.status)}">${formatStatus(transaction.status)}</span>
             </td>
@@ -417,7 +418,7 @@ function formatTransactionType(type) {
         TOPUP: 'Nạp tiền',
         PAYMENT: 'Thanh toán',
         REFUND: 'Hoàn tiền',
-        ESCROW: 'Escrow',
+        ESCROW: 'Tạm giữ',
         WITHDRAWAL: 'Rút tiền'
     };
     return map[type] || type || '-';
@@ -428,7 +429,7 @@ function getDefaultDescription(type) {
         TOPUP: 'Nạp tiền vào ví',
         PAYMENT: 'Thanh toán đơn hàng',
         REFUND: 'Hoàn tiền',
-        ESCROW: 'Giao dịch escrow',
+        ESCROW: 'Giao dịch tạm giữ',
         WITHDRAWAL: 'Rút tiền khỏi ví'
     };
     return map[type] || 'Giao dịch ví';

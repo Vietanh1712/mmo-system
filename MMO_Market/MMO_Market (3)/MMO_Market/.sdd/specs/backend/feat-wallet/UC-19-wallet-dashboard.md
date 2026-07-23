@@ -48,7 +48,7 @@ Bước 4  [Backend]:    Tính toán `totalTopup`, `totalSpent`, `pendingCount`,
                        Trả về WalletStatsDto.
 Bước 5  [Frontend]:   GET /api/v1/wallet/transactions?page=0&size=10&keyword=&type=&status=&fromDate=&toDate=
 Bước 6  [Backend]:    Lấy danh sách WalletTransaction của user, kết hợp bộ lọc (tìm kiếm, loại, trạng thái, thời gian) và phân trang.
-                       Trả về Page<WalletTransactionDto>.
+                       Trả về Page<WalletTransactionDto> (bao gồm thuộc tính balanceAfter).
 Bước 7  [Frontend]:   Hiển thị số dư khả dụng, các khối Thao tác nhanh (thống kê) và Bảng danh sách giao dịch gần đây.
 ```
 

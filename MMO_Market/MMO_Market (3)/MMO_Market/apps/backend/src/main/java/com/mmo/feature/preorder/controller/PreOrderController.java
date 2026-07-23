@@ -3,6 +3,7 @@ import com.mmo.shared.model.PreOrder;
 
 import com.mmo.shared.dto.PreOrderRequest;
 import com.mmo.shared.dto.PreOrderResponse;
+import com.mmo.shared.dto.PreOrderDeliveryRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,8 @@ import java.util.List;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import com.mmo.feature.preorder.service.PreOrderService;
 
 @RestController
@@ -53,6 +56,14 @@ public class PreOrderController {
             return ResponseEntity.badRequest().build();
         }
         PreOrderResponse response = preOrderService.updatePreOrderStatus(userId, preOrderId, newStatus.trim());
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/seller/{preOrderId}/deliver")
+    public ResponseEntity<PreOrderResponse> deliverPreOrder(@AuthenticationPrincipal Long userId,
+                                                            @PathVariable Long preOrderId,
+                                                            @Valid @RequestBody PreOrderDeliveryRequest request) {
+        PreOrderResponse response = preOrderService.deliverPreOrder(userId, preOrderId, request.getDeliveryData());
         return ResponseEntity.ok(response);
     }
 }

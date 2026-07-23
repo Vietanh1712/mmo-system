@@ -42,4 +42,5 @@ build/
 apps/backend/uploads/
 uploads/
 *.log
-**/target/
+**/target/
+.idea/
