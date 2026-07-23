@@ -39,6 +39,9 @@ Hỗ trợ Staff kiểm duyệt KYC, phê duyệt/từ chối các yêu cầu m�
 | **FR-STF-16** | WHEN a Staff accesses category management, THE SYSTEM SHALL allow Staff to view, search, create, update, and toggle active/deleted status (`is_delete`) of parent and child product categories. |
 | **FR-STF-17** | WHEN a Staff manages support tickets, THE SYSTEM SHALL display all support requests, allow filtering by status and category, and enable Staff to respond and transition ticket statuses (`OPEN`, `IN_PROGRESS`, `RESOLVED`, `CLOSED`). |
 | **FR-STF-18** | WHEN a Staff updates a shop status to 'Suspended' with an expiration timestamp (`suspendedUntil`), THE SYSTEM SHALL save `suspended_until` in the Users table and automatically revert the shop status to 'Active' once the timestamp expires via scheduled job or read-trigger. |
+| **FR-STF-19** | WHEN a Staff views `/staff/topups`, THE SYSTEM SHALL query and display all SePay top-up transactions, filter by status, search by keyword/ID/SePay code, and calculate top statistics (total, success, failed, total VND). |
+| **FR-STF-20** | WHEN SePay webhook fails due to incorrect syntax, missing user ID, or amount outside configured min/max deposit limits, THE SYSTEM SHALL save a `TopupTransaction` record with status `Failed` recording the raw transfer content and failure reason. |
+| **FR-STF-21** | WHEN a Staff manually retries/activates a `Failed` or `Pending` top-up transaction via `POST /api/v1/staff/topups/{id}/retry`, THE SYSTEM SHALL validate the target user, credit the user balance, record a `WalletTransaction` ledger, update the top-up status to `Success`, log staff note and staff ID, and send a notification to the target user. |
 
 ---
 
@@ -90,10 +93,16 @@ CREATE TABLE ShopFlags (
 *   `GET /staff/complaints/detail`: Xem chi tiết cuộc hội thoại khiếu nại, mô tả lỗi, và cập nhật trạng thái xử lý thống nhất qua bộ chọn trạng thái.
 *   `GET /staff/shop-registrations`: Xem danh sách tất cả các Shop và bộ lọc.
 *   `GET /staff/shop-registrations/detail`: Xem chi tiết thông tin Shop và tích hợp khu vực duyệt/cập nhật trạng thái hoạt động trực tiếp trên cùng một trang.
+*   `GET /staff/topups`: Xem danh sách các giao dịch nạp tiền SePay, số liệu thống kê và bộ lọc.
+*   `GET /staff/topups/detail`: Xem chi tiết giao dịch nạp tiền, mã SePay, nội dung CK gốc và nhật ký xử lý thủ công.
 *   `GET /staff/categories`: Xem trang quản lý danh mục sản phẩm (Category Management).
 
 
-### 6.2 Các API REST của KYC & Shop
+### 6.2 Các API REST của KYC, Shop & Nạp tiền
+*   `GET /api/v1/staff/topups`: Danh sách phân trang giao dịch nạp tiền (`status`, `keyword`, `page`, `size`).
+*   `GET /api/v1/staff/topups/stats`: Thống kê giao dịch nạp tiền (`totalTopups`, `successTopups`, `failedTopups`, `pendingTopups`, `totalTopupVnd`).
+*   `GET /api/v1/staff/topups/{id}`: Xem chi tiết 1 giao dịch nạp tiền.
+*   `POST /api/v1/staff/topups/{id}/retry`: Kích hoạt nạp tiền thủ công cho giao dịch thất bại (`targetUserId`, `skipMinCheck`, `staffNote`).
 *   `GET /api/v1/staff/categories`: Danh sách phân trang danh mục sản phẩm kèm từ khóa và trạng thái (`keyword`, `isDelete`).
 *   `POST /api/v1/staff/categories`: Tạo mới danh mục (Cha hoặc Con).
 *   `PUT /api/v1/staff/categories/{id}`: Cập nhật thông tin danh mục (`name`, `parentId`, `description`).
@@ -136,3 +145,4 @@ CREATE TABLE ShopFlags (
 *   **AC-STF-02 (Cập nhật trạng thái khiếu nại thống nhất)**: Khi Staff xem chi tiết khiếu nại, thay đổi trạng thái xử lý trên dropdown (`InProgress`, `Resolved`, `Rejected`) và nhấn nút "Cập nhật", hệ thống phải lưu chính xác trạng thái đã chọn và chuyển hướng thành công.
 *   **AC-STF-03 (Bảo toàn số thứ tự STT)**: Tất cả bảng dữ liệu của Staff (KYC, Giao dịch, Rút tiền, Cắm cờ, Duyệt Shop, Khiếu nại) hiển thị cột STT chính xác theo công thức liên tục qua các trang: `currentPage * pageSize + index + 1`.
 *   **AC-STF-04 (Ẩn cột Lý do trong bảng cờ cảnh báo)**: Giao diện danh sách cờ cảnh báo (`/staff/flags`) không hiển thị cột "Lý do" để tránh làm vỡ layout của bảng do nội dung lý do quá dài. Nội dung lý do này chỉ hiển thị trong trang chi tiết cờ cảnh báo (`/staff/flags/detail`).
+*   **AC-STF-05 (Thống kê Nạp tiền cần xử lý)**: API `StaffDashboardService.getDashboardData()` truy vấn đếm tổng số lượng giao dịch nạp tiền thất bại/chờ xử lý (`Failed` và `Pending`) và trả về qua thuộc tính `pendingTopups` của `StaffDashboardDTO`.

@@ -470,5 +470,15 @@ public class StaffController {
     public String shopRegistrationUpdateStatus() {
         return "staff/shop-registration-update-status";
     }
+
+    @GetMapping("/topups")
+    public String topups() {
+        return "staff/topups";
+    }
+
+    @GetMapping("/topups/detail")
+    public String topupDetail() {
+        return "staff/topup-detail";
+    }
 }
 
