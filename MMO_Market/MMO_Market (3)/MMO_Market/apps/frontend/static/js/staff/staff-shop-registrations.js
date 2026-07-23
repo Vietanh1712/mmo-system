@@ -124,10 +124,7 @@
                 <td class="ds-table-right">${balanceFormatted}</td>
 
                 <td class="ds-table-center">
-                    <div class="ds-table-actions">
-                        <a class="ds-btn ds-btn-sm ds-btn-outline" href="/staff/shop-registrations/update-status?id=${item.id}" style="font-size: 11px; padding: 4px 8px; border-radius: 4px;" title="Cập nhật trạng thái">
-                            Cập nhật trạng thái
-                        </a>
+                    <div class="ds-table-actions" style="justify-content: center;">
                         <a class="ds-icon-btn ds-icon-btn-view" href="/staff/shop-registrations/detail?id=${item.id}" title="Xem chi tiết" aria-label="Xem chi tiết">
                             <svg class="ds-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="width: 16px; height: 16px;">
                                 <path d="M2.25 12C3.73 8.12 7.49 5.25 12 5.25C16.51 5.25 20.27 8.12 21.75 12C20.27 15.88 16.51 18.75 12 18.75C7.49 18.75 3.73 15.88 2.25 12Z" stroke="currentColor" stroke-width="2"/>

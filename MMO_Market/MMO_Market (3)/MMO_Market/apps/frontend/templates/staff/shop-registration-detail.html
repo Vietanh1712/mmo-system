@@ -110,24 +110,56 @@
                     </div>
 
                     <div class="ds-card staff-action-card staff-sticky-column">
-                        <div class="ds-card-header">
-                            <h2 class="ds-card-title">Quyết định duyệt</h2>
+                        <div id="pendingReviewSection" style="display: none;">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Quyết định duyệt</h2>
+                            </div>
+                            <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px;">
+                                <div class="ds-alert ds-alert-warning">Hãy đối chiếu kỹ thông tin người dùng và nội dung đăng ký trước khi duyệt.</div>
+                                <div class="ds-cluster" style="gap: 8px;">
+                                    <button class="ds-btn ds-btn-success" type="button" onclick="openApproveShopModal()" style="flex: 1;">
+                                        <i class="fa fa-check"></i> Chấp thuận
+                                    </button>
+                                    <button class="ds-btn ds-btn-danger" type="button" onclick="openRejectShopModal()" style="flex: 1;">
+                                        <i class="fa fa-times"></i> Từ chối
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px;">
-                            <div class="ds-alert ds-alert-warning">Hãy đối chiếu kỹ thông tin người dùng và nội dung đăng ký trước khi duyệt.</div>
-                            <div class="ds-cluster" style="gap: 8px;">
-                                <button class="ds-btn ds-btn-success" type="button" onclick="openApproveShopModal()" style="flex: 1;">
-                                    <i class="fa fa-check"></i> Chấp thuận
-                                </button>
-                                <button class="ds-btn ds-btn-danger" type="button" onclick="openRejectShopModal()" style="flex: 1;">
-                                    <i class="fa fa-times"></i> Từ chối
+
+                        <div id="updateStatusSection">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Cập nhật trạng thái hoạt động</h2>
+                            </div>
+                            <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px;">
+                                <div id="cardSuspendedAlert" style="display: none; flex-direction: column; gap: 6px; background: #fffbe6; border: 1px solid #ffe58f; border-left: 4px solid #d97706; padding: 12px 14px; border-radius: 8px;">
+                                    <div style="font-weight: 600; color: #d97706; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa fa-clock-o"></i> <span>Đang trong thời gian tạm ngưng</span>
+                                    </div>
+                                    <div style="font-size: 13px; color: #4b5563;" id="cardSuspendedUntilText">Hạn: -</div>
+                                    <div style="font-size: 13px; font-weight: 700; color: #2563eb; margin-top: 2px;" id="cardSuspendedCountdown">Tự động mở lại sau: -</div>
+                                </div>
+
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="shopStatusSelect">Trạng thái mới</label>
+                                    <select class="ds-input" id="shopStatusSelect">
+                                        <option value="Active">Hoạt động</option>
+                                        <option value="Suspended">Tạm ngưng</option>
+                                        <option value="Locked">Tạm khóa</option>
+                                        <option value="Banned">Khóa vĩnh viễn</option>
+                                        <option value="Withdrawn">Đã đóng Shop (Hoàn cọc)</option>
+                                    </select>
+                                </div>
+                                <button class="ds-btn ds-btn-primary" type="button" onclick="submitShopStatusUpdate()" style="width: 100%;">
+                                    <i class="fa fa-save"></i> Lưu cập nhật
                                 </button>
                             </div>
-                            <div style="border-top: 1px solid var(--ds-border); padding-top: 16px; margin-top: 4px;">
-                                <a class="ds-btn ds-btn-outline" href="/staff/shop-registrations" style="width: 100%;">
-                                    <i class="fa fa-arrow-left"></i> Quay lại danh sách
-                                </a>
-                            </div>
+                        </div>
+
+                        <div style="padding: 0 24px 20px 24px; border-top: 1px solid var(--ds-border); padding-top: 16px; margin-top: 4px;">
+                            <a class="ds-btn ds-btn-outline" href="/staff/shop-registrations" style="width: 100%;">
+                                <i class="fa fa-arrow-left"></i> Quay lại danh sách
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -167,6 +199,26 @@
         <div style="display: flex; gap: 12px; justify-content: flex-end;">
             <button class="ds-btn ds-btn-outline" type="button" onclick="closeRejectShopModal()">Hủy bỏ</button>
             <button class="ds-btn ds-btn-danger" type="button" onclick="submitRejectShop()">Xác nhận từ chối</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tạm ngưng hoạt động Shop (Ngày, giờ, phút) -->
+<div id="suspendShopModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 99999; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 12px; max-width: 480px; width: 90%; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="margin: 0; font-size: 18px; color: #d97706;"><i class="fa fa-clock-o"></i> Tạm ngưng hoạt động Shop</h3>
+            <button type="button" onclick="closeSuspendShopModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #666;">&times;</button>
+        </div>
+        <p style="color: #555; font-size: 14px; margin-bottom: 16px;">Vui lòng chọn thời điểm (Ngày, Giờ, Phút) hết hạn tạm ngưng. Khi đến thời điểm này, Shop sẽ <b>tự động mở lại trạng thái Hoạt động</b>.</p>
+        <div class="ds-form-field" style="margin-bottom: 20px;">
+            <label class="ds-label" for="modalSuspendUntilInput">Thời điểm kết thúc tạm ngưng <span style="color: red;">*</span></label>
+            <input type="datetime-local" class="ds-input" id="modalSuspendUntilInput" style="width: 100%; box-sizing: border-box;">
+            <div id="modalSuspendUntilError" class="ds-error-text" style="color: #ef4444; font-size: 13px; margin-top: 4px;"></div>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button class="ds-btn ds-btn-outline" type="button" onclick="closeSuspendShopModal()">Hủy bỏ</button>
+            <button class="ds-btn ds-btn-warning" type="button" onclick="confirmSuspendShop()">Xác nhận tạm ngưng</button>
         </div>
     </div>
 </div>

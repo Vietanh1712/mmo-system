@@ -35,8 +35,10 @@ Hỗ trợ Staff kiểm duyệt KYC, phê duyệt/từ chối các yêu cầu m�
 | **FR-STF-12** | WHEN a Staff searches KYC requests, THE SYSTEM SHALL perform a multi-field search across request code, ID number, user full name, and email, automatically stripping any leading '#' character. |
 | **FR-STF-13** | WHEN a Staff requests KYC statistics, THE SYSTEM SHALL return aggregated counts for total, pending, approved, and rejected KYC requests. |
 | **FR-STF-14** | WHEN a Staff changes KYC filter dropdown options, THE SYSTEM SHALL NOT auto-trigger search until the Staff clicks the Search button or presses Enter. |
-| **FR-STF-15** | WHEN a Staff manages shop statuses, THE SYSTEM SHALL support 5 distinct status values (`Active`, `Withdrawn`, `Suspended`, `Locked`, `Banned`). |
+| **FR-STF-15** | WHEN a Staff manages shop account statuses, THE SYSTEM SHALL support 5 distinct status values with standardized Vietnamese display labels: Active ("Hoạt động"), Suspended ("Tạm ngưng"), Locked ("Tạm khóa"), Banned ("Khóa vĩnh viễn"), and Withdrawn ("Đã đóng Shop (Hoàn cọc)"). |
 | **FR-STF-16** | WHEN a Staff accesses category management, THE SYSTEM SHALL allow Staff to view, search, create, update, and toggle active/deleted status (`is_delete`) of parent and child product categories. |
+| **FR-STF-17** | WHEN a Staff manages support tickets, THE SYSTEM SHALL display all support requests, allow filtering by status and category, and enable Staff to respond and transition ticket statuses (`OPEN`, `IN_PROGRESS`, `RESOLVED`, `CLOSED`). |
+| **FR-STF-18** | WHEN a Staff updates a shop status to 'Suspended' with an expiration timestamp (`suspendedUntil`), THE SYSTEM SHALL save `suspended_until` in the Users table and automatically revert the shop status to 'Active' once the timestamp expires via scheduled job or read-trigger. |
 
 ---
 
@@ -87,8 +89,7 @@ CREATE TABLE ShopFlags (
 *   `GET /staff/complaints`: Xem danh sách khiếu nại của người mua.
 *   `GET /staff/complaints/detail`: Xem chi tiết cuộc hội thoại khiếu nại, mô tả lỗi, và cập nhật trạng thái xử lý thống nhất qua bộ chọn trạng thái.
 *   `GET /staff/shop-registrations`: Xem danh sách tất cả các Shop và bộ lọc.
-*   `GET /staff/shop-registrations/detail`: Xem chi tiết thông tin đăng ký Shop.
-*   `GET /staff/shop-registrations/update-status`: Xem trang thay đổi trạng thái hoạt động riêng biệt của Shop.
+*   `GET /staff/shop-registrations/detail`: Xem chi tiết thông tin Shop và tích hợp khu vực duyệt/cập nhật trạng thái hoạt động trực tiếp trên cùng một trang.
 *   `GET /staff/categories`: Xem trang quản lý danh mục sản phẩm (Category Management).
 
 

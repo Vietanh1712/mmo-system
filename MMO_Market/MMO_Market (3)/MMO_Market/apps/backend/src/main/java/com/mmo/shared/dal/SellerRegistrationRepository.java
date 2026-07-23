@@ -15,6 +15,7 @@ import java.util.Optional;
 @Repository
 public interface SellerRegistrationRepository extends JpaRepository<SellerRegistration, Long> {
     Optional<SellerRegistration> findByUserAndIsDeleteFalse(User user);
+    Optional<SellerRegistration> findFirstByUserAndIsDeleteFalseOrderByIdDesc(User user);
     List<SellerRegistration> findAllByIsDeleteFalseOrderByCreatedAtDesc();
     long countByStatusAndIsDeleteFalse(String status);
 
@@ -23,7 +24,13 @@ public interface SellerRegistrationRepository extends JpaRepository<SellerRegist
 
     @Query("SELECT r FROM SellerRegistration r WHERE r.isDelete = false " +
            "AND (:status IS NULL OR UPPER(r.status) = UPPER(:status)) " +
-           "AND (:shopStatus IS NULL OR UPPER(r.user.shopStatus) = UPPER(:shopStatus)) " +
+           "AND (:shopStatus IS NULL OR " +
+           "     (:shopStatus = 'ACTIVE' AND (r.user.shopStatus IS NULL OR UPPER(r.user.shopStatus) IN ('ACTIVE', 'APPROVED'))) OR " +
+           "     (:shopStatus = 'SUSPENDED' AND UPPER(r.user.shopStatus) IN ('SUSPENDED', 'TEMP_LOCKED', 'TEMP_SUSPENDED')) OR " +
+           "     (:shopStatus = 'LOCKED' AND UPPER(r.user.shopStatus) IN ('LOCKED', 'INDEFINITE_LOCKED')) OR " +
+           "     (:shopStatus = 'BANNED' AND UPPER(r.user.shopStatus) IN ('BANNED', 'PERMANENT_BANNED')) OR " +
+           "     (:shopStatus = 'WITHDRAWN' AND UPPER(r.user.shopStatus) IN ('WITHDRAWN', 'DELETED')) OR " +
+           "     (UPPER(r.user.shopStatus) = UPPER(:shopStatus))) " +
            "AND (:keyword IS NULL OR " +
            "    LOWER(r.shopName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "    LOWER(r.supportEmail) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +

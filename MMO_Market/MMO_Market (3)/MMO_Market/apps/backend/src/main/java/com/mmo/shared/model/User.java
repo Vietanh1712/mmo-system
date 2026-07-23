@@ -88,6 +88,9 @@ public class User {
     @Column(name = "lock_time")
     private LocalDateTime lockTime;
 
+    @Column(name = "suspended_until")
+    private LocalDateTime suspendedUntil;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

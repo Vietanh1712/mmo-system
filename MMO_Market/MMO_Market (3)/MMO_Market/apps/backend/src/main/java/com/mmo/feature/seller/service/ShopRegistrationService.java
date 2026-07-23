@@ -22,15 +22,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@EnableScheduling
 public class ShopRegistrationService {
 
     @Autowired
@@ -88,7 +92,7 @@ public class ShopRegistrationService {
             throw new IllegalStateException("Bạn phải hoàn tất xác minh danh tính (KYC) trước khi đăng ký Shop.");
         }
 
-        SellerRegistration registration = sellerRegistrationRepository.findByUserAndIsDeleteFalse(user)
+        SellerRegistration registration = sellerRegistrationRepository.findFirstByUserAndIsDeleteFalseOrderByIdDesc(user)
                 .orElse(new SellerRegistration());
 
         if ("APPROVED".equals(registration.getStatus())) {
@@ -135,7 +139,7 @@ public class ShopRegistrationService {
         User user = userRepository.findByIdAndIsDeleteFalse(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Người dùng không tồn tại."));
 
-        return sellerRegistrationRepository.findByUserAndIsDeleteFalse(user)
+        return sellerRegistrationRepository.findFirstByUserAndIsDeleteFalseOrderByIdDesc(user)
                 .map(this::mapToDto)
                 .orElse(null);
     }
@@ -267,6 +271,15 @@ public class ShopRegistrationService {
 
     private ShopRegistrationResponseDto mapToDto(SellerRegistration registration) {
         User user = registration.getUser();
+        if (user != null && user.getShopStatus() != null &&
+                ("Suspended".equalsIgnoreCase(user.getShopStatus()) || "TEMP_LOCKED".equalsIgnoreCase(user.getShopStatus())) &&
+                user.getSuspendedUntil() != null &&
+                LocalDateTime.now().isAfter(user.getSuspendedUntil())) {
+            user.setShopStatus("Active");
+            user.setSuspendedUntil(null);
+            userRepository.save(user);
+        }
+
         SellerBankInfo bank = null;
         if (user != null) {
             bank = sellerBankInfoRepository.findByUserAndIsDeleteFalse(user).orElse(null);
@@ -283,6 +296,7 @@ public class ShopRegistrationService {
                 .supportPhone(user != null ? user.getPhone() : null)
                 .rejectionReason(registration.getRejectionReason())
                 .shopStatus(user != null ? user.getShopStatus() : null)
+                .suspendedUntil(user != null && user.getSuspendedUntil() != null ? user.getSuspendedUntil().toString() : null)
                 .depositVnd(user != null ? user.getDepositVnd() : 0L)
                 .balanceVnd(user != null ? user.getBalanceVnd() : 0L)
                 .ownerName(user != null ? user.getFullName() : null)
@@ -312,20 +326,17 @@ public class ShopRegistrationService {
             throw new IllegalArgumentException("Người dùng liên kết không tồn tại.");
         }
         
-        if (active) {
-            user.setShopStatus("Active");
-        } else {
-            user.setShopStatus("Banned");
-        }
-        
+        user.setShopStatus(active ? "Active" : "Banned");
+        user.setSuspendedUntil(null);
         userRepository.save(user);
 
-        // Gửi thông báo cho Seller
+        // Tạo thông báo cho Customer/Seller về việc khóa/mở khóa Shop
         Notification statusNotif = Notification.builder()
                 .userId(user.getId())
-                .title(active ? "Hoạt động Shop đã được kích hoạt" : "Cảnh báo: Shop đã bị khóa")
-                .content(active ? String.format("Tài khoản Shop \"%s\" của bạn đã được kích hoạt hoạt động trở lại.", registration.getShopName()) 
-                               : String.format("Tài khoản Shop \"%s\" của bạn đã bị khóa tạm thời do vi phạm điều khoản quy định.", registration.getShopName()))
+                .title(active ? "Shop của bạn đã được mở khóa" : "Shop của bạn đã bị khóa")
+                .content(active ?
+                        String.format("Shop \"%s\" của bạn đã được mở khóa và hoạt động trở lại bình thường.", registration.getShopName()) :
+                        String.format("Shop \"%s\" của bạn đã bị tạm khóa do vi phạm chính sách sàn. Vui lòng liên hệ hỗ trợ để biết thêm chi tiết.", registration.getShopName()))
                 .type("SYSTEM")
                 .severity(active ? "SUCCESS" : "DANGER")
                 .isRead(false)
@@ -338,7 +349,7 @@ public class ShopRegistrationService {
     }
 
     @Transactional
-    public ShopRegistrationResponseDto updateShopStatus(Long registrationId, String shopStatus) {
+    public ShopRegistrationResponseDto updateShopStatus(Long registrationId, String shopStatus, String suspendedUntilStr) {
         SellerRegistration registration = sellerRegistrationRepository.findById(registrationId)
                 .orElseThrow(() -> new IllegalArgumentException("Yêu cầu mở Shop không tồn tại."));
         
@@ -352,7 +363,40 @@ public class ShopRegistrationService {
         }
         
         user.setShopStatus(shopStatus);
+        if (("Suspended".equalsIgnoreCase(shopStatus) || "TEMP_LOCKED".equalsIgnoreCase(shopStatus))
+                && suspendedUntilStr != null && !suspendedUntilStr.isBlank()) {
+            try {
+                user.setSuspendedUntil(java.time.LocalDateTime.parse(suspendedUntilStr.trim()));
+            } catch (Exception e) {
+                try {
+                    user.setSuspendedUntil(java.time.LocalDateTime.parse(suspendedUntilStr.trim().replace(" ", "T")));
+                } catch (Exception ex) {
+                    user.setSuspendedUntil(null);
+                }
+            }
+        } else {
+            user.setSuspendedUntil(null);
+        }
         userRepository.save(user);
         return mapToDto(registration);
+    }
+
+    @Scheduled(fixedRate = 30000)
+    @Transactional
+    public void autoRevertSuspendedShops() {
+        try {
+            List<User> suspendedUsers = userRepository.findAll().stream()
+                    .filter(u -> u.getShopStatus() != null &&
+                            ("Suspended".equalsIgnoreCase(u.getShopStatus()) || "TEMP_LOCKED".equalsIgnoreCase(u.getShopStatus())) &&
+                            u.getSuspendedUntil() != null &&
+                            java.time.LocalDateTime.now().isAfter(u.getSuspendedUntil()))
+                    .collect(Collectors.toList());
+
+            for (User u : suspendedUsers) {
+                u.setShopStatus("Active");
+                u.setSuspendedUntil(null);
+                userRepository.save(u);
+            }
+        } catch (Exception ignored) {}
     }
 }

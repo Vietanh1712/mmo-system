@@ -18,6 +18,7 @@ public class ShopRegistrationResponseDto {
     private String supportPhone;
     private String rejectionReason;
     private String shopStatus;
+    private String suspendedUntil;
     private Long depositVnd;
     private Long balanceVnd;
     private String ownerName;
