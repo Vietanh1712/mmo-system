@@ -221,6 +221,10 @@
 
     const ICON_VIEW = `<svg class="ds-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2.25 12C3.73 8.12 7.49 5.25 12 5.25C16.51 5.25 20.27 8.12 21.75 12C20.27 15.88 16.51 18.75 12 18.75C7.49 18.75 3.73 15.88 2.25 12Z" stroke="currentColor" stroke-width="2"/><path d="M12 15.25C13.79 15.25 15.25 13.79 15.25 12C15.25 10.21 13.79 8.75 12 8.75C10.21 8.75 8.75 10.21 8.75 12C8.75 13.79 10.21 15.25 12 15.25Z" stroke="currentColor" stroke-width="2"/></svg>`;
 
+    const ICON_EDIT = `<svg class="ds-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+    const ICON_PUBLISH = `<svg class="ds-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 12L3 21l18-9L3 3l3 9zm0 0h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
     const ICON_DELETE = `<svg class="ds-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 7L7 20C7.08 21.1 7.9 22 9 22H15C16.1 22 16.92 21.1 17 20L18 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 7V4C9 3.45 9.45 3 10 3H14C14.55 3 15 3.45 15 4V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -674,6 +678,14 @@
         return `<button type="button" class="ds-icon-btn ds-icon-btn-view" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}" onclick="${onclick}">${ICON_VIEW}</button>`;
     }
 
+    function tableActionsEdit(onclick, title) {
+        return `<button type="button" class="ds-icon-btn" style="color: var(--ds-primary);" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}" onclick="${onclick}">${ICON_EDIT}</button>`;
+    }
+
+    function tableActionsPublish(onclick, title) {
+        return `<button type="button" class="ds-icon-btn" style="color: var(--ds-success);" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}" onclick="${onclick}">${ICON_PUBLISH}</button>`;
+    }
+
     function tableActionsDelete(onclick, title) {
         return `<button type="button" class="ds-icon-btn ds-icon-btn-delete" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}" onclick="${onclick}">${ICON_DELETE}</button>`;
     }
@@ -685,7 +697,7 @@
         return `${target}View`;
     }
 
-    window.switchAdminView = function (viewName) {
+    window.switchAdminView = function (viewName, statusParam) {
         const target = VIEWS.includes(viewName) ? viewName : 'dashboard';
         const viewId = resolveViewElementId(target);
 
@@ -699,6 +711,11 @@
         document.querySelectorAll('.sidebar-item').forEach(el => {
             el.classList.toggle('active', el.getAttribute('data-target') === target);
         });
+
+        if (target === 'notifications' && statusParam) {
+            const filterEl = document.getElementById('notifStatusFilter');
+            if (filterEl) filterEl.value = statusParam;
+        }
 
         loadViewData(target);
     };
@@ -1508,7 +1525,6 @@
                     <td>${formatDateTime(l.timestamp)}</td>
                     <td>${escapeHtml(l.operator)}</td>
                     <td class="ds-table-center"><span class="ds-badge ${auditBadgeClass(l.action)}">${escapeHtml(actionLabel(l.action))}</span></td>
-                    <td class="muted">${escapeHtml(l.desc)}</td>
                     <td class="ds-table-center"><span class="ds-badge ds-badge-success">Thành công</span></td>
                     <td>
                         <div class="ds-table-actions">
@@ -1795,12 +1811,25 @@
                 if (lowerStr === 'rejected') return 'Đã từ chối';
             }
 
-            // 6. Trạng thái yêu cầu
+            // 6. Trạng thái yêu cầu & Thông báo
             if (key === 'status') {
+                if (lowerStr === 'published') return 'Đã phát hành';
+                if (lowerStr === 'draft') return 'Bản nháp';
                 if (lowerStr === 'pending') return 'Đang chờ';
                 if (lowerStr === 'completed') return 'Đã hoàn thành';
                 if (lowerStr === 'failed') return 'Thất bại';
-                if (lowerStr === 'held') return 'Tạm giữ';
+                if (lowerStr === 'held') return 'Tạm giữ (Escrow)';
+            }
+
+            // 6b. Loại thông báo
+            if (key === 'type') {
+                if (lowerStr === 'info') return 'Thông tin chung';
+                if (lowerStr === 'warning') return 'Cảnh báo bảo mật';
+                if (lowerStr === 'maintenance') return 'Bảo trì hệ thống';
+                if (lowerStr === 'policy') return 'Chính sách & Điều khoản';
+                if (lowerStr === 'c2c_purchase') return 'Giao dịch C2C';
+                if (lowerStr === 'shop_opening') return 'Phí mở shop';
+                if (lowerStr === 'withdrawal') return 'Rút tiền';
             }
 
             // 7. Trạng thái cửa hàng
@@ -2108,21 +2137,93 @@
         }
     };
 
-    /* ---------- Mock: Notifications ---------- */
+    /* ---------- Notifications Management & Drafts ---------- */
+    let notifCache = [];
+
     window.AdminConsole.openCreateNotification = function () {
-        document.getElementById('notifTitle').value = '';
-        document.getElementById('notifContent').value = '';
-        const select = document.getElementById('notifType');
-        if (select) select.value = 'info';
-        
+        const editingIdEl = document.getElementById('notifEditingId');
+        if (editingIdEl) editingIdEl.value = '';
+
+        const titleEl = document.getElementById('notifTitle');
+        const contentEl = document.getElementById('notifContent');
+        const typeEl = document.getElementById('notifType');
+
+        if (titleEl) { titleEl.value = ''; titleEl.disabled = false; }
+        if (contentEl) { contentEl.value = ''; contentEl.disabled = false; }
+        if (typeEl) { typeEl.value = 'info'; typeEl.disabled = false; }
+
+        const titleHeader = document.getElementById('notifModalTitle');
+        if (titleHeader) titleHeader.textContent = 'Soạn thông báo mới';
+
+        const saveDraftBtn = document.getElementById('saveNotifDraftBtn');
+        const publishBtn = document.getElementById('publishNotifBtn');
+        const closeBtn = document.getElementById('closeNotifModalBtn');
+
+        if (saveDraftBtn) saveDraftBtn.style.display = '';
+        if (publishBtn) publishBtn.style.display = '';
+        if (closeBtn) closeBtn.textContent = 'Hủy';
+
         const wrap = document.getElementById('notifMaintToggleWrap');
         if (wrap) wrap.classList.add('ds-hidden');
-        
+
         const toggle = document.getElementById('notifMaintToggle');
         if (toggle) {
             toggle.setAttribute('aria-pressed', 'false');
             toggle.className = 'ds-toggle ds-toggle-system ds-toggle-inactive';
+            toggle.disabled = false;
         }
+
+        const modal = document.getElementById('createNotifModal');
+        if (modal) modal.classList.remove('ds-hidden');
+    };
+
+    window.AdminConsole.openNotificationModal = function (id) {
+        const item = notifCache.find(n => n.id === id);
+        if (!item) return;
+
+        const editingIdEl = document.getElementById('notifEditingId');
+        if (editingIdEl) editingIdEl.value = id;
+
+        const titleEl = document.getElementById('notifTitle');
+        const contentEl = document.getElementById('notifContent');
+        const typeEl = document.getElementById('notifType');
+
+        if (titleEl) titleEl.value = item.title || '';
+        if (contentEl) contentEl.value = item.content || '';
+        if (typeEl) typeEl.value = item.type || 'info';
+
+        const isPublished = item.status === 'PUBLISHED';
+        const titleHeader = document.getElementById('notifModalTitle');
+        if (titleHeader) {
+            titleHeader.textContent = isPublished ? 'Chi tiết thông báo (Đã phát hành)' : 'Chi tiết & Chỉnh sửa bản nháp';
+        }
+
+        if (titleEl) titleEl.disabled = isPublished;
+        if (contentEl) contentEl.disabled = isPublished;
+        if (typeEl) typeEl.disabled = isPublished;
+
+        const saveDraftBtn = document.getElementById('saveNotifDraftBtn');
+        const publishBtn = document.getElementById('publishNotifBtn');
+        const closeBtn = document.getElementById('closeNotifModalBtn');
+
+        if (isPublished) {
+            if (saveDraftBtn) saveDraftBtn.style.display = 'none';
+            if (publishBtn) publishBtn.style.display = 'none';
+            if (closeBtn) closeBtn.textContent = 'Đóng';
+        } else {
+            if (saveDraftBtn) saveDraftBtn.style.display = '';
+            if (publishBtn) publishBtn.style.display = '';
+            if (closeBtn) closeBtn.textContent = 'Hủy';
+        }
+
+        const wrap = document.getElementById('notifMaintToggleWrap');
+        if (wrap) {
+            if (item.type === 'maintenance') wrap.classList.remove('ds-hidden');
+            else wrap.classList.add('ds-hidden');
+        }
+
+        const toggle = document.getElementById('notifMaintToggle');
+        if (toggle) toggle.disabled = isPublished;
 
         const modal = document.getElementById('createNotifModal');
         if (modal) modal.classList.remove('ds-hidden');
@@ -2154,21 +2255,13 @@
             console.error('Failed to load maintenance status', e);
         }
 
-        // Hide maintenance toggle wrap on load by default in the form
-        const maintToggleWrap = document.getElementById('notifMaintToggleWrap');
-        if (maintToggleWrap) maintToggleWrap.classList.add('ds-hidden');
-        const maintToggle = document.getElementById('notifMaintToggle');
-        if (maintToggle) {
-            maintToggle.setAttribute('aria-pressed', 'false');
-            maintToggle.className = 'ds-toggle ds-toggle-system ds-toggle-inactive';
-        }
-
         const body = document.getElementById('notifHistoryBody');
         if (!body) return;
 
         // Apply filters
         const keyword = (document.getElementById('notifSearch')?.value || '').trim();
         const typeFilter = document.getElementById('notifTypeFilter')?.value || '';
+        const statusFilter = document.getElementById('notifStatusFilter')?.value || 'ALL';
         const startDate = document.getElementById('notifStartDate')?.value || '';
         const endDate = document.getElementById('notifEndDate')?.value || '';
         const sortOrder = document.getElementById('notifSortOrder')?.value || 'DESC';
@@ -2178,6 +2271,7 @@
         params.append('size', notifPageSize);
         if (keyword) params.append('search', keyword);
         if (typeFilter) params.append('type', typeFilter);
+        if (statusFilter && statusFilter !== 'ALL') params.append('status', statusFilter);
         if (startDate) params.append('startDate', startDate);
         if (endDate) params.append('endDate', endDate);
         if (sortOrder) params.append('sort', sortOrder);
@@ -2185,16 +2279,17 @@
         try {
             const response = await authFetch('/notifications?' + params.toString());
             if (!response.ok) {
-                body.innerHTML = '<tr><td colspan="6" class="ds-empty-state">Không thể tải danh sách thông báo.</td></tr>';
+                body.innerHTML = '<tr><td colspan="7" class="ds-empty-state">Không thể tải danh sách thông báo. Vui lòng kiểm tra lại kết nối.</td></tr>';
                 return;
             }
             const data = await response.json();
             const list = data.content || [];
+            notifCache = list;
             const total = data.totalElements || 0;
             const totalPg = data.totalPages || 1;
 
             if (list.length === 0) {
-                body.innerHTML = '<tr><td colspan="6" class="ds-empty-state">Chưa có thông báo nào phù hợp.</td></tr>';
+                body.innerHTML = '<tr><td colspan="7" class="ds-empty-state">Chưa có thông báo nào phù hợp.</td></tr>';
                 const pag = document.getElementById('notifPagination');
                 if (pag) pag.innerHTML = '';
                 return;
@@ -2213,15 +2308,37 @@
                     typeLabel = 'Chính sách';
                     typeBadge = 'ds-badge-muted';
                 }
+
+                const isPublished = n.status === 'PUBLISHED';
+                const statusBadge = isPublished
+                    ? '<span class="ds-badge ds-badge-success">🟢 Đã phát hành</span>'
+                    : '<span class="ds-badge ds-badge-warning">🟡 Bản nháp</span>';
+
+                let actionsHtml = '';
+                if (isPublished) {
+                    // Read-only for Published: View (Eye icon)
+                    actionsHtml = tableActionsView(`AdminConsole.openNotificationModal(${n.id})`, 'Xem chi tiết thông báo');
+                } else {
+                    // Full CRUD for Drafts: View & Edit (Eye icon), Publish (Paper plane icon), Delete (Trash icon)
+                    actionsHtml = `
+                        ${tableActionsView(`AdminConsole.openNotificationModal(${n.id})`, 'Xem & Chỉnh sửa bản nháp')}
+                        ${tableActionsPublish(`AdminConsole.publishDraftDirect(${n.id})`, 'Phát hành ngay')}
+                        ${tableActionsDelete(`AdminConsole.deleteNotification(${n.id})`, 'Xóa bản nháp')}
+                    `;
+                }
+
                 return `
                     <tr>
                         <td class="ds-table-center">${sttNumber(notifPage, notifPageSize, idx)}</td>
                         <td class="ds-table-center">${formatDateTime(n.timestamp)}</td>
-                        <td><strong>${escapeHtml(n.title)}</strong><br><small class="muted" style="font-size:12px; display:block; margin-top:2px;">${escapeHtml(n.content)}</small></td>
+                        <td><strong>${escapeHtml(n.title)}</strong></td>
                         <td class="ds-table-center"><span class="ds-badge ${typeBadge}">${typeLabel}</span></td>
+                        <td class="ds-table-center">${statusBadge}</td>
                         <td>${escapeHtml(n.author)}</td>
                         <td class="ds-table-center">
-                            ${tableActionsDelete(`AdminConsole.deleteNotification(${n.id})`, 'Xóa thông báo')}
+                            <div class="ds-table-actions" style="display: flex; gap: 4px; justify-content: center;">
+                                ${actionsHtml}
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -2237,16 +2354,17 @@
                 onSize: (s) => { notifPageSize = s; notifPage = 0; loadNotificationsView(); }
             });
         } catch (err) {
-            body.innerHTML = '<tr><td colspan="6" class="ds-empty-state">Lỗi kết nối khi tải danh sách thông báo.</td></tr>';
+            body.innerHTML = '<tr><td colspan="7" class="ds-empty-state">Lỗi kết nối khi tải danh sách thông báo. Vui lòng thử lại sau.</td></tr>';
         }
     }
 
-    window.AdminConsole.pushNotification = async function () {
+    window.AdminConsole.submitNotification = async function (targetStatus) {
+        const editingId = document.getElementById('notifEditingId')?.value;
         const title = document.getElementById('notifTitle').value.trim();
         const type = document.getElementById('notifType').value;
         const content = document.getElementById('notifContent').value.trim();
         if (!title || !content) {
-            showToast('Vui lòng nhập tiêu đề và nội dung thông báo.', true);
+            showToast('Vui lòng nhập đầy đủ tiêu đề và nội dung thông báo.', true);
             return;
         }
 
@@ -2262,27 +2380,73 @@
         };
 
         try {
-            const response = await authFetch('/admin/notifications', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
+            let response;
+            if (editingId) {
+                if (targetStatus === 'DRAFT') {
+                    response = await authFetch(`/admin/notifications/drafts/${editingId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(payload)
+                    });
+                } else {
+                    response = await authFetch(`/admin/notifications/drafts/${editingId}/publish`, {
+                        method: 'POST',
+                        body: JSON.stringify({ activateMaintenance: shouldMaint })
+                    });
+                }
+            } else {
+                if (targetStatus === 'DRAFT') {
+                    response = await authFetch('/admin/notifications/drafts', {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    });
+                } else {
+                    response = await authFetch('/admin/notifications', {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    });
+                }
+            }
+
             const data = await response.json();
             if (response.ok && data.success) {
                 document.getElementById('notifTitle').value = '';
                 document.getElementById('notifContent').value = '';
                 AdminConsole.closeCreateNotification();
-                showToast(shouldMaint ? 'Đã phát thông báo & kích hoạt bảo trì hệ thống.' : 'Đã phát thông báo thành công tới toàn bộ người dùng.');
+                const msg = targetStatus === 'DRAFT'
+                    ? 'Đã lưu bản nháp thông báo thành công.'
+                    : (shouldMaint ? 'Đã phát thông báo & kích hoạt bảo trì hệ thống thành công.' : 'Đã phát thông báo thành công tới toàn bộ người dùng.');
+                showToast(msg);
                 await loadNotificationsView();
             } else {
-                showToast(data.message || 'Không thể phát thông báo.', true);
+                showToast(data.message || 'Thao tác không thành công. Vui lòng thử lại.', true);
             }
         } catch (e) {
-            showToast('Lỗi kết nối khi phát thông báo.', true);
+            showToast('Lỗi kết nối máy chủ khi xử lý thông báo.', true);
+        }
+    };
+
+    window.AdminConsole.publishDraftDirect = async function (id) {
+        if (!confirm('Bạn có chắc chắn muốn phát hành bản nháp thông báo này cho toàn bộ người dùng?')) {
+            return;
+        }
+        try {
+            const response = await authFetch(`/admin/notifications/drafts/${id}/publish`, {
+                method: 'POST'
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                showToast('Đã phát hành bản nháp thành công tới toàn bộ người dùng.');
+                await loadNotificationsView();
+            } else {
+                showToast(data.message || 'Không thể phát hành bản nháp.', true);
+            }
+        } catch (e) {
+            showToast('Lỗi kết nối máy chủ khi phát hành bản nháp.', true);
         }
     };
 
     window.AdminConsole.deleteNotification = async function (id) {
-        if (!confirm('Bạn có chắc chắn muốn xóa thông báo này?')) {
+        if (!confirm('Bạn có chắc chắn muốn xóa bản nháp này?')) {
             return;
         }
         try {
@@ -2291,13 +2455,13 @@
             });
             const data = await response.json();
             if (response.ok && data.success) {
-                showToast('Đã xóa thông báo thành công.');
+                showToast('Đã xóa bản nháp thành công.');
                 await loadNotificationsView();
             } else {
-                showToast(data.message || 'Không thể xóa thông báo.', true);
+                showToast(data.message || 'Không thể xóa bản nháp.', true);
             }
         } catch (e) {
-            showToast('Lỗi kết nối khi xóa thông báo.', true);
+            showToast('Lỗi kết nối máy chủ khi xóa bản nháp.', true);
         }
     };
 
@@ -2911,15 +3075,90 @@
         return 'ds-badge-warning';
     }
 
+    function actionLabel(action) {
+        if (!action) return '—';
+        const str = String(action).trim();
+        const lower = str.toLowerCase();
+
+        // Staff & User Management
+        if (lower === 'create_staff' || lower === 'user_create' || lower === 'staff_create') return 'Thêm nhân viên mới';
+        if (lower === 'update_staff' || lower === 'user_status_update' || lower === 'account_update') return 'Cập nhật nhân viên';
+        if (lower === 'delete_staff' || lower === 'soft_delete_user' || lower === 'user_delete') return 'Xóa tài khoản nhân viên';
+        if (lower === 'lock_user' || lower === 'user_lock' || lower === 'account_lock') return 'Khóa tài khoản';
+        if (lower === 'unlock_user' || lower === 'user_unlock' || lower === 'account_unlock') return 'Mở khóa tài khoản';
+        if (lower === 'change_user_role' || lower === 'role_update' || lower === 'user_role_change') return 'Thay đổi vai trò';
+
+        // Permissions
+        if (lower === 'perm_update' || lower === 'permission_update') return 'Cập nhật quyền';
+        if (lower === 'permission_grant' || lower === 'perm_grant') return 'Gán quyền nhân viên';
+        if (lower === 'permission_revoke' || lower === 'perm_revoke') return 'Thu hồi quyền nhân viên';
+
+        // Notifications & Maintenance
+        if (lower === 'notification_create') return 'Tạo thông báo';
+        if (lower === 'notification_draft_save') return 'Lưu bản nháp thông báo';
+        if (lower === 'notification_draft_update') return 'Cập nhật bản nháp thông báo';
+        if (lower === 'notification_publish' || lower === 'notification_draft_publish') return 'Phát hành thông báo';
+        if (lower === 'notification_delete') return 'Xóa thông báo';
+        if (lower === 'maintenance_toggle' || lower === 'toggle_maintenance') return 'Bật/Tắt bảo trì hệ thống';
+
+        // System config & Commissions
+        if (lower === 'config_update' || lower === 'system_config_update') return 'Cập nhật cấu hình hệ thống';
+        if (lower === 'commission_update') return 'Cập nhật biểu phí';
+
+        // KYC & Shop
+        if (lower === 'kyc_approve') return 'Duyệt xác thực KYC';
+        if (lower === 'kyc_reject') return 'Từ chối xác thực KYC';
+        if (lower === 'shop_approve') return 'Duyệt mở cửa hàng';
+        if (lower === 'shop_reject') return 'Từ chối mở cửa hàng';
+
+        // Financial & Complaints
+        if (lower === 'fund_withdraw' || lower === 'withdrawal_approve') return 'Duyệt lệnh rút tiền';
+        if (lower === 'withdrawal_reject') return 'Từ chối lệnh rút tiền';
+        if (lower === 'complaint_resolve') return 'Giải quyết khiếu nại';
+        if (lower === 'dispute_start') return 'Khởi tạo tranh chấp';
+
+        // Auth
+        if (lower === 'login') return 'Đăng nhập';
+        if (lower === 'logout') return 'Đăng xuất';
+
+        let result = str.replace(/_/g, ' ');
+        if (result === result.toUpperCase()) {
+            result = result.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+        }
+        return result;
+    }
+
     function auditBadgeClass(action) {
-        if (action.includes('Approve')) return 'ds-badge-success';
-        if (action.includes('Reject') || action.includes('Lock')) return 'ds-badge-danger';
-        if (action.includes('Config') || action.includes('Maintenance')) return 'ds-badge-info';
+        if (!action) return 'ds-badge-warning';
+        const str = String(action);
+        if (str.includes('Approve') || str.includes('Grant') || str.includes('Unlock') || str.includes('Publish')) return 'ds-badge-success';
+        if (str.includes('Reject') || str.includes('Lock') || str.includes('Delete') || str.includes('Revoke')) return 'ds-badge-danger';
+        if (str.includes('Config') || str.includes('Maintenance')) return 'ds-badge-info';
         return 'ds-badge-warning';
     }
 
     function formatVnd(n) {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
+    }
+
+    function txTypeLabel(type) {
+        if (!type) return '—';
+        const str = String(type).trim();
+        if (str === 'C2C_Purchase' || str === 'Purchase') return 'Giao dịch C2C';
+        if (str === 'Shop_Opening' || str === 'Shop_Fee') return 'Phí mở shop';
+        if (str === 'Withdrawal' || str === 'Withdraw') return 'Rút tiền';
+        if (str === 'Deposit') return 'Nạp tiền';
+        return str.replace(/_/g, ' ');
+    }
+
+    function txStatusLabel(status) {
+        if (!status) return '—';
+        const str = String(status).trim();
+        if (str === 'Completed' || str === 'COMPLETED' || str === 'SUCCESS') return 'Hoàn thành';
+        if (str === 'Pending' || str === 'PENDING') return 'Đang xử lý';
+        if (str === 'Held' || str === 'HELD' || str === 'ESCROW') return 'Tạm giữ (Escrow)';
+        if (str === 'Failed' || str === 'FAILED' || str === 'REJECTED') return 'Thất bại';
+        return str;
     }
 
     function formatNumberWithDots(val) {

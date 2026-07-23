@@ -25,12 +25,13 @@ public class NotificationController {
     public Map<String, Object> getNotifications(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String type,
+            @RequestParam(required = false) String status,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
             @RequestParam(defaultValue = "DESC") String sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size) {
-        return notificationService.getNotifications(search, type, startDate, endDate, sort, page, size);
+        return notificationService.getNotifications(search, type, status, startDate, endDate, sort, page, size);
     }
 
     @GetMapping("/api/admin/notifications/maintenance-status")
@@ -66,6 +67,94 @@ public class NotificationController {
             return AdminActionResponse.builder()
                     .success(false)
                     .message("Không thể phát thông báo: " + e.getMessage())
+                    .build();
+        }
+    }
+
+    @PostMapping("/api/admin/notifications/drafts")
+    public AdminActionResponse saveDraft(
+            @AuthenticationPrincipal Long operatorId,
+            @RequestBody NotificationCreateRequest request,
+            HttpServletRequest servletRequest) {
+        try {
+            notificationService.saveDraft(
+                    operatorId,
+                    request.getTitle(),
+                    request.getContent(),
+                    request.getType(),
+                    getClientIp(servletRequest)
+            );
+            return AdminActionResponse.builder()
+                    .success(true)
+                    .message("Lưu bản nháp thành công.")
+                    .build();
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            return AdminActionResponse.builder()
+                    .success(false)
+                    .message(e.getReason())
+                    .build();
+        } catch (Exception e) {
+            return AdminActionResponse.builder()
+                    .success(false)
+                    .message("Lỗi khi lưu bản nháp: " + e.getMessage())
+                    .build();
+        }
+    }
+
+    @PutMapping("/api/admin/notifications/drafts/{id}")
+    public AdminActionResponse updateDraft(
+            @AuthenticationPrincipal Long operatorId,
+            @PathVariable("id") Long id,
+            @RequestBody NotificationCreateRequest request,
+            HttpServletRequest servletRequest) {
+        try {
+            notificationService.updateDraft(
+                    operatorId,
+                    id,
+                    request.getTitle(),
+                    request.getContent(),
+                    request.getType(),
+                    getClientIp(servletRequest)
+            );
+            return AdminActionResponse.builder()
+                    .success(true)
+                    .message("Cập nhật bản nháp thành công.")
+                    .build();
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            return AdminActionResponse.builder()
+                    .success(false)
+                    .message(e.getReason())
+                    .build();
+        } catch (Exception e) {
+            return AdminActionResponse.builder()
+                    .success(false)
+                    .message("Lỗi khi cập nhật bản nháp: " + e.getMessage())
+                    .build();
+        }
+    }
+
+    @PostMapping("/api/admin/notifications/drafts/{id}/publish")
+    public AdminActionResponse publishDraft(
+            @AuthenticationPrincipal Long operatorId,
+            @PathVariable("id") Long id,
+            @RequestBody(required = false) Map<String, Boolean> requestBody,
+            HttpServletRequest servletRequest) {
+        try {
+            boolean shouldActivate = requestBody != null && Boolean.TRUE.equals(requestBody.get("activateMaintenance"));
+            notificationService.publishDraft(operatorId, id, shouldActivate, getClientIp(servletRequest));
+            return AdminActionResponse.builder()
+                    .success(true)
+                    .message("Phát hành bản nháp thành công.")
+                    .build();
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            return AdminActionResponse.builder()
+                    .success(false)
+                    .message(e.getReason())
+                    .build();
+        } catch (Exception e) {
+            return AdminActionResponse.builder()
+                    .success(false)
+                    .message("Lỗi khi phát hành bản nháp: " + e.getMessage())
                     .build();
         }
     }

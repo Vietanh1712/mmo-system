@@ -176,7 +176,6 @@
                                 <th>Thời gian</th>
                                 <th>Nhân viên</th>
                                 <th class="ds-table-center">Hành động</th>
-                                <th>Chi tiết</th>
                                 <th class="ds-table-center">Trạng thái</th>
                                 <th class="ds-table-center">Thao tác</th>
                             </tr>
@@ -467,10 +466,15 @@
                             <input id="notifSearch" class="ds-input" type="search" placeholder="Tìm tiêu đề, nội dung, người phát...">
                             <select id="notifTypeFilter" class="ds-input" aria-label="Loại thông báo">
                                 <option value="">Tất cả phân loại</option>
-                                <option value="info">Thông tin chung (Info)</option>
-                                <option value="warning">Cảnh báo bảo mật (Warning)</option>
-                                <option value="maintenance">Lịch bảo trì (Maintenance)</option>
-                                <option value="policy">Chính sách &amp; Điều khoản (Policy)</option>
+                                <option value="info">Thông tin chung</option>
+                                <option value="warning">Cảnh báo bảo mật</option>
+                                <option value="maintenance">Lịch bảo trì</option>
+                                <option value="policy">Chính sách &amp; Điều khoản</option>
+                            </select>
+                            <select id="notifStatusFilter" class="ds-input" aria-label="Trạng thái">
+                                <option value="ALL">Tất cả trạng thái</option>
+                                <option value="PUBLISHED">🟢 Đã phát hành</option>
+                                <option value="DRAFT">🟡 Bản nháp</option>
                             </select>
                             <div style="display: flex; align-items: center; gap: 6px;">
                                 <span class="ds-caption" style="white-space: nowrap; color: var(--ds-text-muted);">Từ:</span>
@@ -497,10 +501,11 @@
                             <tr>
                                 <th class="ds-table-center">STT</th>
                                 <th class="ds-table-center">Thời gian</th>
-                                <th>Tiêu đề &amp; Nội dung</th>
+                                <th>Tiêu đề</th>
                                 <th class="ds-table-center">Loại</th>
+                                <th class="ds-table-center">Trạng thái</th>
                                 <th>Người phát</th>
-                                <th class="ds-table-center" style="width: 100px;">Thao tác</th>
+                                <th class="ds-table-center" style="width: 140px;">Thao tác</th>
                             </tr>
                             </thead>
                             <tbody id="notifHistoryBody">
@@ -733,11 +738,11 @@
     </div>
 </main>
 
-<!-- Create announcement modal -->
+<!-- Single combined View & Edit Notification Modal -->
 <div id="createNotifModal" class="ds-modal-backdrop ds-hidden" role="dialog" aria-modal="true">
     <div class="ds-modal" style="max-width: 600px; width: 100%;">
         <div class="ds-modal-header ds-cluster-between" style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 class="ds-heading-md" style="margin: 0; font-weight: 700;">Soạn thông báo mới</h3>
+            <h3 class="ds-heading-md" id="notifModalTitle" style="margin: 0; font-weight: 700;">Soạn thông báo mới</h3>
             <button type="button" class="ds-btn ds-btn-text" style="font-size: 20px; padding: 4px; border: none; background: transparent; cursor: pointer; color: var(--ds-text-subtle);" onclick="AdminConsole.closeCreateNotification()">
                 <i class="fa fa-times"></i>
             </button>
@@ -750,10 +755,10 @@
             <div class="ds-form-field">
                 <label class="ds-label" for="notifType">Loại thông báo</label>
                 <select id="notifType" class="ds-input">
-                    <option value="info">Thông tin chung (Info)</option>
-                    <option value="warning">Cảnh báo (Warning)</option>
-                    <option value="maintenance">Bảo trì hệ thống (Maintenance)</option>
-                    <option value="policy">Chính sách (Policy)</option>
+                    <option value="info">Thông tin chung</option>
+                    <option value="warning">Cảnh báo</option>
+                    <option value="maintenance">Bảo trì hệ thống</option>
+                    <option value="policy">Chính sách &amp; Điều khoản</option>
                 </select>
             </div>
             <div class="ds-form-field">
@@ -770,9 +775,11 @@
                 </div>
             </div>
         </div>
-        <div class="ds-modal-footer">
-            <button type="button" class="ds-btn ds-btn-outline" style="min-width: 100px;" onclick="AdminConsole.closeCreateNotification()">Hủy</button>
-            <button type="button" class="ds-btn ds-btn-primary" style="min-width: 120px;" onclick="AdminConsole.pushNotification()"><i class="fa fa-paper-plane"></i> Phát thông báo</button>
+        <div class="ds-modal-footer" style="display: flex; gap: 8px; justify-content: flex-end;">
+            <input type="hidden" id="notifEditingId" value="">
+            <button type="button" class="ds-btn ds-btn-outline" id="closeNotifModalBtn" style="min-width: 90px;" onclick="AdminConsole.closeCreateNotification()">Hủy</button>
+            <button type="button" class="ds-btn ds-btn-secondary" id="saveNotifDraftBtn" style="min-width: 120px;" onclick="AdminConsole.submitNotification('DRAFT')"><i class="fa fa-floppy-o"></i> Lưu bản nháp</button>
+            <button type="button" class="ds-btn ds-btn-primary" id="publishNotifBtn" style="min-width: 130px;" onclick="AdminConsole.submitNotification('PUBLISHED')"><i class="fa fa-paper-plane"></i> Phát thông báo</button>
         </div>
     </div>
 </div>
