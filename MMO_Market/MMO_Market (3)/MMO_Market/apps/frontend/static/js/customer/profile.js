@@ -1,4 +1,4 @@
-﻿let currentProfile = null;
+let currentProfile = null;
 var accountSidebar = null;
 let profileMessageTimer = null;
 
@@ -302,9 +302,53 @@ function renderProfile(profile) {
     }
     document.getElementById('profileAddress').textContent = profile.address || '-';
 
-    document.getElementById('profileRole').textContent = role;
+    // Translate Role
+    let roleLabel = role;
+    if (role === 'Customer') roleLabel = 'Khách hàng';
+    else if (role === 'Seller') roleLabel = 'Người bán';
+    else if (role === 'Customer_Seller') roleLabel = 'Khách hàng & Người bán';
+    else if (role === 'Staff') roleLabel = 'Nhân viên';
+    else if (role === 'Admin') roleLabel = 'Quản trị viên';
+    document.getElementById('profileRole').textContent = roleLabel;
+
     document.getElementById('profileShopStatusRow').hidden = !isSeller;
-    document.getElementById('profileShopStatus').textContent = profile.shopStatus || '-';
+    
+    // Translate Shop Status
+    const statusEl = document.getElementById('profileShopStatus');
+    if (statusEl) {
+        let statusLabel = '-';
+        let badgeClass = 'ds-badge-info';
+        
+        if (profile.shopStatus) {
+            const stUpper = profile.shopStatus.toUpperCase();
+            if (stUpper === 'PENDING') {
+                statusLabel = 'Chờ kích hoạt';
+                badgeClass = 'ds-badge-warning';
+            } else if (stUpper === 'ACTIVE' || stUpper === 'APPROVED') {
+                statusLabel = 'Hoạt động';
+                badgeClass = 'ds-badge-success';
+            } else if (stUpper === 'REJECTED') {
+                statusLabel = 'Bị từ chối';
+                badgeClass = 'ds-badge-danger';
+            } else if (stUpper === 'WITHDRAWN' || stUpper === 'DELETED') {
+                statusLabel = 'Xóa Shop (Rút tiền cọc)';
+                badgeClass = 'ds-badge-danger';
+            } else if (stUpper === 'SUSPENDED' || stUpper === 'TEMP_LOCKED') {
+                statusLabel = 'Khóa có thời hạn';
+                badgeClass = 'ds-badge-warning';
+            } else if (stUpper === 'LOCKED' || stUpper === 'INDEFINITE_LOCKED') {
+                statusLabel = 'Khóa vô thời hạn';
+                badgeClass = 'ds-badge-warning';
+            } else if (stUpper === 'BANNED' || stUpper === 'PERMANENT_BANNED') {
+                statusLabel = 'Khóa vĩnh viễn';
+                badgeClass = 'ds-badge-danger';
+            } else {
+                statusLabel = profile.shopStatus;
+            }
+        }
+        statusEl.textContent = statusLabel;
+        statusEl.className = `ds-badge ${badgeClass}`;
+    }
     document.getElementById('profileBalance').textContent = balance;
 
     const normalizedRole = accountSidebar.normalizeRole(profile.role);

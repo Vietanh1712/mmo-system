@@ -49,3 +49,24 @@ Chúng ta đã chỉnh sửa toàn diện hệ thống tin nhắn đối chất 
 2. Kiểm tra:
    * Hiển thị đầy đủ lịch sử nhắn tin của Customer & Seller kèm nhãn phân vai rõ ràng.
    * Ô nhập tin nhắn của Staff bị khóa và có placeholder: *"Nhân viên chỉ có quyền Read-only đối với phòng chat đối chất."*
+
+## 2. Kết quả kiểm tra
+- Dự án biên dịch thành công 100% (`BUILD SUCCESS`).
+- Đảm bảo tính liên thông dữ liệu hoàn hảo giữa Seller, Customer và Staff.
+
+---
+
+## 3. Cấu hình gửi Mail & Sửa lỗi OTP (SMTP Configuration)
+- **Lỗi xác thực**: Trước đó, quá trình gửi OTP bị gián đoạn do lỗi `AuthenticationFailedException: 535-5.7.8 Username and Password not accepted` từ phía Gmail.
+- **Khắc phục**: 
+  - Đã cập nhật mật khẩu ứng dụng (App Password) mới (`xaxb rmys deci cauy`) cho tài khoản `nguyenthingoclinh291104@gmail.com` tại dòng 61 của file `application.properties`.
+  - Đã giải phóng tiến trình cũ chạy nền đang giữ cổng `8080` và khởi động lại Server thành công. Hiện tại email OTP đăng ký và khôi phục mật khẩu hoạt động tốt.
+
+---
+
+## 4. Tính năng Đếm ngược 60 giây khi Gửi lại OTP (Resend OTP Countdown)
+- **Cải tiến UX & Bảo mật**: Tránh việc spam click gửi lại OTP liên tục gây nghẽn hòm thư hoặc trùng mã.
+- **Hoạt động**:
+  - Tại trang **Xác thực OTP đăng ký** (`verify-otp.html`) và **Đặt lại mật khẩu** (`reset-password.html`), ngay khi người dùng vừa mở trang, nút **"Gửi lại"** sẽ tự động khóa và đếm ngược hiển thị `Gửi lại (60s)...`.
+  - Hết 60 giây, nút này sẽ hiển thị lại chữ **"Gửi lại"** và cho phép tương tác. Khi bấm, quy trình đếm ngược 60 giây sẽ được lặp lại.
+  - Logic điều khiển đếm ngược được cập nhật thống nhất trong file `auth.js` cho cả hai màn hình.
