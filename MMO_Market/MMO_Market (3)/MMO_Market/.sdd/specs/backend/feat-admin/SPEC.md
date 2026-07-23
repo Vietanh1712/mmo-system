@@ -1,8 +1,8 @@
 # SPEC — System Administration & RBAC
 > **Feature ID:** `feat-admin`
 > **UC Coverage:** UC-15 (System Administration)
-> **Version:** 2.0 | **Status:** Active
-> **Author:** Team | **Last Updated:** 2026-07-16
+> **Version:** 2.1 | **Status:** Active
+> **Author:** Team | **Last Updated:** 2026-07-23
 
 ---
 
@@ -55,7 +55,7 @@ Quản trị viên hệ thống (Admin) cần công cụ quản lý tập trung 
 | ID | EARS Requirement |
 |:---|:---|
 | FR-ADMIN-08 | WHEN an Admin modifies system settings, THE SYSTEM SHALL update the configuration value in SystemConfigurations, record the editor and timestamp, and write an audit log. |
-| FR-ADMIN-09 | THE SYSTEM SHALL write a record to `AuditLogs` for every administrative action, recording the user ID, action type, IP address, description, and json difference payload. |
+| FR-ADMIN-09 | THE SYSTEM SHALL write a record to `AuditLogs` for every administrative action, recording the user ID, category, action type, description, and json difference payload. |
 
 ---
 
@@ -125,7 +125,7 @@ erDiagram
 
 ### 6.1 Báo cáo doanh thu & Dòng tiền
 #### `GET /api/admin/revenue/summary`
-*   **Description**: Lấy thống kê tổng quan doanh thu toàn sàn từ hoa hồng, phí mở Shop, và phí rút tiền.
+*   **Description**: Lấy thống kê tổng quan doanh thu toàn sàn từ hoa hồng C2C (`C2C_Purchase`), phí mở Shop (`Shop_Opening`), và phí rút tiền (`Withdrawal`).
 *   **Response (200 OK):**
     ```json
     {
@@ -138,11 +138,11 @@ erDiagram
 
 #### `GET /api/admin/revenue/transactions`
 *   **Description**: Lấy danh sách giao dịch dòng tiền (Cashflow).
-*   **Query Params**: `keyword`, `type`, `startDate`, `endDate`, `page`, `size`
+*   **Query Params**: `keyword`, `type`, `status`, `startDate`, `endDate`, `sort`, `page`, `size`
 *   **Response (200 OK)**
 
 #### `GET /api/admin/revenue/export`
-*   **Description**: Xuất danh sách giao dịch dòng tiền dưới dạng tệp tin CSV.
+*   **Description**: Xuất danh sách giao dịch dòng tiền dưới dạng tệp tin CSV (BOM UTF-8 đính kèm JWT Bearer Token).
 *   **Response (200 OK, text/csv)**
 
 ### 6.2 Phân quyền RBAC

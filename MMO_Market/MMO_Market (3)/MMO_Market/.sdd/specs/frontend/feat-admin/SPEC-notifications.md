@@ -4,9 +4,9 @@
 > **Route:** `/admin/users#notifications` | **Template:** `templates/admin/users.html`
 > **CSS Script:** `static/css/admin/admin.css`
 > **JS Script:** `static/js/admin-console.js`
-> **Version:** 2.0 | **Status:** Active
+> **Version:** 2.1 | **Status:** Active
 > **Backend ref:** `feat-admin/SPEC.md`
-> **Last Updated:** 2026-07-16
+> **Last Updated:** 2026-07-23
 
 ---
 
@@ -46,6 +46,9 @@ Phân vùng Quản lý Thông báo và Bảo trì hệ thống cung cấp giao d
 │  ┌───────────────────────────────┐ ┌────────────────────────────────┐  │
 │  │[🔍 Tìm tiêu đề, nội dung...   ] │ │[Tất cả phân loại             ▾]│  │
 │  └───────────────────────────────┘ └────────────────────────────────┘  │
+│  ┌───────────────────────────────┐ ┌────────────────────────────────┐  │
+│  │[Từ ngày                       ] │ │[Đến ngày                     ]│  │
+│  └───────────────────────────────┘ └────────────────────────────────┘  │
 │  [ Làm mới bộ lọc ]  [ Tìm kiếm ]                                      │
 │                                                                        │
 │  ┌─────┬───────────┬────────────────────────────┬──────────┬────────┐  │
@@ -67,6 +70,9 @@ Phân vùng Quản lý Thông báo và Bảo trì hệ thống cung cấp giao d
 ### 4.2 Bộ lọc thông báo — `.ds-filter-panel`
 * Ô tìm kiếm từ khóa `#notifSearch`.
 * Dropdown phân loại `#notifTypeFilter` lọc theo loại thông báo: `info`, `warning`, `maintenance`, `policy`.
+* Khoảng thời gian `#notifStartDate`, `#notifEndDate`.
+* Sắp xếp `#notifSortOrder`: Mới nhất trước (`DESC`) hoặc Cũ nhất trước (`ASC`).
+* **Cơ chế tìm kiếm thủ công**: Đổi lựa chọn không tự động lọc; chỉ chạy khi ấn **"Tìm kiếm"**, ấn **Enter** hoặc **"Làm mới bộ lọc"**.
 
 ### 4.3 Bảng lịch sử thông báo hệ thống — `#notifHistoryBody`
 * Hiển thị danh sách các thông báo broadcast đã phát hành gồm STT, thời gian tạo, tiêu đề & nội dung rút gọn, phân loại, người phát hành, và nút "Xóa" để thực hiện soft delete.
@@ -78,18 +84,24 @@ Phân vùng Quản lý Thông báo và Bảo trì hệ thống cung cấp giao d
 1. **Kiểm tra trạng thái bảo trì:**
    * Gọi `GET /api/admin/notifications/maintenance-status`.
    * Nếu bảo trì đang hoạt động (`active: true`), xóa class `ds-hidden` để hiển thị banner `#maintActiveBanner` và chèn nội dung vào `#maintActiveMessage`.
-2. **Phát hành thông báo mới:**
+2. **Tải danh sách thông báo phân trang:**
+   * Gửi AJAX khi người dùng click nút "Tìm kiếm" hoặc chuyển trang:
+     * **Endpoint:** `GET /notifications` (hoặc `/api/notifications`)
+     * **Query Params:** `search`, `type`, `startDate`, `endDate`, `sort`, `page`, `size`.
+     * **Response (200 OK):** Kết xuất dữ liệu vào bảng `#notifHistoryBody`.
+3. **Phát hành thông báo mới:**
    * Khi nhấn "Soạn thông báo", hiển thị modal soạn tin.
    * Admin nhập tiêu đề, nội dung, chọn type. Nhấn gửi, gọi AJAX:
      * **Endpoint:** `POST /api/admin/notifications`
      * **Payload:** `{ "title": "...", "content": "...", "type": "...", "activateMaintenance": true/false }`
      * **Thành công (HTTP 200):** Đóng modal, reload lại danh sách và kiểm tra lại trạng thái bảo trì để hiển thị banner. Ghi nhận Audit Log hành động.
-3. **Tắt chế độ bảo trì nhanh:**
+4. **Tắt chế độ bảo trì nhanh:**
    * Admin nhấn "Tắt bảo trì ngay" trên banner, gửi AJAX:
      * **Endpoint:** `POST /api/admin/notifications/toggle-maintenance`
      * **Payload:** `{ "active": false }`
      * **Thành công (HTTP 200):** Ẩn banner `#maintActiveBanner`, hiển thị thông báo thành công và ghi nhận Audit Log.
-4. **Xóa thông báo:**
+5. **Xóa thông báo:**
    * Admin click nút "Xóa" trên dòng thông báo ở bảng.
    * Gửi AJAX: `DELETE /api/admin/notifications/{id}`.
    * Cập nhật `isDelete = 1` trong DB, reload danh sách tại client và hiện toast. Ghi nhận Audit Log hành động.
+

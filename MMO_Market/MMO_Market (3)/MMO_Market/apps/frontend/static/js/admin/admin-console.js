@@ -207,9 +207,9 @@
     }
 
     const TX_TYPE_LABELS = {
-        Deposit: 'Nạp tiền',
-        Withdrawal: 'Rút tiền',
-        C2C_Purchase: 'Giao dịch C2C'
+        C2C_Purchase: 'Giao dịch C2C',
+        Shop_Opening: 'Phí mở shop',
+        Withdrawal: 'Rút tiền'
     };
 
     const TX_STATUS_LABELS = {
@@ -325,14 +325,9 @@
         });
         document.getElementById('logCategoryFilter')?.addEventListener('change', function () {
             updateActionDropdown(this.value);
-            auditPage = 0;
-            filterAuditLogs();
         });
-        document.getElementById('logActionFilter')?.addEventListener('change', () => { auditPage = 0; filterAuditLogs(); });
-        document.getElementById('logSortOrder')?.addEventListener('change', () => { auditPage = 0; filterAuditLogs(); });
-        document.getElementById('logStartDate')?.addEventListener('change', () => { auditPage = 0; filterAuditLogs(); });
-        document.getElementById('logEndDate')?.addEventListener('change', () => { auditPage = 0; filterAuditLogs(); });
 
+        // Revenue filters
         document.getElementById('revenueSearchBtn')?.addEventListener('click', () => {
             revPage = 0;
             renderRevenueView();
@@ -342,12 +337,39 @@
             const endDate = document.getElementById('revEndDate');
             const k = document.getElementById('revKeywordFilter');
             const t = document.getElementById('revTypeFilter');
+            const s = document.getElementById('revStatusFilter');
+            const sort = document.getElementById('revSortOrder');
             if (startDate) startDate.value = '';
             if (endDate) endDate.value = '';
             if (k) k.value = '';
             if (t) t.value = '';
+            if (s) s.value = '';
+            if (sort) sort.value = 'DESC';
             revPage = 0;
             renderRevenueView();
+        });
+
+        // Notification filters
+        document.getElementById('notifSearchBtn')?.addEventListener('click', () => {
+            notifPage = 0;
+            loadNotificationsView();
+        });
+        document.getElementById('notifResetFilter')?.addEventListener('click', () => {
+            const s = document.getElementById('notifSearch');
+            const t = document.getElementById('notifTypeFilter');
+            const sd = document.getElementById('notifStartDate');
+            const ed = document.getElementById('notifEndDate');
+            const sort = document.getElementById('notifSortOrder');
+            if (s) s.value = '';
+            if (t) t.value = '';
+            if (sd) sd.value = '';
+            if (ed) ed.value = '';
+            if (sort) sort.value = 'DESC';
+            notifPage = 0;
+            loadNotificationsView();
+        });
+        document.getElementById('notifSearch')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); notifPage = 0; loadNotificationsView(); }
         });
 
         document.getElementById('accountFormStatusToggle')?.addEventListener('click', () => {
@@ -1894,6 +1916,8 @@
         const startDate = document.getElementById('revStartDate')?.value || '';
         const endDate = document.getElementById('revEndDate')?.value || '';
         const typeFilter = document.getElementById('revTypeFilter')?.value || '';
+        const statusFilter = document.getElementById('revStatusFilter')?.value || '';
+        const sortOrder = document.getElementById('revSortOrder')?.value || 'DESC';
         const keyword = (document.getElementById('revKeywordFilter')?.value || '').trim();
 
         try {
@@ -1912,8 +1936,10 @@
             const params = new URLSearchParams({
                 keyword: keyword,
                 type: typeFilter,
+                status: statusFilter,
                 startDate: startDate,
                 endDate: endDate,
+                sort: sortOrder,
                 page: String(revPage),
                 size: String(revPageSize)
             });
@@ -1929,7 +1955,8 @@
                 const totalPg = Math.max(data.totalPages || 1, 1);
                 
                 body.innerHTML = slice.length ? slice.map((t, i) => {
-                    const typeClass = t.type === 'Deposit' ? 'ds-badge-success' : (t.type === 'Withdrawal' ? 'ds-badge-warning' : 'ds-badge-info');
+                    const typeClass = t.type === 'Shop_Opening' ? 'ds-badge-info' : (t.type === 'Withdrawal' ? 'ds-badge-warning' : 'ds-badge-success');
+                    const statusClass = t.status === 'Completed' ? 'ds-badge-success' : (t.status === 'Held' ? 'ds-badge-secondary' : (t.status === 'Pending' ? 'ds-badge-warning' : 'ds-badge-danger'));
                     return `
                         <tr>
                             <td class="ds-table-center">${sttNumber(revPage, revPageSize, i)}</td>
@@ -1939,7 +1966,7 @@
                             <td class="ds-table-center"><span class="ds-badge ${typeClass}">${escapeHtml(txTypeLabel(t.type))}</span></td>
                             <td class="ds-money">${formatVnd(t.amount)}</td>
                             <td class="ds-money">${formatVnd(t.fee)}</td>
-                            <td class="ds-table-center"><span class="ds-badge ${t.status === 'Completed' ? 'ds-badge-success' : (t.status === 'Held' ? 'badge held' : 'ds-badge-danger')}">${escapeHtml(txStatusLabel(t.status))}</span></td>
+                            <td class="ds-table-center"><span class="ds-badge ${statusClass}">${escapeHtml(txStatusLabel(t.status))}</span></td>
                         </tr>
                     `;
                 }).join('') : '<tr><td colspan="8" class="ds-empty-state">Không có giao dịch phù hợp.</td></tr>';
@@ -1965,75 +1992,52 @@
         }
     }
 
+    window.AdminConsole.exportRevenue = async function () {
+        const startDate = document.getElementById('revStartDate')?.value || '';
+        const endDate = document.getElementById('revEndDate')?.value || '';
+        const typeFilter = document.getElementById('revTypeFilter')?.value || '';
+        const statusFilter = document.getElementById('revStatusFilter')?.value || '';
+        const sortOrder = document.getElementById('revSortOrder')?.value || 'DESC';
+        const keyword = (document.getElementById('revKeywordFilter')?.value || '').trim();
+
+        const loadingToast = showToast('Đang xuất báo cáo doanh thu...', 'info');
+        try {
+            const params = new URLSearchParams({
+                keyword: keyword,
+                type: typeFilter,
+                status: statusFilter,
+                startDate: startDate,
+                endDate: endDate,
+                sort: sortOrder
+            });
+            const response = await authFetch(`/admin/revenue/export?${params.toString()}`);
+            if (loadingToast) loadingToast.remove();
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `bao-cao-doanh-thu-${new Date().toISOString().slice(0, 10)}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+                showToast('Đã tải báo cáo doanh thu thành công.');
+            } else {
+                showToast('Không thể xuất báo cáo từ máy chủ.', true);
+            }
+        } catch (e) {
+            if (loadingToast) loadingToast.remove();
+            showToast('Lỗi kết nối khi xuất báo cáo.', true);
+        }
+    };
+
     window.AdminConsole.mockExport = async function (type) {
         if (type === 'revenue') {
-            const loadingToast = showToast('Đang xuất báo cáo doanh thu...', 'info');
-            try {
-                const startDate = document.getElementById('revStartDate')?.value || '';
-                const endDate = document.getElementById('revEndDate')?.value || '';
-                const typeFilter = document.getElementById('revTypeFilter')?.value || '';
-                const keyword = (document.getElementById('revKeywordFilter')?.value || '').trim();
-                const params = new URLSearchParams({
-                    keyword: keyword,
-                    type: typeFilter,
-                    startDate: startDate,
-                    endDate: endDate
-                });
-                const response = await authFetch(`/admin/revenue/export?${params.toString()}`);
-                if (loadingToast) loadingToast.remove();
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `bao-cao-doanh-thu-${new Date().toISOString().slice(0, 10)}.csv`;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    window.URL.revokeObjectURL(url);
-                    showToast('Đã tải báo cáo doanh thu thành công.');
-                } else {
-                    showToast('Không thể xuất báo cáo từ máy chủ.', true);
-                }
-            } catch (e) {
-                if (loadingToast) loadingToast.remove();
-                showToast('Lỗi kết nối khi xuất báo cáo.', true);
-            }
-            return;
+            return window.AdminConsole.exportRevenue();
         } else if (type === 'audit') {
-            const loadingToast = showToast('Đang xuất nhật ký hệ thống...', 'info');
-            try {
-                const search = (document.getElementById('logSearch')?.value || '').trim();
-                const action = document.getElementById('logActionFilter')?.value || '';
-                const params = new URLSearchParams({
-                    search: search,
-                    action: action
-                });
-                const response = await authFetch(`/admin/audit-logs/export?${params.toString()}`);
-                if (loadingToast) loadingToast.remove();
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `nhat-ky-he-thong-${new Date().toISOString().slice(0, 10)}.csv`;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    window.URL.revokeObjectURL(url);
-                    showToast('Đã tải nhật ký hệ thống thành công.');
-                } else {
-                    showToast('Không thể xuất nhật ký từ máy chủ.', true);
-                }
-            } catch (e) {
-                if (loadingToast) loadingToast.remove();
-                showToast('Lỗi kết nối khi xuất nhật ký.', true);
-            }
-            return;
+            return window.AdminConsole.exportAuditLogs();
         }
-        const label = type === 'audit' ? 'nhật ký' : 'doanh thu';
-        showToast(`Đang xuất báo cáo ${label}...`);
-        setTimeout(() => showToast(`Đã tải báo cáo ${label} (demo).`), 1200);
     };
 
     async function loadSystemConfigForm() {
@@ -2165,12 +2169,18 @@
         // Apply filters
         const keyword = (document.getElementById('notifSearch')?.value || '').trim();
         const typeFilter = document.getElementById('notifTypeFilter')?.value || '';
+        const startDate = document.getElementById('notifStartDate')?.value || '';
+        const endDate = document.getElementById('notifEndDate')?.value || '';
+        const sortOrder = document.getElementById('notifSortOrder')?.value || 'DESC';
 
         const params = new URLSearchParams();
         params.append('page', notifPage);
         params.append('size', notifPageSize);
         if (keyword) params.append('search', keyword);
         if (typeFilter) params.append('type', typeFilter);
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        if (sortOrder) params.append('sort', sortOrder);
 
         try {
             const response = await authFetch('/notifications?' + params.toString());

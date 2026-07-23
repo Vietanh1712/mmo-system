@@ -25,9 +25,12 @@ public class NotificationController {
     public Map<String, Object> getNotifications(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String type,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(defaultValue = "DESC") String sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size) {
-        return notificationService.getNotifications(search, type, page, size);
+        return notificationService.getNotifications(search, type, startDate, endDate, sort, page, size);
     }
 
     @GetMapping("/api/admin/notifications/maintenance-status")

@@ -117,20 +117,13 @@ public class AdminRevenueService {
                     catch (NumberFormatException e) { return 1.5; }
                 }).orElse(1.5);
 
-        long minWithdrawFee = systemConfigurationRepository.findByConfigKey("MIN_WITHDRAW_FEE_VND")
-                .map(c -> {
-                    try { return Long.parseLong(c.getConfigValue()); }
-                    catch (NumberFormatException e) { return 10000L; }
-                }).orElse(10000L);
-
         List<Withdrawal> withdrawals = withdrawalRepository.findByStatusAndIsDeleteFalse("Completed");
 
         long withdrawalFees = withdrawals.stream().mapToLong(w -> {
             if (w.getFeeVnd() != null) {
                 return w.getFeeVnd();
             }
-            long calculatedFee = (long) (w.getAmountVnd() * (withdrawalPercent / 100.0));
-            return Math.max(calculatedFee, minWithdrawFee);
+            return (long) (w.getAmountVnd() * (withdrawalPercent / 100.0));
         }).sum();
 
         // 4. Doanh thu ròng tổng cộng
@@ -146,9 +139,14 @@ public class AdminRevenueService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> getCashflowTransactions(Long operatorId, String keyword, String type, String startDate, String endDate, int page, int size) {
+        return getCashflowTransactions(operatorId, keyword, type, "", startDate, endDate, "DESC", page, size);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getCashflowTransactions(Long operatorId, String keyword, String type, String status, String startDate, String endDate, String sort, int page, int size) {
         requireAdmin(operatorId);
         
-        List<CashflowTransactionDto> allCashflow = getFilteredCashflowList(keyword, type, startDate, endDate);
+        List<CashflowTransactionDto> allCashflow = getFilteredCashflowList(keyword, type, status, startDate, endDate, sort);
 
         int safePage = Math.max(page, 0);
         int safeSize = Math.max(size, 1);
@@ -166,9 +164,14 @@ public class AdminRevenueService {
 
     @Transactional(readOnly = true)
     public byte[] exportRevenueCsv(Long operatorId, String keyword, String type, String startDate, String endDate) {
+        return exportRevenueCsv(operatorId, keyword, type, "", startDate, endDate, "DESC");
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] exportRevenueCsv(Long operatorId, String keyword, String type, String status, String startDate, String endDate, String sort) {
         requireAdmin(operatorId);
 
-        List<CashflowTransactionDto> transactions = getFilteredCashflowList(keyword, type, startDate, endDate);
+        List<CashflowTransactionDto> transactions = getFilteredCashflowList(keyword, type, status, startDate, endDate, sort);
         
         StringBuilder csv = new StringBuilder();
         // Byte Order Mark (BOM) for Excel UTF-8 support
@@ -178,8 +181,8 @@ public class AdminRevenueService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
         for (int i = 0; i < transactions.size(); i++) {
             CashflowTransactionDto tx = transactions.get(i);
-            String txTypeLabel = "Deposit".equals(tx.getType()) ? "Nạp tiền" : ("Withdrawal".equals(tx.getType()) ? "Rút tiền" : "Giao dịch C2C");
-            String statusLabel = "Completed".equals(tx.getStatus()) ? "Hoàn tất" : ("Held".equals(tx.getStatus()) ? "Đang giữ" : ("Pending".equals(tx.getStatus()) ? "Đang xử lý" : "Thất bại"));
+            String txTypeLabel = "Shop_Opening".equals(tx.getType()) ? "Phí mở shop" : ("Withdrawal".equals(tx.getType()) ? "Rút tiền" : "Giao dịch C2C");
+            String statusLabel = "Completed".equals(tx.getStatus()) ? "Hoàn tất" : ("Held".equals(tx.getStatus()) ? "Tạm giữ (Escrow)" : ("Pending".equals(tx.getStatus()) ? "Đang xử lý" : "Thất bại"));
             csv.append(i + 1).append(",")
                     .append(tx.getId()).append(",")
                     .append(tx.getTimestamp().format(formatter)).append(",")
@@ -193,41 +196,35 @@ public class AdminRevenueService {
         return csv.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
     }
 
-    private List<CashflowTransactionDto> getFilteredCashflowList(String keyword, String type, String startDate, String endDate) {
+    private List<CashflowTransactionDto> getFilteredCashflowList(String keyword, String type, String statusFilter, String startDate, String endDate, String sort) {
         double withdrawalPercent = systemConfigurationRepository.findByConfigKey("WITHDRAWAL_FEE_PERCENT")
                 .map(c -> {
                     try { return Double.parseDouble(c.getConfigValue()); }
                     catch (NumberFormatException e) { return 1.5; }
                 }).orElse(1.5);
 
-        long minWithdrawFee = systemConfigurationRepository.findByConfigKey("MIN_WITHDRAW_FEE_VND")
-                .map(c -> {
-                    try { return Long.parseLong(c.getConfigValue()); }
-                    catch (NumberFormatException e) { return 10000L; }
-                }).orElse(10000L);
-
         List<CashflowTransactionDto> allCashflow = new ArrayList<>();
 
-        // 1. Nạp tiền (TopupTransactions)
-        List<TopupTransaction> topups = topupTransactionRepository.findAllByIsDeleteFalse();
-        Set<Long> topupUserIds = topups.stream().map(TopupTransaction::getUserId).collect(Collectors.toSet());
-        Map<Long, String> userEmailMap = new HashMap<>();
-        if (!topupUserIds.isEmpty()) {
-            userEmailMap = userRepository.findAllById(topupUserIds).stream()
-                    .collect(Collectors.toMap(User::getId, User::getEmail, (e1, e2) -> e1));
-        }
+        long shopOpeningFee = systemConfigurationRepository.findByConfigKey("SHOP_OPENING_FEE_VND")
+                .map(c -> {
+                    try { return Long.parseLong(c.getConfigValue()); }
+                    catch (NumberFormatException e) { return 50000L; }
+                }).orElse(50000L);
 
-        for (TopupTransaction t : topups) {
-            String email = userEmailMap.getOrDefault(t.getUserId(), "unknown@mmo.com");
-            allCashflow.add(CashflowTransactionDto.builder()
-                    .id("DEP" + t.getId())
-                    .timestamp(t.getCreatedAt())
-                    .email(email)
-                    .type("Deposit")
-                    .amount(t.getAmountVnd())
-                    .fee(0L) // Nạp tiền không mất phí nạp
-                    .status("Success".equalsIgnoreCase(t.getStatus()) || "Completed".equalsIgnoreCase(t.getStatus()) ? "Completed" : t.getStatus())
-                    .build());
+        // 1. Phí mở Shop (SellerRegistrations được phê duyệt)
+        List<SellerRegistration> shopRegistrations = sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc();
+        for (SellerRegistration reg : shopRegistrations) {
+            if ("Approved".equalsIgnoreCase(reg.getStatus())) {
+                allCashflow.add(CashflowTransactionDto.builder()
+                        .id("SHOP" + reg.getId())
+                        .timestamp(reg.getCreatedAt())
+                        .email(reg.getUser() != null ? reg.getUser().getEmail() : "unknown@mmo.com")
+                        .type("Shop_Opening")
+                        .amount(shopOpeningFee)
+                        .fee(shopOpeningFee)
+                        .status("Completed")
+                        .build());
+            }
         }
 
         // 2. Rút tiền (Withdrawals)
@@ -237,8 +234,7 @@ public class AdminRevenueService {
             if (w.getFeeVnd() != null) {
                 fee = w.getFeeVnd();
             } else {
-                long calculatedFee = (long) (w.getAmountVnd() * (withdrawalPercent / 100.0));
-                fee = Math.max(calculatedFee, minWithdrawFee);
+                fee = (long) (w.getAmountVnd() * (withdrawalPercent / 100.0));
             }
             String status = "Rejected".equalsIgnoreCase(w.getStatus()) ? "Failed" : w.getStatus();
 
@@ -274,6 +270,7 @@ public class AdminRevenueService {
         // Áp dụng bộ lọc
         String kw = keyword != null ? keyword.trim().toLowerCase(Locale.ROOT) : "";
         String tp = type != null ? type.trim() : "";
+        String st = statusFilter != null ? statusFilter.trim() : "";
         
         LocalDate parsedStart = null;
         LocalDate parsedEnd = null;
@@ -284,16 +281,21 @@ public class AdminRevenueService {
             if (endDate != null && !endDate.isBlank()) {
                 parsedEnd = LocalDate.parse(endDate.trim());
             }
-        } catch (Exception ignored) {
-            // Bỏ qua lỗi định dạng ngày không hợp lệ, không áp dụng lọc ngày bị lỗi
-        }
+        } catch (Exception ignored) {}
 
         final LocalDate finalStart = parsedStart;
         final LocalDate finalEnd = parsedEnd;
 
+        boolean isAsc = "ASC".equalsIgnoreCase(sort);
+        Comparator<CashflowTransactionDto> comparator = Comparator.comparing(CashflowTransactionDto::getTimestamp);
+        if (!isAsc) {
+            comparator = comparator.reversed();
+        }
+
         return allCashflow.stream()
                 .filter(tx -> kw.isEmpty() || tx.getId().toLowerCase(Locale.ROOT).contains(kw) || tx.getEmail().toLowerCase(Locale.ROOT).contains(kw))
                 .filter(tx -> tp.isEmpty() || tx.getType().equalsIgnoreCase(tp))
+                .filter(tx -> st.isEmpty() || tx.getStatus().equalsIgnoreCase(st))
                 .filter(tx -> {
                     if (tx.getTimestamp() == null) return false;
                     LocalDate txDate = tx.getTimestamp().toLocalDate();
@@ -305,7 +307,7 @@ public class AdminRevenueService {
                     }
                     return true;
                 })
-                .sorted(Comparator.comparing(CashflowTransactionDto::getTimestamp).reversed())
+                .sorted(comparator)
                 .collect(Collectors.toList());
     }
 }

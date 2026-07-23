@@ -97,7 +97,7 @@ class NotificationServiceTest {
                 .build());
 
         Page<Notification> page = new PageImpl<>(list, PageRequest.of(0, 5), 1);
-        when(notificationRepository.searchNotifications(any(), any(), any(Pageable.class))).thenReturn(page);
+        when(notificationRepository.searchNotifications(any(), any(), any(), any(), any(Pageable.class))).thenReturn(page);
         when(userRepository.findById(1L)).thenReturn(Optional.of(adminUser));
 
         Map<String, Object> result = notificationService.getNotifications("Notice", "info", 0, 5);
@@ -194,7 +194,7 @@ class NotificationServiceTest {
                 .type("maintenance")
                 .build());
         Page<Notification> page = new PageImpl<>(list, PageRequest.of(0, 1), 1);
-        when(notificationRepository.searchNotifications("maintenance", null, PageRequest.of(0, 1))).thenReturn(page);
+        when(notificationRepository.searchNotifications("maintenance", null, null, null, PageRequest.of(0, 1))).thenReturn(page);
 
         Map<String, Object> result = notificationService.getMaintenanceStatus();
 

@@ -49,10 +49,30 @@ public class NotificationService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> getNotifications(String search, String type, int page, int size) {
-        Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        return getNotifications(search, type, null, null, "DESC", page, size);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getNotifications(String search, String type, String startDateStr, String endDateStr, String sort, int page, int size) {
+        LocalDateTime startAt = null;
+        LocalDateTime endAt = null;
+        if (startDateStr != null && !startDateStr.isBlank()) {
+            try { startAt = java.time.LocalDate.parse(startDateStr.trim()).atStartOfDay(); } catch (Exception ignored) {}
+        }
+        if (endDateStr != null && !endDateStr.isBlank()) {
+            try { endAt = java.time.LocalDate.parse(endDateStr.trim()).atTime(23, 59, 59); } catch (Exception ignored) {}
+        }
+
+        org.springframework.data.domain.Sort.Direction direction = "ASC".equalsIgnoreCase(sort)
+                ? org.springframework.data.domain.Sort.Direction.ASC
+                : org.springframework.data.domain.Sort.Direction.DESC;
+
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by(direction, "createdAt"));
         Page<Notification> notifPage = notificationRepository.searchNotifications(
                 (type == null || type.isBlank()) ? null : type,
                 (search == null || search.isBlank()) ? null : search.trim(),
+                startAt,
+                endAt,
                 pageable
         );
 
@@ -175,6 +195,8 @@ public class NotificationService {
         if ("TRUE".equalsIgnoreCase(val)) {
             Page<Notification> latest = notificationRepository.searchNotifications(
                     "maintenance",
+                    null,
+                    null,
                     null,
                     org.springframework.data.domain.PageRequest.of(0, 1)
             );

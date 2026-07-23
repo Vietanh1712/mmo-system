@@ -4,15 +4,15 @@
 > **Route:** `/admin/users#revenue` | **Template:** `templates/admin/users.html`
 > **CSS Script:** `static/css/admin/admin.css`
 > **JS Script:** `static/js/admin-console.js`
-> **Version:** 2.0 | **Status:** Active
-> **Backend ref:** `feat-admin/UC-15-system-administration.md`
-> **Last Updated:** 2026-07-16
+> **Version:** 2.1 | **Status:** Active
+> **Backend ref:** `feat-admin/SPEC.md`
+> **Last Updated:** 2026-07-23
 
 ---
 
 ## 1. TỔNG QUAN PHÂN VÙNG
 
-Phân vùng Doanh thu & Dòng tiền cung cấp cho Admin báo cáo tổng quát về các nguồn thu tài chính của sàn (hoa hồng C2C từ đơn hàng hoàn thành, phí mở Shop của Seller, và phí thu được từ các lệnh rút tiền đã thực hiện) kèm bảng lịch sử giao dịch dòng tiền toàn sàn.
+Phân vùng Doanh thu & Dòng tiền cung cấp cho Admin báo cáo tổng quát về 3 nguồn thu tài chính thực tế của sàn (phí hoa hồng C2C từ đơn hàng hoàn thành, phí mở Shop của Seller, và phí thu được từ các lệnh rút tiền) kèm bảng lịch sử giao dịch dòng tiền toàn sàn.
 
 ---
 
@@ -46,8 +46,11 @@ Phân vùng Doanh thu & Dòng tiền cung cấp cho Admin báo cáo tổng quát
 │                                                                        │
 │  BỘ LỌC GIAO DỊCH                                                      │
 │  ┌─────────────────┐ ┌─────────────────┐ ┌──────────────┐ ┌──────────┐ │
-│  │[🔍 Tìm mã GD...]│ │[Tất cả loại  ▾] │ │[Từ ngày    ] │ │[Đến ngày]│ │
+│  │[🔍 Tìm mã GD...]│ │[Tất cả nguồn  ▾]│ │[Trạng thái  ▾]│ │[Mới ➔ Cũ▾]│ │
 │  └─────────────────┘ └─────────────────┘ └──────────────┘ └──────────┘ │
+│  ┌─────────────────┐ ┌─────────────────┐                               │
+│  │[Từ ngày       ] │ │[Đến ngày      ] │                               │
+│  └─────────────────┘ └─────────────────┘                               │
 │  [ Làm mới bộ lọc ]  [ Tìm kiếm ]  [ 💾 Xuất Excel ]                   │
 │                                                                        │
 │  ┌─────┬─────────┬──────────┬─────────────────┬──────────┬──────────┐  │
@@ -65,32 +68,34 @@ Phân vùng Doanh thu & Dòng tiền cung cấp cho Admin báo cáo tổng quát
 
 ### 4.1 Khối thẻ doanh thu ròng — `.stats-grid-4`
 * Bốn thẻ hiển thị doanh thu ròng lấy trực tiếp từ hệ thống:
-  * `#revCommissions`: Tổng hoa hồng thu được từ Transactions (Completed, Held).
-  * `#revBuyerFees`: Tổng phí mở shop thu được từ SellerRegistrations (Approved).
-  * `#revWithdrawalFees`: Tổng phí rút tiền thu được từ Withdrawals (Completed).
+  * `#revCommissions`: Tổng hoa hồng thu được từ Transactions (`C2C_Purchase`).
+  * `#revBuyerFees`: Tổng phí mở shop thu được từ SellerRegistrations (`Shop_Opening`).
+  * `#revWithdrawalFees`: Tổng phí rút tiền thu được từ Withdrawals (`Withdrawal`).
   * `#revNetTotal`: Doanh thu ròng tổng cộng (tổng của 3 nguồn thu trên).
-* Chữ số tiền tệ được định dạng dạng VNĐ đẹp và căn chỉnh bằng font `var(--ds-money-font)`.
 
 ### 4.2 Bộ lọc dòng tiền — `.ds-filter-panel`
 * Tìm kiếm từ khóa theo mã giao dịch hoặc email người dùng `#revKeywordFilter`.
-* Lọc loại giao dịch `#revTypeFilter` (Nạp tiền, Rút tiền, Mua hàng).
+* Lọc nguồn doanh thu `#revTypeFilter`: `C2C_Purchase` (Giao dịch C2C), `Shop_Opening` (Phí mở shop), `Withdrawal` (Rút tiền).
+* Lọc trạng thái `#revStatusFilter`: `Completed`, `Pending`, `Held`, `Failed`.
 * Lọc theo ngày bắt đầu `#revStartDate` và ngày kết thúc `#revEndDate`.
+* Sắp xếp `#revSortOrder`: Mới nhất trước (`DESC`) hoặc Cũ nhất trước (`ASC`).
+* **Cơ chế tìm kiếm thủ công**: Đổi lựa chọn không tự động lọc; chỉ chạy khi ấn **"Tìm kiếm"**, ấn **Enter** hoặc **"Làm mới bộ lọc"**.
 
 ### 4.3 Danh sách giao dịch dòng tiền — `#revTransactionsBody`
-* Bảng hiển thị thông tin STT, Mã giao dịch, Thời gian, Email tài khoản thực hiện, Loại giao dịch (định dạng badge màu), Số tiền giao dịch, Phí sàn thu được, và Trạng thái giao dịch.
+* Bảng hiển thị thông tin STT, Mã giao dịch, Thời gian, Email tài khoản thực hiện, Loại giao dịch (badge màu), Số tiền giao dịch, Phí sàn thu được, và Trạng thái giao dịch.
 
 ---
 
 ## 5. LUỒNG XỬ LÝ JS & AJAX
 
 1. **Tải thông số thống kê doanh thu:**
-   * Gửi AJAX tải dữ liệu tổng quan:
+   * Gửi AJAX lấy dữ liệu tổng quan:
      * **Endpoint:** `GET /api/admin/revenue/summary`
      * **Response (200 OK):** Format số tiền sang VNĐ và chèn vào các thẻ `#revCommissions`, `#revBuyerFees`, `#revWithdrawalFees`, `#revNetTotal`.
 2. **Tải danh sách giao dịch dòng tiền phân trang:**
-   * Gửi AJAX khi tải trang hoặc khi người dùng click nút "Tìm kiếm":
+   * Gửi AJAX khi người dùng click nút "Tìm kiếm":
      * **Endpoint:** `GET /api/admin/revenue/transactions`
-     * **Query Params:** `keyword`, `type`, `startDate`, `endDate`, `page`, `size`.
-     * **Response (200 OK):** Kết xuất dữ liệu dòng bảng vào `#revTransactionsBody` và dựng thanh phân trang `#revenuePagination`.
-3. **Xuất báo cáo doanh thu CSV:**
-   * Khi nhấn nút "Xuất Excel", gọi trực tiếp URL `GET /api/admin/revenue/export` kèm theo các param lọc để tải tệp CSV về máy.
+     * **Query Params:** `keyword`, `type`, `status`, `startDate`, `endDate`, `sort`, `page`, `size`.
+     * **Response (200 OK):** Render dữ liệu vào `#revTransactionsBody` và dựng thanh phân trang `#revenuePagination`.
+3. **Xuất báo cáo doanh thu CSV an toàn:**
+   * Khi nhấn "Xuất Excel", gửi request xác thực `authFetch('/admin/revenue/export?...')` đính kèm Token và tải về file CSV `bao-cao-doanh-thu-YYYY-MM-DD.csv`.

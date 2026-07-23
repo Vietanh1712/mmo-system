@@ -30,11 +30,13 @@ public class AdminRevenueController {
             @AuthenticationPrincipal Long operatorId,
             @RequestParam(required = false, defaultValue = "") String keyword,
             @RequestParam(required = false, defaultValue = "") String type,
+            @RequestParam(required = false, defaultValue = "") String status,
             @RequestParam(required = false, defaultValue = "") String startDate,
             @RequestParam(required = false, defaultValue = "") String endDate,
+            @RequestParam(required = false, defaultValue = "DESC") String sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(adminRevenueService.getCashflowTransactions(operatorId, keyword, type, startDate, endDate, page, size));
+        return ResponseEntity.ok(adminRevenueService.getCashflowTransactions(operatorId, keyword, type, status, startDate, endDate, sort, page, size));
     }
 
     @GetMapping("/export")
@@ -42,9 +44,11 @@ public class AdminRevenueController {
             @AuthenticationPrincipal Long operatorId,
             @RequestParam(required = false, defaultValue = "") String keyword,
             @RequestParam(required = false, defaultValue = "") String type,
+            @RequestParam(required = false, defaultValue = "") String status,
             @RequestParam(required = false, defaultValue = "") String startDate,
-            @RequestParam(required = false, defaultValue = "") String endDate) {
-        byte[] csvData = adminRevenueService.exportRevenueCsv(operatorId, keyword, type, startDate, endDate);
+            @RequestParam(required = false, defaultValue = "") String endDate,
+            @RequestParam(required = false, defaultValue = "DESC") String sort) {
+        byte[] csvData = adminRevenueService.exportRevenueCsv(operatorId, keyword, type, status, startDate, endDate, sort);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=bao-cao-doanh-thu.csv")
                 .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
