@@ -84,24 +84,7 @@ public class SellerController {
         return user;
     }
 
-    private int calculateShopLevel(User seller) {
-        long completedCount = transactionRepository.countCompletedSalesBySeller(seller);
-        long totalSold = transactionRepository.countTotalSalesBySeller(seller);
-        long resolvedComplaints = complaintRepository.countResolvedComplaintsBySeller(seller);
 
-        double disputeRate = totalSold > 0 ? (double) resolvedComplaints / totalSold : 0.0;
-
-        boolean isNewByAge = seller.getCreatedAt() != null &&
-                java.time.Duration.between(seller.getCreatedAt(), java.time.LocalDateTime.now()).toDays() < 30;
-
-        if (disputeRate >= 0.02) {
-            return 0; // Shop Cảnh Cáo (Level 0)
-        } else if (isNewByAge || completedCount < 20) {
-            return 1; // Shop Mới (Level 1)
-        } else {
-            return 2; // Shop Uy Tín (Level 2)
-        }
-    }
 
     // 1. Dashboard API
     @GetMapping("/dashboard")
@@ -147,7 +130,7 @@ public class SellerController {
             result.put("activeProductsCount", activeProductsCount);
             result.put("openComplaintsCount", openComplaints);
             result.put("recentTransactions", recentTransactions);
-            result.put("shopLevel", calculateShopLevel(seller));
+            result.put("shopLevel", seller.getShopLevel() != null ? seller.getShopLevel() : 1);
             result.put("disputeRate", disputeRate);
 
             return ResponseEntity.ok(result);
@@ -192,7 +175,7 @@ public class SellerController {
             result.put("accountNumber", bank != null ? bank.getAccountNumber() : "");
             result.put("accountHolder", seller.getFullName() != null ? seller.getFullName().toUpperCase() : "");
             result.put("branch", bank != null ? bank.getBranch() : "");
-            result.put("shopLevel", calculateShopLevel(seller));
+            result.put("shopLevel", seller.getShopLevel() != null ? seller.getShopLevel() : 1);
 
             return ResponseEntity.ok(result);
         } catch (Exception e) {
@@ -386,7 +369,7 @@ public class SellerController {
         try {
             User seller = getSeller(userId);
             long activeProductsCount = productRepository.countBySellerIdAndIsDeleteFalse(seller.getId());
-            int shopLevel = calculateShopLevel(seller);
+            int shopLevel = seller.getShopLevel() != null ? seller.getShopLevel() : 1;
             
             long balance = seller.getBalanceVnd() != null ? seller.getBalanceVnd() : 0L;
             if (balance < 0 && (shopLevel == 0 || shopLevel == 1)) {
@@ -635,7 +618,7 @@ public class SellerController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền thao tác trên sản phẩm này."));
             }
 
-            int shopLevel = calculateShopLevel(seller);
+            int shopLevel = seller.getShopLevel() != null ? seller.getShopLevel() : 1;
             long balance = seller.getBalanceVnd() != null ? seller.getBalanceVnd() : 0L;
             if (balance < 0 && (shopLevel == 0 || shopLevel == 1)) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Tài khoản của bạn đang có số dư âm. Vui lòng nạp tiền thanh toán nợ để tiếp tục đăng bán sản phẩm."));
@@ -682,7 +665,7 @@ public class SellerController {
             String status = (String) request.get("status");
             String imageUrl = (String) request.get("imageUrl");
 
-            int shopLevel = calculateShopLevel(seller);
+            int shopLevel = seller.getShopLevel() != null ? seller.getShopLevel() : 1;
 
             // Chặn cập nhật biến thể đối với Shop Level 0 & 1 khi ví âm
             long balance = seller.getBalanceVnd() != null ? seller.getBalanceVnd() : 0L;
