@@ -49,10 +49,36 @@ public class NotificationService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> getNotifications(String search, String type, int page, int size) {
-        Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        return getNotifications(search, type, "ALL", null, null, "DESC", page, size);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getNotifications(String search, String type, String startDateStr, String endDateStr, String sort, int page, int size) {
+        return getNotifications(search, type, "ALL", startDateStr, endDateStr, sort, page, size);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getNotifications(String search, String type, String status, String startDateStr, String endDateStr, String sort, int page, int size) {
+        LocalDateTime startAt = null;
+        LocalDateTime endAt = null;
+        if (startDateStr != null && !startDateStr.isBlank()) {
+            try { startAt = java.time.LocalDate.parse(startDateStr.trim()).atStartOfDay(); } catch (Exception ignored) {}
+        }
+        if (endDateStr != null && !endDateStr.isBlank()) {
+            try { endAt = java.time.LocalDate.parse(endDateStr.trim()).atTime(23, 59, 59); } catch (Exception ignored) {}
+        }
+
+        org.springframework.data.domain.Sort.Direction direction = "ASC".equalsIgnoreCase(sort)
+                ? org.springframework.data.domain.Sort.Direction.ASC
+                : org.springframework.data.domain.Sort.Direction.DESC;
+
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by(direction, "createdAt"));
         Page<Notification> notifPage = notificationRepository.searchNotifications(
                 (type == null || type.isBlank()) ? null : type,
+                (status == null || status.isBlank()) ? "ALL" : status.trim(),
                 (search == null || search.isBlank()) ? null : search.trim(),
+                startAt,
+                endAt,
                 pageable
         );
 
@@ -65,6 +91,7 @@ public class NotificationService {
             map.put("title", n.getTitle());
             map.put("content", n.getContent());
             map.put("type", n.getType());
+            map.put("status", n.getStatus() != null ? n.getStatus() : "PUBLISHED");
 
             String authorName = "Hệ thống";
             if (n.getUserId() != null) {
@@ -104,6 +131,7 @@ public class NotificationService {
                 .title(title.trim())
                 .content(content.trim())
                 .type(type.trim().toLowerCase())
+                .status("PUBLISHED")
                 .isDelete(false)
                 .isRead(false)
                 .severity("INFO")
@@ -114,7 +142,7 @@ public class NotificationService {
         Map<String, Object> diff = new HashMap<>();
         diff.put("title", title);
         diff.put("type", type);
-        saveAuditLog(operator, "Notification_Create", "Đã tạo thông báo: " + title, ipAddress, diff);
+        saveAuditLog(operator, "Notification_Create", "Đã phát hành thông báo: " + title, ipAddress, diff);
 
         if (activateMaintenance && "maintenance".equalsIgnoreCase(type)) {
             updateMaintenanceConfig("TRUE", operator.getId());
@@ -126,10 +154,97 @@ public class NotificationService {
     }
 
     @Transactional
+    public void saveDraft(Long operatorId, String title, String content, String type, String ipAddress) {
+        User operator = requireAdminOrStaff(operatorId);
+
+        if (title == null || title.trim().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tiêu đề không được để trống.");
+        }
+        if (content == null || content.trim().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nội dung không được để trống.");
+        }
+        if (type == null || type.trim().isBlank()) {
+            type = "info";
+        }
+
+        Notification notif = Notification.builder()
+                .userId(operator.getId())
+                .title(title.trim())
+                .content(content.trim())
+                .type(type.trim().toLowerCase())
+                .status("DRAFT")
+                .isDelete(false)
+                .isRead(false)
+                .severity("INFO")
+                .build();
+        notificationRepository.save(notif);
+
+        Map<String, Object> diff = new HashMap<>();
+        diff.put("title", title);
+        saveAuditLog(operator, "Notification_Draft_Save", "Lưu bản nháp thông báo: " + title, ipAddress, diff);
+    }
+
+    @Transactional
+    public void updateDraft(Long operatorId, Long draftId, String title, String content, String type, String ipAddress) {
+        User operator = requireAdminOrStaff(operatorId);
+        Notification notif = notificationRepository.findById(draftId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy thông báo."));
+
+        if (!"DRAFT".equalsIgnoreCase(notif.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thông báo đã phát hành không thể chỉnh sửa.");
+        }
+
+        if (title == null || title.trim().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tiêu đề không được để trống.");
+        }
+        if (content == null || content.trim().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nội dung không được để trống.");
+        }
+
+        notif.setTitle(title.trim());
+        notif.setContent(content.trim());
+        if (type != null && !type.trim().isBlank()) {
+            notif.setType(type.trim().toLowerCase());
+        }
+        notificationRepository.save(notif);
+
+        Map<String, Object> diff = new HashMap<>();
+        diff.put("title", title);
+        saveAuditLog(operator, "Notification_Draft_Update", "Cập nhật bản nháp: " + title, ipAddress, diff);
+    }
+
+    @Transactional
+    public void publishDraft(Long operatorId, Long draftId, boolean activateMaintenance, String ipAddress) {
+        User operator = requireAdminOrStaff(operatorId);
+        Notification notif = notificationRepository.findById(draftId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy bản nháp."));
+
+        if (!"DRAFT".equalsIgnoreCase(notif.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thông báo này đã được phát hành trước đó.");
+        }
+
+        notif.setStatus("PUBLISHED");
+        notif.setCreatedAt(LocalDateTime.now());
+        notificationRepository.save(notif);
+
+        Map<String, Object> diff = new HashMap<>();
+        diff.put("title", notif.getTitle());
+        saveAuditLog(operator, "Notification_Publish", "Phát hành bản nháp: " + notif.getTitle(), ipAddress, diff);
+
+        if (activateMaintenance && "maintenance".equalsIgnoreCase(notif.getType())) {
+            updateMaintenanceConfig("TRUE", operator.getId());
+        }
+    }
+
+    @Transactional
     public void deleteNotification(Long operatorId, Long notifId, String ipAddress) {
         User operator = requireAdminOrStaff(operatorId);
         Notification notif = notificationRepository.findById(notifId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy thông báo."));
+
+        if (!"DRAFT".equalsIgnoreCase(notif.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thông báo đã phát hành không thể xóa.");
+        }
 
         if (Boolean.TRUE.equals(notif.getIsDelete())) {
             return;
@@ -140,7 +255,7 @@ public class NotificationService {
 
         Map<String, Object> diff = new HashMap<>();
         diff.put("isDelete", "false -> true");
-        saveAuditLog(operator, "Notification_Delete", "Xóa thông báo: " + notif.getTitle(), ipAddress, diff);
+        saveAuditLog(operator, "Notification_Delete", "Xóa bản nháp thông báo: " + notif.getTitle(), ipAddress, diff);
     }
 
     @Transactional
@@ -175,6 +290,9 @@ public class NotificationService {
         if ("TRUE".equalsIgnoreCase(val)) {
             Page<Notification> latest = notificationRepository.searchNotifications(
                     "maintenance",
+                    "PUBLISHED",
+                    null,
+                    null,
                     null,
                     org.springframework.data.domain.PageRequest.of(0, 1)
             );

@@ -21,8 +21,17 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.List;
 
+import com.mmo.shared.dal.AuditLogRepository;
+import com.mmo.shared.model.AuditLog;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class WithdrawalService {
+
+    @Autowired
+    private AuditLogRepository auditLogRepository;
 
     @Autowired
     private WalletService walletService;
@@ -261,5 +270,33 @@ public class WithdrawalService {
         }
         
         withdrawalRepository.save(withdrawal);
+
+        // Ghi AuditLog
+        Map<String, Object> diff = new HashMap<>();
+        diff.put("withdrawalId", id);
+        diff.put("status", newStatus);
+        diff.put("amountVnd", withdrawal.getAmountVnd());
+        diff.put("feeVnd", withdrawal.getFeeVnd());
+        if (rejectionReason != null) {
+            diff.put("rejectionReason", rejectionReason);
+        }
+        String action = ("Approved".equalsIgnoreCase(newStatus) || "Completed".equalsIgnoreCase(newStatus)) ? "Fund_Withdraw" : "Withdrawal_Reject";
+        saveAuditLog(reviewer, action, "Xử lý yêu cầu rút tiền #WD-" + id + " (" + newStatus + ")" + (rejectionReason != null ? ": " + rejectionReason : ""), diff);
+    }
+
+    private void saveAuditLog(User operator, String action, String desc, Map<String, Object> diff) {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("desc", desc);
+            payload.put("diff", diff);
+            String jsonDetails = new ObjectMapper().writeValueAsString(payload);
+            auditLogRepository.save(AuditLog.builder()
+                    .userId(operator != null ? operator.getId() : 1L)
+                    .action(action)
+                    .details(jsonDetails)
+                    .build());
+        } catch (Exception e) {
+            log.error("Failed to save audit log: {}", e.getMessage());
+        }
     }
 }

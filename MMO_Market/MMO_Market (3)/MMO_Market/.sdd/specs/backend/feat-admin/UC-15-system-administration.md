@@ -86,6 +86,17 @@ Bước 3  [Backend]:    Truy vấn phân trang bảng AuditLogs theo các từ 
 Bước 4  [Admin]:      Xem thông tin chi tiết log hoặc lọc theo hành động nhạy cảm để giám sát
 ```
 
+### 3.4 Luồng Quản Lý & Lọc Người Dùng Đa Năng 6 Trường (User Management Filter)
+
+```
+Bước 1  [Admin]:      Vào phân vùng "Quản lý tài khoản"
+Bước 2  [Admin]:      Điền từ khóa tìm kiếm, chọn Vai trò, Trạng thái, Khoảng ngày tạo và Thứ tự sắp xếp, nhấn "Tìm kiếm"
+Bước 3  [Frontend]:   GET /api/admin/users?search=user&role=SELLER&status=ACTIVE&startDate=2026-01-01&endDate=2026-07-23&sortOrder=NEWEST&page=0&size=10
+Bước 4  [Backend]:    Xây dựng Specification/Query động lọc các bản ghi phù hợp từ bảng Users
+                       Trả về danh sách người dùng phân trang (đã bỏ thuộc tính Xác thực trên DTO)
+Bước 5  [Frontend]:   Render danh sách bảng tài khoản người dùng và cập nhật phân trang
+```
+
 ---
 
 ## 4. Quy Tắc Nghiệp Vụ

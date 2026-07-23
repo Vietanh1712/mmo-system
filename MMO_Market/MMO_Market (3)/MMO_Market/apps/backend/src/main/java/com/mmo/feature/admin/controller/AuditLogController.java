@@ -27,17 +27,25 @@ public class AuditLogController {
             @AuthenticationPrincipal Long operatorId,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String action,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(defaultValue = "DESC") String sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return auditLogService.getAuditLogs(operatorId, search, action, page, size);
+        return auditLogService.getAuditLogs(operatorId, search, action, category, startDate, endDate, sort, page, size);
     }
 
     @GetMapping("/export")
     public ResponseEntity<byte[]> exportAuditLogsCsv(
             @AuthenticationPrincipal Long operatorId,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) String action) {
-        byte[] csvData = auditLogService.exportAuditLogsCsv(operatorId, search, action);
+            @RequestParam(required = false) String action,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(defaultValue = "DESC") String sort) {
+        byte[] csvData = auditLogService.exportAuditLogsCsv(operatorId, search, action, category, startDate, endDate, sort);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=nhat-ky-he-thong.csv")
                 .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
