@@ -288,14 +288,13 @@ async function loadMainCategories() {
         const response = await fetch('/api/search/categories?parentOnly=true');
         if (response.ok) {
             const categories = await response.json();
-            const selectEl = document.getElementById('shopCategory');
-            if (selectEl) {
-                selectEl.innerHTML = '<option value="">Chọn danh mục</option>';
+            const listEl = document.getElementById('shopCategoryList');
+            if (listEl) {
+                listEl.innerHTML = '';
                 categories.forEach(cat => {
                     const opt = document.createElement('option');
                     opt.value = cat.name;
-                    opt.textContent = cat.name;
-                    selectEl.appendChild(opt);
+                    listEl.appendChild(opt);
                 });
             }
         }

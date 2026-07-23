@@ -98,14 +98,8 @@
                         </div>
                         <div class="ds-form-field">
                             <label class="ds-label" for="shopCategory">Danh mục kinh doanh chính</label>
-                            <select class="ds-select" id="shopCategory">
-                                <option value="">Chọn danh mục</option>
-                                <option>Tài khoản Premium</option>
-                                <option>Phần mềm & bản quyền</option>
-                                <option>Mạng xã hội</option>
-                                <option>Game & giải trí</option>
-                                <option>Dịch vụ số khác</option>
-                            </select>
+                            <input class="ds-input" id="shopCategory" list="shopCategoryList" placeholder="Nhập hoặc chọn danh mục..." autocomplete="off">
+                            <datalist id="shopCategoryList"></datalist>
                             <small class="ds-error-text" id="shopCategoryError"></small>
                         </div>
                     </div>
