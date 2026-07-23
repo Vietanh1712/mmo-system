@@ -66,11 +66,11 @@ function renderShopStatus(status, suspendedUntilStr) {
     panel.className = 'shop-status-panel';
 
     const statusConfig = {
-        ACTIVE: ['ds-badge ds-badge-success', 'Đang hoạt động', 'fa-check-circle', 'Shop đang hoạt động', 'Sản phẩm đang hiển thị và khách hàng có thể tạo đơn mới.', '', 'Active'],
+        ACTIVE: ['ds-badge ds-badge-success', 'Đang hoạt động', 'fa-check-circle', 'Shop đang hoạt động', 'Sản phẩm đang hiển thị và khách hàng có thể tạo đơn mới.', '', 'Hoạt động'],
         TEMPORARILY_CLOSED: ['ds-badge ds-badge-warning', 'Tạm ngưng', 'fa-pause-circle', 'Shop đang tạm ngưng', 'Shop tạm ngưng nhận đơn mới. Sản phẩm sẽ tự động mở lại sau khi hết thời hạn tạm ngưng.', '', 'Tạm ngưng'],
-        PENDING: ['ds-badge ds-badge-warning', 'Chờ duyệt', 'fa-clock-o', 'Shop đang chờ duyệt', 'Staff đang xét duyệt trạng thái hoạt động của Shop.', '', 'Pending'],
-        BANNED: ['ds-badge ds-badge-danger', 'Bị hạn chế', 'fa-ban', 'Shop đang bị hạn chế', 'Liên hệ Staff để được hỗ trợ về trạng thái Shop.', '', 'Banned'],
-        CLOSED: ['ds-badge ds-badge-danger', 'Đã đóng', 'fa-lock', 'Shop đã đóng', 'Liên hệ Staff nếu bạn cần hỗ trợ mở lại Shop.', '', 'Đã đóng']
+        PENDING: ['ds-badge ds-badge-warning', 'Chờ duyệt', 'fa-clock-o', 'Shop đang chờ duyệt', 'Staff đang xét duyệt trạng thái hoạt động của Shop.', '', 'Chờ duyệt'],
+        BANNED: ['ds-badge ds-badge-danger', 'Khóa vĩnh viễn', 'fa-ban', 'Shop đang bị hạn chế', 'Liên hệ Staff để được hỗ trợ về trạng thái Shop.', '', 'Khóa vĩnh viễn'],
+        CLOSED: ['ds-badge ds-badge-danger', 'Tạm khóa', 'fa-lock', 'Shop đã bị tạm khóa', 'Liên hệ Staff nếu bạn cần hỗ trợ mở lại Shop.', '', 'Tạm khóa']
     };
     const config = statusConfig[status] || statusConfig.ACTIVE;
 
