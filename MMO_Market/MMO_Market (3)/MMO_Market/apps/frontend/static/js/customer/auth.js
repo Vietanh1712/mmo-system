@@ -947,6 +947,26 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     let countdownTimer = null;
+    function startCountdown(seconds) {
+        if (countdownTimer) clearInterval(countdownTimer);
+        let timeLeft = seconds;
+        resendBtn.classList.add('disabled');
+        resendBtn.textContent = `Gửi lại (${timeLeft}s)`;
+
+        countdownTimer = setInterval(() => {
+            timeLeft--;
+            resendBtn.textContent = `Gửi lại (${timeLeft}s)`;
+            if (timeLeft <= 0) {
+                clearInterval(countdownTimer);
+                resendBtn.classList.remove('disabled');
+                resendBtn.textContent = 'Gửi lại';
+            }
+        }, 1000);
+    }
+
+    // Start 60s countdown immediately on page load
+    startCountdown(60);
+
     resendBtn.addEventListener('click', function(e) {
         e.preventDefault();
         if (this.classList.contains('disabled')) return;
@@ -964,19 +984,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (res.status === 200 && res.body.success) {
                     showAlert('Một mã OTP mới đã được gửi.', 'success');
                     otpInput.value = '';
-                    let timeLeft = 60;
-                    resendBtn.classList.add('disabled');
-                    resendBtn.textContent = `Gửi lại (${timeLeft}s)`;
-
-                    countdownTimer = setInterval(() => {
-                        timeLeft--;
-                        resendBtn.textContent = `Gửi lại (${timeLeft}s)`;
-                        if (timeLeft <= 0) {
-                            clearInterval(countdownTimer);
-                            resendBtn.classList.remove('disabled');
-                            resendBtn.textContent = 'Gửi lại';
-                        }
-                    }, 1000);
+                    startCountdown(60);
                 } else {
                     showAlert(res.body.message || 'Không thể gửi lại mã lúc này.', 'error');
                 }
@@ -1182,6 +1190,26 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     let countdownTimer = null;
+    function startCountdown(seconds) {
+        if (countdownTimer) clearInterval(countdownTimer);
+        let timeLeft = seconds;
+        resendBtn.classList.add('disabled');
+        resendBtn.textContent = `Gửi lại (${timeLeft}s)`;
+
+        countdownTimer = setInterval(() => {
+            timeLeft--;
+            resendBtn.textContent = `Gửi lại (${timeLeft}s)`;
+            if (timeLeft <= 0) {
+                clearInterval(countdownTimer);
+                resendBtn.classList.remove('disabled');
+                resendBtn.textContent = 'Gửi lại';
+            }
+        }, 1000);
+    }
+
+    // Start 60s countdown immediately on page load
+    startCountdown(60);
+
     resendBtn.addEventListener('click', function(e) {
         e.preventDefault();
         if (this.classList.contains('disabled')) return;
@@ -1199,19 +1227,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (res.status === 200 && res.body.success) {
                     showAlert('Một mã OTP mới đã được gửi.', 'success');
                     otpInput.value = '';
-                    let timeLeft = 60;
-                    resendBtn.classList.add('disabled');
-                    resendBtn.textContent = `Gửi lại (${timeLeft}s)`;
-
-                    countdownTimer = setInterval(() => {
-                        timeLeft--;
-                        resendBtn.textContent = `Gửi lại (${timeLeft}s)`;
-                        if (timeLeft <= 0) {
-                            clearInterval(countdownTimer);
-                            resendBtn.classList.remove('disabled');
-                            resendBtn.textContent = 'Gửi lại';
-                        }
-                    }, 1000);
+                    startCountdown(60);
                 } else {
                     showAlert(res.body.message || 'Không thể gửi lại mã lúc này.', 'error');
                 }

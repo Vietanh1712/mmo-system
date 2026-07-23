@@ -38,6 +38,7 @@ Bảo vệ tài sản người dùng khỏi việc đánh cắp tài khoản, ng
 | FR-AUTH-01 | WHEN a Guest submits registration details, THE SYSTEM SHALL validate inputs and generate a 6-digit OTP verification code. |
 | FR-AUTH-02 | WHEN a Guest verifies the registration using the correct OTP code, THE SYSTEM SHALL mark the user account as verified (`isVerified = 1`). |
 | FR-AUTH-03 | IF the OTP verification code is expired or invalid, THEN THE SYSTEM SHALL return a `400 Bad Request` with an appropriate message. |
+| FR-AUTH-03_1 | WHEN a Guest requests to resend the OTP code, THE SYSTEM SHALL enforce a 60-second cooldown period, disabling the resend option and displaying a countdown timer to prevent duplicate requests. |
 
 ### 3.2 Đăng nhập & JWT
 | ID | EARS Requirement |
