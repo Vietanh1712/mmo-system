@@ -27,6 +27,7 @@ IF OBJECT_ID('SystemConfigurations', 'U') IS NOT NULL DROP TABLE SystemConfigura
 IF OBJECT_ID('Reviews', 'U') IS NOT NULL DROP TABLE Reviews;
 IF OBJECT_ID('PreOrders', 'U') IS NOT NULL DROP TABLE PreOrders;
 IF OBJECT_ID('Wishlists', 'U') IS NOT NULL DROP TABLE Wishlists;
+IF OBJECT_ID('ChatMessages', 'U') IS NOT NULL DROP TABLE ChatMessages;
 IF OBJECT_ID('Chats', 'U') IS NOT NULL DROP TABLE Chats;
 IF OBJECT_ID('ShopFlags', 'U') IS NOT NULL DROP TABLE ShopFlags;
 IF OBJECT_ID('Complaints', 'U') IS NOT NULL DROP TABLE Complaints;
@@ -369,6 +370,19 @@ CREATE TABLE Chats (
     CONSTRAINT FK_Chats_Sender FOREIGN KEY (sender_id) REFERENCES Users(id) ON DELETE NO ACTION,
     CONSTRAINT FK_Chats_Receiver FOREIGN KEY (receiver_id) REFERENCES Users(id) ON DELETE NO ACTION,
     CONSTRAINT FK_Chats_Complaint FOREIGN KEY (complaint_id) REFERENCES Complaints(id) ON DELETE NO ACTION
+);
+GO
+
+CREATE TABLE ChatMessages (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    sender_id BIGINT NOT NULL,
+    recipient_id BIGINT NOT NULL,
+    content NVARCHAR(1000) NOT NULL,
+    attachment_url VARCHAR(500) NULL,
+    is_read BIT NOT NULL DEFAULT 0,
+    created_at DATETIME DEFAULT GETDATE(),
+    CONSTRAINT FK_ChatMessages_Sender FOREIGN KEY (sender_id) REFERENCES Users(id) ON DELETE NO ACTION,
+    CONSTRAINT FK_ChatMessages_Recipient FOREIGN KEY (recipient_id) REFERENCES Users(id) ON DELETE NO ACTION
 );
 GO
 
