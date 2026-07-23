@@ -91,8 +91,8 @@ AND (
 )
 
 AND (
-    :status IS NULL
-    OR t.status = :status
+    :hasStatusFilter = false
+    OR t.status IN (:statuses)
 )
 
 AND (
@@ -110,7 +110,8 @@ AND (
             @Param("keyword") String keyword,
             @Param("id") Long id,
             @Param("type") String type,
-            @Param("status") String status,
+            @Param("hasStatusFilter") boolean hasStatusFilter,
+            @Param("statuses") java.util.List<String> statuses,
             @Param("fromDate") LocalDateTime fromDate,
             @Param("toDate") LocalDateTime toDate,
             Pageable pageable

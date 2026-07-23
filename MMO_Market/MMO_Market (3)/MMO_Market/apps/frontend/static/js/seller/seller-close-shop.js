@@ -64,7 +64,7 @@ function renderCloseShopSidebarStatus() {
     const sidebarStatus = document.querySelector('[data-seller-shop-status]');
     if (!sidebarStatus) return;
     const status = localStorage.getItem(CLOSE_SHOP_STATUS_STORAGE_KEY) || 'ACTIVE';
-    sidebarStatus.textContent = status === 'CLOSED' ? 'Trạng thái: Đã đóng' : 'Trạng thái: Active';
+    sidebarStatus.textContent = status === 'CLOSED' ? 'Trạng thái: Đã đóng' : 'Trạng thái: Hoạt động';
 }
 
 function showCloseShopToast(message) {

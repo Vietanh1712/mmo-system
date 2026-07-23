@@ -169,7 +169,16 @@ function showToast(message, type = 'success') {
 
 // ==============================================================================
 // 1. GENERAL LAYOUT & SIDEBAR
-// ==============================================================================
+function formatShopStatusVi(st) {
+    const s = String(st || 'Active').toUpperCase();
+    if (s === 'SUSPENDED' || s === 'TEMP_LOCKED' || s === 'TEMPORARILY_CLOSED') return 'Tạm ngưng';
+    if (s === 'LOCKED' || s === 'INDEFINITE_LOCKED' || s === 'CLOSED') return 'Tạm khóa';
+    if (s === 'BANNED' || s === 'PERMANENT_BANNED') return 'Khóa vĩnh viễn';
+    if (s === 'WITHDRAWN') return 'Đã đóng Shop';
+    if (s === 'PENDING') return 'Chờ duyệt';
+    return 'Hoạt động';
+}
+
 async function initSellerLayout() {
     try {
         const res = await sellerFetch('/shop-info');
@@ -182,7 +191,7 @@ async function initSellerLayout() {
         const avatarEl = document.querySelector('.seller-sidebar__avatar');
 
         if (nameEl) nameEl.textContent = data.shopName || 'Cửa hàng của tôi';
-        if (statusEl) statusEl.textContent = `Trạng thái: ${data.shopStatus || 'Active'}`;
+        if (statusEl) statusEl.textContent = `Trạng thái: ${formatShopStatusVi(data.shopStatus)}`;
         if (avatarEl && data.shopName) {
             avatarEl.textContent = data.shopName.charAt(0).toUpperCase();
         }

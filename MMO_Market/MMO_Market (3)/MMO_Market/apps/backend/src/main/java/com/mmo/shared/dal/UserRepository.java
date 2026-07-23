@@ -28,19 +28,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND u.id IN (SELECT r.user.id FROM SellerRegistration r WHERE r.isDelete = false)")
     long countTotalShops();
 
-    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND u.id IN (SELECT r.user.id FROM SellerRegistration r WHERE r.isDelete = false) AND (u.shopStatus IS NULL OR UPPER(u.shopStatus) IN ('ACTIVE', 'APPROVED')) AND (u.shopStatus IS NULL OR UPPER(u.shopStatus) NOT IN ('SUSPENDED', 'TEMP_LOCKED', 'TEMP_SUSPENDED', 'LOCKED', 'INDEFINITE_LOCKED', 'BANNED', 'PERMANENT_BANNED', 'WITHDRAWN', 'DELETED'))")
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND u.id IN (SELECT r.user.id FROM SellerRegistration r WHERE r.isDelete = false) AND (u.shopStatus IS NULL OR UPPER(u.shopStatus) IN ('ACTIVE', 'APPROVED')) AND (u.shopStatus IS NULL OR UPPER(u.shopStatus) NOT IN ('SUSPENDED', 'TEMP_LOCKED', 'TEMP_SUSPENDED', 'TEMPORARILY_CLOSED', 'LOCKED', 'INDEFINITE_LOCKED', 'CLOSED', 'BANNED', 'PERMANENT_BANNED', 'WITHDRAWN', 'DELETED'))")
     long countActiveShops();
 
-    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND u.id IN (SELECT r.user.id FROM SellerRegistration r WHERE r.isDelete = false) AND UPPER(u.shopStatus) IN ('BANNED', 'PERMANENT_BANNED', 'LOCKED', 'INDEFINITE_LOCKED', 'SUSPENDED', 'TEMP_LOCKED', 'TEMP_SUSPENDED')")
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND u.id IN (SELECT r.user.id FROM SellerRegistration r WHERE r.isDelete = false) AND UPPER(u.shopStatus) IN ('BANNED', 'PERMANENT_BANNED', 'LOCKED', 'INDEFINITE_LOCKED', 'CLOSED', 'SUSPENDED', 'TEMP_LOCKED', 'TEMP_SUSPENDED', 'TEMPORARILY_CLOSED')")
     long countBannedShops();
 
     @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND u.id IN (SELECT r.user.id FROM SellerRegistration r WHERE r.isDelete = false) AND UPPER(u.shopStatus) IN ('BANNED', 'PERMANENT_BANNED')")
     long countPermanentBannedShops();
 
-    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND u.id IN (SELECT r.user.id FROM SellerRegistration r WHERE r.isDelete = false) AND UPPER(u.shopStatus) IN ('LOCKED', 'INDEFINITE_LOCKED')")
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND u.id IN (SELECT r.user.id FROM SellerRegistration r WHERE r.isDelete = false) AND UPPER(u.shopStatus) IN ('LOCKED', 'INDEFINITE_LOCKED', 'CLOSED')")
     long countIndefiniteLockedShops();
 
-    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND u.id IN (SELECT r.user.id FROM SellerRegistration r WHERE r.isDelete = false) AND UPPER(u.shopStatus) IN ('SUSPENDED', 'TEMP_LOCKED', 'TEMP_SUSPENDED')")
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND u.id IN (SELECT r.user.id FROM SellerRegistration r WHERE r.isDelete = false) AND UPPER(u.shopStatus) IN ('SUSPENDED', 'TEMP_LOCKED', 'TEMP_SUSPENDED', 'TEMPORARILY_CLOSED')")
     long countTemporarySuspendedShops();
 
     @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND u.id IN (SELECT r.user.id FROM SellerRegistration r WHERE r.isDelete = false) AND UPPER(u.shopStatus) IN ('WITHDRAWN', 'DELETED')")

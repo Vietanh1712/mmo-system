@@ -12,7 +12,6 @@
 
         loadRegistrations();
         loadRegistrationStats();
-        loadShopAccountStatuses();
 
         // Search and filter events
         const searchBtn = document.getElementById('shopSearchBtn');

@@ -139,17 +139,40 @@ public class StaffController {
             try { id = Long.parseLong(kw.replace("#TXN-", "").trim()); kw = null; } catch (Exception ignored) {}
         }
 
-        String typeParam   = (type   != null && !type.isBlank())   ? type   : null;
-        String statusParam = (status != null && !status.isBlank()) ? status : null;
+        String typeParam = (type != null && !type.isBlank()) ? type : null;
+
+        java.util.List<String> statusList = java.util.Collections.emptyList();
+        boolean hasStatusFilter = false;
+        if (status != null && !status.isBlank()) {
+            hasStatusFilter = true;
+            String sUpper = status.trim().toUpperCase();
+            if (sUpper.equals("SUCCESS") || sUpper.equals("COMPLETED")) {
+                statusList = java.util.List.of("Success", "SUCCESS", "Completed", "COMPLETED", "Approved", "APPROVED");
+            } else if (sUpper.equals("PENDING") || sUpper.equals("PROCESSING")) {
+                statusList = java.util.List.of("Pending", "PENDING", "Processing", "PROCESSING");
+            } else if (sUpper.equals("HOLDING") || sUpper.equals("HOLD") || sUpper.equals("ESCROW") || sUpper.equals("HELD")) {
+                statusList = java.util.List.of("Holding", "HOLDING", "Hold", "HOLD", "Escrow", "ESCROW", "Held", "HELD");
+            } else if (sUpper.equals("REFUNDED") || sUpper.equals("REFUND")) {
+                statusList = java.util.List.of("Refunded", "REFUNDED", "Refund", "REFUND");
+            } else if (sUpper.equals("DISPUTED") || sUpper.equals("COMPLAINT")) {
+                statusList = java.util.List.of("Disputed", "DISPUTED", "Complaint", "COMPLAINT");
+            } else if (sUpper.equals("FAILED") || sUpper.equals("FAIL") || sUpper.equals("REJECTED") || sUpper.equals("CANCELLED") || sUpper.equals("CANCEL")) {
+                statusList = java.util.List.of("Failed", "FAILED", "Fail", "FAIL", "Rejected", "REJECTED", "Cancelled", "CANCELLED", "Cancel", "CANCEL");
+            } else {
+                statusList = java.util.List.of(status, status.toUpperCase(), status.toLowerCase());
+            }
+        }
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Transaction> txPage = transactionRepository.searchTransactions(
-                kw, id, typeParam, statusParam, from, to, pageable);
+                kw, id, typeParam, hasStatusFilter, statusList, from, to, pageable);
 
         model.addAttribute("transactions",         txPage.getContent());
         model.addAttribute("currentPage",           page);
         model.addAttribute("totalPages",            txPage.getTotalPages());
-        model.addAttribute("totalTransactions",     txPage.getTotalElements());
+        model.addAttribute("totalFilteredTransactions", txPage.getTotalElements());
+        long overallTotalCount = transactionRepository.countByIsDeleteFalse();
+        model.addAttribute("totalTransactions",     overallTotalCount);
         long completedCount = transactionRepository.countByStatusesAndNotDeleted(java.util.List.of("Success", "success", "Completed", "completed", "Held", "held", "Approved", "approved"));
         long pendingCount = transactionRepository.countByStatusesAndNotDeleted(java.util.List.of("Pending", "pending", "Processing", "processing"));
         long failCount = transactionRepository.countByStatusesAndNotDeleted(java.util.List.of("Failed", "failed", "Fail", "fail", "Rejected", "rejected", "Cancelled", "cancelled", "Cancel", "cancel"));

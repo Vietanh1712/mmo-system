@@ -191,18 +191,44 @@ public class ShopRegistrationService {
     public Map<String, Long> getRegistrationStats() {
         Map<String, Long> stats = new HashMap<>();
 
-        long totalShops = userRepository.countTotalShops();
-        long activeShops = userRepository.countActiveShops();
-        long bannedShops = userRepository.countBannedShops();
-        long totalDeposit = userRepository.sumTotalDeposit();
-        long permanentBannedShops = userRepository.countPermanentBannedShops();
-        long indefiniteLockedShops = userRepository.countIndefiniteLockedShops();
-        long temporarySuspendedShops = userRepository.countTemporarySuspendedShops();
-        long withdrawnShops = userRepository.countWithdrawnShops();
+        List<SellerRegistration> list = sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc();
+
+        long totalShops = list.size();
+        long activeShops = 0;
+        long permanentBannedShops = 0;
+        long indefiniteLockedShops = 0;
+        long temporarySuspendedShops = 0;
+        long withdrawnShops = 0;
+        long totalDeposit = 0;
+
+        for (SellerRegistration reg : list) {
+            User user = reg.getUser();
+            if (user != null) {
+                if (user.getDepositVnd() != null) {
+                    totalDeposit += user.getDepositVnd();
+                }
+                String st = user.getShopStatus();
+                String stUpper = (st != null) ? st.trim().toUpperCase() : "ACTIVE";
+
+                if (stUpper.equals("BANNED") || stUpper.equals("PERMANENT_BANNED")) {
+                    permanentBannedShops++;
+                } else if (stUpper.equals("LOCKED") || stUpper.equals("INDEFINITE_LOCKED") || stUpper.equals("CLOSED")) {
+                    indefiniteLockedShops++;
+                } else if (stUpper.equals("SUSPENDED") || stUpper.equals("TEMP_LOCKED") || stUpper.equals("TEMP_SUSPENDED") || stUpper.equals("TEMPORARILY_CLOSED")) {
+                    temporarySuspendedShops++;
+                } else if (stUpper.equals("WITHDRAWN") || stUpper.equals("DELETED")) {
+                    withdrawnShops++;
+                } else {
+                    activeShops++;
+                }
+            } else {
+                activeShops++;
+            }
+        }
 
         stats.put("totalShops", totalShops);
         stats.put("activeShops", activeShops);
-        stats.put("bannedShops", bannedShops);
+        stats.put("bannedShops", permanentBannedShops + indefiniteLockedShops + temporarySuspendedShops);
         stats.put("totalDeposit", totalDeposit);
         stats.put("permanentBannedShops", permanentBannedShops);
         stats.put("indefiniteLockedShops", indefiniteLockedShops);
@@ -282,7 +308,7 @@ public class ShopRegistrationService {
 
         SellerBankInfo bank = null;
         if (user != null) {
-            bank = sellerBankInfoRepository.findByUserAndIsDeleteFalse(user).orElse(null);
+            bank = sellerBankInfoRepository.findFirstByUserAndIsDeleteFalseOrderByIdDesc(user).orElse(null);
         }
         return ShopRegistrationResponseDto.builder()
                 .id(registration.getId())
