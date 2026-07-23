@@ -18,6 +18,9 @@ USE MMO_System_Schema;
 GO
 
 -- XÓA BẢNG CŨ NẾU CÓ ĐỂ TRÁNH XUNG ĐỘT (XÓA THEO THỨ TỰ CON TRƯỚC - CHA SAU)
+IF OBJECT_ID('UserPermissions', 'U') IS NOT NULL DROP TABLE UserPermissions;
+IF OBJECT_ID('Permissions', 'U') IS NOT NULL DROP TABLE Permissions;
+IF OBJECT_ID('SupportTickets', 'U') IS NOT NULL DROP TABLE SupportTickets;
 IF OBJECT_ID('AuditLogs', 'U') IS NOT NULL DROP TABLE AuditLogs;
 IF OBJECT_ID('Notifications', 'U') IS NOT NULL DROP TABLE Notifications;
 IF OBJECT_ID('SystemConfigurations', 'U') IS NOT NULL DROP TABLE SystemConfigurations;
@@ -139,6 +142,7 @@ CREATE TABLE KYCRequests (
     user_id BIGINT NOT NULL,
     full_name NVARCHAR(255) NOT NULL,
     citizen_id VARCHAR(20) NOT NULL,
+    type_kyc NVARCHAR(50) NULL,
     date_of_birth DATE,
     front_id_image VARCHAR(255) NOT NULL,
     back_id_image VARCHAR(255) NOT NULL,
@@ -188,6 +192,7 @@ CREATE TABLE Products (
     category_id BIGINT NOT NULL,
     name NVARCHAR(500) NOT NULL, -- Tương thích với mô tả sản phẩm dài
     description NVARCHAR(MAX),
+    user_guide NVARCHAR(MAX) NULL,
     image VARCHAR(255),
     product_image_url NVARCHAR(500) NULL, -- Lưu trữ ảnh chi tiết sản phẩm
     product_type NVARCHAR(20) NOT NULL DEFAULT 'ACCOUNT', -- ACCOUNT | KEY | GAME_CARD
@@ -206,6 +211,7 @@ CREATE TABLE ProductVariants (
     price_vnd BIGINT NOT NULL,
     stock INT DEFAULT 0,
     status VARCHAR(20) DEFAULT 'Pending',
+    image_url NVARCHAR(500) NULL,
     created_at DATETIME DEFAULT GETDATE(),
     isDelete BIT DEFAULT 0, -- Đồng bộ với ProductVariant.java: @Column(name = "isDelete")
     CONSTRAINT FK_Variants_Product FOREIGN KEY (product_id) REFERENCES Products(id) ON DELETE NO ACTION
@@ -215,6 +221,7 @@ GO
 CREATE TABLE DigitalAssets (
     id                  BIGINT IDENTITY(1,1) PRIMARY KEY,
     variant_id          BIGINT NOT NULL,
+    transaction_id      BIGINT NULL,                 -- Liên kết đơn hàng đã bán
     asset_type          NVARCHAR(20) NOT NULL,       -- ACCOUNT | KEY | GAME_CARD
     asset_data          NVARCHAR(MAX) NOT NULL,      -- Dữ liệu JSON dự phòng
     account_username    NVARCHAR(255) NULL,          -- Cho loại ACCOUNT
@@ -226,7 +233,8 @@ CREATE TABLE DigitalAssets (
     is_used             BIT NOT NULL DEFAULT 0,      -- 0 = còn hàng, 1 = đã bán
     is_delete           BIT NOT NULL DEFAULT 0,      -- Đồng bộ với DigitalAsset.java: @Column(name = "is_delete")
     created_at          DATETIME NOT NULL DEFAULT GETDATE(),
-    CONSTRAINT FK_DigitalAssets_Variant FOREIGN KEY (variant_id) REFERENCES ProductVariants(id) ON DELETE NO ACTION
+    CONSTRAINT FK_DigitalAssets_Variant FOREIGN KEY (variant_id) REFERENCES ProductVariants(id) ON DELETE NO ACTION,
+    CONSTRAINT FK_DigitalAssets_Transactions FOREIGN KEY (transaction_id) REFERENCES Transactions(id) ON DELETE NO ACTION
 );
 GO
 
@@ -272,12 +280,17 @@ CREATE TABLE Withdrawals (
     seller_id BIGINT NOT NULL,
     bank_info_id BIGINT NOT NULL,
     amount_vnd BIGINT NOT NULL,
+    fee_vnd BIGINT NULL DEFAULT 0,
     status VARCHAR(20) DEFAULT 'Pending',
     proof_file VARCHAR(255),
+    rejection_reason NVARCHAR(MAX) NULL,
+    reviewed_by BIGINT NULL,
+    reviewed_at DATETIME NULL,
     created_at DATETIME DEFAULT GETDATE(),
     isDelete BIT DEFAULT 0,
     CONSTRAINT FK_Withdraw_Seller FOREIGN KEY (seller_id) REFERENCES Users(id) ON DELETE NO ACTION,
-    CONSTRAINT FK_Withdraw_Bank FOREIGN KEY (bank_info_id) REFERENCES SellerBankInfo(id) ON DELETE NO ACTION
+    CONSTRAINT FK_Withdraw_Bank FOREIGN KEY (bank_info_id) REFERENCES SellerBankInfo(id) ON DELETE NO ACTION,
+    CONSTRAINT FK_Withdraw_ReviewedBy FOREIGN KEY (reviewed_by) REFERENCES Users(id) ON DELETE NO ACTION
 );
 GO
 
@@ -457,6 +470,7 @@ CREATE TABLE Notifications (
     isRead BIT DEFAULT 0,
     severity VARCHAR(50) DEFAULT 'INFO',
     target_url VARCHAR(500) NULL,
+    status NVARCHAR(20) NOT NULL DEFAULT N'PUBLISHED',
     created_at DATETIME DEFAULT GETDATE(),
     isDelete BIT DEFAULT 0,
     CONSTRAINT FK_Notif_Users FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION
@@ -467,9 +481,47 @@ CREATE TABLE AuditLogs (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     user_id BIGINT NOT NULL,
     action VARCHAR(255) NOT NULL,
+    target_user_id BIGINT NULL,
+    target_id BIGINT NULL,
+    target_type VARCHAR(100) NULL,
     details NVARCHAR(MAX),
     created_at DATETIME DEFAULT GETDATE(),
     CONSTRAINT FK_Audit_Users FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION
+);
+GO
+
+CREATE TABLE SupportTickets (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    category NVARCHAR(100) NOT NULL,
+    title NVARCHAR(255) NOT NULL,
+    description NVARCHAR(MAX) NOT NULL,
+    status VARCHAR(20) DEFAULT 'Open',
+    resolution NVARCHAR(MAX) NULL,
+    created_at DATETIME DEFAULT GETDATE(),
+    isDelete BIT DEFAULT 0,
+    CONSTRAINT FK_SupportTickets_Users FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION
+);
+GO
+CREATE INDEX idx_support_tickets_user ON SupportTickets(user_id);
+GO
+
+CREATE TABLE Permissions (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    group_name NVARCHAR(100) NOT NULL,
+    description NVARCHAR(500) NULL,
+    created_at DATETIME DEFAULT GETDATE()
+);
+GO
+
+CREATE TABLE UserPermissions (
+    user_id BIGINT NOT NULL,
+    permission_id INT NOT NULL,
+    assigned_at DATETIME DEFAULT GETDATE(),
+    PRIMARY KEY (user_id, permission_id),
+    CONSTRAINT FK_UserPermissions_User FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    CONSTRAINT FK_UserPermissions_Permission FOREIGN KEY (permission_id) REFERENCES Permissions(id) ON DELETE CASCADE
 );
 GO
 
@@ -1835,6 +1887,21 @@ GO
 -- Kiểm tra và chèn các permission bổ sung nếu chưa có (để đảm bảo đồng bộ với DatabaseSeeder)
 IF EXISTS (SELECT * FROM sys.tables WHERE name = 'Permissions')
 BEGIN
+    IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'MANAGE_USERS')
+        INSERT INTO Permissions (name, group_name, description) VALUES ('MANAGE_USERS', N'Người dùng', N'Quản lý thông tin và trạng thái người dùng');
+    IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'MANAGE_PRODUCTS')
+        INSERT INTO Permissions (name, group_name, description) VALUES ('MANAGE_PRODUCTS', N'Sản phẩm', N'Kiểm duyệt và quản lý sản phẩm, biến thể');
+    IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'MANAGE_CATEGORIES')
+        INSERT INTO Permissions (name, group_name, description) VALUES ('MANAGE_CATEGORIES', N'Danh mục', N'Quản lý danh mục sản phẩm');
+    IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'APPROVE_KYC')
+        INSERT INTO Permissions (name, group_name, description) VALUES ('APPROVE_KYC', N'KYC', N'Xem và duyệt các yêu cầu xác minh danh tính');
+    IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'APPROVE_WITHDRAWALS')
+        INSERT INTO Permissions (name, group_name, description) VALUES ('APPROVE_WITHDRAWALS', N'Tài chính', N'Xem và duyệt các yêu cầu rút tiền');
+    IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'RESOLVE_COMPLAINTS')
+        INSERT INTO Permissions (name, group_name, description) VALUES ('RESOLVE_COMPLAINTS', N'Tranh chấp', N'Giải quyết các khiếu nại và tranh chấp đơn hàng');
+    IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'MANAGE_SYSTEM_CONFIG')
+        INSERT INTO Permissions (name, group_name, description) VALUES ('MANAGE_SYSTEM_CONFIG', N'Hệ thống', N'Quản lý các cấu hình tham số hệ thống');
+
     IF NOT EXISTS (SELECT 1 FROM Permissions WHERE name = 'FLAG_SELLER')
         INSERT INTO Permissions (name, group_name, description) VALUES ('FLAG_SELLER', N'Kiểm duyệt', N'Cho phép gắn cờ vi phạm (gạch phạt) đối với người bán vi phạm chính sách.');
         
