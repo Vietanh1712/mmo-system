@@ -90,9 +90,7 @@ public class WithdrawalService {
                     catch (NumberFormatException e) { return 50000000L; }
                 }).orElse(50000000L);
 
-        boolean requireWithdraw2FA = systemConfigurationRepository.findByConfigKey("REQUIRE_WITHDRAW_2FA")
-                .map(c -> Boolean.parseBoolean(c.getConfigValue()))
-                .orElse(false);
+        boolean requireWithdraw2FA = false;
 
         // Validate amounts
         if (amount < minWithdrawalLimit) {
@@ -195,12 +193,21 @@ public class WithdrawalService {
      * Cập nhật trạng thái yêu cầu rút tiền của Seller và thực hiện hoàn tiền nếu bị từ chối.
      */
     @Transactional
-    public void updateWithdrawalStatus(Long id, String newStatus, Long reviewerId, String rejectionReason) {
+    public void updateWithdrawalStatus(Long id, String newStatus, Long reviewerId, String rejectionReason, String proofFile) {
         Withdrawal withdrawal = withdrawalRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Yêu cầu rút tiền không tồn tại."));
 
-        if (!"Pending".equalsIgnoreCase(withdrawal.getStatus())) {
+        String currentStatus = withdrawal.getStatus();
+        if (!"Pending".equalsIgnoreCase(currentStatus) && !"Processing".equalsIgnoreCase(currentStatus)) {
             throw new IllegalStateException("Yêu cầu rút tiền này đã được xử lý từ trước.");
+        }
+
+        // Validate state transition
+        if ("Processing".equalsIgnoreCase(newStatus) && !"Pending".equalsIgnoreCase(currentStatus)) {
+            throw new IllegalStateException("Chỉ lệnh Pending mới có thể chuyển sang Processing.");
+        }
+        if ("Completed".equalsIgnoreCase(newStatus) && !"Processing".equalsIgnoreCase(currentStatus)) {
+            throw new IllegalStateException("Lệnh phải ở trạng thái Processing mới có thể Hoàn tất.");
         }
 
         User reviewer = userRepository.findByIdAndIsDeleteFalse(reviewerId)
@@ -211,6 +218,9 @@ public class WithdrawalService {
         withdrawal.setReviewedAt(java.time.LocalDateTime.now());
         if (rejectionReason != null) {
             withdrawal.setRejectionReason(rejectionReason);
+        }
+        if (proofFile != null && !proofFile.isEmpty()) {
+            withdrawal.setProofFile(proofFile);
         }
 
         if ("Rejected".equalsIgnoreCase(newStatus) || "Failed".equalsIgnoreCase(newStatus)) {
@@ -225,8 +235,8 @@ public class WithdrawalService {
                     seller,
                     "REFUND",
                     refundAmount,
-                    "SUCCESS",
-                    "Hoàn tiền yêu cầu rút tiền ID " + withdrawal.getId() + " bị từ chối. Lý do: " + (rejectionReason != null ? rejectionReason : "Không có lý do"),
+                    "COMPLETED",
+                    "Hoàn tiền do yêu cầu rút tiền bị từ chối/thất bại",
                     "RF" + withdrawal.getId(),
                     seller.getBalanceVnd(),
                     withdrawal.getId()
@@ -241,17 +251,15 @@ public class WithdrawalService {
 
             // Cập nhật trạng thái khóa/mở khóa shop sau khi hoàn tiền rút bị từ chối
             shopLevelService.updateShopLockStatus(seller.getId());
-        }
-
-        if ("Approved".equalsIgnoreCase(newStatus) || "Completed".equalsIgnoreCase(newStatus)) {
-            // Cập nhật trạng thái giao dịch rút tiền gốc thành SUCCESS
+        } else if ("Completed".equalsIgnoreCase(newStatus) || "Approved".equalsIgnoreCase(newStatus)) {
+            // Cập nhật trạng thái giao dịch rút tiền gốc thành COMPLETED
             walletTransactionRepository.findByReferenceIdAndType(withdrawal.getId(), "WITHDRAWAL")
                     .ifPresent(t -> {
-                        t.setStatus("SUCCESS");
+                        t.setStatus("COMPLETED");
                         walletTransactionRepository.save(t);
                     });
         }
-
+        
         withdrawalRepository.save(withdrawal);
     }
 }

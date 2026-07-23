@@ -69,6 +69,7 @@ function translateStatus(status) {
         'held': 'Tạm giữ (Bảo lãnh)',
         'paid': 'Đã thanh toán',
         'delivered': 'Đã giao',
+        'processing': 'Đang xử lý',
         'completed': 'Hoàn tất',
         'cancelled': 'Đã hủy',
         'disputed': 'Tranh chấp',
@@ -1307,6 +1308,7 @@ async function initWithdrawals() {
         let minLimit = 50000;
         let maxLimit = 50000000;
         let feePercent = 1.5;
+        let minFee = 5000; // Thêm minFee mặc định
         let require2FA = true;
 
         try {
@@ -1404,9 +1406,6 @@ async function initWithdrawals() {
                 }
 
                 let fee = Math.floor(amount * (feePercent / 100));
-                if (fee < minFee) {
-                    fee = minFee;
-                }
                 const totalDeducted = amount + fee;
 
                 if (dashData.balanceVnd < totalDeducted) {
@@ -1449,21 +1448,57 @@ async function initWithdrawals() {
                         showToast(err.message, 'error');
                     }
                 } else {
-                    const confirmNo2fa = confirm(`Xác nhận tạo yêu cầu rút tiền ${formatVND(amount)}? Phí rút là ${formatVND(fee)}. Tổng số tiền trừ khỏi ví: ${formatVND(totalDeducted)}.`);
-                    if (!confirmNo2fa) return;
+                    const modalEl = document.getElementById('confirmWithdrawModal');
+                    const modalTextEl = document.getElementById('confirmWithdrawText');
+                    const btnConfirm = document.getElementById('btnConfirmWithdrawal');
 
-                    try {
-                        const postRes = await sellerFetch('/withdrawals', {
-                            method: 'POST',
-                            body: JSON.stringify({ amountVnd: amount })
+                    if (modalEl && modalTextEl && btnConfirm) {
+                        modalTextEl.innerHTML = `Xác nhận tạo yêu cầu rút tiền <strong>${formatVND(amount)}</strong>?<br><br>Phí rút là: <strong style="color:#ef4444">${formatVND(fee)}</strong><br>Tổng số tiền trừ khỏi ví: <strong style="color:#2563eb">${formatVND(totalDeducted)}</strong>`;
+                        modalEl.style.display = 'flex';
+
+                        // Remove old listeners to avoid multiple submissions
+                        const newBtnConfirm = btnConfirm.cloneNode(true);
+                        btnConfirm.parentNode.replaceChild(newBtnConfirm, btnConfirm);
+
+                        newBtnConfirm.addEventListener('click', async () => {
+                            newBtnConfirm.disabled = true;
+                            newBtnConfirm.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
+
+                            try {
+                                const postRes = await sellerFetch('/withdrawals', {
+                                    method: 'POST',
+                                    body: JSON.stringify({ amountVnd: amount })
+                                });
+                                const postData = await postRes.json();
+                                if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
+                                
+                                showToast(postData.message || 'Đã tạo yêu cầu rút tiền thành công!');
+                                setTimeout(() => window.location.reload(), 1500);
+                            } catch (err) {
+                                showToast(err.message, 'error');
+                                newBtnConfirm.disabled = false;
+                                newBtnConfirm.innerHTML = 'Xác nhận';
+                                modalEl.style.display = 'none';
+                            }
                         });
-                        const postData = await postRes.json();
-                        if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
+                    } else {
+                        // Fallback to native confirm if modal HTML is missing
+                        const confirmNo2fa = confirm(`Xác nhận tạo yêu cầu rút tiền ${formatVND(amount)}? Phí rút là ${formatVND(fee)}. Tổng số tiền trừ khỏi ví: ${formatVND(totalDeducted)}.`);
+                        if (!confirmNo2fa) return;
 
-                        showToast(postData.message || 'Đã tạo yêu cầu rút tiền thành công!');
-                        setTimeout(() => window.location.reload(), 1500);
-                    } catch (err) {
-                        showToast(err.message, 'error');
+                        try {
+                            const postRes = await sellerFetch('/withdrawals', {
+                                method: 'POST',
+                                body: JSON.stringify({ amountVnd: amount })
+                            });
+                            const postData = await postRes.json();
+                            if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
+                            
+                            showToast(postData.message || 'Đã tạo yêu cầu rút tiền thành công!');
+                            setTimeout(() => window.location.reload(), 1500);
+                        } catch (err) {
+                            showToast(err.message, 'error');
+                        }
                     }
                 }
             });
@@ -1948,11 +1983,30 @@ async function initWithdrawalDetail() {
         const proofSection = document.querySelector('.proof-placeholder');
         if (proofSection) {
             if (w.proofFile) {
-                proofSection.innerHTML = `
-                    <a href="/images/${w.proofFile}" target="_blank" style="display:block; text-align:center;">
-                        <img src="/images/${w.proofFile}" alt="Biên lai rút tiền" style="max-width:100%; max-height:300px; border-radius:8px; border:1px solid var(--seller-border);"/>
-                    </a>
-                `;
+                // Determine URL for proofFile (it might already start with '/' e.g., '/uploads/...')
+                let proofUrl = w.proofFile;
+                if (!proofUrl.startsWith('http') && !proofUrl.startsWith('/')) {
+                    proofUrl = '/uploads/' + proofUrl;
+                }
+                console.log("Seller proofUrl parsed:", proofUrl);
+                
+                let isImage = proofUrl.toLowerCase().endsWith('.jpg') || proofUrl.toLowerCase().endsWith('.jpeg') || proofUrl.toLowerCase().endsWith('.png');
+                
+                if (isImage) {
+                    proofSection.innerHTML = `
+                        <a href="${proofUrl}" target="_blank" style="display:block; text-align:center;">
+                            <img src="${proofUrl}" alt="Biên lai rút tiền" style="max-width:100%; max-height:300px; border-radius:8px; border:1px solid var(--seller-border);"/>
+                        </a>
+                    `;
+                } else {
+                    proofSection.innerHTML = `
+                        <div style="padding: 16px; text-align: center; background: #f8fafc; border:1px solid var(--seller-border); border-radius:8px;">
+                            <a href="${proofUrl}" target="_blank" class="ds-btn" style="display: inline-block; padding: 8px 16px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 4px;">
+                                <i class="fa fa-file"></i> Tải xuống hóa đơn/chứng từ
+                            </a>
+                        </div>
+                    `;
+                }
             } else {
                 proofSection.innerHTML = `
                     <div style="text-align:center; padding: 20px; background:#f8fafc; border:1px dashed var(--seller-border); border-radius:8px; color:var(--seller-muted);">

@@ -833,9 +833,7 @@ public class SellerController {
                         try { return Long.parseLong(c.getConfigValue()); }
                         catch (NumberFormatException e) { return 50000000L; }
                     }).orElse(50000000L);
-            boolean requireWithdraw2FA = systemConfigurationRepository.findByConfigKey("REQUIRE_WITHDRAW_2FA")
-                    .map(c -> Boolean.parseBoolean(c.getConfigValue()))
-                    .orElse(false);
+            boolean requireWithdraw2FA = false;
 
             return ResponseEntity.ok(Map.of(
                     "withdrawalFeePercent", withdrawalFeePercent,

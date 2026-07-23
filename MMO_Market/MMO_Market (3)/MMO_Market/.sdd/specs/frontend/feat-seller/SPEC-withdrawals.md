@@ -18,8 +18,9 @@ Trang Yêu cầu rút tiền cung cấp giao diện cho phép người bán (Sel
 2. **Khối biểu mẫu rút tiền (Withdrawal Form):**
    * Hiển thị số dư khả dụng và thông tin tài khoản ngân hàng thụ hưởng (ở dạng chỉ đọc để bảo vệ).
    * Ô nhập số tiền muốn rút, hiển thị phí rút tiền hệ thống và số tiền thực nhận sau phí.
-   * Khung xác thực OTP email: Nút "Gửi mã OTP" kèm bộ đếm ngược chống spam 60s và ô nhập 6 chữ số OTP.
-3. **Bảng lịch sử yêu cầu rút tiền:** Danh sách các lệnh rút tiền quá khứ và hiện tại kèm trạng thái kiểm duyệt (`Pending`, `Approved`, `Rejected`).
+   * Nút xác nhận gửi yêu cầu rút tiền.
+3. **Bảng lịch sử yêu cầu rút tiền:** Danh sách các lệnh rút tiền quá khứ và hiện tại kèm trạng thái kiểm duyệt đã được Việt hóa (`Chờ xử lý`, `Đang xử lý`, `Hoàn tất`, `Bị từ chối`).
+4. **Chi tiết rút tiền:** Bấm biểu tượng con mắt để xem chi tiết, hiển thị thông tin ngân hàng và hóa đơn/biên lai chuyển khoản (có thể là ảnh chụp hoặc file PDF tải xuống) mà Nhân viên Kế toán tải lên khi giao dịch ở trạng thái `Hoàn tất`.
 
 ---
 
@@ -58,9 +59,9 @@ Trang Yêu cầu rút tiền cung cấp giao diện cho phép người bán (Sel
 │  │  - Rúttiền│  │  Nhập OTP:    [ 456123 ] [Gửi OTP] │ │
 │  └───────────┘  │  [ XÁC NHẬN YÊU CẦU RÚT TIỀN ]     │ │
 │                 │  LỊCH SỬ RÚT TIỀN:                 │ │
-│                 │  ┌──────────────────────────────┐  │ │
-│                 │  │#W101 | 1.500K | VCB | PENDING  │  │ │
-│                 │  └──────────────────────────────┘  │ │
+│                 │  ┌────────────────────────────────────┐  │
+│                 │  │#W101 | 1.500K | VCB | Chờ xử lý    │  │
+│                 │  └────────────────────────────────────┘  │
 │                 └────────────────────────────────────┘ │
 └────────────────────────────────────────────────────────┘
 ```
@@ -73,35 +74,31 @@ Trang Yêu cầu rút tiền cung cấp giao diện cho phép người bán (Sel
 * Nền xám nhạt bo góc. Hiển thị thông tin Tên Ngân Hàng, Số Tài Khoản và Tên Chủ Tài Khoản đã được liên kết khi đăng ký mở shop.
 * **Quy tắc bảo mật:** Khối này hoàn toàn khóa chỉnh sửa (`read-only`) để chống việc kẻ xấu chiếm quyền tài khoản và đổi bank thụ hưởng hòng rút ruột tiền ví.
 
-### 4.2 Bộ Nhập Mã OTP Đếm Ngược — `.swth-otp-block`
-* Nút "Gửi mã OTP" (`#btnSendOtp`): Nhấp vào sẽ gửi OTP đến email.
-* Kích hoạt đếm ngược 60s trên nút, đổi màu xám mờ và hiển thị: "Gửi lại sau (59s)".
+### 4.2 Modal Xác Nhận Rút Tiền (Custom HTML Modal)
+* Khung Modal popup hiển thị thay thế cho `window.confirm` mặc định của trình duyệt để tăng tính thẩm mỹ và độ chuyên nghiệp.
+* Hiển thị rõ số tiền yêu cầu rút, phí rút (nếu có, từ backend config) và tổng số tiền sẽ trừ khỏi ví.
+* Nút bấm xác nhận có trạng thái loading (spinner vô hiệu hóa nút) chống việc click liên tục sinh ra request rác (spam).
 
 ---
 
 ## 5. LUỒNG XỬ LÝ JS & AJAX
 
 1. **Khởi tạo trang:**
+   * Tải cấu hình rút tiền từ API (`/withdrawals/config`) để lấy hạn mức min/max và phần trăm phí rút tiền.
    * Tải số dư khả dụng hiện tại từ API số dư ví.
-   * Tải lịch sử các yêu cầu rút tiền trước đây bằng API:
-     * **Endpoint:** `GET /api/v1/seller/withdrawals/history`
-     * **Headers:** `Authorization: Bearer <token>`
+   * Tải lịch sử các yêu cầu rút tiền trước đây bằng API.
    * Kết xuất lịch sử vào bảng.
-2. **Gửi mã OTP về email:**
-   * Khi người dùng nhấp "Gửi mã OTP":
-     * Gửi request `POST /api/v1/seller/withdrawals/send-otp` qua AJAX.
-     * **Thành công (HTTP 200):** Bắt đầu đếm ngược 60s trên nút gửi OTP, hiển thị Toast thông báo mã đã được gửi về hòm thư điện tử.
-3. **Submit yêu cầu rút tiền:**
-   * Validate local: Số tiền rút tối thiểu `50,000` VNĐ và không vượt quá số dư khả dụng hiện tại. Ô nhập OTP phải đủ 6 ký tự số.
-   * Gửi API:
-     * **Endpoint:** `POST /api/v1/seller/withdrawals/submit`
+2. **Submit yêu cầu rút tiền (Hiển thị Modal):**
+   * Validate local: Số tiền rút tối thiểu theo cấu hình (ví dụ `10,000` đ) và không vượt quá số dư khả dụng hiện tại.
+   * Tính toán phí rút (nếu có) và hiển thị Custom HTML Modal Popup xác nhận tổng tiền.
+   * Gửi API khi ấn xác nhận trên Modal:
+     * **Endpoint:** `POST /api/v1/seller/withdrawals`
      * **Headers:** `Content-Type: application/json`, `Authorization: Bearer <token>`
-     * **Payload:** `{ "amount": 1500000, "otp": "456123" }`
+     * **Payload:** `{ "amountVnd": 100000 }`
    * **Thành công (HTTP 200):**
-     * Trừ ngay lập tức số dư khả dụng trên UI và chuyển sang số dư tạm giữ hold_balance.
-     * Thêm dòng mới vào bảng lịch sử yêu cầu rút tiền với trạng thái `Pending`.
-     * Reset ô nhập số tiền và ô nhập OTP, kết thúc đếm ngược.
-     * Hiển thị Toast thông báo tạo yêu cầu rút tiền thành công, đang chờ duyệt từ nhân viên Staff.
+     * Ẩn Modal Popup.
+     * Hiển thị Toast thông báo tạo yêu cầu rút tiền thành công.
+     * Trình duyệt tự động reload trang sau 1.5s để làm mới số dư và hiển thị dòng lịch sử lệnh rút vừa tạo với trạng thái `Chờ xử lý`.
 
 ---
 

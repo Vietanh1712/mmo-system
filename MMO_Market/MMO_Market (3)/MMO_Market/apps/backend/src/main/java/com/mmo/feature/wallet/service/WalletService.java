@@ -57,6 +57,7 @@ public class WalletService {
                         .code(txn.getReferenceCode())
                         .type(txn.getType())
                         .amount(txn.getAmountVnd())
+                        .balanceAfter(txn.getBalanceAfter())
                         .status(txn.getStatus())
                         .description(txn.getDescription())
                         .createdAt(txn.getCreatedAt() != null ? txn.getCreatedAt().format(formatter) : "")
