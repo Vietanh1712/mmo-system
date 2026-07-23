@@ -157,7 +157,7 @@ function getUserEmail() {
 function openTicketForm() {
     const token = sessionStorage.getItem('accessToken');
     if (!token) {
-        showWarningToast('Vui lòng đăng nhập để gửi ticket hỗ trợ!');
+        showWarningToast('Vui lòng đăng nhập để gửi phiếu hỗ trợ!');
         window.location.href = '/login?returnUrl=/support';
         return;
     }
@@ -194,17 +194,17 @@ async function submitTicketForm(e) {
 
         if (!res.ok) {
             const data = await res.json();
-            throw new Error(data.message || 'Lỗi gửi ticket');
+            throw new Error(data.message || 'Lỗi gửi phiếu hỗ trợ');
         }
 
         closeTicketForm();
         document.getElementById('support-ticket-form').reset();
         
-        showSuccessToast('Gửi ticket hỗ trợ thành công! Ticket của bạn đã được đưa lên hệ thống xử lý của Staff.');
+        showSuccessToast('Gửi phiếu hỗ trợ thành công! Yêu cầu của bạn đã được đưa lên hệ thống xử lý.');
         window.location.href = '/account/tickets';
     } catch(err) {
         console.error(err);
-        showErrorToast('Không thể gửi ticket hỗ trợ: ' + err.message);
+        showErrorToast('Không thể gửi phiếu hỗ trợ: ' + err.message);
     }
 }
 

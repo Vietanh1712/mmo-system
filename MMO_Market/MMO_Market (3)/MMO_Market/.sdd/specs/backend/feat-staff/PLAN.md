@@ -3,7 +3,7 @@
 ## 1. Mục tiêu (Goals)
 
 Triển khai giao diện vận hành MVC và REST API dành riêng cho nhân viên vận hành (Staff) và quản trị viên (Admin) để xử lý các yêu cầu phê duyệt trong hệ thống theo đặc tả `SPEC.md` (feat-staff). Các nghiệp vụ bao gồm:
-- Xem thống kê hoạt động trên Dashboard (khiếu nại đang xử lý, KYC chờ duyệt, yêu cầu rút tiền mới).
+- Xem thống kê hoạt động trên Dashboard (tổng số shop, KYC chờ duyệt, cờ cảnh báo shop).
 - Lọc và kiểm duyệt yêu cầu rút tiền ngân hàng của Seller.
 - Quản lý cờ cảnh báo (Flags) cho các Shop/Seller vi phạm chính sách sàn giao dịch (đánh giá nguy hiểm: Warning, Critical, Danger).
 - Xem và xử lý khiếu nại (Complaints) cũng như lịch sử giao dịch toàn hệ thống.
@@ -65,14 +65,19 @@ Triển khai giao diện vận hành MVC và REST API dành riêng cho nhân vi�
 ## 4. Các thành phần Frontend
 
 - **Hệ thống Sidebar của Staff:**
-  - File: `templates/fragments/staff-sidebar.html` hiển thị danh sách các chức năng chính, bổ sung menu **Shops** liên kết đến `/staff/shop-registrations`.
+  - File: `templates/fragments/staff-sidebar.html` hiển thị danh sách các chức năng chính. Nhóm các trang Khiếu nại, Giao dịch, và Rút tiền vào menu thả xuống (Dropdown) mới có tên là "**Quản lý đơn từ**". Bổ sung menu **Shops** liên kết đến `/staff/shop-registrations`.
 - **Trang Quản lý Cờ Cảnh Báo (Shop Flags):**
   - File: `templates/staff/flags.html` & `flag-detail.html`, cùng file JS quản lý.
 - **Trang Thống kê Dashboard:**
   - File: `templates/staff/dashboard.html` hiển thị biểu đồ và tổng quan hệ thống, bổ sung thẻ **Quản lý Shop** vào phần Truy cập nhanh.
+- **Trang Quản lý KYC (KYC Verification):**
+  - Script: `static/js/staff/staff-kyc.js` bỏ tự động kích hoạt tìm kiếm khi đổi tùy chọn bộ lọc (`change` event), chỉ thực hiện tìm kiếm khi Staff bấm nút "Tìm kiếm" hoặc nhấn `Enter`.
+  - Template `templates/staff/kyc-detail.html`: Đặt nhãn trạng thái (`#kycStatusBadge` hiển thị "Đã duyệt", "Chờ duyệt", "Từ chối") cố định ở góc trên bên phải của thẻ thông tin người nộp (`.ds-card-header`).
+- **Trang Quản lý Khiếu nại (Complaints):**
+  - File: `templates/staff/complaints.html` & Script: `static/js/staff/staff-complaints.js` hiển thị cột STT liên tục qua từng trang (`currentPage * pageSize + index + 1`).
 - **Trang Quản lý Duyệt Yêu Cầu Shop (Shops):**
-  - File: `templates/staff/shop-registrations.html` được thiết kế đồng bộ với KYC/Complaints với bảng thống kê 4 thẻ, bộ lọc tìm kiếm, bảng danh sách phân trang (có STT và Trạng thái) và Modal chi tiết duyệt shop.
-  - Script: `static/js/staff/staff-shop-registrations.js` gọi các API phân trang/tìm kiếm, thống kê số liệu, tích hợp phân trang chung và điều khiển Modal hiển thị dữ liệu chi tiết kiểm duyệt.
+  - File: `templates/staff/shop-registrations.html` & Script: `static/js/staff/staff-shop-registrations.js` quản lý 5 trạng thái gian hàng (`Active`, `Withdrawn`, `Suspended`, `Locked`, `Banned`).
+  - Template `templates/staff/shop-registration-detail.html`: Đặt nhãn trạng thái (`#shopStatusBadge` hiển thị "Đã duyệt", "Chờ duyệt", "Từ chối") cố định ở góc trên bên phải của thẻ thông tin Shop (`.ds-card-header`).
 
 ---
 
@@ -137,4 +142,94 @@ Bổ sung cột STT (Sequence Number) được tính toán theo phân trang (`cu
   - Thực hiện dịch hoàn toàn các giá trị trạng thái shop (Pending, Approved, Active, Banned, Locked, Rejected) sang tiếng Việt trong hàm hiển thị badge JS.
   - Tải động danh sách các trạng thái tài khoản shop từ database lên thanh bộ lọc để giải quyết triệt để lỗi không tìm kiếm được do lệch giá trị cứng (ví dụ database lưu "Approved" nhưng UI gửi "ACTIVE").
   - Loại bỏ nút hình con mắt trong cột Thao tác và thay thế bằng nút gạt Bật/Tắt trạng thái shop; loại bỏ hoàn toàn các liên kết/modal xem chi tiết.
+
+## 9. Cải tiến Quản lý Shop (phiên bản 2.1 & 2.2 & 2.3)
+- **`ShopRegistrationController.java` & `ShopRegistrationService.java`**:
+  - Triển khai API `GET /api/v1/shop-registrations/{id}` lấy thông tin chi tiết một đăng ký Shop theo ID.
+- **`StaffController.java`**:
+  - Thêm route MVC `/staff/shop-registrations/detail` để trả về giao diện xem chi tiết.
+- **`shop-registrations.html` & `staff-shop-registrations.js`**:
+  - Loại bỏ hoàn toàn modal review cũ.
+  - Chuyển đổi nút xem chi tiết (biểu tượng con mắt) thành liên kết điều hướng sang trang chi tiết mới.
+  - Cấu hình cột "Tên Shop" trong bảng danh sách chỉ hiển thị duy nhất Tên Shop (loại bỏ phần mô tả, email và số điện thoại).
+- **`shop-registration-detail.html` & `staff-shop-registration-detail.js`**:
+  - Tạo trang chi tiết hiển thị đầy đủ thông tin về shop (loại bỏ trường danh mục và ngày nộp yêu cầu), chủ sở hữu (thông tin liên hệ email và số điện thoại được lấy trực tiếp từ bảng `Users` thay vì request), thông tin tài chính (tích hợp thêm thông tin tài khoản ngân hàng của Seller gồm Số tài khoản, Ngân hàng, Chi nhánh lấy từ bảng `SellerBankInfo`) và tích hợp panel duyệt/từ chối yêu cầu (kèm lý do từ chối) tương tự như KYC.
+
+## 10. Tái cấu trúc Menu Sidebar (phiên bản 2.4)
+- **`staff-sidebar.html`**:
+  - Nhóm các tính năng Khiếu nại, Giao dịch và Rút tiền vào một Menu thả xuống (Dropdown) collapsible duy nhất có tên là "Quản lý đơn từ" để giao diện thanh bên của Staff được gọn gàng và khoa học hơn.
+  - Tự động giữ trạng thái mở (`is-open`) nếu trang hiện tại thuộc một trong ba chức năng trong nhóm.
+- **`staff.css` & `staff-ui.js`**:
+  - Thêm CSS styling cho dropdown container, arrow rotate animation và slide down menu.
+  - Thêm JS click handler để cho phép toggle thu/phóng dropdown thủ công.
+
+## 11. Bổ sung Trang tổng quan Quản lý đơn từ (phiên bản 2.5)
+- **`StaffController.java` & `documents-dashboard.html`**:
+  - Triển khai endpoint `/staff/documents` hiển thị trang tổng quan riêng biệt cho phân hệ "Quản lý đơn từ", kết nối dữ liệu thống kê từ database (`dashboard.openComplaints`, `dashboard.pendingWithdrawals`, `dashboard.pendingTransactions`).
+  - Thêm các thẻ truy cập nhanh đến 3 chức năng con: Khiếu nại, Giao dịch, Rút tiền.
+- **Tái cấu trúc Sidebar Dropdown & Main Dashboard (`dashboard.html`)**:
+  - Tách tiêu đề "Quản lý đơn từ" thành liên kết trực tiếp trỏ đến `/staff/documents`, giữ nút mũi tên làm công cụ đóng mở (toggle) danh sách menu con bên dưới.
+  - Trên trang `/staff/dashboard` (dashboard.html), loại bỏ 2 liên kết truy cập nhanh "Quản lý khiếu nại" và "Quản lý rút tiền" riêng rẽ, thay thế bằng 1 thẻ duy nhất là "**Quản lý đơn từ**" trỏ đến `/staff/documents`.
+
+## 12. Thay đổi chỉ số thống kê trên Dashboard chính (phiên bản 2.6)
+- **`StaffDashboardDTO.java` & `StaffDashboardServiceImpl.java`**:
+  - Triển khai thuộc tính `totalShops` lấy số lượng Shop đăng ký từ database bằng `sellerRegistrationRepository.countByIsDeleteFalse()`.
+- **`dashboard.html`**:
+  - Thay thế thẻ thống kê "**Khiếu nại đang mở**" bằng "**Tổng số Shop**" (màu xanh lá) để làm nổi bật quy mô hoạt động hệ thống.
+  - Xóa bỏ hoàn toàn thẻ thống kê "**Yêu cầu rút tiền**" khỏi màn hình Dashboard chính (do chỉ số này đã chuyển sang trang tổng quan đơn từ).
+
+## 13. Cập nhật giao diện Xử lý khiếu nại & Xem chi tiết giao dịch (phiên bản 2.7)
+- **Cải tiến giao diện khiếu nại (`complaint-detail.html`)**:
+  - Đổi nhãn trạng thái `"Từ chối khiếu nại"` thành `"Từ chối"`.
+  - Thay thế hai nút bấm cứng `"Giải quyết"` và `"Từ chối"` bằng một nút bấm `"Cập nhật"` duy nhất kết nối trực tiếp với bộ chọn trạng thái xử lý (`complaintStatus`).
+  - Loại bỏ hộp cảnh báo giả lập `ds-alert` `"Chế độ giả lập Staff — Cập nhật sẽ đồng bộ tức thì sang người dùng."`.
+- **Cải tiến logic xử lý khiếu nại (`staff-complaint-detail.js`)**:
+  - Triển khai hàm `submitComplaintStatus()` để đọc giá trị trạng thái từ bộ chọn và gửi đi qua hàm `handleStaffAction()`.
+  - Sửa lại câu thông báo thành công (toast) hiển thị đúng theo trạng thái được chọn (`Đang xử lý` / `Đã giải quyết` / `Từ chối`).
+  - Hỗ trợ fallback lý do giải quyết mặc định phù hợp cho trạng thái `InProgress`.
+- **Cải tiến giao diện chi tiết giao dịch (`transaction-detail.html`)**:
+  - Loại bỏ hộp cảnh báo `ds-alert` `"Giao dịch đã hoàn tất, tiền đã được giữ bảo lãnh theo quy trình C2C."` để làm gọn và trực quan hóa giao diện tóm tắt giao dịch.
+
+## 14. Bổ sung 4 trạng thái Shop mới và nâng cấp 6 thẻ thống kê Shop (`staff-shop-registrations.js`) (phiên bản 2.8)
+- **Ánh xạ trạng thái hiển thị (Badge & Filter dropdown)**:
+  - `WITHDRAWN` hoặc `DELETED` -> "Đã xóa (rút tiền cọc)" (Badge đỏ / danh sách chọn lọc).
+  - `SUSPENDED` hoặc `TEMP_LOCKED` -> "Khóa xóa có thời hạn" (Badge vàng / danh sách chọn lọc).
+  - `LOCKED` || `INDEFINITE_LOCKED` -> "Khóa xóa vô thời hạn" (Badge vàng / danh sách chọn lọc).
+  - `BANNED` hoặc `PERMANENT_BANNED` -> "Khóa Shop vĩnh viễn" (Badge đỏ / danh sách chọn lọc).
+- **Thống kê 6 thẻ chỉ số mới**:
+  - `shop-registrations.html` hiển thị 6 thẻ tương ứng với 6 chỉ số: Tổng số Shop, Tổng tiền cọc, Shop khóa vĩnh viễn, Shop khóa vô thời hạn, Shop khóa có thời hạn, Xóa Shop.
+  - Tích hợp các hàm đếm chuyên biệt trong `UserRepository` (`countTotalShops`, `countPermanentBannedShops`, `countIndefiniteLockedShops`, `countTemporarySuspendedShops`, `countWithdrawnShops`, `sumTotalDeposit`) và cập nhật hàm trả về DTO ở Service.
+  - Script Frontend `staff-shop-registrations.js` chịu trách nhiệm gọi API thống kê và gán giá trị tương ứng lên UI.
+
+## 15. Thay thế nút Bật/Tắt hoạt động bằng nút sang trang Cập nhật trạng thái Shop riêng biệt (phiên bản 2.9)
+- **Cải tiến danh sách Shop (`staff-shop-registrations.js`)**:
+  - Gỡ bỏ điều khiển chuyển mạch toggle `ds-switch` khỏi danh sách hàng của bảng Shop.
+  - Thay thế bằng liên kết nút bấm dạng `ds-btn ds-btn-sm ds-btn-outline` với nhãn `"Cập nhật trạng thái"`. Khi Staff ấn nút này sẽ điều hướng sang trang thay đổi trạng thái Shop riêng biệt `/staff/shop-registrations/update-status?id=...`.
+- **Tạo trang Cập nhật trạng thái Shop riêng biệt (`shop-registration-update-status.html` & `staff-shop-registration-update-status.js`)**:
+  - Tạo view MVC mới và tệp Javascript xử lý nghiệp vụ riêng biệt.
+  - Hiển thị thông tin cơ bản của shop: Mã shop, Tên shop, Chủ sở hữu, Trạng thái hoạt động hiện tại.
+  - Cung cấp một select dropdown chứa 5 tùy chọn trạng thái: Hoạt động (Active), Đã xóa (rút tiền cọc) (Withdrawn), Khóa xóa có thời hạn (Suspended), Khóa xóa vô thời hạn (Locked), Khóa Shop vĩnh viễn (Banned) cùng nút bấm `"Lưu cập nhật"`.
+- **Triển khai REST API cập nhật trạng thái (`ShopRegistrationController.java` & `ShopRegistrationService.java`)**:
+  - Cung cấp REST API endpoint `PUT /api/v1/shop-registrations/{id}/update-status?status=...` để lưu giá trị trạng thái hoạt động mới được chọn vào cột `shop_status` trong bảng `Users`.
+  - Triển khai logic AJAX đồng bộ trong `staff-shop-registration-update-status.js` để gửi yêu cầu lưu và điều hướng quay lại danh sách.
+
+## 16. Loại bỏ cột Lý do khỏi bảng danh sách cờ cảnh báo (phiên bản 3.0)
+- **`flags.html`**:
+  - Gỡ bỏ cột "Lý do" (cột tiêu đề `<th>Lý do</th>` và ô dữ liệu `<td th:text="${flag.reason}"></td>`) khỏi bảng hiển thị danh sách cờ cảnh báo để giao diện hiển thị tinh gọn hơn, tránh việc lý do dài gây vỡ khung bảng. Lý do chi tiết vẫn được hiển thị tại trang chi tiết cờ cảnh báo (`flag-detail.html`) và có thể chỉnh sửa tại đây.
+
+## 17. Tích hợp Phiếu hỗ trợ vào Quản lý đơn từ (phiên bản 3.1)
+- **Staff Sidebar & Documents Dashboard (`staff-sidebar.html`, `documents-dashboard.html`):**
+  - Di chuyển menu liên kết "Phiếu Hỗ Trợ" từ cấp cao nhất vào bên trong menu thả xuống (Dropdown) "Quản lý đơn từ".
+  - Cập nhật điều kiện hiển thị trạng thái mở (`is-open`) của Dropdown để tự động kích hoạt khi đang xem trang Phiếu hỗ trợ (`support-tickets`).
+  - Bổ sung thẻ thống kê số lượng phiếu hỗ trợ chờ xử lý (`dashboard.pendingTickets`) và thẻ truy cập nhanh cho "Phiếu hỗ trợ" trong bảng chức năng của Documents Dashboard.
+- **Staff Dashboard Service (`StaffDashboardServiceImpl.java` & `StaffDashboardDTO.java`):**
+  - Bổ sung logic đếm số phiếu hỗ trợ có trạng thái "Open" hoặc "Processing" chưa bị xóa (`isDelete = false`) thông qua `SupportTicketRepository` để truyền giá trị vào DTO hiển thị.
+
+
+
+
+
+
+
+
 

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Tổng quan quản lý đơn từ')}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('documents')}"></aside>
+
+            <section class="ds-section">
+                <div class="staff-page-header">
+                    <div>
+                        <h1 class="ds-page-title">Tổng quan quản lý đơn từ</h1>
+                        <p class="ds-page-subtitle">Theo dõi và xử lý các hồ sơ khiếu nại, lịch sử giao dịch, yêu cầu rút tiền và phiếu hỗ trợ.</p>
+                    </div>
+                    <span class="ds-badge ds-badge-info">Documents Dashboard</span>
+                </div>
+
+                <div class="staff-stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+                    <div class="ds-card staff-stat-card yellow">
+                        <p class="staff-stat-card__label">Khiếu nại đang mở</p>
+                        <p class="staff-stat-card__value" th:text="${dashboard.openComplaints}"></p>
+                        <p class="staff-stat-card__hint">Cần phân xử & hoàn tiền</p>
+                    </div>
+                    <div class="ds-card staff-stat-card blue">
+                        <p class="staff-stat-card__label">Yêu cầu rút tiền chờ duyệt</p>
+                        <p class="staff-stat-card__value" th:text="${dashboard.pendingWithdrawals}"></p>
+                        <p class="staff-stat-card__hint">Chờ phê duyệt thanh toán</p>
+                    </div>
+                    <div class="ds-card staff-stat-card red">
+                        <p class="staff-stat-card__label">Giao dịch chờ duyệt</p>
+                        <p class="staff-stat-card__value" th:text="${dashboard.pendingTransactions}"></p>
+                        <p class="staff-stat-card__hint">Đang xử lý / Tạm giữ</p>
+                    </div>
+                    <div class="ds-card staff-stat-card green">
+                        <p class="staff-stat-card__label">Phiếu hỗ trợ chờ xử lý</p>
+                        <p class="staff-stat-card__value" th:text="${dashboard.pendingTickets}"></p>
+                        <p class="staff-stat-card__hint">Yêu cầu hỗ trợ chưa giải quyết</p>
+                    </div>
+                </div>
+
+                <div class="ds-card">
+                    <div class="ds-card-header">
+                        <h2 class="ds-card-title">Chức năng quản lý đơn từ</h2>
+                    </div>
+                    <div class="staff-quick-grid">
+                        <a class="ds-card staff-quick-card" href="/staff/complaints">
+                            <div class="staff-quick-card__icon staff-quick-card__icon--danger"><i class="fa fa-exclamation-circle"></i></div>
+                            <h3>Quản lý khiếu nại</h3>
+                            <p>Xem danh sách và giải quyết khiếu nại, tranh chấp giữa người mua và người bán.</p>
+                        </a>
+                        <a class="ds-card staff-quick-card" href="/staff/support-tickets">
+                            <div class="staff-quick-card__icon staff-quick-card__icon--success"><i class="fa fa-ticket"></i></div>
+                            <h3>Phiếu hỗ trợ</h3>
+                            <p>Xem danh sách và phản hồi các yêu cầu hỗ trợ, thắc mắc từ người dùng.</p>
+                        </a>
+                        <a class="ds-card staff-quick-card" href="/staff/transactions">
+                            <div class="staff-quick-card__icon staff-quick-card__icon--muted"><i class="fa fa-exchange"></i></div>
+                            <h3>Lịch sử giao dịch</h3>
+                            <p>Xem lịch sử biến động số dư, giao dịch nạp rút, mua bán trên toàn hệ thống.</p>
+                        </a>
+                        <a class="ds-card staff-quick-card" href="/staff/withdrawals">
+                            <div class="staff-quick-card__icon staff-quick-card__icon--info"><i class="fa fa-money"></i></div>
+                            <h3>Yêu cầu rút tiền</h3>
+                            <p>Phê duyệt hoặc từ chối các yêu cầu rút tiền mặt về ngân hàng của Seller.</p>
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/customer/auth.js}"></script>
+<script th:src="@{/js/staff/staff-ui.js}"></script>
+</body>
+</html>

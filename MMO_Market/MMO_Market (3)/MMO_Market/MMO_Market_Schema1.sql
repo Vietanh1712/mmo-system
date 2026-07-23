@@ -61,7 +61,14 @@ CREATE TABLE Users (
     role NVARCHAR(MAX) NOT NULL, -- JSON format: {"role": "Customer"}, {"role": "Seller"}, {"role": "Admin"}, {"role": "Staff"}
     phone VARCHAR(20),
     shop_status VARCHAR(20) DEFAULT 'Pending', -- Pending, Active, Banned
+    shop_level INT DEFAULT 1,
+    flag_3_count INT DEFAULT 0,
+    withdrawal_locked BIT DEFAULT 0,
     balance_vnd BIGINT DEFAULT 0,
+    deposit_vnd BIGINT DEFAULT 0,
+    failed_attempts INT DEFAULT 0,
+    lock_time DATETIME2 NULL,
+    is_2fa_enabled BIT DEFAULT 0,
     permissions NVARCHAR(MAX) NULL,
     isVerified BIT DEFAULT 0,
     isLocked BIT DEFAULT 0,
@@ -249,6 +256,8 @@ CREATE TABLE Transactions (
     commission_vnd BIGINT NOT NULL,
     status VARCHAR(20) DEFAULT 'Pending',
     escrow_release_date DATETIME,
+    payment_method VARCHAR(50) NULL,
+    quantity INT DEFAULT 1 NOT NULL,
     created_at DATETIME DEFAULT GETDATE(),
     isDelete BIT DEFAULT 0,
     CONSTRAINT FK_Trans_Customer FOREIGN KEY (customer_id) REFERENCES Users(id) ON DELETE NO ACTION,
@@ -278,9 +287,13 @@ CREATE TABLE WalletTransactions (
     amount_vnd BIGINT NOT NULL,
     balance_after BIGINT NOT NULL,
     transaction_type VARCHAR(50) NOT NULL, -- DEPOSIT, WITHDRAW, PURCHASE, SALE, REFUND
+    type VARCHAR(50) NOT NULL, -- TOPUP, PAYMENT, REFUND, ESCROW, WITHDRAWAL
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING', -- PENDING, SUCCESS, FAILED
     reference_id BIGINT NULL,
+    reference_code VARCHAR(100) NULL,
     description NVARCHAR(MAX),
     created_at DATETIME DEFAULT GETDATE(),
+    isDelete BIT DEFAULT 0,
     CONSTRAINT FK_WalletLog_Users FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION
 );
 GO
@@ -297,12 +310,17 @@ CREATE TABLE Complaints (
     description NVARCHAR(MAX) NOT NULL,
     evidence NVARCHAR(MAX),
     status VARCHAR(20) DEFAULT 'Open',
+    preferred_solution VARCHAR(50) NULL,
     resolution NVARCHAR(MAX),
+    resolved_by BIGINT NULL,
+    resolved_at DATETIME NULL,
+    decision_type VARCHAR(50) NULL,
     created_at DATETIME DEFAULT GETDATE(),
     isDelete BIT DEFAULT 0,
     CONSTRAINT FK_Complaints_Trans FOREIGN KEY (transaction_id) REFERENCES Transactions(id) ON DELETE NO ACTION,
     CONSTRAINT FK_Complaints_Customer FOREIGN KEY (customer_id) REFERENCES Users(id) ON DELETE NO ACTION,
-    CONSTRAINT FK_Complaints_Seller FOREIGN KEY (seller_id) REFERENCES Users(id) ON DELETE NO ACTION
+    CONSTRAINT FK_Complaints_Seller FOREIGN KEY (seller_id) REFERENCES Users(id) ON DELETE NO ACTION,
+    CONSTRAINT FK_Complaints_ResolvedBy FOREIGN KEY (resolved_by) REFERENCES Users(id) ON DELETE NO ACTION
 );
 GO
 
@@ -313,6 +331,7 @@ CREATE TABLE ShopFlags (
     complaint_id BIGINT NULL,
     reason NVARCHAR(MAX) NOT NULL,
     flag_level VARCHAR(20) DEFAULT 'Warning',
+    status VARCHAR(20) DEFAULT 'Pending',
     created_at DATETIME DEFAULT GETDATE(),
     isDelete BIT DEFAULT 0,
     CONSTRAINT FK_Flags_Seller FOREIGN KEY (seller_id) REFERENCES Users(id) ON DELETE NO ACTION,
@@ -326,28 +345,20 @@ CREATE TABLE Chats (
     sender_id BIGINT NOT NULL,
     receiver_id BIGINT NOT NULL,
     complaint_id BIGINT NULL,
+    product_id BIGINT NULL,
     chat_type VARCHAR(20) DEFAULT 'Normal',
     message NVARCHAR(MAX) NOT NULL,
     created_at DATETIME DEFAULT GETDATE(),
     isDelete BIT DEFAULT 0,
     sender_deleted BIT DEFAULT 0,
     receiver_deleted BIT DEFAULT 0,
+    isRead BIT DEFAULT 0,
     CONSTRAINT FK_Chats_Sender FOREIGN KEY (sender_id) REFERENCES Users(id) ON DELETE NO ACTION,
     CONSTRAINT FK_Chats_Receiver FOREIGN KEY (receiver_id) REFERENCES Users(id) ON DELETE NO ACTION,
     CONSTRAINT FK_Chats_Complaint FOREIGN KEY (complaint_id) REFERENCES Complaints(id) ON DELETE NO ACTION
 );
 GO
 
-CREATE TABLE ChatBlocks (
-    id BIGINT IDENTITY(1,1) PRIMARY KEY,
-    blocker_id BIGINT NOT NULL,
-    blocked_id BIGINT NOT NULL,
-    created_at DATETIME DEFAULT GETDATE(),
-    CONSTRAINT FK_ChatBlocks_Blocker FOREIGN KEY (blocker_id) REFERENCES Users(id) ON DELETE NO ACTION,
-    CONSTRAINT FK_ChatBlocks_Blocked FOREIGN KEY (blocked_id) REFERENCES Users(id) ON DELETE NO ACTION,
-    CONSTRAINT UQ_ChatBlocks UNIQUE (blocker_id, blocked_id)
-);
-GO
 
 CREATE TABLE ChatMutes (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
@@ -439,9 +450,13 @@ GO
 
 CREATE TABLE Notifications (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
-    user_id BIGINT NOT NULL,
+    user_id BIGINT NULL,
     title NVARCHAR(255) NOT NULL,
     content NVARCHAR(MAX),
+    type VARCHAR(50) NOT NULL DEFAULT 'info',
+    isRead BIT DEFAULT 0,
+    severity VARCHAR(50) DEFAULT 'INFO',
+    target_url VARCHAR(500) NULL,
     created_at DATETIME DEFAULT GETDATE(),
     isDelete BIT DEFAULT 0,
     CONSTRAINT FK_Notif_Users FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION
@@ -519,8 +534,18 @@ BEGIN
         UPDATE Users
         SET shop_status = i.status,
             role = CASE
-                WHEN i.status = 'Approved' AND JSON_VALUE(Users.role, '$.role') = 'Customer' THEN '{"role": "Customer_Seller"}'
-                WHEN i.status = 'Rejected' AND JSON_VALUE(Users.role, '$.role') = 'Customer_Seller' THEN '{"role": "Customer"}'
+                WHEN i.status = 'Approved' THEN
+                    CASE
+                        WHEN ISJSON(Users.role) = 1 AND JSON_VALUE(Users.role, '$.role') = 'Customer' THEN '{"role": "Customer_Seller"}'
+                        WHEN Users.role = 'Customer' THEN 'Customer_Seller'
+                        ELSE Users.role
+                    END
+                WHEN i.status = 'Rejected' THEN
+                    CASE
+                        WHEN ISJSON(Users.role) = 1 AND JSON_VALUE(Users.role, '$.role') = 'Customer_Seller' THEN '{"role": "Customer"}'
+                        WHEN Users.role = 'Customer_Seller' THEN 'Customer'
+                        ELSE Users.role
+                    END
                 ELSE Users.role
             END
         FROM Users
@@ -764,8 +789,6 @@ GO
 
 
 
-
-
 -- ==============================================================================
 -- MERGED MIGRATION: 20260618_001_create_permissions_and_user_permissions.sql
 -- ==============================================================================
@@ -873,94 +896,106 @@ BEGIN TRY
     BEGIN TRANSACTION;
     PRINT '--- BẮT ĐẦU MIGRATION KYC ---';
 
-    -- 1. KIỂM TRA BASELINE
-    IF OBJECT_ID('dbo.KYCRequests', 'U') IS NULL
-        RAISERROR('LỖI BASELINE: Bảng dbo.KYCRequests không tồn tại.', 16, 1);
-
-    IF OBJECT_ID('dbo.KYCDocuments', 'U') IS NULL
-        RAISERROR('LỖI BASELINE: Bảng dbo.KYCDocuments không tồn tại.', 16, 1);
-
-    -- Pre-check citizen_id (VARCHAR(20) NOT NULL), status (VARCHAR(20)), isDelete (BIT NULL)
+    -- 1. KIỂM TRA BASELINE (Chỉ chạy migration nếu chưa ở V2)
     IF NOT EXISTS (
-        SELECT 1 FROM sys.columns c JOIN sys.types t ON c.user_type_id = t.user_type_id
-        WHERE c.object_id = OBJECT_ID('dbo.KYCRequests') AND c.name = 'citizen_id' AND t.name = 'varchar' AND c.max_length = 20 AND c.is_nullable = 0
-    ) OR NOT EXISTS (
-        SELECT 1 FROM sys.columns c JOIN sys.types t ON c.user_type_id = t.user_type_id
-        WHERE c.object_id = OBJECT_ID('dbo.KYCRequests') AND c.name = 'status' AND t.name = 'varchar' AND c.max_length = 20
-    ) OR NOT EXISTS (
-        SELECT 1 FROM sys.columns c JOIN sys.types t ON c.user_type_id = t.user_type_id
-        WHERE c.object_id = OBJECT_ID('dbo.KYCRequests') AND c.name = 'isDelete' AND t.name = 'bit' AND c.is_nullable = 1
+        SELECT 1 FROM sys.columns 
+        WHERE object_id = OBJECT_ID('dbo.KYCRequests') AND name = 'citizen_id'
     )
     BEGIN
-        RAISERROR('LỖI BASELINE: Cấu hình citizen_id, status hoặc isDelete không đúng kiểu dữ liệu khởi điểm.', 16, 1);
+        PRINT '--- Cột citizen_id không tồn tại (đã ở dạng V2 hoặc đã được migrate trước đó). Bỏ qua. ---';
+        IF OBJECT_ID('dbo.KYCDocuments', 'U') IS NOT NULL
+            DROP TABLE dbo.KYCDocuments;
     END
+    ELSE
+    BEGIN
+        IF OBJECT_ID('dbo.KYCRequests', 'U') IS NULL
+            RAISERROR('LỖI BASELINE: Bảng dbo.KYCRequests không tồn tại.', 16, 1);
 
-    IF EXISTS (SELECT 1 FROM sys.columns WHERE Name IN ('id_number', 'id_type', 'request_code', 'version', 'active_user_id') AND Object_ID = OBJECT_ID('dbo.KYCRequests'))
-        RAISERROR('LỖI BASELINE: Tồn tại cột rác từ version khác. Abort.', 16, 1);
+        IF OBJECT_ID('dbo.KYCDocuments', 'U') IS NULL
+            RAISERROR('LỖI BASELINE: Bảng dbo.KYCDocuments không tồn tại.', 16, 1);
 
-    -- Pre-check rỗng dữ liệu
-    IF EXISTS (SELECT 1 FROM dbo.KYCDocuments) OR EXISTS (SELECT 1 FROM dbo.KYCRequests)
-        RAISERROR('LỖI DỮ LIỆU: Bảng KYCRequests hoặc KYCDocuments đang có dữ liệu rác. Yêu cầu truncate DB Test trước.', 16, 1);
+        -- Pre-check citizen_id (VARCHAR(20) NOT NULL), status (VARCHAR(20)), isDelete (BIT NULL)
+        IF NOT EXISTS (
+            SELECT 1 FROM sys.columns c JOIN sys.types t ON c.user_type_id = t.user_type_id
+            WHERE c.object_id = OBJECT_ID('dbo.KYCRequests') AND c.name = 'citizen_id' AND t.name = 'varchar' AND c.max_length = 20 AND c.is_nullable = 0
+        ) OR NOT EXISTS (
+            SELECT 1 FROM sys.columns c JOIN sys.types t ON c.user_type_id = t.user_type_id
+            WHERE c.object_id = OBJECT_ID('dbo.KYCRequests') AND c.name = 'status' AND t.name = 'varchar' AND c.max_length = 20
+        ) OR NOT EXISTS (
+            SELECT 1 FROM sys.columns c JOIN sys.types t ON c.user_type_id = t.user_type_id
+            WHERE c.object_id = OBJECT_ID('dbo.KYCRequests') AND c.name = 'isDelete' AND t.name = 'bit' AND c.is_nullable = 1
+        )
+        BEGIN
+            RAISERROR('LỖI BASELINE: Cấu hình citizen_id, status hoặc isDelete không đúng kiểu dữ liệu khởi điểm.', 16, 1);
+        END
 
-    -- 2. SCHEMA CHANGES
-    DROP TABLE dbo.KYCDocuments;
+        IF EXISTS (SELECT 1 FROM sys.columns WHERE Name IN ('id_number', 'id_type', 'request_code', 'version', 'active_user_id') AND Object_ID = OBJECT_ID('dbo.KYCRequests'))
+            RAISERROR('LỖI BASELINE: Tồn tại cột rác từ version khác. Abort.', 16, 1);
 
-    EXEC sp_rename 'dbo.KYCRequests.citizen_id', 'id_number', 'COLUMN';
-    ALTER TABLE dbo.KYCRequests ALTER COLUMN id_number VARCHAR(50) NOT NULL;
+        -- Pre-check rỗng dữ liệu
+        IF EXISTS (SELECT 1 FROM dbo.KYCDocuments) OR EXISTS (SELECT 1 FROM dbo.KYCRequests)
+            RAISERROR('LỖI DỮ LIỆU: Bảng KYCRequests hoặc KYCDocuments đang có dữ liệu rác. Yêu cầu truncate DB Test trước.', 16, 1);
 
-    -- Xử lý Default Status Cũ (Drop 'Pending' cũ, thêm 'PENDING' mới)
-    DECLARE @statusConstraintName NVARCHAR(200);
-    SELECT @statusConstraintName = d.name 
-    FROM sys.default_constraints d JOIN sys.columns c ON d.parent_object_id = c.object_id AND d.parent_column_id = c.column_id 
-    WHERE c.name = 'status' AND c.object_id = OBJECT_ID('dbo.KYCRequests');
+        -- 2. SCHEMA CHANGES
+        DROP TABLE dbo.KYCDocuments;
 
-    IF @statusConstraintName IS NOT NULL
-        EXEC('ALTER TABLE dbo.KYCRequests DROP CONSTRAINT ' + @statusConstraintName);
-        
-    ALTER TABLE dbo.KYCRequests ADD CONSTRAINT DF_KYC_Status DEFAULT 'PENDING' FOR status;
+        EXEC sp_rename 'dbo.KYCRequests.citizen_id', 'id_number', 'COLUMN';
+        ALTER TABLE dbo.KYCRequests ALTER COLUMN id_number VARCHAR(50) NOT NULL;
 
-    -- Thêm id_type, request_code, version
-    ALTER TABLE dbo.KYCRequests ADD id_type VARCHAR(50) NOT NULL CONSTRAINT DF_KYC_IdType DEFAULT 'CCCD';
-    ALTER TABLE dbo.KYCRequests ADD request_code VARCHAR(32) NOT NULL;
-    ALTER TABLE dbo.KYCRequests ADD CONSTRAINT UQ_KYC_RequestCode UNIQUE (request_code);
-    ALTER TABLE dbo.KYCRequests ADD version INT NOT NULL CONSTRAINT DF_KYC_Version DEFAULT 0;
+        -- Xử lý Default Status Cũ (Drop 'Pending' cũ, thêm 'PENDING' mới)
+        DECLARE @statusConstraintName NVARCHAR(200);
+        SELECT @statusConstraintName = d.name 
+        FROM sys.default_constraints d JOIN sys.columns c ON d.parent_object_id = c.object_id AND d.parent_column_id = c.column_id 
+        WHERE c.name = 'status' AND c.object_id = OBJECT_ID('dbo.KYCRequests');
 
-    -- Xử lý isDelete Default Cũ -> Set BIT NOT NULL
-    DECLARE @isDeleteConstraintName NVARCHAR(200);
-    SELECT @isDeleteConstraintName = d.name 
-    FROM sys.default_constraints d JOIN sys.columns c ON d.parent_object_id = c.object_id AND d.parent_column_id = c.column_id 
-    WHERE c.name = 'isDelete' AND c.object_id = OBJECT_ID('dbo.KYCRequests');
+        IF @statusConstraintName IS NOT NULL
+            EXEC('ALTER TABLE dbo.KYCRequests DROP CONSTRAINT ' + @statusConstraintName);
+            
+        ALTER TABLE dbo.KYCRequests ADD CONSTRAINT DF_KYC_Status DEFAULT 'PENDING' FOR status;
 
-    IF @isDeleteConstraintName IS NOT NULL
-        EXEC('ALTER TABLE dbo.KYCRequests DROP CONSTRAINT ' + @isDeleteConstraintName);
+        -- Thêm id_type, request_code, version
+        ALTER TABLE dbo.KYCRequests ADD id_type VARCHAR(50) NOT NULL CONSTRAINT DF_KYC_IdType DEFAULT 'CCCD';
+        ALTER TABLE dbo.KYCRequests ADD request_code VARCHAR(32) NOT NULL;
+        ALTER TABLE dbo.KYCRequests ADD CONSTRAINT UQ_KYC_RequestCode UNIQUE (request_code);
+        ALTER TABLE dbo.KYCRequests ADD version INT NOT NULL CONSTRAINT DF_KYC_Version DEFAULT 0;
 
-    ALTER TABLE dbo.KYCRequests ALTER COLUMN isDelete BIT NOT NULL;
-    ALTER TABLE dbo.KYCRequests ADD CONSTRAINT DF_KYC_IsDelete DEFAULT 0 FOR isDelete;
+        -- Xử lý isDelete Default Cũ -> Set BIT NOT NULL
+        DECLARE @isDeleteConstraintName NVARCHAR(200);
+        SELECT @isDeleteConstraintName = d.name 
+        FROM sys.default_constraints d JOIN sys.columns c ON d.parent_object_id = c.object_id AND d.parent_column_id = c.column_id 
+        WHERE c.name = 'isDelete' AND c.object_id = OBJECT_ID('dbo.KYCRequests');
 
-    -- Thêm active_user_id
-    ALTER TABLE dbo.KYCRequests ADD active_user_id BIGINT NULL;
+        IF @isDeleteConstraintName IS NOT NULL
+            EXEC('ALTER TABLE dbo.KYCRequests DROP CONSTRAINT ' + @isDeleteConstraintName);
 
-    -- 3. CONSTRAINTS & INDEXES
-    EXEC('CREATE UNIQUE INDEX UQ_KYC_Active_Per_User ON dbo.KYCRequests(active_user_id) WHERE active_user_id IS NOT NULL;');
+        ALTER TABLE dbo.KYCRequests ALTER COLUMN isDelete BIT NOT NULL;
+        ALTER TABLE dbo.KYCRequests ADD CONSTRAINT DF_KYC_IsDelete DEFAULT 0 FOR isDelete;
 
-    EXEC('ALTER TABLE dbo.KYCRequests ADD CONSTRAINT CHK_KYC_Status CHECK (status IN (''PENDING'', ''APPROVED'', ''REJECTED''));');
-    EXEC('ALTER TABLE dbo.KYCRequests ADD CONSTRAINT CHK_KYC_IdType CHECK (id_type IN (''CCCD'', ''CMND'', ''PASSPORT'', ''DRIVER_LICENSE''));');
+        -- Thêm active_user_id
+        ALTER TABLE dbo.KYCRequests ADD active_user_id BIGINT NULL;
 
-    EXEC('ALTER TABLE dbo.KYCRequests ADD CONSTRAINT CHK_KYC_ActiveState CHECK (
-        (isDelete = 1 AND active_user_id IS NULL) OR
-        (isDelete = 0 AND status IN (''PENDING'', ''APPROVED'') AND active_user_id = user_id) OR
-        (isDelete = 0 AND status = ''REJECTED'' AND active_user_id IS NULL)
-    );');
+        -- 3. CONSTRAINTS & INDEXES
+        EXEC('CREATE UNIQUE INDEX UQ_KYC_Active_Per_User ON dbo.KYCRequests(active_user_id) WHERE active_user_id IS NOT NULL;');
 
-    EXEC('ALTER TABLE dbo.KYCRequests ADD CONSTRAINT CHK_KYC_ReviewState CHECK (
-        (status = ''PENDING'' AND reviewed_by IS NULL AND reviewed_at IS NULL AND rejection_reason IS NULL) OR
-        (status = ''APPROVED'' AND reviewed_by IS NOT NULL AND reviewed_at IS NOT NULL AND rejection_reason IS NULL) OR
-        (status = ''REJECTED'' AND reviewed_by IS NOT NULL AND reviewed_at IS NOT NULL AND rejection_reason IS NOT NULL AND LTRIM(RTRIM(rejection_reason)) != '''')
-    );');
+        EXEC('ALTER TABLE dbo.KYCRequests ADD CONSTRAINT CHK_KYC_Status CHECK (status IN (''PENDING'', ''APPROVED'', ''REJECTED''));');
+        EXEC('ALTER TABLE dbo.KYCRequests ADD CONSTRAINT CHK_KYC_IdType CHECK (id_type IN (''CCCD'', ''CMND'', ''PASSPORT'', ''DRIVER_LICENSE''));');
 
-    EXEC('CREATE INDEX IDX_KYC_User_Created ON dbo.KYCRequests(user_id, created_at DESC);');
-    EXEC('CREATE INDEX IDX_KYC_Status_Created ON dbo.KYCRequests(status, created_at DESC);');
-    EXEC('CREATE INDEX IDX_KYC_Reviewer_Date ON dbo.KYCRequests(reviewed_by, reviewed_at DESC);');
+        EXEC('ALTER TABLE dbo.KYCRequests ADD CONSTRAINT CHK_KYC_ActiveState CHECK (
+            (isDelete = 1 AND active_user_id IS NULL) OR
+            (isDelete = 0 AND status IN (''PENDING'', ''APPROVED'') AND active_user_id = user_id) OR
+            (isDelete = 0 AND status = ''REJECTED'' AND active_user_id IS NULL)
+        );');
+
+        EXEC('ALTER TABLE dbo.KYCRequests ADD CONSTRAINT CHK_KYC_ReviewState CHECK (
+            (status = ''PENDING'' AND reviewed_by IS NULL AND reviewed_at IS NULL AND rejection_reason IS NULL) OR
+            (status = ''APPROVED'' AND reviewed_by IS NOT NULL AND reviewed_at IS NOT NULL AND rejection_reason IS NULL) OR
+            (status = ''REJECTED'' AND reviewed_by IS NOT NULL AND reviewed_at IS NOT NULL AND rejection_reason IS NOT NULL AND LTRIM(RTRIM(rejection_reason)) != '''')
+        );');
+
+        EXEC('CREATE INDEX IDX_KYC_User_Created ON dbo.KYCRequests(user_id, created_at DESC);');
+        EXEC('CREATE INDEX IDX_KYC_Status_Created ON dbo.KYCRequests(status, created_at DESC);');
+        EXEC('CREATE INDEX IDX_KYC_Reviewer_Date ON dbo.KYCRequests(reviewed_by, reviewed_at DESC);');
+    END
 
     PRINT '--- MIGRATION HOÀN TẤT THÀNH CÔNG ---';
     COMMIT TRANSACTION;
@@ -995,7 +1030,7 @@ WHERE c.object_id = OBJECT_ID('dbo.KYCRequests') AND c.name IN ('status', 'isDel
 -- ==============================================================================
 -- MERGED MIGRATION: 20260618_004_add_media_url_to_reviews.sql
 -- ==============================================================================
-USE MMO_System;
+USE MMO_System_Schema;
 GO
 
 IF COL_LENGTH('Reviews', 'media_url') IS NULL
@@ -1228,20 +1263,6 @@ BEGIN
 END
 GO
 
--- Create ChatBlocks table
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('ChatBlocks') AND type = 'U')
-BEGIN
-    CREATE TABLE ChatBlocks (
-        id BIGINT IDENTITY(1,1) PRIMARY KEY,
-        blocker_id BIGINT NOT NULL,
-        blocked_id BIGINT NOT NULL,
-        created_at DATETIME DEFAULT GETDATE(),
-        CONSTRAINT FK_ChatBlocks_Blocker FOREIGN KEY (blocker_id) REFERENCES Users(id) ON DELETE NO ACTION,
-        CONSTRAINT FK_ChatBlocks_Blocked FOREIGN KEY (blocked_id) REFERENCES Users(id) ON DELETE NO ACTION,
-        CONSTRAINT UQ_ChatBlocks UNIQUE (blocker_id, blocked_id)
-    );
-END
-GO
 
 -- Create ChatMutes table
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('ChatMutes') AND type = 'U')
@@ -1395,7 +1416,7 @@ GO
 -- Description: Reset column values to 0 where they are NULL.
 -- ==============================================================================
 
-USE MMO_System;
+USE MMO_System_Schema;
 GO
 
 -- 1. Ensure any null is_delete or isDelete columns are active (0)

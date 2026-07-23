@@ -18,7 +18,7 @@
 - Quản lý gian hàng (Shop) và các sản phẩm/tài sản số.
 - Nạp tiền (Top-up) vào ví và giao dịch thanh toán.
 - Đặt hàng, đặt trước (Pre-order), giao tài sản số và cơ chế khóa quỹ (Escrow).
-- Quản lý khiếu nại (Complaint) và yêu cầu hỗ trợ (Support Ticket).
+- Quản lý khiếu nại (Complaint) và yêu cầu hỗ trợ (Phiếu hỗ trợ).
 - Quản lý việc rút tiền (Withdrawal) từ ví của người bán.
 - Cảnh báo gian hàng (Flag Shop) và đánh giá (Review) sản phẩm.
 - Nhắn tin (Chat) và nhận thông báo (Notification).
@@ -46,7 +46,7 @@ Người dùng đã đăng ký tài khoản hợp lệ.
 - Đặt mua sản phẩm số, đặt trước (Pre-Order), xem chi tiết đơn hàng.
 - Theo dõi gian hàng (Follow Shop).
 - Đánh giá sản phẩm đã mua.
-- Gửi khiếu nại đối với đơn hàng gặp sự cố, tạo thẻ hỗ trợ (Support Ticket).
+- Gửi khiếu nại đối với đơn hàng gặp sự cố, tạo phiếu hỗ trợ (Support Ticket).
 - Nhắn tin với người bán.
 - Gửi cờ báo cáo gian hàng (Flag Shop).
 - Nhận và quản lý thông báo từ hệ thống.
@@ -70,7 +70,7 @@ Nhân viên vận hành hệ thống.
 - Xem và duyệt/từ chối yêu cầu KYC (KycRequest) và Seller Registration.
 - Xem và xử lý các khiếu nại (Complaint) từ Customer và Seller.
 - Xem, duyệt/từ chối các yêu cầu rút tiền (Withdrawal) của Seller.
-- Xử lý các cờ báo cáo (Flag) gian hàng và thẻ hỗ trợ (Support Ticket).
+- Xử lý các cờ báo cáo (Flag) gian hàng và phiếu hỗ trợ (Support Ticket).
 - Trao đổi (Chat) với người dùng trong luồng giải quyết khiếu nại/hỗ trợ.
 - Xem quyền hạn cá nhân (MyPermissions).
 
@@ -141,10 +141,10 @@ Quản trị viên hệ thống cấp cao nhất.
 - Staff xem, duyệt/từ chối yêu cầu rút tiền.
 - Upload bằng chứng chuyển tiền khi duyệt hoàn tất.
 
-### FR-10 Complaint & Support Ticket
+### FR-10 Complaint & Support Ticket (Phiếu hỗ trợ)
 - Customer tạo khiếu nại cho đơn hàng thuộc sở hữu.
 - Tạm dừng giải phóng quỹ (Escrow) nếu khiếu nại mở trong 72 giờ đầu.
-- Gửi yêu cầu hỗ trợ chung (SupportTicket).
+- Gửi yêu cầu hỗ trợ chung (SupportTicket - Phiếu hỗ trợ).
 - Staff ra quyết định giải quyết (Customer thắng: hoàn tiền, Seller thắng: giải phóng tiền).
 
 ### FR-11 Feedback, Review and Flag
@@ -154,7 +154,7 @@ Quản trị viên hệ thống cấp cao nhất.
 
 ### FR-12 Chat
 - Gửi tin nhắn trực tiếp giữa các người dùng (Chat).
-- Tính năng chặn (ChatBlock) và tắt thông báo (ChatMute).
+- Tính năng tắt thông báo (ChatMute).
 - Trao đổi (Chat) giữa Customer, Seller và Staff.
 
 ### FR-13 Notification
@@ -168,7 +168,6 @@ Quản trị viên hệ thống cấp cao nhất.
 ### FR-15 Administration
 - Thống kê doanh thu (Revenue).
 - Cấu hình hệ thống động (SystemConfiguration).
-- Quản lý danh mục (Category).
 - Ghi nhận và xem nhật ký hoạt động (AuditLog).
 
 ---
@@ -355,12 +354,6 @@ Quản trị viên hệ thống cấp cao nhất.
 | receiver_id | BIGINT | FK -> Users |
 | message | VARCHAR | Nội dung |
 
-### ChatBlock
-| Attribute | Type | Description |
-| --------- | ---- | ----------- |
-| id | BIGINT | Primary key |
-| blocker_id | BIGINT | FK -> Users |
-| blocked_id | BIGINT | FK -> Users |
 
 ### ChatMute
 | Attribute | Type | Description |
@@ -469,7 +462,7 @@ Quản trị viên hệ thống cấp cao nhất.
 - Không được xử lý trùng yêu cầu.
 
 ### Complaint & Support Ticket
-- User có thể tạo complaint cho order hợp lệ hoặc gửi Ticket hỗ trợ chung.
+- User có thể tạo complaint cho order hợp lệ hoặc gửi Phiếu hỗ trợ chung.
 - Staff có thể xem, tương tác Chat và xử lý yêu cầu.
 
 ### Chat & Notification
@@ -486,7 +479,7 @@ Quản trị viên hệ thống cấp cao nhất.
 
 Hiện tại repository chưa có tài liệu chính thức xác định đầy đủ phạm vi ngoài hệ thống. Danh sách dưới đây được tổng hợp từ các chức năng chưa xuất hiện trong source code và cần được Product Owner xác nhận.
 
-- Giao tiếp thời gian thực (Chat Realtime): Mặc dù Backend đã có Module Chat lưu trữ tin nhắn (REST API `ChatController`, Models `Chat`, `ChatBlock`), tuy nhiên không có bất kỳ cấu hình WebSocket nào (như STOMP, SignalR/Hub) được tìm thấy, chứng tỏ ứng dụng chưa có giao tiếp thời gian thực. `Cần xác nhận`
+- Giao tiếp thời gian thực (Chat Realtime): Mặc dù Backend đã có Module Chat lưu trữ tin nhắn (REST API `ChatController`, Models `Chat`), tuy nhiên không có bất kỳ cấu hình WebSocket nào (như STOMP, SignalR/Hub) được tìm thấy, chứng tỏ ứng dụng chưa có giao tiếp thời gian thực. `Cần xác nhận`
 - Danh sách yêu thích (Wishlist): Frontend có thể hiển thị, nhưng Backend không hề có Entity/Model `Wishlist` hay `WishlistController`. Chức năng này không được hỗ trợ xử lý trên DB. `Cần xác nhận`
 
 *(Lưu ý: Các module từng bị cho là Mock như ShopRegistration, Notification nay đã có bằng chứng hiện diện đầy đủ qua Repository, Service và Controller thực tế).*
@@ -509,7 +502,7 @@ Hiện tại repository chưa có tài liệu chính thức xác định đầy 
 | FR-09 | Withdrawal | Seller, Staff | /seller/withdrawals | /api/seller/withdrawals | SellerController | WithdrawalService | WithdrawalRepository | Withdrawals | Implemented | SellerController.java, trg_CheckWithdrawalMin |
 | FR-10 | Complaint & Support | Customer, Staff | /account/tickets | /api/complaints | ComplaintController, SupportTicketController | ComplaintService | ComplaintRepository | Complaints, SupportTickets | Implemented | ComplaintController.java, Complaints DB |
 | FR-11 | Feedback & Flag | Customer | /account/orders/{id}/feedback | /api/reviews | ReviewController | ReviewService | ReviewRepository | Reviews, ShopFlags | Implemented | ReviewController.java, Reviews table |
-| FR-12 | Chat | Customer, Seller, Staff | /messages | /api/chat | ChatController, StaffChatRestController | ChatService | ChatRepository | Chats, ChatBlocks, ChatMutes | Implemented | ChatController.java, Chats table |
+| FR-12 | Chat | Customer, Seller, Staff | /messages | /api/chat | ChatController, StaffChatRestController | ChatService | ChatRepository | Chats, ChatMutes | Implemented | ChatController.java, Chats table |
 | FR-13 | Notification | Customer, Seller | /notifications | /api/notifications | NotificationController | NotificationService | NotificationRepository | Notifications | Implemented | NotificationController.java, Notifications DB |
 | FR-14 | Staff Management | Admin | /admin/users | /api/admin/staff | StaffController | StaffService | UserRepository | Users, UserPermissions, Permissions | Implemented | StaffController.java, Permissions DB |
 | FR-15 | Administration | Admin | /admin | /api/admin/system-config | SystemConfigurationController | SystemConfigService | SystemConfigRepository | SystemConfigurations, AuditLogs | Implemented | SystemConfigurationController.java |

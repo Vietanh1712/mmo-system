@@ -1,11 +1,9 @@
 package com.mmo.feature.chat.controller;
 
-import com.mmo.shared.dal.ChatBlockRepository;
 import com.mmo.shared.dal.ChatMuteRepository;
 import com.mmo.shared.dal.ChatRepository;
 import com.mmo.shared.dal.UserRepository;
 import com.mmo.shared.model.Chat;
-import com.mmo.shared.model.ChatBlock;
 import com.mmo.shared.model.ChatMute;
 import com.mmo.shared.model.User;
 import org.springframework.http.ResponseEntity;
@@ -22,24 +20,75 @@ import java.util.stream.Collectors;
 public class ChatController {
 
     private final ChatRepository chatRepository;
-    private final ChatBlockRepository chatBlockRepository;
     private final ChatMuteRepository chatMuteRepository;
     private final UserRepository userRepository;
     private final UserStatusService userStatusService;
     private final com.mmo.shared.dal.ComplaintRepository complaintRepository;
 
     public ChatController(ChatRepository chatRepository,
-                          ChatBlockRepository chatBlockRepository,
                           ChatMuteRepository chatMuteRepository,
                           UserRepository userRepository,
                           UserStatusService userStatusService,
                           com.mmo.shared.dal.ComplaintRepository complaintRepository) {
         this.chatRepository = chatRepository;
-        this.chatBlockRepository = chatBlockRepository;
         this.chatMuteRepository = chatMuteRepository;
         this.userRepository = userRepository;
         this.userStatusService = userStatusService;
         this.complaintRepository = complaintRepository;
+    }
+
+    @GetMapping("/unread-count")
+    public ResponseEntity<?> getUnreadCount(@AuthenticationPrincipal Long userId) {
+        userStatusService.updateActiveTime(userId);
+        Optional<User> currentUserOpt = userRepository.findById(userId);
+        if (currentUserOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "User not found"));
+        }
+        User currentUser = currentUserOpt.get();
+
+        long unreadRooms = 0;
+
+        // 1. Count normal chats with unread messages
+        List<Chat> allChats = chatRepository.findAllChatsForContactList(currentUser);
+        Map<Long, Chat> contactLatestChat = new HashMap<>();
+        for (Chat chat : allChats) {
+            User contact = chat.getSender().getId().equals(userId) ? chat.getReceiver() : chat.getSender();
+            Long contactId = contact.getId();
+            Chat existing = contactLatestChat.get(contactId);
+            if (existing == null || chat.getCreatedAt().isAfter(existing.getCreatedAt())) {
+                contactLatestChat.put(contactId, chat);
+            }
+        }
+
+        for (Map.Entry<Long, Chat> entry : contactLatestChat.entrySet()) {
+            if (entry.getKey().equals(userId)) continue;
+            Chat latestChat = entry.getValue();
+            boolean isCurrentUserSender = latestChat.getSender().getId().equals(userId);
+            boolean isDeletedByUser = isCurrentUserSender
+                    ? Boolean.TRUE.equals(latestChat.getSenderDeleted())
+                    : Boolean.TRUE.equals(latestChat.getReceiverDeleted());
+            if (isDeletedByUser) continue;
+
+            User contactUser = latestChat.getSender().getId().equals(userId) ? latestChat.getReceiver() : latestChat.getSender();
+            long unreadCount = chatRepository.countUnreadFrom(contactUser, currentUser);
+            if (unreadCount > 0) {
+                unreadRooms++;
+            }
+        }
+
+        // 2. Count active complaints with unread messages
+        List<com.mmo.shared.model.Complaint> activeComplaints = complaintRepository.findActiveComplaintsForUser(currentUser);
+        for (com.mmo.shared.model.Complaint comp : activeComplaints) {
+            List<Chat> compChats = chatRepository.findByComplaintAndIsDeleteFalseOrderByCreatedAtAsc(comp);
+            long unread = compChats.stream()
+                .filter(c -> !c.getSender().getId().equals(userId) && (c.getIsRead() == null || Boolean.FALSE.equals(c.getIsRead())))
+                .count();
+            if (unread > 0) {
+                unreadRooms++;
+            }
+        }
+
+        return ResponseEntity.ok(Map.of("unreadCount", unreadRooms));
     }
 
     // 0. Get contact info by userId (for chat header when no existing chat)
@@ -121,8 +170,6 @@ public class ChatController {
                     Chat latestChat = entry.getValue();
                     User contactUser = latestChat.getSender().getId().equals(userId) ? latestChat.getReceiver() : latestChat.getSender();
 
-                    boolean isBlocked = chatBlockRepository.existsByBlockerAndBlocked(currentUser, contactUser);
-                    boolean isBlockedByContact = chatBlockRepository.existsByBlockerAndBlocked(contactUser, currentUser);
                     boolean isMuted = chatMuteRepository.existsByUserAndContact(currentUser, contactUser);
                     long unreadCount = chatRepository.countUnreadFrom(contactUser, currentUser);
 
@@ -133,15 +180,14 @@ public class ChatController {
                             contactUser.getFullName().substring(0, 2).toUpperCase() : "US");
                     map.put("latestMessage", latestChat.getMessage());
                     map.put("latestTime", latestChat.getCreatedAt());
-                    map.put("isBlocked", isBlocked);
-                    map.put("isBlockedByContact", isBlockedByContact);
+                    map.put("isBlocked", false);
+                    map.put("isBlockedByContact", false);
                     map.put("isMuted", isMuted);
                     map.put("online", userStatusService.isOnline(contactId));
                     map.put("unreadCount", unreadCount);
                     return map;
                 })
                 .collect(Collectors.toCollection(ArrayList::new));
-
         // Inject active complaints group chats
         List<com.mmo.shared.model.Complaint> activeComplaints = complaintRepository.findActiveComplaintsForUser(currentUser);
         for (com.mmo.shared.model.Complaint comp : activeComplaints) {
@@ -172,7 +218,6 @@ public class ChatController {
             map.put("isComplaint", true);
             responseList.add(map);
         }
-
         // Sort combined list by newest first
         responseList.sort((m1, m2) -> {
             java.time.LocalDateTime t1 = (java.time.LocalDateTime) m1.get("latestTime");
@@ -351,15 +396,6 @@ public class ChatController {
         User sender = senderOpt.get();
         User receiver = receiverOpt.get();
 
-        // Check block status
-        boolean hasBlocked = chatBlockRepository.existsByBlockerAndBlocked(sender, receiver);
-        boolean isBlockedByReceiver = chatBlockRepository.existsByBlockerAndBlocked(receiver, sender);
-        if (hasBlocked) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Bạn đã chặn liên hệ này. Vui lòng mở chặn để tiếp tục gửi tin nhắn."));
-        }
-        if (isBlockedByReceiver) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Không thể gửi tin nhắn. Bạn đã bị liên hệ này chặn."));
-        }
 
         String msgText = request.get("message");
         if (msgText == null || msgText.trim().isEmpty()) {
@@ -422,51 +458,6 @@ public class ChatController {
         return ResponseEntity.ok(Map.of("message", "Đã xóa lịch sử trò chuyện thành công."));
     }
 
-    // 5. Block contact
-    @PostMapping("/{contactId}/block")
-    public ResponseEntity<?> blockContact(@AuthenticationPrincipal Long userId, @PathVariable Long contactId) {
-        Optional<User> currentUserOpt = userRepository.findById(userId);
-        Optional<User> contactOpt = userRepository.findById(contactId);
-        if (currentUserOpt.isEmpty() || contactOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "User or contact not found"));
-        }
-
-        User currentUser = currentUserOpt.get();
-        User contact = contactOpt.get();
-
-        if (chatBlockRepository.existsByBlockerAndBlocked(currentUser, contact)) {
-            return ResponseEntity.ok(Map.of("message", "Liên hệ đã được chặn từ trước."));
-        }
-
-        ChatBlock block = ChatBlock.builder()
-                .blocker(currentUser)
-                .blocked(contact)
-                .build();
-        chatBlockRepository.save(block);
-
-        return ResponseEntity.ok(Map.of("message", "Đã chặn liên hệ thành công."));
-    }
-
-    // 6. Unblock contact
-    @PostMapping("/{contactId}/unblock")
-    public ResponseEntity<?> unblockContact(@AuthenticationPrincipal Long userId, @PathVariable Long contactId) {
-        Optional<User> currentUserOpt = userRepository.findById(userId);
-        Optional<User> contactOpt = userRepository.findById(contactId);
-        if (currentUserOpt.isEmpty() || contactOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "User or contact not found"));
-        }
-
-        User currentUser = currentUserOpt.get();
-        User contact = contactOpt.get();
-
-        Optional<ChatBlock> blockOpt = chatBlockRepository.findByBlockerAndBlocked(currentUser, contact);
-        if (blockOpt.isPresent()) {
-            chatBlockRepository.delete(blockOpt.get());
-            return ResponseEntity.ok(Map.of("message", "Đã mở chặn liên hệ thành công."));
-        }
-
-        return ResponseEntity.ok(Map.of("message", "Liên hệ chưa được chặn."));
-    }
 
     // 7. Search active chats with contact by keyword
     @GetMapping("/{contactId}/search")

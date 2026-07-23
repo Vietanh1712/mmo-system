@@ -21,7 +21,12 @@ public interface KycRequestRepository extends JpaRepository<KycRequest, Long> {
 
     @org.springframework.data.jpa.repository.Query("SELECT k FROM KycRequest k WHERE k.isDelete = false " +
             "AND (:status IS NULL OR k.status = :status) " +
-            "AND (:requestCode IS NULL OR LOWER(k.requestCode) LIKE LOWER(CONCAT('%', :requestCode, '%'))) " +
+            "AND (:requestCode IS NULL OR (" +
+            "    LOWER(k.requestCode) LIKE LOWER(CONCAT('%', :requestCode, '%')) OR " +
+            "    LOWER(k.idNumber) LIKE LOWER(CONCAT('%', :requestCode, '%')) OR " +
+            "    LOWER(k.user.fullName) LIKE LOWER(CONCAT('%', :requestCode, '%')) OR " +
+            "    LOWER(k.user.email) LIKE LOWER(CONCAT('%', :requestCode, '%'))" +
+            ")) " +
             "AND (:idType IS NULL OR k.idType = :idType)")
     Page<KycRequest> searchKycRequests(
             @org.springframework.data.repository.query.Param("status") com.mmo.shared.model.KycStatus status,

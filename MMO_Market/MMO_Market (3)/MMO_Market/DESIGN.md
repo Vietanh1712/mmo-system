@@ -65,4 +65,23 @@ Tài liệu này lưu trữ các nguyên tắc thiết kế giao diện (UI) và
     background: #fef2f2 !important;
     color: #dc2626 !important;
 }
-```
+
+---
+
+## 4. HỆ THỐNG THÔNG BÁO TOAST (Toast Notification System)
+
+Toàn bộ thông báo phản hồi nhanh (toasts) phải được đồng bộ theo thiết kế dạng thẻ (card-based toast) được định nghĩa trong [toast.js](file:///c:/Users/pc/MMO_new1/MMO_Market/MMO_Market%20(3)/MMO_Market/apps/frontend/static/js/components/toast.js). Không sử dụng dạng thanh chữ nhật đơn giản cũ.
+
+### Quy chuẩn thiết kế (Design Specification)
+* **Vị trí hiển thị**: Góc dưới bên phải màn hình (`bottom: 24px; right: 24px;`).
+* **Cấu trúc thẻ**:
+  * Có viền trái dày `5px` với màu tương ứng theo loại thông báo:
+    * `success`: Xanh lá (`#10a37f`)
+    * `error` / `danger`: Đỏ (`#ef4444`)
+    * `warning`: Vàng cam (`#f59e0b`)
+    * `info`: Xanh dương (`#3b82f6`)
+  * Màu nền thẻ: Màu nhạt dịu mắt (ví dụ: nền xanh lá nhạt `#f0fdf4` cho thông báo thành công).
+  * Chứa icon Font Awesome (`fa-check-circle`, `fa-times-circle`, `fa-exclamation-triangle`, `fa-info-circle`).
+  * Có tiêu đề đậm (`Thành công`, `Lỗi`, `Cảnh báo`) và nội dung mô tả chi tiết ở dưới.
+  * Có nút đóng nhanh (dấu `x`) ở góc trên bên phải.
+  * Hiệu ứng chuyển động (transition) xuất hiện/mất đi mượt mà với hiệu ứng trượt nhẹ (slide).

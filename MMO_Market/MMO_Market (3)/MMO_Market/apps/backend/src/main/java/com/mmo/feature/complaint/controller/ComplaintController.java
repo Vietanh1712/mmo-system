@@ -168,39 +168,6 @@ public class ComplaintController {
         }
     }
 
-    @GetMapping("/{id}/chat")
-    public ResponseEntity<?> getComplaintChatHistory(
-            @AuthenticationPrincipal Long userId,
-            @PathVariable Long id) {
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập."));
-        }
-        if (!isStaffOrAdmin(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền truy cập thông tin này."));
-        }
-
-        try {
-            List<com.mmo.shared.model.Chat> chats = complaintService.getComplaintChatHistory(id, userId);
-            // Convert to DTO/Map if needed, for simplicity we can return the raw list or map it
-            List<Map<String, Object>> response = chats.stream().map(c -> {
-                Map<String, Object> map = new HashMap<>();
-                map.put("id", c.getId());
-                map.put("message", c.getMessage());
-                map.put("createdAt", c.getCreatedAt());
-                map.put("senderId", c.getSender() != null ? c.getSender().getId() : null);
-                map.put("receiverId", c.getReceiver() != null ? c.getReceiver().getId() : null);
-                return map;
-            }).collect(Collectors.toList());
-
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("message", "Lỗi lấy tin nhắn: " + e.getMessage()));
-        }
-    }
-
     @GetMapping("/all")
     public ResponseEntity<?> getAllComplaints(
             @AuthenticationPrincipal Long userId,
@@ -263,24 +230,6 @@ public class ComplaintController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "Lỗi cập nhật khiếu nại: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/statuses")
-    public ResponseEntity<?> getComplaintStatuses(@AuthenticationPrincipal Long userId) {
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập."));
-        }
-        if (!isStaffOrAdmin(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền truy cập thông tin này."));
-        }
-
-        try {
-            List<String> statuses = complaintService.getAllStatuses();
-            return ResponseEntity.ok(statuses);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("message", "Lỗi lấy danh sách trạng thái khiếu nại: " + e.getMessage()));
         }
     }
 

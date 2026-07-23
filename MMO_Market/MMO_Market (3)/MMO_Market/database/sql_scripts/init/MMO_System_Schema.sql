@@ -249,6 +249,8 @@ CREATE TABLE Transactions (
     commission_vnd BIGINT NOT NULL,
     status VARCHAR(20) DEFAULT 'Pending',
     escrow_release_date DATETIME,
+    payment_method VARCHAR(50) NULL,
+    quantity INT DEFAULT 1 NOT NULL,
     created_at DATETIME DEFAULT GETDATE(),
     isDelete BIT DEFAULT 0,
     CONSTRAINT FK_Trans_Customer FOREIGN KEY (customer_id) REFERENCES Users(id) ON DELETE NO ACTION,
@@ -278,9 +280,13 @@ CREATE TABLE WalletTransactions (
     amount_vnd BIGINT NOT NULL,
     balance_after BIGINT NOT NULL,
     transaction_type VARCHAR(50) NOT NULL, -- DEPOSIT, WITHDRAW, PURCHASE, SALE, REFUND
+    type VARCHAR(50) NOT NULL, -- TOPUP, PAYMENT, REFUND, ESCROW, WITHDRAWAL
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING', -- PENDING, SUCCESS, FAILED
     reference_id BIGINT NULL,
+    reference_code VARCHAR(100) NULL,
     description NVARCHAR(MAX),
     created_at DATETIME DEFAULT GETDATE(),
+    isDelete BIT DEFAULT 0,
     CONSTRAINT FK_WalletLog_Users FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION
 );
 GO
@@ -297,12 +303,17 @@ CREATE TABLE Complaints (
     description NVARCHAR(MAX) NOT NULL,
     evidence NVARCHAR(MAX),
     status VARCHAR(20) DEFAULT 'Open',
+    preferred_solution VARCHAR(50) NULL,
     resolution NVARCHAR(MAX),
+    resolved_by BIGINT NULL,
+    resolved_at DATETIME NULL,
+    decision_type VARCHAR(50) NULL,
     created_at DATETIME DEFAULT GETDATE(),
     isDelete BIT DEFAULT 0,
     CONSTRAINT FK_Complaints_Trans FOREIGN KEY (transaction_id) REFERENCES Transactions(id) ON DELETE NO ACTION,
     CONSTRAINT FK_Complaints_Customer FOREIGN KEY (customer_id) REFERENCES Users(id) ON DELETE NO ACTION,
-    CONSTRAINT FK_Complaints_Seller FOREIGN KEY (seller_id) REFERENCES Users(id) ON DELETE NO ACTION
+    CONSTRAINT FK_Complaints_Seller FOREIGN KEY (seller_id) REFERENCES Users(id) ON DELETE NO ACTION,
+    CONSTRAINT FK_Complaints_ResolvedBy FOREIGN KEY (resolved_by) REFERENCES Users(id) ON DELETE NO ACTION
 );
 GO
 
@@ -313,6 +324,7 @@ CREATE TABLE ShopFlags (
     complaint_id BIGINT NULL,
     reason NVARCHAR(MAX) NOT NULL,
     flag_level VARCHAR(20) DEFAULT 'Warning',
+    status VARCHAR(20) DEFAULT 'Pending',
     created_at DATETIME DEFAULT GETDATE(),
     isDelete BIT DEFAULT 0,
     CONSTRAINT FK_Flags_Seller FOREIGN KEY (seller_id) REFERENCES Users(id) ON DELETE NO ACTION,
@@ -326,28 +338,20 @@ CREATE TABLE Chats (
     sender_id BIGINT NOT NULL,
     receiver_id BIGINT NOT NULL,
     complaint_id BIGINT NULL,
+    product_id BIGINT NULL,
     chat_type VARCHAR(20) DEFAULT 'Normal',
     message NVARCHAR(MAX) NOT NULL,
     created_at DATETIME DEFAULT GETDATE(),
     isDelete BIT DEFAULT 0,
     sender_deleted BIT DEFAULT 0,
     receiver_deleted BIT DEFAULT 0,
+    isRead BIT DEFAULT 0,
     CONSTRAINT FK_Chats_Sender FOREIGN KEY (sender_id) REFERENCES Users(id) ON DELETE NO ACTION,
     CONSTRAINT FK_Chats_Receiver FOREIGN KEY (receiver_id) REFERENCES Users(id) ON DELETE NO ACTION,
     CONSTRAINT FK_Chats_Complaint FOREIGN KEY (complaint_id) REFERENCES Complaints(id) ON DELETE NO ACTION
 );
 GO
 
-CREATE TABLE ChatBlocks (
-    id BIGINT IDENTITY(1,1) PRIMARY KEY,
-    blocker_id BIGINT NOT NULL,
-    blocked_id BIGINT NOT NULL,
-    created_at DATETIME DEFAULT GETDATE(),
-    CONSTRAINT FK_ChatBlocks_Blocker FOREIGN KEY (blocker_id) REFERENCES Users(id) ON DELETE NO ACTION,
-    CONSTRAINT FK_ChatBlocks_Blocked FOREIGN KEY (blocked_id) REFERENCES Users(id) ON DELETE NO ACTION,
-    CONSTRAINT UQ_ChatBlocks UNIQUE (blocker_id, blocked_id)
-);
-GO
 
 CREATE TABLE ChatMutes (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
@@ -439,9 +443,13 @@ GO
 
 CREATE TABLE Notifications (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
-    user_id BIGINT NOT NULL,
+    user_id BIGINT NULL,
     title NVARCHAR(255) NOT NULL,
     content NVARCHAR(MAX),
+    type VARCHAR(50) NOT NULL DEFAULT 'info',
+    isRead BIT DEFAULT 0,
+    severity VARCHAR(50) DEFAULT 'INFO',
+    target_url VARCHAR(500) NULL,
     created_at DATETIME DEFAULT GETDATE(),
     isDelete BIT DEFAULT 0,
     CONSTRAINT FK_Notif_Users FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION
@@ -519,8 +527,18 @@ BEGIN
         UPDATE Users
         SET shop_status = i.status,
             role = CASE
-                WHEN i.status = 'Approved' AND JSON_VALUE(Users.role, '$.role') = 'Customer' THEN '{"role": "Customer_Seller"}'
-                WHEN i.status = 'Rejected' AND JSON_VALUE(Users.role, '$.role') = 'Customer_Seller' THEN '{"role": "Customer"}'
+                WHEN i.status = 'Approved' THEN
+                    CASE
+                        WHEN ISJSON(Users.role) = 1 AND JSON_VALUE(Users.role, '$.role') = 'Customer' THEN '{"role": "Customer_Seller"}'
+                        WHEN Users.role = 'Customer' THEN 'Customer_Seller'
+                        ELSE Users.role
+                    END
+                WHEN i.status = 'Rejected' THEN
+                    CASE
+                        WHEN ISJSON(Users.role) = 1 AND JSON_VALUE(Users.role, '$.role') = 'Customer_Seller' THEN '{"role": "Customer"}'
+                        WHEN Users.role = 'Customer_Seller' THEN 'Customer'
+                        ELSE Users.role
+                    END
                 ELSE Users.role
             END
         FROM Users

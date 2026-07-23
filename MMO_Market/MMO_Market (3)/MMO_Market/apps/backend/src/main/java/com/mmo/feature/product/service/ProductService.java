@@ -61,6 +61,15 @@ public class ProductService {
         // Fallback: nếu DB chưa có giao dịch nào, lấy sản phẩm mới
         if (products == null || products.isEmpty()) {
             products = productRepository.findAllByIsDeleteFalse();
+            // Lọc bỏ sản phẩm của shop bị Locked, Banned hoặc Pending
+            products = products.stream()
+                    .filter(p -> p.getSeller() != null 
+                        && Boolean.FALSE.equals(p.getSeller().getIsDelete())
+                        && (p.getSeller().getShopStatus() == null 
+                            || (!"Locked".equalsIgnoreCase(p.getSeller().getShopStatus())
+                            && !"Banned".equalsIgnoreCase(p.getSeller().getShopStatus())
+                            && !"Pending".equalsIgnoreCase(p.getSeller().getShopStatus()))))
+                    .collect(Collectors.toList());
             if (products.size() > limit) {
                 products = products.subList(0, limit);
             }

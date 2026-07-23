@@ -194,11 +194,7 @@ public class NotificationService {
         User user = userRepository.findByIdAndIsDeleteFalse(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
 
-        String role = normalizeRole(user.getRole());
-        List<Notification> personal = new ArrayList<>();
-        if (!"Admin".equalsIgnoreCase(role) && !"Staff".equalsIgnoreCase(role)) {
-            personal = notificationRepository.findAllByUserIdAndIsDeleteFalseOrderByCreatedAtDesc(userId);
-        }
+        List<Notification> personal = notificationRepository.findAllByUserIdAndIsDeleteFalseOrderByCreatedAtDesc(userId);
 
         List<Notification> broadcasts = notificationRepository.findAllBroadcastNotifications();
 

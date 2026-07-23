@@ -19,7 +19,9 @@ async function loadShopInfo() {
 
         document.getElementById('shopName').value = data.shopName || '';
         document.getElementById('shopDesc').value = data.description || '';
+        
         document.getElementById('bankName').value = data.bankName || '';
+
         document.getElementById('accountNumber').value = data.accountNumber || '';
         document.getElementById('accountHolder').value = data.accountHolder || '';
         document.getElementById('branch').value = data.branch || '';

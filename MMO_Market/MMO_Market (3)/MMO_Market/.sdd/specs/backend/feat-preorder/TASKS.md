@@ -1,22 +1,24 @@
 # TASKS — Pre-Orders (`feat-preorder`)
 
 > **Feature ID:** `feat-preorder` | **UC Coverage:** UC-16 (Pre-order)
-> **Phiên bản:** 1.0 | **Cập nhật:** 2026-06-27
+> **Phiên bản:** 1.0 | **Cập nhật:** 2026-07-16
 
 ---
 
 ## Phase 1: Database & Entities
 
-- [x] **1.1** Tạo bảng `PreOrders` lưu trữ các đơn đặt trước sản phẩm.
+- [x] **1.1** Tạo bảng `PreOrders` lưu trữ các đơn đặt trước sản phẩm trong CSDL SQL Server.
 
 ## Phase 2: Repositories
 
-- [x] **2.1** `PreOrderRepository` — truy vấn các đơn hàng đặt trước của khách hàng.
+- [x] **2.1** `PreOrderRepository` — cung cấp các phương thức truy vấn danh sách đặt trước theo tài khoản khách hàng, sắp xếp theo thời gian khởi tạo giảm dần.
 
-## Phase 4: Business Logic (Services)
+## Phase 3: Business Logic (Services)
 
-- [x] **4.1** `PreOrderService.createPreOrder()` — ghi nhận yêu cầu đặt trước sản phẩm từ người dùng khi sản phẩm hết hàng.
+- [x] **3.1** `PreOrderService.createPreOrder()` — xử lý nghiệp vụ tạo mới đơn đặt hàng trước của khách hàng cho sản phẩm đang hết hàng.
+- [x] **3.2** `PreOrderService.getPreOrdersByCustomer()` — lấy ra lịch sử các yêu cầu đặt mua trước của Buyer đã đăng nhập.
 
-## Phase 5: Controllers & Security
+## Phase 4: Controllers & Security
 
-- [x] **5.1** `PreOrderController` — API `/api/v1/pre-orders` yêu cầu vai trò `Customer`.
+- [x] **4.1** `PreOrderController` — API REST `/api/v1/pre-orders` để gửi và xem danh sách pre-orders qua AJAX.
+- [x] **4.2** `PreOrderPageController` — MVC Controller điều hướng và render giao diện đặt trước `/pre-orders/new` và danh sách đơn đặt trước `/pre-orders`.

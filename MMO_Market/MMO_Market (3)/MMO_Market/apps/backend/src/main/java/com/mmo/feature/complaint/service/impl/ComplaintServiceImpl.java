@@ -54,6 +54,9 @@ public class ComplaintServiceImpl implements ComplaintService {
     @Autowired
     private ChatRepository chatRepository;
 
+    @Autowired
+    private com.mmo.feature.seller.service.ShopLevelService shopLevelService;
+
     @Override
     public List<ComplaintDTO> getAllComplaints() {
 
@@ -257,19 +260,7 @@ public class ComplaintServiceImpl implements ComplaintService {
             throw new IllegalArgumentException("Không thể khiếu nại giao dịch đã bị hủy hoặc hoàn tiền.");
         }
 
-        // Kiểm tra xem khách hàng và người bán đã chat với nhau chưa
-        List<com.mmo.shared.model.Chat> chats = chatRepository.findActiveChatsBetweenUsers(customer, transaction.getSeller());
-        if (chats == null || chats.isEmpty()) {
-            throw new IllegalArgumentException("Vui lòng nhắn tin trao đổi với người bán trước khi tạo khiếu nại. Chỉ tạo khiếu nại khi hai bên không thể tự giải quyết.");
-        }
-
-        // Bắt buộc có lý do và bằng chứng
-        if (description == null || description.trim().isEmpty()) {
-            throw new IllegalArgumentException("Vui lòng cung cấp lý do khiếu nại.");
-        }
-        if (evidence == null || evidence.trim().isEmpty()) {
-            throw new IllegalArgumentException("Vui lòng cung cấp bằng chứng (hình ảnh/video) khiếu nại.");
-        }
+        String originalStatus = status; // Lưu trạng thái gốc: "Held" hoặc "Completed"
 
         // Đóng băng tiền/giao dịch: Cập nhật trạng thái giao dịch thành 'Disputed'
         transaction.setStatus("Disputed");
@@ -284,11 +275,59 @@ public class ComplaintServiceImpl implements ComplaintService {
                 .evidence(evidence)
                 .status("PENDING_REVIEW")
                 .preferredSolution(preferredSolution)
+                .decisionType(originalStatus)
                 .isDelete(false)
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return complaintRepository.save(complaint);
+        Complaint saved = complaintRepository.save(complaint);
+
+        // 1. Gửi thông báo cho Customer (người khiếu nại)
+        Notification customerNotif = Notification.builder()
+                .userId(customer.getId())
+                .title("Đã nhận yêu cầu khiếu nại")
+                .content(String.format("Yêu cầu khiếu nại của bạn cho giao dịch #TXN-%d đã được tiếp nhận và đang chờ duyệt.", transaction.getId()))
+                .type("COMPLAINT")
+                .severity("INFO")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/account/complaints/detail?id=" + saved.getId())
+                .build();
+        notificationRepository.save(customerNotif);
+
+        // 2. Gửi thông báo cảnh báo cho Seller (người bị khiếu nại)
+        Notification sellerNotif = Notification.builder()
+                .userId(transaction.getSeller().getId())
+                .title("Giao dịch bị khiếu nại")
+                .content(String.format("Giao dịch #TXN-%d bán sản phẩm \"%s\" của bạn đã bị khách hàng khiếu nại. Số dư giao dịch tạm thời bị đóng băng. Vui lòng kiểm tra lại.", transaction.getId(), transaction.getProduct().getName()))
+                .type("COMPLAINT")
+                .severity("WARNING")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/seller/complaints")
+                .build();
+        notificationRepository.save(sellerNotif);
+
+        // 3. Gửi thông báo cho Staff có quyền xử lý khiếu nại (HANDLE_DISPUTES)
+        List<User> staffAndAdmins = userRepository.findUsersByPermission("HANDLE_DISPUTES");
+        for (User staff : staffAndAdmins) {
+            if (staff.getId().equals(customer.getId())) {
+                continue;
+            }
+            Notification staffNotif = Notification.builder()
+                    .userId(staff.getId())
+                    .title("Có khiếu nại mới cần xử lý")
+                    .content(String.format("Giao dịch #TXN-%d giữa %s và %s đang bị khiếu nại cần xử lý.", transaction.getId(), customer.getFullName(), transaction.getSeller().getFullName()))
+                    .type("COMPLAINT")
+                    .severity("WARNING")
+                    .isRead(false)
+                    .isDelete(false)
+                    .targetUrl("/staff/complaints/detail?id=" + saved.getId())
+                    .build();
+            notificationRepository.save(staffNotif);
+        }
+
+        return saved;
     }
 
     @Override
@@ -321,6 +360,32 @@ public class ComplaintServiceImpl implements ComplaintService {
         systemMsg.setIsRead(false);
         systemMsg.setCreatedAt(LocalDateTime.now());
         chatRepository.save(systemMsg);
+
+        // Gửi thông báo cho Customer
+        Notification customerDisputeNotif = Notification.builder()
+                .userId(complaint.getCustomer().getId())
+                .title("Mở cuộc đối chất khiếu nại")
+                .content(String.format("Phòng chat đối chất cho khiếu nại #CMP-%d (giao dịch #TXN-%d) đã được nhân viên %s mở. Vui lòng vào thương lượng.", complaint.getId(), complaint.getTransaction().getId(), staff.getFullName()))
+                .type("COMPLAINT")
+                .severity("WARNING")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/account/complaints/detail?id=" + complaint.getId())
+                .build();
+        notificationRepository.save(customerDisputeNotif);
+
+        // Gửi thông báo cho Seller
+        Notification sellerDisputeNotif = Notification.builder()
+                .userId(complaint.getSeller().getId())
+                .title("Mở cuộc đối chất khiếu nại")
+                .content(String.format("Phòng chat đối chất cho khiếu nại #CMP-%d (giao dịch #TXN-%d) đã được nhân viên %s mở. Vui lòng vào giải trình.", complaint.getId(), complaint.getTransaction().getId(), staff.getFullName()))
+                .type("COMPLAINT")
+                .severity("WARNING")
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl("/seller/complaints")
+                .build();
+        notificationRepository.save(sellerDisputeNotif);
 
         return complaint;
     }
@@ -355,21 +420,6 @@ public class ComplaintServiceImpl implements ComplaintService {
         return complaintRepository.findById(complaintId)
                 .filter(c -> c.getIsDelete() == null || !c.getIsDelete())
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khiếu nại."));
-    }
-
-    @Override
-    public List<com.mmo.shared.model.Chat> getComplaintChatHistory(Long complaintId, Long staffId) {
-        Complaint complaint = getComplaintByIdForStaff(complaintId);
-        if (complaint.getTransaction() == null) {
-            return java.util.Collections.emptyList();
-        }
-        User customer = complaint.getCustomer();
-        User seller = complaint.getSeller();
-        if (customer == null || seller == null) {
-            return java.util.Collections.emptyList();
-        }
-        // Staff views full chat history without deleted filters
-        return chatRepository.findNormalChatsBetween(customer, seller);
     }
 
     @Override
@@ -446,70 +496,152 @@ public class ComplaintServiceImpl implements ComplaintService {
                 tx.setCommissionVnd(actualCommission);
                 transactionRepository.save(tx);
 
-                // Hoàn tiền cho Buyer
-                if (customer != null && refundAmount > 0) {
-                    long oldBalance = (customer.getBalanceVnd() != null ? customer.getBalanceVnd() : 0L);
-                    long newBalance = oldBalance + refundAmount;
-                    customer.setBalanceVnd(newBalance);
-                    userRepository.save(customer);
-
-                    String referenceCode = String.format("REFUND-CMP-%d-TX-%d", complaint.getId(), tx.getId());
-                    walletService.recordTransaction(
-                            customer,
-                            "REFUND",
-                            refundAmount,
-                            "SUCCESS",
-                            String.format("Hoàn tiền khiếu nại #CMP-%d (sử dụng %d/%d ngày): %s", complaint.getId(), daysUsed, totalDays, resolution),
-                            referenceCode,
-                            newBalance,
-                            complaint.getId());
-
-                    Notification buyerNotif = Notification.builder()
-                            .userId(customer.getId())
-                            .title("Thông báo hoàn tiền khiếu nại")
-                            .content(String.format(
-                                    "Khiếu nại #CMP-%d đối với đơn hàng MMO-ORD-%d đã được chấp nhận. Số tiền %,d VNĐ (%d ngày chưa sử dụng) đã được hoàn vào ví.",
-                                    complaint.getId(), tx.getId(), refundAmount, daysRemaining))
-                            .type("WALLET")
-                            .severity("SUCCESS")
-                            .isRead(false)
-                            .isDelete(false)
-                            .targetUrl("/account/transactions")
-                            .build();
-                    notificationRepository.save(buyerNotif);
+                // Lấy trạng thái giao dịch trước khi Disputed từ decisionType
+                String origStatus = complaint.getDecisionType();
+                if (origStatus == null || origStatus.trim().isEmpty()) {
+                    origStatus = "Held"; // Fallback mặc định
                 }
 
-                // Giải ngân phần còn lại cho Seller
-                if (seller != null && sellerNetPayout > 0) {
-                    long oldBalance = (seller.getBalanceVnd() != null ? seller.getBalanceVnd() : 0L);
-                    long newBalance = oldBalance + sellerNetPayout;
-                    seller.setBalanceVnd(newBalance);
-                    userRepository.save(seller);
+                if ("Completed".equalsIgnoreCase(origStatus)) {
+                    // Seller đã nhận full tiền từ trước (Completed). Staff duyệt khiếu nại (Buyer thắng):
+                    // 1. Hoàn tiền cho Buyer
+                    if (customer != null && refundAmount > 0) {
+                        long oldBalance = (customer.getBalanceVnd() != null ? customer.getBalanceVnd() : 0L);
+                        long newBalance = oldBalance + refundAmount;
+                        customer.setBalanceVnd(newBalance);
+                        userRepository.save(customer);
 
-                    String referenceCode = String.format("PAYOUT-CMP-RESOLVED-%d-TX-%d", complaint.getId(), tx.getId());
-                    walletService.recordTransaction(
-                            seller,
-                            "PAYMENT",
-                            sellerNetPayout,
-                            "SUCCESS",
-                            String.format("Giải ngân từ khiếu nại được chấp nhận #CMP-%d (sử dụng %d/%d ngày): %s", complaint.getId(), daysUsed, totalDays, resolution),
-                            referenceCode,
-                            newBalance,
-                            complaint.getId());
+                        String referenceCode = String.format("REFUND-CMP-%d-TX-%d", complaint.getId(), tx.getId());
+                        walletService.recordTransaction(
+                                customer,
+                                "REFUND",
+                                refundAmount,
+                                "SUCCESS",
+                                String.format("Hoàn tiền khiếu nại #CMP-%d (sử dụng %d/%d ngày): %s", complaint.getId(), daysUsed, totalDays, resolution),
+                                referenceCode,
+                                newBalance,
+                                complaint.getId());
 
-                    Notification sellerNotif = Notification.builder()
-                            .userId(seller.getId())
-                            .title("Thông báo giải ngân khiếu nại")
-                            .content(String.format(
-                                    "Khiếu nại #CMP-%d đối với đơn hàng MMO-ORD-%d đã được giải quyết. Phần tiền %,d VNĐ (%d ngày đã dùng) đã được giải ngân.",
-                                    complaint.getId(), tx.getId(), sellerNetPayout, daysUsed))
-                            .type("WALLET")
-                            .severity("SUCCESS")
-                            .isRead(false)
-                            .isDelete(false)
-                            .targetUrl("/account/transactions")
-                            .build();
-                    notificationRepository.save(sellerNotif);
+                        Notification buyerNotif = Notification.builder()
+                                .userId(customer.getId())
+                                .title("Thông báo hoàn tiền khiếu nại")
+                                .content(String.format(
+                                        "Khiếu nại #CMP-%d đối với đơn hàng MMO-ORD-%d đã được chấp nhận. Số tiền %,d VNĐ (%d ngày chưa sử dụng) đã được hoàn vào ví.",
+                                        complaint.getId(), tx.getId(), refundAmount, daysRemaining))
+                                .type("WALLET")
+                                .severity("SUCCESS")
+                                .isRead(false)
+                                .isDelete(false)
+                                .targetUrl("/account/transactions")
+                                .build();
+                        notificationRepository.save(buyerNotif);
+                    }
+
+                    // 2. Khấu trừ trực tiếp từ ví Seller (chấp nhận ví âm)
+                    if (seller != null && refundAmount > 0) {
+                        long oldBalance = (seller.getBalanceVnd() != null ? seller.getBalanceVnd() : 0L);
+                        long newBalance = oldBalance - refundAmount;
+                        seller.setBalanceVnd(newBalance);
+                        userRepository.save(seller);
+
+                        String referenceCode = String.format("REFUND-DEDUCT-CMP-%d-TX-%d", complaint.getId(), tx.getId());
+                        walletService.recordTransaction(
+                                seller,
+                                "REFUND",
+                                -refundAmount,
+                                "SUCCESS",
+                                String.format("Khấu trừ hoàn tiền khiếu nại #CMP-%d (sử dụng %d/%d ngày): %s", complaint.getId(), daysUsed, totalDays, resolution),
+                                referenceCode,
+                                newBalance,
+                                complaint.getId());
+
+                        Notification sellerNotif = Notification.builder()
+                                .userId(seller.getId())
+                                .title("Thông báo khấu trừ ví")
+                                .content(String.format(
+                                        "Khiếu nại #CMP-%d đối với đơn hàng MMO-ORD-%d đã được giải quyết. Số tiền %,d VNĐ đã bị khấu trừ khỏi ví của bạn do lỗi khiếu nại.",
+                                        complaint.getId(), tx.getId(), refundAmount))
+                                .type("WALLET")
+                                .severity("DANGER")
+                                .isRead(false)
+                                .isDelete(false)
+                                .targetUrl("/account/transactions")
+                                .build();
+                        notificationRepository.save(sellerNotif);
+
+                        // Cập nhật trạng thái khóa/mở khóa của shop
+                        shopLevelService.updateShopLockStatus(seller.getId());
+                    }
+                } else {
+                    // Logic mặc định cho đơn hàng Held (Chưa giải ngân)
+                    // Hoàn tiền cho Buyer
+                    if (customer != null && refundAmount > 0) {
+                        long oldBalance = (customer.getBalanceVnd() != null ? customer.getBalanceVnd() : 0L);
+                        long newBalance = oldBalance + refundAmount;
+                        customer.setBalanceVnd(newBalance);
+                        userRepository.save(customer);
+
+                        String referenceCode = String.format("REFUND-CMP-%d-TX-%d", complaint.getId(), tx.getId());
+                        walletService.recordTransaction(
+                                customer,
+                                "REFUND",
+                                refundAmount,
+                                "SUCCESS",
+                                String.format("Hoàn tiền khiếu nại #CMP-%d (sử dụng %d/%d ngày): %s", complaint.getId(), daysUsed, totalDays, resolution),
+                                referenceCode,
+                                newBalance,
+                                complaint.getId());
+
+                        Notification buyerNotif = Notification.builder()
+                                .userId(customer.getId())
+                                .title("Thông báo hoàn tiền khiếu nại")
+                                .content(String.format(
+                                        "Khiếu nại #CMP-%d đối với đơn hàng MMO-ORD-%d đã được chấp nhận. Số tiền %,d VNĐ (%d ngày chưa sử dụng) đã được hoàn vào ví.",
+                                        complaint.getId(), tx.getId(), refundAmount, daysRemaining))
+                                .type("WALLET")
+                                .severity("SUCCESS")
+                                .isRead(false)
+                                .isDelete(false)
+                                .targetUrl("/account/transactions")
+                                .build();
+                        notificationRepository.save(buyerNotif);
+                    }
+
+                    // Giải ngân phần còn lại cho Seller
+                    if (seller != null && sellerNetPayout > 0) {
+                        long oldBalance = (seller.getBalanceVnd() != null ? seller.getBalanceVnd() : 0L);
+                        long newBalance = oldBalance + sellerNetPayout;
+                        seller.setBalanceVnd(newBalance);
+                        userRepository.save(seller);
+
+                        String referenceCode = String.format("PAYOUT-CMP-RESOLVED-%d-TX-%d", complaint.getId(), tx.getId());
+                        walletService.recordTransaction(
+                                seller,
+                                "PAYMENT",
+                                sellerNetPayout,
+                                "SUCCESS",
+                                String.format("Giải ngân từ khiếu nại được chấp nhận #CMP-%d (sử dụng %d/%d ngày): %s", complaint.getId(), daysUsed, totalDays, resolution),
+                                referenceCode,
+                                newBalance,
+                                complaint.getId());
+
+                        Notification sellerNotif = Notification.builder()
+                                .userId(seller.getId())
+                                .title("Thông báo giải ngân khiếu nại")
+                                .content(String.format(
+                                        "Khiếu nại #CMP-%d đối với đơn hàng MMO-ORD-%d đã được giải quyết. Phần tiền %,d VNĐ (%d ngày đã dùng) đã được giải ngân.",
+                                        complaint.getId(), tx.getId(), sellerNetPayout, daysUsed))
+                                .type("WALLET")
+                                .severity("SUCCESS")
+                                .isRead(false)
+                                .isDelete(false)
+                                .targetUrl("/account/transactions")
+                                .build();
+                        notificationRepository.save(sellerNotif);
+
+                        // Cập nhật trạng thái khóa/mở khóa của shop
+                        shopLevelService.updateShopLockStatus(seller.getId());
+                    }
                 }
 
                 log.info(
@@ -521,10 +653,11 @@ public class ComplaintServiceImpl implements ComplaintService {
 
                 // Giải ngân tiền về ví cho Seller
                 User seller = tx.getSeller();
+                long payout = tx.getAmountVnd() - tx.getCommissionVnd();
+                long newBalance = 0;
                 if (seller != null) {
-                    long payout = tx.getAmountVnd() - tx.getCommissionVnd();
                     long oldBalance = (seller.getBalanceVnd() != null ? seller.getBalanceVnd() : 0L);
-                    long newBalance = oldBalance + payout;
+                    newBalance = oldBalance + payout;
                     seller.setBalanceVnd(newBalance);
                     userRepository.save(seller);
 
@@ -556,31 +689,46 @@ public class ComplaintServiceImpl implements ComplaintService {
                             .build();
                     notificationRepository.save(sellerNotif);
 
-                    // Gửi thông báo cho Buyer
-                    User customer = tx.getCustomer();
-                    if (customer != null) {
-                        Notification customerNotif = Notification.builder()
-                                .userId(customer.getId())
-                                .title("Khiếu nại đơn hàng bị từ chối")
-                                .content(String.format(
-                                        "Khiếu nại #CMP-%d đối với đơn hàng MMO-ORD-%d đã bị từ chối. Lý do: %s",
-                                        complaint.getId(), tx.getId(), resolution))
-                                .type("WALLET")
-                                .severity("DANGER")
-                                .isRead(false)
-                                .isDelete(false)
-                                .targetUrl("/account/transactions")
-                                .build();
-                        notificationRepository.save(customerNotif);
-                    }
-
-                    log.info(
-                            "Ghi lại giao dịch giải ngân PAYMENT cho Seller ID {} từ khiếu nại #CMP-{} bị từ chối. Số tiền: {} VNĐ. Số dư mới: {} VNĐ",
-                            seller.getId(), complaint.getId(), payout, newBalance);
+                    // Cập nhật trạng thái khóa/mở khóa của shop
+                    shopLevelService.updateShopLockStatus(seller.getId());
                 }
+
+                // Gửi thông báo cho Buyer
+                User customer = tx.getCustomer();
+                if (customer != null) {
+                    Notification customerNotif = Notification.builder()
+                            .userId(customer.getId())
+                            .title("Khiếu nại đơn hàng bị từ chối")
+                            .content(String.format(
+                                    "Khiếu nại #CMP-%d đối với đơn hàng MMO-ORD-%d đã bị từ chối. Lý do: %s",
+                                    complaint.getId(), tx.getId(), resolution))
+                            .type("WALLET")
+                            .severity("DANGER")
+                            .isRead(false)
+                            .isDelete(false)
+                            .targetUrl("/account/transactions")
+                            .build();
+                    notificationRepository.save(customerNotif);
+                }
+
+                log.info(
+                        "Ghi lại giao dịch giải ngân PAYMENT cho Seller ID {} từ khiếu nại #CMP-{} bị từ chối. Số tiền: {} VNĐ. Số dư mới: {} VNĐ",
+                        seller != null ? seller.getId() : null, complaint.getId(), payout, newBalance);
             } else if ("InProgress".equalsIgnoreCase(status) || "In_Progress".equalsIgnoreCase(status)) {
                 tx.setStatus("Disputed");
                 transactionRepository.save(tx);
+            }
+        }
+
+        // Tự động tính toán lại và cập nhật shop_level vào DB cho Seller
+        if ("Resolved".equalsIgnoreCase(status) || "Completed".equalsIgnoreCase(status)) {
+            User seller = complaint.getSeller();
+            if (seller != null) {
+                try {
+                    shopLevelService.evaluateSellerLevel(seller.getId());
+                } catch (Exception e) {
+                    log.error("Lỗi khi tự động đánh giá lại Shop Level cho Seller ID {}: {}", seller.getId(), e.getMessage());
+                }
             }
         }
 
@@ -588,9 +736,11 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     @Override
-    public org.springframework.data.domain.Page<Complaint> searchComplaintsForStaff(String keyword, String status, int page, int size) {
-        org.springframework.data.domain.Pageable pageable = 
-                org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by("createdAt").descending());
+    public org.springframework.data.domain.Page<Complaint> searchComplaintsForStaff(String keyword, String status,
+            int page, int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size,
+                org.springframework.data.domain.Sort.by("createdAt").descending());
+
         Long complaintId = null;
         String searchKeyword = null;
         if (keyword != null && !keyword.trim().isEmpty()) {

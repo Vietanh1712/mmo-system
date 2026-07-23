@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
 
 const ACCOUNT_ORDERS_MOCK_KEY = 'mmoMarketMyOrdersMock';
 
@@ -196,6 +196,9 @@ function renderOrders() {
 
     tableBody.innerHTML = pagedOrders.map(order => {
         const orderDate = parseVietnameseDateTime(order.createdAt);
+        const sellerLink = order.sellerId 
+            ? `<a href="/shop/${order.sellerId}" style="text-decoration: underline; color: inherit;">${escapeHtml(order.sellerName)}</a>`
+            : escapeHtml(order.sellerName);
         return `
             <tr>
                 <td>${escapeHtml(order.orderCode)}</td>
@@ -204,7 +207,7 @@ function renderOrders() {
                         <span>${escapeHtml(order.productName)}</span>
                     </div>
                     <div class="ds-text-sm ds-text-muted ds-mt-sm">
-                        ${escapeHtml(order.sellerName)}
+                        ${sellerLink}
                     </div>
                 </td>
                 <td class="ds-text-right">${formatMoney(order.amount)}</td>

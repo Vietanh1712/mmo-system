@@ -76,10 +76,10 @@ public class SupportTicketController {
             @RequestBody Map<String, String> request) {
 
         if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập trước khi gửi ticket."));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập trước khi gửi phiếu hỗ trợ."));
         }
         if (!isCustomerOrSeller(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Chỉ tài khoản Customer hoặc Seller mới được phép tạo ticket hỗ trợ."));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Chỉ tài khoản Customer hoặc Seller mới được phép tạo phiếu hỗ trợ."));
         }
 
         String category = request.get("category");
@@ -96,17 +96,17 @@ public class SupportTicketController {
             SupportTicket ticket = supportTicketService.createTicket(userId, category.trim(), title.trim(), description.trim());
             return ResponseEntity.ok(mapTicketToDto(ticket));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Lỗi tạo ticket: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Lỗi tạo phiếu hỗ trợ: " + e.getMessage()));
         }
     }
 
     @GetMapping
     public ResponseEntity<?> getUserTickets(@AuthenticationPrincipal Long userId) {
         if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập để xem lịch sử ticket."));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập để xem lịch sử phiếu hỗ trợ."));
         }
         if (!isCustomerOrSeller(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Chỉ tài khoản Customer hoặc Seller mới có lịch sử ticket."));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Chỉ tài khoản Customer hoặc Seller mới có lịch sử phiếu hỗ trợ."));
         }
 
         try {
@@ -116,7 +116,7 @@ public class SupportTicketController {
                     .collect(Collectors.toList());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Lỗi lấy danh sách ticket: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Lỗi lấy danh sách phiếu hỗ trợ: " + e.getMessage()));
         }
     }
 
@@ -126,7 +126,7 @@ public class SupportTicketController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập."));
         }
         if (!isStaffOrAdmin(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền xem tất cả ticket."));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền xem tất cả phiếu hỗ trợ."));
         }
 
         try {
@@ -136,7 +136,7 @@ public class SupportTicketController {
                     .collect(Collectors.toList());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Lỗi lấy danh sách ticket toàn hệ thống: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Lỗi lấy danh sách phiếu hỗ trợ toàn hệ thống: " + e.getMessage()));
         }
     }
 
@@ -152,13 +152,13 @@ public class SupportTicketController {
             SupportTicket ticket = supportTicketService.getTicketById(id);
             // Quyền truy cập: Chủ sở hữu ticket hoặc Staff/Admin
             if (!ticket.getUser().getId().equals(userId) && !isStaffOrAdmin(userId)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền xem chi tiết ticket này."));
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền xem chi tiết phiếu hỗ trợ này."));
             }
             return ResponseEntity.ok(mapTicketToDto(ticket));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Lỗi chi tiết ticket: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Lỗi chi tiết phiếu hỗ trợ: " + e.getMessage()));
         }
     }
 
@@ -171,7 +171,7 @@ public class SupportTicketController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Vui lòng đăng nhập."));
         }
         if (!isStaffOrAdmin(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền cập nhật ticket."));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Bạn không có quyền cập nhật phiếu hỗ trợ."));
         }
 
         String status = request.get("status");
@@ -187,7 +187,7 @@ public class SupportTicketController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Lỗi cập nhật ticket: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Lỗi cập nhật phiếu hỗ trợ: " + e.getMessage()));
         }
     }
 }

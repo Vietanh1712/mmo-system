@@ -104,4 +104,61 @@ public class PreOrderService {
                         .build())
                 .collect(Collectors.toList());
     }
+    @Transactional(readOnly = true)
+    public List<PreOrderResponse> getPreOrdersBySeller(Long sellerId) {
+        if (sellerId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Chưa đăng nhập.");
+        }
+        User seller = userRepository.findByIdAndIsDeleteFalse(sellerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Tài khoản không hợp lệ."));
+
+        List<PreOrder> preOrders = preOrderRepository.findBySellerOrderByCreatedAtDesc(seller);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        return preOrders.stream()
+                .map(po -> PreOrderResponse.builder()
+                        .success(true)
+                        .id(po.getId())
+                        .productId(po.getProduct().getId())
+                        .productName(po.getProduct().getName())
+                        .customerEmail(po.getCustomer().getEmail())
+                        .quantity(po.getQuantity())
+                        .expectedPriceVnd(po.getExpectedPriceVnd())
+                        .status(po.getStatus())
+                        .notes(po.getNotes())
+                        .createdAt(po.getCreatedAt() != null ? po.getCreatedAt().format(formatter) : "")
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public PreOrderResponse updatePreOrderStatus(Long sellerId, Long preOrderId, String newStatus) {
+        if (sellerId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Chưa đăng nhập.");
+        }
+        PreOrder preOrder = preOrderRepository.findById(preOrderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy đơn đặt trước."));
+
+        if (!preOrder.getProduct().getSeller().getId().equals(sellerId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền cập nhật đơn này.");
+        }
+
+        preOrder.setStatus(newStatus);
+        PreOrder saved = preOrderRepository.save(preOrder);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        return PreOrderResponse.builder()
+                .success(true)
+                .message("Cập nhật trạng thái thành công.")
+                .id(saved.getId())
+                .productId(saved.getProduct().getId())
+                .productName(saved.getProduct().getName())
+                .customerEmail(saved.getCustomer().getEmail())
+                .quantity(saved.getQuantity())
+                .expectedPriceVnd(saved.getExpectedPriceVnd())
+                .status(saved.getStatus())
+                .notes(saved.getNotes())
+                .createdAt(saved.getCreatedAt() != null ? saved.getCreatedAt().format(formatter) : "")
+                .build();
+    }
 }

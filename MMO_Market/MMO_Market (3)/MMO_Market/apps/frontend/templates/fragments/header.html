@@ -33,7 +33,7 @@
         try {
             if (window && window.location && String(window.location.pathname).toLowerCase().startsWith('/seller')) {
                 document.body.classList.remove('is-system-user');
-                ['headerCartButton','headerNotifButton','topupNavItem','topupDropdownItem','transactionsDropdownItem','preordersDropdownItem','cartDropdownItem','sellerDashboardDropdownItem']
+                ['headerCartButton','headerNotifButton','headerMessageButton','topupNavItem','topupDropdownItem','transactionsDropdownItem','preordersDropdownItem','cartDropdownItem','sellerDashboardDropdownItem']
                     .forEach(id => {
                         const el = document.getElementById(id);
                         if (el) el.style.display = '';
@@ -134,6 +134,42 @@
 
             const token = sessionStorage.getItem("accessToken");
             const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user");
+
+            if (token && token !== "null" && token !== "undefined") {
+                fetch('/api/v1/profile', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                .then(res => { if (res.ok) return res.json(); })
+                .then(profile => {
+                    if (profile) {
+                        const currentUserStr = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user");
+                        if (currentUserStr) {
+                            const u = JSON.parse(currentUserStr);
+                            u.balanceVnd = profile.balanceVnd;
+                            u.fullName = profile.fullName;
+                            u.role = profile.role;
+                            u.shopStatus = profile.shopStatus;
+                            
+                            sessionStorage.setItem("user", JSON.stringify(u));
+                            sessionStorage.setItem("userInfo", JSON.stringify(u));
+                            localStorage.setItem("user", JSON.stringify(u));
+                            localStorage.setItem("userInfo", JSON.stringify(u));
+
+                            const balanceEl = document.querySelector('.user-profile__balance');
+                            if (balanceEl) {
+                                const formatted = typeof formatCurrency === 'function'
+                                    ? formatCurrency(profile.balanceVnd)
+                                    : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(profile.balanceVnd);
+                                const currentRole = parseHeaderRole(profile.role);
+                                const isSystemRole = currentRole === 'Admin' || currentRole === 'Staff';
+                                balanceEl.textContent = isSystemRole ? (currentRole === 'Admin' ? 'Quản trị viên' : 'Nhân viên') : formatted;
+                            }
+                        }
+                    }
+                })
+                .catch(err => console.error("Error syncing profile:", err));
+            }
+
             const authArea = document.getElementById('headerAuthArea');
             const dropdown = document.getElementById('userDropdown');
 
@@ -174,10 +210,12 @@
                         // Make sure key customer header controls are visible
                         const headerCartBtn = document.getElementById('headerCartButton');
                         const headerNotifBtn = document.getElementById('headerNotifButton');
+                        const headerMsgBtn = document.getElementById('headerMessageButton');
                         const topupNav = document.getElementById('topupNavItem');
                         const topupDropdown = document.getElementById('topupDropdownItem');
                         if (headerCartBtn) headerCartBtn.style.display = '';
                         if (headerNotifBtn) headerNotifBtn.style.display = '';
+                        if (headerMsgBtn) headerMsgBtn.style.display = '';
                         if (topupNav) topupNav.style.display = '';
                         if (topupDropdown) topupDropdown.style.display = '';
 
@@ -221,8 +259,10 @@
                         }
                     }
 
-                    if (currentRole === 'Admin' && adminWorkbenchItem) {
-                        adminWorkbenchItem.style.display = 'flex';
+                    if (currentRole === 'Admin') {
+                        if (adminWorkbenchItem) adminWorkbenchItem.style.display = 'flex';
+                        const messagesDropdownItem = document.getElementById('messagesDropdownItem');
+                        if (messagesDropdownItem) messagesDropdownItem.style.display = 'none';
                     }
 
                     if (currentRole === 'Staff' && staffWorkItem) {
@@ -248,6 +288,12 @@
                                 <i class="fa fa-bell"></i>
                                 <span class="header-cart-button__badge header-cart-button__badge--danger" id="headerNotifCount" style="display: none;">0</span>
                             </button>
+                            ${currentRole !== 'Admin' ? `
+                            <button class="header-cart-button" type="button" id="headerMessageButton" title="Tin nhắn" aria-label="Tin nhắn" onclick="goToMessages()">
+                                <i class="fa fa-envelope"></i>
+                                <span class="header-cart-button__badge header-cart-button__badge--danger" id="headerMessageCount" style="display: none;">0</span>
+                            </button>
+                            ` : ''}
                             <button class="header-cart-button" type="button" id="headerCartButton" title="Giỏ hàng của tôi" aria-label="Giỏ hàng của tôi" onclick="checkAuthAndRedirect('/cart')">
                                 <i class="fa fa-shopping-cart"></i>
                                 <span class="header-cart-button__badge" id="headerCartCount">0</span>
@@ -271,6 +317,7 @@
                     }
                     refreshHeaderCartBadge();
                     refreshHeaderNotifBadge();
+                    refreshHeaderMessageBadge();
                 } catch (error) {
                     console.error("Lỗi khi parse thông tin user:", error);
                     sessionStorage.removeItem('userInfo');
@@ -424,6 +471,22 @@
         }
         window.getCartStorageKey = getCartStorageKey;
 
+        function getNotifStorageKey() {
+            try {
+                const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user") || localStorage.getItem("userInfo") || localStorage.getItem("user");
+                if (userString && userString !== "null" && userString !== "undefined") {
+                    const user = JSON.parse(userString);
+                    if (user && user.id) {
+                        return `mmoReadNotifs_${user.id}`;
+                    }
+                }
+            } catch (error) {
+                console.error("Error determining notif key:", error);
+            }
+            return 'mmoReadNotifs_guest';
+        }
+        window.getNotifStorageKey = getNotifStorageKey;
+
         function refreshHeaderCartBadge() {
             const badge = document.getElementById('headerCartCount');
             if (!badge) return;
@@ -464,7 +527,7 @@
                 }
 
                 if (list) {
-                    const readIds = JSON.parse(localStorage.getItem('mmoReadNotifs') || '[]');
+                    const readIds = JSON.parse(localStorage.getItem(getNotifStorageKey()) || '[]');
                     const unreadCount = list.filter(n => {
                         if (n.isBroadcast) {
                             return !readIds.includes(n.originalTimestamp);
@@ -483,13 +546,48 @@
             }
         }
 
+        async function refreshHeaderMessageBadge() {
+            const badge = document.getElementById('headerMessageCount');
+            if (!badge) return;
+            const token = sessionStorage.getItem("accessToken");
+            if (!token || token === "null" || token === "undefined") {
+                badge.innerText = '0';
+                badge.style.display = 'none';
+                return;
+            }
+            try {
+                const response = await fetch('/api/v1/chats/unread-count', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const unreadCount = data.unreadCount || 0;
+                    badge.innerText = unreadCount > 99 ? '99+' : String(unreadCount);
+                    badge.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
+                } else {
+                    badge.innerText = '0';
+                    badge.style.display = 'none';
+                }
+            } catch (error) {
+                badge.innerText = '0';
+                badge.style.display = 'none';
+            }
+        }
+
         window.initHeader = initHeader;
         window.refreshHeaderCartBadge = refreshHeaderCartBadge;
         window.refreshHeaderNotifBadge = refreshHeaderNotifBadge;
+        window.refreshHeaderMessageBadge = refreshHeaderMessageBadge;
         window.addEventListener('storage', () => {
             refreshHeaderCartBadge();
             refreshHeaderNotifBadge();
+            refreshHeaderMessageBadge();
         });
+
+        // Periodically refresh message badge every 15 seconds if token exists
+        if (sessionStorage.getItem("accessToken")) {
+            setInterval(refreshHeaderMessageBadge, 15000);
+        }
 
         const HEADER_SEARCH_SUGGESTIONS = [
             'Netflix',
