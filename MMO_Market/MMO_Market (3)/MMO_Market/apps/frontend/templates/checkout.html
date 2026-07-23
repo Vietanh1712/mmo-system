@@ -590,20 +590,6 @@
                     </div>
                 </div>
 
-                <!-- Escrow hold notification -->
-                <div class="escrow-box">
-                    <i class="fa fa-shield"></i>
-                    <div class="escrow-text">
-                        <h4>Giao dịch bảo lãnh Escrow 3 ngày (72h)</h4>
-                        <p>Số tiền này sẽ được hệ thống MMO Market đóng băng an toàn trong 3 ngày. Người bán chỉ nhận được tiền sau khi hết thời hạn bảo lãnh mà không có bất kỳ tranh chấp nào được mở ra.</p>
-                    </div>
-                </div>
-
-                <!-- Agree checkbox -->
-                <label class="escrow-agree-checkbox">
-                    <input type="checkbox" id="agreeEscrow" onchange="togglePayButton()">
-                    <span>Tôi đồng ý với điều khoản giao dịch bảo lãnh Escrow của hệ thống.</span>
-                </label>
             </div>
 
         </section>
@@ -636,7 +622,7 @@
                     <span class="total-price" id="totalPriceText">79.000đ</span>
                 </div>
 
-                <button class="btn-confirm-payment" id="btnPay" disabled onclick="handlePaymentSubmit()">
+                <button class="btn-confirm-payment" id="btnPay" onclick="handlePaymentSubmit()">
                     <i class="fa fa-lock"></i> Xác nhận thanh toán
                 </button>
             </div>
@@ -667,10 +653,6 @@
                     <span class="invoice-label">Số tiền thanh toán:</span>
                     <span class="invoice-value invoice-value--money" id="invAmount">79.000 VNĐ</span>
                 </div>
-                <div class="invoice-row">
-                    <span class="invoice-label">Thời gian giữ tiền (Escrow):</span>
-                    <span class="invoice-value" style="color: #d97706;"><i class="fa fa-clock-o"></i> 72 giờ</span>
-                </div>
                 <div id="modalCredentialsRow" style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-color);" hidden>
                     <div class="invoice-row" style="margin-bottom: 8px;">
                         <span class="invoice-label" id="modalCredLabel">Tài khoản:</span>
@@ -679,6 +661,10 @@
                     <div class="invoice-row" id="modalCredPasswordRow">
                         <span class="invoice-label">Mật khẩu:</span>
                         <span class="invoice-value" id="modalCredPassword" style="font-family: monospace; font-size: 13.5px; color: var(--brand-dark); font-weight: 700;">-</span>
+                    </div>
+                    <div class="invoice-row" id="modalCredNoteRow" style="margin-top: 8px;" hidden>
+                        <span class="invoice-label">Ghi chú:</span>
+                        <span class="invoice-value" id="modalCredNote" style="font-size: 13.5px; color: #475569; font-weight: 500;">-</span>
                     </div>
                 </div>
             </div>
@@ -890,14 +876,12 @@
             }
         });
 
-        // Toggle confirm payment button disabled state based on check box
         function togglePayButton() {
-            const agreed = document.getElementById('agreeEscrow').checked;
             const btnPay = document.getElementById('btnPay');
-            if (agreed) {
-                btnPay.removeAttribute('disabled');
-            } else {
-                btnPay.setAttribute('disabled', 'true');
+            if (btnPay) {
+                if (hasEnoughBalance) {
+                    btnPay.removeAttribute('disabled');
+                }
             }
         }
 
@@ -1114,6 +1098,19 @@
                                 document.getElementById('modalCredPassword').innerText = firstOrder.credentials.password;
                             }
                         }
+
+                        const noteRow = document.getElementById('modalCredNoteRow');
+                        if (noteRow) {
+                            if (firstOrder.credentials.note && firstOrder.credentials.note.trim() !== '') {
+                                noteRow.hidden = false;
+                                noteRow.style.display = 'flex';
+                                document.getElementById('modalCredNote').innerText = firstOrder.credentials.note;
+                            } else {
+                                noteRow.hidden = true;
+                                noteRow.style.display = 'none';
+                            }
+                        }
+
                         credRow.hidden = false;
                     } else {
                         credRow.hidden = true;

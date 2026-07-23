@@ -40,5 +40,6 @@ build/
 
 ### Uploads & Logs ###
 apps/backend/uploads/
+uploads/
 *.log
 **/target/

@@ -16,7 +16,8 @@
         { id: 'APPROVE_WITHDRAWALS', label: 'Phê duyệt yêu cầu rút tiền', group: 'Tài chính', desc: 'Cho phép duyệt lệnh chuyển tiền/rút tiền của Seller từ ví hệ thống về tài khoản ngân hàng.' },
         { id: 'HANDLE_DISPUTES', label: 'Phân xử tranh chấp & Hoàn tiền', group: 'Vận hành', desc: 'Cho phép làm trung gian giải quyết khiếu nại giữa người mua và người bán, hoàn trả hoặc giải ngân tiền Escrow.' },
         { id: 'MANAGE_SUPPORT', label: 'Tiếp nhận & Hỗ trợ khách hàng', group: 'Vận hành', desc: 'Cho phép tiếp nhận, phản hồi và hỗ trợ giải đáp các thắc mắc (ticketing/live chat) của khách hàng.' },
-        { id: 'MANAGE_SHOPS', label: 'Quản lý cửa hàng (Shop)', group: 'Vận hành', desc: 'Cho phép xem, phê duyệt yêu cầu mở gian hàng, khóa hoặc mở khóa hoạt động của các Shop.' }
+        { id: 'MANAGE_SHOPS', label: 'Quản lý cửa hàng (Shop)', group: 'Vận hành', desc: 'Cho phép xem, phê duyệt yêu cầu mở gian hàng, khóa hoặc mở khóa hoạt động của các Shop.' },
+        { id: 'MANAGE_CATEGORIES', label: 'Quản lý danh mục sản phẩm', group: 'Danh mục', desc: 'Cho phép xem, tạo mới, chỉnh sửa và ẩn/hiện các danh mục sản phẩm số trên hệ thống.' }
     ];
 
     const MOCK_DEFAULT = {
@@ -2358,7 +2359,7 @@
                         const p = ALL_PERMISSIONS.find(ap => ap.id === pid);
                         if (p) groups.add(p.group);
                     });
-                    return groups.has('Kiểm duyệt') && groups.has('Tài chính') && groups.has('Vận hành');
+                    return userPerms.length > 0;
                 });
             } else {
                 const groupPerms = ALL_PERMISSIONS.filter(p => p.group === selectedGroupId).map(p => p.id);
@@ -2390,7 +2391,7 @@
                         const p = ALL_PERMISSIONS.find(ap => ap.id === pid);
                         if (p) groups.add(p.group);
                     });
-                    return groups.has('Kiểm duyệt') && groups.has('Tài chính') && groups.has('Vận hành');
+                    return userPerms.length > 0;
                 });
             }
         }

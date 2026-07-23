@@ -115,15 +115,11 @@
                         </div>
                         <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px;">
                             <div class="ds-alert ds-alert-warning">Hãy đối chiếu kỹ thông tin người dùng và nội dung đăng ký trước khi duyệt.</div>
-                            <div class="ds-form-field" id="rejectionReasonFieldGroup">
-                                <label class="ds-label" for="reviewReason">Lý do từ chối (bắt buộc khi từ chối)</label>
-                                <textarea class="ds-textarea" id="reviewReason" placeholder="Nhập lý do nếu từ chối..." style="min-height: 100px;"></textarea>
-                            </div>
                             <div class="ds-cluster" style="gap: 8px;">
-                                <button class="ds-btn ds-btn-success" type="button" onclick="reviewShop(true)" style="flex: 1;">
+                                <button class="ds-btn ds-btn-success" type="button" onclick="openApproveShopModal()" style="flex: 1;">
                                     <i class="fa fa-check"></i> Chấp thuận
                                 </button>
-                                <button class="ds-btn ds-btn-danger" type="button" onclick="reviewShop(false)" style="flex: 1;">
+                                <button class="ds-btn ds-btn-danger" type="button" onclick="openRejectShopModal()" style="flex: 1;">
                                     <i class="fa fa-times"></i> Từ chối
                                 </button>
                             </div>
@@ -131,6 +127,7 @@
                                 <a class="ds-btn ds-btn-outline" href="/staff/shop-registrations" style="width: 100%;">
                                     <i class="fa fa-arrow-left"></i> Quay lại danh sách
                                 </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -138,6 +135,41 @@
         </div>
     </div>
 </main>
+
+<!-- Modal Phê duyệt Mở Shop -->
+<div id="approveShopModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 99999; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 12px; max-width: 440px; width: 90%; padding: 24px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+        <div style="width: 56px; height: 56px; background: #f0fdf4; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+            <i class="fa fa-check-circle" style="font-size: 32px; color: #10a37f;"></i>
+        </div>
+        <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600; color: #333;">Xác nhận Phê duyệt Shop</h3>
+        <p style="color: #666; font-size: 14px; margin-bottom: 24px; line-height: 1.5;">Bạn có chắc chắn muốn <b>Chấp thuận</b> yêu cầu đăng ký mở Shop này không?</p>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+            <button class="ds-btn ds-btn-outline" type="button" onclick="closeApproveShopModal()" style="min-width: 100px;">Hủy bỏ</button>
+            <button class="ds-btn ds-btn-success" type="button" onclick="submitApproveShop()" style="min-width: 120px;">Đồng ý Phê duyệt</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Từ chối Mở Shop -->
+<div id="rejectShopModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 99999; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 12px; max-width: 480px; width: 90%; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="margin: 0; font-size: 18px; color: #ef4444;"><i class="fa fa-exclamation-triangle"></i> Từ chối Đăng ký Mở Shop</h3>
+            <button type="button" onclick="closeRejectShopModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #666;">&times;</button>
+        </div>
+        <p style="color: #555; font-size: 14px; margin-bottom: 16px;">Vui lòng nhập lý do từ chối yêu cầu đăng ký mở Shop này. Lý do sẽ được thông báo đến người bán.</p>
+        <div class="ds-form-field" style="margin-bottom: 20px;">
+            <label class="ds-label" for="modalShopRejectReason">Lý do từ chối <span style="color: red;">*</span></label>
+            <textarea class="ds-textarea" id="modalShopRejectReason" placeholder="Ví dụ: Tên Shop không phù hợp, thông tin dịch vụ vi phạm chính sách..." style="min-height: 100px; width: 100%; box-sizing: border-box;"></textarea>
+            <div id="modalShopRejectReasonError" class="ds-error-text" style="color: #ef4444; font-size: 13px; margin-top: 4px;"></div>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button class="ds-btn ds-btn-outline" type="button" onclick="closeRejectShopModal()">Hủy bỏ</button>
+            <button class="ds-btn ds-btn-danger" type="button" onclick="submitRejectShop()">Xác nhận từ chối</button>
+        </div>
+    </div>
+</div>
 
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 <script th:src="@{/js/customer/auth.js}"></script>

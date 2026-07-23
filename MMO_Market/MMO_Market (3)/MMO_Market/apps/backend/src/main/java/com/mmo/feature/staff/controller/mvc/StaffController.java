@@ -63,6 +63,16 @@ public class StaffController {
         return "staff/dashboard";
     }
 
+    @GetMapping("/categories")
+    public String categories() {
+        return "staff/categories";
+    }
+
+    @GetMapping("/categories/detail")
+    public String categoryDetail() {
+        return "staff/category-detail";
+    }
+
     @GetMapping("/documents")
     public String documentsDashboard(Model model) {
         model.addAttribute("dashboard", staffDashboardService.getDashboardData());

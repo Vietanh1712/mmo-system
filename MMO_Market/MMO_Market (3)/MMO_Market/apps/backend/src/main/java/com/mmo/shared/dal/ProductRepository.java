@@ -22,6 +22,8 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     List<Product> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndIsDeleteFalse(String name, String description);
     List<Product> findByCategoryAndNameContainingIgnoreCaseOrCategoryAndDescriptionContainingIgnoreCaseAndIsDeleteFalse(Category category, String name, Category category2, String description);
     long countBySellerIdAndIsDeleteFalse(Long sellerId);
+    long countByCategoryIdAndIsDeleteFalse(Long categoryId);
+    long countByCategoryIdInAndIsDeleteFalse(List<Long> categoryIds);
 
     // Lấy top sản phẩm bán chạy nhất dựa trên số lượng giao dịch HOÀN THÀNH hoặc TẠM GIỮ (Completed, Held)
     @Query(value = """

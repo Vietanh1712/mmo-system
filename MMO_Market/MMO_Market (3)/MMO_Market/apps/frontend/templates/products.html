@@ -53,12 +53,13 @@
                         <select id="category-filter" class="filter-select">
                             <option value="">Tất cả danh mục</option>
                             <option value="1">Email</option>
-                            <option value="2">Tài khoản Premium</option>
+                            <option value="2">Tài khoản</option>
                             <option value="3">Phần mềm</option>
                             <option value="4">Tăng tương tác</option>
                             <option value="5">Dịch vụ phần mềm</option>
                             <option value="6">Blockchain</option>
-                            <option value="7">Khác</option>
+                            <option value="66">Khác</option>
+                            <option value="67">Dịch vụ khác</option>
                         </select>
                     </div>
 
@@ -159,7 +160,7 @@
                 productId: 1,
                 productName: "Tài khoản Netflix Premium 4K UHD 1 Tháng (Xem riêng 1 thiết bị, bảo hành 1 đổi 1)",
                 imageUrl: "",
-                categoryName: "Tài khoản Premium",
+                categoryName: "Tài khoản",
                 categoryId: 19,
                 parentCategoryId: 2,
                 sellerName: "StoreMaster",
@@ -174,7 +175,7 @@
                 productId: 2,
                 productName: "Tài khoản Netflix Premium 4K UHD Gói 1 Năm (Chính chủ gia hạn ổn định)",
                 imageUrl: "",
-                categoryName: "Tài khoản Premium",
+                categoryName: "Tài khoản",
                 categoryId: 19,
                 parentCategoryId: 2,
                 sellerName: "Netflix_Vip_Store",
@@ -189,7 +190,7 @@
                 productId: 3,
                 productName: "Tài khoản ChatGPT Plus (OpenAI GPT-4o) Chính Chủ Sẵn 20$ Hạn 1 Tháng",
                 imageUrl: "",
-                categoryName: "Tài khoản Premium",
+                categoryName: "Tài khoản",
                 categoryId: 31,
                 parentCategoryId: 7,
                 sellerName: "AI_Helper",
@@ -204,7 +205,7 @@
                 productId: 4,
                 productName: "Spotify Premium 1 Năm Giá Siêu Rẻ (Nâng cấp Family email của bạn)",
                 imageUrl: "",
-                categoryName: "Tài khoản Premium",
+                categoryName: "Tài khoản",
                 categoryId: 31,
                 parentCategoryId: 7,
                 sellerName: "MusicLovers",
@@ -234,7 +235,7 @@
                 productId: 6,
                 productName: "Youtube Premium Không Quảng Cáo 6 Tháng (Add Family bao chạy mượt)",
                 imageUrl: "",
-                categoryName: "Tài khoản Premium",
+                categoryName: "Tài khoản",
                 categoryId: 31,
                 parentCategoryId: 7,
                 sellerName: "RedPremium",
@@ -294,7 +295,7 @@
                 productId: 10,
                 productName: "Tài khoản NordVPN Premium 1 Năm Bảo Mật Mã Hóa Cao",
                 imageUrl: "",
-                categoryName: "Tài khoản Premium",
+                categoryName: "Tài khoản",
                 categoryId: 31,
                 parentCategoryId: 7,
                 sellerName: "SecureNet",
@@ -339,7 +340,7 @@
                 productId: 13,
                 productName: "Gói Dịch Vụ Thiết Kế Logo & Banner Chuyên Nghiệp (Không thuộc danh mục chính)",
                 imageUrl: "",
-                categoryName: "Khác",
+                categoryName: "Dịch vụ phần mềm",
                 categoryId: 31,
                 parentCategoryId: 7,
                 sellerName: "CreativeHub",
@@ -362,20 +363,14 @@
         let currentPage = 0;
         let isUsingMock = false;
 
-        // Lọc theo danh mục cha (1–7), tương thích API parent_id
+        // Lọc theo danh mục cha
         function matchesCategoryFilter(product, categoryFilter) {
             if (!categoryFilter) return true;
-            const parentId = parseInt(categoryFilter, 10);
-            if (parentId === 7) {
-                // Hỗ trợ lọc "Khác": khớp nếu parentCategoryId là 7 hoặc tên danh mục có chữ "khác"
-                const categoryNameLower = (product.categoryName || '').toLowerCase();
-                const productNameLower = (product.productName || '').toLowerCase();
-                return product.parentCategoryId === 7 || categoryNameLower.includes('khác') || productNameLower.includes('khác');
-            }
+            const catId = parseInt(categoryFilter, 10);
             if (product.parentCategoryId != null) {
-                return product.parentCategoryId === parentId;
+                return product.parentCategoryId === catId;
             }
-            return product.categoryId === parentId;
+            return product.categoryId === catId;
         }
 
         function matchesSubCategoryFilter(product, subCategory) {
@@ -388,13 +383,42 @@
 
         const CATEGORY_NAMES = {
             '1': 'Email',
-            '2': 'Tài khoản Premium',
+            '2': 'Tài khoản',
             '3': 'Phần mềm',
             '4': 'Tăng tương tác',
             '5': 'Dịch vụ phần mềm',
             '6': 'Blockchain',
-            '7': 'Khác'
+            '66': 'Khác',
+            '67': 'Dịch vụ khác'
         };
+
+        function getParentCategoryName(categoryName, productName = '') {
+            const text = ((categoryName || '') + ' ' + (productName || '')).toLowerCase();
+            
+            if (text.includes('email') || text.includes('gmail') || text.includes('hotmail') || text.includes('outlook') || text.includes('mail')) {
+                return 'Email';
+            }
+            if (text.includes('dịch vụ tiktok') || text.includes('dịch vụ facebook') || text.includes('dịch vụ google') || 
+                text.includes('dịch vụ youtube') || text.includes('tăng tương tác') || text.includes('follower') || text.includes('tương tác')) {
+                return 'Tăng tương tác';
+            }
+            if (text.includes('đồ họa') || text.includes('design') || text.includes('tool') || text.includes('video editor') || 
+                text.includes('plugin') || text.includes('script') || text.includes('dịch vụ phần mềm')) {
+                return 'Dịch vụ phần mềm';
+            }
+            if (text.includes('phần mềm') || text.includes('key window') || text.includes('key win') || text.includes('diệt virus')) {
+                return 'Phần mềm';
+            }
+            if (text.includes('blockchain') || text.includes('crypto') || text.includes('nft') || text.includes('ví điện tử') || text.includes('coinlist')) {
+                return 'Blockchain';
+            }
+            if (text.includes('tài khoản') || text.includes('account') || text.includes('netflix') || text.includes('chatgpt') || 
+                text.includes('spotify') || text.includes('canva') || text.includes('nordvpn') || text.includes('tiktok') || text.includes('bm')) {
+                return 'Tài khoản';
+            }
+            
+            return 'Khác';
+        }
 
         function getCatalogDisplayLabel() {
             if (currentKeyword) return `Tìm kiếm "${currentKeyword}"`;
@@ -513,8 +537,8 @@
         // Fetch products from backend or load mock data on failure/empty
         async function fetchProducts() {
             const params = new URLSearchParams();
-            const apiKeyword = currentKeyword || currentSubCategory;
-            if (apiKeyword) params.append('keyword', apiKeyword);
+            if (currentKeyword) params.append('keyword', currentKeyword);
+            if (currentSubCategory) params.append('subCategory', currentSubCategory);
             if (currentCategory) params.append('categoryId', currentCategory);
             if (currentMaxPrice) {
                 params.append('minPrice', '0');
@@ -701,7 +725,7 @@
                         </div>
                         <div class="product-info">
                             <div class="category-rating">
-                                <span class="category-badge">${product.categoryName || 'Sản phẩm số'}</span>
+                                <span class="category-badge">${getParentCategoryName(product.categoryName, product.productName)}</span>
                                 <span class="rating-stars">${starHtml}</span>
                             </div>
                             <h4 class="product-title">${product.productName}</h4>
@@ -829,8 +853,39 @@
             if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
         }
 
+        async function initCategoryFilterDropdown() {
+            const catSelect = document.getElementById('category-filter');
+            if (!catSelect) return;
+            try {
+                const res = await fetch('/api/v1/categories');
+                if (!res.ok) return;
+                const categories = await res.json();
+                
+                // Sort main categories: push "Khác" and "Dịch vụ khác" to the end
+                categories.sort((a, b) => {
+                    const nameA = (a.name || '').toLowerCase().trim();
+                    const nameB = (b.name || '').toLowerCase().trim();
+                    const isKhacA = nameA.includes('khác');
+                    const isKhacB = nameB.includes('khác');
+                    if (isKhacA && !isKhacB) return 1;
+                    if (!isKhacA && isKhacB) return -1;
+                    return (a.id || 0) - (b.id || 0);
+                });
+
+                catSelect.innerHTML = '<option value="">Tất cả danh mục</option>' +
+                    categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+                if (currentCategory) {
+                    catSelect.value = currentCategory;
+                }
+            } catch (e) {
+                console.error('Error loading category filter:', e);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             syncUIFromURL();
+            initCategoryFilterDropdown();
             fetchProducts();
 
             // Add automatic change listeners for immediate filtering

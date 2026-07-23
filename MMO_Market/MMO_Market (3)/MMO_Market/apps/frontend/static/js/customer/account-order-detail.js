@@ -403,6 +403,18 @@ function createAccessInfo(order) {
                 </div>
                 `}
 
+                ${creds.note ? `
+                <div class="cred-field">
+                    <span class="cred-field__label">Ghi chú:</span>
+                    <div class="cred-field__row">
+                        <code class="cred-field__value" id="credNote">${escapeHtml(creds.note)}</code>
+                        <button class="cred-copy-btn" onclick="copyToClipboard('${escapeHtml(creds.note).replace(/'/g, '&#039;')}', 'Ghi ch\u00fa', this)" title="Sao chép">
+                            <i class="fa fa-copy"></i><span>Copy</span>
+                        </button>
+                    </div>
+                </div>
+                ` : ''}
+
                 <div class="cred-card__warning">
                     <i class="fa fa-exclamation-triangle"></i>
                     Vui lòng không thay đổi mật khẩu hoặc thông tin bảo mật để tránh ảnh hưởng đến thời gian bảo hành.

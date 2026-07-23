@@ -544,7 +544,14 @@
             const count = document.getElementById('assetCount');
             const warning = document.getElementById('noAssetsWarning');
 
-            count.textContent = assets.length;
+            const usedCount = assets.filter(a => a.isUsed === true).length;
+            const availableCount = assets.length - usedCount;
+
+            if (usedCount > 0) {
+                count.textContent = `${assets.length} tài sản (${availableCount} còn hàng, ${usedCount} đã bán)`;
+            } else {
+                count.textContent = `${assets.length} tài sản`;
+            }
 
             if (assets.length === 0) {
                 container.style.display = 'none';
@@ -562,26 +569,33 @@
                 if (productType === 'ACCOUNT') {
                     col1Label = `<code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 12px;">${asset.username}</code>`;
                     col2Label = `Mật khẩu: <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 12px;">••••••</code>`;
-                    if (asset.notes) col2Label += `<br><small>${asset.notes}</small>`;
+                    if (asset.notes) col2Label += `<br><small style="color: #64748b;">${asset.notes}</small>`;
                 } else if (productType === 'KEY') {
                     col1Label = `<code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 12px;">${asset.keyCode}</code>`;
-                    col2Label = asset.notes ? `<small>${asset.notes}</small>` : '';
+                    col2Label = asset.notes ? `<small style="color: #64748b;">${asset.notes}</small>` : '';
                 } else if (productType === 'GAME_CARD') {
                     col1Label = `<code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 12px;">${asset.cardCode}</code>`;
-                    col2Label = asset.notes ? `<small>${asset.notes}</small>` : '';
+                    col2Label = asset.notes ? `<small style="color: #64748b;">${asset.notes}</small>` : '';
                 }
 
+                const isUsed = asset.isUsed === true;
+                const statusBadge = isUsed 
+                    ? `<span class="status-badge sold" style="background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;">Đã bán</span>`
+                    : `<span class="status-badge available" style="background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;">Còn hàng</span>`;
+
+                const actionButton = isUsed
+                    ? `<button type="button" class="delete-btn" disabled style="opacity: 0.35; cursor: not-allowed;" title="Tài sản đã bán không thể xóa"><i class="fa fa-trash"></i></button>`
+                    : `<button type="button" class="delete-btn" onclick="deleteAsset(${index})" title="Xóa"><i class="fa fa-trash"></i></button>`;
+
                 return `
-                    <tr>
+                    <tr style="${isUsed ? 'background-color: #f8fafc; opacity: 0.8;' : ''}">
                         <td>${index + 1}</td>
                         <td>${col1Label}</td>
                         <td>${col2Label}</td>
-                        <td><span class="status-badge available">Còn hàng</span></td>
+                        <td>${statusBadge}</td>
                         <td>
                             <div class="asset-row-actions">
-                                <button type="button" class="delete-btn" onclick="deleteAsset(${index})" title="Xóa">
-                                    <i class="fa fa-trash"></i>
-                                </button>
+                                ${actionButton}
                             </div>
                         </td>
                     </tr>
@@ -603,6 +617,10 @@
 
         async function deleteAsset(index) {
             const asset = assets[index];
+            if (asset.isUsed) {
+                alert('Tài sản đã được bán cho người mua, không thể xóa!');
+                return;
+            }
             if (confirm('Bạn chắc chắn muốn xóa tài sản này?')) {
                 if (asset.id) {
                     try {

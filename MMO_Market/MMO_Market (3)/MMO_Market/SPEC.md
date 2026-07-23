@@ -71,6 +71,7 @@ Nhân viên vận hành hệ thống.
 - Xem và xử lý các khiếu nại (Complaint) từ Customer và Seller.
 - Xem, duyệt/từ chối các yêu cầu rút tiền (Withdrawal) của Seller.
 - Xử lý các cờ báo cáo (Flag) gian hàng và phiếu hỗ trợ (Support Ticket).
+- Quản lý danh mục sản phẩm (Category Management - xem, tìm kiếm, tạo mới, chỉnh sửa, ẩn/hiện danh mục cha/con).
 - Trao đổi (Chat) với người dùng trong luồng giải quyết khiếu nại/hỗ trợ.
 - Xem quyền hạn cá nhân (MyPermissions).
 
@@ -79,7 +80,7 @@ Quản trị viên hệ thống cấp cao nhất.
 
 **Permissions**
 - Quản lý danh sách người dùng, xem thống kê (AdminUserManagement).
-- Quản lý phân quyền (Role, Permission) cho Staff.
+- Quản lý phân quyền (Role, Permission - bao gồm quyền Quản lý danh mục `MANAGE_CATEGORIES`) cho Staff.
 - Cấu hình hệ thống (SystemConfiguration).
 - Quản lý mức phí, doanh thu (AdminRevenue).
 - Xem nhật ký hoạt động (Audit log).
@@ -507,6 +508,7 @@ Hiện tại repository chưa có tài liệu chính thức xác định đầy 
 | FR-14 | Staff Management | Admin | /admin/users | /api/admin/staff | StaffController | StaffService | UserRepository | Users, UserPermissions, Permissions | Implemented | StaffController.java, Permissions DB |
 | FR-15 | Administration | Admin | /admin | /api/admin/system-config | SystemConfigurationController | SystemConfigService | SystemConfigRepository | SystemConfigurations, AuditLogs | Implemented | SystemConfigurationController.java |
 | FR-16 | PreOrder | Customer | /pre-orders | /api/pre-orders | PreOrderController | PreOrderService | PreOrderRepository | PreOrders | Implemented | PreOrderController.java, PreOrders table |
+| FR-17 | Category Management | Staff, Admin | /staff/categories | /api/v1/staff/categories | StaffController, StaffCategoryApiController | CategoryService | CategoryRepository | Categories | Implemented | StaffCategoryApiController.java, Categories table |
 
 ## Appendix B – Screen Inventory
 
@@ -526,6 +528,7 @@ Hiện tại repository chưa có tài liệu chính thức xác định đầy 
 | Inventory | Seller | /seller/inventory.html | /seller/inventory | SellerPageController | Quản lý kho | Implemented |
 | Withdrawals | Seller | /seller/withdrawals.html | /seller/withdrawals | SellerPageController | Rút tiền | Implemented |
 | Staff Dashboard | Staff | /staff/dashboard.html | /staff/dashboard | StaffController | Bảng điều khiển Staff | Implemented |
+| Staff Categories | Staff | /staff/categories.html | /staff/categories | StaffController | Quản lý danh mục sản phẩm | Implemented |
 | Admin Users | Admin | /admin/users.html | /admin/users | AdminPageController | Quản lý người dùng | Implemented |
 
 ## Appendix C – API and Route Inventory

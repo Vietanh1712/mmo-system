@@ -54,6 +54,27 @@ public class ShopRegistrationService {
     @Autowired
     private NotificationRepository notificationRepository;
 
+    @jakarta.annotation.PostConstruct
+    public void autoApproveExistingRegistrations() {
+        try {
+            List<SellerRegistration> pendingList = sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc().stream()
+                    .filter(r -> r.getStatus() != null && "PENDING".equalsIgnoreCase(r.getStatus().trim()))
+                    .collect(Collectors.toList());
+            for (SellerRegistration reg : pendingList) {
+                reg.setStatus("APPROVED");
+                sellerRegistrationRepository.save(reg);
+                User u = reg.getUser();
+                if (u != null) {
+                    if (u.getRole() == null || u.getRole().contains("\"Customer\"")) {
+                        u.setRole("{\"role\": \"Seller\"}");
+                    }
+                    u.setShopStatus("Active");
+                    userRepository.save(u);
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
     @Transactional
     public ShopRegistrationResponseDto submitRegistration(Long userId, ShopRegistrationRequestDto request) {
         User user = userRepository.findByIdAndIsDeleteFalse(userId)
@@ -74,13 +95,22 @@ public class ShopRegistrationService {
             throw new IllegalStateException("Bạn đã có Shop đang hoạt động.");
         }
 
+        // Tự động duyệt mở shop sau khi đã xác minh KYC
         registration.setUser(user);
         registration.setShopName(request.getShopName());
         registration.setDescription(request.getDescription());
         registration.setCategory(request.getCategory());
         registration.setSupportEmail(request.getSupportEmail());
         registration.setSupportPhone(request.getSupportPhone());
-        registration.setStatus("PENDING");
+        registration.setStatus("APPROVED");
+
+        // Nâng cấp vai trò người dùng thành Seller và kích hoạt shopStatus
+        String currentRole = user.getRole();
+        if (currentRole == null || currentRole.contains("\"Customer\"")) {
+            user.setRole("{\"role\": \"Seller\"}");
+        }
+        user.setShopStatus("Active");
+        userRepository.save(user);
 
         SellerRegistration saved = sellerRegistrationRepository.save(registration);
 
@@ -88,33 +118,14 @@ public class ShopRegistrationService {
         Notification customerNotif = Notification.builder()
                 .userId(user.getId())
                 .title("Đăng ký mở Shop thành công")
-                .content(String.format("Yêu cầu đăng ký mở Shop \"%s\" của bạn đã được gửi thành công và đang chờ duyệt.", saved.getShopName()))
+                .content(String.format("Chúc mừng! Shop \"%s\" của bạn đã được khởi tạo thành công. Bạn có thể bắt đầu sử dụng giao diện người bán ngay.", saved.getShopName()))
                 .type("SYSTEM")
-                .severity("INFO")
+                .severity("SUCCESS")
                 .isRead(false)
                 .isDelete(false)
-                .targetUrl("/account/register-shop")
+                .targetUrl("/seller/dashboard")
                 .build();
         notificationRepository.save(customerNotif);
-
-        // 2. Tạo thông báo cho Staff có quyền duyệt mở Shop (MANAGE_SHOPS)
-        List<User> staffAndAdmins = userRepository.findUsersByPermission("MANAGE_SHOPS");
-        for (User staff : staffAndAdmins) {
-            if (staff.getId().equals(user.getId())) {
-                continue;
-            }
-            Notification staffNotif = Notification.builder()
-                    .userId(staff.getId())
-                    .title("Yêu cầu mở Shop mới")
-                    .content(String.format("Có yêu cầu mở Shop mới \"%s\" từ %s (%s) cần phê duyệt.", saved.getShopName(), user.getFullName(), user.getEmail()))
-                    .type("SYSTEM")
-                    .severity("WARNING")
-                    .isRead(false)
-                    .isDelete(false)
-                    .targetUrl("/staff/shop-registrations")
-                    .build();
-            notificationRepository.save(staffNotif);
-        }
 
         return mapToDto(saved);
     }

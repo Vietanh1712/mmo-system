@@ -161,6 +161,34 @@
 
             // Load context product if productId query parameter exists
             const urlParams = new URLSearchParams(window.location.search);
+            const sellerIdParam = urlParams.get('sellerId');
+            const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user");
+            if (userString && sellerIdParam) {
+                try {
+                    const user = JSON.parse(userString);
+                    if (user && Number(user.id) === Number(sellerIdParam)) {
+                        sessionStorage.setItem('pendingToast', JSON.stringify({
+                            type: 'warning',
+                            message: 'Bạn không thể nhắn tin cho chính mình.'
+                        }));
+                        window.location.href = '/messages';
+                        return;
+                    }
+                } catch(e){}
+            }
+
+            // Check if there is a pending toast to display
+            const pending = sessionStorage.getItem('pendingToast');
+            if (pending) {
+                try {
+                    const toastInfo = JSON.parse(pending);
+                    if (toastInfo.type === 'warning' && typeof showWarningToast === 'function') {
+                        showWarningToast(toastInfo.message);
+                    }
+                } catch(e){}
+                sessionStorage.removeItem('pendingToast');
+            }
+
             const productIdParam = urlParams.get('productId');
             if (productIdParam) {
                 try {
