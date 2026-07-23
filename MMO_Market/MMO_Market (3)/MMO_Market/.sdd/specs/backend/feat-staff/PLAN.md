@@ -76,8 +76,10 @@ Triển khai giao diện vận hành MVC và REST API dành riêng cho nhân vi�
 - **Trang Quản lý Khiếu nại (Complaints):**
   - File: `templates/staff/complaints.html` & Script: `static/js/staff/staff-complaints.js` hiển thị cột STT liên tục qua từng trang (`currentPage * pageSize + index + 1`).
 - **Trang Quản lý Duyệt Yêu Cầu Shop (Shops):**
-  - File: `templates/staff/shop-registrations.html` & Script: `static/js/staff/staff-shop-registrations.js` quản lý 5 trạng thái gian hàng (`Active`, `Withdrawn`, `Suspended`, `Locked`, `Banned`).
-  - Template `templates/staff/shop-registration-detail.html`: Đặt nhãn trạng thái (`#shopStatusBadge` hiển thị "Đã duyệt", "Chờ duyệt", "Từ chối") cố định ở góc trên bên phải của thẻ thông tin Shop (`.ds-card-header`).
+  - File: `templates/staff/shop-registrations.html` & Script: `static/js/staff/staff-shop-registrations.js` quản lý 5 trạng thái gian hàng với nhãn chuẩn hóa: `Active` ("Hoạt động"), `Suspended` ("Tạm ngưng"), `Locked` ("Tạm khóa"), `Withdrawn` ("Đã đóng Shop (Hoàn cọc)"), `Banned` ("Khóa vĩnh viễn"). Các thẻ thống kê hiển thị: "Shop tạm khóa", "Shop tạm ngưng", "Đã đóng Shop (Hoàn cọc)".
+  - Template `templates/staff/shop-registration-detail.html`: Đặt nhãn trạng thái (`#shopStatusBadge` hiển thị "Đã duyệt", "Chờ duyệt", "Từ chối") cố định ở góc trên bên phải của thẻ thông tin Shop (`.ds-card-header`). Tích hợp Modal tạm ngưng có thời hạn (`suspendShopModal` hỗ trợ chọn Ngày, Giờ, Phút `suspendedUntil`), hiển thị khung đếm ngược thời gian thực (Real-time countdown timer) ở cả thẻ thông tin Shop và thẻ Cập nhật trạng thái (`#cardSuspendedAlert`). Cơ chế tự động khôi phục về trạng thái Hoạt động (`Active`) khi hết thời hạn tạm ngưng via `@Scheduled` job hoặc lazy evaluation khi xem thông tin.
+- **Trang Quản lý Phiếu Hỗ Trợ (Support Tickets - UC-17):**
+  - File: `templates/staff/support-tickets.html` & `support-ticket-detail.html` cùng Script tương ứng tiếp nhận phiếu hỗ trợ, phản hồi giải pháp và chuyển đổi trạng thái (`OPEN`, `IN_PROGRESS`, `RESOLVED`, `CLOSED`).
 
 ---
 

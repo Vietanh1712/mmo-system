@@ -124,10 +124,7 @@
                 <td class="ds-table-right">${balanceFormatted}</td>
 
                 <td class="ds-table-center">
-                    <div class="ds-table-actions">
-                        <a class="ds-btn ds-btn-sm ds-btn-outline" href="/staff/shop-registrations/update-status?id=${item.id}" style="font-size: 11px; padding: 4px 8px; border-radius: 4px;" title="Cập nhật trạng thái">
-                            Cập nhật trạng thái
-                        </a>
+                    <div class="ds-table-actions" style="justify-content: center;">
                         <a class="ds-icon-btn ds-icon-btn-view" href="/staff/shop-registrations/detail?id=${item.id}" title="Xem chi tiết" aria-label="Xem chi tiết">
                             <svg class="ds-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="width: 16px; height: 16px;">
                                 <path d="M2.25 12C3.73 8.12 7.49 5.25 12 5.25C16.51 5.25 20.27 8.12 21.75 12C20.27 15.88 16.51 18.75 12 18.75C7.49 18.75 3.73 15.88 2.25 12Z" stroke="currentColor" stroke-width="2"/>
@@ -150,10 +147,10 @@
         if (stUpper === 'REJECTED') return '<span class="ds-badge ds-badge-danger">Bị từ chối</span>';
         
         // 4 new statuses mapping
-        if (stUpper === 'WITHDRAWN' || stUpper === 'DELETED') return '<span class="ds-badge ds-badge-danger">Đã xóa (rút tiền cọc)</span>';
-        if (stUpper === 'SUSPENDED' || stUpper === 'TEMP_LOCKED') return '<span class="ds-badge ds-badge-warning">Khóa xóa có thời hạn</span>';
-        if (stUpper === 'LOCKED' || stUpper === 'INDEFINITE_LOCKED') return '<span class="ds-badge ds-badge-warning">Khóa xóa vô thời hạn</span>';
-        if (stUpper === 'BANNED' || stUpper === 'PERMANENT_BANNED') return '<span class="ds-badge ds-badge-danger">Khóa Shop vĩnh viễn</span>';
+        if (stUpper === 'WITHDRAWN' || stUpper === 'DELETED') return '<span class="ds-badge ds-badge-danger">Đã đóng Shop (Hoàn cọc)</span>';
+        if (stUpper === 'SUSPENDED' || stUpper === 'TEMP_LOCKED') return '<span class="ds-badge ds-badge-warning">Tạm ngưng</span>';
+        if (stUpper === 'LOCKED' || stUpper === 'INDEFINITE_LOCKED') return '<span class="ds-badge ds-badge-warning">Tạm khóa</span>';
+        if (stUpper === 'BANNED' || stUpper === 'PERMANENT_BANNED') return '<span class="ds-badge ds-badge-danger">Khóa vĩnh viễn</span>';
         
         return `<span class="ds-badge ds-badge-info">${shopStatus}</span>`;
     }
@@ -209,13 +206,13 @@
                     } else if (stUpper === 'REJECTED') {
                         label = 'Bị từ chối';
                     } else if (stUpper === 'WITHDRAWN' || stUpper === 'DELETED') {
-                        label = 'Đã xóa (rút tiền cọc)';
+                        label = 'Đã đóng Shop (Hoàn cọc)';
                     } else if (stUpper === 'SUSPENDED' || stUpper === 'TEMP_LOCKED') {
-                        label = 'Khóa xóa có thời hạn';
+                        label = 'Tạm ngưng';
                     } else if (stUpper === 'LOCKED' || stUpper === 'INDEFINITE_LOCKED') {
-                        label = 'Khóa xóa vô thời hạn';
+                        label = 'Tạm khóa';
                     } else if (stUpper === 'BANNED' || stUpper === 'PERMANENT_BANNED') {
-                        label = 'Khóa Shop vĩnh viễn';
+                        label = 'Khóa vĩnh viễn';
                     }
                     
                     if (!addedValues.has(label)) {

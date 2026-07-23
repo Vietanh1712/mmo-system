@@ -48,7 +48,8 @@
 | 2.6 | 2026-07-11 | Cập nhật các chỉ số trên trang Dashboard tổng quan chính `/staff/dashboard`: Thay thế thẻ thống kê "Khiếu nại đang mở" bằng "Tổng số Shop" (được đếm tự động từ database) và xóa bỏ hoàn toàn thẻ thống kê "Yêu cầu rút tiền". |
 | 2.7 | 2026-07-17 | Xóa cột "Lý do" khỏi bảng danh sách cờ cảnh báo (flags.html); Đồng thời tích hợp mục "Phiếu Hỗ Trợ" (Support Tickets) vào trong nhóm menu thả xuống và trang tổng quan "Quản lý đơn từ" (documents-dashboard.html). |
 | 2.8 | 2026-07-19 | Cập nhật giao diện cờ cảnh báo (flags.html & staff.css): Thay đổi bố cục các thẻ thống kê thành 3 ô trên 1 hàng (staff-stat-grid--3cols) trên desktop và tự động phản hồi theo kích thước màn hình. |
-| 2.9 | 2026-07-19 | Cập nhật giao diện Quản lý Shop (shop-registrations.html & staff.css): Thay đổi bố cục 4 thẻ thống kê thành 4 ô trên 1 hàng (staff-stat-grid--4cols) trên desktop và tự động phản hồi theo kích thước màn hình. |
+| 2.8.1 | 2026-07-19 | Cập nhật giao diện Quản lý Shop (shop-registrations.html & staff.css): Thay đổi bố cục thẻ thống kê thành 4 ô trên 1 hàng (staff-stat-grid--4cols) trên desktop. |
+| 2.9 | 2026-07-23 | Chuẩn hóa 5 nhãn trạng thái tài khoản Shop tiếng Việt (Hoạt động, Tạm ngưng, Tạm khóa, Khóa vĩnh viễn, Đã đóng Shop (Hoàn cọc)); Cập nhật các thẻ thống kê danh sách Shop; Hợp nhất chức năng xem chi tiết và cập nhật trạng thái hoạt động vào 1 trang duy nhất `/staff/shop-registrations/detail`; Rút gọn cột thao tác bảng danh sách Shop thành 1 nút icon con mắt (`ds-icon-btn-view`) duy nhất; Tích hợp Modal chọn Ngày/Giờ/Phút tạm ngưng (`suspendShopModal`); Hiển thị khung đếm ngược thời gian thực (Real-time countdown timer) ở thẻ thông tin Shop và thẻ Cập nhật trạng thái; Tự động khôi phục về trạng thái 'Hoạt động' khi đếm ngược kết thúc. |
 
 
 

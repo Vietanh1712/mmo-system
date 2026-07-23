@@ -11,5 +11,6 @@ import java.util.Optional;
 @Repository
 public interface SellerBankInfoRepository extends JpaRepository<SellerBankInfo, Long> {
     Optional<SellerBankInfo> findByUserAndIsDeleteFalse(User user);
+    Optional<SellerBankInfo> findFirstByUserAndIsDeleteFalseOrderByIdDesc(User user);
     List<SellerBankInfo> findByUser(User user);
 }

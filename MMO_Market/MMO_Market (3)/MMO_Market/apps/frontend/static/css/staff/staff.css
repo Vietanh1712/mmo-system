@@ -926,6 +926,28 @@
     align-self: start;
 }
 
+/* Combobox Custom Dropdown Menu Styling */
+.ds-combobox-menu {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    background: #ffffff;
+}
+
+.ds-combobox-item {
+    padding: 8px 14px;
+    font-size: 13px;
+    color: #334155;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.ds-combobox-item:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    font-weight: 500;
+}
+
 @media (max-width: 992px) {
     .staff-detail-grid,
     .staff-chat-layout {

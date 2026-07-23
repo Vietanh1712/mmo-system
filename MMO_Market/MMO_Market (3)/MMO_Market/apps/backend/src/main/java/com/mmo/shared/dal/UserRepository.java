@@ -25,27 +25,28 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Boolean existsByEmailAndIsDeleteFalse(String email);
     long countByIsDeleteFalse();
 
-    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND u.shopStatus IS NOT NULL AND UPPER(u.shopStatus) NOT IN ('PENDING', 'REJECTED')")
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND u.id IN (SELECT r.user.id FROM SellerRegistration r WHERE r.isDelete = false)")
     long countTotalShops();
 
-    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND (UPPER(u.shopStatus) = 'ACTIVE' OR UPPER(u.shopStatus) = 'APPROVED')")
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND u.id IN (SELECT r.user.id FROM SellerRegistration r WHERE r.isDelete = false) AND (u.shopStatus IS NULL OR UPPER(u.shopStatus) IN ('ACTIVE', 'APPROVED')) AND (u.shopStatus IS NULL OR UPPER(u.shopStatus) NOT IN ('SUSPENDED', 'TEMP_LOCKED', 'TEMP_SUSPENDED', 'LOCKED', 'INDEFINITE_LOCKED', 'BANNED', 'PERMANENT_BANNED', 'WITHDRAWN', 'DELETED'))")
     long countActiveShops();
 
-    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND (UPPER(u.shopStatus) = 'BANNED' OR UPPER(u.shopStatus) = 'LOCKED')")
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND u.id IN (SELECT r.user.id FROM SellerRegistration r WHERE r.isDelete = false) AND UPPER(u.shopStatus) IN ('BANNED', 'PERMANENT_BANNED', 'LOCKED', 'INDEFINITE_LOCKED', 'SUSPENDED', 'TEMP_LOCKED', 'TEMP_SUSPENDED')")
     long countBannedShops();
 
-    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND (UPPER(u.shopStatus) = 'BANNED' OR UPPER(u.shopStatus) = 'PERMANENT_BANNED')")
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND u.id IN (SELECT r.user.id FROM SellerRegistration r WHERE r.isDelete = false) AND UPPER(u.shopStatus) IN ('BANNED', 'PERMANENT_BANNED')")
     long countPermanentBannedShops();
 
-    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND (UPPER(u.shopStatus) = 'LOCKED' OR UPPER(u.shopStatus) = 'INDEFINITE_LOCKED')")
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND u.id IN (SELECT r.user.id FROM SellerRegistration r WHERE r.isDelete = false) AND UPPER(u.shopStatus) IN ('LOCKED', 'INDEFINITE_LOCKED')")
     long countIndefiniteLockedShops();
 
-    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND (UPPER(u.shopStatus) = 'SUSPENDED' OR UPPER(u.shopStatus) = 'TEMP_LOCKED')")
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND u.id IN (SELECT r.user.id FROM SellerRegistration r WHERE r.isDelete = false) AND UPPER(u.shopStatus) IN ('SUSPENDED', 'TEMP_LOCKED', 'TEMP_SUSPENDED')")
     long countTemporarySuspendedShops();
 
-    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND (UPPER(u.shopStatus) = 'WITHDRAWN' OR UPPER(u.shopStatus) = 'DELETED')")
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) FROM User u WHERE u.isDelete = false AND u.id IN (SELECT r.user.id FROM SellerRegistration r WHERE r.isDelete = false) AND UPPER(u.shopStatus) IN ('WITHDRAWN', 'DELETED')")
     long countWithdrawnShops();
-    @org.springframework.data.jpa.repository.Query("SELECT COALESCE(SUM(u.depositVnd), 0) FROM User u WHERE u.isDelete = false")
+
+    @org.springframework.data.jpa.repository.Query("SELECT COALESCE(SUM(u.depositVnd), 0) FROM User u WHERE u.isDelete = false AND u.id IN (SELECT r.user.id FROM SellerRegistration r WHERE r.isDelete = false)")
     long sumTotalDeposit();
 
     @org.springframework.data.jpa.repository.Query("SELECT u FROM User u WHERE u.isDelete = false AND (LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
