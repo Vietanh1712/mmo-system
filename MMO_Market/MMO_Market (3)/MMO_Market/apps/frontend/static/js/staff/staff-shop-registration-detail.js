@@ -64,15 +64,49 @@ function hideActionPanel() {
     }
 }
 
-async function reviewShop(isApproved) {
-    if (!currentShopId) return;
+function openApproveShopModal() {
+    const modal = document.getElementById('approveShopModal');
+    if (modal) modal.style.display = 'flex';
+}
 
-    const reasonInput = document.getElementById('reviewReason');
-    const reason = reasonInput ? reasonInput.value.trim() : '';
-    if (!isApproved && !reason) {
-        showToast("Vui lòng nhập lý do từ chối.", "danger");
+function closeApproveShopModal() {
+    const modal = document.getElementById('approveShopModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function submitApproveShop() {
+    closeApproveShopModal();
+    executeShopReview(true, '');
+}
+
+function openRejectShopModal() {
+    const modal = document.getElementById('rejectShopModal');
+    const input = document.getElementById('modalShopRejectReason');
+    const err = document.getElementById('modalShopRejectReasonError');
+    if (input) input.value = '';
+    if (err) err.textContent = '';
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeRejectShopModal() {
+    const modal = document.getElementById('rejectShopModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function submitRejectShop() {
+    const input = document.getElementById('modalShopRejectReason');
+    const err = document.getElementById('modalShopRejectReasonError');
+    const reason = input ? input.value.trim() : '';
+    if (!reason) {
+        if (err) err.textContent = 'Vui lòng nhập lý do từ chối đăng ký Shop.';
         return;
     }
+    closeRejectShopModal();
+    executeShopReview(false, reason);
+}
+
+async function executeShopReview(isApproved, reason) {
+    if (!currentShopId) return;
 
     try {
         const response = await authFetch(`/v1/shop-registrations/${currentShopId}/review`, {
@@ -82,7 +116,7 @@ async function reviewShop(isApproved) {
         });
 
         if (response.ok) {
-            showToast("Xử lý yêu cầu thành công", "success");
+            showToast(isApproved ? "Phê duyệt đăng ký Shop thành công" : "Từ chối đăng ký Shop thành công", "success");
             setTimeout(() => {
                 window.location.href = '/staff/shop-registrations';
             }, 1500);

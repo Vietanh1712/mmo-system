@@ -19,6 +19,8 @@ async function initializeShopRegistrationPage() {
     document.getElementById('shopRegistrationForm').addEventListener('submit', submitShopRegistration);
     document.getElementById('shopEditRequestButton').addEventListener('click', editShopRegistration);
 
+    await loadMainCategories();
+
     try {
         const feeResponse = await fetch('/api/public/config/shop-fee');
         if (feeResponse.ok) {
@@ -278,6 +280,27 @@ async function executeShopRegistrationSubmit(data) {
     } finally {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
+    }
+}
+
+async function loadMainCategories() {
+    try {
+        const response = await fetch('/api/search/categories?parentOnly=true');
+        if (response.ok) {
+            const categories = await response.json();
+            const selectEl = document.getElementById('shopCategory');
+            if (selectEl) {
+                selectEl.innerHTML = '<option value="">Chọn danh mục</option>';
+                categories.forEach(cat => {
+                    const opt = document.createElement('option');
+                    opt.value = cat.name;
+                    opt.textContent = cat.name;
+                    selectEl.appendChild(opt);
+                });
+            }
+        }
+    } catch (e) {
+        console.error('Không thể tải danh mục kinh doanh chính', e);
     }
 }
 

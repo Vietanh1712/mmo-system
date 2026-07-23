@@ -404,7 +404,10 @@ public class ProductSearchController {
     }
 
     @GetMapping("/categories")
-    public ResponseEntity<List<Category>> getCategories() {
+    public ResponseEntity<List<Category>> getCategories(@RequestParam(required = false) Boolean parentOnly) {
+        if (Boolean.TRUE.equals(parentOnly)) {
+            return ResponseEntity.ok(categoryRepository.findByParentIsNullAndIsDeleteFalse());
+        }
         return ResponseEntity.ok(categoryRepository.findByIsDeleteFalse());
     }
 }

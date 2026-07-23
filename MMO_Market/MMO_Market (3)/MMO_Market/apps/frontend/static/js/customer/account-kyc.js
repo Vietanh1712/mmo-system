@@ -309,17 +309,33 @@ async function submitKycForm(event) {
     submitBtn.disabled = true;
 
     try {
+        const token = sessionStorage.getItem('accessToken');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+
         const response = await fetch('/api/v1/kyc', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${sessionStorage.getItem('accessToken')}`
+                'Authorization': `Bearer ${token}`
             },
             body: formData
         });
 
+        if (response.status === 401) {
+            sessionStorage.clear();
+            window.location.href = '/login';
+            return;
+        }
+
         if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.message || 'Lỗi gửi yêu cầu KYC');
+            let errorMsg = 'Lỗi gửi yêu cầu KYC';
+            try {
+                const data = await response.json();
+                errorMsg = data.message || errorMsg;
+            } catch (e) {}
+            throw new Error(errorMsg);
         }
 
         closeKycFormMode();
@@ -327,7 +343,11 @@ async function submitKycForm(event) {
         renderKycState();
         showKycMessage('Đã gửi yêu cầu định danh thành công!', 'success');
     } catch (error) {
-        showKycFormMessage(error.message);
+        let msg = error.message;
+        if (msg === 'Failed to fetch' || (msg && msg.toLowerCase().includes('fetch'))) {
+            msg = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng hoặc thử lại.';
+        }
+        showKycFormMessage(msg);
     } finally {
         submitBtn.textContent = originalText;
         submitBtn.disabled = false;
