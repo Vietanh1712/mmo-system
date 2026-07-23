@@ -76,11 +76,13 @@ public class TransactionController {
                     credentialsDTO = PurchaseResponse.CredentialsDTO.builder()
                             .username(asset.getKeyCode() != null ? asset.getKeyCode() : asset.getCardCode())
                             .password("(Product Key)")
+                            .note(asset.getNotes())
                             .build();
                 } else {
                     credentialsDTO = PurchaseResponse.CredentialsDTO.builder()
                             .username(asset.getAccountUsername())
                             .password(asset.getAccountPassword())
+                            .note(asset.getNotes())
                             .build();
                 }
             }
@@ -215,6 +217,9 @@ public class TransactionController {
                     } else {
                         creds.put("username", asset.getAccountUsername());
                         creds.put("password", asset.getAccountPassword());
+                    }
+                    if (asset.getNotes() != null && !asset.getNotes().trim().isEmpty()) {
+                        creds.put("note", asset.getNotes());
                     }
                     credsList.add(creds);
                 }

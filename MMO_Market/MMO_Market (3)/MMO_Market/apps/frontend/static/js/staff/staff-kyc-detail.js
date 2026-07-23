@@ -61,13 +61,48 @@ function hideActionPanel() {
     }
 }
 
-async function reviewKyc(status) {
-    const note = document.getElementById('kycNote').value.trim();
-    if (status === 'REJECTED' && !note) {
-        showToast("Vui lòng nhập lý do từ chối", "danger");
+function openApproveKycModal() {
+    const modal = document.getElementById('approveKycModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeApproveKycModal() {
+    const modal = document.getElementById('approveKycModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function submitApproveKyc() {
+    closeApproveKycModal();
+    executeKycReview('APPROVED', '');
+}
+
+function openRejectKycModal() {
+    const modal = document.getElementById('rejectKycModal');
+    const input = document.getElementById('modalRejectReason');
+    const err = document.getElementById('modalRejectReasonError');
+    if (input) input.value = '';
+    if (err) err.textContent = '';
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeRejectKycModal() {
+    const modal = document.getElementById('rejectKycModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function submitRejectKyc() {
+    const input = document.getElementById('modalRejectReason');
+    const err = document.getElementById('modalRejectReasonError');
+    const note = input ? input.value.trim() : '';
+    if (!note) {
+        if (err) err.textContent = 'Vui lòng nhập lý do từ chối hồ sơ.';
         return;
     }
+    closeRejectKycModal();
+    executeKycReview('REJECTED', note);
+}
 
+async function executeKycReview(status, note) {
     const payload = {
         version: currentVersion,
         status: status,
@@ -86,18 +121,17 @@ async function reviewKyc(status) {
 
         const data = await response.json();
         if (!response.ok) {
-            throw new Error(data.message || 'Lỗi khi duyệt');
+            throw new Error(data.message || 'Lỗi khi xử lý hồ sơ');
         }
 
-        showToast("Duyệt hồ sơ thành công", "success");
+        showToast(status === 'APPROVED' ? "Phê duyệt hồ sơ thành công" : "Từ chối hồ sơ thành công", "success");
         setTimeout(() => {
             window.location.href = '/staff/kyc';
         }, 1500);
 
     } catch (e) {
         showToast(e.message, "danger");
-        if (e.message.includes('thay đổi bởi một người dùng khác')) {
-            // Optimistic locking failure, reload to get new version
+        if (e.message && e.message.includes('thay đổi bởi một người dùng khác')) {
             setTimeout(() => location.reload(), 2000);
         }
     }

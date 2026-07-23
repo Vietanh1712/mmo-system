@@ -25,5 +25,6 @@ public class PurchaseResponse {
     public static class CredentialsDTO {
         private String username;
         private String password;
+        private String note;
     }
 }

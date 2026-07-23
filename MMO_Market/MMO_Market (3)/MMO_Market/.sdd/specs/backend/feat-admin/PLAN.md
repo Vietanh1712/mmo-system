@@ -69,12 +69,12 @@ Triển khai các tính năng quản lý hệ thống, phân quyền hạn nhân
   - File: `templates/admin/users.html` và kịch bản `static/js/admin-console.js`.
   - Quản lý chuyển đổi các panel view phụ thông qua hàm `switchAdminView(viewId)`:
     - `dashboard`: Thống kê tài khoản và vẽ biểu đồ SVG doanh thu tuần.
-    - `audit-logs`: Danh sách logs, tìm kiếm, lọc hành động, xem payload chi tiết.
+    - `audit-logs`: Danh sách logs, tìm kiếm, lọc nhóm tác vụ/hành động con, loại bỏ cột Chi tiết để tối ưu không gian hiển thị, Việt hóa 100%.
     - `revenue`: Biến động số dư và nút xuất báo cáo Excel/CSV.
-    - `accounts`: Danh sách user, nút khóa, cập nhật role, và form CRUD nhân viên Staff.
+    - `accounts`: Bộ lọc đa năng 6 trường (`search`, `role`, `status`, `startDate`, `endDate`, `sortOrder`), danh sách user (đã bỏ cột "Xác thực"), nút khóa/mở khóa, và form CRUD nhân viên Staff.
     - `permissions`: Dropdown multiselect để gán/thu hồi quyền của Staff.
-    - `system-config` / `commissions`: Biểu mẫu cập nhật cấu hình và biểu phí.
-    - `notifications`: Form phát thông báo toàn sàn, toggle bảo trì, banner cảnh báo.
+    - `system-config` / `commissions`: Biểu mẫu cập nhật cấu hình (đã chuẩn hóa nhãn "Thời gian hết hạn đăng nhập (phút)", kết nối 100% Backend Java thực tế) và biểu phí hoa hồng lưu CSDL.
+    - `notifications`: Form phát thông báo toàn sàn, xem chi tiết qua Popup Modal, toggle bảo trì, banner cảnh báo.
 
 ---
 
@@ -82,4 +82,4 @@ Triển khai các tính năng quản lý hệ thống, phân quyền hạn nhân
 
 - Toàn bộ dữ liệu trong bảng `AuditLogs` là bất biến (chỉ cho phép INSERT, chặn UPDATE/DELETE).
 - JWT Filter hoạt động động để từ chối truy cập của các tài khoản có `isLocked = 1` ngay lập tức.
-- Validate chặt chẽ các giá trị cấu hình đầu vào trước khi lưu vào DB.
+- Validate chặt chẽ các giá trị cấu hình đầu vào trước khi lưu vào CSDL SQL Server và có hiệu lực thời gian thực ở Backend.

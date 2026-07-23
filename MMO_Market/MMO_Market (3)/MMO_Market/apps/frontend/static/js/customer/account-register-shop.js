@@ -19,6 +19,8 @@ async function initializeShopRegistrationPage() {
     document.getElementById('shopRegistrationForm').addEventListener('submit', submitShopRegistration);
     document.getElementById('shopEditRequestButton').addEventListener('click', editShopRegistration);
 
+    await loadMainCategories();
+
     try {
         const feeResponse = await fetch('/api/public/config/shop-fee');
         if (feeResponse.ok) {
@@ -278,6 +280,87 @@ async function executeShopRegistrationSubmit(data) {
     } finally {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
+    }
+}
+
+let allCategoriesList = [];
+
+async function loadMainCategories() {
+    try {
+        const response = await fetch('/api/search/categories?parentOnly=true');
+        if (response.ok) {
+            const categories = await response.json();
+            allCategoriesList = categories.map(cat => cat.name);
+            
+            const listEl = document.getElementById('shopCategoryDropdownList');
+            const inputEl = document.getElementById('shopCategory');
+            const btnEl = document.getElementById('shopCategoryDropdownBtn');
+            
+            if (listEl && inputEl && btnEl) {
+                const renderDropdownItems = (items) => {
+                    listEl.innerHTML = '';
+                    if (items.length === 0) {
+                        const li = document.createElement('li');
+                        li.style.padding = '10px 16px';
+                        li.style.fontSize = '13px';
+                        li.style.color = '#94a3b8';
+                        li.textContent = 'Không có kết quả';
+                        listEl.appendChild(li);
+                        return;
+                    }
+                    items.forEach(name => {
+                        const li = document.createElement('li');
+                        li.className = 'category-dropdown-item';
+                        li.style.padding = '10px 16px';
+                        li.style.fontSize = '13.5px';
+                        li.style.color = '#1e293b';
+                        li.style.cursor = 'pointer';
+                        li.style.transition = 'background 0.15s ease';
+                        li.textContent = name;
+                        
+                        li.addEventListener('mouseover', () => { li.style.background = '#f1f5f9'; });
+                        li.addEventListener('mouseout', () => { li.style.background = 'transparent'; });
+                        
+                        li.addEventListener('mousedown', (e) => {
+                            e.preventDefault();
+                            inputEl.value = name;
+                            listEl.style.display = 'none';
+                        });
+                        listEl.appendChild(li);
+                    });
+                };
+                
+                renderDropdownItems(allCategoriesList);
+                
+                btnEl.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = listEl.style.display === 'block';
+                    listEl.style.display = isOpen ? 'none' : 'block';
+                    if (!isOpen) {
+                        renderDropdownItems(allCategoriesList);
+                    }
+                });
+                
+                inputEl.addEventListener('input', () => {
+                    const text = inputEl.value.trim().toLowerCase();
+                    if (text === '') {
+                        listEl.style.display = 'none';
+                        return;
+                    }
+                    const filtered = allCategoriesList.filter(name => name.toLowerCase().includes(text));
+                    listEl.style.display = 'block';
+                    renderDropdownItems(filtered);
+                });
+                
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.custom-select-search')) {
+                        listEl.style.display = 'none';
+                    }
+                });
+            }
+        }
+    } catch (e) {
+        console.error('Không thể tải danh mục kinh doanh chính', e);
     }
 }
 

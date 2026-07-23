@@ -55,6 +55,11 @@
                         <i class="fa fa-exchange"></i> Giao dịch
                     </a>
                     <a class="staff-sidebar__link staff-sidebar__dropdown-item"
+                       th:classappend="${active == 'topups'} ? ' is-active' : ''"
+                       href="/staff/topups">
+                        <i class="fa fa-university"></i> Nạp tiền
+                    </a>
+                    <a class="staff-sidebar__link staff-sidebar__dropdown-item"
                        th:classappend="${active == 'withdrawals'} ? ' is-active' : ''"
                        href="/staff/withdrawals"
                        data-required-permission="APPROVE_WITHDRAWALS">
@@ -63,6 +68,12 @@
                 </div>
             </div>
 
+            <a class="staff-sidebar__link"
+               th:classappend="${active == 'categories'} ? ' is-active' : ''"
+               href="/staff/categories"
+               data-required-permission="MANAGE_CATEGORIES">
+                <i class="fa fa-folder-open"></i> Quản lý danh mục
+            </a>
             <a class="staff-sidebar__link"
                th:classappend="${active == 'flags'} ? ' is-active' : ''"
                href="/staff/flags"

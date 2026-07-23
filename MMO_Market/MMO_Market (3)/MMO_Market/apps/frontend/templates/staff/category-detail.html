@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/staff-head :: staffHead('Chi tiết danh mục')}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="staff-page">
+    <div class="ds-container ds-page-shell">
+        <div class="ds-two-column">
+            <aside th:replace="~{fragments/staff-sidebar :: staffSidebar('categories')}"></aside>
+
+            <section class="ds-section">
+                <!-- Breadcrumb -->
+                <nav class="staff-breadcrumb">
+                    <a href="/staff/categories">Quản lý danh mục</a>
+                    <span>/</span>
+                    <span id="catCodeDisplay">#CAT-...</span>
+                </nav>
+
+                <!-- Page Header -->
+                <div class="staff-page-header ds-cluster-between">
+                    <div>
+                        <h1 class="ds-page-title">Chi tiết danh mục</h1>
+                        <p class="ds-page-subtitle">Mã danh mục <strong id="catCodeSubtitle">#CAT-...</strong> — <span id="catNameSubtitle">...</span></p>
+                    </div>
+                    <span class="ds-badge ds-badge-info" id="catStatusBadge">Đang hoạt động</span>
+                </div>
+
+                <!-- Main Grid Layout (Left Details + Right Sticky Summary & Actions) -->
+                <div class="staff-detail-grid">
+                    <div class="ds-stack-md">
+                        <!-- Card 1: Thông tin danh mục -->
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Thông tin danh mục</h2>
+                            </div>
+                            <div style="padding: 20px 24px;">
+                                <dl class="staff-info-list">
+                                    <div class="staff-info-row">
+                                        <dt>Mã danh mục</dt>
+                                        <dd id="infoCatId">-</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Danh mục cha</dt>
+                                        <dd id="infoParentName">-</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Danh mục phụ</dt>
+                                        <dd id="infoCatName" style="font-weight: 700; color: #0f172a;">-</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Mô tả danh mục</dt>
+                                        <dd id="infoDescription" class="ds-text-subtle">-</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Số sản phẩm liên kết</dt>
+                                        <dd id="infoProductCount">-</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Thời gian tạo</dt>
+                                        <dd id="infoCreatedAt">-</dd>
+                                    </div>
+                                    <div class="staff-info-row">
+                                        <dt>Cập nhật lần cuối</dt>
+                                        <dd id="infoUpdatedAt">-</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Chỉnh sửa thông tin danh mục -->
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Chỉnh sửa thông tin danh mục</h2>
+                            </div>
+                            <div style="padding: 20px 24px;">
+                                <form id="editCategoryForm" class="ds-stack-md">
+                                    <div class="ds-form-field">
+                                        <label class="ds-label" for="categoryParentInput">Danh mục cha</label>
+                                        <div class="ds-combobox-wrapper" style="position: relative;">
+                                            <input class="ds-input" type="text" id="categoryParentInput" placeholder="Chọn hoặc nhập tên Danh mục cha (Email, Tài khoản...)" autocomplete="off" style="padding-right: 36px;">
+                                            <button type="button" class="ds-combobox-arrow" id="btnToggleParentDropdown" tabindex="-1" title="Xem danh sách gợi ý" style="position: absolute; right: 0; top: 0; bottom: 0; width: 36px; background: transparent; border: none; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center;">
+                                                <i class="fa fa-chevron-down" style="font-size: 11px;"></i>
+                                            </button>
+                                            <ul class="ds-combobox-menu" id="parentDropdownMenu" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; max-height: 200px; overflow-y: auto; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000; padding: 4px 0; margin: 0; list-style: none;">
+                                                <!-- Dynamic menu options -->
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="ds-form-field">
+                                        <label class="ds-label" for="categoryName">Danh mục phụ <span class="ds-text-danger">*</span></label>
+                                        <input class="ds-input" type="text" id="categoryName" required placeholder="Nhập tên danh mục (ví dụ: Gmail, Hotmail, Key Windows 11...)">
+                                    </div>
+                                    <div class="ds-form-field">
+                                        <label class="ds-label" for="categoryDescription">Mô tả danh mục</label>
+                                        <textarea class="ds-textarea" id="categoryDescription" rows="3" placeholder="Mô tả ngắn gọn về danh mục sản phẩm này..."></textarea>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <button class="ds-btn ds-btn-primary" type="submit" id="btnSaveCategory">
+                                            <i class="fa fa-save"></i> Lưu thay đổi
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Sticky Summary & Actions Card -->
+                    <div class="ds-stack-md staff-sticky-column" style="position: sticky; top: 110px; align-self: start;">
+                        <!-- Single Merged Card: Tóm tắt & Hành động -->
+                        <div class="ds-card">
+                            <div class="ds-card-header">
+                                <h2 class="ds-card-title">Tóm tắt</h2>
+                            </div>
+                            <div style="padding: 20px 24px;" class="ds-stack-sm">
+                                <div class="ds-cluster-between" style="padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">
+                                    <span class="ds-text-subtle">Trạng thái</span>
+                                    <span id="summaryStatusBadge" class="ds-badge ds-badge-info">Đang hoạt động</span>
+                                </div>
+                                <div class="ds-cluster-between" style="margin-top: 12px; padding-bottom: 16px;">
+                                    <span class="ds-text-subtle">Số sản phẩm</span>
+                                    <strong id="summaryProductCount" style="color: #0f172a;">0 SP</strong>
+                                </div>
+
+                                <!-- Integrated Action Buttons -->
+                                <div style="border-top: 1px solid var(--ds-border, #e2e8f0); padding-top: 16px; margin-top: 4px;" class="ds-stack-sm">
+                                    <button class="ds-btn ds-btn-danger" type="button" id="btnToggleStatus" style="width: 100%; justify-content: center;">
+                                        <i class="fa fa-eye-slash"></i> Ẩn danh mục này
+                                    </button>
+                                    <a class="ds-btn ds-btn-outline" href="/staff/categories" style="width: 100%; justify-content: center; text-decoration: none; margin-top: 8px;">
+                                        <i class="fa fa-arrow-left"></i> Quay lại danh sách
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/customer/auth.js}"></script>
+<script th:src="@{/js/staff/staff-ui.js}"></script>
+<script th:src="@{/js/staff/staff-category-detail.js}"></script>
+</body>
+</html>

@@ -14,6 +14,7 @@ public class WalletTransactionDto {
     private String code;
     private String type;
     private Long amount;
+    private Long balanceAfter;
     private String status;
     private String description;
     private String createdAt;

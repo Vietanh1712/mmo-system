@@ -9,13 +9,35 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/features/home.css}">
     <link rel="stylesheet" th:href="@{/css/features/messages.css}">
+    <th:block th:if="${isSellerView}">
+        <link rel="stylesheet" th:href="@{/css/customer/profile.css}">
+        <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
+        <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
+        <link rel="stylesheet" th:href="@{/css/seller/seller.css}">
+    </th:block>
 </head>
 
 <body class="messages-page">
 
     <header th:replace="fragments/header :: header"></header>
 
-    <div class="messages-layout">
+    <th:block th:if="${isSellerView}">
+        <main class="ds-container-fluid admin-shell" style="max-width: 1500px; margin: 0 auto;">
+            <div class="admin-layout ds-two-column">
+                <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('messages')}"></aside>
+                <section class="admin-workspace ds-page-shell" style="padding-right: 20px;">
+                    <th:block th:replace="~{this :: chatInterface}"></th:block>
+                </section>
+            </div>
+        </main>
+    </th:block>
+
+    <th:block th:unless="${isSellerView}">
+        <th:block th:replace="~{this :: chatInterface}"></th:block>
+    </th:block>
+
+    <th:block th:fragment="chatInterface">
+    <div class="messages-layout" th:style="${isSellerView ? 'margin: 0; max-width: 100%; height: calc(100vh - 120px); min-height: 500px; padding: 0;' : ''}">
 
         <!-- Sidebar -->
         <aside class="messages-sidebar" aria-label="Danh sách tin nhắn">
@@ -64,43 +86,7 @@
             </div>
 
             <div class="messages-main__body" id="messages-main-body">
-                <div class="messages-date-badge">TODAY</div>
-
-                <article class="messages-context-card" onclick="window.location.href='/products/1'">
-                    <div class="messages-context-card__thumb"><i class="fa fa-play-circle"></i></div>
-                    <div class="messages-context-card__info">
-                        <div class="messages-context-card__label">ITEM OF DISCUSSION</div>
-                        <div class="messages-context-card__name" id="context-product-name">Tài khoản Netflix Premium 4K UHD 1 Tháng</div>
-                        <div class="messages-context-card__meta">
-                            <span class="messages-context-card__price" id="context-product-price">65.000 VNĐ</span>
-                            <span class="messages-context-card__stock">IN STOCK</span>
-                        </div>
-                    </div>
-                    <i class="fa fa-chevron-right messages-context-card__chevron"></i>
-                </article>
-
-                <div class="msg-row msg-row--left">
-                    <div class="msg-row__avatar">SM</div>
-                    <div class="msg-bubble-wrap">
-                        <div class="msg-bubble msg-bubble--in">Chào bạn! Cảm ơn bạn đã mua sản phẩm tại cửa hàng. Nếu cần hỗ trợ kích hoạt, cứ nhắn em nhé.</div>
-                        <span class="msg-meta">10:15</span>
-                    </div>
-                </div>
-
-                <div class="msg-row msg-row--right">
-                    <div class="msg-bubble-wrap">
-                        <div class="msg-bubble msg-bubble--out">Shop ơi, em chưa nhận được thông tin tài khoản trong đơn #ORD-8842 ạ.</div>
-                        <span class="msg-meta">10:18 <i class="fa fa-check"></i></span>
-                    </div>
-                </div>
-
-                <div class="msg-row msg-row--left">
-                    <div class="msg-row__avatar">SM</div>
-                    <div class="msg-bubble-wrap">
-                        <div class="msg-bubble msg-bubble--in">Dạ em đã gửi lại tài khoản Netflix qua phần chi tiết đơn hàng. Bạn kiểm tra lại giúp em nhé!</div>
-                        <span class="msg-meta">10:24</span>
-                    </div>
-                </div>
+                <!-- Chat messages will be loaded dynamically by JavaScript -->
             </div>
 
             <footer class="messages-main__footer">
@@ -133,6 +119,7 @@
         </section>
 
     </div>
+    </th:block>
 
     <footer th:replace="fragments/footer :: footer"></footer>
 
@@ -161,6 +148,34 @@
 
             // Load context product if productId query parameter exists
             const urlParams = new URLSearchParams(window.location.search);
+            const sellerIdParam = urlParams.get('sellerId');
+            const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user");
+            if (userString && sellerIdParam) {
+                try {
+                    const user = JSON.parse(userString);
+                    if (user && Number(user.id) === Number(sellerIdParam)) {
+                        sessionStorage.setItem('pendingToast', JSON.stringify({
+                            type: 'warning',
+                            message: 'Bạn không thể nhắn tin cho chính mình.'
+                        }));
+                        window.location.href = '/messages';
+                        return;
+                    }
+                } catch(e){}
+            }
+
+            // Check if there is a pending toast to display
+            const pending = sessionStorage.getItem('pendingToast');
+            if (pending) {
+                try {
+                    const toastInfo = JSON.parse(pending);
+                    if (toastInfo.type === 'warning' && typeof showWarningToast === 'function') {
+                        showWarningToast(toastInfo.message);
+                    }
+                } catch(e){}
+                sessionStorage.removeItem('pendingToast');
+            }
+
             const productIdParam = urlParams.get('productId');
             if (productIdParam) {
                 try {

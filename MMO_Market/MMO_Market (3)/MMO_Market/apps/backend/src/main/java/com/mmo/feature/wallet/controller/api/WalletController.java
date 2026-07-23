@@ -84,7 +84,7 @@ public class WalletController {
         try {
             User user = userRepository.findByIdAndIsDeleteFalse(userId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng."));
-            SellerBankInfo bank = sellerBankInfoRepository.findByUserAndIsDeleteFalse(user).orElse(null);
+            SellerBankInfo bank = sellerBankInfoRepository.findFirstByUserAndIsDeleteFalseOrderByIdDesc(user).orElse(null);
 
             Map<String, Object> result = new HashMap<>();
             result.put("bankName", bank != null ? bank.getBankName() : "");
@@ -111,7 +111,7 @@ public class WalletController {
                 return ResponseEntity.badRequest().body(Map.of("message", "Tên ngân hàng và số tài khoản không được để trống."));
             }
 
-            SellerBankInfo bank = sellerBankInfoRepository.findByUserAndIsDeleteFalse(user)
+            SellerBankInfo bank = sellerBankInfoRepository.findFirstByUserAndIsDeleteFalseOrderByIdDesc(user)
                     .orElse(new SellerBankInfo());
             bank.setUser(user);
             bank.setBankName(bankName);
@@ -182,11 +182,6 @@ public class WalletController {
                         try { return Double.parseDouble(c.getConfigValue()); }
                         catch (NumberFormatException e) { return 1.5; }
                     }).orElse(1.5);
-            long minWithdrawFee = systemConfigurationRepository.findByConfigKey("MIN_WITHDRAW_FEE_VND")
-                    .map(c -> {
-                        try { return Long.parseLong(c.getConfigValue()); }
-                        catch (NumberFormatException e) { return 10000L; }
-                    }).orElse(10000L);
             long minWithdrawalLimit = systemConfigurationRepository.findByConfigKey("MIN_WITHDRAWAL_VND")
                     .map(c -> {
                         try { return Long.parseLong(c.getConfigValue()); }
@@ -198,12 +193,15 @@ public class WalletController {
                         catch (NumberFormatException e) { return 50000000L; }
                     }).orElse(50000000L);
 
+            boolean requireWithdraw2FA = systemConfigurationRepository.findByConfigKey("REQUIRE_WITHDRAW_2FA")
+                    .map(c -> Boolean.parseBoolean(c.getConfigValue()))
+                    .orElse(false);
+
             return ResponseEntity.ok(Map.of(
                     "withdrawalFeePercent", withdrawalFeePercent,
-                    "minWithdrawFee", minWithdrawFee,
                     "minWithdrawalLimit", minWithdrawalLimit,
                     "maxWithdrawalLimit", maxWithdrawalLimit,
-                    "requireWithdraw2FA", false
+                    "requireWithdraw2FA", requireWithdraw2FA
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));

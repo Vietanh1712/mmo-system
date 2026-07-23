@@ -104,6 +104,7 @@ public class PreOrderService {
                         .build())
                 .collect(Collectors.toList());
     }
+
     @Transactional(readOnly = true)
     public List<PreOrderResponse> getPreOrdersBySeller(Long sellerId) {
         if (sellerId == null) {
@@ -158,6 +159,39 @@ public class PreOrderService {
                 .expectedPriceVnd(saved.getExpectedPriceVnd())
                 .status(saved.getStatus())
                 .notes(saved.getNotes())
+                .deliveryData(saved.getDeliveryData())
+                .createdAt(saved.getCreatedAt() != null ? saved.getCreatedAt().format(formatter) : "")
+                .build();
+    }
+
+    @Transactional
+    public PreOrderResponse deliverPreOrder(Long sellerId, Long preOrderId, String deliveryData) {
+        PreOrder preOrder = preOrderRepository.findById(preOrderId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn đặt trước"));
+
+        if (!preOrder.getProduct().getSeller().getId().equals(sellerId)) {
+            throw new RuntimeException("Bạn không có quyền thực hiện thao tác này");
+        }
+
+        if (!preOrder.getStatus().equalsIgnoreCase("PENDING") && !preOrder.getStatus().equalsIgnoreCase("Chờ xử lý")) {
+            throw new RuntimeException("Chỉ có thể trả hàng cho đơn đang chờ xử lý");
+        }
+
+        preOrder.setStatus("COMPLETED");
+        preOrder.setDeliveryData(deliveryData);
+        PreOrder saved = preOrderRepository.save(preOrder);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        return PreOrderResponse.builder()
+                .id(saved.getId())
+                .productId(saved.getProduct().getId())
+                .productName(saved.getProduct().getName())
+                .customerEmail(saved.getCustomer().getEmail())
+                .quantity(saved.getQuantity())
+                .expectedPriceVnd(saved.getExpectedPriceVnd())
+                .status(saved.getStatus())
+                .notes(saved.getNotes())
+                .deliveryData(saved.getDeliveryData())
                 .createdAt(saved.getCreatedAt() != null ? saved.getCreatedAt().format(formatter) : "")
                 .build();
     }

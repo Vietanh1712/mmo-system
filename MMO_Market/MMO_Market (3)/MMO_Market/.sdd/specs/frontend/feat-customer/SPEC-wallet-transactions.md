@@ -47,9 +47,9 @@ Trang Lịch sử giao dịch ví cho phép người dùng theo dõi toàn bộ 
 │  │                      │  ├─────────────────────────────────┤  │
 │  │                      │  │ Danh sách giao dịch             │  │
 │  │                      │  │ Hiển thị 1-2/2 giao dịch.       │  │
-│  │                      │  │ STT | Mã GD | Loại | Mô tả | Tiền | Trạng thái │  │
-│  │                      │  │ 1 | MMO-1 | Thanh toán | ... | -65k | Thành công │  │
-│  │                      │  │ 2 | SP-99 | Nạp tiền   | ... | +500k| Thành công │  │
+│  │                      │  │ STT | Mã GD | Loại | Mô tả | Biến động | Số dư | Trạng thái │  │
+│  │                      │  │ 1 | MMO-1 | Thanh toán | ... | -65k | 100k | Thành công │  │
+│  │                      │  │ 2 | SP-99 | Nạp tiền   | ... | +500k| 165k | Thành công │  │
 │  │                      │  │                                 │  │
 │  │                      │  │  << <  [1]  > >>     [Hiển thị 5/trang]│  │
 │  └──────────────────────┘  └─────────────────────────────────┘  │
@@ -76,8 +76,9 @@ Trang Lịch sử giao dịch ví cho phép người dùng theo dõi toàn bộ 
 * Nút `[ Làm mới bộ lọc ]` (Clear filters) và `[ Tìm kiếm ]` (Submit filter).
 
 ### 3.4 Bảng Danh Sách Giao Dịch & Phân Trang
-* Bảng gồm các cột: STT, Mã giao dịch, Loại, Mô tả, Số tiền, Trạng thái.
-* **Số tiền:** Tô màu Xanh lá (`+`) cho dòng tiền vào, màu Đỏ (`-`) cho dòng tiền ra.
+* Bảng gồm các cột: STT, Mã giao dịch, Loại, Mô tả, Biến động, Số dư, Trạng thái, Thời gian.
+* **Biến động:** Tô màu Xanh lá (`+`) cho dòng tiền vào, màu Đỏ (`-`) cho dòng tiền ra.
+* **Số dư:** Hiển thị số dư tài khoản sau khi thực hiện giao dịch (Balance After).
 * **Trạng thái:** Sử dụng badge (Thành công - Xanh lá, Đang xử lý - Vàng/Cam, Thất bại - Đỏ).
 * Có phân trang (Pagination) ở dưới cùng, hỗ trợ đổi số dòng hiển thị trên một trang (ví dụ: 5, 10, 20).
 

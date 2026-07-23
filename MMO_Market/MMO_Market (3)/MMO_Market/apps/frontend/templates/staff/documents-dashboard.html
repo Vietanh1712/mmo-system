@@ -41,6 +41,11 @@
                         <p class="staff-stat-card__value" th:text="${dashboard.pendingTickets}"></p>
                         <p class="staff-stat-card__hint">Yêu cầu hỗ trợ chưa giải quyết</p>
                     </div>
+                    <div class="ds-card staff-stat-card yellow" style="border-left: 4px solid #f59e0b !important;">
+                        <p class="staff-stat-card__label">Nạp tiền cần xử lý</p>
+                        <p class="staff-stat-card__value" th:text="${dashboard.pendingTopups}"></p>
+                        <p class="staff-stat-card__hint">Đơn lỗi / Chờ kích hoạt thủ công</p>
+                    </div>
                 </div>
 
                 <div class="ds-card">
@@ -62,6 +67,11 @@
                             <div class="staff-quick-card__icon staff-quick-card__icon--muted"><i class="fa fa-exchange"></i></div>
                             <h3>Lịch sử giao dịch</h3>
                             <p>Xem lịch sử biến động số dư, giao dịch nạp rút, mua bán trên toàn hệ thống.</p>
+                        </a>
+                        <a class="ds-card staff-quick-card" href="/staff/topups">
+                            <div class="staff-quick-card__icon staff-quick-card__icon--primary" style="background: #eff6ff; color: #2563eb;"><i class="fa fa-university"></i></div>
+                            <h3>Quản lý nạp tiền</h3>
+                            <p>Theo dõi các giao dịch nạp SePay và kích hoạt thủ công các đơn nạp thất bại do gõ sai nội dung.</p>
                         </a>
                         <a class="ds-card staff-quick-card" href="/staff/withdrawals">
                             <div class="staff-quick-card__icon staff-quick-card__icon--info"><i class="fa fa-money"></i></div>
