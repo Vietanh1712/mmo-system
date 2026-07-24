@@ -10,6 +10,21 @@
     <link rel="stylesheet" th:href="@{/css/components/common.css}">
     <link rel="stylesheet" th:href="@{/css/customer/authen.css}">
 
+    <style>
+        .resend-text {
+            color: #475569 !important; /* Muted slate gray */
+        }
+        .resend-text a {
+            color: #ea580c !important; /* Brand orange color from DESIGN.md */
+            font-weight: 600;
+        }
+        .resend-text a.disabled {
+            color: #94a3b8 !important; /* Slate color when disabled */
+            text-decoration: none !important;
+            cursor: default !important;
+            pointer-events: none;
+        }
+    </style>
 </head>
 <body class="auth-layout">
 

@@ -11,6 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import com.mmo.feature.staff.service.StaffDashboardService;
 import com.mmo.shared.dal.ComplaintRepository;
 import com.mmo.shared.dal.TransactionRepository;
@@ -25,10 +26,15 @@ import com.mmo.shared.model.Notification;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Duration;
 import java.util.List;
+import java.util.UUID;
 
 @Controller
 @RequestMapping("/staff")
@@ -271,11 +277,39 @@ public class StaffController {
     public String updateWithdrawalStatus(
             @RequestParam Long id,
             @RequestParam String status,
+            @RequestParam(value = "proofFile", required = false) MultipartFile proofFile,
             RedirectAttributes redirectAttributes
     ) {
         Object principal243 = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long reviewerId = (principal243 instanceof Long) ? (Long) principal243 : null;
-        withdrawalService.updateWithdrawalStatus(id, status, reviewerId, null);
+        
+        String proofFileUrl = null;
+        try {
+            if ("Completed".equalsIgnoreCase(status)) {
+                if (proofFile == null || proofFile.isEmpty()) {
+                    throw new RuntimeException("Vui lòng đính kèm hình ảnh giao dịch để hoàn tất.");
+                }
+                String uploadDir = "uploads";
+                File dir = new File(uploadDir);
+                if (!dir.exists()) {
+                    dir.mkdirs();
+                }
+                String originalFilename = proofFile.getOriginalFilename();
+                String extension = "";
+                if (originalFilename != null && originalFilename.contains(".")) {
+                    extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                }
+                String fileName = UUID.randomUUID().toString() + extension;
+                Path path = Paths.get(uploadDir, fileName);
+                Files.copy(proofFile.getInputStream(), path);
+                proofFileUrl = "/uploads/" + fileName;
+            }
+
+            withdrawalService.updateWithdrawalStatus(id, status, reviewerId, null, proofFileUrl);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi duyệt rút tiền: " + e.getMessage());
+            return "redirect:/staff/withdrawals/detail?id=" + id;
+        }
 
         Withdrawal withdrawal = withdrawalRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Withdrawal request not found"));
@@ -317,7 +351,7 @@ public class StaffController {
     ) {
         Object principal284 = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long reviewerId = (principal284 instanceof Long) ? (Long) principal284 : null;
-        withdrawalService.updateWithdrawalStatus(id, "Rejected", reviewerId, reason);
+        withdrawalService.updateWithdrawalStatus(id, "Rejected", reviewerId, reason, null);
 
         Withdrawal withdrawal = withdrawalRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Withdrawal request not found"));

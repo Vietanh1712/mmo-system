@@ -1,6 +1,6 @@
-﻿(function () {
-const TOPUP_MIN_AMOUNT = 10000;
-const TOPUP_MAX_AMOUNT = 50000000;
+(function () {
+let topupMinAmount = 10000;
+let topupMaxAmount = 50000000;
 
 let topupProfile = null;
 let accountSidebar = null;
@@ -49,6 +49,17 @@ async function loadTopupPage() {
         initialBalance = topupProfile.balanceVnd || 0;
         accountSidebar.render(topupProfile);
         document.getElementById('topupBalance').textContent = formatMoney(initialBalance);
+
+        try {
+            const limitsResponse = await fetch('/api/public/config/deposit-limits');
+            if (limitsResponse.ok) {
+                const limitsData = await limitsResponse.json();
+                topupMinAmount = limitsData.minDepositLimit || topupMinAmount;
+                topupMaxAmount = limitsData.maxDepositLimit || topupMaxAmount;
+            }
+        } catch (err) {
+            console.warn('Failed to load deposit limits from backend', err);
+        }
 
         try {
             const configResponse = await fetch('/api/sepay/config');
@@ -133,7 +144,7 @@ function startBalancePolling(topupAmount) {
 
     pollingInterval = setInterval(async () => {
         try {
-            const response = await authFetch('/v1/profile');
+            const response = await authFetch('/v1/profile?t=' + new Date().getTime());
             if (response.ok) {
                 const profile = await response.json();
                 const currentBalance = profile.balanceVnd || 0;
@@ -151,6 +162,10 @@ function startBalancePolling(topupAmount) {
                     if (badge) {
                         badge.textContent = 'Thành công';
                         badge.className = 'ds-badge ds-badge-success';
+                    }
+
+                    if (accountSidebar && topupProfile) {
+                        accountSidebar.render(topupProfile);
                     }
 
                     // Cập nhật số dư mới vào sessionStorage và localStorage
@@ -189,13 +204,13 @@ function validateAmount(amount) {
         return false;
     }
 
-    if (amount < TOPUP_MIN_AMOUNT) {
-        showAmountError(`Số tiền nạp tối thiểu là ${formatMoney(TOPUP_MIN_AMOUNT)}.`);
+    if (amount < topupMinAmount) {
+        showAmountError(`Số tiền nạp tối thiểu là ${formatMoney(topupMinAmount)}.`);
         return false;
     }
 
-    if (amount > TOPUP_MAX_AMOUNT) {
-        showAmountError(`Số tiền nạp tối đa là ${formatMoney(TOPUP_MAX_AMOUNT)}.`);
+    if (amount > topupMaxAmount) {
+        showAmountError(`Số tiền nạp tối đa là ${formatMoney(topupMaxAmount)}.`);
         return false;
     }
 

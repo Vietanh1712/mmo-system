@@ -69,6 +69,7 @@ function translateStatus(status) {
         'held': 'Tạm giữ (Bảo lãnh)',
         'paid': 'Đã thanh toán',
         'delivered': 'Đã giao',
+        'processing': 'Đang xử lý',
         'completed': 'Hoàn tất',
         'cancelled': 'Đã hủy',
         'disputed': 'Tranh chấp',
@@ -1204,6 +1205,12 @@ async function initTransactions() {
                     <td class="text-right text-success">+${formatVND(t.netEarningVnd)}</td>
                     <td><span class="badge ${badgeClass}">${translateStatus(t.status)}</span></td>
                     <td>${t.createdAt.replace('T', ' ').substring(0, 16)}</td>
+                    <td class="text-right">
+                        ${(t.status === 'Disputed' || t.status === 'Khiếu nại')
+                            ? `<a class="icon-button" href="/seller/complaints" title="Xem khiếu nại"><i class="fa fa-warning"></i></a>`
+                            : `<a class="icon-button" href="/messages?to=${t.customerEmail}" title="Nhắn tin"><i class="fa fa-envelope"></i></a>
+                               <a class="icon-button" href="#" title="Chi tiết" onclick="showToast('Tính năng đang phát triển', 'info'); return false;"><i class="fa fa-info-circle"></i></a>`}
+                    </td>
                 </tr>
             `;
         }).join('');
@@ -1310,7 +1317,7 @@ async function initWithdrawals() {
         let minLimit = 50000;
         let maxLimit = 50000000;
         let feePercent = 1.5;
-        let minFee = 10000;
+        let minFee = 5000; // Thêm minFee mặc định
         let require2FA = true;
 
         try {
@@ -1319,8 +1326,7 @@ async function initWithdrawals() {
                 const configData = await configRes.json();
                 minLimit = configData.minWithdrawalLimit || minLimit;
                 maxLimit = configData.maxWithdrawalLimit || maxLimit;
-                feePercent = configData.withdrawalFeePercent || feePercent;
-                minFee = configData.minWithdrawFee || minFee;
+                feePercent = configData.withdrawalFeePercent !== undefined ? configData.withdrawalFeePercent : feePercent;
                 require2FA = configData.requireWithdraw2FA !== undefined ? configData.requireWithdraw2FA : require2FA;
             }
         } catch (e) {
@@ -1335,7 +1341,7 @@ async function initWithdrawals() {
         
         const hintEl = document.querySelector('.profile-edit-form__hint');
         if (hintEl) {
-            hintEl.textContent = `Hạn mức: ${formatVND(minLimit)} - ${formatVND(maxLimit)} · Phí: ${feePercent}% (tối thiểu ${formatVND(minFee)})`;
+            hintEl.textContent = `Hạn mức: ${formatVND(minLimit)} - ${formatVND(maxLimit)} · Phí rút tiền: ${feePercent}%`;
         }
 
         const inputEl = document.getElementById('withdrawAmount');
@@ -1364,10 +1370,7 @@ async function initWithdrawals() {
                     feeInfoEl.innerHTML = '';
                     return;
                 }
-                let fee = Math.floor(val * (feePercent / 100));
-                if (fee < minFee) {
-                    fee = minFee;
-                }
+                const fee = Math.floor(val * (feePercent / 100));
                 const total = val + fee;
                 feeInfoEl.innerHTML = `
                     <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
@@ -1412,9 +1415,6 @@ async function initWithdrawals() {
                 }
 
                 let fee = Math.floor(amount * (feePercent / 100));
-                if (fee < minFee) {
-                    fee = minFee;
-                }
                 const totalDeducted = amount + fee;
 
                 if (dashData.balanceVnd < totalDeducted) {
@@ -1457,21 +1457,57 @@ async function initWithdrawals() {
                         showToast(err.message, 'error');
                     }
                 } else {
-                    const confirmNo2fa = confirm(`Xác nhận tạo yêu cầu rút tiền ${formatVND(amount)}? Phí rút là ${formatVND(fee)}. Tổng số tiền trừ khỏi ví: ${formatVND(totalDeducted)}.`);
-                    if (!confirmNo2fa) return;
+                    const modalEl = document.getElementById('confirmWithdrawModal');
+                    const modalTextEl = document.getElementById('confirmWithdrawText');
+                    const btnConfirm = document.getElementById('btnConfirmWithdrawal');
 
-                    try {
-                        const postRes = await sellerFetch('/withdrawals', {
-                            method: 'POST',
-                            body: JSON.stringify({ amountVnd: amount })
+                    if (modalEl && modalTextEl && btnConfirm) {
+                        modalTextEl.innerHTML = `Xác nhận tạo yêu cầu rút tiền <strong>${formatVND(amount)}</strong>?<br><br>Phí rút là: <strong style="color:#ef4444">${formatVND(fee)}</strong><br>Tổng số tiền trừ khỏi ví: <strong style="color:#2563eb">${formatVND(totalDeducted)}</strong>`;
+                        modalEl.style.display = 'flex';
+
+                        // Remove old listeners to avoid multiple submissions
+                        const newBtnConfirm = btnConfirm.cloneNode(true);
+                        btnConfirm.parentNode.replaceChild(newBtnConfirm, btnConfirm);
+
+                        newBtnConfirm.addEventListener('click', async () => {
+                            newBtnConfirm.disabled = true;
+                            newBtnConfirm.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
+
+                            try {
+                                const postRes = await sellerFetch('/withdrawals', {
+                                    method: 'POST',
+                                    body: JSON.stringify({ amountVnd: amount })
+                                });
+                                const postData = await postRes.json();
+                                if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
+                                
+                                showToast(postData.message || 'Đã tạo yêu cầu rút tiền thành công!');
+                                setTimeout(() => window.location.reload(), 1500);
+                            } catch (err) {
+                                showToast(err.message, 'error');
+                                newBtnConfirm.disabled = false;
+                                newBtnConfirm.innerHTML = 'Xác nhận';
+                                modalEl.style.display = 'none';
+                            }
                         });
-                        const postData = await postRes.json();
-                        if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
+                    } else {
+                        // Fallback to native confirm if modal HTML is missing
+                        const confirmNo2fa = confirm(`Xác nhận tạo yêu cầu rút tiền ${formatVND(amount)}? Phí rút là ${formatVND(fee)}. Tổng số tiền trừ khỏi ví: ${formatVND(totalDeducted)}.`);
+                        if (!confirmNo2fa) return;
 
-                        showToast(postData.message || 'Đã tạo yêu cầu rút tiền thành công!');
-                        setTimeout(() => window.location.reload(), 1500);
-                    } catch (err) {
-                        showToast(err.message, 'error');
+                        try {
+                            const postRes = await sellerFetch('/withdrawals', {
+                                method: 'POST',
+                                body: JSON.stringify({ amountVnd: amount })
+                            });
+                            const postData = await postRes.json();
+                            if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
+                            
+                            showToast(postData.message || 'Đã tạo yêu cầu rút tiền thành công!');
+                            setTimeout(() => window.location.reload(), 1500);
+                        } catch (err) {
+                            showToast(err.message, 'error');
+                        }
                     }
                 }
             });
@@ -1956,11 +1992,30 @@ async function initWithdrawalDetail() {
         const proofSection = document.querySelector('.proof-placeholder');
         if (proofSection) {
             if (w.proofFile) {
-                proofSection.innerHTML = `
-                    <a href="/images/${w.proofFile}" target="_blank" style="display:block; text-align:center;">
-                        <img src="/images/${w.proofFile}" alt="Biên lai rút tiền" style="max-width:100%; max-height:300px; border-radius:8px; border:1px solid var(--seller-border);"/>
-                    </a>
-                `;
+                // Determine URL for proofFile (it might already start with '/' e.g., '/uploads/...')
+                let proofUrl = w.proofFile;
+                if (!proofUrl.startsWith('http') && !proofUrl.startsWith('/')) {
+                    proofUrl = '/uploads/' + proofUrl;
+                }
+                console.log("Seller proofUrl parsed:", proofUrl);
+                
+                let isImage = proofUrl.toLowerCase().endsWith('.jpg') || proofUrl.toLowerCase().endsWith('.jpeg') || proofUrl.toLowerCase().endsWith('.png');
+                
+                if (isImage) {
+                    proofSection.innerHTML = `
+                        <a href="${proofUrl}" target="_blank" style="display:block; text-align:center;">
+                            <img src="${proofUrl}" alt="Biên lai rút tiền" style="max-width:100%; max-height:300px; border-radius:8px; border:1px solid var(--seller-border);"/>
+                        </a>
+                    `;
+                } else {
+                    proofSection.innerHTML = `
+                        <div style="padding: 16px; text-align: center; background: #f8fafc; border:1px solid var(--seller-border); border-radius:8px;">
+                            <a href="${proofUrl}" target="_blank" class="ds-btn" style="display: inline-block; padding: 8px 16px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 4px;">
+                                <i class="fa fa-file"></i> Tải xuống hóa đơn/chứng từ
+                            </a>
+                        </div>
+                    `;
+                }
             } else {
                 proofSection.innerHTML = `
                     <div style="text-align:center; padding: 20px; background:#f8fafc; border:1px dashed var(--seller-border); border-radius:8px; color:var(--seller-muted);">
@@ -2001,8 +2056,9 @@ async function initPreOrders() {
         }
 
         tbody.innerHTML = orders.map(o => {
-            const statusClass = (o.status === 'Chờ xử lý' || o.status === 'PENDING') ? 'pending' 
-                              : (o.status === 'Hoàn thành' || o.status === 'COMPLETED') ? 'ok' 
+            const st = (o.status || '').toUpperCase();
+            const statusClass = (st === 'PENDING' || o.status === 'Chờ xử lý') ? 'pending' 
+                              : (st === 'COMPLETED' || o.status === 'Hoàn thành') ? 'ok' 
                               : 'locked';
 
             return `
@@ -2015,14 +2071,16 @@ async function initPreOrders() {
                     <td><span class="badge ${statusClass}">${translateStatus(o.status)}</span></td>
                     <td>${o.createdAt ? new Date(o.createdAt).toLocaleString('vi-VN') : ''}</td>
                     <td class="text-right">
-                        ${(o.status === 'PENDING' || o.status === 'Chờ xử lý') ? `
-                        <button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px; margin-right: 4px;" onclick="updatePreOrderStatus(${o.id}, 'COMPLETED')">
-                            <i class="fa fa-check"></i> Hoàn thành
+                        ${(st === 'PENDING' || o.status === 'Chờ xử lý') ? `
+                        <button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px; margin-right: 4px; background: var(--seller-primary); color: white; border: none;" onclick="openDeliveryModal(${o.id})">
+                            <i class="fa fa-paper-plane"></i> Trả hàng
                         </button>
                         <button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px; color: var(--seller-danger); border-color: var(--seller-danger);" onclick="updatePreOrderStatus(${o.id}, 'CANCELLED')">
                             <i class="fa fa-times"></i> Hủy
                         </button>
-                        ` : ''}
+                        ` : `<button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px;" onclick="showToast('Nội dung trả: ${o.deliveryData ? o.deliveryData.replace(/\\n/g, ' ') : 'N/A'}', 'info')">
+                                <i class="fa fa-eye"></i> Xem trả hàng
+                             </button>`}
                     </td>
                 </tr>
             `;
@@ -2060,5 +2118,61 @@ async function updatePreOrderStatus(id, status) {
     }
 }
 
+let currentDeliveryPreOrderId = null;
+
+function openDeliveryModal(id) {
+    currentDeliveryPreOrderId = id;
+    const modal = document.getElementById('deliveryModal');
+    if (modal) {
+        document.getElementById('deliveryDataInput').value = '';
+        modal.style.display = 'flex';
+    }
+}
+
+function closeDeliveryModal() {
+    currentDeliveryPreOrderId = null;
+    const modal = document.getElementById('deliveryModal');
+    if (modal) modal.style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const btnSubmitDelivery = document.getElementById('btnSubmitDelivery');
+    if (btnSubmitDelivery) {
+        btnSubmitDelivery.addEventListener('click', async () => {
+            const data = document.getElementById('deliveryDataInput').value.trim();
+            if (!data) {
+                showToast('Vui lòng nhập nội dung trả hàng.', 'error');
+                return;
+            }
+            if (!currentDeliveryPreOrderId) return;
+            
+            try {
+                const token = sessionStorage.getItem('accessToken');
+                const res = await fetch(`/api/v1/pre-orders/seller/${currentDeliveryPreOrderId}/deliver`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ deliveryData: data })
+                });
+                
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.message || 'Trả hàng thất bại.');
+                }
+                
+                showToast('Đã trả hàng cho khách thành công!');
+                closeDeliveryModal();
+                initPreOrders();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        });
+    }
+});
+
 window.initPreOrders = initPreOrders;
 window.updatePreOrderStatus = updatePreOrderStatus;
+window.openDeliveryModal = openDeliveryModal;
+window.closeDeliveryModal = closeDeliveryModal;

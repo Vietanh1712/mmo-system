@@ -134,8 +134,8 @@
                                 </td>
                                 <td class="ds-table-center">
                                     <span class="ds-badge"
-                                          th:classappend="${#strings.toLowerCase(w.status) == 'approved' ? 'ds-badge-success' : (#strings.toLowerCase(w.status) == 'rejected' ? 'ds-badge-danger' : 'ds-badge-warning')}"
-                                          th:text="${#strings.toLowerCase(w.status) == 'pending' ? 'Chờ duyệt' : (#strings.toLowerCase(w.status) == 'approved' ? 'Hoàn tất' : (#strings.toLowerCase(w.status) == 'rejected' ? 'Từ chối' : w.status))}">
+                                          th:classappend="${#strings.toLowerCase(w.status) == 'approved' || #strings.toLowerCase(w.status) == 'completed' ? 'ds-badge-success' : (#strings.toLowerCase(w.status) == 'rejected' ? 'ds-badge-danger' : (#strings.toLowerCase(w.status) == 'processing' ? 'ds-badge-info' : 'ds-badge-warning'))}"
+                                          th:text="${#strings.toLowerCase(w.status) == 'pending' ? 'Chờ duyệt' : (#strings.toLowerCase(w.status) == 'processing' ? 'Đang xử lý' : (#strings.toLowerCase(w.status) == 'approved' || #strings.toLowerCase(w.status) == 'completed' ? 'Hoàn tất' : (#strings.toLowerCase(w.status) == 'rejected' ? 'Từ chối' : w.status)))}">
                                     </span>
                                 </td>
                                 <td

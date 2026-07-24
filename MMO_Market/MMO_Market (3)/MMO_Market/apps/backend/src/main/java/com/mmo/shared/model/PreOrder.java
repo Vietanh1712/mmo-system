@@ -46,6 +46,9 @@ public class PreOrder {
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String notes;
 
+    @Column(columnDefinition = "NVARCHAR(MAX)")
+    private String deliveryData;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

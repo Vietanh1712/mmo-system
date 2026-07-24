@@ -33,4 +33,24 @@ public class PublicSystemConfigController {
         response.put("shopOpeningFee", fee);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/deposit-limits")
+    public ResponseEntity<Map<String, Long>> getDepositLimits() {
+        long minDeposit = systemConfigurationRepository.findByConfigKey("MIN_DEPOSIT_LIMIT_VND")
+                .map(config -> {
+                    try { return Long.parseLong(config.getConfigValue()); }
+                    catch (NumberFormatException e) { return 10000L; }
+                }).orElse(10000L);
+
+        long maxDeposit = systemConfigurationRepository.findByConfigKey("MAX_DEPOSIT_LIMIT_VND")
+                .map(config -> {
+                    try { return Long.parseLong(config.getConfigValue()); }
+                    catch (NumberFormatException e) { return 50000000L; }
+                }).orElse(50000000L);
+
+        Map<String, Long> response = new HashMap<>();
+        response.put("minDepositLimit", minDeposit);
+        response.put("maxDepositLimit", maxDeposit);
+        return ResponseEntity.ok(response);
+    }
 }
