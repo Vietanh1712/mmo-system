@@ -1,33 +1,42 @@
 # TASKS — Seller Console & Shop Management (`feat-seller`)
 
-> **Feature ID:** `feat-seller` | **UC Coverage:** UC-04 (Seller Registration)
-> **Phiên bản:** 1.0 | **Cập nhật:** 2026-06-27
+> **Feature ID:** `feat-seller` | **UC Coverage:** UC-04 (Seller Registration), UC-05 (Seller Console)
+> **Phiên bản:** 2.0 | **Cập nhật:** 2026-07-24
 
 ---
 
-## Phase 1: Database & Entities
+## Phase 1: Seller Registration (Đăng ký Shop)
 
-- [x] **1.1** Database schema tạo các bảng `SellerRegistrations` và `SellerBankInfo` liên kết khóa ngoại tới `Users`.
-- [x] **1.2** JPA Entities `SellerRegistration` và `SellerBankInfo` — map đúng thông tin tên cửa hàng `shop_name`, mô tả và chi tiết ngân hàng để rút tiền.
+- [x] **1.1** Entity & Repository: Tạo `SellerRegistration`, `SellerBankInfo` và các interface repository liên quan.
+- [x] **1.2** Business Logic: Cài đặt luồng Auto-Approve trong `ShopRegistrationService.submitRegistration()` kiểm tra trạng thái KYC, tự động cập nhật User Role thành `SELLER`.
+- [x] **1.3** API Endpoint: Viết `ShopRegistrationController` cho API `POST /api/v1/shop-registrations`.
 
-## Phase 2: Repositories
+## Phase 2: Seller Dashboard & Info
 
-- [x] **2.1** `SellerRegistrationRepository` — tìm kiếm hồ sơ cửa hàng theo người dùng `findByUserId`.
-- [x] **2.2** `SellerBankInfoRepository` — lấy cấu hình ngân hàng của Seller.
+- [x] **2.1** Tích hợp hàm xem số liệu thống kê `/api/seller/dashboard` (đếm completedSales, totalRevenue, activeProductsCount, openComplaints).
+- [x] **2.2** API quản lý Thông tin Shop (`/api/seller/shop-info`).
+- [x] **2.3** Cài đặt chức năng Tạm đóng/Mở cửa hàng (`/api/seller/shop-status`).
 
-## Phase 3: DTOs & Validation
+## Phase 3: Quản lý Sản phẩm & Biến thể (Products & Variants)
 
-- [x] **3.1** `ShopRegistrationRequest` — validate bắt buộc có tên Shop và số tài khoản ngân hàng.
+- [x] **3.1** API Danh sách và Chi tiết sản phẩm (`GET /api/seller/products`, `/api/seller/products/{id}`).
+- [x] **3.2** API CRUD Sản phẩm (`POST`, `PUT`, `DELETE /api/seller/products`). Ràng buộc theo cấp độ Shop Level và tài khoản âm (`balanceVnd < 0`).
+- [x] **3.3** API CRUD Biến thể (`POST`, `PUT`, `DELETE /api/seller/variants`).
 
-## Phase 4: Business Logic (Services)
+## Phase 4: Quản lý Kho tài sản số (Digital Assets)
 
-- [x] **4.1** `ShopRegistrationService.registerShop()` — xác minh tài khoản đã được KYC thành công trước khi phê duyệt nâng cấp vai trò lên `Seller`.
+- [x] **4.1** API Upload Hàng loạt Tài sản số (`POST /api/seller/digital-assets`). Hỗ trợ loại ACCOUNT, KEY, GAME_CARD.
+- [x] **4.2** API Liệt kê và Xóa tài sản (`GET`, `DELETE`).
+- [x] **4.3** Logic tự động cập nhật số lượng tồn kho `variant.stock` khi thêm/xóa tài sản.
 
-## Phase 5: Controllers & Security
+## Phase 5: Giao dịch & Rút tiền (Transactions & Withdrawals)
 
-- [x] **5.1** `ShopRegistrationController` — API đăng ký `POST /api/v1/shop-registrations`.
-- [x] **5.2** `SellerController` — cung cấp cổng thông tin Seller Console chỉ truy cập được bởi người dùng có vai trò `Seller`.
+- [x] **5.1** API Lịch sử giao dịch bán hàng (`GET /api/seller/transactions`).
+- [x] **5.2** API Danh sách yêu cầu rút tiền (`GET /api/seller/withdrawals`).
+- [x] **5.3** API Yêu cầu rút tiền mới (`POST /api/seller/withdrawals`) tích hợp với `WithdrawalService`.
 
-## Phase 6: Testing
+## Phase 6: Hỗ trợ, Đánh giá & Báo cáo (Complaints, Reviews, Flags)
 
-- [x] **6.1** Viết kiểm thử tự động xác minh người dùng chưa KYC sẽ bị hệ thống từ chối đăng ký shop.
+- [x] **6.1** API Thống kê chuyên sâu (`GET /api/seller/statistics`) - trả về biểu đồ doanh thu tuần, top sản phẩm.
+- [x] **6.2** API Quản lý Khiếu nại (`GET /api/seller/complaints`, trả lời chat `POST /api/seller/complaints/{id}/chat`).
+- [x] **6.3** API Xem đánh giá khách hàng (`GET /api/seller/reviews`) và cờ vi phạm Shop (`GET /api/seller/shop-flags`).

@@ -33,11 +33,11 @@ Người dùng đã hoàn thành KYC thành công có nhu cầu kinh doanh sản
 
 | ID | EARS Requirement |
 |---|---|
-| **FR-SELL-01** | WHEN a verified User (`isVerified = 1`) submits a shop registration with name and bank account, THE SYSTEM SHALL save a `SellerRegistration` record with status `PENDING` and a `SellerBankInfo` record. |
-| **FR-SELL-02** | THE SYSTEM SHALL prevent duplicate registrations: IF a `PENDING` or `APPROVED` registration already exists for the user, THE SYSTEM SHALL reject the new submission with an error. |
-| **FR-SELL-03** | WHEN a User queries `GET /me`, THE SYSTEM SHALL return the current status of their shop registration (`NOT_SUBMITTED`, `PENDING`, `APPROVED`, `REJECTED`). |
-| **FR-SELL-04** | WHEN Staff/Admin approves a registration, THE SYSTEM SHALL update the user's role to `SELLER` and set `registration.status = APPROVED`. |
-| **FR-SELL-05** | WHEN Staff/Admin rejects a registration, THE SYSTEM SHALL set `registration.status = REJECTED`; the user MAY re-submit a new registration. |
+| **FR-SELL-01** | WHEN a verified User (`isVerified = 1`) submits a shop registration with name, THE SYSTEM SHALL save a `SellerRegistration` record with status `APPROVED`. |
+| **FR-SELL-02** | THE SYSTEM SHALL prevent duplicate registrations: IF an `APPROVED` registration already exists for the user, THE SYSTEM SHALL reject the new submission with an error. |
+| **FR-SELL-03** | WHEN a User queries `GET /me`, THE SYSTEM SHALL return the current status of their shop registration. |
+| **FR-SELL-04** | UPON successful registration, THE SYSTEM SHALL automatically update the user's role to `SELLER` and `shopStatus` to `Active`. |
+| **FR-SELL-05** | (Removed Manual Staff Review) |
 | **FR-SELL-06** | WHILE user is a Seller, THE SYSTEM SHALL allow full CRUD access to their own Products and Product Variants via `/api/seller/products/**` and `/api/seller/variants/**`. |
 | **FR-SELL-07** | THE SYSTEM SHALL enforce ownership: A Seller MUST only be able to read, update, or delete Products, Variants, and DigitalAssets that belong to them (`product.seller_id = currentUser.id`). |
 | **FR-SELL-08** | WHEN a Seller creates a Product, THE SYSTEM SHALL require at least 1 Variant; each Variant MUST have a `variantName`, `priceVnd` (BIGINT > 0), and `imageUrl`. |
@@ -60,7 +60,7 @@ Người dùng đã hoàn thành KYC thành công có nhu cầu kinh doanh sản
 | Rule | Mô tả |
 |---|---|
 | **BR-SELL-01** | Chỉ User có `isVerified = 1` mới được đăng ký shop. |
-| **BR-SELL-02** | Không cho phép đăng ký mới khi đã có hồ sơ `PENDING` hoặc `APPROVED`. |
+| **BR-SELL-02** | Không cho phép đăng ký mới khi đã có hồ sơ `APPROVED`. |
 | **BR-SELL-03** | Giá sản phẩm (`priceVnd`) phải lưu kiểu `BIGINT` (VNĐ nguyên). |
 | **BR-SELL-04** | Soft delete bắt buộc: không xóa vật lý Product, Variant, DigitalAsset, SellerRegistration. Dùng `isDelete = 1`. |
 | **BR-SELL-05** | Ownership validation: Mọi thao tác ghi đều phải kiểm tra `seller.id == currentUser.id` tại Service/Controller. |
@@ -81,7 +81,7 @@ CREATE TABLE SellerRegistrations (
     description     NVARCHAR(MAX) NULL,
     contract        VARCHAR(255) NULL,
     signed_contract VARCHAR(255) NULL,
-    status          VARCHAR(20) DEFAULT 'Pending',  -- Pending | Approved | Rejected
+    status          VARCHAR(20) DEFAULT 'APPROVED',  -- Approved
     created_at      DATETIME DEFAULT GETDATE(),
     isDelete        BIT DEFAULT 0,
     CONSTRAINT FK_Reg_Users FOREIGN KEY (user_id) REFERENCES Users(id)
@@ -127,8 +127,8 @@ CREATE TABLE SellerBankInfo (
     "branch": "Chi nhánh Hà Nội"
   }
   ```
-- **Response (200 OK):** `ShopRegistrationResponseDto` với `status = PENDING`.
-- **Response (400):** Đã có hồ sơ `PENDING`/`APPROVED`, hoặc User chưa KYC.
+- **Response (200 OK):** `ShopRegistrationResponseDto` với `status = APPROVED`.
+- **Response (400):** Đã có hồ sơ `APPROVED`, hoặc User chưa KYC.
 
 #### `GET /api/v1/shop-registrations/me`
 - **Auth:** `CUSTOMER` hoặc `SELLER`
@@ -136,12 +136,10 @@ CREATE TABLE SellerBankInfo (
 
 #### `GET /api/v1/shop-registrations`
 - **Auth:** `STAFF` hoặc `ADMIN`
-- **Response (200 OK):** `List<ShopRegistrationResponseDto>` — danh sách hồ sơ chờ duyệt.
+- **Response (200 OK):** `Page<ShopRegistrationResponseDto>` — danh sách toàn bộ hồ sơ đăng ký.
 
 #### `PUT /api/v1/shop-registrations/{id}/review`
-- **Auth:** `STAFF` hoặc `ADMIN`
-- **Request Body:** `ShopRegistrationReviewDto` (`{ "status": "Approved"|"Rejected", "note": "..." }`).
-- **Response (200 OK):** `ShopRegistrationResponseDto` đã cập nhật trạng thái; nếu Approved → role User = `SELLER`.
+- *(Lưu ý: API này vẫn còn để hỗ trợ staff review các record cũ nếu có, nhưng luồng đăng ký mới đã là Auto-Approve).*
 
 ---
 
