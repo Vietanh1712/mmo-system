@@ -1,6 +1,6 @@
 # SPEC — Support Ticket Management (Phiếu Hỗ Trợ)
 > **Feature ID:** `feat-support`
-> **UC Coverage:** UC-17 (Support Tickets)
+> **UC Coverage:** UC-27
 > **Version:** 1.2 | **Status:** Active
 > **Author:** Team | **Last Updated:** 2026-07-18
 

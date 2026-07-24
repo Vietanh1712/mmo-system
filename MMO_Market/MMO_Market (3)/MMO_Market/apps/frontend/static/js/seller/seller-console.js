@@ -770,6 +770,7 @@ async function initProductAdd() {
                 e.preventDefault();
                 const name = document.getElementById('productName').value.trim();
                 const description = document.getElementById('description').value.trim();
+                const userGuide = document.getElementById('userGuide') ? document.getElementById('userGuide').value.trim() : '';
                 const categoryId = subSelect.value || mainSelect.value;
                 const typeEl = document.querySelector('input[name="productType"]:checked');
                 const productType = typeEl ? typeEl.value : 'ACCOUNT';
@@ -830,6 +831,7 @@ async function initProductAdd() {
                         body: JSON.stringify({ 
                             name, 
                             description, 
+                            userGuide,
                             categoryId, 
                             productType, 
                             image: mainProductImageUrl,

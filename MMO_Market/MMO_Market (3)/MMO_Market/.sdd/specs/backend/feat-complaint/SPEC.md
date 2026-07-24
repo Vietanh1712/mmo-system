@@ -1,6 +1,6 @@
 # SPEC — Complaint & Dispute Resolution
 > **Feature ID:** `feat-complaint`
-> **UC Coverage:** UC-10 (Complaints & Dispute Resolution)
+> **UC Coverage:** UC-26, UC-29
 > **Version:** 2.0 | **Status:** Active
 > **Author:** Team | **Last Updated:** 2026-07-16
 

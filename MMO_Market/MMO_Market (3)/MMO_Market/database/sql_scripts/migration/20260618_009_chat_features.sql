@@ -21,18 +21,4 @@ END
 GO
 
 
--- Create ChatMutes table
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('ChatMutes') AND type = 'U')
-BEGIN
-    CREATE TABLE ChatMutes (
-        id BIGINT IDENTITY(1,1) PRIMARY KEY,
-        user_id BIGINT NOT NULL,
-        contact_id BIGINT NOT NULL,
-        created_at DATETIME DEFAULT GETDATE(),
-        CONSTRAINT FK_ChatMutes_User FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION,
-        CONSTRAINT FK_ChatMutes_Contact FOREIGN KEY (contact_id) REFERENCES Users(id) ON DELETE NO ACTION,
-        CONSTRAINT UQ_ChatMutes UNIQUE (user_id, contact_id)
-    );
-END
-GO
 
