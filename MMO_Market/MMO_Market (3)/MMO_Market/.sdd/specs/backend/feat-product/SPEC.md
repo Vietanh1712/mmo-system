@@ -1,6 +1,6 @@
 # SPEC — Product Catalog & Reviews Management
 > **Feature ID:** `feat-product`
-> **UC Coverage:** UC-05 (Product Discovery), UC-06 (Shop Product Management), UC-11 (Feedback & Reviews)
+> **UC Coverage:** UC-07, UC-08, UC-09, UC-23, UC-24
 > **Version:** 1.0 | **Status:** Active
 > **Author:** Team | **Last Updated:** 2026-06-27
 

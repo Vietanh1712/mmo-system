@@ -1,6 +1,6 @@
 # SPEC — Direct Messaging, Block & Mute
 > **Feature ID:** `feat-chat`
-> **UC Coverage:** UC-12 (Direct Chat)
+> **UC Coverage:** UC-15
 > **Version:** 1.0 | **Status:** Active
 > **Author:** Team | **Last Updated:** 2026-06-27
 

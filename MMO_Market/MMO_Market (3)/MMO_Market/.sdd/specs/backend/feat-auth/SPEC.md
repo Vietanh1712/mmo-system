@@ -1,6 +1,6 @@
 # SPEC — Authentication & Profile Management
 > **Feature ID:** `feat-auth`
-> **UC Coverage:** UC-01 (Authentication), UC-02 (User Profile)
+> **UC Coverage:** UC-01, UC-02, UC-03, UC-04, UC-05, UC-06
 > **Version:** 1.0 | **Status:** Active
 > **Author:** Team | **Last Updated:** 2026-06-27
 

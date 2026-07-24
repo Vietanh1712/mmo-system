@@ -1,6 +1,6 @@
 # SPEC — Product Reviews & Ratings
 > **Feature ID:** `feat-review`
-> **UC Coverage:** UC-17 (Product Review & Rating)
+> **UC Coverage:** UC-10, UC-11
 > **Version:** 1.0 | **Status:** Active
 > **Author:** Team | **Last Updated:** 2026-07-16
 

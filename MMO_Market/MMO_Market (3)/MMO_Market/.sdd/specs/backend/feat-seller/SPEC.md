@@ -1,6 +1,6 @@
 # SPEC — Seller Console & Shop Management
 > **Feature ID:** `feat-seller`
-> **UC Coverage:** UC-04 (Seller Registration), UC-05 (Seller Console)
+> **UC Coverage:** UC-21, UC-22, UC-25
 > **Version:** 2.0 | **Status:** Active
 > **Author:** Team | **Last Updated:** 2026-06-27
 

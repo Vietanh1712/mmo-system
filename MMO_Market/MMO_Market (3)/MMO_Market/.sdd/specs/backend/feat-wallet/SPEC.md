@@ -1,6 +1,6 @@
 # SPEC — Wallet & Financial Management
 > **Feature ID:** `feat-wallet`
-> **UC Coverage:** UC-07 (Wallet Top-up), UC-09 (Withdrawal)
+> **UC Coverage:** UC-16, UC-17, UC-18, UC-19, UC-20, UC-30
 > **Version:** 1.0 | **Status:** Active
 > **Author:** Team | **Last Updated:** 2026-06-27
 
