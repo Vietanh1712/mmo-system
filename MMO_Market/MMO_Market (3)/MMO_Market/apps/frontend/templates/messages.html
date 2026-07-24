@@ -33,11 +33,7 @@
     </th:block>
 
     <th:block th:unless="${isSellerView}">
-        <th:block th:replace="~{this :: chatInterface}"></th:block>
-    </th:block>
-
-    <th:block th:fragment="chatInterface">
-    <div class="messages-layout" th:style="${isSellerView ? 'margin: 0; max-width: 100%; height: calc(100vh - 120px); min-height: 500px; padding: 0;' : ''}">
+        <div th:fragment="chatInterface" class="messages-layout" th:style="${isSellerView == true ? 'margin: 0; max-width: 100%; height: calc(100vh - 120px); min-height: 500px; padding: 0;' : ''}">
 
         <!-- Sidebar -->
         <aside class="messages-sidebar" aria-label="Danh sách tin nhắn">
@@ -123,7 +119,6 @@
         </section>
 
     </div>
-    </th:block>
 
     <footer th:replace="fragments/footer :: footer"></footer>
 
