@@ -23,25 +23,25 @@ public class WebConfig implements WebMvcConfigurer {
         this.maintenanceInterceptor = maintenanceInterceptor;
     }
 
-    @Bean
-    public ITemplateResolver customTemplateResolver() {
-        FileTemplateResolver resolver = new FileTemplateResolver();
-        File f1 = new File("apps/frontend/templates");
-        File f2 = new File("../frontend/templates");
-        if (f1.exists()) {
-            resolver.setPrefix(f1.getAbsolutePath() + File.separator);
-        } else if (f2.exists()) {
-            resolver.setPrefix(f2.getAbsolutePath() + File.separator);
-        } else {
-            resolver.setPrefix("apps/frontend/templates/");
-        }
-        resolver.setSuffix(".html");
-        resolver.setTemplateMode(TemplateMode.HTML);
-        resolver.setCharacterEncoding("UTF-8");
-        resolver.setCacheable(false);
-        resolver.setCheckExistence(true);
-        return resolver;
-    }
+    // @Bean
+    // public ITemplateResolver customTemplateResolver() {
+    //     FileTemplateResolver resolver = new FileTemplateResolver();
+    //     File f1 = new File("apps/frontend/templates");
+    //     File f2 = new File("../frontend/templates");
+    //     if (f1.exists()) {
+    //         resolver.setPrefix(f1.getAbsolutePath() + File.separator);
+    //     } else if (f2.exists()) {
+    //         resolver.setPrefix(f2.getAbsolutePath() + File.separator);
+    //     } else {
+    //         resolver.setPrefix("apps/frontend/templates/");
+    //     }
+    //     resolver.setSuffix(".html");
+    //     resolver.setTemplateMode(TemplateMode.HTML);
+    //     resolver.setCharacterEncoding("UTF-8");
+    //     resolver.setCacheable(false);
+    //     resolver.setCheckExistence(true);
+    //     return resolver;
+    // }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
@@ -49,11 +49,12 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:" + uploadPath + "/");
 
-        File static1 = new File("apps/frontend/static");
-        File static2 = new File("../frontend/static");
-        String staticPath = static1.exists() ? static1.getAbsolutePath() : (static2.exists() ? static2.getAbsolutePath() : "apps/frontend/static");
-        registry.addResourceHandler("/**")
-                .addResourceLocations("file:" + staticPath + "/");
+        // Use application.properties (spring.web.resources.static-locations) instead of hardcoding
+        // File static1 = new File("apps/frontend/static");
+        // File static2 = new File("../frontend/static");
+        // String staticPath = static1.exists() ? static1.getAbsolutePath() : (static2.exists() ? static2.getAbsolutePath() : "apps/frontend/static");
+        // registry.addResourceHandler("/**")
+        //         .addResourceLocations("file:" + staticPath + "/");
     }
 
     @Override

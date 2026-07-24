@@ -87,7 +87,11 @@
             </div>
 
             <div class="messages-main__body" id="messages-main-body">
-                <!-- Chat messages will be loaded dynamically by JavaScript -->
+                <div class="messages-empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #94a3b8; text-align: center; padding: 40px 20px;">
+                    <i class="fa fa-comments-o" style="font-size: 48px; margin-bottom: 12px; color: #cbd5e1;"></i>
+                    <p style="margin: 0; font-size: 14px; font-weight: 600; color: #64748b;">Chưa có cuộc trò chuyện nào được chọn</p>
+                    <p style="margin: 6px 0 0; font-size: 12.5px; color: #94a3b8;">Hãy chọn một cuộc trò chuyện từ danh sách bên trái hoặc nhắn tin cho người bán từ trang sản phẩm.</p>
+                </div>
             </div>
 
             <footer class="messages-main__footer">
@@ -265,6 +269,23 @@
                 } else {
                     totalBadge.style.display = 'none';
                 }
+            }
+        }
+
+        async function selectInitialChat() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sellerIdParam = urlParams.get('sellerId');
+            if (sellerIdParam && !isNaN(Number(sellerIdParam))) {
+                await selectChat(Number(sellerIdParam));
+            } else if (activeChatList && activeChatList.length > 0) {
+                await selectChat(activeChatList[0].contactId);
+            } else {
+                const headerName = document.getElementById('chat-header-name');
+                if (headerName) headerName.textContent = '';
+                const headerAvatar = document.getElementById('chat-header-avatar');
+                if (headerAvatar) headerAvatar.textContent = '';
+                const headerStatus = document.getElementById('chat-header-status');
+                if (headerStatus) headerStatus.textContent = '';
             }
         }
 
