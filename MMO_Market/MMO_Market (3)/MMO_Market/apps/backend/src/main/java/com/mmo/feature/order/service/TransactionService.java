@@ -145,14 +145,10 @@ public class TransactionService {
         // Tính toán thời gian giam tiền Escrow (Escrow Hold Hours) động
         int escrowHoldHours = 72; // Mặc định 3 ngày
         
-<<<<<<< HEAD
+        int shopLevel = seller.getShopLevel() != null ? seller.getShopLevel() : 1;
         long completedCount = transactionRepository.countCompletedSalesBySeller(seller);
         long totalSold = transactionRepository.countTotalSalesBySeller(seller);
         long resolvedComplaints = complaintRepository.countResolvedComplaintsBySeller(seller);
-=======
-        User seller = product.getSeller();
-        int shopLevel = seller.getShopLevel() != null ? seller.getShopLevel() : 1;
->>>>>>> 87e66c1274e32dbd86986e7404238481baf26ec2
         
         if (shopLevel == 1) {
             // Giai đoạn thử thách (Shop mới Level 1)
