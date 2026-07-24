@@ -3,8 +3,7 @@
 > **Feature ID:** `feat-wallet` | **Page:** `Wallet`
 > **Route:** `/wallet` | **Template:** `templates/account/wallet.html`
 > **CSS Script:** `static/css/customer/style.css`
-> **JS Script:** `static/js/account-wallet.js`
-> **Version:** 2.0 | **Status:** Published
+> **JS Script:** `static/js/customer/account-wallet.js`
 
 ---
 

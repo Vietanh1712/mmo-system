@@ -1,10 +1,9 @@
 # SPEC — Nạp Tiền Vào Ví (Wallet Top-up)
 
 > **Feature ID:** `feat-customer` | **Page:** `Wallet Top-up`
-> **Route:** `/wallet/topup` | **Template:** `templates/account/wallet-topup.html`
+> **Route:** `/wallet/topup` | **Template:** `templates/account/topup.html`
 > **CSS Script:** `static/css/customer/style.css`
-> **JS Script:** `static/js/wallet-topup.js`
-> **Version:** 1.0 | **Status:** Published
+> **JS Script:** `static/js/customer/account-topup.js`
 
 ---
 

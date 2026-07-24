@@ -3,8 +3,7 @@
 > **Feature ID:** `feat-customer` | **Page:** `Profile`
 > **Route:** `/profile` | **Template:** `templates/profile/index.html`
 > **CSS Script:** `static/css/customer/style.css`
-> **JS Script:** `static/js/profile.js`
-> **Version:** 1.0 | **Status:** Draft
+> **JS Script:** `static/js/customer/profile.js`
 > **Backend ref:** `feat-auth/UC-01-authentication.md`
 
 ---

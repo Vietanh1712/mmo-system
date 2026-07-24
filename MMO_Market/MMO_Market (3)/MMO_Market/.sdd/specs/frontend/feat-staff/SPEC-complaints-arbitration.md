@@ -4,8 +4,7 @@
 > **Routes:** `/staff/complaints`, `/staff/complaints/{complaintId}`
 > **Templates:** `templates/staff/complaints.html`, `templates/staff/complaint-detail.html`
 > **CSS Script:** `static/css/customer/style.css`
-> **JS Scripts:** `static/js/staff-complaints.js`, `static/js/staff-complaint-detail.js`
-> **Version:** 2.0 | **Status:** Draft
+> **JS Scripts:** `static/js/staff/staff-complaints.js`, `static/js/staff/staff-complaint-detail.js`
 > **Backend ref:** `feat-complaint/UC-10-complaint-dispute.md`
 
 ---

@@ -1,10 +1,8 @@
 package com.mmo.feature.chat.controller;
 
-import com.mmo.shared.dal.ChatMuteRepository;
 import com.mmo.shared.dal.ChatRepository;
 import com.mmo.shared.dal.UserRepository;
 import com.mmo.shared.model.Chat;
-import com.mmo.shared.model.ChatMute;
 import com.mmo.shared.model.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,18 +18,15 @@ import java.util.stream.Collectors;
 public class ChatController {
 
     private final ChatRepository chatRepository;
-    private final ChatMuteRepository chatMuteRepository;
     private final UserRepository userRepository;
     private final UserStatusService userStatusService;
     private final com.mmo.shared.dal.ComplaintRepository complaintRepository;
 
     public ChatController(ChatRepository chatRepository,
-                          ChatMuteRepository chatMuteRepository,
                           UserRepository userRepository,
                           UserStatusService userStatusService,
                           com.mmo.shared.dal.ComplaintRepository complaintRepository) {
         this.chatRepository = chatRepository;
-        this.chatMuteRepository = chatMuteRepository;
         this.userRepository = userRepository;
         this.userStatusService = userStatusService;
         this.complaintRepository = complaintRepository;
@@ -170,7 +165,7 @@ public class ChatController {
                     Chat latestChat = entry.getValue();
                     User contactUser = latestChat.getSender().getId().equals(userId) ? latestChat.getReceiver() : latestChat.getSender();
 
-                    boolean isMuted = chatMuteRepository.existsByUserAndContact(currentUser, contactUser);
+                    boolean isMuted = false;
                     long unreadCount = chatRepository.countUnreadFrom(contactUser, currentUser);
 
                     Map<String, Object> map = new HashMap<>();
@@ -501,37 +496,12 @@ public class ChatController {
         User currentUser = currentUserOpt.get();
         User contact = contactOpt.get();
 
-        if (chatMuteRepository.existsByUserAndContact(currentUser, contact)) {
-            return ResponseEntity.ok(Map.of("message", "Liên hệ đã được tắt thông báo từ trước."));
-        }
-
-        ChatMute mute = ChatMute.builder()
-                .user(currentUser)
-                .contact(contact)
-                .build();
-        chatMuteRepository.save(mute);
-
         return ResponseEntity.ok(Map.of("message", "Đã tắt thông báo cuộc trò chuyện thành công."));
     }
 
     // 9. Unmute notifications for contact
     @PostMapping("/{contactId}/unmute")
     public ResponseEntity<?> unmuteContact(@AuthenticationPrincipal Long userId, @PathVariable Long contactId) {
-        Optional<User> currentUserOpt = userRepository.findById(userId);
-        Optional<User> contactOpt = userRepository.findById(contactId);
-        if (currentUserOpt.isEmpty() || contactOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "User or contact not found"));
-        }
-
-        User currentUser = currentUserOpt.get();
-        User contact = contactOpt.get();
-
-        Optional<ChatMute> muteOpt = chatMuteRepository.findByUserAndContact(currentUser, contact);
-        if (muteOpt.isPresent()) {
-            chatMuteRepository.delete(muteOpt.get());
-            return ResponseEntity.ok(Map.of("message", "Đã bật thông báo cuộc trò chuyện thành công."));
-        }
-
-        return ResponseEntity.ok(Map.of("message", "Liên hệ chưa được tắt thông báo."));
+        return ResponseEntity.ok(Map.of("message", "Đã bật thông báo cuộc trò chuyện thành công."));
     }
 }

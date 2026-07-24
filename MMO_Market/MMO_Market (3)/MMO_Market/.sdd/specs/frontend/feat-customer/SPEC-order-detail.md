@@ -3,8 +3,7 @@
 > **Feature ID:** `feat-order` | **Page:** `OrderDetail`
 > **Route:** `/account/orders/{orderId}` | **Template:** `templates/account/order-detail.html`
 > **CSS Script:** `static/css/customer/style.css`
-> **JS Script:** `static/js/account-order-detail.js`
-> **Version:** 1.0 | **Status:** Draft
+> **JS Script:** `static/js/customer/account-order-detail.js`
 > **Backend ref:** `feat-order/UC-08-order-checkout.md`
 
 ---

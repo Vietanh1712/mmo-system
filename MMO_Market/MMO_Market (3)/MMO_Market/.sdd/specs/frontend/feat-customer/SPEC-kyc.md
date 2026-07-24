@@ -3,8 +3,7 @@
 > **Feature ID:** `feat-kyc` | **Page:** `KycVerification`
 > **Route:** `/account/kyc` | **Template:** `templates/account/kyc.html`
 > **CSS Script:** `static/css/customer/style.css`
-> **JS Script:** `static/js/account-kyc.js`
-> **Version:** 1.0 | **Status:** Draft
+> **JS Script:** `static/js/customer/account-kyc.js`
 > **Backend ref:** `feat-kyc/UC-03-kyc-verification.md`
 
 ---

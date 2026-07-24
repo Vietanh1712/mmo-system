@@ -1,8 +1,7 @@
 # UC-04 — Bảo Mật Tài Khoản (Account Security)
 
-> **Feature ID:** `feat-auth` | **Phiên bản:** 1.0 | **Trạng thái:** Published
+> **Feature ID:** `feat-auth` | **Trạng thái:** Published
 > **Tham chiếu FR:** FR-SECURITY-01 đến FR-SECURITY-04
-> **Cập nhật:** 2026-07-01
 
 ---
 

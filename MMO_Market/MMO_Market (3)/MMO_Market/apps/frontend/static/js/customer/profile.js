@@ -303,6 +303,7 @@ function renderProfile(profile) {
     document.getElementById('profileAddress').textContent = profile.address || '-';
 
     // Translate Role
+    const role = accountSidebar ? accountSidebar.normalizeRole(profile.role) : (typeof window.normalizeRole === 'function' ? window.normalizeRole(profile.role) : 'Customer');
     let roleLabel = role;
     if (role === 'Customer') roleLabel = 'Khách hàng';
     else if (role === 'Seller') roleLabel = 'Người bán';
@@ -317,41 +318,41 @@ function renderProfile(profile) {
     const statusEl = document.getElementById('profileShopStatus');
     if (statusEl) {
         let statusLabel = '-';
-        let badgeClass = 'ds-badge-info';
+        let badgeClass = 'ds-badge ds-badge-info';
         
         if (profile.shopStatus) {
             const stUpper = profile.shopStatus.toUpperCase();
             if (stUpper === 'PENDING') {
-                statusLabel = 'Chờ kích hoạt';
-                badgeClass = 'ds-badge-warning';
+                statusLabel = 'Chờ duyệt';
+                badgeClass = 'ds-badge ds-badge-warning';
             } else if (stUpper === 'ACTIVE' || stUpper === 'APPROVED') {
                 statusLabel = 'Hoạt động';
-                badgeClass = 'ds-badge-success';
+                badgeClass = 'ds-badge ds-badge-success';
             } else if (stUpper === 'REJECTED') {
                 statusLabel = 'Bị từ chối';
-                badgeClass = 'ds-badge-danger';
+                badgeClass = 'ds-badge ds-badge-danger';
             } else if (stUpper === 'WITHDRAWN' || stUpper === 'DELETED') {
-                statusLabel = 'Xóa Shop (Rút tiền cọc)';
-                badgeClass = 'ds-badge-danger';
-            } else if (stUpper === 'SUSPENDED' || stUpper === 'TEMP_LOCKED') {
-                statusLabel = 'Khóa có thời hạn';
-                badgeClass = 'ds-badge-warning';
-            } else if (stUpper === 'LOCKED' || stUpper === 'INDEFINITE_LOCKED') {
-                statusLabel = 'Khóa vô thời hạn';
-                badgeClass = 'ds-badge-warning';
+                statusLabel = 'Đã đóng Shop';
+                badgeClass = 'ds-badge ds-badge-danger';
+            } else if (stUpper === 'SUSPENDED' || stUpper === 'TEMP_LOCKED' || stUpper === 'TEMPORARILY_CLOSED') {
+                statusLabel = 'Tạm ngưng';
+                badgeClass = 'ds-badge ds-badge-warning';
+            } else if (stUpper === 'LOCKED' || stUpper === 'INDEFINITE_LOCKED' || stUpper === 'CLOSED') {
+                statusLabel = 'Tạm khóa';
+                badgeClass = 'ds-badge ds-badge-warning';
             } else if (stUpper === 'BANNED' || stUpper === 'PERMANENT_BANNED') {
                 statusLabel = 'Khóa vĩnh viễn';
-                badgeClass = 'ds-badge-danger';
+                badgeClass = 'ds-badge ds-badge-danger';
             } else {
                 statusLabel = profile.shopStatus;
             }
         }
         statusEl.textContent = statusLabel;
-        statusEl.className = `ds-badge ${badgeClass}`;
+        statusEl.className = badgeClass;
     }
     document.getElementById('profileBalance').textContent = balance;
 
-    const normalizedRole = accountSidebar.normalizeRole(profile.role);
+    const normalizedRole = role;
     const isInternal = normalizedRole === 'Staff' || normalizedRole === 'Admin';
     const nationalIdRow = document.getElementById('profileNationalIdRow');
     if (nationalIdRow) {
@@ -362,7 +363,9 @@ function renderProfile(profile) {
         nationalIdField.hidden = isInternal;
     }
 
-    accountSidebar.render(profile);
+    if (accountSidebar) {
+        accountSidebar.render(profile);
+    }
 }
 
 function renderMaskedField(elementId, value, maskFn) {
