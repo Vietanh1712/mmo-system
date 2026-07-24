@@ -1,265 +1,334 @@
-# CLAUDE.md — MMO Market Architecture Map & Guidelines
+# CLAUDE.md — MMO Market v1.0
 
-Tài liệu này chi tiết hóa bản đồ kiến trúc hệ thống, danh sách màn hình UI, các quyết định kiến trúc (ADR), bài học kinh nghiệm và Anti-patterns của hệ thống **MMO Market**. Hãy sử dụng tài liệu này làm cơ sở định hướng thiết kế và phát triển.
+## Sàn Giao Dịch Sản Phẩm Số C2C Bảo Mật Tích Hợp Ví Điện Tử
+
+> **Mục đích**: Bản đồ địa hình — Kiến trúc, ADR, Lessons Learned, Anti-patterns
+> **Đọc trước**: `.specify/memory/constitution.md` (stack, security, standards) | `AGENTS.md` (domain rules, golden patterns)
 
 ---
 
-## 1. TỔNG QUAN KIẾN TRÚC & PHÂN TẦNG
+## TL;DR (60 giây)
 
-Hệ thống áp dụng kiến trúc phân lớp tiêu chuẩn (**3-Layer Architecture**) cho Backend Spring Boot và phân tách rõ ràng với Frontend.
+### Tech Stack (Xem `.specify/memory/constitution.md`)
+- **Backend**: Spring Boot 3.1, Java 17, Spring Security + JWT
+- **Frontend**: Thymeleaf, HTML5, Vanilla CSS, Vanilla JS
+- **Database**: SQL Server (T-SQL)
+- **Integrations**: Cổng thanh toán tự động SePay, Gmail SMTP (gửi OTP/thông báo)
 
-### 1.1. Sơ đồ Kiến trúc Phân tầng
+### Domain
+- Sàn giao dịch sản phẩm số C2C (key game, giftcode, tài khoản game/Premium) chuyên biệt cho MMO.
+- **4 Roles**: Customer (Người mua), Seller (Người bán), Staff (Nhân viên kiểm duyệt), Admin (Quản trị viên).
+- **Security**: Mã hóa thông tin sản phẩm số (`DigitalAsset`) trên database để tránh rò rỉ dữ liệu.
+- **Ví điện tử**: Tích hợp ví tiền tệ VNĐ trực tiếp, xử lý nạp/rút và cơ chế bảo vệ giao dịch.
+
+### Key Rules
+- ✅ Sử dụng đơn vị tiền tệ VNĐ dạng số nguyên lớn (`Long` / `BIGINT`).
+- ✅ Ví người dùng phải tách biệt 2 trạng thái số dư: khả dụng (`available_balance`) và đóng băng (`hold_balance`).
+- ✅ Giam tiền giao dịch trung gian (Escrow) 72 giờ mặc định (hoặc 168 giờ đối với shop mới/shop bị cảnh cáo/tỷ lệ khiếu nại cao).
+- ✅ DTO Pattern bắt buộc cho API Request/Response.
+- ✅ Soft Delete toàn hệ thống dùng cờ `isDelete = 1` cho các thực thể quan trọng.
+- ✅ SQL Server Triggers bắt buộc phải xử lý set-based qua bảng ảo `inserted`/`deleted`.
+- ❌ KHÔNG hardcode thông tin bảo mật hay credentials.
+- ❌ KHÔNG trả JPA Entity trực tiếp ra API Controller.
+- ❌ KHÔNG tính tiền hay phân quyền ở Frontend.
+- ❌ KHÔNG dùng `System.out.println` hoặc `printStackTrace` (phải sử dụng SLF4J logger).
+
+---
+
+## KIẾN TRÚC HỆ THỐNG
+
+### Sơ đồ tổng quan
+
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
 │                        FRONTEND PORTAL (Thymeleaf/HTML/CSS/JS)         │
-│  - Render UI từ Thymeleaf template.                                     │
-│  - Gọi REST API không đồng bộ qua JavaScript (Fetch/Axios).            │
-│  - UX validation, UI state management.                                  │
+│  - Render giao diện phía máy chủ bằng Thymeleaf.                       │
+│  - Thực hiện các request REST API không đồng bộ qua JavaScript.        │
+│  - Quản lý trạng thái giao diện và validate UX đầu vào.                │
 └──────────────────────────────────┬─────────────────────────────────────┘
                                    │ (REST API / JSON)
                                    ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        BACKEND (Spring Boot 3.1)                       │
+│                        BACKEND (Spring Boot 3.1 + Java 17)             │
 │  ┌──────────────────────────────────────────────────────────────────┐  │
 │  │  Controller Layer (@RestController)                              │  │
-│  │  - Tiếp nhận request, phân quyền sơ bộ, validate dữ liệu đầu vào. │  │
-│  │  - Trả về ApiResponse<DTO> chuẩn, map lỗi qua Exception Handler.  │  │
+│  │  - Tiếp nhận request, phân quyền sơ bộ, validate đầu vào.        │  │
+│  │  - Trả về DTO chuẩn và xử lý ngoại lệ qua @ControllerAdvice.      │  │
 │  └───────────────────────────────┬──────────────────────────────────┘  │
 │                                  │
 │                                  ▼
 │  ┌──────────────────────────────────────────────────────────────────┐  │
-│  │  Service Layer (@Service)                                        │  │
-│  │  - Xử lý business logic nghiệp vụ chính (nạp/rút, escrow, mua bán).│  │
-│  │  - Quản lý Transaction (@Transactional), kiểm tra quyền sở hữu.    │  │
+│  │  Service Layer (@Service / @Transactional)                       │  │
+│  │  - Xử lý business logic nghiệp vụ chính (rút/nạp, mua bán, ví).  │  │
+│  │  - Áp dụng Pessimistic Locking để tránh Race Condition số dư.     │  │
 │  └───────────────────────────────┬──────────────────────────────────┘  │
 │                                  │
 │                                  ▼
 │  ┌──────────────────────────────────────────────────────────────────┐  │
 │  │  Repository Layer (@Repository)                                  │  │
-│  │  - Giao tiếp với cơ sở dữ liệu qua Spring Data JPA / Hibernate.   │  │
+│  │  - Spring Data JPA, Hibernate, custom native SQL/JPQL queries.   │  │
 │  └───────────────────────────────┬──────────────────────────────────┘  │
 │                                  │
 │                                  ▼
 │  ┌──────────────────────────────────────────────────────────────────┐  │
 │  │  Entity Layer (@Entity)                                          │  │
-│  │  - Ánh xạ trực tiếp với bảng cơ sở dữ liệu SQL Server.            │  │
-│  │  - Tích hợp cờ soft delete isDelete.                             │  │
+│  │  - Ánh xạ cấu trúc bảng SQL Server và quản lý Soft Delete.       │  │
 │  └──────────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────┬─────────────────────────────────────┘
                                    │
                                    ▼
 ┌────────────────────────────────────────────────────────────────────────┐
 │                      DATABASE & SERVICES EXTERNAL                      │
-│   - SQL Server (T-SQL) - Cơ sở dữ liệu quan hệ chính.                  │
-│   - SePay Integration (Cổng tự động nhận tiền nạp).                    │
-│   - Gmail SMTP (Gửi OTP, thông báo biến động tài khoản).              │
+│  - SQL Server (T-SQL): Cơ sở dữ liệu và trigger set-based.             │
+│  - SePay Integration: Nhận cổng thanh toán tự động nạp tiền.           │
+│  - Gmail SMTP: Gửi OTP xác thực và thông báo biến động số dư.          │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. CẤU TRÚC THƯ MỤC CODE THỰC TẾ
+## CORE MODULES
+
+### Auth & KYC Module
+- Đăng nhập/Đăng ký tài khoản (Guest, Customer, Staff, Admin).
+- JWT Authentication + Google OAuth2.
+- Hồ sơ định danh cá nhân (KYC) hỗ trợ tải ảnh CCCD/CMND.
+- Quy trình duyệt KYC tự động hoặc thủ công từ Staff.
+
+### Product Catalog & Shop Module
+- Đăng ký mở shop kinh doanh (có thu phí mở shop).
+- Đăng bán sản phẩm số (`Product`), quản lý biến thể (`ProductVariant`).
+- Mã hóa dữ liệu số nhạy cảm (`DigitalAsset` - key, tài khoản) trước khi lưu trữ vào DB.
+- Cảnh cáo cắm cờ (`ShopFlag`) và quản lý trạng thái Shop (Active, Inactive, Suspended, Locked, Banned).
+
+### Wallet & Payment Escrow Module
+- Nạp tiền tự động qua tích hợp cổng thanh toán SePay.
+- Yêu cầu rút tiền (`Withdrawal`) của người bán, xác minh số dư khả dụng và đưa vào hàng đợi Pending chờ Staff duyệt.
+- Xử lý Escrow (giam tiền) giao dịch trong ví trung gian hệ thống và lên lịch cộng tiền khả dụng sau thời hạn bảo lãnh.
+
+### Order & Transaction Module
+- Đặt hàng và thanh toán đơn hàng sản phẩm số.
+- Giải mã thông tin sản phẩm và hiển thị giao hàng tức thì cho người mua khi đơn hàng thành công.
+- Lưu nhật ký giao dịch tài chính (`WalletTransaction`) để theo dõi dòng tiền.
+- Đặt trước sản phẩm (`PreOrder`) cho các mặt hàng chưa có sẵn.
+
+### Chat & Support Module
+- Chat trực tiếp 1-1 giữa người bán và người mua.
+- Chat 3 bên khi có tranh chấp/khiếu nại (`Complaint`) với sự tham gia phân xử của Staff.
+- Tạo thẻ yêu cầu hỗ trợ chung (`SupportTicket`).
+
+---
+
+## FLOWS
+
+### Order Checkout & Asset Decryption Flow
+```
+Buyer → Frontend: Submit order checkout request
+      → POST /api/v1/orders
+      → Backend: OrderService.processCheckout() [Transactional]
+           ├── Lock Buyer & Seller wallet details (Pessimistic Lock)
+           ├── Check if Buyer available_balance >= order amount
+           ├── Deduct Buyer available_balance -> Put to hold_balance (Escrow)
+           ├── Retrieve and decrypt DigitalAsset (keys/accounts) from database
+           ├── Update ProductVariant inventory/stock
+           ├── Record WalletTransaction details
+           └── Return decrypted credentials dynamically to Buyer
+```
+
+### Escrow Lock/Release Flow
+```
+Transaction Complete (Escrow Locked in hold_balance)
+       ├── Schedule release timer based on Shop Level & warning status (72h or 168h)
+       │     ├── IF Buyer confirms early completion OR Timer expires without dispute:
+       │     │     └── Release funds from hold_balance to Seller available_balance
+       │     │
+       │     └── IF Buyer opens Complaint before release date:
+       │           ├── Hold funds locked in hold_balance indefinitely
+       │           └── Staff reviews complaint:
+       │                 ├── Accept: Refund hold_balance to Buyer available_balance
+       │                 └── Reject: Release hold_balance to Seller available_balance
+```
+
+---
+
+## ADR (Architecture Decision Records)
+
+### ADR-001: Spring Boot 3.1 + Java 17
+- **Trạng thái**: ✅ Active
+- **Quyết định**: Sử dụng Java 17 kết hợp Spring Boot 3.1.
+- **Lý do**: Cung cấp hiệu năng cao, bảo mật mạnh mẽ và khả năng hỗ trợ hệ sinh thái thư viện doanh nghiệp ổn định cho các hệ thống ví tài chính.
+
+### ADR-002: Database First & T-SQL (SQL Server)
+- **Trạng thái**: ✅ Active
+- **Quyết định**: Schema SQL Server là nguồn chân lý duy nhất. Mọi thay đổi cấu trúc bảng phải thực hiện qua migration script SQL. Thực thể JPA Entity được ánh xạ thủ công từ database, cấm sử dụng cơ chế sinh tự động `ddl-auto: update`.
+
+### ADR-003: Cơ chế Escrow (Giam tiền) Động
+- **Trạng thái**: ✅ Active
+- **Quyết định**: Tiền giao dịch bị tạm giam trong ví hệ thống. Thời gian giam tiền tính toán động:
+  - **168 giờ (7 ngày)**: Shop bị cảnh cáo (Level 0), shop mới dưới 20 đơn thành công (Level 1), hoặc shop có tỷ lệ khiếu nại đúng `>= 2%`.
+  - **72 giờ (3 ngày)**: Mặc định đối với các cửa hàng bình thường khác.
+
+### ADR-004: Soft Delete Toàn Hệ Thống
+- **Trạng thái**: ✅ Active
+- **Quyết định**: Không xóa vật lý dữ liệu quan trọng (Users, Products, Orders). Sử dụng cờ `isDelete = 1` và luôn lọc dữ liệu qua cờ này khi truy vấn.
+
+### ADR-005: DTO Pattern Bắt Buộc
+- **Trạng thái**: ✅ Active
+- **Quyết định**: Controller chỉ nhận và trả về các lớp DTO. Ánh xạ (mapping) giữa Entity và DTO phải diễn ra ở Service Layer.
+
+---
+
+## LESSONS LEARNED
+
+### LESSON-001: Tách biệt available_balance và hold_balance
+- **Bài học**: Không gộp chung số dư tài khoản. Việc tách biệt giúp hệ thống đóng băng tiền an toàn khi có khiếu nại hoặc lệnh rút tiền đang xử lý, ngăn chặn việc rút khống/tiêu lặp tiền (double spending).
+
+### LESSON-002: Cấu hình template path động
+- **Bài học**: Tránh cấu hình tuyệt đối ổ đĩa cứng nhắc (`d:/mmo-system/...`) trong file cấu hình. Cần sửa về đúng thư mục làm việc của máy chạy (`c:/Users/...`) hoặc dùng đường dẫn tương đối để đảm bảo khả năng di động của ứng dụng khi chạy local.
+
+### LESSON-003: Tránh lỗi kiểu SpEL ternary null-to-boolean
+- **Bài học**: Sử dụng biểu thức ternary dạng `${isSellerView ? ...}` trong Thymeleaf sẽ gây ra lỗi `SpelEvaluationException` nếu thuộc tính đó là `null`. Giải pháp là so sánh tường minh `${isSellerView == true ? ...}`.
+
+### LESSON-004: Khai báo th:fragment trực tiếp trên container HTML
+- **Bài học**: Khai báo fragment trên thẻ `th:block` bao ngoài của mã giao diện có thể khiến Thymeleaf kết xuất (render) thẻ đó hai lần trong luồng trang. Khai báo trực tiếp thuộc tính `th:fragment` lên thẻ container chính (`div`) để giao diện hiển thị chính xác.
+
+---
+
+## ANTI-PATTERNS
+
+### Code & DB Anti-Patterns
+
+| Anti-Pattern | Mô tả | Cách khắc phục |
+|---|---|---|
+| **Hard Delete** | Xóa trực tiếp dữ liệu khỏi DB | Thay bằng Soft Delete (`isDelete = 1`). |
+| **Summing Ledger on View** | Tính số dư ví bằng cách SUM lịch sử giao dịch mỗi lần hiển thị | Lưu trữ trường `balance_vnd` trong bảng Users và cập nhật qua transaction. |
+| **Row-by-Row Trigger** | Trigger SQL Server viết theo kiểu lặp từng dòng | Bắt buộc xử lý tập hợp (set-based) qua bảng ảo `inserted`/`deleted`. |
+| **Hardcoded Credentials** | Lưu mật khẩu, khóa bí mật trực tiếp trong code | Sử dụng Environment Variables thông qua cấu hình Spring Boot. |
+
+### Thymeleaf & Frontend Anti-Patterns
+
+| Anti-Pattern | Mô tả | Cách khắc phục |
+|---|---|---|
+| **Client-Side Authorization** | Ẩn/hiển thị nút chức năng ở frontend để phân quyền | Chỉ xem đó là UX. Backend phải xác thực quyền hạn (Role/Ownership) trên mỗi request. |
+| **Client-Side Wallet Check** | Kiểm tra số dư ví ở phía client trước khi mua hàng | Backend Service Layer bắt buộc phải khóa ví và kiểm tra lại số dư trước khi trừ tiền. |
+| **Static HTML Hardcoding** | Viết trực tiếp tin nhắn mockup tĩnh trên HTML | Sử dụng trạng thái trống (`messages-empty-state`) và tải động dữ liệu qua JS. |
+
+---
+
+## FILE STRUCTURE
+
+### Backend (Spring Boot)
+```
+apps/backend/
+├── src/main/java/com/mmo/
+│   ├── MMOMarketApplication.java # Entry point
+│   ├── shared/                   # Thành phần dùng chung toàn dự án
+│   │   ├── model/                # JPA Entities
+│   │   ├── dal/                  # JPA Repositories (Spring Data JPA)
+│   │   ├── security/             # Cấu hình Spring Security & JWT Filter
+│   │   ├── config/               # WebConfig, JpaConfig
+│   │   ├── dto/                  # Shared DTOs
+│   │   └── mvc/                  # Shared MVC Controllers (Thymeleaf views mapping)
+│   └── feature/                  # Phân chia theo mô-đun nghiệp vụ chính
+│       ├── auth/                 # Xác thực & Quản lý thông tin cá nhân
+│       ├── kyc/                  # Yêu cầu KYC và phê duyệt tài liệu
+│       ├── seller/               # Đăng ký shop, cấu hình shop & seller dashboard
+│       ├── product/              # Tìm kiếm sản phẩm, danh mục, đánh giá, cắm cờ
+│       ├── wallet/               # Nạp tiền (SePay), rút tiền, ví điện tử
+│       ├── order/                # Giỏ hàng, thanh toán và xử lý đơn hàng
+│       ├── preorder/             # Đặt hàng trước
+│       ├── complaint/            # Tranh chấp & Khiếu nại
+│       ├── support/              # Thẻ hỗ trợ người dùng
+│       ├── chat/                 # Chat trực tiếp 1-1
+│       ├── notification/         # Gửi thông báo email và in-app
+│       ├── staff/                # Giao diện và nghiệp vụ của Nhân viên
+│       ├── admin/                # Giao diện và nghiệp vụ của Quản trị viên
+│       └── upload/               # Quản lý tải lên tệp tin đính kèm
+└── src/main/resources/
+    └── application.properties    # Cấu hình kết nối DB, Thymeleaf path
+```
+
+### Frontend (Thymeleaf)
+```
+apps/frontend/
+├── templates/                    # Tệp HTML Thymeleaf
+│   ├── account/                  # Lịch sử đơn hàng, giao dịch ví của User
+│   ├── admin/                    # Trang quản lý của Admin
+│   ├── auth/                     # Đăng ký, đăng nhập, quên mật khẩu
+│   ├── fragments/                # Khối giao diện dùng chung (header, footer, sidebar)
+│   ├── seller/                   # Console quản lý của Seller
+│   ├── staff/                    # Trang kiểm duyệt của Staff
+│   ├── home.html                 # Trang chủ
+│   ├── messages.html             # Trang chat trực tiếp
+│   └── search-results.html       # Kết quả tìm kiếm sản phẩm
+└── static/                       # Tài sản tĩnh
+    ├── css/                      # Stylesheet phân chia theo feature
+    └── js/                       # Script xử lý gọi API & render động
+```
+
+---
+
+## DEVELOPMENT WORKFLOW
 
 ```
-c:\Users\pc\MMO_new1\MMO_Market\MMO_Market (3)\MMO_Market\
-├── apps/
-│   ├── backend/                      # Source code Spring Boot (Java 17, Maven)
-│   │   ├── src/main/java/com/mmo/
-│   │   │   ├── MMOMarketApplication.java # Entry point (tự động Component Scan)
-│   │   │   ├── shared/               # Lớp dùng chung (shared layer)
-│   │   │   │   ├── model/            # Entities
-│   │   │   │   ├── dal/              # Repositories (Spring Data JPA)
-│   │   │   │   ├── security/         # Security configs, JWT filters
-│   │   │   │   ├── config/           # Cấu hình hệ thống (WebConfig, JpaConfig)
-│   │   │   │   ├── dto/              # DTOs dùng chung
-│   │   │   │   └── mvc/              # Shared Thymeleaf MVC controllers
-│   │   │   └── feature/              # Feature modules (phân chia theo lát cắt nghiệp vụ)
-│   │   │       ├── auth/             # Login, register, profile
-│   │   │       ├── kyc/              # KYC requests verification
-│   │   │       ├── seller/           # Seller shop registration & dashboard
-│   │   │       ├── product/          # Product list, categories, reviews, flags
-│   │   │       ├── wallet/           # Topup, wallet, withdrawal
-│   │   │       ├── order/            # Purchase orders, checkouts
-│   │   │       ├── preorder/         # Pre-ordering features
-│   │   │       ├── complaint/        # Transaction complaints
-│   │   │       ├── support/          # Support tickets management
-│   │   │       ├── chat/             # Direct messaging
-│   │   │       ├── notification/     # In-app & email notifications
-│   │   │       ├── staff/            # Staff moderation
-│   │   │       ├── admin/            # Admin revenue reports & configurations
-│   │   │       └── upload/           # File attachments upload
-│   │   └── src/main/resources/       # application.properties
-│   └── frontend/                     # Mã nguồn giao diện chính
-│       ├── templates/                # Các file Thymeleaf (HTML)
-│       └── static/                   # Assets (CSS, JS, Images)
-├── docs/                             # Tài liệu đặc tả và thiết kế
-└── .sdd/                             # Quy tắc phát triển và đặc tả SDD (SPEC, PLAN, TASKS)
+┌─────────────────────────────────────────────────────────┐
+│  specify → plan → implement → test → review → deploy    │
+│  Define     Plan     Build       Verify   Review        │
+└─────────────────────────────────────────────────────────┘
 ```
 
----
+### Phase Commands
 
-## 3. CORE USE CASES & LUỒNG NGHIỆP VỤ
-
-### Nghiệp vụ Khách hàng (Customer)
-*   **Đăng ký (Register)**: Hỗ trợ Email/Password (+ OTP) hoặc Google OAuth2.
-*   **Mua hàng (Purchase)**: Chọn sản phẩm -> Chọn biến thể -> Bấm mua -> Hệ thống kiểm tra số dư ví -> Nếu đủ tiền: Trừ ví, Giao thông tin sản phẩm tức thì, Đổi trạng thái đơn thành Completed. Nếu thiếu tiền: Báo lỗi.
-*   **Nạp tiền (Top-up)**: Nhập số tiền -> Tạo QR Code/Lệnh thanh toán -> Thanh toán qua Sepay -> Hệ thống nhận Callback từ Sepay -> Tự động cộng tiền vào ví.
-*   **Khiếu nại (Complaint)**: Tạo khiếu nại đơn hàng -> Tạm giữ tiền -> Chờ Seller phản hồi -> Staff phân xử (Hoàn tiền hoặc Chuyển cho Seller).
-*   **Đặt hàng trước (Pre-Order)**: Chọn sản phẩm -> Gửi yêu cầu đặt trước với số lượng và mức giá mong muốn -> Lưu vào bảng `PreOrders` chờ xử lý.
-*   **Đánh giá (Review) & Báo cáo (Shop Flag)**: Customer viết đánh giá (rating 1-5 sao và bình luận) sau khi giao dịch hoàn tất. Báo cáo (Flag) gian hàng nếu phát hiện vi phạm.
-
-### Nghiệp vụ Người bán (Seller)
-*   **Quản lý sản phẩm & Kho hàng**: Tạo sản phẩm -> Upload dữ liệu số -> Hệ thống mã hóa bảo mật -> Đăng bán. Khi có giao dịch nạp tài sản số (`DigitalAsset`), tồn kho biến thể (`ProductVariant.stock`) tự động tính toán lại dựa trên các key/account chưa dùng.
-*   **Rút tiền (Withdraw)**: Nhập số tiền (> 50.000) -> Kiểm tra số dư khả dụng -> Trừ số dư ví, Đưa vào trạng thái Pending -> Staff duyệt -> Cập nhật trạng thái Completed.
-
-### Nghiệp vụ Vận hành (Staff & Admin)
-*   **Duyệt KYC**: Xác minh giấy tờ tùy thân của User để cấp quyền bán hàng.
-*   **Duyệt đăng ký Shop**: Phê duyệt hoặc từ chối hồ sơ đăng ký mở gian hàng của người dùng.
-*   **Duyệt rút tiền (Withdrawal Approval)**: Xem xét, phê duyệt hoặc từ chối các yêu cầu rút tiền ngân hàng của Seller, cập nhật trạng thái và đính kèm biên lai chuyển khoản.
-*   **Giải quyết khiếu nại (Complaint Resolution)**: Phân xử các khiếu nại giao dịch giữa Buyer và Seller, kiểm tra lịch sử chat/bằng chứng, cập nhật trạng thái khiếu nại (InProgress, Resolved, Rejected) và giải phóng/hoàn trả số dư đang đóng băng trong ví Escrow.
-*   **Giám sát giao dịch (Transaction Monitoring)**: Giám sát lịch sử giao dịch toàn sàn, theo dõi luồng tiền và thời gian bảo lãnh (Escrow duration) của từng đơn hàng.
-*   **Tiếp nhận & Xử lý hỗ trợ (Support Ticket Handling)**: Tiếp nhận, quản lý và xử lý các thẻ yêu cầu hỗ trợ (Support Tickets) gửi từ người dùng.
-*   **Cập nhật trạng thái Shop (Shop Status Update)**: Cập nhật trạng thái hoạt động của Shop (Active, Withdrawn, Suspended, Locked, Banned) riêng biệt tùy thuộc vào tình trạng vi phạm chính sách của Shop.
-*   **Quản lý Cờ (Flag Management)**: Cắm cờ cảnh báo Shop vi phạm với các mức độ (Warning, Critical, Danger) hoặc gỡ bỏ cờ khi vi phạm đã được khắc phục.
-*   **Admin Setup**: Cấu hình phí giao dịch, phí hoa hồng (Commission rate), quản lý phân quyền Staff (cấp/thu hồi quyền hạn), quản trị cấu hình hệ thống và chế độ bảo trì.
+| Giai đoạn | Lệnh thực hiện |
+|---|---|
+| **Build & Compile** | `mvn clean compile` |
+| **Run Backend** | Chạy `run_project.bat` từ gốc thư mục |
+| **Kiểm thử (Test)** | `mvn test` (bỏ qua kiểm thử bằng `-Dmaven.test.skip=true`) |
+| **Đồng bộ CSDL** | Thực thi migration scripts trong thư mục `/database/sql_scripts/migration/` |
 
 ---
 
-## 4. DANH SÁCH MÀN HÌNH (Screens Flow)
+## DOMAIN MODEL
 
-Hệ thống được chia thành 4 Portal tương ứng với các nhóm người dùng chính:
-
-### 4.1. Guest + Customer + User (28 Screens)
-1.  **Homepage** (Trang chủ)
-2.  **Sign In** (Đăng nhập)
-3.  **Forgot Password** (Quên mật khẩu)
-4.  **Sign Up** (Đăng ký)
-5.  **OTP Verification** (Xác thực OTP)
-6.  **Reset Password** (Đặt lại mật khẩu)
-7.  **Contact** (Liên hệ)
-8.  **My Profile** (Hồ sơ cá nhân)
-9.  **Change Information** (Đổi thông tin)
-10. **My KYC** (Hồ sơ định danh)
-11. **Send KYC** (Gửi yêu cầu định danh)
-12. **My Order** (Đơn hàng của tôi)
-13. **Feedback** (Đánh giá)
-14. **Order Detail** (Chi tiết đơn hàng)
-15. **My Wishlist** (Sản phẩm yêu thích - Dự phòng)
-16. **My Complaint** (Khiếu nại của tôi)
-17. **Complaint Detail** (Chi tiết khiếu nại)
-18. **My Notification** (Thông báo)
-19. **Register Shop** (Đăng ký mở Shop)
-20. **Top Up** (Nạp tiền ví)
-21. **Category** (Danh mục sản phẩm)
-22. **Product Detail** (Chi tiết sản phẩm)
-23. **Confirm Order** (Xác nhận đặt hàng)
-24. **Chat** (Nhắn tin trực tiếp)
-25. **Shop** (Trang gian hàng Seller)
-26. **Pre-order Request** (Tạo đơn đặt trước)
-27. **My Pre-orders** (Danh sách đặt trước của tôi)
-28. **Support Page** (Trang hỗ trợ chung)
-
-### 4.2. Seller (23 Screens)
-1.  **Shop Dashboard** (Tổng quan doanh thu, đơn hàng)
-2.  **Shop Info** (Cài đặt thông tin Shop)
-3.  **Close Shop** (Đóng cửa gian hàng)
-4.  **Top Up Money** (Nạp tiền vào tài khoản Seller)
-5.  **Shop Flag** (Nhận cảnh báo vi phạm)
-6.  **Withdraw** (Yêu cầu rút tiền)
-7.  **Withdrawal History Detail** (Chi tiết lịch sử rút tiền)
-8.  **Verify OTP** (Xác nhận OTP)
-9.  **Products** (Quản lý sản phẩm & Kho hàng)
-10. **Edit Product** (Chỉnh sửa sản phẩm)
-11. **Create Product** (Đăng bán sản phẩm mới)
-12. **Product Detail Preview** (Xem trước sản phẩm)
-13. **Create Variant** (Tạo biến thể giá/số lượng)
-14. **Update Variant** (Sửa biến thể)
-15. **Add Account** (Thêm tài khoản ngân hàng nhận tiền)
-16. **Update Account** (Cập nhật tài khoản)
-17. **Transaction** (Lịch sử giao dịch/Bán hàng)
-18. **Complaint Management** (Quản lý khiếu nại từ khách)
-19. **Complaint Detail** (Chi tiết/Phản hồi khiếu nại)
-20. **Review** (Quản lý đánh giá từ khách)
-21. **Chat** (Chat với Customer)
-22. **Shop Statistics** (Thống kê doanh thu Shop chi tiết)
-23. **Variant Form** (Mẫu nhập thông tin biến thể)
-
-### 4.3. Staff (18 Screens)
-1.  **Staff Dashboard** (Tổng quan vận hành)
-2.  **Withdrawal Management** (Danh sách yêu cầu rút tiền)
-3.  **Withdrawal Detail** (Chi tiết lệnh rút & Tải biên lai)
-4.  **Transaction Management** (Giám sát dòng tiền)
-5.  **Transaction Detail** (Chi tiết giao dịch)
-6.  **Complaint Management** (Danh sách khiếu nại chờ xử lý)
-7.  **Complaint Detail** (Phân xử khiếu nại/Hoàn tiền)
-8.  **KYC Management** (Danh sách KYC chờ duyệt)
-9.  **KYC Detail** (Chi tiết hình ảnh CCCD & Duyệt)
-10. **Flag Management** (Danh sách Shop bị cắm cờ)
-11. **Flag Detail** (Cắm cờ vi phạm Shop/Sản phẩm)
-12. **Chat** (Hỗ trợ người dùng)
-13. **Documents Dashboard** (Dashboard tài liệu hệ thống)
-14. **Shop Registrations List** (Danh sách đơn  Shop)
-15. **Shop Registration Detail** (Chi tiết duyệt Shop)
-16. **Shop Registration Update Status** (Cập nhật trạng thái mở Shop)
-17. **Support Tickets List** (Danh sách thẻ yêu cầu hỗ trợ)
-18. **Support Ticket Detail** (Chi tiết xử lý thẻ hỗ trợ)
-
-### 4.4. Admin (13 Screens)
-1.  **Admin Dashboard** (Tổng quan toàn hệ thống)
-2.  **Manage System Configuration** (Bảo trì hệ thống)
-3.  **Setup Transaction Fees** (Cài đặt phí giao dịch)
-4.  **Setup Commission Rates** (Cài đặt phần trăm hoa hồng)
-5.  **Manage Maintenance Mode** (Bật/Tắt bảo trì)
-6.  **System Statistics** (Thống kê hệ thống)
-7.  **View Revenue Reports** (Báo cáo doanh thu)
-8.  **View Cash Flow** (Dòng tiền)
-9.  **View Growth Charts** (Biểu đồ tăng trưởng)
-10. **Manage Accounts** (Quản lý/Khóa User)
-11. **Manage Staff Permissions** (Quản lý phân quyền)
-12. **Assign Permissions** (Cấp quyền Staff)
-13. **Edit Permissions** (Chỉnh sửa quyền)
+### Core Entities & Relationships
+- **User**: Thực thể người dùng hệ thống (`role` là CUSTOMER, SELLER, STAFF, ADMIN; trạng thái `isDelete`).
+- **SellerRegistration / Shop**: Hồ sơ đăng ký gian hàng liên kết 1-1 với User.
+- **Product**: Sản phẩm đăng bán, thuộc về một Shop và nằm trong một Category.
+- **ProductVariant**: Biến thể của sản phẩm (theo phân loại thuộc tính, giá tiền, số lượng tồn kho).
+- **DigitalAsset**: Tài sản số thực tế (key game, giftcode, tài khoản) được mã hóa bảo mật, liên kết trực tiếp với ProductVariant.
+- **Order / OrderDetail**: Đơn hàng mua sản phẩm và chi tiết các biến thể sản phẩm đã chọn mua.
+- **WalletTransaction**: Nhật ký giao dịch ví điện tử của người dùng (ghi nhận biến động nạp, rút, mua, giam tiền, hoàn tiền).
+- **Complaint**: Tranh chấp khiếu nại đơn hàng giữa người mua và người bán.
+- **SupportTicket**: Yêu cầu hỗ trợ gửi đến nhân viên hệ thống.
 
 ---
 
-## 5. ADR (Architecture Decision Records)
+## NAMING QUICK REFERENCE
 
-Quy trình ghi lại các quyết định kiến trúc quan trọng để định hình hệ thống lâu dài.
-
-### ADR-01: Sử dụng T-SQL và Database First (SQL Server)
-*   **Trạng thái**: Active | **Ngày cập nhật**: 2026-06-18
-*   **Bối cảnh**: Hệ thống C2C đòi hỏi tính nhất quán giao dịch cực cao, sử dụng các stored procedure và trigger phức tạp trên SQL Server.
-*   **Quyết định**: Áp dụng Database First. Schema SQL Server là nguồn chân lý duy nhất. JPA Entity phải được đồng bộ thủ công theo Database Schema, cấm `ddl-auto=update` sinh tự động.
-
-### ADR-02: Cơ chế Escrow (Giam tiền) Động
-*   **Trạng thái**: Active | **Ngày cập nhật**: 2026-07-07
-*   **Bối cảnh**: Bảo vệ Customer tránh bị lừa đảo khi mua sản phẩm số lỗi, đồng thời áp dụng chính sách chặt chẽ hơn cho các shop mới hoặc shop có rủi ro tranh chấp cao.
-*   **Quyết định**: Tiền thanh toán của Customer sẽ bị giam giữ tạm thời (quy định bởi `escrow_release_date` của Transaction). Thời gian giam tiền được tính toán động:
-    *   **168 giờ (7 ngày)**: Áp dụng đối với Shop bị cảnh cáo (Level 0), Shop mới đăng dưới 20 đơn hàng thành công (Level 1), hoặc các shop có tỷ lệ khiếu nại đúng `>= 2%`.
-    *   **72 giờ (3 ngày)**: Áp dụng mặc định đối với các shop hoạt động bình thường, ổn định.
-    *   Chỉ sau thời gian này (hoặc khi Buyer chủ động xác nhận hoàn thành sớm), số dư khả dụng (`balance_vnd`) của Seller mới được cộng tiền thực tế.
+| Loại đối tượng | Quy tắc đặt tên | Ví dụ |
+|---|---|---|
+| Java Class | PascalCase | `WalletService`, `ChatController` |
+| Java Method | camelCase | `transferToEscrow()`, `getUserById()` |
+| Java Constant | UPPER_SNAKE_CASE | `TRANSACTION_LIMIT`, `MAX_RETRIES` |
+| Bảng CSDL / Cột | snake_case, PascalCase | Bảng `Users`, Cột `balance_vnd`, `isDelete` |
+| Đường dẫn API | kebab-case, số nhiều | `/api/v1/shop-registrations`, `/api/v1/orders` |
+| Tệp HTML / CSS / JS | kebab-case | `messages.html`, `seller-console.js` |
 
 ---
 
-## 6. LESSONS LEARNED & SYSTEM SAFEGUARDS
+## ADR STATUS TABLE
 
-*   **Tránh lưu file lớn trực tiếp dạng BLOB**: Làm phình to database SQL Server và làm chậm thời gian query. Bắt buộc lưu đường dẫn file trên Server hoặc S3, database chỉ lưu chuỗi đường dẫn.
-*   **Bảo vệ tiền ví của User**: Luôn dùng `@Transactional` ở Service layer khi thực hiện rút tiền, nạp tiền hoặc mua sản phẩm. Đảm bảo locking thích hợp để tránh double spending (tiêu lặp tiền).
-*   **Trigger an toàn set-based**: Trigger trên SQL Server phải luôn hoạt động trên tập hợp dòng dữ liệu (qua bảng `inserted` / `deleted`), cấm giả định chỉ có 1 row bị thay đổi tại một thời điểm.
+| Ký hiệu ADR | Tên quyết định | Trạng thái | Ngày kiểm duyệt |
+|---|---|---|---|
+| ADR-001 | Spring Boot 3.1 + Java 17 | ✅ Active | 2026-07-24 |
+| ADR-002 | Database First & T-SQL | ✅ Active | 2026-07-24 |
+| ADR-003 | Cơ chế Escrow (Giam tiền) Động | ✅ Active | 2026-07-24 |
+| ADR-004 | Soft Delete Toàn Hệ Thống | ✅ Active | 2026-07-24 |
+| ADR-005 | DTO Pattern Bắt Buộc | ✅ Active | 2026-07-24 |
+| ADR-006 | SePay Auto Top-up Webhook | ✅ Active | 2026-07-24 |
 
 ---
 
-## 7. ANTI-PATTERNS (Các mẫu thiết kế tồi cần tránh)
-
-### 7.1. Database Anti-patterns
-*   **Hard Delete dữ liệu quan trọng**: Xóa vật lý dòng bản ghi (ví dụ: orders, users). Khắc phục bằng cờ `isDelete = 1` (Soft Delete).
-*   **Tính số dư bằng cách SUM lịch sử giao dịch mỗi lần hiển thị**: Gây quá tải database khi số giao dịch tăng. Phải lưu số dư hiện tại trong ví và cập nhật đồng thời khi có giao dịch phát sinh.
-
-### 7.2. Code & Spring Boot Anti-patterns
-*   **Bypass DTO Pattern**: Trả JPA Entity trực tiếp ra API bên ngoài. Điều này làm lộ cấu trúc CSDL và dễ gây lỗi vòng lặp tuần tự hóa (circular serialization).
-*   **Thực hiện business logic nghiệp vụ tài chính ở Controller**: Gây khó khăn cho viết Unit Test và dễ bỏ sót các bước validate/transaction.
-
-### 7.3. Frontend & Thymeleaf Anti-patterns
-*   **Lưu thông tin số dư ví vào LocalStorage và tin tưởng nó**: Dữ liệu phía client có thể bị chỉnh sửa dễ dàng. Số dư ví và phân quyền phải luôn được xác thực lại ở Backend trên mỗi request gọi API.
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
