@@ -380,11 +380,43 @@ public class SellerController {
         }
     }
 
+    private String validateShopActiveStatus(User seller) {
+        if (seller.getShopStatus() != null &&
+                ("Suspended".equalsIgnoreCase(seller.getShopStatus()) || "TEMP_LOCKED".equalsIgnoreCase(seller.getShopStatus())) &&
+                seller.getSuspendedUntil() != null &&
+                java.time.LocalDateTime.now().isAfter(seller.getSuspendedUntil())) {
+            seller.setShopStatus("Active");
+            seller.setSuspendedUntil(null);
+            userRepository.save(seller);
+        }
+
+        String status = seller.getShopStatus();
+        if (status != null) {
+            if ("Suspended".equalsIgnoreCase(status) || "TEMP_LOCKED".equalsIgnoreCase(status)) {
+                return "Cửa hàng của bạn đang ở trạng thái Tạm ngưng, không thể thực hiện thao tác này.";
+            }
+            if ("Locked".equalsIgnoreCase(status) || "INDEFINITE_LOCKED".equalsIgnoreCase(status)) {
+                return "Cửa hàng của bạn đang bị Tạm khóa, không thể thực hiện thao tác này.";
+            }
+            if ("Banned".equalsIgnoreCase(status) || "PERMANENT_BANNED".equalsIgnoreCase(status)) {
+                return "Cửa hàng của bạn đã bị Khóa vĩnh viễn, không thể thực hiện thao tác này.";
+            }
+            if ("Withdrawn".equalsIgnoreCase(status) || "DELETED".equalsIgnoreCase(status) || "Pending".equalsIgnoreCase(status)) {
+                return "Cửa hàng của bạn hiện không ở trạng thái hoạt động, không thể thực hiện thao tác này.";
+            }
+        }
+        return null;
+    }
+
     // 7. Product POST (Create)
     @PostMapping("/products")
     public ResponseEntity<?> createProduct(@AuthenticationPrincipal Long userId, @RequestBody Map<String, Object> request) {
         try {
             User seller = getSeller(userId);
+            String statusErr = validateShopActiveStatus(seller);
+            if (statusErr != null) {
+                return ResponseEntity.badRequest().body(Map.of("message", statusErr));
+            }
             long activeProductsCount = productRepository.countBySellerIdAndIsDeleteFalse(seller.getId());
             int shopLevel = calculateShopLevel(seller);
             
@@ -520,6 +552,10 @@ public class SellerController {
     public ResponseEntity<?> updateProduct(@AuthenticationPrincipal Long userId, @PathVariable Long id, @RequestBody Map<String, Object> request) {
         try {
             User seller = getSeller(userId);
+            String statusErr = validateShopActiveStatus(seller);
+            if (statusErr != null) {
+                return ResponseEntity.badRequest().body(Map.of("message", statusErr));
+            }
             Product p = productRepository.findByIdAndIsDeleteFalse(id)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sản phẩm."));
 
@@ -613,6 +649,10 @@ public class SellerController {
     public ResponseEntity<?> createVariant(@AuthenticationPrincipal Long userId, @RequestBody Map<String, Object> request) {
         try {
             User seller = getSeller(userId);
+            String statusErr = validateShopActiveStatus(seller);
+            if (statusErr != null) {
+                return ResponseEntity.badRequest().body(Map.of("message", statusErr));
+            }
             Object prodIdObj = request.get("productId");
             String variantName = (String) request.get("variantName");
             Object priceObj = request.get("priceVnd");
@@ -669,6 +709,10 @@ public class SellerController {
     public ResponseEntity<?> updateVariant(@AuthenticationPrincipal Long userId, @PathVariable Long id, @RequestBody Map<String, Object> request) {
         try {
             User seller = getSeller(userId);
+            String statusErr = validateShopActiveStatus(seller);
+            if (statusErr != null) {
+                return ResponseEntity.badRequest().body(Map.of("message", statusErr));
+            }
             ProductVariant v = productVariantRepository.findByIdAndIsDeleteFalse(id)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy biến thể."));
 

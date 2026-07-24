@@ -52,6 +52,36 @@ public class TransactionService {
         Product product = productRepository.findByIdAndIsDeleteFalse(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Sản phẩm không tồn tại."));
 
+        User seller = product.getSeller();
+        if (seller == null || Boolean.TRUE.equals(seller.getIsDelete())) {
+            throw new IllegalArgumentException("Người bán không tồn tại hoặc đã bị xóa.");
+        }
+
+        if (seller.getShopStatus() != null &&
+                ("Suspended".equalsIgnoreCase(seller.getShopStatus()) || "TEMP_LOCKED".equalsIgnoreCase(seller.getShopStatus())) &&
+                seller.getSuspendedUntil() != null &&
+                LocalDateTime.now().isAfter(seller.getSuspendedUntil())) {
+            seller.setShopStatus("Active");
+            seller.setSuspendedUntil(null);
+            userRepository.save(seller);
+        }
+
+        String sellerShopStatus = seller.getShopStatus();
+        if (sellerShopStatus != null) {
+            if ("Suspended".equalsIgnoreCase(sellerShopStatus) || "TEMP_LOCKED".equalsIgnoreCase(sellerShopStatus)) {
+                throw new IllegalArgumentException("Cửa hàng của người bán đang tạm ngưng hoạt động, không thể mua sản phẩm.");
+            }
+            if ("Locked".equalsIgnoreCase(sellerShopStatus) || "INDEFINITE_LOCKED".equalsIgnoreCase(sellerShopStatus)) {
+                throw new IllegalArgumentException("Cửa hàng của người bán đang bị tạm khóa, không thể mua sản phẩm.");
+            }
+            if ("Banned".equalsIgnoreCase(sellerShopStatus) || "PERMANENT_BANNED".equalsIgnoreCase(sellerShopStatus)) {
+                throw new IllegalArgumentException("Cửa hàng của người bán đã bị khóa vĩnh viễn, không thể mua sản phẩm.");
+            }
+            if ("Withdrawn".equalsIgnoreCase(sellerShopStatus) || "DELETED".equalsIgnoreCase(sellerShopStatus) || "Pending".equalsIgnoreCase(sellerShopStatus)) {
+                throw new IllegalArgumentException("Cửa hàng của người bán hiện không ở trạng thái hoạt động, không thể mua sản phẩm.");
+            }
+        }
+
         // Tìm variant phù hợp theo variantLabel (variantName) với cơ chế tìm kiếm mềm và fallback
         ProductVariant variant = product.getVariants().stream()
                 .filter(v -> v.getIsDelete() != null && !v.getIsDelete())
@@ -115,7 +145,6 @@ public class TransactionService {
         // Tính toán thời gian giam tiền Escrow (Escrow Hold Hours) động
         int escrowHoldHours = 72; // Mặc định 3 ngày
         
-        User seller = product.getSeller();
         long completedCount = transactionRepository.countCompletedSalesBySeller(seller);
         long totalSold = transactionRepository.countTotalSalesBySeller(seller);
         long resolvedComplaints = complaintRepository.countResolvedComplaintsBySeller(seller);
