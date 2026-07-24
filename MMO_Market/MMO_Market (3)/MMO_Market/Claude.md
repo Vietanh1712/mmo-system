@@ -113,7 +113,7 @@ c:\Users\pc\MMO_new1\MMO_Market\MMO_Market (3)\MMO_Market\
 *   **Rút tiền (Withdraw)**: Nhập số tiền (> 50.000) -> Kiểm tra số dư khả dụng -> Trừ số dư ví, Đưa vào trạng thái Pending -> Staff duyệt -> Cập nhật trạng thái Completed.
 
 ### Nghiệp vụ Vận hành (Staff & Admin)
-*   **Duyệt KYC**: Xác minh giấy tờ tùy thân của User để cấp quyền bán hàng / nạp rút số lượng lớn.
+*   **Duyệt KYC**: Xác minh giấy tờ tùy thân của User để cấp quyền bán hàng.
 *   **Duyệt đăng ký Shop**: Phê duyệt hoặc từ chối hồ sơ đăng ký mở gian hàng của người dùng.
 *   **Duyệt rút tiền (Withdrawal Approval)**: Xem xét, phê duyệt hoặc từ chối các yêu cầu rút tiền ngân hàng của Seller, cập nhật trạng thái và đính kèm biên lai chuyển khoản.
 *   **Giải quyết khiếu nại (Complaint Resolution)**: Phân xử các khiếu nại giao dịch giữa Buyer và Seller, kiểm tra lịch sử chat/bằng chứng, cập nhật trạng thái khiếu nại (InProgress, Resolved, Rejected) và giải phóng/hoàn trả số dư đang đóng băng trong ví Escrow.
