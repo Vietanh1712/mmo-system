@@ -4,10 +4,8 @@
 > **Routes:** `/staff/kyc`, `/staff/kyc/{kycId}`
 > **Templates:** `templates/staff/kyc.html`, `templates/staff/kyc-detail.html`
 > **CSS Script:** `static/css/customer/style.css`
-> **JS Scripts:** `static/js/staff-kyc.js`, `static/js/staff-kyc-detail.js`
-> **Version:** 1.1 | **Status:** Active
+> **JS Scripts:** `static/js/staff/staff-kyc.js`, `static/js/staff/staff-kyc-detail.js`
 > **Backend ref:** `feat-kyc/UC-03-kyc-verification.md`
-> **Last Updated:** 2026-07-01
 
 ---
 

@@ -1,8 +1,7 @@
 # UC-02 — Quản Lý Hồ Sơ Cá Nhân (User Profile Management)
 
-> **Feature ID:** `feat-auth` | **Phiên bản:** 1.0 | **Trạng thái:** Published
+> **Feature ID:** `feat-auth` | **Trạng thái:** Published
 > **Tham chiếu FR:** FR-PROFILE-01 đến FR-PROFILE-03
-> **Cập nhật:** 2026-06-30
 
 ---
 

@@ -303,6 +303,7 @@ function renderProfile(profile) {
     document.getElementById('profileAddress').textContent = profile.address || '-';
 
     // Translate Role
+    const role = accountSidebar ? accountSidebar.normalizeRole(profile.role) : (typeof window.normalizeRole === 'function' ? window.normalizeRole(profile.role) : 'Customer');
     let roleLabel = role;
     if (role === 'Customer') roleLabel = 'Khách hàng';
     else if (role === 'Seller') roleLabel = 'Người bán';
@@ -351,7 +352,7 @@ function renderProfile(profile) {
     }
     document.getElementById('profileBalance').textContent = balance;
 
-    const normalizedRole = accountSidebar.normalizeRole(profile.role);
+    const normalizedRole = role;
     const isInternal = normalizedRole === 'Staff' || normalizedRole === 'Admin';
     const nationalIdRow = document.getElementById('profileNationalIdRow');
     if (nationalIdRow) {
@@ -362,7 +363,9 @@ function renderProfile(profile) {
         nationalIdField.hidden = isInternal;
     }
 
-    accountSidebar.render(profile);
+    if (accountSidebar) {
+        accountSidebar.render(profile);
+    }
 }
 
 function renderMaskedField(elementId, value, maskFn) {

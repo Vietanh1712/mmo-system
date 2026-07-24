@@ -3,8 +3,7 @@
 > **Feature ID:** `feat-order` | **Page:** `OrderHistory`
 > **Route:** `/account/orders` | **Template:** `templates/account/orders.html`
 > **CSS Script:** `static/css/customer/style.css`
-> **JS Script:** `static/js/account-orders.js`
-> **Version:** 2.0 | **Status:** Published
+> **JS Script:** `static/js/customer/account-orders.js`
 > **Backend ref:** `feat-order/UC-20-order-history.md`
 
 ---

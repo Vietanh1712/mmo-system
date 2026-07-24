@@ -1,8 +1,7 @@
 # UC-03 — Xác Thực Danh Tính (KYC Verification)
 
-> **Feature:** `feat-kyc` | **Phiên bản:** 1.0 | **Trạng thái:** Published
+> **Feature:** `feat-kyc` | **Trạng thái:** Published
 > **Tham chiếu FR:** FR-KYC-01 đến FR-KYC-06
-> **Cập nhật:** 2026-06-30
 
 ---
 

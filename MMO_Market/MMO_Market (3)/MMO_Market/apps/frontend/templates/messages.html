@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/features/home.css}">
     <link rel="stylesheet" th:href="@{/css/features/messages.css}">
-    <th:block th:if="${isSellerView}">
+    <th:block th:if="${isSellerView == true}">
         <link rel="stylesheet" th:href="@{/css/customer/profile.css}">
         <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
         <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
@@ -21,7 +21,7 @@
 
     <header th:replace="fragments/header :: header"></header>
 
-    <th:block th:if="${isSellerView}">
+    <th:block th:if="${isSellerView == true}">
         <main class="ds-container-fluid admin-shell" style="max-width: 1500px; margin: 0 auto;">
             <div class="admin-layout ds-two-column">
                 <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('messages')}"></aside>
@@ -32,12 +32,13 @@
         </main>
     </th:block>
 
-    <th:block th:unless="${isSellerView}">
+    <th:block th:unless="${isSellerView == true}">
         <th:block th:replace="~{this :: chatInterface}"></th:block>
     </th:block>
 
+    <template style="display:none;">
     <th:block th:fragment="chatInterface">
-    <div class="messages-layout" th:style="${isSellerView ? 'margin: 0; max-width: 100%; height: calc(100vh - 120px); min-height: 500px; padding: 0;' : ''}">
+    <div class="messages-layout" th:style="${isSellerView == true ? 'margin: 0; max-width: 100%; height: calc(100vh - 120px); min-height: 500px; padding: 0;' : ''}">
 
         <!-- Sidebar -->
         <aside class="messages-sidebar" aria-label="Danh sách tin nhắn">
@@ -120,6 +121,7 @@
 
     </div>
     </th:block>
+    </template>
 
     <footer th:replace="fragments/footer :: footer"></footer>
 

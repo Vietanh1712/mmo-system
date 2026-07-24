@@ -1,7 +1,5 @@
 # SPEC — Staff Console Dashboard & Approvals
 > **Feature ID:** `feat-staff`
-> **Version:** 2.0 | **Status:** Active
-> **Author:** Team | **Last Updated:** 2026-06-27
 
 ---
 
