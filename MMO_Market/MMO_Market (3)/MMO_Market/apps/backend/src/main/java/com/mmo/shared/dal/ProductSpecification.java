@@ -103,9 +103,11 @@ public class ProductSpecification {
                 criteriaBuilder.equal(variantJoin.get("isDelete"), false)
             ));
 
-            // --- Exclude products from Locked, Banned, or Pending shops, or deleted sellers ---
+            // --- Exclude products from Locked, Banned, Pending, Suspended, etc. shops, or deleted sellers ---
             predicates.add(criteriaBuilder.equal(root.get("seller").get("isDelete"), false));
-            predicates.add(criteriaBuilder.not(root.get("seller").get("shopStatus").in("Locked", "Banned", "Pending")));
+            predicates.add(criteriaBuilder.not(root.get("seller").get("shopStatus").in(
+                    "Locked", "Banned", "Pending", "Suspended", "TEMP_LOCKED", "Withdrawn", "DELETED", "INDEFINITE_LOCKED", "PERMANENT_BANNED"
+            )));
 
             // --- Avoid duplicates when joining with a one-to-many relationship ---
             query.distinct(true);
