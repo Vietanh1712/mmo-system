@@ -1304,7 +1304,9 @@
             document.getElementById('accountFormPasswordRequired').style.display = 'none';
             if (submitBtn) submitBtn.style.display = '';
             if (actionsBar) actionsBar.style.display = '';
-            setAccountFormEditable(true);
+            setAccountFormEditable(false);
+            const toggle = document.getElementById('accountFormStatusToggle');
+            if (toggle) toggle.disabled = false;
         } else {
             document.getElementById('accountFormEmail').disabled = true;
             document.getElementById('accountFormPasswordWrap').style.display = 'none';
