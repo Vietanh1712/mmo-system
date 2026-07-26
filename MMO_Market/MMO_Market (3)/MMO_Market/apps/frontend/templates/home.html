@@ -424,9 +424,10 @@
         // LOGIC ADVANCED SEARCH BAR (CASCADING DROPDOWNS & AUTOCOMPLETE)
         // =======================================================
 
-        // Dữ liệu giả lập (Mock Data) theo đúng spec của bạn
-        const SEARCH_DATA = {
+        // Dữ liệu danh mục động từ CSDL, fallback sang Mock Data nếu API lỗi
+        let SEARCH_DATA = {
             "all": [],
+            "seller": [],
             "email": [
                 "Gmail", "HotMail", "OutlookMail", "RuMail", "DomainMail",
                 "YahooMail", "ProtonMail", "Loại Mail Khác"
@@ -457,10 +458,53 @@
                 "Tiền ảo - Crypto", "NFT", "Coinlist", "Airdrop",
                 "Ví điện tử", "Tài khoản sàn", "Blockchain khác"
             ],
-            "seller": [],
             "other": [],
             "other_service": []
         };
+
+        // Hàm tải danh mục cha và con động từ database
+        async function loadDynamicCategories() {
+            try {
+                const res = await fetch('/api/search/categories?parentOnly=true');
+                if (res.ok) {
+                    const categories = await res.json();
+                    if (categories && categories.length > 0) {
+                        const mainCatSelect = document.getElementById('main-category');
+                        mainCatSelect.innerHTML = `
+                            <option value="" selected disabled hidden>Chọn danh mục chính...</option>
+                            <option value="all">Tất cả</option>
+                            <option value="seller">Tên người bán</option>
+                        `;
+                        
+                        const newSearchData = {
+                            "all": [],
+                            "seller": []
+                        };
+                        
+                        categories.forEach(cat => {
+                            const opt = document.createElement('option');
+                            opt.value = cat.id;
+                            opt.innerText = cat.name;
+                            mainCatSelect.appendChild(opt);
+                            
+                            const activeSubs = (cat.subCategories || [])
+                                .filter(sub => !sub.isDelete && !sub.is_delete)
+                                .map(sub => sub.name);
+                                
+                            newSearchData[cat.id] = activeSubs;
+                        });
+                        
+                        SEARCH_DATA = newSearchData;
+                    }
+                }
+            } catch (err) {
+                console.error("Lỗi khi tải danh mục động:", err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDynamicCategories();
+        });
 
         // 1. Cập nhật Dropdown 2 khi Dropdown 1 thay đổi
         function updateSubCategories() {
@@ -569,7 +613,10 @@
             const subCat = normalizeSuggestionKeyword(rawSubCat);
             const keyword = document.getElementById('main-search').value.trim();
 
-            const categoryId = MAIN_TO_CATEGORY_ID[mainCat];
+            let categoryId = MAIN_TO_CATEGORY_ID[mainCat];
+            if (!categoryId && mainCat && !isNaN(mainCat)) {
+                categoryId = mainCat; // If it's a dynamic parent category ID
+            }
             const hasFilter = keyword || subCat || categoryId;
 
             if (!hasFilter) {
