@@ -4,7 +4,6 @@
 > **Route:** `/account/orders/{orderCode}/feedback` | **Template:** `templates/account/leave-feedback.html`
 > **CSS Script:** `static/css/features/leave-feedback.css`
 > **JS Script:** Tích hợp trực tiếp thẻ `<script>` trong file template.
-> **Version:** 1.0 | **Status:** Active
 > **Backend ref:** `feat-review/UC-17-product-review.md`
 
 ---

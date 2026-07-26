@@ -5,20 +5,19 @@
 -- ============================================================================
 
 IF NOT EXISTS (
-    SELECT 1 
-    FROM sys.columns 
+    SELECT 1 FROM sys.columns 
     WHERE object_id = OBJECT_ID(N'[dbo].[Notifications]') 
       AND name = N'status'
 )
 BEGIN
     ALTER TABLE [dbo].[Notifications] 
     ADD [status] NVARCHAR(20) NOT NULL CONSTRAINT [DF_Notifications_status] DEFAULT N'PUBLISHED';
-
-    -- Update existing records to PUBLISHED
-    UPDATE [dbo].[Notifications] 
-    SET [status] = N'PUBLISHED' 
-    WHERE [status] IS NULL;
 END
+GO
+
+UPDATE [dbo].[Notifications] 
+SET [status] = N'PUBLISHED' 
+WHERE [status] IS NULL;
 GO
 
 -- ============================================================================

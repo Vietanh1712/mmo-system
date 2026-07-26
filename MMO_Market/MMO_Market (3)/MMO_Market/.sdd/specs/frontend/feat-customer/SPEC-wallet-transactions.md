@@ -1,10 +1,9 @@
 # SPEC — Lịch Sử Giao Dịch Ví (Wallet Transactions)
 
 > **Feature ID:** `feat-wallet` | **Page:** `Wallet Transactions`
-> **Route:** `/wallet/transactions` | **Template:** `templates/account/wallet-transactions.html`
+> **Route:** `/wallet/transactions` | **Template:** `templates/account/transactions.html`
 > **CSS Script:** `static/css/customer/style.css`
-> **JS Script:** `static/js/wallet-transactions.js`
-> **Version:** 1.0 | **Status:** Published
+> **JS Script:** `static/js/customer/account-transactions.js`
 
 ---
 

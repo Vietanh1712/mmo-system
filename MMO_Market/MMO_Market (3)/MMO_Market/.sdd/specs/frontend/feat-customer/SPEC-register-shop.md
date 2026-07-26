@@ -3,8 +3,7 @@
 > **Feature ID:** `feat-customer` | **Page:** `Register Shop`
 > **Route:** `/account/register-shop` | **Template:** `templates/account/register-shop.html`
 > **CSS Script:** `static/css/customer/style.css`
-> **JS Script:** `static/js/register-shop.js`
-> **Version:** 1.0 | **Status:** Draft
+> **JS Script:** `static/js/customer/account-register-shop.js`
 
 ---
 
