@@ -8,7 +8,7 @@ COPY ["MMO_Market/MMO_Market (3)/MMO_Market/apps/frontend", "./apps/frontend"]
 
 # Build the executable JAR package
 WORKDIR /app/apps/backend
-RUN mvn clean package -DskipTests -B
+RUN mvn clean package -Dmaven.test.skip=true -B
 
 # Runtime stage
 FROM eclipse-temurin:17-jre-alpine
