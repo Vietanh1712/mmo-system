@@ -58,7 +58,7 @@ public class StaffDashboardServiceImpl implements StaffDashboardService {
                                 .countByStatusAndIsDeleteFalse(com.mmo.shared.model.KycStatus.PENDING);
 
                 long pendingTransactions = transactionRepository.countByStatusesAndNotDeleted(java.util.List.of(
-                                "Pending", "pending", "Processing", "processing"
+                                "Pending", "pending", "Processing", "processing", "Held", "held", "Holding", "holding", "Hold", "hold"
                 ));
 
                 long totalShops = sellerRegistrationRepository.countByIsDeleteFalse();
