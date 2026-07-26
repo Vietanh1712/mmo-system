@@ -1,6 +1,6 @@
 # SPEC — Orders & Escrow Purchase
 > **Feature ID:** `feat-order`
-> **UC Coverage:** UC-12, UC-13, UC-14
+> **UC Coverage:** UC-08 (Order Purchase & Escrow)
 > **Version:** 1.0 | **Status:** Active
 > **Author:** Team | **Last Updated:** 2026-06-27
 

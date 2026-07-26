@@ -40,11 +40,7 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-- [ ] **Currency check**: Does the feature only use VNĐ (`BIGINT`/`Long`)? Is the balance separated into available and hold balance if wallet operations are involved?
-- [ ] **Escrow check**: Are payments held in system escrow for 72 hours (or 168 hours under warnings/new shops) before release?
-- [ ] **Data Security & Deletion**: Is digital assets content encrypted before storage? Does it use soft delete (`isDelete = 1`)?
-- [ ] **Service Layer check**: Are controllers returning clean DTOs and not JPA Entities? Are calculations and permissions checked strictly at backend?
-- [ ] **Trigger check**: If triggers are used, are they strictly set-based (no row-by-row)?
+[Gates determined based on constitution file]
 
 ## Project Structure
 

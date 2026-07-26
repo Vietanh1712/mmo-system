@@ -4,7 +4,6 @@
 > **Route:** `/account/notifications` | **Template:** `templates/account/notifications.html`
 > **CSS Script:** `static/css/features/notifications.css`
 > **JS Script:** `static/js/customer/account-notifications.js`
-> **Version:** 1.1 | **Status:** Active
 > **Backend ref:** `feat-notification/SPEC.md`
 
 ---

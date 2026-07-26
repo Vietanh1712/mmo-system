@@ -303,12 +303,13 @@ function renderProfile(profile) {
     document.getElementById('profileAddress').textContent = profile.address || '-';
 
     // Translate Role
-    let roleLabel = profile.role || 'Khách hàng';
-    if (roleLabel === 'Customer') roleLabel = 'Khách hàng';
-    else if (roleLabel === 'Seller') roleLabel = 'Người bán';
-    else if (roleLabel === 'Customer_Seller') roleLabel = 'Khách hàng & Người bán';
-    else if (roleLabel === 'Staff') roleLabel = 'Nhân viên';
-    else if (roleLabel === 'Admin') roleLabel = 'Quản trị viên';
+    const role = accountSidebar ? accountSidebar.normalizeRole(profile.role) : (typeof window.normalizeRole === 'function' ? window.normalizeRole(profile.role) : 'Customer');
+    let roleLabel = role;
+    if (role === 'Customer') roleLabel = 'Khách hàng';
+    else if (role === 'Seller') roleLabel = 'Người bán';
+    else if (role === 'Customer_Seller') roleLabel = 'Khách hàng & Người bán';
+    else if (role === 'Staff') roleLabel = 'Nhân viên';
+    else if (role === 'Admin') roleLabel = 'Quản trị viên';
     document.getElementById('profileRole').textContent = roleLabel;
 
     document.getElementById('profileShopStatusRow').hidden = !isSeller;
@@ -351,7 +352,7 @@ function renderProfile(profile) {
     }
     document.getElementById('profileBalance').textContent = balance;
 
-    const normalizedRole = accountSidebar.normalizeRole(profile.role);
+    const normalizedRole = role;
     const isInternal = normalizedRole === 'Staff' || normalizedRole === 'Admin';
     const nationalIdRow = document.getElementById('profileNationalIdRow');
     if (nationalIdRow) {
@@ -362,7 +363,9 @@ function renderProfile(profile) {
         nationalIdField.hidden = isInternal;
     }
 
-    accountSidebar.render(profile);
+    if (accountSidebar) {
+        accountSidebar.render(profile);
+    }
 }
 
 function renderMaskedField(elementId, value, maskFn) {
