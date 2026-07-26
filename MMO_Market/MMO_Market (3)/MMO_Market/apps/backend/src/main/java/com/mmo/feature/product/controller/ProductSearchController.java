@@ -77,6 +77,9 @@ public class ProductSearchController {
     @Autowired
     private ComplaintRepository complaintRepository;
 
+    @Autowired
+    private com.mmo.shared.dal.ChatRepository chatRepository;
+
     @GetMapping("/products")
     public ResponseEntity<Page<ProductSearchResultDTO>> searchProducts(
             @RequestParam(required = false) String keyword,
@@ -344,7 +347,22 @@ public class ProductSearchController {
                     profile.put("totalProducts", productCount);
                     Double avgSellerRating = reviewRepository.findAverageRatingBySellerId(sellerId);
                     profile.put("rating", avgSellerRating != null ? avgSellerRating : 0.0);
-                    profile.put("responseTime", "Trong vài giờ"); // High-fidelity mock response time
+                    
+                    Double avgMinutes = chatRepository.findAverageResponseTimeInMinutes(sellerId, java.time.LocalDateTime.now().minusDays(30));
+                    String responseTimeStr = "Trong vài giờ";
+                    if (avgMinutes != null) {
+                        if (avgMinutes <= 60) {
+                            responseTimeStr = "Trong vài phút";
+                        } else if (avgMinutes <= 300) {
+                            responseTimeStr = "Trong vài giờ";
+                        } else if (avgMinutes <= 1440) {
+                            responseTimeStr = "Trong vòng 1 ngày";
+                        } else {
+                            responseTimeStr = "Trong vài ngày";
+                        }
+                    }
+                    profile.put("responseTime", responseTimeStr);
+
                     profile.put("email", user.getEmail());
                     profile.put("followerCount", followerCount);
                     profile.put("isFollowing", isFollowing);
