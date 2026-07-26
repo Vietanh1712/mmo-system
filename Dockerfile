@@ -2,10 +2,10 @@
 FROM maven:3.9.6-eclipse-temurin-17-alpine AS build
 WORKDIR /app
 
-# Copy project files from subfolder into build container
-COPY "MMO_Market/MMO_Market (3)/MMO_Market/pom.xml" ./pom.xml
-COPY "MMO_Market/MMO_Market (3)/MMO_Market/apps/backend" ./apps/backend
-COPY "MMO_Market/MMO_Market (3)/MMO_Market/apps/frontend" ./apps/frontend
+# Copy project files from subfolder into build container using JSON array syntax for paths with spaces
+COPY ["MMO_Market/MMO_Market (3)/MMO_Market/pom.xml", "./pom.xml"]
+COPY ["MMO_Market/MMO_Market (3)/MMO_Market/apps/backend", "./apps/backend"]
+COPY ["MMO_Market/MMO_Market (3)/MMO_Market/apps/frontend", "./apps/frontend"]
 
 # Build the executable WAR package
 WORKDIR /app/apps/backend
