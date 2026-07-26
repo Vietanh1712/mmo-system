@@ -5,7 +5,76 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="cc5262a2-5922-4af2-8358-144285f2178e" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/order/service/TransactionStatusSyncService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/security/SellerAccessValidator.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/controller/AuthenticationControllerTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/controller/ComplaintControllerRbacTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/controller/ComplaintControllerTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/controller/ProductControllerRbacTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/controller/ProductControllerTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/controller/PublicProductControllerTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/controller/StaffComplaintControllerTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/entity/UserEntityTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/security/ComplaintStatusValidatorTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/security/SellerAccessValidatorTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/AdminRevenueServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/AdminUserManagementServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/AuditLogServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/AuthenticationServiceCoverageTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/AuthenticationServiceP1aTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/AuthenticationServicePhaseCTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/AuthenticationServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/CategoryServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/ComplaintManagerServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/ComplaintServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/ComplaintSettlementServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/CustomerComplaintServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/CustomerDashboardServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/EscrowCalculationServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/EscrowContractServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/NotificationServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/OrderDeliveryServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/OrderExpiredServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/OrderModifyServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/OrderServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/PreOrderServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/PreOrderTaskServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/ProductManagementServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/ProductSearchServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/ProductServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/ProductVariantServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/PublicProductSearchServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/ReviewServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/SePayServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/SellerReportServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/SellerServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/SellerVerificationServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/StaffComplaintServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/StaffDashboardServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/StaffPermissionServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/SupportTicketServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/SystemConfigurationServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/TopupServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/TopupWebhookServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/TransactionAdjustmentServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/TransactionServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/TransactionStatusSyncServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/UserServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/service/WithdrawalServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/support/TestFixtures.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/support/TestSecurityUtils.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/testing/mmo-full-unit-test-specification.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/unit-test-specification.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/seller/service/ShopRegistrationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/seller/service/ShopRegistrationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/support/service/SupportTicketService.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/support/service/SupportTicketService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/ChatRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/ChatRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/SellerRegistrationRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/SellerRegistrationRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/UserRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/test/DBTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-shop-registrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-shop-registrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/shop-registrations.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/shop-registrations.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_guide_complaint_shoplevel.md" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -15,22 +84,22 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../../.." />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "NNCuong1312"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;NNCuong1312&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/Vietanh1712/mmo-system.git",
-    "accountId": "7db50a0a-cdf5-4d58-bfe7-069485175bdd"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Vietanh1712/mmo-system.git&quot;,
+    &quot;accountId&quot;: &quot;7db50a0a-cdf5-4d58-bfe7-069485175bdd&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 8,
-  "fromUser": false
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8,
+  &quot;fromUser&quot;: false
+}</component>
   <component name="ProjectId" id="3GwC9XRUBB0vJAcrRC9muF6dmrZ" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -44,7 +113,7 @@
     "Spring Boot.MMOMarketApplication.executor": "Run",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "cuong2k3",
+    "git-widget-placeholder": "linh",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
     "node.js.detected.package.eslint": "true",
@@ -53,6 +122,11 @@
     "to.speed.mode.migration.done": "true"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\pc\MMO_new1\MMO_Market\MMO_Market (3)\MMO_Market" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration name="MMOMarketApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
       <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UnknownPolicyInFreeMode" />
