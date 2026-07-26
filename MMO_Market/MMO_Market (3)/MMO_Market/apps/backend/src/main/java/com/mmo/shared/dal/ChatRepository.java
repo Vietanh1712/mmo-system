@@ -17,23 +17,24 @@ import java.time.LocalDateTime;
 public interface ChatRepository extends JpaRepository<Chat, Long> {
     List<Chat> findByComplaintAndIsDeleteFalseOrderByCreatedAtAsc(Complaint complaint);
 
-    @Query(value = "WITH MessageSequence AS (" +
-            "    SELECT " +
-            "        sender_id, receiver_id, created_at," +
-            "        LEAD(sender_id) OVER (PARTITION BY CASE WHEN sender_id = :sellerId THEN receiver_id ELSE sender_id END ORDER BY created_at) as next_sender_id," +
-            "        LEAD(created_at) OVER (PARTITION BY CASE WHEN sender_id = :sellerId THEN receiver_id ELSE sender_id END ORDER BY created_at) as next_created_at" +
-            "    FROM Chats" +
-            "    WHERE (sender_id = :sellerId OR receiver_id = :sellerId)" +
-            "      AND (chat_type = 'Normal' OR chat_type IS NULL)" +
-            "      AND complaint_id IS NULL" +
-            "      AND isDelete = 0" +
-            "      AND created_at >= :since" +
-            ")" +
-            "SELECT " +
-            "    AVG(CAST(DATEDIFF(MINUTE, created_at, next_created_at) AS FLOAT))" +
-            "FROM MessageSequence" +
-            "WHERE receiver_id = :sellerId" +
-            "  AND next_sender_id = :sellerId", nativeQuery = true)
+    @Query(value = """
+            WITH MessageSequence AS (
+                SELECT
+                    sender_id, receiver_id, created_at,
+                    LEAD(sender_id) OVER (PARTITION BY CASE WHEN sender_id = :sellerId THEN receiver_id ELSE sender_id END ORDER BY created_at) AS next_sender_id,
+                    LEAD(created_at) OVER (PARTITION BY CASE WHEN sender_id = :sellerId THEN receiver_id ELSE sender_id END ORDER BY created_at) AS next_created_at
+                FROM Chats
+                WHERE (sender_id = :sellerId OR receiver_id = :sellerId)
+                  AND (chat_type = 'Normal' OR chat_type IS NULL)
+                  AND complaint_id IS NULL
+                  AND isDelete = 0
+                  AND created_at >= :since
+            )
+            SELECT AVG(CAST(DATEDIFF(MINUTE, created_at, next_created_at) AS FLOAT))
+            FROM MessageSequence
+            WHERE receiver_id = :sellerId
+              AND next_sender_id = :sellerId
+            """, nativeQuery = true)
     Double findAverageResponseTimeInMinutes(@Param("sellerId") Long sellerId, @Param("since") LocalDateTime since);
 
     @Query("SELECT c FROM Chat c WHERE c.isDelete = false AND (" +

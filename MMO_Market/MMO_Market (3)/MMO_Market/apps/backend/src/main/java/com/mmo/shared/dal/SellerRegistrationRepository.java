@@ -28,7 +28,7 @@ public interface SellerRegistrationRepository extends JpaRepository<SellerRegist
            "     (:shopStatus = 'ACTIVE' AND (r.user.shopStatus IS NULL OR UPPER(r.user.shopStatus) IN ('ACTIVE', 'APPROVED'))) OR " +
            "     (:shopStatus = 'SUSPENDED' AND UPPER(r.user.shopStatus) IN ('SUSPENDED', 'TEMP_LOCKED', 'TEMP_SUSPENDED')) OR " +
            "     (:shopStatus = 'LOCKED' AND UPPER(r.user.shopStatus) IN ('LOCKED', 'INDEFINITE_LOCKED')) OR " +
-           "     (:shopStatus = 'BANNED' AND UPPER(r.user.shopStatus) IN ('BANNED', 'PERMANENT_BANNED')) OR " +
+           "     (:shopStatus = 'Banned' AND UPPER(r.user.shopStatus) IN ('BANNED', 'PERMANENT_BANNED')) OR " +
            "     (:shopStatus = 'WITHDRAWN' AND UPPER(r.user.shopStatus) IN ('WITHDRAWN', 'DELETED')) OR " +
            "     (UPPER(r.user.shopStatus) = UPPER(:shopStatus))) " +
            "AND (:keyword IS NULL OR " +
