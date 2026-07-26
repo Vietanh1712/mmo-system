@@ -378,7 +378,8 @@
             const term = subCategory.toLowerCase().trim();
             const name = (product.productName || '').toLowerCase();
             const cat = (product.categoryName || '').toLowerCase();
-            return name.includes(term) || cat.includes(term);
+            const subCatName = (product.subCategoryName || '').toLowerCase();
+            return name.includes(term) || cat.includes(term) || subCatName.includes(term) || (product.categoryId && String(product.categoryId) === term);
         }
 
         const CATEGORY_NAMES = {
@@ -725,7 +726,7 @@
                         </div>
                         <div class="product-info">
                             <div class="category-rating">
-                                <span class="category-badge">${getParentCategoryName(product.categoryName, product.productName)}</span>
+                                <span class="category-badge">${product.categoryName || 'Khác'}</span>
                                 <span class="rating-stars">${starHtml}</span>
                             </div>
                             <h4 class="product-title">${product.productName}</h4>
@@ -857,7 +858,7 @@
             const catSelect = document.getElementById('category-filter');
             if (!catSelect) return;
             try {
-                const res = await fetch('/api/v1/categories');
+                const res = await fetch('/api/search/categories?parentOnly=true');
                 if (!res.ok) return;
                 const categories = await res.json();
                 

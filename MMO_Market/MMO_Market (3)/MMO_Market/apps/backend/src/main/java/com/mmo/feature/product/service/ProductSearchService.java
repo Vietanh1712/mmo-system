@@ -98,8 +98,13 @@ public class ProductSearchService {
         dto.setImageUrl(product.getImage());
 
         if (product.getCategory() != null) {
-            if (product.getCategory().getParent() != null && product.getCategory().getParent().getName() != null) {
-                dto.setCategoryName(product.getCategory().getParent().getName());
+            dto.setCategoryId(product.getCategory().getId());
+            dto.setSubCategoryName(product.getCategory().getName());
+            if (product.getCategory().getParent() != null) {
+                dto.setParentCategoryId(product.getCategory().getParent().getId());
+                if (product.getCategory().getParent().getName() != null) {
+                    dto.setCategoryName(product.getCategory().getParent().getName());
+                }
             } else if (product.getCategory().getName() != null) {
                 dto.setCategoryName(product.getCategory().getName());
             }
