@@ -1,0 +1,7 @@
+.git
+.idea
+.vscode
+target/
+apps/backend/target/
+node_modules/
+*.log
