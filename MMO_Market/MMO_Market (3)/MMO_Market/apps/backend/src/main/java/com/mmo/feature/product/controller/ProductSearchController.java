@@ -104,6 +104,21 @@ public class ProductSearchController {
     @GetMapping("/products/{productId}")
     public ResponseEntity<com.mmo.shared.dto.ProductDetailDTO> getProductDetail(@PathVariable Long productId) {
         return productRepository.findByIdAndIsDeleteFalse(productId)
+                .filter(product -> {
+                    com.mmo.shared.model.User seller = product.getSeller();
+                    if (seller == null || Boolean.TRUE.equals(seller.getIsDelete())) return false;
+                    String status = seller.getShopStatus();
+                    if (status == null) return true;
+                    return !status.equalsIgnoreCase("Locked") && 
+                           !status.equalsIgnoreCase("Banned") && 
+                           !status.equalsIgnoreCase("Pending") && 
+                           !status.equalsIgnoreCase("Suspended") && 
+                           !status.equalsIgnoreCase("TEMP_LOCKED") && 
+                           !status.equalsIgnoreCase("Withdrawn") && 
+                           !status.equalsIgnoreCase("DELETED") && 
+                           !status.equalsIgnoreCase("INDEFINITE_LOCKED") && 
+                           !status.equalsIgnoreCase("PERMANENT_BANNED");
+                })
                 .map(product -> {
                     // Query statistics from DB
                     Double avgRating = reviewRepository.findAverageRatingByProductId(product.getId());

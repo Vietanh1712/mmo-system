@@ -23,13 +23,19 @@ public class PreOrderService {
     private final PreOrderRepository preOrderRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final com.mmo.shared.dal.DigitalAssetRepository digitalAssetRepository;
+    private final com.mmo.shared.dal.NotificationRepository notificationRepository;
 
     public PreOrderService(PreOrderRepository preOrderRepository,
                            UserRepository userRepository,
-                           ProductRepository productRepository) {
+                           ProductRepository productRepository,
+                           com.mmo.shared.dal.DigitalAssetRepository digitalAssetRepository,
+                           com.mmo.shared.dal.NotificationRepository notificationRepository) {
         this.preOrderRepository = preOrderRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
+        this.digitalAssetRepository = digitalAssetRepository;
+        this.notificationRepository = notificationRepository;
     }
 
     @Transactional
@@ -194,5 +200,87 @@ public class PreOrderService {
                 .deliveryData(saved.getDeliveryData())
                 .createdAt(saved.getCreatedAt() != null ? saved.getCreatedAt().format(formatter) : "")
                 .build();
+    }
+
+    @Transactional
+    public void autoFulfillPreOrders(com.mmo.shared.model.ProductVariant variant, List<com.mmo.shared.model.DigitalAsset> newAssets) {
+        if (newAssets == null || newAssets.isEmpty()) return;
+
+        Product product = variant.getProduct();
+        List<PreOrder> pendingPreOrders = preOrderRepository.findByProductAndStatusIgnoreCaseAndIsDeleteFalseOrderByCreatedAtAsc(product, "Pending");
+
+        if (pendingPreOrders.isEmpty()) {
+            pendingPreOrders = preOrderRepository.findByProductAndStatusIgnoreCaseAndIsDeleteFalseOrderByCreatedAtAsc(product, "Chờ xử lý");
+        }
+
+        if (pendingPreOrders.isEmpty()) return;
+
+        // Collect all available un-used assets from these newly added assets
+        List<com.mmo.shared.model.DigitalAsset> availableAssets = new java.util.ArrayList<>();
+        for (com.mmo.shared.model.DigitalAsset asset : newAssets) {
+            if (asset.getIsUsed() == null || !asset.getIsUsed()) {
+                availableAssets.add(asset);
+            }
+        }
+
+        for (PreOrder preOrder : pendingPreOrders) {
+            if (availableAssets.isEmpty()) break;
+
+            int needed = preOrder.getQuantity() != null ? preOrder.getQuantity() : 1;
+            if (availableAssets.size() >= needed) {
+                // Fulfill this preorder
+                List<String> deliveryDataList = new java.util.ArrayList<>();
+                for (int i = 0; i < needed; i++) {
+                    com.mmo.shared.model.DigitalAsset asset = availableAssets.remove(0);
+                    asset.setIsUsed(true);
+                    digitalAssetRepository.save(asset);
+
+                    String data = "";
+                    if (asset.getAssetType().equalsIgnoreCase("ACCOUNT")) {
+                        data = "Tài khoản: " + asset.getAccountUsername() + " | Mật khẩu: " + asset.getAccountPassword();
+                    } else if (asset.getAssetType().equalsIgnoreCase("KEY")) {
+                        data = "Mã Key: " + asset.getKeyCode();
+                    } else if (asset.getAssetType().equalsIgnoreCase("CARD")) {
+                        data = "Mã thẻ: " + asset.getCardCode() + " | Seri: " + asset.getCardPin();
+                    }
+                    if (asset.getNotes() != null && !asset.getNotes().isEmpty()) {
+                        data += " | Ghi chú: " + asset.getNotes();
+                    }
+                    deliveryDataList.add(data);
+                }
+
+                preOrder.setStatus("COMPLETED");
+                preOrder.setDeliveryData(String.join("\n", deliveryDataList));
+                preOrderRepository.save(preOrder);
+
+                // Notify Customer
+                com.mmo.shared.model.Notification customerNotif = com.mmo.shared.model.Notification.builder()
+                        .userId(preOrder.getCustomer().getId())
+                        .title("Đơn đặt trước đã có hàng!")
+                        .content("Sản phẩm '" + product.getName() + "' (Mã PO-" + preOrder.getId() + ") đã được người bán gửi hàng. Vui lòng kiểm tra chi tiết đơn đặt trước của bạn.")
+                        .type("ORDER")
+                        .severity("SUCCESS")
+                        .isRead(false)
+                        .isDelete(false)
+                        .createdAt(java.time.LocalDateTime.now())
+                        .targetUrl("/preorders")
+                        .build();
+                notificationRepository.save(customerNotif);
+
+                // Notify Seller
+                com.mmo.shared.model.Notification sellerNotif = com.mmo.shared.model.Notification.builder()
+                        .userId(product.getSeller().getId())
+                        .title("Đã tự động gửi hàng cho khách!")
+                        .content("Hệ thống đã tự động lấy tài sản vừa nạp để giao cho Đơn đặt trước PO-" + preOrder.getId() + " của sản phẩm '" + product.getName() + "'.")
+                        .type("ORDER")
+                        .severity("SUCCESS")
+                        .isRead(false)
+                        .isDelete(false)
+                        .createdAt(java.time.LocalDateTime.now())
+                        .targetUrl("/seller/preorders")
+                        .build();
+                notificationRepository.save(sellerNotif);
+            }
+        }
     }
 }

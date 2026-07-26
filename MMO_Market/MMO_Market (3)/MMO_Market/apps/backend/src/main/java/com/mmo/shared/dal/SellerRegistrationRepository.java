@@ -32,16 +32,14 @@ public interface SellerRegistrationRepository extends JpaRepository<SellerRegist
            "     (:shopStatus = 'WITHDRAWN' AND UPPER(r.user.shopStatus) IN ('WITHDRAWN', 'DELETED')) OR " +
            "     (UPPER(r.user.shopStatus) = UPPER(:shopStatus))) " +
            "AND (:keyword IS NULL OR " +
-           "    LOWER(r.shopName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "    LOWER(r.supportEmail) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "    LOWER(r.supportPhone) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "    LOWER(r.category) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "    (:searchId IS NOT NULL AND r.id = :searchId))")
+           "    LOWER(r.shopName) LIKE CONCAT('%', LOWER(:keyword), '%') OR " +
+           "    LOWER(r.supportEmail) LIKE CONCAT('%', LOWER(:keyword), '%') OR " +
+           "    LOWER(r.supportPhone) LIKE CONCAT('%', LOWER(:keyword), '%') OR " +
+           "    LOWER(r.category) LIKE CONCAT('%', LOWER(:keyword), '%'))")
     Page<SellerRegistration> searchRegistrations(
             @Param("status") String status,
             @Param("shopStatus") String shopStatus,
             @Param("keyword") String keyword,
-            @Param("searchId") Long searchId,
             Pageable pageable);
 
     @Query("SELECT DISTINCT r.status FROM SellerRegistration r WHERE r.status IS NOT NULL AND r.isDelete = false")

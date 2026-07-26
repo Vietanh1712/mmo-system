@@ -14,4 +14,6 @@ public interface PreOrderRepository extends JpaRepository<PreOrder, Long> {
     
     @org.springframework.data.jpa.repository.Query("SELECT p FROM PreOrder p WHERE p.product.seller = :seller AND p.isDelete = false ORDER BY p.createdAt DESC")
     List<PreOrder> findBySellerOrderByCreatedAtDesc(@org.springframework.data.repository.query.Param("seller") User seller);
+
+    List<PreOrder> findByProductAndStatusIgnoreCaseAndIsDeleteFalseOrderByCreatedAtAsc(com.mmo.shared.model.Product product, String status);
 }

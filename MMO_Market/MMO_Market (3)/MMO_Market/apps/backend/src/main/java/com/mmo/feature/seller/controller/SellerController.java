@@ -36,6 +36,7 @@ public class SellerController {
     private final EmailService emailService;
     private final AuthenticationService authenticationService;
     private final WithdrawalService withdrawalService;
+    private final com.mmo.feature.preorder.service.PreOrderService preOrderService;
 
     public SellerController(UserRepository userRepository, ProductRepository productRepository,
                             ProductVariantRepository productVariantRepository, CategoryRepository categoryRepository,
@@ -49,7 +50,8 @@ public class SellerController {
                             EmailVerificationRepository emailVerificationRepository,
                             EmailService emailService,
                             AuthenticationService authenticationService,
-                            WithdrawalService withdrawalService) {
+                            WithdrawalService withdrawalService,
+                            com.mmo.feature.preorder.service.PreOrderService preOrderService) {
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.productVariantRepository = productVariantRepository;
@@ -68,6 +70,7 @@ public class SellerController {
         this.emailService = emailService;
         this.authenticationService = authenticationService;
         this.withdrawalService = withdrawalService;
+        this.preOrderService = preOrderService;
     }
 
 
@@ -620,6 +623,23 @@ public class SellerController {
             map.put("stock", v.getStock());
             map.put("status", v.getStatus());
             map.put("imageUrl", v.getImageUrl());
+
+            List<DigitalAsset> assetList = digitalAssetRepository.findByVariantAndIsDeleteFalse(v);
+            List<Map<String, Object>> assetMapList = assetList.stream().map(asset -> {
+                Map<String, Object> amap = new HashMap<>();
+                amap.put("id", asset.getId());
+                amap.put("assetType", asset.getAssetType());
+                amap.put("accountUsername", asset.getAccountUsername());
+                amap.put("accountPassword", asset.getAccountPassword()); // We need to return password so seller can view it
+                amap.put("keyCode", asset.getKeyCode());
+                amap.put("cardCode", asset.getCardCode());
+                amap.put("cardPin", asset.getCardPin());
+                amap.put("notes", asset.getNotes());
+                amap.put("isUsed", asset.getIsUsed());
+                amap.put("createdAt", asset.getCreatedAt() != null ? asset.getCreatedAt().toString() : null);
+                return amap;
+            }).collect(Collectors.toList());
+            map.put("assets", assetMapList);
 
             return ResponseEntity.ok(map);
         } catch (Exception e) {
@@ -1188,6 +1208,10 @@ public class SellerController {
     public ResponseEntity<?> createDigitalAssets(@AuthenticationPrincipal Long userId, @RequestBody Map<String, Object> request) {
         try {
             User seller = getSeller(userId);
+            String statusErr = validateShopActiveStatus(seller);
+            if (statusErr != null) {
+                return ResponseEntity.badRequest().body(Map.of("message", statusErr));
+            }
             Object variantIdObj = request.get("variantId");
             String assetType = (String) request.get("assetType");
             List<Map<String, Object>> assetsList = (List<Map<String, Object>>) request.get("assets");
@@ -1260,6 +1284,13 @@ public class SellerController {
                 savedAssets.add(digitalAssetRepository.save(asset));
             }
 
+            // Tự động xử lý Đơn đặt trước (Pre-Order)
+            try {
+                preOrderService.autoFulfillPreOrders(variant, savedAssets);
+            } catch (Exception ex) {
+                System.err.println("Lỗi khi tự động giao hàng đặt trước: " + ex.getMessage());
+            }
+
             // Recalculate and update the variant stock!
             if (!"SERVICE".equals(variant.getProduct().getProductType())) {
                 List<DigitalAsset> activeAssets = digitalAssetRepository.findByVariantAndIsDeleteFalse(variant);
@@ -1282,6 +1313,10 @@ public class SellerController {
     public ResponseEntity<?> deleteDigitalAsset(@AuthenticationPrincipal Long userId, @PathVariable Long id) {
         try {
             User seller = getSeller(userId);
+            String statusErr = validateShopActiveStatus(seller);
+            if (statusErr != null) {
+                return ResponseEntity.badRequest().body(Map.of("message", statusErr));
+            }
             DigitalAsset asset = digitalAssetRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài sản."));
 
@@ -1312,6 +1347,10 @@ public class SellerController {
     public ResponseEntity<?> updateProductDetails(@AuthenticationPrincipal Long userId, @PathVariable Long id, @RequestBody Map<String, Object> request) {
         try {
             User seller = getSeller(userId);
+            String statusErr = validateShopActiveStatus(seller);
+            if (statusErr != null) {
+                return ResponseEntity.badRequest().body(Map.of("message", statusErr));
+            }
             Product p = productRepository.findByIdAndIsDeleteFalse(id)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sản phẩm."));
 
