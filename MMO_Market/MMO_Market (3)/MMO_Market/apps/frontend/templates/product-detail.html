@@ -762,36 +762,21 @@
             const stockStatusText = document.getElementById('stockStatusText');
             const heroBadge = document.getElementById('heroBadge');
 
-            const isServiceType = selectedProduct.categoryName === 'Tăng tương tác' || 
-                                  selectedProduct.categoryName === 'Dịch vụ phần mềm' ||
-                                  selectedProduct.categoryName === 'Dịch vụ khác' ||
-                                  (selectedProduct.categoryName && selectedProduct.categoryName.toLowerCase().includes('dịch vụ'));
-                                  
-            if (!productHasStock || isServiceType) {
+            if (!productHasStock) {
                 if (buyButton) {
                     buyButton.classList.add('is-preorder');
-                    buyButton.innerHTML = isServiceType ? '<i class="fa fa-clock-o"></i> Đặt trước dịch vụ' : '<i class="fa fa-clock-o"></i> Đặt trước';
+                    buyButton.innerHTML = '<i class="fa fa-clock-o"></i> Đặt trước';
                 }
                 if (cartButton) {
                     cartButton.classList.add('is-hidden');
                 }
                 if (stockStatusText) {
-                    if (isServiceType) {
-                        stockStatusText.className = 'status-instock';
-                        stockStatusText.innerHTML = '<i class="fa fa-bolt"></i> Dịch vụ';
-                    } else {
-                        stockStatusText.className = 'status-outofstock';
-                        stockStatusText.innerHTML = '<i class="fa fa-times-circle"></i> Hết hàng';
-                    }
+                    stockStatusText.className = 'status-outofstock';
+                    stockStatusText.innerHTML = '<i class="fa fa-times-circle"></i> Hết hàng';
                 }
                 if (heroBadge) {
-                    if (isServiceType) {
-                        heroBadge.classList.add('is-service');
-                        heroBadge.innerText = 'Dịch vụ';
-                    } else {
-                        heroBadge.classList.add('is-outofstock');
-                        heroBadge.innerText = 'Hết hàng';
-                    }
+                    heroBadge.classList.add('is-outofstock');
+                    heroBadge.innerText = 'Hết hàng';
                 }
             } else {
                 if (buyButton) {
@@ -805,6 +790,7 @@
                     stockStatusText.className = 'status-instock';
                     stockStatusText.innerHTML = '<i class="fa fa-check-circle"></i> Còn hàng';
                 }
+
             }
 
             // Populate variant buttons dynamically
@@ -1235,7 +1221,6 @@
                         const style = document.createElement('style');
                         style.innerHTML = `
                             #buyActionButton, #cartActionButton, .btn-pdp-buy, .btn-pdp-cart {
-                                pointer-events: none !important;
                                 opacity: 0.5 !important;
                                 cursor: not-allowed !important;
                             }
@@ -1243,9 +1228,9 @@
                         document.head.appendChild(style);
                         setTimeout(() => {
                             const buyBtn = document.getElementById('buyActionButton');
-                            if (buyBtn) { buyBtn.onclick = () => alert("Quản trị viên và nhân viên không được phép mua hàng."); buyBtn.title = "Quản trị viên và nhân viên không được phép mua hàng"; }
+                            if (buyBtn) { buyBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); }; buyBtn.title = "Quản trị viên và nhân viên không được phép mua hàng"; }
                             const cartBtn = document.getElementById('cartActionButton');
-                            if (cartBtn) { cartBtn.onclick = () => alert("Quản trị viên và nhân viên không được phép mua hàng."); cartBtn.title = "Quản trị viên và nhân viên không được phép mua hàng"; }
+                            if (cartBtn) { cartBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); }; cartBtn.title = "Quản trị viên và nhân viên không được phép mua hàng"; }
                         }, 500); // wait for initProductDetails to replace innerHTML if any
                     }
                 } catch(e){}
@@ -1373,13 +1358,11 @@
 
         // Buy Now Button Handler
         function buyNow() {
-            const isServiceType = selectedProduct.categoryName === 'Tăng tương tác' || 
-                                  selectedProduct.categoryName === 'Dịch vụ phần mềm' ||
-                                  selectedProduct.categoryName === 'Dịch vụ khác' ||
-                                  (selectedProduct.categoryName && selectedProduct.categoryName.toLowerCase().includes('dịch vụ'));
-
-            if (!productHasStock || isServiceType) {
-                openPreOrderRequest(isServiceType);
+            if (typeof window.isEmployeeUser === 'function' && window.isEmployeeUser()) {
+                return; // Do nothing for staff/admin
+            }
+            if (!productHasStock) {
+                openPreOrderRequest();
                 return;
             }
             const token = sessionStorage.getItem("accessToken");
@@ -1404,7 +1387,10 @@
             }
         }
 
-        function openPreOrderRequest(isServiceType = false) {
+        function openPreOrderRequest() {
+            if (typeof window.isEmployeeUser === 'function' && window.isEmployeeUser()) {
+                return; // Do nothing for staff/admin
+            }
             const token = sessionStorage.getItem("accessToken");
             if (!token) {
                 showWarningToast("Vui lòng đăng nhập để gửi yêu cầu đặt trước!");
@@ -1420,22 +1406,19 @@
                 icon: selectedProduct.icon,
                 iconColor: selectedProduct.color,
                 stock: selectedProduct.stock,
-                imageUrl: selectedProduct.imageUrl || '',
-                isService: isServiceType
+                imageUrl: selectedProduct.imageUrl || ''
             });
             window.location.href = `/pre-orders/new?${params.toString()}`;
         }
 
         // Add to Cart Button Handler
         function addToCart() {
-            const isServiceType = selectedProduct.categoryName === 'Tăng tương tác' || 
-                                  selectedProduct.categoryName === 'Dịch vụ phần mềm' ||
-                                  selectedProduct.categoryName === 'Dịch vụ khác' ||
-                                  (selectedProduct.categoryName && selectedProduct.categoryName.toLowerCase().includes('dịch vụ'));
-                                  
-            if (!productHasStock || isServiceType) {
-                showWarningToast(isServiceType ? 'Sản phẩm dịch vụ vui lòng đặt trước.' : 'Sản phẩm đã hết hàng, vui lòng đặt trước.');
-                openPreOrderRequest(isServiceType);
+            if (typeof window.isEmployeeUser === 'function' && window.isEmployeeUser()) {
+                return; // Do nothing for staff/admin
+            }
+            if (!productHasStock) {
+                showWarningToast('Sản phẩm đã hết hàng, vui lòng đặt trước.');
+                openPreOrderRequest();
                 return;
             }
             const cartItem = {

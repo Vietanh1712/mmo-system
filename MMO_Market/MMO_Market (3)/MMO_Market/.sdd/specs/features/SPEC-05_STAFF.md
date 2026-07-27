@@ -26,6 +26,7 @@ Staff là lực lượng hỗ trợ vận hành hệ thống MMO Market. Họ c�
 - **FR-STAF-08**: WHEN Staff manages shop account statuses, THE SYSTEM SHALL support 5 distinct status options with Vietnamese labels: Active ("Hoạt động"), Suspended ("Tạm ngưng"), Locked ("Tạm khóa"), Banned ("Khóa vĩnh viễn"), and Withdrawn ("Đã đóng Shop (Hoàn cọc)").
 - **FR-STAF-09**: WHEN Staff processes support tickets (UC-17), THE SYSTEM SHALL allow Staff to view ticket lists, respond with solutions, and update ticket statuses (`OPEN`, `IN_PROGRESS`, `RESOLVED`, `CLOSED`).
 - **FR-STAF-10**: WHEN Staff selects "Tạm ngưng" (Suspended) status for a shop, THE SYSTEM SHALL open a popup to specify expiration date, hour, and minute (`suspendedUntil`), and automatically reinstate the shop to Active status upon expiration with real-time countdown timer display.
+- **FR-STAF-11**: WHEN Staff searches shop registrations, THE SYSTEM SHALL match the input keyword against shop code (e.g., `SHOP-1` or `1`), shop name, support email, support phone, category, seller full name, and seller email.
 
 ---
 

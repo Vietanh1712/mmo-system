@@ -896,14 +896,23 @@
 
         // Buy Now handler redirects to PDP first, carrying filter context
         function buyNow(productId) {
+            if (typeof window.isEmployeeUser === 'function' && window.isEmployeeUser()) {
+                return; // Do nothing for staff/admin
+            }
             window.location.href = `/products/${productId}` + window.location.search;
         }
 
         function preOrderNow(productId) {
+            if (typeof window.isEmployeeUser === 'function' && window.isEmployeeUser()) {
+                return; // Do nothing for staff/admin
+            }
             window.location.href = `/products/${productId}` + window.location.search;
         }
 
         function addToCartFromCard(productId) {
+            if (typeof window.isEmployeeUser === 'function' && window.isEmployeeUser()) {
+                return; // Do nothing for staff/admin
+            }
             const product = (window.currentRenderedProducts || []).find(item => item.productId === productId);
             if (!product) {
                 showWarningToast('Không tìm thấy thông tin sản phẩm để thêm vào giỏ hàng.');

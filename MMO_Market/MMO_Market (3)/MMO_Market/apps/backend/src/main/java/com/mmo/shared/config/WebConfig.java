@@ -45,9 +45,9 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        String uploadPath = new File("uploads").getAbsolutePath();
+        String uploadPath = new File("uploads").toURI().toString();
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + uploadPath + "/");
+                .addResourceLocations(uploadPath);
 
         // Use application.properties (spring.web.resources.static-locations) instead of hardcoding
         // File static1 = new File("apps/frontend/static");

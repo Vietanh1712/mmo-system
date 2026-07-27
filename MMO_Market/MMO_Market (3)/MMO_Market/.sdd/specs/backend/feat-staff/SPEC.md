@@ -42,6 +42,7 @@ Hỗ trợ Staff kiểm duyệt KYC, phê duyệt/từ chối các yêu cầu m�
 | **FR-STF-19** | WHEN a Staff views `/staff/topups`, THE SYSTEM SHALL query and display all SePay top-up transactions, filter by status, search by keyword/ID/SePay code, and calculate top statistics (total, success, failed, total VND). |
 | **FR-STF-20** | WHEN SePay webhook fails due to incorrect syntax, missing user ID, or amount outside configured min/max deposit limits, THE SYSTEM SHALL save a `TopupTransaction` record with status `Failed` recording the raw transfer content and failure reason. |
 | **FR-STF-21** | WHEN a Staff manually retries/activates a `Failed` or `Pending` top-up transaction via `POST /api/v1/staff/topups/{id}/retry`, THE SYSTEM SHALL validate the target user, credit the user balance, record a `WalletTransaction` ledger, update the top-up status to `Success`, log staff note and staff ID, and send a notification to the target user. |
+| **FR-STF-22** | WHEN a Staff searches shop registrations, THE SYSTEM SHALL perform a multi-field search across shop name, support email, support phone, category, registration ID, shop code format (e.g., `SHOP-1`), seller full name, and seller email. |
 
 ---
 

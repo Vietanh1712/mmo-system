@@ -16,4 +16,6 @@ public interface PreOrderRepository extends JpaRepository<PreOrder, Long> {
     List<PreOrder> findBySellerOrderByCreatedAtDesc(@org.springframework.data.repository.query.Param("seller") User seller);
 
     List<PreOrder> findByProductAndStatusIgnoreCaseAndIsDeleteFalseOrderByCreatedAtAsc(com.mmo.shared.model.Product product, String status);
+
+    List<PreOrder> findByIsDeleteFalseOrderByCreatedAtAsc();
 }
