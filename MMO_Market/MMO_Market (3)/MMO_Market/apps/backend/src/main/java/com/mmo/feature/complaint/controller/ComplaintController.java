@@ -173,6 +173,7 @@ public class ComplaintController {
             @AuthenticationPrincipal Long userId,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String createdDate,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         if (userId == null) {
@@ -184,7 +185,7 @@ public class ComplaintController {
 
         try {
             org.springframework.data.domain.Page<Complaint> complaintsPage = 
-                    complaintService.searchComplaintsForStaff(keyword, status, page, size);
+                    complaintService.searchComplaintsForStaff(keyword, status, createdDate, page, size);
             org.springframework.data.domain.Page<Map<String, Object>> responsePage = 
                     complaintsPage.map(this::mapComplaintToDto);
             return ResponseEntity.ok(responsePage);
