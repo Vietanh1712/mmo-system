@@ -52,20 +52,28 @@
                 </div>
 
                 <div class="admin-card">
-                    <div class="card-header-flex ds-cluster-between">
+                    <div class="card-header-flex" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
                         <h3>Danh sách khiếu nại</h3>
-                        <div style="display: flex; gap: 8px; align-items: center;">
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <div style="position: relative; width: 250px;">
+                                <i class="fa fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #64748b;"></i>
+                                <input type="text" class="ds-input" placeholder="Tìm kiếm khiếu nại, mã GD..." style="padding-left: 36px; width: 100%; border-radius: 6px; border: 1px solid #cbd5e1; padding-top: 8px; padding-bottom: 8px;">
+                            </div>
                             <select aria-label="Lọc trạng thái" class="ds-select" style="min-width: 150px; padding: 6px 10px; font-size: 13px;">
                                 <option value="">Tất cả trạng thái</option>
-                                <option selected>Open</option>
-                                <option>InProgress</option>
-                                <option>Resolved</option>
-                                <option>Closed</option>
+                                <option value="open" selected>Đang mở</option>
+                                <option value="in_progress">Đang xử lý</option>
+                                <option value="resolved">Đã giải quyết</option>
+                                <option value="closed">Đã đóng</option>
                             </select>
                             <select aria-label="Lọc sản phẩm" class="ds-select" style="min-width: 150px; padding: 6px 10px; font-size: 13px;">
-                                <option value="">Tất cả sản phẩm</option>
-                                <option>Canva Pro</option>
-                                <option>Netflix Premium</option>
+                                <option value="">Tất cả danh mục</option>
+                                <option value="email">Email</option>
+                                <option value="account">Tài khoản</option>
+                                <option value="software">Phần mềm</option>
+                                <option value="engagement">Tăng tương tác</option>
+                                <option value="software_service">Dịch vụ phần mềm</option>
+                                <option value="blockchain">Blockchain</option>
                             </select>
                         </div>
                     </div>

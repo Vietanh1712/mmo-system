@@ -99,6 +99,25 @@
                 </div>
 
                 <div class="admin-card seller-transactions-card">
+                    <div class="card-header-flex" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 16px;">
+                        <h3>Danh sách đơn đặt trước</h3>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <div style="position: relative; width: 250px;">
+                                <i class="fa fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #64748b;"></i>
+                                <input type="text" class="ds-input" id="preorderSearchInput" placeholder="Tìm mã đơn, khách hàng..." style="padding-left: 36px; width: 100%; border-radius: 6px; border: 1px solid #cbd5e1; padding-top: 8px; padding-bottom: 8px;">
+                            </div>
+                            <select class="ds-select" id="preorderStatusFilter" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; min-width: 150px;">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="pending">Chờ xử lý</option>
+                                <option value="completed">Hoàn thành</option>
+                                <option value="cancelled">Đã hủy</option>
+                            </select>
+                            <select class="ds-select" id="preorderSortSelect" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; min-width: 150px;">
+                                <option value="newest">Mới nhất</option>
+                                <option value="oldest">Cũ nhất</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="table-wrap">
                         <table class="admin-table seller-table" id="preOrdersTable">
                             <thead>
