@@ -587,41 +587,47 @@ a {
 .category-box {
     background: white;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 25px;
+    border-radius: 16px;
+    padding: 35px 25px;
     text-align: center;
     transition: all 0.3s ease;
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
 
 .category-box:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 20px -5px rgba(0,0,0,0.1);
+    transform: translateY(-6px);
+    box-shadow: 0 16px 24px -5px rgba(0,0,0,0.08);
     border-color: #fbceb5;
 }
 
 .category-box__icon-wrapper {
-    width: 70px;
-    height: 70px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
-    margin: 0 auto 20px;
+    margin: 0 auto 22px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 30px;
+    font-size: 34px;
+    transition: transform 0.3s ease;
+}
+
+.category-box:hover .category-box__icon-wrapper {
+    transform: scale(1.08);
 }
 
 .category-box__title {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
     color: #0f172a;
-    margin: 0 0 10px;
+    margin: 0 0 12px;
 }
 
 .category-box__desc {
-    font-size: 14px;
+    font-size: 14.5px;
     color: #64748b;
     margin: 0;
+    line-height: 1.5;
 }
 
 .category-box--email .category-box__icon-wrapper { background-color: #eef2ff; color: #4f46e5; }
@@ -638,10 +644,31 @@ a {
    ================================================== */
 .section-title {
     text-align: center;
-    font-size: 28px;
-    font-weight: 700;
+    font-size: 26px;
+    font-weight: 800;
     color: #0f172a;
-    margin: 60px 0 30px;
+    margin: 60px 0 35px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.section-title::after {
+    content: '';
+    display: block;
+    width: 50px;
+    height: 4px;
+    background: linear-gradient(90deg, #fbceb5, #ea580c);
+    border-radius: 2px;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.section-title:hover::after {
+    width: 90px;
 }
 
 .categories-container {
