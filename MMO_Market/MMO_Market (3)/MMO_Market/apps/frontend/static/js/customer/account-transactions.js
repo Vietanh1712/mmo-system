@@ -414,6 +414,8 @@ function getAmountClass(transaction) {
 }
 
 function formatTransactionType(type) {
+    if (!type) return '-';
+    const upperType = type.toUpperCase().trim();
     const map = {
         TOPUP: 'Nạp tiền',
         PAYMENT: 'Thanh toán',
@@ -421,10 +423,12 @@ function formatTransactionType(type) {
         ESCROW: 'Tạm giữ',
         WITHDRAWAL: 'Rút tiền'
     };
-    return map[type] || type || '-';
+    return map[upperType] || type || '-';
 }
 
 function getDefaultDescription(type) {
+    if (!type) return 'Giao dịch ví';
+    const upperType = type.toUpperCase().trim();
     const map = {
         TOPUP: 'Nạp tiền vào ví',
         PAYMENT: 'Thanh toán đơn hàng',
@@ -432,22 +436,26 @@ function getDefaultDescription(type) {
         ESCROW: 'Giao dịch tạm giữ',
         WITHDRAWAL: 'Rút tiền khỏi ví'
     };
-    return map[type] || 'Giao dịch ví';
+    return map[upperType] || 'Giao dịch ví';
 }
 
 function formatStatus(status) {
+    if (!status) return '-';
+    const upperStatus = status.toUpperCase().trim();
     const map = {
         SUCCESS: 'Thành công',
         PENDING: 'Đang xử lý',
         FAILED: 'Thất bại'
     };
-    return map[status] || status || '-';
+    return map[upperStatus] || status || '-';
 }
 
 function getStatusBadgeClass(status) {
-    if (status === 'SUCCESS') return 'ds-badge-success';
-    if (status === 'PENDING') return 'ds-badge-warning';
-    if (status === 'FAILED') return 'ds-badge-danger';
+    if (!status) return 'ds-badge-muted';
+    const upperStatus = status.toUpperCase().trim();
+    if (upperStatus === 'SUCCESS') return 'ds-badge-success';
+    if (upperStatus === 'PENDING') return 'ds-badge-warning';
+    if (upperStatus === 'FAILED') return 'ds-badge-danger';
     return 'ds-badge-muted';
 }
 
