@@ -1121,6 +1121,7 @@ public class SellerController {
             details.put("customerName", c.getCustomer().getFullName());
             details.put("customerEmail", c.getCustomer().getEmail());
             details.put("description", c.getDescription());
+            details.put("preferredSolution", c.getPreferredSolution() != null ? c.getPreferredSolution() : "");
             details.put("evidence", c.getEvidence() != null ? c.getEvidence() : "");
             details.put("status", c.getStatus());
             details.put("resolution", c.getResolution() != null ? c.getResolution() : "");

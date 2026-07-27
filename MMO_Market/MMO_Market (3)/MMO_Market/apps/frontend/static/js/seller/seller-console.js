@@ -1895,6 +1895,14 @@ async function initComplaintDetail() {
 
         const descEl = document.getElementById('c-description');
         if (descEl) descEl.textContent = c.description || '-';
+
+        const solutionEl = document.getElementById('c-preferred-solution');
+        if (solutionEl) {
+            let solText = c.preferredSolution || 'Không có';
+            if (solText === 'REFUND') solText = 'Yêu cầu hoàn tiền';
+            else if (solText === 'REPLACEMENT') solText = 'Yêu cầu đổi sản phẩm khác';
+            solutionEl.textContent = solText;
+        }
         
         if (c.evidence) {
             const evSec = document.getElementById('c-evidence-section');
