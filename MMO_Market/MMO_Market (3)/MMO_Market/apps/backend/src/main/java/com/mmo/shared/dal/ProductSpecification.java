@@ -24,11 +24,15 @@ public class ProductSpecification {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // --- Keyword Search (in product name only) ---
+            // --- Keyword Search (in product name, seller full name, or shop code) ---
             if (keyword != null && !keyword.trim().isEmpty()) {
                 String likePattern = "%" + keyword.toLowerCase() + "%";
                 Predicate namePredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), likePattern);
-                predicates.add(namePredicate);
+                Predicate sellerNamePredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("seller").get("fullName")), likePattern);
+                Predicate sellerIdPredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("seller").get("id").as(String.class)), likePattern);
+                Predicate shopCodePredicate = criteriaBuilder.like(criteriaBuilder.lower(criteriaBuilder.concat("shop-", root.get("seller").get("id").as(String.class))), likePattern);
+                
+                predicates.add(criteriaBuilder.or(namePredicate, sellerNamePredicate, sellerIdPredicate, shopCodePredicate));
             }
 
             // --- Category Filter ---

@@ -114,12 +114,22 @@ AND (
       :hasStatus = false
       OR c.status IN (:statuses)
 )
+AND (
+      cast(:fromDate as timestamp) IS NULL
+      OR c.createdAt >= :fromDate
+)
+AND (
+      cast(:toDate as timestamp) IS NULL
+      OR c.createdAt <= :toDate
+)
 """)
     Page<Complaint> searchComplaintsForStaff(
             @Param("complaintId") Long complaintId,
             @Param("keyword") String keyword,
             @Param("statuses") java.util.Collection<String> statuses,
             @Param("hasStatus") boolean hasStatus,
+            @Param("fromDate") java.time.LocalDateTime fromDate,
+            @Param("toDate") java.time.LocalDateTime toDate,
             Pageable pageable
     );
 }

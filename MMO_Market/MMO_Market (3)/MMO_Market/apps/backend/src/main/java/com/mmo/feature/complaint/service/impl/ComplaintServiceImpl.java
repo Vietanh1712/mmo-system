@@ -764,7 +764,7 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Override
     public org.springframework.data.domain.Page<Complaint> searchComplaintsForStaff(String keyword, String status,
-            int page, int size) {
+            String createdDate, int page, int size) {
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size,
                 org.springframework.data.domain.Sort.by("createdAt").descending());
 
@@ -810,8 +810,18 @@ public class ComplaintServiceImpl implements ComplaintService {
         if (!hasStatus) {
             queryStatuses.add("DUMMY_STATUS_EMPTY");
         }
-        
-        return complaintRepository.searchComplaintsForStaff(complaintId, searchKeyword, queryStatuses, hasStatus, pageable);
+
+        LocalDateTime fromDate = null;
+        LocalDateTime toDate = null;
+        if (createdDate != null && !createdDate.trim().isEmpty()) {
+            try {
+                java.time.LocalDate parsedDate = java.time.LocalDate.parse(createdDate.trim());
+                fromDate = parsedDate.atStartOfDay();
+                toDate = parsedDate.atTime(23, 59, 59);
+            } catch (Exception ignored) {}
+        }
+
+        return complaintRepository.searchComplaintsForStaff(complaintId, searchKeyword, queryStatuses, hasStatus, fromDate, toDate, pageable);
     }
 
     private int parseDurationDays(String variantName) {
