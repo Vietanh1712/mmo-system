@@ -49,6 +49,9 @@ public class PreOrder {
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String deliveryData;
 
+    @Column(name = "proof_image", length = 500)
+    private String proofImage;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

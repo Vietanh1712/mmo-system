@@ -387,8 +387,8 @@
                         <small class="profile-edit-form__hint">Kích thước khuyến nghị: 600x600px. Tối đa 2MB.</small>
                     </div>
 
-                    <!-- Section 2: Product Type Selection (Hidden, Auto-selected via JS) -->
-                    <div id="productTypeSection" style="display: none;">
+                    <!-- Section 2: Product Type Selection (Auto-selected via JS but editable) -->
+                    <div id="productTypeSection" style="display: block; margin-bottom: 24px;">
                         <div class="form-section-title">Loại sản phẩm <span style="color: #ef4444;">*</span></div>
                         <p class="profile-edit-form__hint">Chọn loại sản phẩm để xác định các thông tin kho cần nhập</p>
     
@@ -507,6 +507,31 @@
             fileInput.files = files;
             fileInput.dispatchEvent(new Event('change', { bubbles: true }));
         });
+
+        // Auto-select product type based on category
+        const mainSelect = document.getElementById('mainCategory');
+        const subSelect = document.getElementById('subCategory');
+        
+        function autoSelectType() {
+            const selectedText = (subSelect.options[subSelect.selectedIndex]?.text || mainSelect.options[mainSelect.selectedIndex]?.text || '').toLowerCase();
+            let type = 'ACCOUNT';
+            
+            if (selectedText.includes('key') || selectedText.includes('phần mềm') || selectedText.includes('công cụ')) {
+                type = 'KEY';
+            } else if (selectedText.includes('thẻ') || selectedText.includes('game') || selectedText.includes('nạp')) {
+                type = 'GAME_CARD';
+            } else if (selectedText.includes('dịch vụ') || selectedText.includes('like') || selectedText.includes('view') || selectedText.includes('buff') || selectedText.includes('tiktok') || selectedText.includes('youtube')) {
+                type = 'SERVICE';
+            }
+            
+            const radio = document.querySelector(`input[name="productType"][value="${type}"]`);
+            if (radio) {
+                radio.checked = true;
+            }
+        }
+
+        mainSelect.addEventListener('change', () => setTimeout(autoSelectType, 100));
+        subSelect.addEventListener('change', autoSelectType);
     </script>
 </body>
 </html>

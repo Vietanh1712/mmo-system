@@ -275,8 +275,11 @@
         async function selectInitialChat() {
             const urlParams = new URLSearchParams(window.location.search);
             const sellerIdParam = urlParams.get('sellerId');
-            if (sellerIdParam && !isNaN(Number(sellerIdParam))) {
-                await selectChat(Number(sellerIdParam));
+            const customerIdParam = urlParams.get('customerId');
+            const contactId = sellerIdParam ? Number(sellerIdParam) : (customerIdParam ? Number(customerIdParam) : null);
+            
+            if (contactId && !isNaN(contactId)) {
+                await selectChat(contactId);
             } else if (activeChatList && activeChatList.length > 0) {
                 await selectChat(activeChatList[0].contactId);
             } else {

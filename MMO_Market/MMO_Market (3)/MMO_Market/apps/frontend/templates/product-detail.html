@@ -762,21 +762,36 @@
             const stockStatusText = document.getElementById('stockStatusText');
             const heroBadge = document.getElementById('heroBadge');
 
-            if (!productHasStock) {
+            const isServiceType = selectedProduct.categoryName === 'Tăng tương tác' || 
+                                  selectedProduct.categoryName === 'Dịch vụ phần mềm' ||
+                                  selectedProduct.categoryName === 'Dịch vụ khác' ||
+                                  (selectedProduct.categoryName && selectedProduct.categoryName.toLowerCase().includes('dịch vụ'));
+                                  
+            if (!productHasStock || isServiceType) {
                 if (buyButton) {
                     buyButton.classList.add('is-preorder');
-                    buyButton.innerHTML = '<i class="fa fa-clock-o"></i> Đặt trước';
+                    buyButton.innerHTML = isServiceType ? '<i class="fa fa-clock-o"></i> Đặt trước dịch vụ' : '<i class="fa fa-clock-o"></i> Đặt trước';
                 }
                 if (cartButton) {
                     cartButton.classList.add('is-hidden');
                 }
                 if (stockStatusText) {
-                    stockStatusText.className = 'status-outofstock';
-                    stockStatusText.innerHTML = '<i class="fa fa-times-circle"></i> Hết hàng';
+                    if (isServiceType) {
+                        stockStatusText.className = 'status-instock';
+                        stockStatusText.innerHTML = '<i class="fa fa-bolt"></i> Dịch vụ';
+                    } else {
+                        stockStatusText.className = 'status-outofstock';
+                        stockStatusText.innerHTML = '<i class="fa fa-times-circle"></i> Hết hàng';
+                    }
                 }
                 if (heroBadge) {
-                    heroBadge.classList.add('is-outofstock');
-                    heroBadge.innerText = 'Hết hàng';
+                    if (isServiceType) {
+                        heroBadge.classList.add('is-service');
+                        heroBadge.innerText = 'Dịch vụ';
+                    } else {
+                        heroBadge.classList.add('is-outofstock');
+                        heroBadge.innerText = 'Hết hàng';
+                    }
                 }
             } else {
                 if (buyButton) {
@@ -790,7 +805,6 @@
                     stockStatusText.className = 'status-instock';
                     stockStatusText.innerHTML = '<i class="fa fa-check-circle"></i> Còn hàng';
                 }
-
             }
 
             // Populate variant buttons dynamically
@@ -1359,8 +1373,13 @@
 
         // Buy Now Button Handler
         function buyNow() {
-            if (!productHasStock) {
-                openPreOrderRequest();
+            const isServiceType = selectedProduct.categoryName === 'Tăng tương tác' || 
+                                  selectedProduct.categoryName === 'Dịch vụ phần mềm' ||
+                                  selectedProduct.categoryName === 'Dịch vụ khác' ||
+                                  (selectedProduct.categoryName && selectedProduct.categoryName.toLowerCase().includes('dịch vụ'));
+
+            if (!productHasStock || isServiceType) {
+                openPreOrderRequest(isServiceType);
                 return;
             }
             const token = sessionStorage.getItem("accessToken");
@@ -1385,7 +1404,7 @@
             }
         }
 
-        function openPreOrderRequest() {
+        function openPreOrderRequest(isServiceType = false) {
             const token = sessionStorage.getItem("accessToken");
             if (!token) {
                 showWarningToast("Vui lòng đăng nhập để gửi yêu cầu đặt trước!");
@@ -1401,16 +1420,22 @@
                 icon: selectedProduct.icon,
                 iconColor: selectedProduct.color,
                 stock: selectedProduct.stock,
-                imageUrl: selectedProduct.imageUrl || ''
+                imageUrl: selectedProduct.imageUrl || '',
+                isService: isServiceType
             });
             window.location.href = `/pre-orders/new?${params.toString()}`;
         }
 
         // Add to Cart Button Handler
         function addToCart() {
-            if (!productHasStock) {
-                showWarningToast('Sản phẩm đã hết hàng, vui lòng đặt trước.');
-                openPreOrderRequest();
+            const isServiceType = selectedProduct.categoryName === 'Tăng tương tác' || 
+                                  selectedProduct.categoryName === 'Dịch vụ phần mềm' ||
+                                  selectedProduct.categoryName === 'Dịch vụ khác' ||
+                                  (selectedProduct.categoryName && selectedProduct.categoryName.toLowerCase().includes('dịch vụ'));
+                                  
+            if (!productHasStock || isServiceType) {
+                showWarningToast(isServiceType ? 'Sản phẩm dịch vụ vui lòng đặt trước.' : 'Sản phẩm đã hết hàng, vui lòng đặt trước.');
+                openPreOrderRequest(isServiceType);
                 return;
             }
             const cartItem = {

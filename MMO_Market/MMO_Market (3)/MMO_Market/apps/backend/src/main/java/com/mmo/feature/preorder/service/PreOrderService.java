@@ -171,7 +171,7 @@ public class PreOrderService {
     }
 
     @Transactional
-    public PreOrderResponse deliverPreOrder(Long sellerId, Long preOrderId, String deliveryData) {
+    public PreOrderResponse deliverPreOrder(Long sellerId, Long preOrderId, com.mmo.shared.dto.PreOrderDeliveryRequest request) {
         PreOrder preOrder = preOrderRepository.findById(preOrderId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn đặt trước"));
 
@@ -184,7 +184,11 @@ public class PreOrderService {
         }
 
         preOrder.setStatus("COMPLETED");
-        preOrder.setDeliveryData(deliveryData);
+        preOrder.setDeliveryData(request.getDeliveryData());
+        if (request.getProofImage() != null && !request.getProofImage().isBlank()) {
+            preOrder.setProofImage(request.getProofImage());
+        }
+        
         PreOrder saved = preOrderRepository.save(preOrder);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -198,6 +202,7 @@ public class PreOrderService {
                 .status(saved.getStatus())
                 .notes(saved.getNotes())
                 .deliveryData(saved.getDeliveryData())
+                .proofImage(saved.getProofImage())
                 .createdAt(saved.getCreatedAt() != null ? saved.getCreatedAt().format(formatter) : "")
                 .build();
     }

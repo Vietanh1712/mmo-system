@@ -56,6 +56,15 @@
 
             fetchPreOrders(token);
         });
+        
+        function escapeHtml(unsafe) {
+            return (unsafe || '').toString()
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
 
         function fetchPreOrders(token) {
             const messageEl = document.getElementById('preOrdersMessage');
@@ -167,6 +176,13 @@
                                     <span class="preorder-card__label">Ghi chú của bạn</span>
                                     <p class="preorder-card__notes-text">${notes}</p>
                                 </div>
+                                ${po.status === 'COMPLETED' || po.status === 'Hoàn thành' ? `
+                                <div class="preorder-card__delivery" style="margin-top: 16px; padding: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
+                                    <span class="preorder-card__label" style="color: #166534; font-weight: 600;"><i class="fa fa-check-circle"></i> Kết quả trả hàng từ người bán</span>
+                                    <p class="preorder-card__notes-text" style="color: #14532d; font-family: monospace; white-space: pre-wrap; margin-top: 8px;">${po.deliveryData ? escapeHtml(po.deliveryData) : 'Đã hoàn thành'}</p>
+                                    ${po.proofImage ? `<div style="margin-top: 12px;"><img src="${po.proofImage}" alt="Ảnh bằng chứng" style="max-width: 100%; max-height: 300px; border-radius: 6px; border: 1px solid #bbf7d0; cursor: pointer;" onclick="window.open(this.src)"></div>` : ''}
+                                </div>
+                                ` : ''}
                             </div>
                             
                             <div class="preorder-card__workflow" aria-label="Quy trình đơn hàng">

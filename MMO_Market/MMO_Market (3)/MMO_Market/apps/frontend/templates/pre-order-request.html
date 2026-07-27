@@ -163,6 +163,8 @@
             return Math.max(1, parseInt(document.getElementById('quantityInput')?.value || '1', 10) || 1);
         }
 
+        const isService = readParam('isService', 'false') === 'true';
+
         function getExpectedPriceVnd() {
             return unitPrice * getQuantity();
         }
@@ -180,7 +182,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            if (preorderProduct.stock > 0 && preorderProduct.productId) {
+            if (!isService && preorderProduct.stock > 0 && preorderProduct.productId) {
                 showWarningToast('Sản phẩm này còn hàng, vui lòng mua trực tiếp thay vì đặt trước.');
                 window.location.href = `/products/${preorderProduct.productId}`;
                 return;
@@ -202,6 +204,31 @@
             document.getElementById('summaryProductText').innerText = preorderProduct.productName || '-';
             document.getElementById('summarySellerText').innerText = preorderProduct.sellerName || '-';
             document.getElementById('summaryCurrentPriceText').innerText = formatVND(preorderProduct.price);
+
+            if (isService) {
+                document.querySelector('h1.preorder-title').innerText = 'Đặt trước dịch vụ';
+                document.querySelector('.preorder-subtitle').innerText = 'Nhập thông tin (như tên acc TikTok, IG, FB hoặc Link bài viết) để Seller thực hiện dịch vụ.';
+                
+                const notesLabel = document.querySelector('label[for="notesInput"]');
+                if (notesLabel) {
+                    notesLabel.innerHTML = 'Thông tin cung cấp cho Seller (Tên Acc, Link, Ghi chú) <span style="color: #ef4444;">*</span>';
+                }
+                
+                const notesInput = document.getElementById('notesInput');
+                if (notesInput) {
+                    notesInput.placeholder = 'Ví dụ: Link bài viết TikTok: https://... hoặc User IG: @abc...';
+                    notesInput.required = true;
+                }
+                
+                const stockContainer = document.getElementById('stockText').parentElement;
+                if (stockContainer) stockContainer.style.display = 'none';
+                const statusPill = document.querySelector('.status-pill');
+                if (statusPill) {
+                    statusPill.innerHTML = '<i class="fa fa-bolt"></i> Dịch vụ';
+                    statusPill.style.backgroundColor = 'var(--surface)';
+                    statusPill.style.color = 'var(--brand)';
+                }
+            }
 
             const quantityInput = document.getElementById('quantityInput');
             quantityInput.addEventListener('input', updatePreOrderSummary);
@@ -231,6 +258,11 @@
 
             if (quantity < 1 || expectedPriceVnd < 1) {
                 showWarningToast('Vui lòng nhập số lượng hợp lệ.');
+                return;
+            }
+            
+            if (isService && !notes) {
+                showWarningToast('Vui lòng nhập thông tin cho Seller (link, tên tài khoản...).');
                 return;
             }
 

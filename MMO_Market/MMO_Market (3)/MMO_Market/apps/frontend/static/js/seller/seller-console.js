@@ -1210,7 +1210,7 @@ async function initTransactions() {
                     <td class="text-right">
                         ${(t.status === 'Disputed' || t.status === 'Khiếu nại')
                             ? `<a class="icon-button" href="/seller/complaints" title="Xem khiếu nại"><i class="fa fa-warning"></i></a>`
-                            : `<a class="icon-button" href="/messages?to=${t.customerEmail}" title="Nhắn tin"><i class="fa fa-envelope"></i></a>
+                            : `<a class="icon-button" href="/messages?sellerView=true&customerId=${t.customerId}" title="Nhắn tin"><i class="fa fa-envelope"></i></a>
                                <a class="icon-button" href="#" title="Chi tiết" onclick="showToast('Tính năng đang phát triển', 'info'); return false;"><i class="fa fa-info-circle"></i></a>`}
                     </td>
                 </tr>
@@ -2080,7 +2080,7 @@ async function initPreOrders() {
                         <button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px; color: var(--seller-danger); border-color: var(--seller-danger);" onclick="updatePreOrderStatus(${o.id}, 'CANCELLED')">
                             <i class="fa fa-times"></i> Hủy
                         </button>
-                        ` : `<button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px;" onclick="showToast('Nội dung trả: ${o.deliveryData ? o.deliveryData.replace(/\\n/g, ' ') : 'N/A'}', 'info')">
+                        ` : `<button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px;" onclick="openViewDeliveryModal('${escapeHtml(o.deliveryData || '')}', '${o.proofImage || ''}')">
                                 <i class="fa fa-eye"></i> Xem trả hàng
                              </button>`}
                     </td>
@@ -2142,21 +2142,59 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnSubmitDelivery) {
         btnSubmitDelivery.addEventListener('click', async () => {
             const data = document.getElementById('deliveryDataInput').value.trim();
+            const fileInput = document.getElementById('deliveryProofImage');
+            const statusText = document.getElementById('deliveryUploadStatus');
+            
             if (!data) {
                 showToast('Vui lòng nhập nội dung trả hàng.', 'error');
                 return;
             }
             if (!currentDeliveryPreOrderId) return;
             
+            btnSubmitDelivery.disabled = true;
+            btnSubmitDelivery.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
+            
+            let proofImage = '';
+            const token = sessionStorage.getItem('accessToken');
+            
             try {
-                const token = sessionStorage.getItem('accessToken');
+                if (fileInput && fileInput.files.length > 0) {
+                    if (statusText) {
+                        statusText.style.color = 'var(--seller-ink)';
+                        statusText.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tải ảnh lên...';
+                    }
+                    const file = fileInput.files[0];
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    
+                    const uploadRes = await fetch('/api/upload', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: formData
+                    });
+                    const uploadData = await uploadRes.json();
+                    if (!uploadRes.ok) {
+                        throw new Error(uploadData.message || 'Lỗi tải lên ảnh bằng chứng.');
+                    }
+                    proofImage = uploadData.url;
+                    if (statusText) {
+                        statusText.style.color = '#16a34a';
+                        statusText.innerHTML = '<i class="fa fa-check-circle"></i> Tải ảnh thành công.';
+                    }
+                }
+            
                 const res = await fetch(`/api/v1/pre-orders/seller/${currentDeliveryPreOrderId}/deliver`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ deliveryData: data })
+                    body: JSON.stringify({ 
+                        deliveryData: data,
+                        proofImage: proofImage
+                    })
                 });
                 
                 if (!res.ok) {
@@ -2169,12 +2207,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 initPreOrders();
             } catch (err) {
                 showToast(err.message, 'error');
+                if (statusText) statusText.innerHTML = '';
+            } finally {
+                btnSubmitDelivery.disabled = false;
+                btnSubmitDelivery.innerHTML = 'Xác nhận trả hàng';
             }
         });
     }
 });
 
+function openViewDeliveryModal(text, imageUrl) {
+    const modal = document.getElementById('viewDeliveryModal');
+    if (modal) {
+        document.getElementById('viewDeliveryText').textContent = text || 'Không có ghi chú';
+        const imgContainer = document.getElementById('viewDeliveryImageContainer');
+        const img = document.getElementById('viewDeliveryImage');
+        if (imageUrl && imageUrl !== 'null' && imageUrl.trim() !== '') {
+            img.src = imageUrl;
+            imgContainer.style.display = 'block';
+        } else {
+            imgContainer.style.display = 'none';
+        }
+        modal.style.display = 'flex';
+    }
+}
+
+function closeViewDeliveryModal() {
+    const modal = document.getElementById('viewDeliveryModal');
+    if (modal) modal.style.display = 'none';
+}
+
 window.initPreOrders = initPreOrders;
 window.updatePreOrderStatus = updatePreOrderStatus;
 window.openDeliveryModal = openDeliveryModal;
 window.closeDeliveryModal = closeDeliveryModal;
+window.openViewDeliveryModal = openViewDeliveryModal;
+window.closeViewDeliveryModal = closeViewDeliveryModal;

@@ -73,12 +73,37 @@
                 <button type="button" onclick="closeDeliveryModal()" style="background: transparent; border: none; font-size: 20px; cursor: pointer; color: var(--seller-muted);">&times;</button>
             </div>
             <div style="margin-bottom: 16px;">
-                <label style="display: block; font-weight: 500; margin-bottom: 8px; color: var(--seller-ink);">Nội dung trả hàng (Key, Tài khoản, Thẻ nạp, v.v.) <span style="color: #ef4444;">*</span></label>
-                <textarea id="deliveryDataInput" rows="5" style="width: 100%; padding: 12px; border: 1px solid var(--seller-border); border-radius: 6px; font-family: monospace; font-size: 14px;" placeholder="Ví dụ: \nUsername: admin\nPassword: 123456\nHoặc mã thẻ: XXXX-YYYY-ZZZZ"></textarea>
+                <label style="display: block; font-weight: 500; margin-bottom: 8px; color: var(--seller-ink);">Nội dung trả hàng / Ghi chú <span style="color: #ef4444;">*</span></label>
+                <textarea id="deliveryDataInput" rows="4" style="width: 100%; padding: 12px; border: 1px solid var(--seller-border); border-radius: 6px; font-family: monospace; font-size: 14px;" placeholder="Nhập thông tin tài khoản, mã thẻ, hoặc ghi chú hoàn thành dịch vụ..."></textarea>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-weight: 500; margin-bottom: 8px; color: var(--seller-ink);">Ảnh bằng chứng (Tùy chọn)</label>
+                <input type="file" id="deliveryProofImage" accept="image/*" style="width: 100%; padding: 8px; border: 1px solid var(--seller-border); border-radius: 6px; font-size: 13px;">
+                <p id="deliveryUploadStatus" style="font-size: 12px; margin-top: 4px;"></p>
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 12px;">
                 <button type="button" class="ds-btn ds-btn-outline" onclick="closeDeliveryModal()">Hủy</button>
                 <button type="button" class="ds-btn ds-btn-primary" id="btnSubmitDelivery" style="background: var(--seller-primary); color: white; border: none;">Xác nhận trả hàng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Xem Nội Dung Trả Hàng (View Delivery Modal) -->
+    <div id="viewDeliveryModal" class="asset-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="asset-modal-content" style="background: white; border-radius: 8px; width: 500px; max-width: 90%; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="margin: 0; font-size: 18px; color: var(--seller-ink);">Nội dung trả hàng</h3>
+                <button type="button" onclick="closeViewDeliveryModal()" style="background: transparent; border: none; font-size: 20px; cursor: pointer; color: var(--seller-muted);">&times;</button>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <pre id="viewDeliveryText" style="width: 100%; padding: 12px; border: 1px solid var(--seller-border); border-radius: 6px; font-family: monospace; font-size: 14px; background: #f8fafc; white-space: pre-wrap; margin: 0;"></pre>
+            </div>
+            <div id="viewDeliveryImageContainer" style="margin-bottom: 16px; display: none;">
+                <p style="font-weight: 500; font-size: 13px; margin-bottom: 8px;">Ảnh bằng chứng:</p>
+                <img id="viewDeliveryImage" src="" alt="Proof" style="max-width: 100%; border-radius: 6px; border: 1px solid var(--seller-border);">
+            </div>
+            <div style="display: flex; justify-content: flex-end;">
+                <button type="button" class="ds-btn ds-btn-outline" onclick="closeViewDeliveryModal()">Đóng</button>
             </div>
         </div>
     </div>
