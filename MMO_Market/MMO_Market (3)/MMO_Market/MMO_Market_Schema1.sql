@@ -8,16 +8,22 @@
 -- ==============================================================================
 
 -- 1. KHỞI TẠO CƠ SỞ DỮ LIỆU
-IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'MMO_System_Schema')
+USE master;
+GO
+IF EXISTS (SELECT * FROM sys.databases WHERE name = 'MMO_System_Schema')
 BEGIN
-    CREATE DATABASE MMO_System_Schema;
+    ALTER DATABASE MMO_System_Schema SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE MMO_System_Schema;
 END
+GO
+CREATE DATABASE MMO_System_Schema;
 GO
 
 USE MMO_System_Schema;
 GO
 
 -- XÓA BẢNG CŨ NẾU CÓ ĐỂ TRÁNH XUNG ĐỘT (XÓA THEO THỨ TỰ CON TRƯỚC - CHA SAU)
+IF OBJECT_ID('ChatMutes', 'U') IS NOT NULL DROP TABLE ChatMutes;
 IF OBJECT_ID('UserPermissions', 'U') IS NOT NULL DROP TABLE UserPermissions;
 IF OBJECT_ID('Permissions', 'U') IS NOT NULL DROP TABLE Permissions;
 IF OBJECT_ID('SupportTickets', 'U') IS NOT NULL DROP TABLE SupportTickets;
@@ -72,6 +78,7 @@ CREATE TABLE Users (
     deposit_vnd BIGINT DEFAULT 0,
     failed_attempts INT DEFAULT 0,
     lock_time DATETIME2 NULL,
+    suspended_until DATETIME2 NULL,
     is_2fa_enabled BIT DEFAULT 0,
     permissions NVARCHAR(MAX) NULL,
     isVerified BIT DEFAULT 0,
@@ -219,41 +226,9 @@ CREATE TABLE ProductVariants (
 );
 GO
 
-CREATE TABLE DigitalAssets (
-    id                  BIGINT IDENTITY(1,1) PRIMARY KEY,
-    variant_id          BIGINT NOT NULL,
-    transaction_id      BIGINT NULL,                 -- Liên kết đơn hàng đã bán
-    asset_type          NVARCHAR(20) NOT NULL,       -- ACCOUNT | KEY | GAME_CARD
-    asset_data          NVARCHAR(MAX) NOT NULL,      -- Dữ liệu JSON dự phòng
-    account_username    NVARCHAR(255) NULL,          -- Cho loại ACCOUNT
-    account_password    NVARCHAR(500) NULL,          -- Cho loại ACCOUNT
-    key_code            NVARCHAR(MAX) NULL,          -- Cho loại KEY
-    card_code           NVARCHAR(MAX) NULL,          -- Cho loại GAME_CARD
-    card_pin            NVARCHAR(255) NULL,          -- Cho loại GAME_CARD
-    notes               NVARCHAR(MAX) NULL,          -- Ghi chú chung
-    is_used             BIT NOT NULL DEFAULT 0,      -- 0 = còn hàng, 1 = đã bán
-    is_delete           BIT NOT NULL DEFAULT 0,      -- Đồng bộ với DigitalAsset.java: @Column(name = "is_delete")
-    created_at          DATETIME NOT NULL DEFAULT GETDATE(),
-    CONSTRAINT FK_DigitalAssets_Variant FOREIGN KEY (variant_id) REFERENCES ProductVariants(id) ON DELETE NO ACTION,
-    CONSTRAINT FK_DigitalAssets_Transactions FOREIGN KEY (transaction_id) REFERENCES Transactions(id) ON DELETE NO ACTION
-);
-GO
-
 -- ==========================================
 -- PHẦN 4: GIAO DỊCH VÀ VÍ ĐIỆN TỬ (TÀI CHÍNH - MAPPED WITH TopupTransaction.java, Transaction.java, Withdrawal.java)
 -- ==========================================
-
-CREATE TABLE TopupTransactions (
-    id BIGINT IDENTITY(1,1) PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    amount_vnd BIGINT NOT NULL,
-    sepay_code VARCHAR(255),
-    status VARCHAR(20) DEFAULT 'Pending',
-    created_at DATETIME DEFAULT GETDATE(),
-    isDelete BIT DEFAULT 0,
-    CONSTRAINT FK_Topup_Users FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION
-);
-GO
 
 CREATE TABLE Transactions (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
@@ -273,6 +248,38 @@ CREATE TABLE Transactions (
     CONSTRAINT FK_Trans_Seller FOREIGN KEY (seller_id) REFERENCES Users(id) ON DELETE NO ACTION,
     CONSTRAINT FK_Trans_Product FOREIGN KEY (product_id) REFERENCES Products(id) ON DELETE NO ACTION,
     CONSTRAINT FK_Trans_Variant FOREIGN KEY (variant_id) REFERENCES ProductVariants(id) ON DELETE NO ACTION
+);
+GO
+
+CREATE TABLE TopupTransactions (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    amount_vnd BIGINT NOT NULL,
+    sepay_code VARCHAR(255),
+    status VARCHAR(20) DEFAULT 'Pending',
+    created_at DATETIME DEFAULT GETDATE(),
+    isDelete BIT DEFAULT 0,
+    CONSTRAINT FK_Topup_Users FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION
+);
+GO
+
+CREATE TABLE DigitalAssets (
+    id                  BIGINT IDENTITY(1,1) PRIMARY KEY,
+    variant_id          BIGINT NOT NULL,
+    transaction_id      BIGINT NULL,                 -- Liên kết đơn hàng đã bán
+    asset_type          NVARCHAR(20) NOT NULL,       -- ACCOUNT | KEY | GAME_CARD
+    asset_data          NVARCHAR(MAX) NOT NULL,      -- Dữ liệu JSON dự phòng
+    account_username    NVARCHAR(255) NULL,          -- Cho loại ACCOUNT
+    account_password    NVARCHAR(500) NULL,          -- Cho loại ACCOUNT
+    key_code            NVARCHAR(MAX) NULL,          -- Cho loại KEY
+    card_code           NVARCHAR(MAX) NULL,          -- Cho loại GAME_CARD
+    card_pin            NVARCHAR(255) NULL,          -- Cho loại GAME_CARD
+    notes               NVARCHAR(MAX) NULL,          -- Ghi chú chung
+    is_used             BIT NOT NULL DEFAULT 0,      -- 0 = còn hàng, 1 = đã bán
+    is_delete           BIT NOT NULL DEFAULT 0,      -- Đồng bộ với DigitalAsset.java: @Column(name = "is_delete")
+    created_at          DATETIME NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT FK_DigitalAssets_Variant FOREIGN KEY (variant_id) REFERENCES ProductVariants(id) ON DELETE NO ACTION,
+    CONSTRAINT FK_DigitalAssets_Transactions FOREIGN KEY (transaction_id) REFERENCES Transactions(id) ON DELETE NO ACTION
 );
 GO
 
@@ -1772,8 +1779,10 @@ GO
 USE MMO_System_Schema;
 GO
 
-ALTER TABLE Transactions
-ADD payment_method NVARCHAR(50);
+IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_name = 'Transactions' AND column_name = 'payment_method')
+BEGIN
+    ALTER TABLE Transactions ADD payment_method NVARCHAR(50);
+END
 GO
 
 
@@ -1802,8 +1811,10 @@ WHERE id IN (9,10);
 USE MMO_System_Schema;
 GO
 
-ALTER TABLE KYCRequests
-ADD type_kyc NVARCHAR(50);
+IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_name = 'KYCRequests' AND column_name = 'type_kyc')
+BEGIN
+    ALTER TABLE KYCRequests ADD type_kyc NVARCHAR(50);
+END
 GO
 
 

@@ -1,7 +1,7 @@
 const TICKET_STATUS_MAP = {
-    'Open':       { label: 'Mới',            cls: 'ticket-badge--processing', icon: 'fa-plus-circle' },
-    'Processing': { label: 'Đang xử lý',     cls: 'ticket-badge--processing', icon: 'fa-spinner fa-spin' },
-    'Resolved':   { label: 'Đã giải quyết',  cls: 'ticket-badge--resolved',   icon: 'fa-check-circle' },
+    'open':       { label: 'Mới',            cls: 'ticket-badge--processing', icon: 'fa-plus-circle' },
+    'processing': { label: 'Đang xử lý',     cls: 'ticket-badge--processing', icon: 'fa-spinner fa-spin' },
+    'resolved':   { label: 'Đã giải quyết',  cls: 'ticket-badge--resolved',   icon: 'fa-check-circle' },
 };
 
 function formatTicketDate(dateStr) {
@@ -17,7 +17,8 @@ function formatTicketDate(dateStr) {
 }
 
 function renderTicketBadge(status) {
-    const info = TICKET_STATUS_MAP[status] || { label: status, cls: 'ticket-badge--closed', icon: 'fa-question' };
+    const cleanStatus = (status || 'open').toLowerCase().trim();
+    const info = TICKET_STATUS_MAP[cleanStatus] || { label: status || 'Mới', cls: 'ticket-badge--closed', icon: 'fa-question' };
     return `<span class="ticket-badge ${info.cls}"><i class="fa ${info.icon}"></i> ${info.label}</span>`;
 }
 

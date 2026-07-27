@@ -423,7 +423,7 @@ function getTypeBadgeClass(type) {
 }
 
 function formatReadStatus(status) {
-    return status === 'UNREAD' ? 'Chưa đọc' : 'Đã đọc';
+    return (status || '').toUpperCase().trim() === 'UNREAD' ? 'Chưa đọc' : 'Đã đọc';
 }
 
 function clearDatePicker(hiddenId, displayId) {

@@ -254,12 +254,19 @@
             // Trạng thái Badge
             const badge = document.getElementById('complaintStatusBadge');
             badge.className = 'ds-badge';
-            if (c.status === 'Resolved') {
+            const cleanStatus = (c.status || '').toUpperCase().replace('_', '').trim();
+            if (cleanStatus === 'RESOLVED') {
                 badge.classList.add('ds-badge-success');
-                badge.textContent = 'Hoàn tiền thành công';
-            } else if (c.status === 'Rejected') {
+                badge.textContent = 'Chấp nhận hoàn tiền';
+            } else if (cleanStatus === 'REJECTED') {
                 badge.classList.add('ds-badge-danger');
-                badge.textContent = 'Đã bác đơn';
+                badge.textContent = 'Bác đơn (Giải ngân)';
+            } else if (cleanStatus === 'OPEN') {
+                badge.classList.add('ds-badge-info');
+                badge.textContent = 'Chờ xử lý';
+            } else if (cleanStatus === 'CLOSED') {
+                badge.classList.add('ds-badge-muted');
+                badge.textContent = 'Đã đóng';
             } else {
                 badge.classList.add('ds-badge-warning');
                 badge.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tranh chấp';
