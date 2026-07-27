@@ -130,6 +130,7 @@
     <footer th:replace="fragments/footer :: footer"></footer>
 
     <script th:src="@{/js/customer/auth.js}"></script>
+    <script th:if="${isSellerView == true}" th:src="@{/js/seller/seller-console.js(v=1.3)}"></script>
     <script>
         const CHAT_DATA = {};
 

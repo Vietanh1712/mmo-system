@@ -34,6 +34,10 @@ public class PreOrder {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "variant_id")
+    private ProductVariant variant;
+
     @Column(name = "expected_price_vnd", nullable = false)
     private Long expectedPriceVnd;
 

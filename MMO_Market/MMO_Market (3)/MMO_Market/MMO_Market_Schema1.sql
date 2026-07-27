@@ -351,6 +351,7 @@ CREATE TABLE PreOrders (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     customer_id BIGINT NOT NULL,
     product_id BIGINT NOT NULL,
+    variant_id BIGINT NULL,
     expected_price_vnd BIGINT NOT NULL,
     quantity INT DEFAULT 1,
     status VARCHAR(20) DEFAULT 'Pending',
@@ -360,6 +361,7 @@ CREATE TABLE PreOrders (
     deliveryData NVARCHAR(MAX) NULL,
     CONSTRAINT FK_PreOrder_Customer FOREIGN KEY (customer_id) REFERENCES Users(id) ON DELETE NO ACTION,
     CONSTRAINT FK_PreOrder_Product FOREIGN KEY (product_id) REFERENCES Products(id) ON DELETE NO ACTION
+    ,CONSTRAINT FK_PreOrder_Variant FOREIGN KEY (variant_id) REFERENCES ProductVariants(id) ON DELETE NO ACTION
 );
 GO
 

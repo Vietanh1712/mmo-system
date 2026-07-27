@@ -3,12 +3,12 @@
 <body>
 
 <aside class="seller-sidebar" th:fragment="sellerSidebar(activeMenu)">
-    <div class="seller-sidebar__shop">
-        <div class="seller-sidebar__avatar">S</div>
+    <div class="seller-sidebar__shop" aria-busy="true">
+        <div class="seller-sidebar__avatar">...</div>
         <div class="seller-sidebar__identity">
-            <strong class="seller-sidebar__name">Shop MMO Pro</strong>
+            <strong class="seller-sidebar__name">Đang tải cửa hàng...</strong>
             <div style="display: flex; flex-direction: column; gap: 2px;">
-                <span class="seller-sidebar__status" data-seller-shop-status style="font-size: 11px; color: var(--ds-text-subtle);">Trạng thái: Hoạt động</span>
+                <span class="seller-sidebar__status" data-seller-shop-status style="font-size: 11px; color: var(--ds-text-subtle);">Đang tải trạng thái...</span>
                 <span class="seller-sidebar__level-badge" style="font-size: 11px; font-weight: 700;"></span>
             </div>
         </div>
@@ -17,7 +17,7 @@
     <div class="seller-sidebar__wallet">
         <div>
             <span class="seller-sidebar__wallet-label">Số dư khả dụng</span>
-            <strong class="seller-sidebar__balance">12.450.000 VNĐ</strong>
+            <strong class="seller-sidebar__balance">Đang tải...</strong>
         </div>
     </div>
 
@@ -103,6 +103,57 @@
             <span>Đăng xuất</span>
         </a>
     </nav>
+
+    <script>
+        (() => {
+            try {
+                const rawUser = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
+                const user = rawUser ? JSON.parse(rawUser) : null;
+                if (!user || user.id == null) return;
+
+                const cacheKey = `sellerSidebarCache:${user.id}`;
+                const rawCache = sessionStorage.getItem(cacheKey) || localStorage.getItem(cacheKey);
+                const cached = rawCache ? JSON.parse(rawCache) : null;
+                const balance = cached && cached.balanceVnd != null
+                    ? cached.balanceVnd
+                    : user.balanceVnd;
+
+                const balanceEl = document.querySelector('.seller-sidebar__balance');
+                if (balanceEl && balance != null) {
+                    balanceEl.textContent = new Intl.NumberFormat('vi-VN', {
+                        style: 'currency',
+                        currency: 'VND'
+                    }).format(Number(balance) || 0);
+                }
+
+                if (!cached || !cached.shopName) return;
+
+                const statusMap = {
+                    SUSPENDED: 'Tạm ngưng',
+                    TEMP_LOCKED: 'Tạm ngưng',
+                    TEMPORARILY_CLOSED: 'Tạm ngưng',
+                    LOCKED: 'Tạm khóa',
+                    INDEFINITE_LOCKED: 'Tạm khóa',
+                    CLOSED: 'Tạm khóa',
+                    BANNED: 'Khóa vĩnh viễn',
+                    PERMANENT_BANNED: 'Khóa vĩnh viễn',
+                    WITHDRAWN: 'Đã đóng Shop',
+                    PENDING: 'Chờ duyệt'
+                };
+                const status = statusMap[String(cached.shopStatus || 'Active').toUpperCase()] || 'Hoạt động';
+
+                const nameEl = document.querySelector('.seller-sidebar__name');
+                const statusEl = document.querySelector('.seller-sidebar__status');
+                const avatarEl = document.querySelector('.seller-sidebar__avatar');
+                const shopEl = document.querySelector('.seller-sidebar__shop');
+
+                if (nameEl) nameEl.textContent = cached.shopName;
+                if (statusEl) statusEl.textContent = `Trạng thái: ${status}`;
+                if (avatarEl) avatarEl.textContent = cached.shopName.charAt(0).toUpperCase();
+                if (shopEl) shopEl.setAttribute('aria-busy', 'false');
+            } catch (error) {}
+        })();
+    </script>
 </aside>
 
 </body>

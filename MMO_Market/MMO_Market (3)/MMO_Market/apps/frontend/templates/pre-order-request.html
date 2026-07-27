@@ -148,6 +148,8 @@
 
         const preorderProduct = {
             productId: parseNumber(readParam('productId', fallbackProduct.productId)),
+            variantId: parseNumber(readParam('variantId', null)) || null,
+            variantName: readParam('variantName', ''),
             productName: readParam('productName', fallbackProduct.productName || 'Sản phẩm'),
             sellerName: readParam('sellerName', fallbackProduct.sellerName || 'Seller'),
             price: parseNumber(readParam('price', fallbackProduct.price), fallbackProduct.price || 0),
@@ -248,7 +250,13 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ productId: preorderProduct.productId, quantity, expectedPriceVnd, notes })
+                    body: JSON.stringify({
+                        productId: preorderProduct.productId,
+                        variantId: preorderProduct.variantId,
+                        quantity,
+                        expectedPriceVnd,
+                        notes
+                    })
                 });
 
                 if (response.status === 401) {

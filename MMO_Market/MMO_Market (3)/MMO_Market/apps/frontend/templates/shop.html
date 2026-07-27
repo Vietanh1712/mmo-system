@@ -722,6 +722,9 @@
 
         // Instant purchase flow
         function buyProduct(productId) {
+            if (typeof window.isEmployeeUser === 'function' && window.isEmployeeUser()) {
+                return; // Do nothing for staff/admin
+            }
             const token = sessionStorage.getItem('accessToken');
             if (!token) {
                 window.location.href = `/login?redirect=/shop/${SELLER_ID}`;
@@ -732,6 +735,9 @@
 
         // Add to cart method
         function addToCart(productId) {
+            if (typeof window.isEmployeeUser === 'function' && window.isEmployeeUser()) {
+                return; // Do nothing for staff/admin
+            }
             const product = (window.currentRenderedProducts || []).find(item => item.productId === productId);
             if (!product) {
                 showWarningToast('Không tìm thấy thông tin sản phẩm để thêm vào giỏ hàng.');
@@ -772,6 +778,9 @@
 
         // Preorder redirection
         function preOrderProduct(productId) {
+            if (typeof window.isEmployeeUser === 'function' && window.isEmployeeUser()) {
+                return; // Do nothing for staff/admin
+            }
             const token = sessionStorage.getItem('accessToken');
             if (!token) {
                 window.location.href = `/login?redirect=/shop/${SELLER_ID}`;

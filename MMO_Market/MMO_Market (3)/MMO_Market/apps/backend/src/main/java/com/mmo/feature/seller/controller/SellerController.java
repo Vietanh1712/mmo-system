@@ -5,6 +5,7 @@ import com.mmo.shared.model.*;
 import com.mmo.feature.auth.service.EmailService;
 import com.mmo.feature.auth.service.AuthenticationService;
 import com.mmo.feature.wallet.service.WithdrawalService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/seller")
+@Slf4j
 public class SellerController {
 
     private final UserRepository userRepository;
@@ -1289,7 +1291,7 @@ public class SellerController {
             try {
                 preOrderService.autoFulfillPreOrders(variant, savedAssets);
             } catch (Exception ex) {
-                System.err.println("Lỗi khi tự động giao hàng đặt trước: " + ex.getMessage());
+                log.error("Tự động giao preorder thất bại cho variant {}.", variant.getId(), ex);
             }
 
             // Recalculate and update the variant stock!

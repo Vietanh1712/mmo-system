@@ -471,6 +471,21 @@
         }
         window.getCartStorageKey = getCartStorageKey;
 
+        function isEmployeeUser() {
+            try {
+                const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user") || localStorage.getItem("userInfo") || localStorage.getItem("user");
+                if (userString && userString !== "null" && userString !== "undefined") {
+                    const user = JSON.parse(userString);
+                    if (user && user.role) {
+                        const role = parseHeaderRole(user.role);
+                        return role === 'Admin' || role === 'Staff';
+                    }
+                }
+            } catch (e) {}
+            return false;
+        }
+        window.isEmployeeUser = isEmployeeUser;
+
         function getNotifStorageKey() {
             try {
                 const userString = sessionStorage.getItem("userInfo") || sessionStorage.getItem("user") || localStorage.getItem("userInfo") || localStorage.getItem("user");
