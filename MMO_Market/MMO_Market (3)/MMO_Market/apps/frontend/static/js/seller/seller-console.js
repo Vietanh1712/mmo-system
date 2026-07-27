@@ -7,6 +7,28 @@
 
 const SELLER_API_BASE = '/api/seller';
 
+function getCurrentSellerStorageUser() {
+    try {
+        const raw = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
+        return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+        return null;
+    }
+}
+
+function getSellerSidebarCacheKey() {
+    const user = getCurrentSellerStorageUser();
+    return user && user.id != null ? `sellerSidebarCache:${user.id}` : null;
+}
+
+function cacheSellerSidebar(data) {
+    const key = getSellerSidebarCacheKey();
+    if (!key) return;
+    const value = JSON.stringify(data);
+    sessionStorage.setItem(key, value);
+    localStorage.setItem(key, value);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Guard check for authentication
     const token = sessionStorage.getItem('accessToken');
@@ -182,7 +204,12 @@ function formatShopStatusVi(st) {
 
 async function initSellerLayout() {
     try {
-        const res = await sellerFetch('/shop-info');
+        // Load independent sidebar data concurrently so no stale placeholder is
+        // visible and the balance does not wait for shop info to finish first.
+        const [res, dashRes] = await Promise.all([
+            sellerFetch('/shop-info'),
+            sellerFetch('/dashboard')
+        ]);
         if (!res.ok) return;
         const data = await res.json();
 
@@ -195,7 +222,12 @@ async function initSellerLayout() {
         if (statusEl) statusEl.textContent = `Trạng thái: ${formatShopStatusVi(data.shopStatus)}`;
         if (avatarEl && data.shopName) {
             avatarEl.textContent = data.shopName.charAt(0).toUpperCase();
+        } else if (avatarEl) {
+            avatarEl.textContent = 'S';
         }
+
+        const shopContainer = document.querySelector('.seller-sidebar__shop');
+        if (shopContainer) shopContainer.setAttribute('aria-busy', 'false');
 
         const levelBadgeEl = document.querySelector('.seller-sidebar__level-badge');
         if (levelBadgeEl) {
@@ -209,13 +241,21 @@ async function initSellerLayout() {
             }
         }
 
-        // Fetch dashboard to update balance
-        const dashRes = await sellerFetch('/dashboard');
+        const storedUser = getCurrentSellerStorageUser();
+        const sidebarCache = {
+            shopName: data.shopName || 'Cửa hàng của tôi',
+            shopStatus: data.shopStatus || 'Active',
+            shopLevel: data.shopLevel !== undefined ? data.shopLevel : 1,
+            balanceVnd: storedUser ? storedUser.balanceVnd : 0
+        };
+
         if (dashRes.ok) {
             const dashData = await dashRes.json();
             const balanceEl = document.querySelector('.seller-sidebar__balance');
             if (balanceEl) balanceEl.textContent = formatVND(dashData.balanceVnd);
+            sidebarCache.balanceVnd = dashData.balanceVnd;
         }
+        cacheSellerSidebar(sidebarCache);
     } catch (err) {
         console.error('Lỗi khởi tạo layout người bán:', err);
     }
@@ -1210,7 +1250,7 @@ async function initTransactions() {
                     <td class="text-right">
                         ${(t.status === 'Disputed' || t.status === 'Khiếu nại')
                             ? `<a class="icon-button" href="/seller/complaints" title="Xem khiếu nại"><i class="fa fa-warning"></i></a>`
-                            : `<a class="icon-button" href="/messages?sellerView=true&customerId=${t.customerId}" title="Nhắn tin"><i class="fa fa-envelope"></i></a>
+                            : `<a class="icon-button" href="/messages?to=${t.customerEmail}" title="Nhắn tin"><i class="fa fa-envelope"></i></a>
                                <a class="icon-button" href="#" title="Chi tiết" onclick="showToast('Tính năng đang phát triển', 'info'); return false;"><i class="fa fa-info-circle"></i></a>`}
                     </td>
                 </tr>
@@ -1895,6 +1935,14 @@ async function initComplaintDetail() {
 
         const descEl = document.getElementById('c-description');
         if (descEl) descEl.textContent = c.description || '-';
+
+        const solutionEl = document.getElementById('c-preferred-solution');
+        if (solutionEl) {
+            let solText = c.preferredSolution || 'Không có';
+            if (solText === 'REFUND') solText = 'Yêu cầu hoàn tiền';
+            else if (solText === 'REPLACEMENT') solText = 'Yêu cầu đổi sản phẩm khác';
+            solutionEl.textContent = solText;
+        }
         
         if (c.evidence) {
             const evSec = document.getElementById('c-evidence-section');
@@ -2036,6 +2084,8 @@ async function initWithdrawalDetail() {
 // ==============================================================================
 // PREORDERS MANAGEMENT
 // ==============================================================================
+const preOrderDetailsById = new Map();
+
 async function initPreOrders() {
     const tbody = document.querySelector('#preOrdersTable tbody');
     if (!tbody) return;
@@ -2056,6 +2106,9 @@ async function initPreOrders() {
             tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 40px; color: var(--seller-muted);"><i class="fa fa-inbox" style="font-size: 24px; display: block; margin-bottom: 8px;"></i> Không có đơn đặt trước nào.</td></tr>`;
             return;
         }
+
+        preOrderDetailsById.clear();
+        orders.forEach(order => preOrderDetailsById.set(Number(order.id), order));
 
         tbody.innerHTML = orders.map(o => {
             const st = (o.status || '').toUpperCase();
@@ -2080,8 +2133,8 @@ async function initPreOrders() {
                         <button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px; color: var(--seller-danger); border-color: var(--seller-danger);" onclick="updatePreOrderStatus(${o.id}, 'CANCELLED')">
                             <i class="fa fa-times"></i> Hủy
                         </button>
-                        ` : `<button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px;" onclick="openViewDeliveryModal('${escapeHtml(o.deliveryData || '')}', '${o.proofImage || ''}')">
-                                <i class="fa fa-eye"></i> Xem trả hàng
+                        ` : `<button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px;" onclick="openPreOrderDetailModal(${o.id})">
+                                <i class="fa fa-eye"></i> Chi tiết
                              </button>`}
                     </td>
                 </tr>
@@ -2091,6 +2144,65 @@ async function initPreOrders() {
     } catch (err) {
         tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="color: var(--seller-danger);"><i class="fa fa-exclamation-triangle"></i> ${err.message}</td></tr>`;
         showToast(err.message, 'error');
+    }
+}
+
+function setPreOrderDetailText(elementId, value, fallback = '-') {
+    const element = document.getElementById(elementId);
+    if (element) element.textContent = value || fallback;
+}
+
+function openPreOrderDetailModal(id) {
+    const order = preOrderDetailsById.get(Number(id));
+    const modal = document.getElementById('preOrderDetailModal');
+    if (!order || !modal) {
+        showToast('Không tìm thấy thông tin đơn đặt trước.', 'error');
+        return;
+    }
+
+    const deliveryData = (order.deliveryData || '').trim();
+    setPreOrderDetailText('preOrderDetailCode', `#PO-${order.id}`);
+    setPreOrderDetailText('preOrderDetailStatus', translateStatus(order.status));
+    setPreOrderDetailText('preOrderDetailCustomer', order.customerEmail);
+    setPreOrderDetailText('preOrderDetailProduct', order.productName);
+    setPreOrderDetailText('preOrderDetailQuantity', String(order.quantity || 0));
+    setPreOrderDetailText('preOrderDetailNotes', order.notes, 'Không có ghi chú.');
+    setPreOrderDetailText(
+        'preOrderDetailDate',
+        order.createdAt ? new Date(order.createdAt).toLocaleString('vi-VN') : ''
+    );
+    setPreOrderDetailText(
+        'preOrderDetailDelivery',
+        deliveryData,
+        'Chưa có thông tin giao hàng.'
+    );
+
+    const copyButton = document.getElementById('copyPreOrderDetailButton');
+    if (copyButton) copyButton.hidden = !deliveryData;
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    modal.querySelector('button[aria-label="Đóng cửa sổ chi tiết"]')?.focus();
+}
+
+function closePreOrderDetailModal() {
+    const modal = document.getElementById('preOrderDetailModal');
+    if (modal) modal.hidden = true;
+    document.body.style.overflow = '';
+}
+
+function handlePreOrderDetailBackdrop(event) {
+    if (event.target === event.currentTarget) closePreOrderDetailModal();
+}
+
+async function copyPreOrderDetailDelivery() {
+    const deliveryData = document.getElementById('preOrderDetailDelivery')?.textContent?.trim();
+    if (!deliveryData || deliveryData === 'Chưa có thông tin giao hàng.') return;
+
+    try {
+        await navigator.clipboard.writeText(deliveryData);
+        showToast('Đã sao chép thông tin giao hàng.');
+    } catch (error) {
+        showToast('Không thể sao chép thông tin giao hàng.', 'error');
     }
 }
 
@@ -2142,59 +2254,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnSubmitDelivery) {
         btnSubmitDelivery.addEventListener('click', async () => {
             const data = document.getElementById('deliveryDataInput').value.trim();
-            const fileInput = document.getElementById('deliveryProofImage');
-            const statusText = document.getElementById('deliveryUploadStatus');
-            
             if (!data) {
                 showToast('Vui lòng nhập nội dung trả hàng.', 'error');
                 return;
             }
             if (!currentDeliveryPreOrderId) return;
             
-            btnSubmitDelivery.disabled = true;
-            btnSubmitDelivery.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
-            
-            let proofImage = '';
-            const token = sessionStorage.getItem('accessToken');
-            
             try {
-                if (fileInput && fileInput.files.length > 0) {
-                    if (statusText) {
-                        statusText.style.color = 'var(--seller-ink)';
-                        statusText.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tải ảnh lên...';
-                    }
-                    const file = fileInput.files[0];
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    
-                    const uploadRes = await fetch('/api/upload', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: formData
-                    });
-                    const uploadData = await uploadRes.json();
-                    if (!uploadRes.ok) {
-                        throw new Error(uploadData.message || 'Lỗi tải lên ảnh bằng chứng.');
-                    }
-                    proofImage = uploadData.url;
-                    if (statusText) {
-                        statusText.style.color = '#16a34a';
-                        statusText.innerHTML = '<i class="fa fa-check-circle"></i> Tải ảnh thành công.';
-                    }
-                }
-            
+                const token = sessionStorage.getItem('accessToken');
                 const res = await fetch(`/api/v1/pre-orders/seller/${currentDeliveryPreOrderId}/deliver`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ 
-                        deliveryData: data,
-                        proofImage: proofImage
-                    })
+                    body: JSON.stringify({ deliveryData: data })
                 });
                 
                 if (!res.ok) {
@@ -2207,39 +2281,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 initPreOrders();
             } catch (err) {
                 showToast(err.message, 'error');
-                if (statusText) statusText.innerHTML = '';
-            } finally {
-                btnSubmitDelivery.disabled = false;
-                btnSubmitDelivery.innerHTML = 'Xác nhận trả hàng';
             }
         });
     }
 });
 
-function openViewDeliveryModal(text, imageUrl) {
-    const modal = document.getElementById('viewDeliveryModal');
-    if (modal) {
-        document.getElementById('viewDeliveryText').textContent = text || 'Không có ghi chú';
-        const imgContainer = document.getElementById('viewDeliveryImageContainer');
-        const img = document.getElementById('viewDeliveryImage');
-        if (imageUrl && imageUrl !== 'null' && imageUrl.trim() !== '') {
-            img.src = imageUrl;
-            imgContainer.style.display = 'block';
-        } else {
-            imgContainer.style.display = 'none';
-        }
-        modal.style.display = 'flex';
-    }
-}
-
-function closeViewDeliveryModal() {
-    const modal = document.getElementById('viewDeliveryModal');
-    if (modal) modal.style.display = 'none';
-}
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closePreOrderDetailModal();
+});
 
 window.initPreOrders = initPreOrders;
 window.updatePreOrderStatus = updatePreOrderStatus;
 window.openDeliveryModal = openDeliveryModal;
 window.closeDeliveryModal = closeDeliveryModal;
-window.openViewDeliveryModal = openViewDeliveryModal;
-window.closeViewDeliveryModal = closeViewDeliveryModal;
+window.openPreOrderDetailModal = openPreOrderDetailModal;
+window.closePreOrderDetailModal = closePreOrderDetailModal;
+window.handlePreOrderDetailBackdrop = handlePreOrderDetailBackdrop;
+window.copyPreOrderDetailDelivery = copyPreOrderDetailDelivery;

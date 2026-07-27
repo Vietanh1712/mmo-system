@@ -16,6 +16,8 @@ public class PreOrderResponse {
     private Long id;
     private Long productId;
     private String productName;
+    private Long variantId;
+    private String variantName;
     private String customerEmail;
     private Integer quantity;
     private Long expectedPriceVnd;

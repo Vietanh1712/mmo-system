@@ -12,6 +12,71 @@
     <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
     <link rel="stylesheet" th:href="@{/css/seller/seller.css}">
     <link rel="stylesheet" th:href="@{/css/components/toast.css}">
+    <style>
+        .preorder-detail-modal {
+            width: min(680px, 100%);
+        }
+
+        .preorder-detail-modal__title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+            color: var(--seller-ink);
+            font-size: 18px;
+        }
+
+        .preorder-detail-modal__grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px 24px;
+        }
+
+        .preorder-detail-modal__item--wide {
+            grid-column: 1 / -1;
+        }
+
+        .preorder-detail-modal__label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--seller-muted);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .preorder-detail-modal__value {
+            margin: 0;
+            color: var(--seller-ink);
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .preorder-detail-modal__delivery {
+            min-height: 88px;
+            margin: 0;
+            padding: 14px;
+            border: 1px solid var(--seller-border);
+            border-radius: 8px;
+            background: var(--ds-surface-muted, #f8fafc);
+            color: var(--seller-ink);
+            font: 13px/1.6 "Courier New", monospace;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        @media (max-width: 600px) {
+            .preorder-detail-modal__grid {
+                grid-template-columns: 1fr;
+            }
+
+            .preorder-detail-modal__item--wide {
+                grid-column: auto;
+            }
+        }
+    </style>
 </head>
 <body>
     <header th:replace="fragments/header :: header"></header>
@@ -73,13 +138,8 @@
                 <button type="button" onclick="closeDeliveryModal()" style="background: transparent; border: none; font-size: 20px; cursor: pointer; color: var(--seller-muted);">&times;</button>
             </div>
             <div style="margin-bottom: 16px;">
-                <label style="display: block; font-weight: 500; margin-bottom: 8px; color: var(--seller-ink);">Nội dung trả hàng / Ghi chú <span style="color: #ef4444;">*</span></label>
-                <textarea id="deliveryDataInput" rows="4" style="width: 100%; padding: 12px; border: 1px solid var(--seller-border); border-radius: 6px; font-family: monospace; font-size: 14px;" placeholder="Nhập thông tin tài khoản, mã thẻ, hoặc ghi chú hoàn thành dịch vụ..."></textarea>
-            </div>
-            <div style="margin-bottom: 16px;">
-                <label style="display: block; font-weight: 500; margin-bottom: 8px; color: var(--seller-ink);">Ảnh bằng chứng (Tùy chọn)</label>
-                <input type="file" id="deliveryProofImage" accept="image/*" style="width: 100%; padding: 8px; border: 1px solid var(--seller-border); border-radius: 6px; font-size: 13px;">
-                <p id="deliveryUploadStatus" style="font-size: 12px; margin-top: 4px;"></p>
+                <label style="display: block; font-weight: 500; margin-bottom: 8px; color: var(--seller-ink);">Nội dung trả hàng (Key, Tài khoản, Thẻ nạp, v.v.) <span style="color: #ef4444;">*</span></label>
+                <textarea id="deliveryDataInput" rows="5" style="width: 100%; padding: 12px; border: 1px solid var(--seller-border); border-radius: 6px; font-family: monospace; font-size: 14px;" placeholder="Ví dụ: \nUsername: admin\nPassword: 123456\nHoặc mã thẻ: XXXX-YYYY-ZZZZ"></textarea>
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 12px;">
                 <button type="button" class="ds-btn ds-btn-outline" onclick="closeDeliveryModal()">Hủy</button>
@@ -88,28 +148,69 @@
         </div>
     </div>
 
-    <!-- Modal Xem Nội Dung Trả Hàng (View Delivery Modal) -->
-    <div id="viewDeliveryModal" class="asset-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-        <div class="asset-modal-content" style="background: white; border-radius: 8px; width: 500px; max-width: 90%; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <h3 style="margin: 0; font-size: 18px; color: var(--seller-ink);">Nội dung trả hàng</h3>
-                <button type="button" onclick="closeViewDeliveryModal()" style="background: transparent; border: none; font-size: 20px; cursor: pointer; color: var(--seller-muted);">&times;</button>
+    <!-- Modal chi tiết đơn đặt trước -->
+    <div id="preOrderDetailModal" class="ds-modal-backdrop" hidden
+         onclick="handlePreOrderDetailBackdrop(event)">
+        <div class="ds-modal preorder-detail-modal" role="dialog" aria-modal="true"
+             aria-labelledby="preOrderDetailTitle">
+            <div class="ds-modal-header ds-cluster-between">
+                <h3 id="preOrderDetailTitle" class="preorder-detail-modal__title">
+                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    Chi tiết đơn đặt trước
+                </h3>
+                <button type="button" class="ds-btn ds-btn-text" onclick="closePreOrderDetailModal()"
+                        aria-label="Đóng cửa sổ chi tiết">
+                    <i class="fa fa-times" aria-hidden="true"></i>
+                </button>
             </div>
-            <div style="margin-bottom: 16px;">
-                <pre id="viewDeliveryText" style="width: 100%; padding: 12px; border: 1px solid var(--seller-border); border-radius: 6px; font-family: monospace; font-size: 14px; background: #f8fafc; white-space: pre-wrap; margin: 0;"></pre>
+            <div class="ds-modal-body">
+                <div class="preorder-detail-modal__grid">
+                    <div>
+                        <span class="preorder-detail-modal__label">Mã đơn</span>
+                        <p id="preOrderDetailCode" class="preorder-detail-modal__value">-</p>
+                    </div>
+                    <div>
+                        <span class="preorder-detail-modal__label">Trạng thái</span>
+                        <p id="preOrderDetailStatus" class="preorder-detail-modal__value">-</p>
+                    </div>
+                    <div>
+                        <span class="preorder-detail-modal__label">Khách hàng</span>
+                        <p id="preOrderDetailCustomer" class="preorder-detail-modal__value">-</p>
+                    </div>
+                    <div>
+                        <span class="preorder-detail-modal__label">Ngày đặt</span>
+                        <p id="preOrderDetailDate" class="preorder-detail-modal__value">-</p>
+                    </div>
+                    <div class="preorder-detail-modal__item--wide">
+                        <span class="preorder-detail-modal__label">Sản phẩm</span>
+                        <p id="preOrderDetailProduct" class="preorder-detail-modal__value">-</p>
+                    </div>
+                    <div>
+                        <span class="preorder-detail-modal__label">Số lượng</span>
+                        <p id="preOrderDetailQuantity" class="preorder-detail-modal__value">-</p>
+                    </div>
+                    <div>
+                        <span class="preorder-detail-modal__label">Ghi chú</span>
+                        <p id="preOrderDetailNotes" class="preorder-detail-modal__value">-</p>
+                    </div>
+                    <div class="preorder-detail-modal__item--wide">
+                        <span class="preorder-detail-modal__label">Thông tin đã giao</span>
+                        <pre id="preOrderDetailDelivery" class="preorder-detail-modal__delivery">Chưa có thông tin giao hàng.</pre>
+                    </div>
+                </div>
             </div>
-            <div id="viewDeliveryImageContainer" style="margin-bottom: 16px; display: none;">
-                <p style="font-weight: 500; font-size: 13px; margin-bottom: 8px;">Ảnh bằng chứng:</p>
-                <img id="viewDeliveryImage" src="" alt="Proof" style="max-width: 100%; border-radius: 6px; border: 1px solid var(--seller-border);">
-            </div>
-            <div style="display: flex; justify-content: flex-end;">
-                <button type="button" class="ds-btn ds-btn-outline" onclick="closeViewDeliveryModal()">Đóng</button>
+            <div class="ds-modal-footer">
+                <button type="button" class="ds-btn ds-btn-outline" onclick="closePreOrderDetailModal()">Đóng</button>
+                <button type="button" class="ds-btn ds-btn-primary" id="copyPreOrderDetailButton"
+                        onclick="copyPreOrderDetailDelivery()">
+                    <i class="fa fa-copy" aria-hidden="true"></i> Sao chép thông tin
+                </button>
             </div>
         </div>
     </div>
 
     <div id="sellerToastContainer"></div>
 
-    <script th:src="@{/js/seller/seller-console.js(v=1.2)}"></script>
+    <script th:src="@{/js/seller/seller-console.js(v=1.3)}"></script>
 </body>
 </html>
