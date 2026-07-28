@@ -13,4 +13,6 @@ import lombok.NoArgsConstructor;
 public class PreOrderDeliveryRequest {
     @NotBlank(message = "Dữ liệu trả hàng không được để trống")
     private String deliveryData;
+
+    private String proofImage;
 }

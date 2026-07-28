@@ -5,6 +5,7 @@ import com.mmo.shared.model.*;
 import com.mmo.feature.auth.service.EmailService;
 import com.mmo.feature.auth.service.AuthenticationService;
 import com.mmo.feature.wallet.service.WithdrawalService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/seller")
+@Slf4j
 public class SellerController {
 
     private final UserRepository userRepository;
@@ -36,6 +38,7 @@ public class SellerController {
     private final EmailService emailService;
     private final AuthenticationService authenticationService;
     private final WithdrawalService withdrawalService;
+    private final com.mmo.feature.preorder.service.PreOrderService preOrderService;
 
     public SellerController(UserRepository userRepository, ProductRepository productRepository,
                             ProductVariantRepository productVariantRepository, CategoryRepository categoryRepository,
@@ -49,7 +52,8 @@ public class SellerController {
                             EmailVerificationRepository emailVerificationRepository,
                             EmailService emailService,
                             AuthenticationService authenticationService,
-                            WithdrawalService withdrawalService) {
+                            WithdrawalService withdrawalService,
+                            com.mmo.feature.preorder.service.PreOrderService preOrderService) {
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.productVariantRepository = productVariantRepository;
@@ -68,6 +72,7 @@ public class SellerController {
         this.emailService = emailService;
         this.authenticationService = authenticationService;
         this.withdrawalService = withdrawalService;
+        this.preOrderService = preOrderService;
     }
 
 
@@ -363,11 +368,43 @@ public class SellerController {
         }
     }
 
+    private String validateShopActiveStatus(User seller) {
+        if (seller.getShopStatus() != null &&
+                ("Suspended".equalsIgnoreCase(seller.getShopStatus()) || "TEMP_LOCKED".equalsIgnoreCase(seller.getShopStatus())) &&
+                seller.getSuspendedUntil() != null &&
+                java.time.LocalDateTime.now().isAfter(seller.getSuspendedUntil())) {
+            seller.setShopStatus("Active");
+            seller.setSuspendedUntil(null);
+            userRepository.save(seller);
+        }
+
+        String status = seller.getShopStatus();
+        if (status != null) {
+            if ("Suspended".equalsIgnoreCase(status) || "TEMP_LOCKED".equalsIgnoreCase(status)) {
+                return "Cửa hàng của bạn đang ở trạng thái Tạm ngưng, không thể thực hiện thao tác này.";
+            }
+            if ("Locked".equalsIgnoreCase(status) || "INDEFINITE_LOCKED".equalsIgnoreCase(status)) {
+                return "Cửa hàng của bạn đang bị Tạm khóa, không thể thực hiện thao tác này.";
+            }
+            if ("Banned".equalsIgnoreCase(status) || "PERMANENT_BANNED".equalsIgnoreCase(status)) {
+                return "Cửa hàng của bạn đã bị Khóa vĩnh viễn, không thể thực hiện thao tác này.";
+            }
+            if ("Withdrawn".equalsIgnoreCase(status) || "DELETED".equalsIgnoreCase(status) || "Pending".equalsIgnoreCase(status)) {
+                return "Cửa hàng của bạn hiện không ở trạng thái hoạt động, không thể thực hiện thao tác này.";
+            }
+        }
+        return null;
+    }
+
     // 7. Product POST (Create)
     @PostMapping("/products")
     public ResponseEntity<?> createProduct(@AuthenticationPrincipal Long userId, @RequestBody Map<String, Object> request) {
         try {
             User seller = getSeller(userId);
+            String statusErr = validateShopActiveStatus(seller);
+            if (statusErr != null) {
+                return ResponseEntity.badRequest().body(Map.of("message", statusErr));
+            }
             long activeProductsCount = productRepository.countBySellerIdAndIsDeleteFalse(seller.getId());
             int shopLevel = seller.getShopLevel() != null ? seller.getShopLevel() : 1;
             
@@ -503,6 +540,10 @@ public class SellerController {
     public ResponseEntity<?> updateProduct(@AuthenticationPrincipal Long userId, @PathVariable Long id, @RequestBody Map<String, Object> request) {
         try {
             User seller = getSeller(userId);
+            String statusErr = validateShopActiveStatus(seller);
+            if (statusErr != null) {
+                return ResponseEntity.badRequest().body(Map.of("message", statusErr));
+            }
             Product p = productRepository.findByIdAndIsDeleteFalse(id)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sản phẩm."));
 
@@ -585,6 +626,23 @@ public class SellerController {
             map.put("status", v.getStatus());
             map.put("imageUrl", v.getImageUrl());
 
+            List<DigitalAsset> assetList = digitalAssetRepository.findByVariantAndIsDeleteFalse(v);
+            List<Map<String, Object>> assetMapList = assetList.stream().map(asset -> {
+                Map<String, Object> amap = new HashMap<>();
+                amap.put("id", asset.getId());
+                amap.put("assetType", asset.getAssetType());
+                amap.put("accountUsername", asset.getAccountUsername());
+                amap.put("accountPassword", asset.getAccountPassword()); // We need to return password so seller can view it
+                amap.put("keyCode", asset.getKeyCode());
+                amap.put("cardCode", asset.getCardCode());
+                amap.put("cardPin", asset.getCardPin());
+                amap.put("notes", asset.getNotes());
+                amap.put("isUsed", asset.getIsUsed());
+                amap.put("createdAt", asset.getCreatedAt() != null ? asset.getCreatedAt().toString() : null);
+                return amap;
+            }).collect(Collectors.toList());
+            map.put("assets", assetMapList);
+
             return ResponseEntity.ok(map);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
@@ -596,6 +654,10 @@ public class SellerController {
     public ResponseEntity<?> createVariant(@AuthenticationPrincipal Long userId, @RequestBody Map<String, Object> request) {
         try {
             User seller = getSeller(userId);
+            String statusErr = validateShopActiveStatus(seller);
+            if (statusErr != null) {
+                return ResponseEntity.badRequest().body(Map.of("message", statusErr));
+            }
             Object prodIdObj = request.get("productId");
             String variantName = (String) request.get("variantName");
             Object priceObj = request.get("priceVnd");
@@ -652,6 +714,10 @@ public class SellerController {
     public ResponseEntity<?> updateVariant(@AuthenticationPrincipal Long userId, @PathVariable Long id, @RequestBody Map<String, Object> request) {
         try {
             User seller = getSeller(userId);
+            String statusErr = validateShopActiveStatus(seller);
+            if (statusErr != null) {
+                return ResponseEntity.badRequest().body(Map.of("message", statusErr));
+            }
             ProductVariant v = productVariantRepository.findByIdAndIsDeleteFalse(id)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy biến thể."));
 
@@ -737,6 +803,7 @@ public class SellerController {
             List<Map<String, Object>> result = transactions.stream().map(t -> {
                 Map<String, Object> map = new HashMap<>();
                 map.put("id", t.getId());
+                map.put("customerId", t.getCustomer().getId());
                 map.put("customerEmail", t.getCustomer().getEmail());
                 map.put("productName", t.getProduct().getName());
                 map.put("variantName", t.getVariant().getVariantName());
@@ -1057,6 +1124,7 @@ public class SellerController {
             details.put("customerName", c.getCustomer().getFullName());
             details.put("customerEmail", c.getCustomer().getEmail());
             details.put("description", c.getDescription());
+            details.put("preferredSolution", c.getPreferredSolution() != null ? c.getPreferredSolution() : "");
             details.put("evidence", c.getEvidence() != null ? c.getEvidence() : "");
             details.put("status", c.getStatus());
             details.put("resolution", c.getResolution() != null ? c.getResolution() : "");
@@ -1144,6 +1212,10 @@ public class SellerController {
     public ResponseEntity<?> createDigitalAssets(@AuthenticationPrincipal Long userId, @RequestBody Map<String, Object> request) {
         try {
             User seller = getSeller(userId);
+            String statusErr = validateShopActiveStatus(seller);
+            if (statusErr != null) {
+                return ResponseEntity.badRequest().body(Map.of("message", statusErr));
+            }
             Object variantIdObj = request.get("variantId");
             String assetType = (String) request.get("assetType");
             List<Map<String, Object>> assetsList = (List<Map<String, Object>>) request.get("assets");
@@ -1216,6 +1288,13 @@ public class SellerController {
                 savedAssets.add(digitalAssetRepository.save(asset));
             }
 
+            // Tự động xử lý Đơn đặt trước (Pre-Order)
+            try {
+                preOrderService.autoFulfillPreOrders(variant, savedAssets);
+            } catch (Exception ex) {
+                log.error("Tự động giao preorder thất bại cho variant {}.", variant.getId(), ex);
+            }
+
             // Recalculate and update the variant stock!
             if (!"SERVICE".equals(variant.getProduct().getProductType())) {
                 List<DigitalAsset> activeAssets = digitalAssetRepository.findByVariantAndIsDeleteFalse(variant);
@@ -1238,6 +1317,10 @@ public class SellerController {
     public ResponseEntity<?> deleteDigitalAsset(@AuthenticationPrincipal Long userId, @PathVariable Long id) {
         try {
             User seller = getSeller(userId);
+            String statusErr = validateShopActiveStatus(seller);
+            if (statusErr != null) {
+                return ResponseEntity.badRequest().body(Map.of("message", statusErr));
+            }
             DigitalAsset asset = digitalAssetRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài sản."));
 
@@ -1268,6 +1351,10 @@ public class SellerController {
     public ResponseEntity<?> updateProductDetails(@AuthenticationPrincipal Long userId, @PathVariable Long id, @RequestBody Map<String, Object> request) {
         try {
             User seller = getSeller(userId);
+            String statusErr = validateShopActiveStatus(seller);
+            if (statusErr != null) {
+                return ResponseEntity.badRequest().body(Map.of("message", statusErr));
+            }
             Product p = productRepository.findByIdAndIsDeleteFalse(id)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sản phẩm."));
 

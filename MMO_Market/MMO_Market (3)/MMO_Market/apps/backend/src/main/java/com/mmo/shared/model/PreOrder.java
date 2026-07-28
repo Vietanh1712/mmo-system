@@ -34,6 +34,10 @@ public class PreOrder {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "variant_id")
+    private ProductVariant variant;
+
     @Column(name = "expected_price_vnd", nullable = false)
     private Long expectedPriceVnd;
 
@@ -48,6 +52,9 @@ public class PreOrder {
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String deliveryData;
+
+    @Column(name = "proof_image", length = 500)
+    private String proofImage;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

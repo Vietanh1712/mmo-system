@@ -236,7 +236,10 @@ Bổ sung cột STT (Sequence Number) được tính toán theo phân trang (`cu
 - **`StaffDashboardDTO.java` & `StaffDashboardServiceImpl.java`**:
   - Thêm thuộc tính `pendingTopups` vào DTO trả về của API tổng quan.
   - Tích hợp `TopupTransactionRepository.countByStatusIgnoreCase("Failed") + topupTransactionRepository.countByStatusIgnoreCase("Pending")` đếm tổng số lượng giao dịch nạp tiền thất bại/chờ xử lý từ Database.
-  - Cập nhật giao diện `/staff/documents` bổ sung thẻ thống kê "Nạp tiền cần xử lý".
+## 21. Bổ sung tìm kiếm theo Mã Shop & Thông tin chủ sở hữu (phiên bản 3.7)
+- **`SellerRegistrationRepository.java` & `ProductSpecification.java`**:
+  - Cập nhật câu lệnh JPQL trong `searchRegistrations` hỗ trợ tìm kiếm đa trường: Mã Shop (`SHOP-1`, `SHOP-2`...), ID số, Tên hiển thị chủ shop (`user.fullName`) và Email chủ shop (`user.email`).
+  - Cập nhật `ProductSpecification` hỗ trợ tìm kiếm sản phẩm theo tên shop và mã shop (`SHOP-x`).
 
 
 

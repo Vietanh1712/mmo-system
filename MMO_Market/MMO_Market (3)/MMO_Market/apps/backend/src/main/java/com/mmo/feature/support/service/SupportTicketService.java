@@ -102,6 +102,23 @@ public class SupportTicketService {
             throw new IllegalArgumentException("Trạng thái phiếu hỗ trợ không hợp lệ.");
         }
         
+        // Validation: Không thể nhảy cóc từ Open lên Resolved mà chưa qua Processing
+        if (status.equals("Resolved") && ticket.getStatus().equals("Open")) {
+            throw new IllegalArgumentException("Không thể chuyển thẳng trạng thái từ Open sang Resolved.");
+        }
+
+        // Validation: Cấm đóng/giải quyết nếu đã Resolved (Already closed/resolved)
+        if (ticket.getStatus().equals("Resolved")) {
+            throw new IllegalArgumentException("Phiếu hỗ trợ này đã được giải quyết xong.");
+        }
+
+        // Validation: Yêu cầu ghi chú giải quyết ít nhất 10 ký tự khi chuyển sang Resolved
+        if (status.equals("Resolved")) {
+            if (resolution == null || resolution.trim().length() < 10) {
+                throw new IllegalArgumentException("Nội dung giải quyết phải có ít nhất 10 ký tự.");
+            }
+        }
+        
         if (resolution != null && !resolution.trim().isEmpty()) {
             if (!status.equals("Resolved")) {
                 status = "Processing";
@@ -112,6 +129,7 @@ public class SupportTicketService {
         ticket.setResolution(resolution);
         
         SupportTicket savedTicket = supportTicketRepository.save(ticket);
+
 
         // Tạo thông báo cập nhật cho người gửi (Customer/Seller)
         String statusLabel = "Đang xử lý";

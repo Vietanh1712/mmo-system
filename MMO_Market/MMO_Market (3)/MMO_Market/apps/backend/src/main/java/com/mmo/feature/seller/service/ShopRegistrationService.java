@@ -85,6 +85,23 @@ public class ShopRegistrationService {
                     userRepository.save(u);
                 }
             }
+
+            // Fix missing registrations for existing Sellers
+            List<User> allUsers = userRepository.findAll();
+            for (User u : allUsers) {
+                if (u.getRole() != null && u.getRole().contains("Seller")) {
+                    boolean hasReg = sellerRegistrationRepository.findByUserAndIsDeleteFalse(u).isPresent();
+                    if (!hasReg) {
+                        SellerRegistration reg = new SellerRegistration();
+                        reg.setUser(u);
+                        reg.setShopName(u.getFullName() != null ? u.getFullName() + " Shop" : "Shop " + u.getId());
+                        reg.setStatus("APPROVED");
+                        reg.setCategory("Chung");
+                        reg.setDescription("Shop được tạo tự động từ hệ thống.");
+                        sellerRegistrationRepository.save(reg);
+                    }
+                }
+            }
         } catch (Exception ignored) {}
     }
 
@@ -178,21 +195,7 @@ public class ShopRegistrationService {
         String cleanShopStatus = (shopStatus == null || shopStatus.isBlank()) ? null : shopStatus.trim();
         String cleanKeyword = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
 
-        Long searchId = null;
-        if (cleanKeyword != null) {
-            String kwUpper = cleanKeyword.toUpperCase();
-            if (kwUpper.startsWith("SHOP-")) {
-                try {
-                    searchId = Long.parseLong(kwUpper.substring(5).trim());
-                } catch (NumberFormatException ignored) {}
-            } else {
-                try {
-                    searchId = Long.parseLong(cleanKeyword);
-                } catch (NumberFormatException ignored) {}
-            }
-        }
-
-        Page<SellerRegistration> regPage = sellerRegistrationRepository.searchRegistrations(cleanStatus, cleanShopStatus, cleanKeyword, searchId, pageable);
+        Page<SellerRegistration> regPage = sellerRegistrationRepository.searchRegistrations(cleanStatus, cleanShopStatus, cleanKeyword, pageable);
         return regPage.map(this::mapToDto);
     }
 
@@ -360,8 +363,8 @@ public class ShopRegistrationService {
                 .rejectionReason(registration.getRejectionReason())
                 .shopStatus(user != null ? user.getShopStatus() : null)
                 .suspendedUntil(user != null && user.getSuspendedUntil() != null ? user.getSuspendedUntil().toString() : null)
-                .depositVnd(user != null ? user.getDepositVnd() : 0L)
-                .balanceVnd(user != null ? user.getBalanceVnd() : 0L)
+                .depositVnd(user != null && user.getDepositVnd() != null ? user.getDepositVnd() : 0L)
+                .balanceVnd(user != null && user.getBalanceVnd() != null ? user.getBalanceVnd() : 0L)
                 .ownerName(user != null ? user.getFullName() : null)
                 .bankAccountNumber(bank != null ? bank.getAccountNumber() : null)
                 .bankName(bank != null ? bank.getBankName() : null)

@@ -205,15 +205,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 };
 
                 let avatarClass = 'ds-avatar-success';
+                let avatarContent = initial;
                 if (conv.userRole === 'Seller') {
                     avatarClass = 'ds-avatar-primary';
                 } else if (conv.userRole === 'Dispute') {
                     avatarClass = 'ds-avatar-danger';
+                    avatarContent = '<i class="fa fa-gavel" style="font-size:15px;"></i>';
                 }
 
                 item.innerHTML = `
                     <div class="staff-avatar-wrap">
-                        <span class="ds-avatar ds-avatar-sm ${avatarClass}">${conv.userRole === 'Dispute' ? 'TC' : initial}</span>
+                        <span class="ds-avatar ds-avatar-sm ${avatarClass}">${avatarContent}</span>
                         <span class="staff-chat-status ${isOnline ? '' : 'staff-chat-status--offline'}"></span>
                     </div>
                     <div style="flex: 1; overflow: hidden;">
@@ -323,7 +325,7 @@ document.addEventListener('DOMContentLoaded', function () {
         panelHeaderTitle.textContent = userName;
         if (userId < 0) {
             panelHeaderSubtitle.innerHTML = `${userEmail} · ${userRole}`;
-            panelHeaderAvatar.textContent = 'TC';
+            panelHeaderAvatar.innerHTML = '<i class="fa fa-gavel" style="font-size:15px;"></i>';
             panelHeaderAvatar.className = 'ds-avatar ds-avatar-sm ds-avatar-danger';
             
             chatInput.disabled = true;
@@ -429,13 +431,51 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+    function escapeHtmlText(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function getSenderAvatarHtml(senderName, role, isMe) {
+        let initials = senderName ? senderName.trim().split(/\s+/).map(w => w[0]).join('').substring(0, 2).toUpperCase() : '??';
+        let bg = '#2563eb'; // Customer blue
+        let titleRole = role || 'Khách hàng';
+        let iconHtml = escapeHtmlText(initials);
+
+        if (role) {
+            if (role.includes('Cửa hàng') || role.includes('Seller') || role.includes('Shop')) {
+                bg = '#d97706'; // Seller amber/orange
+                titleRole = 'Cửa hàng';
+            } else if (role.includes('Khách hàng') || role.includes('Customer') || role.includes('Buyer')) {
+                bg = '#2563eb'; // Customer blue
+                titleRole = 'Khách hàng';
+            } else if (role.includes('Staff') || role.includes('Admin') || role.includes('Nhân viên')) {
+                bg = '#7c3aed'; // Staff purple
+                titleRole = 'Nhân viên';
+                iconHtml = '<i class="fa fa-user-shield" style="font-size:11px;"></i>';
+            }
+        } else if (isMe) {
+            bg = '#7c3aed';
+            titleRole = 'Nhân viên';
+            iconHtml = '<i class="fa fa-user-shield" style="font-size:11px;"></i>';
+        }
+
+        return `<div style="width: 32px; height: 32px; border-radius: 50%; background: ${bg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0; margin-bottom: 2px;" title="${escapeHtmlText(senderName || '')} (${titleRole})">${iconHtml}</div>`;
+    }
+
         messages.forEach(msg => {
-            if (msg.message.startsWith('Hệ thống:')) {
+            if (msg.message && msg.message.startsWith('Hệ thống:')) {
                 const systemRow = document.createElement('div');
-                systemRow.style.cssText = 'width: 100%; display: flex; justify-content: center; margin: 12px 0; box-sizing: border-box;';
+                systemRow.style.cssText = 'width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; margin: 12px 0; box-sizing: border-box;';
                 systemRow.innerHTML = `
-                    <div style="font-size: 12px; background: #e2e8f0; color: #475569; padding: 6px 14px; border-radius: 6px; border: 1px solid #cbd5e1; display: inline-block; font-weight: 500; text-align: left;">
-                        ${msg.message}
+                    <div style="width: 26px; height: 26px; border-radius: 50%; background: #64748b; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0;"><i class="fa fa-cog"></i></div>
+                    <div style="font-size: 12px; background: #f1f5f9; color: #334155; padding: 6px 14px; border-radius: 6px; border: 1px solid #cbd5e1; display: inline-block; font-weight: 500; text-align: left;">
+                        ${escapeHtmlText(msg.message)}
                     </div>
                 `;
                 messagesContainer.appendChild(systemRow);
@@ -460,16 +500,32 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const row = document.createElement('div');
             row.className = `staff-chat-row ${rowClass}`;
+            row.style.display = 'flex';
+            row.style.gap = '8px';
+            row.style.alignItems = 'flex-end';
 
-            const roleLabel = msg.role ? `<span style="font-size: 10px; font-weight: bold; color: var(--ds-text-secondary); display: block; margin-bottom: 2px;">${msg.senderName} (${msg.role})</span>` : '';
+            const roleLabel = msg.role ? `<span style="font-size: 10.5px; font-weight: 700; color: var(--ds-text-secondary); display: block; margin-bottom: 3px;">${escapeHtmlText(msg.senderName)} <span style="opacity:0.8; font-weight:500;">(${msg.role})</span></span>` : '';
+            const avatarHtml = getSenderAvatarHtml(msg.senderName, msg.role, isMe);
 
-            row.innerHTML = `
-                <div class="staff-chat-bubble-wrap">
-                    ${roleLabel}
-                    <div class="staff-chat-bubble ${bubbleClass}">${msg.message}</div>
-                    <span class="staff-chat-meta">${timeStr}</span>
-                </div>
-            `;
+            if (isMe) {
+                row.innerHTML = `
+                    <div class="staff-chat-bubble-wrap">
+                        ${roleLabel}
+                        <div class="staff-chat-bubble ${bubbleClass}">${msg.message}</div>
+                        <span class="staff-chat-meta">${timeStr}</span>
+                    </div>
+                    ${avatarHtml}
+                `;
+            } else {
+                row.innerHTML = `
+                    ${avatarHtml}
+                    <div class="staff-chat-bubble-wrap">
+                        ${roleLabel}
+                        <div class="staff-chat-bubble ${bubbleClass}">${msg.message}</div>
+                        <span class="staff-chat-meta">${timeStr}</span>
+                    </div>
+                `;
+            }
 
             messagesContainer.appendChild(row);
         });

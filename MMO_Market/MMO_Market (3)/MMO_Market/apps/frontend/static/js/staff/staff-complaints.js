@@ -16,6 +16,8 @@ async function loadStaffComplaintsFromApi() {
     const search = searchInput ? searchInput.value.trim() : '';
     const statusSelect = document.getElementById('staff-status-select');
     const status = statusSelect ? statusSelect.value : '';
+    const dateInput = document.getElementById('staff-date-input');
+    const createdDate = dateInput ? dateInput.value.trim() : '';
 
     let url = `/api/complaints/all?page=${currentPage}&size=${pageSize}`;
     if (search) {
@@ -23,6 +25,9 @@ async function loadStaffComplaintsFromApi() {
     }
     if (status) {
         url += `&status=${status}`;
+    }
+    if (createdDate) {
+        url += `&createdDate=${encodeURIComponent(createdDate)}`;
     }
 
     try {
@@ -226,6 +231,8 @@ function resetStaffFilters() {
     if (searchInput) searchInput.value = '';
     const statusSelect = document.getElementById('staff-status-select');
     if (statusSelect) statusSelect.value = '';
+    const dateInput = document.getElementById('staff-date-input');
+    if (dateInput) dateInput.value = '';
     currentPage = 0;
     renderStaffComplaints();
 }

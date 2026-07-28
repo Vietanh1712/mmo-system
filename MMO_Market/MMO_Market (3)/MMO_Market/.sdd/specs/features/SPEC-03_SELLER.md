@@ -17,8 +17,8 @@ Seller Console là trung tâm quản lý dành cho người bán (Seller) trên 
 ---
 
 ## 3. Functional Requirements
-- **FR-SELL-01**: WHEN a Customer submits a Shop Registration, THE SYSTEM SHALL save it as PENDING and notify Staff.
-- **FR-SELL-02**: WHEN Staff approves the registration, THE SYSTEM SHALL change the user's role to SELLER.
+- **FR-SELL-01**: WHEN a Customer submits a Shop Registration, THE SYSTEM SHALL save it as APPROVED automatically if KYC is verified.
+- **FR-SELL-02**: WHEN the registration is created, THE SYSTEM SHALL change the user's role to SELLER and shop status to Active.
 - **FR-SELL-03**: WHILE user is a Seller, THE SYSTEM SHALL allow full CRUD access to their own Products and Product Variants.
 - **FR-SELL-04**: WHEN a Seller creates a Product, THE SYSTEM SHALL require at least 1 Variant with `priceVnd` > 0.
 - **FR-SELL-05**: WHEN a Seller uploads DigitalAssets (batch) for a Variant, THE SYSTEM SHALL update the variant's `stock` automatically.

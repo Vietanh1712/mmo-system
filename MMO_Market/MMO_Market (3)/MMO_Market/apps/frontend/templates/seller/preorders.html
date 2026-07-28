@@ -12,6 +12,71 @@
     <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
     <link rel="stylesheet" th:href="@{/css/seller/seller.css}">
     <link rel="stylesheet" th:href="@{/css/components/toast.css}">
+    <style>
+        .preorder-detail-modal {
+            width: min(680px, 100%);
+        }
+
+        .preorder-detail-modal__title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+            color: var(--seller-ink);
+            font-size: 18px;
+        }
+
+        .preorder-detail-modal__grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px 24px;
+        }
+
+        .preorder-detail-modal__item--wide {
+            grid-column: 1 / -1;
+        }
+
+        .preorder-detail-modal__label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--seller-muted);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .preorder-detail-modal__value {
+            margin: 0;
+            color: var(--seller-ink);
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .preorder-detail-modal__delivery {
+            min-height: 88px;
+            margin: 0;
+            padding: 14px;
+            border: 1px solid var(--seller-border);
+            border-radius: 8px;
+            background: var(--ds-surface-muted, #f8fafc);
+            color: var(--seller-ink);
+            font: 13px/1.6 "Courier New", monospace;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        @media (max-width: 600px) {
+            .preorder-detail-modal__grid {
+                grid-template-columns: 1fr;
+            }
+
+            .preorder-detail-modal__item--wide {
+                grid-column: auto;
+            }
+        }
+    </style>
 </head>
 <body>
     <header th:replace="fragments/header :: header"></header>
@@ -34,6 +99,25 @@
                 </div>
 
                 <div class="admin-card seller-transactions-card">
+                    <div class="card-header-flex" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 16px;">
+                        <h3>Danh sách đơn đặt trước</h3>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <div style="position: relative; width: 250px;">
+                                <i class="fa fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #64748b;"></i>
+                                <input type="text" class="ds-input" id="preorderSearchInput" placeholder="Tìm mã đơn, khách hàng..." style="padding-left: 36px; width: 100%; border-radius: 6px; border: 1px solid #cbd5e1; padding-top: 8px; padding-bottom: 8px;">
+                            </div>
+                            <select class="ds-select" id="preorderStatusFilter" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; min-width: 150px;">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="pending">Chờ xử lý</option>
+                                <option value="completed">Hoàn thành</option>
+                                <option value="cancelled">Đã hủy</option>
+                            </select>
+                            <select class="ds-select" id="preorderSortSelect" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; min-width: 150px;">
+                                <option value="newest">Mới nhất</option>
+                                <option value="oldest">Cũ nhất</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="table-wrap">
                         <table class="admin-table seller-table" id="preOrdersTable">
                             <thead>
@@ -83,8 +167,69 @@
         </div>
     </div>
 
+    <!-- Modal chi tiết đơn đặt trước -->
+    <div id="preOrderDetailModal" class="ds-modal-backdrop" hidden
+         onclick="handlePreOrderDetailBackdrop(event)">
+        <div class="ds-modal preorder-detail-modal" role="dialog" aria-modal="true"
+             aria-labelledby="preOrderDetailTitle">
+            <div class="ds-modal-header ds-cluster-between">
+                <h3 id="preOrderDetailTitle" class="preorder-detail-modal__title">
+                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    Chi tiết đơn đặt trước
+                </h3>
+                <button type="button" class="ds-btn ds-btn-text" onclick="closePreOrderDetailModal()"
+                        aria-label="Đóng cửa sổ chi tiết">
+                    <i class="fa fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="ds-modal-body">
+                <div class="preorder-detail-modal__grid">
+                    <div>
+                        <span class="preorder-detail-modal__label">Mã đơn</span>
+                        <p id="preOrderDetailCode" class="preorder-detail-modal__value">-</p>
+                    </div>
+                    <div>
+                        <span class="preorder-detail-modal__label">Trạng thái</span>
+                        <p id="preOrderDetailStatus" class="preorder-detail-modal__value">-</p>
+                    </div>
+                    <div>
+                        <span class="preorder-detail-modal__label">Khách hàng</span>
+                        <p id="preOrderDetailCustomer" class="preorder-detail-modal__value">-</p>
+                    </div>
+                    <div>
+                        <span class="preorder-detail-modal__label">Ngày đặt</span>
+                        <p id="preOrderDetailDate" class="preorder-detail-modal__value">-</p>
+                    </div>
+                    <div class="preorder-detail-modal__item--wide">
+                        <span class="preorder-detail-modal__label">Sản phẩm</span>
+                        <p id="preOrderDetailProduct" class="preorder-detail-modal__value">-</p>
+                    </div>
+                    <div>
+                        <span class="preorder-detail-modal__label">Số lượng</span>
+                        <p id="preOrderDetailQuantity" class="preorder-detail-modal__value">-</p>
+                    </div>
+                    <div>
+                        <span class="preorder-detail-modal__label">Ghi chú</span>
+                        <p id="preOrderDetailNotes" class="preorder-detail-modal__value">-</p>
+                    </div>
+                    <div class="preorder-detail-modal__item--wide">
+                        <span class="preorder-detail-modal__label">Thông tin đã giao</span>
+                        <pre id="preOrderDetailDelivery" class="preorder-detail-modal__delivery">Chưa có thông tin giao hàng.</pre>
+                    </div>
+                </div>
+            </div>
+            <div class="ds-modal-footer">
+                <button type="button" class="ds-btn ds-btn-outline" onclick="closePreOrderDetailModal()">Đóng</button>
+                <button type="button" class="ds-btn ds-btn-primary" id="copyPreOrderDetailButton"
+                        onclick="copyPreOrderDetailDelivery()">
+                    <i class="fa fa-copy" aria-hidden="true"></i> Sao chép thông tin
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="sellerToastContainer"></div>
 
-    <script th:src="@{/js/seller/seller-console.js(v=1.2)}"></script>
+    <script th:src="@{/js/seller/seller-console.js(v=1.3)}"></script>
 </body>
 </html>

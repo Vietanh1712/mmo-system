@@ -3,8 +3,7 @@
 > **Feature ID:** `feat-customer` | **Page:** `Security`
 > **Route:** `/account/security` | **Template:** `templates/account/security.html`
 > **CSS Script:** `static/css/customer/style.css`
-> **JS Script:** `static/js/security.js`
-> **Version:** 1.0 | **Status:** Draft
+> **JS Script:** `static/js/customer/account-security.js`
 > **Backend ref:** `feat-auth/UC-01-authentication.md`
 
 ---

@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/features/home.css}">
     <link rel="stylesheet" th:href="@{/css/features/messages.css}">
-    <th:block th:if="${isSellerView}">
+    <th:block th:if="${isSellerView == true}">
         <link rel="stylesheet" th:href="@{/css/customer/profile.css}">
         <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
         <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
@@ -21,7 +21,7 @@
 
     <header th:replace="fragments/header :: header"></header>
 
-    <th:block th:if="${isSellerView}">
+    <th:block th:if="${isSellerView == true}">
         <main class="ds-container-fluid admin-shell" style="max-width: 1500px; margin: 0 auto;">
             <div class="admin-layout ds-two-column">
                 <aside th:replace="~{fragments/seller-sidebar :: sellerSidebar('messages')}"></aside>
@@ -32,8 +32,13 @@
         </main>
     </th:block>
 
-    <th:block th:unless="${isSellerView}">
-        <div th:fragment="chatInterface" class="messages-layout" th:style="${isSellerView == true ? 'margin: 0; max-width: 100%; height: calc(100vh - 120px); min-height: 500px; padding: 0;' : ''}">
+    <th:block th:unless="${isSellerView == true}">
+        <th:block th:replace="~{this :: chatInterface}"></th:block>
+    </th:block>
+
+    <template style="display:none;">
+    <th:block th:fragment="chatInterface">
+    <div class="messages-layout" th:style="${isSellerView == true ? 'margin: 0; max-width: 100%; height: calc(100vh - 120px); min-height: 500px; padding: 0;' : ''}">
 
         <!-- Sidebar -->
         <aside class="messages-sidebar" aria-label="Danh sách tin nhắn">
@@ -119,14 +124,52 @@
         </section>
 
     </div>
+    </th:block>
+    </template>
 
     <footer th:replace="fragments/footer :: footer"></footer>
 
     <script th:src="@{/js/customer/auth.js}"></script>
+    <script th:if="${isSellerView == true}" th:src="@{/js/seller/seller-console.js(v=1.3)}"></script>
     <script>
         const CHAT_DATA = {};
 
         const MESSAGES_HISTORY = {};
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function getInitials(name) {
+            if (!name || !name.trim()) return '?';
+            return name.trim().charAt(0).toUpperCase();
+        }
+
+        function getSenderAvatarHtml(senderName, role) {
+            let initials = getInitials(senderName);
+            let bg = '#0f172a'; // Match header avatar background color exactly
+            let titleRole = role || 'Khách hàng';
+            let iconHtml = escapeHtml(initials);
+
+            if (role) {
+                if (role.includes('Cửa hàng') || role.includes('Seller') || role.includes('Shop')) {
+                    titleRole = 'Cửa hàng';
+                } else if (role.includes('Khách hàng') || role.includes('Customer') || role.includes('Buyer')) {
+                    titleRole = 'Khách hàng';
+                } else if (role.includes('Staff') || role.includes('Admin') || role.includes('Nhân viên')) {
+                    titleRole = 'Nhân viên';
+                    iconHtml = '<i class="fa fa-user-shield" style="font-size: 11px;"></i>';
+                }
+            }
+
+            return `<div style="width: 32px; height: 32px; border-radius: 50%; background: ${bg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; align-self: flex-start; margin-top: 2px;" title="${escapeHtml(senderName || '')} (${titleRole})">${iconHtml}</div>`;
+        }
 
         let currentSelectedChatId = null;
         let pendingAttachment = null;
@@ -229,13 +272,16 @@
                         ? `<span class="messages-chat-item__badge">${unread}</span>`
                         : '';
 
+                    const isDispute = c.isComplaint || c.contactId < 0;
+                    const avatarContent = isDispute ? '<i class="fa fa-gavel" style="font-size:15px;"></i>' : getInitials(c.name);
+
                     const li = document.createElement('li');
                     li.className = `messages-chat-item ${isActive ? 'is-active' : ''} ${(unread > 0 && !isActive) ? 'has-unread' : ''}`;
                     li.setAttribute('data-chat-id', c.contactId);
                     li.onclick = () => selectChat(c.contactId);
                     li.innerHTML = `
                         <div class="messages-chat-item__avatar-wrap">
-                            <div class="messages-chat-item__avatar">${c.avatar}</div>
+                            <div class="messages-chat-item__avatar ${isDispute ? 'messages-chat-item__avatar--dispute' : ''}" style="background: #0f172a; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">${avatarContent}</div>
                             <span class="messages-chat-item__status ${c.online ? '' : 'messages-chat-item__status--offline'}"></span>
                         </div>
                         <div class="messages-chat-item__body">
@@ -268,8 +314,11 @@
         async function selectInitialChat() {
             const urlParams = new URLSearchParams(window.location.search);
             const sellerIdParam = urlParams.get('sellerId');
-            if (sellerIdParam && !isNaN(Number(sellerIdParam))) {
-                await selectChat(Number(sellerIdParam));
+            const customerIdParam = urlParams.get('customerId');
+            const contactId = sellerIdParam ? Number(sellerIdParam) : (customerIdParam ? Number(customerIdParam) : null);
+            
+            if (contactId && !isNaN(contactId)) {
+                await selectChat(contactId);
             } else if (activeChatList && activeChatList.length > 0) {
                 await selectChat(activeChatList[0].contactId);
             } else {
@@ -330,7 +379,24 @@
             }
 
             document.getElementById('chat-header-name').textContent = chat.name;
-            document.getElementById('chat-header-avatar').textContent = chat.avatar;
+            const headerInfoEl = document.getElementById('chat-header-info');
+            if (chat.isComplaint || id < 0) {
+                document.getElementById('chat-header-avatar').innerHTML = '<i class="fa fa-gavel" style="font-size:16px;"></i>';
+                document.getElementById('chat-header-avatar').style.background = '#0f172a';
+                document.getElementById('chat-header-avatar').style.color = '#ffffff';
+                if (headerInfoEl) {
+                    headerInfoEl.style.cursor = 'default';
+                    headerInfoEl.removeAttribute('title');
+                }
+            } else {
+                document.getElementById('chat-header-avatar').textContent = getInitials(chat.name);
+                document.getElementById('chat-header-avatar').style.background = '#0f172a';
+                document.getElementById('chat-header-avatar').style.color = '#ffffff';
+                if (headerInfoEl) {
+                    headerInfoEl.style.cursor = 'pointer';
+                    headerInfoEl.setAttribute('title', 'Xem gian hàng');
+                }
+            }
             const contextProductNameEl = document.getElementById('context-product-name');
             if (contextProductNameEl) {
                 contextProductNameEl.textContent = chat.product || 'Tin nhắn trực tuyến';
@@ -374,6 +440,7 @@
                     const complaintId = Array.isArray(data) ? null : data.complaintId;
                     const userRole = Array.isArray(data) ? null : data.userRole;
                     const transactionId = Array.isArray(data) ? null : data.transactionId;
+                    const complaintDescription = Array.isArray(data) ? null : data.complaintDescription;
 
                     let chat = activeChatList.find(c => c.contactId === id);
                     if (chat) {
@@ -381,6 +448,28 @@
                         chat.complaintId = complaintId;
                         chat.userRole = userRole;
                         chat.transactionId = transactionId;
+                        chat.sellerId = data.sellerId;
+                        chat.customerId = data.customerId;
+                        chat.complaintDescription = complaintDescription;
+                    }
+
+                    if (isComplaint || id < 0) {
+                        const headerAvatarEl = document.getElementById('chat-header-avatar');
+                        if (headerAvatarEl) {
+                            headerAvatarEl.style.background = '#0f172a';
+                            headerAvatarEl.style.color = '#ffffff';
+                            headerAvatarEl.innerHTML = '<i class="fa fa-gavel" style="font-size:16px;"></i>';
+                        }
+                        const headerInfoEl = document.getElementById('chat-header-info');
+                        if (headerInfoEl) {
+                            if (userRole === 'customer') {
+                                headerInfoEl.style.cursor = 'pointer';
+                                headerInfoEl.setAttribute('title', 'Xem gian hàng');
+                            } else {
+                                headerInfoEl.style.cursor = 'default';
+                                headerInfoEl.removeAttribute('title');
+                            }
+                        }
                     }
 
                     // Determine product context for this chat:
@@ -447,7 +536,14 @@
                 const cp = currentContextProduct;
                 const contextCard = document.createElement('article');
                 contextCard.className = 'messages-context-card';
-                contextCard.onclick = () => { window.location.href = `/products/${cp.id}`; };
+                
+                const isDispute = chat && (chat.isComplaint || chat.contactId < 0);
+                if (!isDispute) {
+                    contextCard.onclick = () => { window.location.href = `/products/${cp.id}`; };
+                    contextCard.style.cursor = 'pointer';
+                } else {
+                    contextCard.style.cursor = 'default';
+                }
 
                 let formattedPrice = '—';
                 try {
@@ -460,19 +556,47 @@
                     ? `<span class="messages-context-card__stock" style="color: #ef4444; background: #fef2f2;">HẾT HÀNG</span>`
                     : `<span class="messages-context-card__stock">CÒN HÀNG</span>`;
 
+                const chevronHtml = !isDispute ? '<i class="fa fa-chevron-right messages-context-card__chevron"></i>' : '';
+
                 contextCard.innerHTML = `
                     <div class="messages-context-card__thumb"><i class="fa fa-play-circle"></i></div>
                     <div class="messages-context-card__info">
-                        <div class="messages-context-card__label">SẢN PHẨM ĐANG HỎI</div>
+                        <div class="messages-context-card__label">${isDispute ? 'SẢN PHẨM TRANH CHẤP' : 'SẢN PHẨM ĐANG HỎI'}</div>
                         <div class="messages-context-card__name">${cp.name}</div>
                         <div class="messages-context-card__meta">
                             <span class="messages-context-card__price">${formattedPrice}</span>
                             ${stockBadge}
                         </div>
                     </div>
-                    <i class="fa fa-chevron-right messages-context-card__chevron"></i>
+                    ${chevronHtml}
                 `;
                 body.appendChild(contextCard);
+
+                if (isDispute && chat && chat.complaintDescription) {
+                    const complaintCard = document.createElement('div');
+                    complaintCard.style.background = '#fef2f2';
+                    complaintCard.style.border = '1px solid #fee2e2';
+                    complaintCard.style.borderRadius = '8px';
+                    complaintCard.style.padding = '12px 16px';
+                    complaintCard.style.margin = '0 0 16px 0';
+                    complaintCard.style.display = 'flex';
+                    complaintCard.style.flexDirection = 'column';
+                    complaintCard.style.gap = '4px';
+                    complaintCard.style.textAlign = 'left';
+                    complaintCard.style.fontSize = '13px';
+                    complaintCard.style.lineHeight = '1.5';
+                    complaintCard.style.color = '#991b1b';
+
+                    complaintCard.innerHTML = `
+                        <div style="font-weight: 700; display: flex; align-items: center; gap: 6px; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; color: #ef4444;">
+                            <i class="fa fa-exclamation-triangle"></i> Chi tiết lý do khiếu nại của khách hàng
+                        </div>
+                        <div style="background: #ffffff; border-radius: 6px; border: 1px solid #fecaca; padding: 10px; color: #1f2937; margin-top: 4px; font-weight: 500;">
+                            ${escapeHtml(chat.complaintDescription)}
+                        </div>
+                    `;
+                    body.appendChild(complaintCard);
+                }
             }
 
             // 3. Render message history
@@ -480,34 +604,80 @@
                 const row = document.createElement('div');
                 const timeStr = msg.createdAt ? formatChatTime(new Date(msg.createdAt)) : '';
                 
-                if (msg.type === 'in' || msg.type === 'system') {
-                    if (msg.type === 'system') {
-                        row.className = 'msg-row msg-row--left';
-                        row.style.maxWidth = '100%';
-                        row.style.width = '100%';
-                        row.style.justifyContent = 'center';
-                        row.style.margin = '8px 0';
-                        row.innerHTML = `
-                            <div style="font-size: 12px; background: #e2e8f0; color: #475569; padding: 6px 14px; border-radius: 6px; border: 1px solid #cbd5e1; display: inline-block;">
-                                ${msg.message}
+                const isSystem = msg.type === 'system' || (msg.message && msg.message.startsWith('Hệ thống:'));
+                if (isSystem) {
+                    row.className = 'msg-row msg-row--left';
+                    row.style.maxWidth = '100%';
+                    row.style.width = '100%';
+                    row.style.justifyContent = 'center';
+                    row.style.margin = '12px 0';
+                    row.innerHTML = `
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: #64748b; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0;"><i class="fa fa-cog"></i></div>
+                            <div style="font-size: 12px; background: #f1f5f9; color: #334155; padding: 6px 14px; border-radius: 6px; border: 1px solid #cbd5e1; display: inline-block; font-weight: 500; text-align: left;">
+                                ${escapeHtml(msg.message)}
                             </div>
-                        `;
-                    } else {
-                        row.className = 'msg-row msg-row--left';
-                        row.innerHTML = `
-                            <div class="msg-row__avatar">${chat ? chat.avatar : 'US'}</div>
-                            <div class="msg-bubble-wrap">
-                                <div class="msg-bubble msg-bubble--in">${msg.message}</div>
-                                <span class="msg-meta">${timeStr}</span>
-                            </div>
-                        `;
-                    }
-                } else {
+                        </div>
+                    `;
+                    body.appendChild(row);
+                    return;
+                }
+
+                const isMe = msg.type === 'out';
+                const senderName = msg.senderName || (isMe ? 'Bạn' : (chat ? chat.name : 'Người dùng'));
+                const senderRole = msg.role || '';
+                
+                let titleColor = '#2563eb';
+                let bubbleStyle = '';
+                let avatarBg = '#0f172a'; // Match header avatar background color exactly
+                let initials = getInitials(senderName);
+                let avatarContent = escapeHtml(initials);
+
+                const isShopSender = (senderRole.includes('Cửa hàng') || senderRole.includes('Seller')) && chat && chat.sellerId;
+
+                if (senderRole.includes('Cửa hàng') || senderRole.includes('Seller')) {
+                    titleColor = '#d97706';
+                    bubbleStyle = 'background: #ffedd5; color: #1e293b; border: none;';
+                } else if (senderRole.includes('Khách hàng') || senderRole.includes('Customer') || senderRole.includes('Buyer')) {
+                    titleColor = '#2563eb';
+                    bubbleStyle = 'background: #dbeafe; color: #1e293b; border: none;';
+                } else if (senderRole.includes('Staff') || senderRole.includes('Admin') || senderRole.includes('Nhân viên')) {
+                    titleColor = '#7c3aed';
+                    bubbleStyle = 'background: #f3e8ff; color: #1e293b; border: none;';
+                    avatarContent = '<i class="fa fa-user-shield" style="font-size: 11px;"></i>';
+                }
+
+                const nameRoleHeader = senderName 
+                    ? `<span style="font-size: 11px; font-weight: 700; color: ${titleColor}; display: block; margin-bottom: 3px;">
+                        ${isShopSender ? `<a href="/shop/${chat.sellerId}" style="color: ${titleColor}; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${escapeHtml(senderName)}</a>` : escapeHtml(senderName)}
+                        ${senderRole ? ` <small style="font-weight: 500; opacity: 0.85;">(${escapeHtml(senderRole)})</small>` : ''}
+                       </span>` 
+                    : '';
+
+                const avatarWrapperStart = isShopSender ? `<a href="/shop/${chat.sellerId}" style="text-decoration: none; color: inherit; display: inline-block;">` : '';
+                const avatarWrapperEnd = isShopSender ? `</a>` : '';
+                const senderAvatarHtml = `${avatarWrapperStart}<div style="width: 32px; height: 32px; border-radius: 50%; background: ${avatarBg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; align-self: flex-start; margin-top: 2px;" title="${escapeHtml(senderName)} (${escapeHtml(senderRole)})">${avatarContent}</div>${avatarWrapperEnd}`;
+
+                if (isMe) {
                     row.className = 'msg-row msg-row--right';
                     row.innerHTML = `
-                        <div class="msg-bubble-wrap">
-                            <div class="msg-bubble msg-bubble--out">${msg.message}</div>
+                        <div class="msg-bubble-wrap" style="align-items: flex-end;">
+                            ${nameRoleHeader}
+                            <div class="msg-bubble msg-bubble--out" style="${bubbleStyle}">${msg.message}</div>
                             <span class="msg-meta">${timeStr} <i class="fa fa-check"></i></span>
+                        </div>
+                    `;
+                } else {
+                    row.className = 'msg-row msg-row--left';
+                    row.style.display = 'flex';
+                    row.style.gap = '10px';
+                    row.style.alignItems = 'flex-start';
+                    row.innerHTML = `
+                        ${senderAvatarHtml}
+                        <div class="msg-bubble-wrap" style="align-items: flex-start;">
+                            ${nameRoleHeader}
+                            <div class="msg-bubble msg-bubble--in" style="${bubbleStyle}">${msg.message}</div>
+                            <span class="msg-meta">${timeStr}</span>
                         </div>
                     `;
                 }
@@ -532,6 +702,11 @@
                     CHAT_DATA[k].sellerId === currentSelectedChatId || (CHAT_DATA[k].sellerId === null && currentSelectedChatId === 14)
                 );
                 if (mockKey) chat = CHAT_DATA[mockKey];
+            }
+
+            if (chat && (chat.isComplaint || chat.contactId < 0)) {
+                // Do nothing for dispute conversations
+                return;
             }
 
             if (chat && (chat.sellerId || chat.contactId)) {

@@ -28,20 +28,22 @@ public interface SellerRegistrationRepository extends JpaRepository<SellerRegist
            "     (:shopStatus = 'ACTIVE' AND (r.user.shopStatus IS NULL OR UPPER(r.user.shopStatus) IN ('ACTIVE', 'APPROVED'))) OR " +
            "     (:shopStatus = 'SUSPENDED' AND UPPER(r.user.shopStatus) IN ('SUSPENDED', 'TEMP_LOCKED', 'TEMP_SUSPENDED')) OR " +
            "     (:shopStatus = 'LOCKED' AND UPPER(r.user.shopStatus) IN ('LOCKED', 'INDEFINITE_LOCKED')) OR " +
-           "     (:shopStatus = 'BANNED' AND UPPER(r.user.shopStatus) IN ('BANNED', 'PERMANENT_BANNED')) OR " +
+           "     (:shopStatus = 'Banned' AND UPPER(r.user.shopStatus) IN ('BANNED', 'PERMANENT_BANNED')) OR " +
            "     (:shopStatus = 'WITHDRAWN' AND UPPER(r.user.shopStatus) IN ('WITHDRAWN', 'DELETED')) OR " +
            "     (UPPER(r.user.shopStatus) = UPPER(:shopStatus))) " +
            "AND (:keyword IS NULL OR " +
-           "    LOWER(r.shopName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "    LOWER(r.supportEmail) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "    LOWER(r.supportPhone) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "    LOWER(r.category) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "    (:searchId IS NOT NULL AND r.id = :searchId))")
+           "    LOWER(r.shopName) LIKE CONCAT('%', LOWER(:keyword), '%') OR " +
+           "    LOWER(r.supportEmail) LIKE CONCAT('%', LOWER(:keyword), '%') OR " +
+           "    LOWER(r.supportPhone) LIKE CONCAT('%', LOWER(:keyword), '%') OR " +
+           "    LOWER(r.category) LIKE CONCAT('%', LOWER(:keyword), '%') OR " +
+           "    CAST(r.id AS string) LIKE CONCAT('%', LOWER(:keyword), '%') OR " +
+           "    LOWER(CONCAT('SHOP-', CAST(r.id AS string))) LIKE CONCAT('%', LOWER(:keyword), '%') OR " +
+           "    LOWER(r.user.fullName) LIKE CONCAT('%', LOWER(:keyword), '%') OR " +
+           "    LOWER(r.user.email) LIKE CONCAT('%', LOWER(:keyword), '%'))")
     Page<SellerRegistration> searchRegistrations(
             @Param("status") String status,
             @Param("shopStatus") String shopStatus,
             @Param("keyword") String keyword,
-            @Param("searchId") Long searchId,
             Pageable pageable);
 
     @Query("SELECT DISTINCT r.status FROM SellerRegistration r WHERE r.status IS NOT NULL AND r.isDelete = false")

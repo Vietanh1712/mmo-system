@@ -1,6 +1,6 @@
 # SPEC — System Administration & RBAC
 > **Feature ID:** `feat-admin`
-> **UC Coverage:** UC-28
+> **UC Coverage:** UC-15 (System Administration)
 > **Version:** 2.1 | **Status:** Active
 > **Author:** Team | **Last Updated:** 2026-07-23
 
