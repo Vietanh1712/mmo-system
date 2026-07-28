@@ -1,4 +1,4 @@
-﻿package com.mmo.security;
+package com.mmo.security;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

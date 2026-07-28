@@ -1,4 +1,4 @@
-﻿package com.mmo.service;
+package com.mmo.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -61,14 +61,6 @@ public class AuthenticationServiceCoverageTest {
     }
 
     /**
-     * Ca kiểm thử: Xác minh mã OTP wrong code ném ra lỗi business exception.
-     */
-    @Test
-    void verifyOtp_wrongCode_throwsBusinessException() {
-        // TODO: Triển khai kiểm thử cho verifyOtp_wrongCode_throwsBusinessException
-    }
-
-    /**
      * Ca kiểm thử: Xác minh mã OTP hết hạn ném ra lỗi mã OTP hết hạn exception.
      */
     @Test
@@ -109,22 +101,6 @@ public class AuthenticationServiceCoverageTest {
     }
 
     /**
-     * Ca kiểm thử: Resend mã OTP already hoạt động ném ra lỗi business exception.
-     */
-    @Test
-    void resendOtp_alreadyActive_throwsBusinessException() {
-        // TODO: Triển khai kiểm thử cho resendOtp_alreadyActive_throwsBusinessException
-    }
-
-    /**
-     * Ca kiểm thử: Resend mã OTP already hoạt động ném ra lỗi business exception.
-     */
-    @Test
-    void resendOtp_alreadyActive_throwsBusinessException() {
-        // TODO: Triển khai kiểm thử cho resendOtp_alreadyActive_throwsBusinessException
-    }
-
-    /**
      * Ca kiểm thử: Resend mã OTP không hoạt động issues new mã OTP.
      */
     @Test
@@ -138,14 +114,6 @@ public class AuthenticationServiceCoverageTest {
     @Test
     void login_unknownEmail_throwsBusinessException() {
         // TODO: Triển khai kiểm thử cho login_unknownEmail_throwsBusinessException
-    }
-
-    /**
-     * Ca kiểm thử: Đăng nhập google only account ném ra lỗi business exception.
-     */
-    @Test
-    void login_googleOnlyAccount_throwsBusinessException() {
-        // TODO: Triển khai kiểm thử cho login_googleOnlyAccount_throwsBusinessException
     }
 
     /**
@@ -202,22 +170,6 @@ public class AuthenticationServiceCoverageTest {
     @Test
     void resolveGoogleSignIn_newUser_nullFullName_usesEmail() {
         // TODO: Triển khai kiểm thử cho resolveGoogleSignIn_newUser_nullFullName_usesEmail
-    }
-
-    /**
-     * Ca kiểm thử: Complete google link không hợp lệ token ném ra lỗi business exception.
-     */
-    @Test
-    void completeGoogleLink_invalidToken_throwsBusinessException() {
-        // TODO: Triển khai kiểm thử cho completeGoogleLink_invalidToken_throwsBusinessException
-    }
-
-    /**
-     * Ca kiểm thử: Complete google link không hợp lệ token ném ra lỗi business exception.
-     */
-    @Test
-    void completeGoogleLink_invalidToken_throwsBusinessException() {
-        // TODO: Triển khai kiểm thử cho completeGoogleLink_invalidToken_throwsBusinessException
     }
 
     /**

@@ -1,4 +1,4 @@
-﻿package com.mmo.service;
+package com.mmo.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,14 +11,6 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @ExtendWith(MockitoExtension.class)
 public class ReviewServiceTest {
-
-    /**
-     * Ca kiểm thử: Submit review trùng lặp ném ra lỗi xung đột dữ liệu.
-     */
-    @Test
-    void submitReview_duplicate_throwsConflict() {
-        // TODO: Triển khai kiểm thử cho submitReview_duplicate_throwsConflict
-    }
 
     /**
      * Ca kiểm thử: Submit review trùng lặp ném ra lỗi xung đột dữ liệu.

@@ -1,4 +1,4 @@
-﻿package com.mmo.service;
+package com.mmo.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,14 +11,6 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @ExtendWith(MockitoExtension.class)
 public class CustomerDashboardServiceTest {
-
-    /**
-     * Ca kiểm thử: Get dashboard non khách hàng lỗi không có quyền truy cập (403 Forbidden).
-     */
-    @Test
-    void getDashboard_nonCustomer_forbidden() {
-        // TODO: Triển khai kiểm thử cho getDashboard_nonCustomer_forbidden
-    }
 
     /**
      * Ca kiểm thử: Get dashboard non khách hàng lỗi không có quyền truy cập (403 Forbidden).

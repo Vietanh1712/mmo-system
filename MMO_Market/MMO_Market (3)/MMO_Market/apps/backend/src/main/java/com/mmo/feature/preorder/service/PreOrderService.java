@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import com.mmo.shared.dal.ProductVariantRepository;
 import com.mmo.shared.dal.NotificationRepository;
 import com.mmo.shared.model.Notification;
 
@@ -32,32 +33,21 @@ public class PreOrderService {
     private final PreOrderRepository preOrderRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
-<<<<<<< HEAD
-    private final NotificationRepository notificationRepository;
-=======
-    private final com.mmo.shared.dal.ProductVariantRepository productVariantRepository;
+    private final ProductVariantRepository productVariantRepository;
     private final com.mmo.shared.dal.DigitalAssetRepository digitalAssetRepository;
-    private final com.mmo.shared.dal.NotificationRepository notificationRepository;
->>>>>>> dd89e11a7027ecbf617a453eb9cd15587c6a8da0
+    private final NotificationRepository notificationRepository;
 
     public PreOrderService(PreOrderRepository preOrderRepository,
                            UserRepository userRepository,
                            ProductRepository productRepository,
-<<<<<<< HEAD
-                           NotificationRepository notificationRepository) {
-        this.preOrderRepository = preOrderRepository;
-        this.userRepository = userRepository;
-        this.productRepository = productRepository;
-=======
-                           com.mmo.shared.dal.ProductVariantRepository productVariantRepository,
+                           ProductVariantRepository productVariantRepository,
                            com.mmo.shared.dal.DigitalAssetRepository digitalAssetRepository,
-                           com.mmo.shared.dal.NotificationRepository notificationRepository) {
+                           NotificationRepository notificationRepository) {
         this.preOrderRepository = preOrderRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.productVariantRepository = productVariantRepository;
         this.digitalAssetRepository = digitalAssetRepository;
->>>>>>> dd89e11a7027ecbf617a453eb9cd15587c6a8da0
         this.notificationRepository = notificationRepository;
     }
 
@@ -97,43 +87,28 @@ public class PreOrderService {
 
         PreOrder saved = preOrderRepository.save(preOrder);
 
-<<<<<<< HEAD
         if (product.getSeller() != null) {
             try {
-                Notification sellerNotif = Notification.builder()
+                Notification sellerNotification = Notification.builder()
                         .userId(product.getSeller().getId())
-                        .title("Đơn đặt trước mới")
-                        .content("Khách hàng " + customer.getEmail() + " đã yêu cầu đặt trước " + saved.getQuantity() + " sản phẩm " + product.getName() + ".")
+                        .title("Bạn có đơn đặt trước mới")
+                        .content("Đơn PO-" + saved.getId()
+                                + " đặt " + saved.getQuantity() + " tài khoản của sản phẩm '"
+                                + product.getName() + "'"
+                                + (variant != null ? ", biến thể '" + variant.getVariantName() + "'" : "")
+                                + ".")
                         .type("ORDER")
                         .severity("INFO")
-                        .targetUrl("/seller/console")
                         .isRead(false)
                         .isDelete(false)
-                        .status("PUBLISHED")
+                        .createdAt(java.time.LocalDateTime.now())
+                        .targetUrl("/seller/console")
                         .build();
-                notificationRepository.save(sellerNotif);
+                notificationRepository.save(sellerNotification);
             } catch (Exception e) {
-                // Log and absorb exception to avoid breaking transaction
+                log.warn("Lỗi gửi thông báo cho seller: {}", e.getMessage());
             }
         }
-=======
-        com.mmo.shared.model.Notification sellerNotification = com.mmo.shared.model.Notification.builder()
-                .userId(product.getSeller().getId())
-                .title("Bạn có đơn đặt trước mới")
-                .content("Đơn PO-" + saved.getId()
-                        + " đặt " + saved.getQuantity() + " tài khoản của sản phẩm '"
-                        + product.getName() + "'"
-                        + (variant != null ? ", biến thể '" + variant.getVariantName() + "'" : "")
-                        + ".")
-                .type("ORDER")
-                .severity("INFO")
-                .isRead(false)
-                .isDelete(false)
-                .createdAt(java.time.LocalDateTime.now())
-                .targetUrl("/seller/preorders")
-                .build();
-        notificationRepository.save(sellerNotification);
->>>>>>> dd89e11a7027ecbf617a453eb9cd15587c6a8da0
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return PreOrderResponse.builder()

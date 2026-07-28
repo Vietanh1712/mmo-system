@@ -1,6 +1,7 @@
 package com.mmo.service;
 
 import com.mmo.feature.seller.service.ShopRegistrationService;
+import com.mmo.feature.wallet.service.WalletService;
 import com.mmo.shared.dal.*;
 import com.mmo.shared.dto.ShopRegistrationRequestDto;
 import com.mmo.shared.dto.ShopRegistrationResponseDto;
@@ -139,9 +140,6 @@ public class SellerServiceTest {
 
         ShopRegistrationRequestDto request = new ShopRegistrationRequestDto();
         request.setShopName("Gian Hang Alpha");
-        request.setBankName("Techcombank");
-        request.setBankAccountNumber("123456789");
-        request.setBankAccountName("NGUYEN VAN A");
 
         ShopRegistrationResponseDto response = shopRegistrationService.submitRegistration(1L, request);
 
