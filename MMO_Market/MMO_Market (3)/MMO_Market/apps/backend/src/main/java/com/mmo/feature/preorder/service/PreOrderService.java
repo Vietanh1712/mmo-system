@@ -16,6 +16,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.mmo.shared.dal.NotificationRepository;
+import com.mmo.shared.model.Notification;
 
 @Service
 public class PreOrderService {
@@ -23,13 +25,16 @@ public class PreOrderService {
     private final PreOrderRepository preOrderRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final NotificationRepository notificationRepository;
 
     public PreOrderService(PreOrderRepository preOrderRepository,
                            UserRepository userRepository,
-                           ProductRepository productRepository) {
+                           ProductRepository productRepository,
+                           NotificationRepository notificationRepository) {
         this.preOrderRepository = preOrderRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
+        this.notificationRepository = notificationRepository;
     }
 
     @Transactional
@@ -64,6 +69,26 @@ public class PreOrderService {
         preOrder.setNotes(request.getNotes() == null ? null : request.getNotes().trim());
 
         PreOrder saved = preOrderRepository.save(preOrder);
+
+        if (product.getSeller() != null) {
+            try {
+                Notification sellerNotif = Notification.builder()
+                        .userId(product.getSeller().getId())
+                        .title("Đơn đặt trước mới")
+                        .content("Khách hàng " + customer.getEmail() + " đã yêu cầu đặt trước " + saved.getQuantity() + " sản phẩm " + product.getName() + ".")
+                        .type("ORDER")
+                        .severity("INFO")
+                        .targetUrl("/seller/console")
+                        .isRead(false)
+                        .isDelete(false)
+                        .status("PUBLISHED")
+                        .build();
+                notificationRepository.save(sellerNotif);
+            } catch (Exception e) {
+                // Log and absorb exception to avoid breaking transaction
+            }
+        }
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return PreOrderResponse.builder()
                 .success(true)
