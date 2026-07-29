@@ -131,6 +131,7 @@ Quản trị viên hệ thống cấp cao nhất.
 ### FR-08 Order and Purchase (Includes Pre-Order)
 - Khách hàng (Customer) chọn mua ProductVariant.
 - Hỗ trợ đặt hàng trước (PreOrder).
+- Hỗ trợ xử lý khi số lượng đặt mua vượt quá tồn kho (Hiện popup chọn: Option A - mua tối đa có sẵn, Option B - mua tối đa có sẵn và đặt trước phần thiếu, Option C - đặt trước toàn bộ).
 - Hệ thống kiểm tra số dư ví, tình trạng tồn kho, và xác thực sở hữu.
 - Trừ tiền trong ví, giảm tồn kho.
 - Khởi tạo Transaction (đơn hàng) và giao tài sản số.

@@ -43,7 +43,12 @@ Tất cả tài khoản được lưu trữ tập trung tại bảng `Users`, h�
   - **WHEN** Customer thực hiện gửi yêu cầu đặt mua một biến thể sản phẩm số, **THE system SHALL** thực hiện kiểm tra số dư ví tiền mặt (`wallet_balance`) của Customer với giá bán (`price`) của biến thể đó.
   - **IF** số dư ví nhỏ hơn giá sản phẩm, **THE system SHALL** từ chối xử lý và trả về mã lỗi HTTP 400 Bad Request (`INSUFFICIENT_FUNDS`).
   - **IF** số lượng tồn kho (`stock`) của mặt hàng nhỏ hơn hoặc bằng 0, **THE system SHALL** từ chối xử lý và trả về mã lỗi HTTP 400 Bad Request (`OUT_OF_STOCK`).
-  - **WHEN** tất cả các điều kiện kiểm tra đều hợp lệ, **THE system SHALL** thực hiện trừ tiền mặt trong ví Customer, giảm `stock` kho hàng đi 1 đơn vị, tính phí sàn thu (`commission_amount`) dựa theo cấu hình bảng `Commissions` và tạo mới một bản ghi giao dịch trong bảng `Transactions`.
+  - **IF** số lượng đặt mua (`quantity`) vượt quá số lượng tồn kho (`stock`) của biến thể mặt hàng, **THE system SHALL** hỗ trợ Giao diện hiển thị Pop-up lựa chọn cho phép Khách hàng:
+    - **Option A (Mua tối đa sẵn có)**: Chỉ mua `stock` sản phẩm hiện tại (giao ngay và trừ tiền tương ứng).
+    - **Option B (Đặt trước số lượng thiếu)**: Mua ngay `stock` sản phẩm có sẵn, đồng thời tạo một yêu cầu Đặt trước (Pre-Order) cho phần số lượng còn thiếu `(quantity - stock)`.
+    - **Option C (Đặt trước toàn bộ đơn hàng)**: Chuyển toàn bộ `quantity` sản phẩm đặt mua sang yêu cầu Đặt trước (Pre-Order) để nhận hàng cùng lúc.
+    - **Hủy giao dịch**: Đóng pop-up và không thực hiện hành động nào.
+  - **WHEN** tất cả các điều kiện kiểm tra đều hợp lệ, **THE system SHALL** thực hiện trừ tiền mặt trong ví Customer, giảm `stock` kho hàng đi tương ứng, tính phí sàn thu (`commission_amount`) dựa theo cấu hình bảng Commissions và tạo mới một bản ghi giao dịch trong bảng `Transactions`.
   - **THE system SHALL** đặt trạng thái giao dịch ban đầu là `Pending` và thiết lập thời hạn nhả tiền (`escrow_release_date`) bằng thời gian hiện tại cộng thêm đúng 3 ngày (72 giờ). Tiền của Seller hoàn toàn chưa được cộng ở giai đoạn này.
 
 ### FE04 - Xử Lý Tranh Chấp & Khiếu Nại (Complaint Handling)

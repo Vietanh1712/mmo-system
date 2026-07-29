@@ -680,6 +680,32 @@
         </div>
     </div>
 
+    <!-- OVER-STOCK CHOICE MODAL -->
+    <div class="modal-overlay" id="overStockModal">
+        <div class="modal-card" style="max-width: 540px; padding: 28px;">
+            <div class="modal-success-icon" style="background: linear-gradient(135deg, #f59e0b, #ea580c); width: 56px; height: 56px; margin-bottom: 16px;">
+                <i class="fa fa-exclamation-triangle" style="font-size: 24px; color: #fff;"></i>
+            </div>
+            <h3 class="modal-title" style="color: var(--brand-dark); font-size: 20px; font-weight: 800; margin-bottom: 12px;">Số lượng vượt quá tồn kho</h3>
+            <p class="modal-desc" id="overStockText" style="color: var(--text-muted); font-size: 14.5px; line-height: 1.6; margin-bottom: 24px; text-align: center;">
+                Sản phẩm này hiện chỉ còn <strong id="osAvailable" style="color: var(--brand-accent); font-size: 16px;">0</strong> sản phẩm có sẵn. Bạn đang yêu cầu mua <strong id="osRequested" style="color: var(--brand-dark); font-size: 16px;">0</strong> sản phẩm.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+                <button class="btn-modal-close" id="btnBuyRemaining" onclick="chooseBuyRemainingOnly()" style="background: var(--brand-dark); color: #fff; border: none; padding: 14px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%;">
+                    <span id="btnBuyRemainingText">Chỉ mua 0 sản phẩm còn lại</span>
+                </button>
+
+                <button class="btn-modal-close" id="btnBuyAndPreOrder" onclick="chooseBuyRemainingAndPreOrder()" style="background: var(--brand-accent); color: #fff; border: none; padding: 14px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%;">
+                    <span id="btnBuyAndPreOrderText">Mua 0 sản phẩm + Đặt trước 0 sản phẩm thiếu</span>
+                </button>
+
+                <button class="btn-modal-close" onclick="closeOverStockModal()" style="background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border-color); padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
+                    <i class="fa fa-times"></i> Hủy giao dịch
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- 2. FOOTER (REPLACED WITH SHARED FRAGMENT) -->
     <footer th:replace="~{fragments/footer :: footer}"></footer>
 
@@ -903,6 +929,249 @@
             }
         }
 
+        // ===== OVER-STOCK MODAL STATE =====
+        let pendingOverStockItem = null; // { itemIndex, available, requested, productId, variantLabel, price }
+
+        function resetPayButton() {
+            const btnPay = document.getElementById('btnPay');
+            if (!btnPay) return;
+            btnPay.removeAttribute('disabled');
+            btnPay.innerHTML = '<i class="fa fa-lock"></i> Xác nhận thanh toán';
+        }
+
+        function closeOverStockModal() {
+            document.getElementById('overStockModal').classList.remove('active');
+            pendingOverStockItem = null;
+            resetPayButton();
+        }
+
+        function showOverStockModal(available, requested, itemIndex, productId, variantLabel, price) {
+            const deficit = requested - available;
+            pendingOverStockItem = { itemIndex, available, requested, deficit, productId, variantLabel, price };
+            document.getElementById('osAvailable').innerText = available;
+            document.getElementById('osRequested').innerText = requested;
+            document.getElementById('btnBuyRemainingText').innerText = `Chỉ mua ${available} sản phẩm còn lại`;
+            document.getElementById('btnBuyAndPreOrderText').innerText = `Mua ${available} sản phẩm + Đặt trước ${deficit} sản phẩm thiếu`;
+            document.getElementById('overStockModal').classList.add('active');
+            resetPayButton();
+        }
+
+        function syncCheckoutItemQuantityToCart(itemIndex, newQuantity) {
+            if (checkoutMode !== 'cart') return;
+            const item = checkoutItems[itemIndex];
+            if (!item) return;
+
+            try {
+                const cartKey = typeof window.getCartStorageKey === 'function' ? window.getCartStorageKey() : 'mmoCart';
+                const cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+                const idx = cart.findIndex(c =>
+                    Number(c.productId) === Number(item.productId) &&
+                    (c.variantLabel || '') === (item.variantLabel || '') &&
+                    Number(c.duration || 1) === Number(item.duration || 1)
+                );
+                if (idx !== -1) {
+                    cart[idx].quantity = newQuantity;
+                    localStorage.setItem(cartKey, JSON.stringify(cart));
+                    if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
+                }
+            } catch (error) {
+                console.error('Không thể đồng bộ số lượng giỏ hàng:', error);
+            }
+        }
+
+        function refreshCheckoutSummary() {
+            checkoutTotal = checkoutItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            document.getElementById('totalPriceText').innerText = formatVND(checkoutTotal);
+            document.getElementById('unitPriceText').innerText = formatVND(checkoutTotal);
+            const totalQty = checkoutItems.reduce((sum, item) => sum + item.quantity, 0);
+            const summaryQty = document.getElementById('summaryQuantityText');
+            if (summaryQty) summaryQty.innerText = String(totalQty);
+            renderCheckoutItems();
+
+            const userBalance = currentUser?.balanceVnd || 0;
+            hasEnoughBalance = userBalance >= checkoutTotal;
+            const balanceBox = document.getElementById('balanceBox');
+            const balanceStatus = document.getElementById('balanceStatus');
+            const btnPay = document.getElementById('btnPay');
+            if (userBalance < checkoutTotal) {
+                balanceBox?.classList.add('insufficient');
+                if (balanceStatus) {
+                    balanceStatus.innerHTML = `<i class="fa fa-times-circle status-error"></i> <span class="status-error">Không đủ số dư</span>`;
+                }
+                if (btnPay) {
+                    btnPay.innerHTML = `<i class="fa fa-credit-card"></i> Nạp thêm tiền vào ví`;
+                    btnPay.classList.add('topup-style');
+                }
+            } else {
+                balanceBox?.classList.remove('insufficient');
+                if (balanceStatus) {
+                    balanceStatus.innerHTML = `<i class="fa fa-check-circle status-ok"></i> <span class="status-ok">Đủ số dư</span>`;
+                }
+                if (btnPay) {
+                    btnPay.innerHTML = '<i class="fa fa-lock"></i> Xác nhận thanh toán';
+                    btnPay.classList.remove('topup-style');
+                }
+            }
+        }
+
+        async function chooseBuyRemainingOnly() {
+            if (!pendingOverStockItem) return;
+            const { itemIndex, available } = pendingOverStockItem;
+
+            if (checkoutMode === 'cart') {
+                checkoutItems[itemIndex].quantity = available;
+                syncCheckoutItemQuantityToCart(itemIndex, available);
+            }
+
+            closeOverStockModal();
+            refreshCheckoutSummary();
+            handlePaymentSubmit();
+        }
+
+        function removeCheckoutItemFromCart(itemIndex) {
+            if (checkoutMode !== 'cart') return;
+            const item = checkoutItems[itemIndex];
+            if (!item) return;
+
+            try {
+                const cartKey = typeof window.getCartStorageKey === 'function' ? window.getCartStorageKey() : 'mmoCart';
+                const cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+                const idx = cart.findIndex(c =>
+                    Number(c.productId) === Number(item.productId) &&
+                    (c.variantLabel || '') === (item.variantLabel || '') &&
+                    Number(c.duration || 1) === Number(item.duration || 1)
+                );
+                if (idx !== -1) {
+                    cart.splice(idx, 1);
+                    localStorage.setItem(cartKey, JSON.stringify(cart));
+                    if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
+                }
+            } catch (error) {
+                console.error('Không thể xóa sản phẩm khỏi giỏ hàng:', error);
+            }
+        }
+
+        async function chooseBuyRemainingAndPreOrder() {
+            if (!pendingOverStockItem) return;
+            const { available, deficit, productId, variantLabel, price, itemIndex } = pendingOverStockItem;
+            closeOverStockModal();
+
+            const token = sessionStorage.getItem('accessToken');
+            const btnPay = document.getElementById('btnPay');
+            btnPay.setAttribute('disabled', 'true');
+            btnPay.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
+
+            try {
+                // Step 1: Purchase the available stock
+                let successOrders = [];
+                let lastFinalBalance = currentUser.balanceVnd;
+                for (let q = 0; q < available; q++) {
+                    const response = await fetch('/api/transactions/purchase', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ productId: Number(productId), variantLabel: variantLabel })
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.message || 'Lỗi mua sản phẩm.');
+                    successOrders.push({ task: { productId, variantLabel }, data });
+                    lastFinalBalance = data.finalBalance;
+                }
+
+                // Step 2: Create Pre-Order for the deficit
+                const preOrderRes = await fetch('/api/v1/pre-orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({
+                        productId: Number(productId),
+                        quantity: deficit,
+                        expectedPriceVnd: price * deficit
+                    })
+                });
+                const preOrderData = await preOrderRes.json();
+                if (!preOrderRes.ok) {
+                    showWarningToast('Đã mua ' + available + ' sản phẩm, nhưng không thể tạo đơn đặt trước: ' + (preOrderData.message || 'Lỗi hệ thống'));
+                } else {
+                    showSuccessToast('Đã mua ' + available + ' sản phẩm và tạo đơn đặt trước ' + deficit + ' sản phẩm thành công!');
+                }
+
+                // Update user balance
+                currentUser.balanceVnd = lastFinalBalance;
+                sessionStorage.setItem('userInfo', JSON.stringify(currentUser));
+                sessionStorage.setItem('user', JSON.stringify(currentUser));
+
+                // Show success modal with first order info
+                if (successOrders.length > 0) {
+                    const firstOrder = successOrders[0].data;
+                    const totalAmount = successOrders.reduce((sum, item) => sum + item.data.amount, 0);
+                    document.getElementById('invTxnId').innerText = successOrders.map(o => o.data.transactionCode).join(', ');
+                    document.getElementById('invProduct').innerText = firstOrder.productName + (successOrders.length > 1 ? ` (x${successOrders.length})` : '');
+                    document.getElementById('invAmount').innerText = formatVND(totalAmount);
+
+                    const credRow = document.getElementById('modalCredentialsRow');
+                    if (firstOrder.credentials && successOrders.length === 1) {
+                        document.getElementById('modalCredLabel').innerText = 'Tài khoản:';
+                        document.getElementById('modalCredUsername').innerText = firstOrder.credentials.username;
+                        const passRow = document.getElementById('modalCredPasswordRow');
+                        if (firstOrder.credentials.password && firstOrder.credentials.password !== '(Product Key)') {
+                            passRow.style.display = 'flex';
+                            document.getElementById('modalCredPassword').innerText = firstOrder.credentials.password;
+                        } else {
+                            if (passRow) passRow.style.display = 'none';
+                        }
+                        credRow.hidden = false;
+                    } else if (successOrders.length > 1) {
+                        document.getElementById('modalCredLabel').innerText = 'Thông tin bàn giao:';
+                        document.getElementById('modalCredUsername').innerHTML = '<span style="color: var(--brand-dark); font-weight: normal;">Đã bàn giao ' + successOrders.length + ' tài khoản/key. Xem chi tiết trong Lịch sử đơn hàng.</span>';
+                        const passRow = document.getElementById('modalCredPasswordRow');
+                        if (passRow) passRow.style.display = 'none';
+                        credRow.hidden = false;
+                    }
+                    currentCreatedOrderCode = firstOrder.orderCode || '';
+                    document.getElementById('successModal').classList.add('active');
+                }
+
+                if (checkoutMode === 'cart') {
+                    removeCheckoutItemFromCart(itemIndex);
+                    checkoutItems.splice(itemIndex, 1);
+                }
+            } catch (err) {
+                showErrorToast(err.message || 'Có lỗi xảy ra khi thực hiện thanh toán.');
+                resetPayButton();
+            }
+        }
+
+        // ===== STOCK CHECK HELPER =====
+        async function fetchVariantStock(productId) {
+            try {
+                const res = await fetch(`/api/search/products/${productId}`);
+                if (!res.ok) return null;
+                const data = await res.json();
+                return data.variants || [];
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Mimic backend fallback logic to find correct variant DTO
+        function findMatchedVariant(variants, variantLabel) {
+            if (!variants || variants.length === 0) return null;
+            
+            // 1. Exact match
+            let matched = variants.find(v => v.label === variantLabel || v.name === variantLabel);
+            if (matched) return matched;
+            
+            // 2. Substring match (case-insensitive)
+            const labelLower = (variantLabel || '').toLowerCase();
+            matched = variants.find(v => {
+                const vLabelLower = (v.label || v.name || '').toLowerCase();
+                return vLabelLower.includes(labelLower) || labelLower.includes(vLabelLower);
+            });
+            if (matched) return matched;
+            
+            // 3. Fallback to first variant
+            return variants[0];
+        }
+
         // Handle Submit Button Click
         async function handlePaymentSubmit() {
             if (!hasEnoughBalance) {
@@ -923,6 +1192,44 @@
             const btnPay = document.getElementById('btnPay');
             btnPay.setAttribute('disabled', 'true');
             btnPay.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
+
+            // ===== CHECK STOCK BEFORE PROCEEDING =====
+            try {
+                if (checkoutMode === 'cart') {
+                    // Check each cart item's stock
+                    for (let i = 0; i < checkoutItems.length; i++) {
+                        const item = checkoutItems[i];
+                        const variants = await fetchVariantStock(item.productId);
+                        if (variants) {
+                            const matchedVariant = findMatchedVariant(variants, item.variantLabel);
+                            if (matchedVariant && item.quantity > matchedVariant.stock) {
+                                if (matchedVariant.stock <= 0) {
+                                    showWarningToast(`Sản phẩm "${item.productName}" đã hết hàng. Vui lòng xóa khỏi giỏ hàng.`);
+                                    btnPay.removeAttribute('disabled');
+                                    btnPay.innerHTML = '<i class="fa fa-lock"></i> Xác nhận thanh toán';
+                                    return;
+                                }
+                                showOverStockModal(matchedVariant.stock, item.quantity, i, item.productId, item.variantLabel, item.price);
+                                return;
+                            }
+                        }
+                    }
+                } else {
+                    // Single mode: check stock dynamically
+                    const variants = await fetchVariantStock(productId);
+                    if (variants) {
+                        const matchedVariant = findMatchedVariant(variants, paramVariantLabel);
+                        if (matchedVariant && matchedVariant.stock <= 0) {
+                            showWarningToast("Sản phẩm hiện đã hết hàng, vui lòng quay lại sau.");
+                            btnPay.removeAttribute('disabled');
+                            btnPay.innerHTML = '<i class="fa fa-lock"></i> Xác nhận thanh toán';
+                            return;
+                        }
+                    }
+                }
+            } catch (stockCheckErr) {
+                console.warn('Stock check failed, proceeding with backend validation:', stockCheckErr);
+            }
 
             try {
                 let successOrders = [];
