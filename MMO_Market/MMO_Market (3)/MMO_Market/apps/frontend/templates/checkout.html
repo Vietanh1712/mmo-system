@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,10 +10,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://unpkg.com/font-awesome@4.7.0/css/font-awesome.min.css">
-    
+
     <!-- CSS -->
     <link rel="stylesheet" th:href="@{/css/features/home.css}">
-    
+
     <style>
         :root {
             --brand-primary: #fbceb5;
@@ -24,7 +25,7 @@
             --text-main: #334155;
             --text-muted: #64748b;
             --border-color: #e2e8f0;
-            --shadow-light: 0 4px 20px rgba(0,0,0,0.04);
+            --shadow-light: 0 4px 20px rgba(0, 0, 0, 0.04);
             --danger: #dc2626;
             --action-orange: #fd761a;
             --action-blue: #0058be;
@@ -317,25 +318,25 @@
             color: var(--text-muted);
         }
 
-        .summary-row > span:first-child {
+        .summary-row>span:first-child {
             color: var(--text-muted);
             font-weight: 400;
         }
 
         /* Default value style — neutral */
-        .summary-row > span:last-child {
+        .summary-row>span:last-child {
             color: var(--brand-dark);
             font-weight: 600;
         }
 
         /* Price rows — red */
-        .summary-row.is-price > span:last-child {
+        .summary-row.is-price>span:last-child {
             color: var(--danger);
             font-weight: 900;
         }
 
         /* Free service fee — green */
-        .summary-row.is-free > span:last-child {
+        .summary-row.is-free>span:last-child {
             color: var(--status-green);
             font-weight: 600;
         }
@@ -349,7 +350,7 @@
             color: var(--brand-dark);
         }
 
-        .summary-row.total > span:first-child {
+        .summary-row.total>span:first-child {
             color: var(--brand-dark);
             font-weight: 700;
         }
@@ -442,7 +443,7 @@
             max-width: 480px;
             padding: 30px;
             text-align: center;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             transform: scale(0.9);
             transition: transform 0.3s ease;
         }
@@ -537,6 +538,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <!-- 1. HEADER (REPLACED WITH SHARED FRAGMENT) -->
@@ -544,30 +546,34 @@
 
     <!-- BREADCRUMB -->
     <div class="breadcrumb-container">
-        <a href="/"><i class="fa fa-home"></i> Trang chủ</a> &gt; 
-        <a href="/search">Sản phẩm</a> &gt; 
-        <a id="breadcrumbProductLink" href="/products/1">Thông tin sản phẩm</a> &gt; 
+        <a href="/"><i class="fa fa-home"></i> Trang chủ</a> &gt;
+        <a href="/search">Sản phẩm</a> &gt;
+        <a id="breadcrumbProductLink" href="/products/1">Thông tin sản phẩm</a> &gt;
         <span>Thanh toán đơn hàng</span>
     </div>
 
     <!-- MAIN LAYOUT -->
     <main class="checkout-layout">
-        
+
         <!-- LEFT COLUMN: Payment details -->
         <section class="checkout-main">
-            
+
             <!-- Card 1: Product detail confirmation -->
             <div class="checkout-card">
-                <h3 class="checkout-card__title"><i class="fa fa-shopping-cart" style="color: var(--brand-accent);"></i>Xác nhận thông tin sản phẩm</h3>
+                <h3 class="checkout-card__title"><i class="fa fa-shopping-cart"
+                        style="color: var(--brand-accent);"></i>Xác nhận thông tin sản phẩm</h3>
                 <div class="checkout-product">
                     <div class="checkout-product__icon">
                         <i class="fa fa-play-circle" id="productIcon" style="color: #E50914;"></i>
                     </div>
                     <div class="checkout-product__info">
-                        <h4 class="checkout-product__name" id="productName">Tài khoản Netflix Premium UltraHD 4K (Xem riêng tư)</h4>
+                        <h4 class="checkout-product__name" id="productName">Tài khoản Netflix Premium UltraHD 4K (Xem
+                            riêng tư)</h4>
                         <div class="checkout-product__meta">
-                            <span class="checkout-product__duration" id="productDurationContainer">Thời hạn: <strong id="productDuration">1 Tháng</strong></span>
-                            <span class="checkout-product__seller">Cửa hàng: <strong id="productSeller">NetflixVN Store</strong></span>
+                            <span class="checkout-product__duration" id="productDurationContainer">Thời hạn: <strong
+                                    id="productDuration">1 Tháng</strong></span>
+                            <span class="checkout-product__seller">Cửa hàng: <strong id="productSeller">NetflixVN
+                                    Store</strong></span>
                         </div>
                     </div>
                 </div>
@@ -576,8 +582,9 @@
 
             <!-- Card 2: Payment method -->
             <div class="checkout-card">
-                <h3 class="checkout-card__title"><i class="fa fa-credit-card" style="color: var(--brand-accent);"></i>Phương thức thanh toán</h3>
-                
+                <h3 class="checkout-card__title"><i class="fa fa-credit-card"
+                        style="color: var(--brand-accent);"></i>Phương thức thanh toán</h3>
+
                 <!-- Wallet balance info box -->
                 <div class="balance-info-box" id="balanceBox">
                     <div class="balance-label">
@@ -596,10 +603,11 @@
 
         <!-- RIGHT COLUMN: Order Summary sidebar -->
         <aside class="checkout-sidebar">
-            
+
             <div class="checkout-card">
-                <h3 class="checkout-card__title"><i class="fa fa-file-text-o" style="color: var(--brand-accent);"></i>Tóm tắt đơn hàng</h3>
-                
+                <h3 class="checkout-card__title"><i class="fa fa-file-text-o"
+                        style="color: var(--brand-accent);"></i>Tóm tắt đơn hàng</h3>
+
                 <div class="summary-row is-price">
                     <span id="summaryPriceLabel">Giá tiền sản phẩm:</span>
                     <span id="unitPriceText">79.000đ</span>
@@ -638,8 +646,9 @@
                 <i class="fa fa-check"></i>
             </div>
             <h3 class="modal-title">Giao dịch thành công!</h3>
-            <p class="modal-desc">Đơn hàng của bạn đã được thanh toán và lưu trữ an toàn trong ví Escrow bảo lãnh của hệ thống.</p>
-            
+            <p class="modal-desc">Đơn hàng của bạn đã được thanh toán và lưu trữ an toàn trong ví Escrow bảo lãnh của hệ
+                thống.</p>
+
             <div class="invoice-details">
                 <div class="invoice-row">
                     <span class="invoice-label">Mã giao dịch:</span>
@@ -653,27 +662,33 @@
                     <span class="invoice-label">Số tiền thanh toán:</span>
                     <span class="invoice-value invoice-value--money" id="invAmount">79.000 VNĐ</span>
                 </div>
-                <div id="modalCredentialsRow" style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-color);" hidden>
+                <div id="modalCredentialsRow"
+                    style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-color);" hidden>
                     <div class="invoice-row" style="margin-bottom: 8px;">
                         <span class="invoice-label" id="modalCredLabel">Tài khoản:</span>
-                        <span class="invoice-value" id="modalCredUsername" style="font-family: monospace; font-size: 13.5px; color: var(--brand-dark); font-weight: 700;">-</span>
+                        <span class="invoice-value" id="modalCredUsername"
+                            style="font-family: monospace; font-size: 13.5px; color: var(--brand-dark); font-weight: 700;">-</span>
                     </div>
                     <div class="invoice-row" id="modalCredPasswordRow">
                         <span class="invoice-label">Mật khẩu:</span>
-                        <span class="invoice-value" id="modalCredPassword" style="font-family: monospace; font-size: 13.5px; color: var(--brand-dark); font-weight: 700;">-</span>
+                        <span class="invoice-value" id="modalCredPassword"
+                            style="font-family: monospace; font-size: 13.5px; color: var(--brand-dark); font-weight: 700;">-</span>
                     </div>
-                    <div class="invoice-row" id="modalCredNoteRow" style="margin-top: 8px;" hidden>
+                    <div class="invoice-row" id="modalCredNoteRow" style="margin-top: 8px; display: none;" hidden>
                         <span class="invoice-label">Ghi chú:</span>
-                        <span class="invoice-value" id="modalCredNote" style="font-size: 13.5px; color: #475569; font-weight: 500;">-</span>
+                        <span class="invoice-value" id="modalCredNote"
+                            style="font-size: 13.5px; color: #475569; font-weight: 500;">-</span>
                     </div>
                 </div>
             </div>
 
             <div style="display: flex; gap: 12px; justify-content: center; margin-top: 20px; flex-wrap: wrap;">
-                <button class="btn-modal-close" id="btnViewOrder" onclick="goToOrderDetail()" style="min-width: 180px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                <button class="btn-modal-close" id="btnViewOrder" onclick="goToOrderDetail()"
+                    style="min-width: 180px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
                     <i class="fa fa-info-circle"></i> Xem chi tiết đơn hàng
                 </button>
-                <button class="btn-modal-close" onclick="closeSuccessModal()" style="min-width: 180px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                <button class="btn-modal-close" onclick="closeSuccessModal()"
+                    style="min-width: 180px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
                     Đóng & Về trang chủ
                 </button>
             </div>
@@ -683,22 +698,40 @@
     <!-- STOCK OVERFLOW / INSUFFICIENT MODAL -->
     <div class="modal-overlay" id="stockModal">
         <div class="modal-card" style="max-width: 520px; text-align: left;">
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 12px;">
-                <div style="width: 44px; height: 44px; border-radius: 50%; background: #fef2f2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+            <div
+                style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 12px;">
+                <div
+                    style="width: 44px; height: 44px; border-radius: 50%; background: #fef2f2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 22px;">
                     <i class="fa fa-exclamation-triangle"></i>
                 </div>
                 <div>
-                    <h3 class="modal-title" style="margin: 0; font-size: 18px; color: var(--brand-dark);">Số lượng vượt quá tồn kho</h3>
+                    <h3 class="modal-title" style="margin: 0; font-size: 18px; color: var(--brand-dark);">Số lượng vượt
+                        quá tồn kho</h3>
                     <div style="font-size: 13px; color: var(--text-muted);">Cập nhật tồn kho thực tế từ hệ thống</div>
                 </div>
             </div>
 
-            <div id="stockModalContent" style="font-size: 14.5px; line-height: 1.6; color: var(--text-main); margin-bottom: 24px; background: #fff8f6; padding: 14px 16px; border-radius: 8px; border: 1px solid #fee2e2;">
+            <div id="stockModalContent"
+                style="font-size: 14.5px; line-height: 1.6; color: var(--text-main); margin-bottom: 24px; background: #fff8f6; padding: 14px 16px; border-radius: 8px; border: 1px solid #fee2e2;">
                 <!-- Content injected dynamically -->
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 10px;" id="stockModalButtons">
                 <!-- Buttons injected dynamically -->
+            </div>
+
+            <div id="preOrderNotesContainer"
+                style="display: none; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border-color);">
+                <label
+                    style="font-size: 13.5px; font-weight: 700; color: var(--brand-dark); display: block; margin-bottom: 6px;">Ghi
+                    chú gửi Seller (Không bắt buộc):</label>
+                <textarea id="preOrderNotesInput"
+                    placeholder="Nhập ghi chú đặt trước của bạn tại đây (ví dụ: liên hệ qua email, thông số tài khoản mong muốn...)"
+                    style="width: 100%; height: 75px; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; font-size: 13px; font-family: inherit; resize: none; box-sizing: border-box; margin-bottom: 12px; outline: none; transition: border-color 0.2s;"></textarea>
+                <button type="button" onclick="confirmPreOrderWithOptions()" id="btnConfirmPreOrderWithOptions"
+                    style="width: 100%; background: var(--action-orange); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; text-align: center; box-shadow: 0 4px 14px rgba(253, 118, 26, 0.2); transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="fa fa-paper-plane"></i> Xác nhận gửi yêu cầu đặt trước
+                </button>
             </div>
         </div>
     </div>
@@ -714,20 +747,20 @@
 
         // Mock products database matching homepage and search page styling/pricing
         const PRODUCTS_DB = {
-            1: { name: "Tài khoản Netflix Premium UltraHD 4K (Xem riêng tư) 1 Tháng", icon: "fa-play-circle", color: "#E50914", seller: "NetflixVN Store", prices: {1: 65000, 3: 180000, 6: 340000} },
-            2: { name: "Tài khoản Netflix Premium 4K UHD Gói 1 Năm (Chính chủ gia hạn ổn định)", icon: "fa-play-circle", color: "#E50914", seller: "Netflix_Vip_Store", prices: {12: 650000} },
-            3: { name: "Tài khoản ChatGPT Plus (OpenAI GPT-4o) Chính Chủ Sẵn 20$ Hạn 1 Tháng", icon: "fa-comments", color: "#10a37f", seller: "AI_Helper Store", prices: {1: 150000} },
-            4: { name: "Spotify Premium 1 Năm Giá Siêu Rẻ (Nâng cấp Family email của bạn)", icon: "fa-music", color: "#1DB954", seller: "MusicLovers Store", prices: {12: 250000} },
-            5: { name: "Key Windows 11 Pro Bản Quyền Vĩnh Viễn (Kèm hướng dẫn active chi tiết)", icon: "fa-windows", color: "#0078d4", seller: "Microsoft_Reseller Store", prices: {1: 99000} },
-            6: { name: "Youtube Premium Không Quảng Cáo 6 Tháng (Add Family bao chạy mượt)", icon: "fa-youtube-play", color: "#FF0000", seller: "RedPremium Store", prices: {6: 120000} },
-            7: { name: "Gói Tài Khoản Canva Pro Thiết Kế 1 Năm Trọn Gói", icon: "fa-paint-brush", color: "#00c4cc", seller: "DesignHub Store", prices: {12: 180000} },
-            8: { name: "Combo 10 Gmail Việt Cổ 2018 - 2020 Cực Sạch Có Sẵn Kênh Youtube", icon: "fa-envelope", color: "#ea4335", seller: "MailMaster Store", prices: {1: 35000} },
-            9: { name: "Tool Nuôi Nick Facebook Auto Like Post Share Độc Quyền", icon: "fa-facebook-square", color: "#1877F2", seller: "MMO_Coder Store", prices: {1: 850000} },
-            10: { name: "Tài khoản NordVPN Premium 1 Năm Bảo Mật Mã Hóa Cao", icon: "fa-shield", color: "#4682b4", seller: "SecureNet Store", prices: {12: 350000} },
-            11: { name: "Tăng 1000 Follower Thật TikTok Việt Tốc Độ Nhanh Tự Nhiên", icon: "fa-video-camera", color: "#010101", seller: "SocialMediaUp Store", prices: {1: 95000} },
-            12: { name: "Ví Điện Tử Trust Wallet Hạn Cổ Có Sẵn Cụm Từ Bảo Mật", icon: "fa-btc", color: "#f7931a", seller: "CryptoSafe Store", prices: {1: 150000} },
-            13: { name: "Gói Dịch Vụ Thiết Kế Logo & Banner Chuyên Nghiệp (Không thuộc danh mục chính)", icon: "fa-paint-brush", color: "#7c3aed", seller: "CreativeHub Store", prices: {1: 299000} },
-            14: { name: "Gmail Việt Cổ 2019 Siêu Sạch - Bảo hành đổi 1-1 trong 7 ngày", icon: "fa-envelope", color: "#ea4335", seller: "GmailPro_VN Store", prices: {1: 28000} }
+            1: { name: "Tài khoản Netflix Premium UltraHD 4K (Xem riêng tư) 1 Tháng", icon: "fa-play-circle", color: "#E50914", seller: "NetflixVN Store", prices: { 1: 65000, 3: 180000, 6: 340000 } },
+            2: { name: "Tài khoản Netflix Premium 4K UHD Gói 1 Năm (Chính chủ gia hạn ổn định)", icon: "fa-play-circle", color: "#E50914", seller: "Netflix_Vip_Store", prices: { 12: 650000 } },
+            3: { name: "Tài khoản ChatGPT Plus (OpenAI GPT-4o) Chính Chủ Sẵn 20$ Hạn 1 Tháng", icon: "fa-comments", color: "#10a37f", seller: "AI_Helper Store", prices: { 1: 150000 } },
+            4: { name: "Spotify Premium 1 Năm Giá Siêu Rẻ (Nâng cấp Family email của bạn)", icon: "fa-music", color: "#1DB954", seller: "MusicLovers Store", prices: { 12: 250000 } },
+            5: { name: "Key Windows 11 Pro Bản Quyền Vĩnh Viễn (Kèm hướng dẫn active chi tiết)", icon: "fa-windows", color: "#0078d4", seller: "Microsoft_Reseller Store", prices: { 1: 99000 } },
+            6: { name: "Youtube Premium Không Quảng Cáo 6 Tháng (Add Family bao chạy mượt)", icon: "fa-youtube-play", color: "#FF0000", seller: "RedPremium Store", prices: { 6: 120000 } },
+            7: { name: "Gói Tài Khoản Canva Pro Thiết Kế 1 Năm Trọn Gói", icon: "fa-paint-brush", color: "#00c4cc", seller: "DesignHub Store", prices: { 12: 180000 } },
+            8: { name: "Combo 10 Gmail Việt Cổ 2018 - 2020 Cực Sạch Có Sẵn Kênh Youtube", icon: "fa-envelope", color: "#ea4335", seller: "MailMaster Store", prices: { 1: 35000 } },
+            9: { name: "Tool Nuôi Nick Facebook Auto Like Post Share Độc Quyền", icon: "fa-facebook-square", color: "#1877F2", seller: "MMO_Coder Store", prices: { 1: 850000 } },
+            10: { name: "Tài khoản NordVPN Premium 1 Năm Bảo Mật Mã Hóa Cao", icon: "fa-shield", color: "#4682b4", seller: "SecureNet Store", prices: { 12: 350000 } },
+            11: { name: "Tăng 1000 Follower Thật TikTok Việt Tốc Độ Nhanh Tự Nhiên", icon: "fa-video-camera", color: "#010101", seller: "SocialMediaUp Store", prices: { 1: 95000 } },
+            12: { name: "Ví Điện Tử Trust Wallet Hạn Cổ Có Sẵn Cụm Từ Bảo Mật", icon: "fa-btc", color: "#f7931a", seller: "CryptoSafe Store", prices: { 1: 150000 } },
+            13: { name: "Gói Dịch Vụ Thiết Kế Logo & Banner Chuyên Nghiệp (Không thuộc danh mục chính)", icon: "fa-paint-brush", color: "#7c3aed", seller: "CreativeHub Store", prices: { 1: 299000 } },
+            14: { name: "Gmail Việt Cổ 2019 Siêu Sạch - Bảo hành đổi 1-1 trong 7 ngày", icon: "fa-envelope", color: "#ea4335", seller: "GmailPro_VN Store", prices: { 1: 28000 } }
         };
 
         const checkoutUrlParams = new URLSearchParams(window.location.search);
@@ -738,7 +771,7 @@
             if (!label) return false;
             const l = label.toLowerCase();
             return l.includes('tháng') || l.includes('năm') || l.includes('ngày') || l.includes('tuần') || l.includes('giờ') ||
-                   l.includes('month') || l.includes('year') || l.includes('day') || l.includes('week') || l.includes('hour');
+                l.includes('month') || l.includes('year') || l.includes('day') || l.includes('week') || l.includes('hour');
         }
         // State
         let selectedProduct = PRODUCTS_DB[productId] || PRODUCTS_DB[1];
@@ -809,7 +842,7 @@
             // 2. Load product details to UI
             document.getElementById('productName').innerText = selectedProduct.name;
             document.getElementById('productSeller').innerText = selectedProduct.seller;
-            
+
             const prodIconContainer = document.querySelector('.checkout-product__icon');
             if (prodIconContainer) {
                 if (selectedProduct.imageUrl && !selectedProduct.imageUrl.includes('placeholder.com')) {
@@ -852,14 +885,14 @@
             } else {
                 document.getElementById('unitPriceText').innerText = formatVND(price);
                 document.getElementById('summaryQuantityText').innerText = '1';
-                
+
                 if (isDuration) {
                     document.getElementById('summaryDurationLabel').innerText = 'Thời hạn gia hạn:';
                 } else {
                     document.getElementById('summaryDurationLabel').innerText = 'Lựa chọn:';
                 }
                 document.getElementById('summaryDurationText').innerText = displayLabel;
-                
+
                 document.getElementById('totalPriceText').innerText = formatVND(price);
                 document.getElementById('summaryServiceValue').innerText = 'Miễn phí';
             }
@@ -885,7 +918,7 @@
                     hasEnoughBalance = false;
                     balanceBox.classList.add('insufficient');
                     balanceStatus.innerHTML = `<i class="fa fa-times-circle status-error"></i> <span class="status-error">Không đủ số dư</span>`;
-                    
+
                     // Modify buy button to point to Topup (nạp tiền)
                     btnPay.innerHTML = `<i class="fa fa-credit-card"></i> Nạp thêm tiền vào ví`;
                     btnPay.classList.add('topup-style');
@@ -969,12 +1002,12 @@
                             let matchedVariant = null;
                             if (prodData.variants && prodData.variants.length > 0) {
                                 matchedVariant = prodData.variants.find(v => (v.label || v.name || '').toLowerCase() === targetLabel)
-                                              || prodData.variants.find(v => targetLabel.includes((v.label || v.name || '').toLowerCase()) || (v.label || v.name || '').toLowerCase().includes(targetLabel))
-                                              || prodData.variants[0];
+                                    || prodData.variants.find(v => targetLabel.includes((v.label || v.name || '').toLowerCase()) || (v.label || v.name || '').toLowerCase().includes(targetLabel))
+                                    || prodData.variants[0];
                             }
-                            
+
                             const actualStock = matchedVariant && matchedVariant.stock != null ? matchedVariant.stock : (prodData.stock != null ? prodData.stock : 0);
-                            
+
                             if (item.quantity > actualStock) {
                                 stockBreach = {
                                     itemIndex: i,
@@ -1091,7 +1124,7 @@
                     if (savedOrders !== null) {
                         orders = JSON.parse(savedOrders);
                     }
-                } catch (e) {}
+                } catch (e) { }
 
                 let txns = [];
                 try {
@@ -1099,7 +1132,7 @@
                     if (savedTxns !== null) {
                         txns = JSON.parse(savedTxns);
                     }
-                } catch (e) {}
+                } catch (e) { }
 
                 const now = new Date();
 
@@ -1157,7 +1190,7 @@
                         const isKey = firstOrder.credentials.password === '(Product Key)';
                         document.getElementById('modalCredLabel').innerText = isKey ? 'Mã kích hoạt (Key):' : 'Tài khoản (Email/Username):';
                         document.getElementById('modalCredUsername').innerText = firstOrder.credentials.username;
-                        
+
                         const passRow = document.getElementById('modalCredPasswordRow');
                         if (isKey) {
                             if (passRow) passRow.style.display = 'none';
@@ -1196,6 +1229,8 @@
                         document.getElementById('modalCredUsername').innerHTML = '<span style="color: var(--brand-dark); font-weight: normal;">Đã bàn giao tự động tài khoản/key bản quyền của tất cả sản phẩm. Vui lòng xem chi tiết trong Lịch sử đơn hàng.</span>';
                         const passRow = document.getElementById('modalCredPasswordRow');
                         if (passRow) passRow.style.display = 'none';
+                        const noteRow = document.getElementById('modalCredNoteRow');
+                        if (noteRow) noteRow.style.display = 'none';
                         credRow.hidden = false;
                     }
                     currentCreatedOrderCode = ''; // chuyển về danh sách lịch sử đơn hàng chung
@@ -1283,8 +1318,8 @@
                 <div class="checkout-cart-item">
                     <div class="checkout-cart-item__icon">
                         ${item.imageUrl && !item.imageUrl.includes('placeholder.com')
-                            ? `<img src="${item.imageUrl}" alt="${item.productName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">`
-                            : `<i class="fa ${item.icon}" style="color: ${item.iconColor}"></i>`}
+                    ? `<img src="${item.imageUrl}" alt="${item.productName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">`
+                    : `<i class="fa ${item.icon}" style="color: ${item.iconColor}"></i>`}
                     </div>
                     <div>
                         <div class="checkout-cart-item__name">${escapeHtml(item.productName)}</div>
@@ -1343,9 +1378,9 @@
                         <span><i class="fa fa-check-circle" style="margin-right: 8px;"></i> Chỉ mua ${actualStock} sản phẩm còn lại</span>
                         <i class="fa fa-arrow-right"></i>
                     </button>
-                    <button type="button" onclick="handleStockOption2()" style="width: 100%; background: var(--action-orange); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between;">
+                    <button type="button" onclick="togglePreOrderNotes()" style="width: 100%; background: var(--action-orange); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between;">
                         <span><i class="fa fa-cart-plus" style="margin-right: 8px;"></i> Mua ${actualStock} sản phẩm + Đặt trước ${missingQty} sản phẩm thiếu</span>
-                        <i class="fa fa-arrow-right"></i>
+                        <i class="fa fa-chevron-down" id="preOrderChevron"></i>
                     </button>
                     <button type="button" onclick="closeStockModal()" style="width: 100%; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; text-align: center;">
                         Hủy giao dịch
@@ -1353,14 +1388,24 @@
                 `;
             } else {
                 buttonsContainer.innerHTML = `
-                    <button type="button" onclick="handleStockOption2()" style="width: 100%; background: var(--action-orange); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between;">
+                    <button type="button" onclick="togglePreOrderNotes()" style="width: 100%; background: var(--action-orange); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between;">
                         <span><i class="fa fa-clock-o" style="margin-right: 8px;"></i> Đặt trước toàn bộ ${requestedQty} sản phẩm</span>
-                        <i class="fa fa-arrow-right"></i>
+                        <i class="fa fa-chevron-down" id="preOrderChevron"></i>
                     </button>
                     <button type="button" onclick="closeStockModal()" style="width: 100%; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; text-align: center;">
                         Hủy giao dịch
                     </button>
                 `;
+            }
+
+            // Reset notes container
+            const notesContainer = document.getElementById('preOrderNotesContainer');
+            if (notesContainer) {
+                notesContainer.style.display = 'none';
+            }
+            const notesInput = document.getElementById('preOrderNotesInput');
+            if (notesInput) {
+                notesInput.value = '';
             }
 
             modal.classList.add('active');
@@ -1374,6 +1419,43 @@
                 btnPay.removeAttribute('disabled');
                 btnPay.innerHTML = '<i class="fa fa-lock"></i> Xác nhận thanh toán';
             }
+            // Reset notes on close
+            const notesContainer = document.getElementById('preOrderNotesContainer');
+            if (notesContainer) notesContainer.style.display = 'none';
+            const notesInput = document.getElementById('preOrderNotesInput');
+            if (notesInput) notesInput.value = '';
+        }
+
+        function togglePreOrderNotes() {
+            const container = document.getElementById('preOrderNotesContainer');
+            const chevron = document.getElementById('preOrderChevron');
+            if (!container) return;
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                if (chevron) {
+                    chevron.className = 'fa fa-chevron-up';
+                }
+                const modal = document.getElementById('stockModal');
+                if (modal) {
+                    const card = modal.querySelector('.modal-card');
+                    if (card) {
+                        setTimeout(() => {
+                            card.scrollTop = card.scrollHeight;
+                        }, 50);
+                    }
+                }
+            } else {
+                container.style.display = 'none';
+                if (chevron) {
+                    chevron.className = 'fa fa-chevron-down';
+                }
+            }
+        }
+
+        function confirmPreOrderWithOptions() {
+            const notesInput = document.getElementById('preOrderNotesInput');
+            const customNotes = notesInput ? notesInput.value : '';
+            handleStockOption2(customNotes);
         }
 
         async function handleStockOption1() {
@@ -1416,7 +1498,7 @@
             }, 500);
         }
 
-        async function handleStockOption2() {
+        async function handleStockOption2(customNotes = '') {
             if (!currentStockBreach) return;
             const breach = currentStockBreach;
             closeStockModal();
@@ -1435,7 +1517,7 @@
             try {
                 let successOrders = [];
                 let lastFinalBalance = currentUser ? currentUser.balanceVnd : 0;
-                
+
                 // 1. Mua số lượng hàng sẵn có (actualStock) nếu > 0
                 if (breach.actualStock > 0) {
                     const response = await fetch('/api/transactions/purchase', {
@@ -1479,7 +1561,7 @@
                         productId: Number(breach.item.productId),
                         quantity: breach.missingQty,
                         expectedPriceVnd: (breach.price || 0) * breach.missingQty,
-                        notes: `Tự động tạo từ thanh toán giỏ hàng (Mua ${breach.actualStock} sản phẩm có sẵn + Đặt trước ${breach.missingQty} sản phẩm thiếu)`
+                        notes: customNotes.trim() !== '' ? customNotes.trim() : `Tự động tạo từ thanh toán giỏ hàng (Mua ${breach.actualStock} sản phẩm có sẵn + Đặt trước ${breach.missingQty} sản phẩm thiếu)`
                     })
                 });
 
@@ -1502,7 +1584,7 @@
                         cart = cart.filter(c => Number(c.productId) !== targetProdId);
                         localStorage.setItem(cartKey, JSON.stringify(cart));
                         if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
-                    } catch (e) {}
+                    } catch (e) { }
                 }
 
                 if (successOrders.length > 0) {
@@ -1510,13 +1592,24 @@
                     document.getElementById('invTxnId').innerText = firstOrder.transactionCode;
                     document.getElementById('invProduct').innerText = `${firstOrder.productName} (Mua ${breach.actualStock} + Đặt trước ${breach.missingQty})`;
                     document.getElementById('invAmount').innerText = formatVND(firstOrder.amount);
-                    
+
                     const credRow = document.getElementById('modalCredentialsRow');
                     if (credRow) {
                         document.getElementById('modalCredLabel').innerText = 'Thông tin bàn giao & Đặt trước:';
                         document.getElementById('modalCredUsername').innerHTML = `<span style="color: var(--brand-dark); font-weight: 600;">Đã thanh toán thành công <strong>${breach.actualStock}</strong> sản phẩm có sẵn. Đồng thời đã gửi yêu cầu Đặt trước thành công cho <strong>${breach.missingQty}</strong> sản phẩm thiếu tới Seller.</span>`;
                         const passRow = document.getElementById('modalCredPasswordRow');
                         if (passRow) passRow.style.display = 'none';
+                        const noteRow = document.getElementById('modalCredNoteRow');
+                        if (noteRow) {
+                            if (customNotes.trim() !== '') {
+                                noteRow.hidden = false;
+                                noteRow.style.display = 'flex';
+                                document.getElementById('modalCredNote').innerText = customNotes.trim();
+                            } else {
+                                noteRow.hidden = true;
+                                noteRow.style.display = 'none';
+                            }
+                        }
                         credRow.hidden = false;
                     }
 
@@ -1560,4 +1653,5 @@
         }
     </script>
 </body>
+
 </html>

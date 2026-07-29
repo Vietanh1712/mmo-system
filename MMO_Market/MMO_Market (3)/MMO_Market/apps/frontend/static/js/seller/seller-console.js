@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // SELLER CONSOLE JS
 // File: seller-console.js
 // Description: Controls all dynamic operations and REST API data binding
@@ -1064,7 +1064,8 @@ async function initVariantForm() {
             if (assetsRes.ok) {
                 const existingAssets = await assetsRes.json();
                 assets = existingAssets.map(ea => {
-                    if (productType === 'ACCOUNT') {
+                    const type = ea.assetType || productType;
+                    if (type === 'ACCOUNT') {
                         return {
                             id: ea.id,
                             type: 'ACCOUNT',
@@ -1073,7 +1074,7 @@ async function initVariantForm() {
                             notes: ea.notes || '',
                             isUsed: ea.isUsed === true
                         };
-                    } else if (productType === 'KEY') {
+                    } else if (type === 'KEY') {
                         return {
                             id: ea.id,
                             type: 'KEY',
@@ -1081,7 +1082,7 @@ async function initVariantForm() {
                             notes: ea.notes || '',
                             isUsed: ea.isUsed === true
                         };
-                    } else if (productType === 'GAME_CARD') {
+                    } else if (type === 'GAME_CARD') {
                         return {
                             id: ea.id,
                             type: 'GAME_CARD',
@@ -1091,6 +1092,17 @@ async function initVariantForm() {
                         };
                     }
                 }).filter(Boolean);
+
+                // Switch the active tab to match the first asset type if exists
+                if (assets.length > 0) {
+                    const firstType = assets[0].type;
+                    if (firstType && firstType !== productType) {
+                        if (typeof window.switchAssetInputType === 'function') {
+                            window.switchAssetInputType(firstType);
+                        }
+                    }
+                }
+
                 if (typeof updateAssetList === 'function') updateAssetList();
             }
         } else {
@@ -1164,37 +1176,47 @@ async function initVariantForm() {
 
                     // Batch save any new assets
                     if (newAssets.length > 0) {
-                        const mappedAssets = newAssets.map(a => {
-                            if (productType === 'ACCOUNT') {
-                                return {
-                                    accountUsername: a.username,
-                                    accountPassword: a.password,
-                                    notes: a.notes
-                                };
-                            } else if (productType === 'KEY') {
-                                return {
-                                    keyCode: a.keyCode,
-                                    notes: a.notes
-                                };
-                            } else if (productType === 'GAME_CARD') {
-                                return {
-                                    cardCode: a.cardCode,
-                                    cardPin: "",
-                                    notes: a.notes
-                                };
-                            }
+                        const groups = {};
+                        newAssets.forEach(a => {
+                            const type = a.type || 'ACCOUNT';
+                            if (!groups[type]) groups[type] = [];
+                            groups[type].push(a);
                         });
 
-                        const assetRes = await sellerFetch('/digital-assets', {
-                            method: 'POST',
-                            body: JSON.stringify({
-                                variantId: savedVariantId,
-                                assetType: productType,
-                                assets: mappedAssets
-                            })
-                        });
-                        const assetData = await assetRes.json();
-                        if (!assetRes.ok) throw new Error(assetData.message || 'Lưu tài sản thất bại.');
+                        for (const type of Object.keys(groups)) {
+                            const typeAssets = groups[type];
+                            const mappedAssets = typeAssets.map(a => {
+                                if (type === 'ACCOUNT') {
+                                    return {
+                                        accountUsername: a.username,
+                                        accountPassword: a.password,
+                                        notes: a.notes
+                                    };
+                                } else if (type === 'KEY') {
+                                    return {
+                                        keyCode: a.keyCode,
+                                        notes: a.notes
+                                    };
+                                } else if (type === 'GAME_CARD') {
+                                    return {
+                                        cardCode: a.cardCode,
+                                        cardPin: "",
+                                        notes: a.notes
+                                    };
+                                }
+                            });
+
+                            const assetRes = await sellerFetch('/digital-assets', {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    variantId: savedVariantId,
+                                    assetType: type,
+                                    assets: mappedAssets
+                                })
+                            });
+                            const assetData = await assetRes.json();
+                            if (!assetRes.ok) throw new Error(assetData.message || 'LÆ°u tÃ i sáº£n tháº¥t báº¡i.');
+                        }
                     }
 
                     showToast(isEdit ? 'Đã cập nhật biến thể & tài sản!' : 'Đã tạo biến thể & tài sản thành công!');
