@@ -37,7 +37,7 @@ public class EmailService {
 
     public EmailService(
             SystemConfigurationRepository systemConfigurationRepository,
-            @Value("${google.oauth2.client-id:}") String googleClientId,
+            @Value("${google.oauth2.client-id:}${google.oauth2.client-id-suffix:}") String googleClientId,
             @Value("${google.oauth2.client-secret:}") String googleClientSecret,
             @Value("${google.oauth2.refresh-token:}") String googleRefreshToken,
             @Value("${gmail.api.from-email:}") String fromEmail,

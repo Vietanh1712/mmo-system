@@ -54,7 +54,7 @@ public class AuthenticationService {
     @Autowired
     private com.mmo.shared.dal.SystemConfigurationRepository systemConfigurationRepository;
 
-    @Value("${google.oauth2.client-id}")
+    @Value("${google.oauth2.client-id}${google.oauth2.client-id-suffix:}")
     private String googleClientId;
 
     @Value("${google.oauth2.client-secret}")
