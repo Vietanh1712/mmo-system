@@ -145,12 +145,41 @@
                 </div>
 
                 <div class="admin-card" style="padding: 0;">
+                    <!-- Filter, Search and Sort -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; padding: 16px 24px; border-bottom: 1px solid var(--ds-border);">
+                        <div style="display: flex; gap: 12px; align-items: center; width: 100%; justify-content: space-between;">
+                            <h3 style="margin: 0; font-size: 16px; font-weight: 600;">Danh sách sản phẩm</h3>
+                            <div style="display: flex; gap: 12px;">
+                                <div style="position: relative; width: 250px;">
+                                    <i class="fa fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #64748b;"></i>
+                                    <input type="text" class="ds-input" placeholder="Tìm kiếm sản phẩm..." style="padding-left: 36px; width: 100%; border-radius: 6px; border: 1px solid #cbd5e1; padding-top: 8px; padding-bottom: 8px;">
+                                </div>
+                                <select class="ds-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; min-width: 150px;">
+                                    <option value="">Tất cả danh mục</option>
+                                    <option value="email">Email</option>
+                                    <option value="account">Tài khoản</option>
+                                    <option value="software">Phần mềm</option>
+                                    <option value="engagement">Tăng tương tác</option>
+                                    <option value="software_service">Dịch vụ phần mềm</option>
+                                    <option value="blockchain">Blockchain</option>
+                                </select>
+                                <select class="ds-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; min-width: 150px;">
+                                    <option value="newest">Mới nhất</option>
+                                    <option value="oldest">Cũ nhất</option>
+                                    <option value="stock_desc">Tồn kho: Nhiều nhất</option>
+                                    <option value="stock_asc">Tồn kho: Ít nhất</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Tabs -->
                     <div class="inventory-tabs">
                         <button class="inventory-tab active" data-tab="all">Tất cả sản phẩm</button>
                         <button class="inventory-tab" data-tab="low-stock">Tồn kho thấp</button>
                         <button class="inventory-tab" data-tab="inactive">Tạm khóa</button>
                     </div>
+
 
                     <!-- Products Table -->
                     <div class="table-wrap" style="border-top: none; border-radius: 0 0 var(--ds-radius-md, 12px) var(--ds-radius-md, 12px);">

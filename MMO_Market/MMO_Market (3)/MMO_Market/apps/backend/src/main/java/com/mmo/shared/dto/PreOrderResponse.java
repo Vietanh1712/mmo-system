@@ -24,5 +24,6 @@ public class PreOrderResponse {
     private String status;
     private String notes;
     private String deliveryData;
+    private String proofImage;
     private String createdAt;
 }

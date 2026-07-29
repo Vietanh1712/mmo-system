@@ -16,7 +16,7 @@ async function loadTickets() {
         console.error(e);
         document.getElementById('staff-tickets-body').innerHTML = `
             <tr>
-                <td colspan="7" style="text-align: center; padding: 24px; color: red;">
+                <td colspan="8" style="text-align: center; padding: 24px; color: red;">
                     Lỗi khi tải danh sách phiếu hỗ trợ từ máy chủ. Vui lòng kiểm tra đăng nhập.
                 </td>
             </tr>
@@ -55,7 +55,7 @@ function renderTickets() {
     if (filtered.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" style="text-align: center; padding: 24px; color: var(--ds-text-subtle);">
+                <td colspan="8" style="text-align: center; padding: 24px; color: var(--ds-text-subtle);">
                     Không tìm thấy phiếu hỗ trợ nào phù hợp với bộ lọc.
                 </td>
             </tr>
@@ -71,7 +71,8 @@ function renderTickets() {
 
     const pageItems = filtered.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
 
-    tbody.innerHTML = pageItems.map(item => {
+    tbody.innerHTML = pageItems.map((item, index) => {
+        const stt = currentPage * pageSize + index + 1;
         let badgeClass = 'ds-badge-warning';
         let statusText = 'Đang xử lý';
         if (item.status === 'Open') {
@@ -92,6 +93,7 @@ function renderTickets() {
 
         return `
             <tr>
+                <td class="ds-table-center">${stt}</td>
                 <td>#ST-${escapeHtml(item.id)}</td>
                 <td>
                     <div class="ds-entity">

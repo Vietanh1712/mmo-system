@@ -803,6 +803,7 @@ public class SellerController {
             List<Map<String, Object>> result = transactions.stream().map(t -> {
                 Map<String, Object> map = new HashMap<>();
                 map.put("id", t.getId());
+                map.put("customerId", t.getCustomer().getId());
                 map.put("customerEmail", t.getCustomer().getEmail());
                 map.put("productName", t.getProduct().getName());
                 map.put("variantName", t.getVariant().getVariantName());

@@ -35,7 +35,11 @@ public interface SellerRegistrationRepository extends JpaRepository<SellerRegist
            "    LOWER(r.shopName) LIKE CONCAT('%', LOWER(:keyword), '%') OR " +
            "    LOWER(r.supportEmail) LIKE CONCAT('%', LOWER(:keyword), '%') OR " +
            "    LOWER(r.supportPhone) LIKE CONCAT('%', LOWER(:keyword), '%') OR " +
-           "    LOWER(r.category) LIKE CONCAT('%', LOWER(:keyword), '%'))")
+           "    LOWER(r.category) LIKE CONCAT('%', LOWER(:keyword), '%') OR " +
+           "    CAST(r.id AS string) LIKE CONCAT('%', LOWER(:keyword), '%') OR " +
+           "    LOWER(CONCAT('SHOP-', CAST(r.id AS string))) LIKE CONCAT('%', LOWER(:keyword), '%') OR " +
+           "    LOWER(r.user.fullName) LIKE CONCAT('%', LOWER(:keyword), '%') OR " +
+           "    LOWER(r.user.email) LIKE CONCAT('%', LOWER(:keyword), '%'))")
     Page<SellerRegistration> searchRegistrations(
             @Param("status") String status,
             @Param("shopStatus") String shopStatus,

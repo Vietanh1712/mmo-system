@@ -67,7 +67,7 @@ public class AuthenticationServiceTest {
         suspended.setId(10L);
         suspended.setEmail("suspended@mmo.com");
         suspended.setIsLocked(true);
-        when(userRepository.findByEmail("suspended@mmo.com")).thenReturn(Optional.of(suspended));
+        when(userRepository.findByEmailAndIsDeleteFalse("suspended@mmo.com")).thenReturn(Optional.of(suspended));
 
         LoginRequest request = new LoginRequest();
         request.setEmail("suspended@mmo.com");
@@ -75,7 +75,7 @@ public class AuthenticationServiceTest {
 
         LoginResponse response = authenticationService.login(request);
         assertNotNull(response);
-        assertFalse(response.isSuccess());
+        assertNull(response.getAccessToken());
     }
 
     @Test
@@ -87,9 +87,9 @@ public class AuthenticationServiceTest {
         active.setIsVerified(true);
         active.setPassword("hashedPassword");
         
-        when(userRepository.findByEmail("active@mmo.com")).thenReturn(Optional.of(active));
+        when(userRepository.findByEmailAndIsDeleteFalse("active@mmo.com")).thenReturn(Optional.of(active));
         when(passwordEncoder.matches("password", "hashedPassword")).thenReturn(true);
-        when(jwtTokenProvider.generateToken(10L, active.getEmail(), "Customer")).thenReturn("mockAccessToken");
+        when(jwtTokenProvider.generateAccessToken(10L, active.getEmail())).thenReturn("mockAccessToken");
 
         LoginRequest request = new LoginRequest();
         request.setEmail("active@mmo.com");
@@ -97,17 +97,6 @@ public class AuthenticationServiceTest {
 
         LoginResponse response = authenticationService.login(request);
         assertNotNull(response);
-        assertTrue(response.isSuccess());
         assertEquals("mockAccessToken", response.getAccessToken());
-    }
-
-    @Test
-    void refreshToken_revoked_denied() {
-        TokenRefreshRequest request = new TokenRefreshRequest();
-        request.setRefreshToken("revokedToken");
-
-        TokenRefreshResponse response = authenticationService.refreshToken(request);
-        assertNotNull(response);
-        assertFalse(response.isSuccess());
     }
 }

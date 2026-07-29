@@ -440,6 +440,8 @@ function setBadge(elementId, text, badgeClass) {
 }
 
 function formatOrderStatus(status) {
+    if (!status) return '-';
+    const upperStatus = status.toUpperCase().trim();
     const map = {
         PENDING: 'Chờ xử lý',
         HELD: 'Tạm giữ',
@@ -450,32 +452,38 @@ function formatOrderStatus(status) {
         DISPUTED: 'Tranh chấp',
         REFUNDED: 'Đã hoàn tiền'
     };
-    return map[status] || status || '-';
+    return map[upperStatus] || status || '-';
 }
 
 function getOrderStatusBadgeClass(status) {
-    if (status === 'COMPLETED' || status === 'DELIVERED') return 'ds-badge-success';
-    if (status === 'DISPUTED' || status === 'CANCELLED') return 'ds-badge-danger';
-    if (status === 'PENDING' || status === 'PAID') return 'ds-badge-warning';
-    if (status === 'HELD' || status === 'REFUNDED') return 'ds-badge-info';
+    if (!status) return 'ds-badge-muted';
+    const upperStatus = status.toUpperCase().trim();
+    if (upperStatus === 'COMPLETED' || upperStatus === 'DELIVERED') return 'ds-badge-success';
+    if (upperStatus === 'DISPUTED' || upperStatus === 'CANCELLED') return 'ds-badge-danger';
+    if (upperStatus === 'PENDING' || upperStatus === 'PAID') return 'ds-badge-warning';
+    if (upperStatus === 'HELD' || upperStatus === 'REFUNDED') return 'ds-badge-info';
     return 'ds-badge-muted';
 }
 
 function formatPaymentStatus(status) {
+    if (!status) return '-';
+    const upperStatus = status.toUpperCase().trim();
     const map = {
         PAID: 'Đã thanh toán',
         PENDING: 'Chờ thanh toán',
         FAILED: 'Thất bại',
         REFUNDED: 'Đã hoàn tiền'
     };
-    return map[status] || status || '-';
+    return map[upperStatus] || status || '-';
 }
 
 function getPaymentBadgeClass(status) {
-    if (status === 'PAID') return 'ds-badge-success';
-    if (status === 'PENDING') return 'ds-badge-warning';
-    if (status === 'FAILED') return 'ds-badge-danger';
-    if (status === 'REFUNDED') return 'ds-badge-info';
+    if (!status) return 'ds-badge-muted';
+    const upperStatus = status.toUpperCase().trim();
+    if (upperStatus === 'PAID') return 'ds-badge-success';
+    if (upperStatus === 'PENDING') return 'ds-badge-warning';
+    if (upperStatus === 'FAILED') return 'ds-badge-danger';
+    if (upperStatus === 'REFUNDED') return 'ds-badge-info';
     return 'ds-badge-muted';
 }
 

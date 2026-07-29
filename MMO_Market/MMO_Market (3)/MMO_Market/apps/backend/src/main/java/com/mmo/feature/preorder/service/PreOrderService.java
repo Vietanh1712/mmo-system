@@ -22,6 +22,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import com.mmo.shared.dal.ProductVariantRepository;
+import com.mmo.shared.dal.NotificationRepository;
+import com.mmo.shared.model.Notification;
 
 @Service
 @Slf4j
@@ -30,16 +33,16 @@ public class PreOrderService {
     private final PreOrderRepository preOrderRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
-    private final com.mmo.shared.dal.ProductVariantRepository productVariantRepository;
+    private final ProductVariantRepository productVariantRepository;
     private final com.mmo.shared.dal.DigitalAssetRepository digitalAssetRepository;
-    private final com.mmo.shared.dal.NotificationRepository notificationRepository;
+    private final NotificationRepository notificationRepository;
 
     public PreOrderService(PreOrderRepository preOrderRepository,
                            UserRepository userRepository,
                            ProductRepository productRepository,
-                           com.mmo.shared.dal.ProductVariantRepository productVariantRepository,
+                           ProductVariantRepository productVariantRepository,
                            com.mmo.shared.dal.DigitalAssetRepository digitalAssetRepository,
-                           com.mmo.shared.dal.NotificationRepository notificationRepository) {
+                           NotificationRepository notificationRepository) {
         this.preOrderRepository = preOrderRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
@@ -84,22 +87,28 @@ public class PreOrderService {
 
         PreOrder saved = preOrderRepository.save(preOrder);
 
-        com.mmo.shared.model.Notification sellerNotification = com.mmo.shared.model.Notification.builder()
-                .userId(product.getSeller().getId())
-                .title("Bạn có đơn đặt trước mới")
-                .content("Đơn PO-" + saved.getId()
-                        + " đặt " + saved.getQuantity() + " tài khoản của sản phẩm '"
-                        + product.getName() + "'"
-                        + (variant != null ? ", biến thể '" + variant.getVariantName() + "'" : "")
-                        + ".")
-                .type("ORDER")
-                .severity("INFO")
-                .isRead(false)
-                .isDelete(false)
-                .createdAt(java.time.LocalDateTime.now())
-                .targetUrl("/seller/preorders")
-                .build();
-        notificationRepository.save(sellerNotification);
+        if (product.getSeller() != null) {
+            try {
+                Notification sellerNotification = Notification.builder()
+                        .userId(product.getSeller().getId())
+                        .title("Bạn có đơn đặt trước mới")
+                        .content("Đơn PO-" + saved.getId()
+                                + " đặt " + saved.getQuantity() + " tài khoản của sản phẩm '"
+                                + product.getName() + "'"
+                                + (variant != null ? ", biến thể '" + variant.getVariantName() + "'" : "")
+                                + ".")
+                        .type("ORDER")
+                        .severity("INFO")
+                        .isRead(false)
+                        .isDelete(false)
+                        .createdAt(java.time.LocalDateTime.now())
+                        .targetUrl("/seller/console")
+                        .build();
+                notificationRepository.save(sellerNotification);
+            } catch (Exception e) {
+                log.warn("Lỗi gửi thông báo cho seller: {}", e.getMessage());
+            }
+        }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return PreOrderResponse.builder()
@@ -212,7 +221,7 @@ public class PreOrderService {
     }
 
     @Transactional
-    public PreOrderResponse deliverPreOrder(Long sellerId, Long preOrderId, String deliveryData) {
+    public PreOrderResponse deliverPreOrder(Long sellerId, Long preOrderId, com.mmo.shared.dto.PreOrderDeliveryRequest request) {
         PreOrder preOrder = preOrderRepository.findById(preOrderId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn đặt trước"));
 
@@ -225,7 +234,11 @@ public class PreOrderService {
         }
 
         preOrder.setStatus("COMPLETED");
-        preOrder.setDeliveryData(deliveryData);
+        preOrder.setDeliveryData(request.getDeliveryData());
+        if (request.getProofImage() != null && !request.getProofImage().isBlank()) {
+            preOrder.setProofImage(request.getProofImage());
+        }
+        
         PreOrder saved = preOrderRepository.save(preOrder);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -241,6 +254,7 @@ public class PreOrderService {
                 .status(saved.getStatus())
                 .notes(saved.getNotes())
                 .deliveryData(saved.getDeliveryData())
+                .proofImage(saved.getProofImage())
                 .createdAt(saved.getCreatedAt() != null ? saved.getCreatedAt().format(formatter) : "")
                 .build();
     }

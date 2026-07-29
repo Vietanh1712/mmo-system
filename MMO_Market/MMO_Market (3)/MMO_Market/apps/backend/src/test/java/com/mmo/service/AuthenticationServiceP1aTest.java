@@ -1,4 +1,4 @@
-﻿package com.mmo.service;
+package com.mmo.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,14 +11,6 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @ExtendWith(MockitoExtension.class)
 public class AuthenticationServiceP1aTest {
-
-    /**
-     * Ca kiểm thử: Refresh token suspended denied.
-     */
-    @Test
-    void refreshToken_suspended_denied() {
-        // TODO: Triển khai kiểm thử cho refreshToken_suspended_denied
-    }
 
     /**
      * Ca kiểm thử: Refresh token suspended denied.
@@ -42,14 +34,6 @@ public class AuthenticationServiceP1aTest {
     @Test
     void forgotPassword_unknownEmail_noException_noSideEffects() {
         // TODO: Triển khai kiểm thử cho forgotPassword_unknownEmail_noException_noSideEffects
-    }
-
-    /**
-     * Ca kiểm thử: Forgot password google only no exception no mã OTP.
-     */
-    @Test
-    void forgotPassword_googleOnly_noException_noOtp() {
-        // TODO: Triển khai kiểm thử cho forgotPassword_googleOnly_noException_noOtp
     }
 
     /**
