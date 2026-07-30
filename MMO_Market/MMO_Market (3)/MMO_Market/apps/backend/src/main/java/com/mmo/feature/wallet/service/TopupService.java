@@ -255,11 +255,15 @@ public class TopupService {
 
     private void saveFailedTopup(String sepayCode, Long amount, String content, Long userId, String reason) {
         try {
+            if (userId == null || userId <= 0 || !userRepository.existsById(userId)) {
+                log.warn("Cannot save failed top-up transaction to database because user ID {} does not exist. Reason: {}", userId, reason);
+                return;
+            }
             TopupTransaction tx = TopupTransaction.builder()
                     .sepayCode(sepayCode)
                     .amountVnd(amount != null ? amount : 0L)
                     .transferContent(content)
-                    .userId(userId != null ? userId : 0L)
+                    .userId(userId)
                     .status("Failed")
                     .failureReason(reason)
                     .build();
