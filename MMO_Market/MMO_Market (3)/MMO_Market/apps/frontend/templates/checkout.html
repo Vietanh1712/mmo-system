@@ -680,6 +680,29 @@
         </div>
     </div>
 
+    <!-- STOCK OVERFLOW / INSUFFICIENT MODAL -->
+    <div class="modal-overlay" id="stockModal">
+        <div class="modal-card" style="max-width: 520px; text-align: left;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 12px;">
+                <div style="width: 44px; height: 44px; border-radius: 50%; background: #fef2f2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+                    <i class="fa fa-exclamation-triangle"></i>
+                </div>
+                <div>
+                    <h3 class="modal-title" style="margin: 0; font-size: 18px; color: var(--brand-dark);">Số lượng vượt quá tồn kho</h3>
+                    <div style="font-size: 13px; color: var(--text-muted);">Cập nhật tồn kho thực tế từ hệ thống</div>
+                </div>
+            </div>
+
+            <div id="stockModalContent" style="font-size: 14.5px; line-height: 1.6; color: var(--text-main); margin-bottom: 24px; background: #fff8f6; padding: 14px 16px; border-radius: 8px; border: 1px solid #fee2e2;">
+                <!-- Content injected dynamically -->
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;" id="stockModalButtons">
+                <!-- Buttons injected dynamically -->
+            </div>
+        </div>
+    </div>
+
     <!-- 2. FOOTER (REPLACED WITH SHARED FRAGMENT) -->
     <footer th:replace="~{fragments/footer :: footer}"></footer>
 
@@ -922,25 +945,71 @@
 
             const btnPay = document.getElementById('btnPay');
             btnPay.setAttribute('disabled', 'true');
-            btnPay.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
+            btnPay.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang kiểm tra tồn kho...';
 
             try {
+                // 1. Kiểm tra tồn kho thực tế từ Database trước khi tiến hành thanh toán
+                let itemsToCheck = checkoutMode === 'cart' ? checkoutItems : [{
+                    productId: Number(productId),
+                    productName: selectedProduct.name,
+                    variantLabel: paramVariantLabel || (duration + " Tháng"),
+                    quantity: 1,
+                    price: price
+                }];
+
+                let stockBreach = null;
+
+                for (let i = 0; i < itemsToCheck.length; i++) {
+                    const item = itemsToCheck[i];
+                    try {
+                        const prodRes = await fetch(`/api/search/products/${item.productId}`);
+                        if (prodRes.ok) {
+                            const prodData = await prodRes.json();
+                            const targetLabel = (item.variantLabel || '').toLowerCase();
+                            let matchedVariant = null;
+                            if (prodData.variants && prodData.variants.length > 0) {
+                                matchedVariant = prodData.variants.find(v => (v.label || v.name || '').toLowerCase() === targetLabel)
+                                              || prodData.variants.find(v => targetLabel.includes((v.label || v.name || '').toLowerCase()) || (v.label || v.name || '').toLowerCase().includes(targetLabel))
+                                              || prodData.variants[0];
+                            }
+                            
+                            const actualStock = matchedVariant && matchedVariant.stock != null ? matchedVariant.stock : (prodData.stock != null ? prodData.stock : 0);
+                            
+                            if (item.quantity > actualStock) {
+                                stockBreach = {
+                                    itemIndex: i,
+                                    item: item,
+                                    requestedQty: item.quantity,
+                                    actualStock: actualStock,
+                                    missingQty: item.quantity - actualStock,
+                                    price: item.price || (matchedVariant ? matchedVariant.price : price)
+                                };
+                                break;
+                            }
+                        }
+                    } catch (e) {
+                        console.warn("Lỗi kiểm tra tồn kho trực tuyến:", e);
+                    }
+                }
+
+                if (stockBreach) {
+                    // Dừng tiến trình thanh toán lập tức và hiển thị Pop-up (Modal) thông báo
+                    btnPay.removeAttribute('disabled');
+                    btnPay.innerHTML = '<i class="fa fa-lock"></i> Xác nhận thanh toán';
+                    showStockModal(stockBreach);
+                    return;
+                }
+
+                btnPay.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
+
                 let successOrders = [];
                 let lastFinalBalance = currentUser.balanceVnd;
                 let successCount = 0;
                 let errorMessages = [];
 
                 if (checkoutMode === 'cart') {
-                    // Tạo danh sách các request cần thực hiện (mỗi request mua 1 sản phẩm có số lượng 1)
-                    const purchaseTasks = [];
+                    // Tạo danh sách các purchase requests (truyền quantity thực tế của mỗi item)
                     for (const item of checkoutItems) {
-                        for (let q = 0; q < item.quantity; q++) {
-                            purchaseTasks.push(item);
-                        }
-                    }
-
-                    // Thực hiện tuần tự các purchaseTasks để tránh race condition ví tài chính
-                    for (const task of purchaseTasks) {
                         try {
                             const response = await fetch('/api/transactions/purchase', {
                                 method: 'POST',
@@ -949,24 +1018,24 @@
                                     'Authorization': `Bearer ${token}`
                                 },
                                 body: JSON.stringify({
-                                    productId: Number(task.productId),
-                                    variantLabel: task.variantLabel || (task.duration + " Tháng")
+                                    productId: Number(item.productId),
+                                    variantLabel: item.variantLabel || (item.duration + " Tháng"),
+                                    quantity: item.quantity
                                 })
                             });
 
                             const data = await response.json();
 
                             if (!response.ok) {
-                                throw new Error(data.message || `Lỗi mua sản phẩm ${task.productName}`);
+                                throw new Error(data.message || `Lỗi mua sản phẩm ${item.productName}`);
                             }
 
-                            successOrders.push({ task, data });
+                            successOrders.push({ task: item, data });
                             lastFinalBalance = data.finalBalance;
                             successCount++;
                         } catch (err) {
                             console.error("Lỗi mua sản phẩm trong giỏ hàng:", err);
                             errorMessages.push(err.message || "Lỗi không xác định");
-                            // Dừng lại nếu lỗi (ví dụ do hết số dư ví hoặc hết hàng)
                             break;
                         }
                     }
@@ -1244,6 +1313,240 @@
                 if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
             } catch (error) {
                 console.error('Không thể cập nhật giỏ hàng sau thanh toán:', error);
+            }
+        }
+
+        // --- STOCK OVERFLOW MODAL HANDLERS ---
+        let currentStockBreach = null;
+
+        function showStockModal(breach) {
+            currentStockBreach = breach;
+            const modal = document.getElementById('stockModal');
+            const content = document.getElementById('stockModalContent');
+            const buttonsContainer = document.getElementById('stockModalButtons');
+
+            if (!modal || !content || !buttonsContainer) return;
+
+            const item = breach.item;
+            const actualStock = breach.actualStock;
+            const requestedQty = breach.requestedQty;
+            const missingQty = breach.missingQty;
+
+            content.innerHTML = `
+                <div style="font-weight: 700; color: var(--brand-dark); margin-bottom: 6px;">Sản phẩm: ${escapeHtml(item.productName || item.name)}</div>
+                <div style="color: #991b1b; font-weight: 600;">Sản phẩm này hiện chỉ còn <strong>${actualStock}</strong> sản phẩm có sẵn. Bạn đang yêu cầu mua <strong>${requestedQty}</strong> sản phẩm.</div>
+            `;
+
+            if (actualStock > 0) {
+                buttonsContainer.innerHTML = `
+                    <button type="button" onclick="handleStockOption1()" style="width: 100%; background: #0058be; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fa fa-check-circle" style="margin-right: 8px;"></i> Chỉ mua ${actualStock} sản phẩm còn lại</span>
+                        <i class="fa fa-arrow-right"></i>
+                    </button>
+                    <button type="button" onclick="handleStockOption2()" style="width: 100%; background: var(--action-orange); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fa fa-cart-plus" style="margin-right: 8px;"></i> Mua ${actualStock} sản phẩm + Đặt trước ${missingQty} sản phẩm thiếu</span>
+                        <i class="fa fa-arrow-right"></i>
+                    </button>
+                    <button type="button" onclick="closeStockModal()" style="width: 100%; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; text-align: center;">
+                        Hủy giao dịch
+                    </button>
+                `;
+            } else {
+                buttonsContainer.innerHTML = `
+                    <button type="button" onclick="handleStockOption2()" style="width: 100%; background: var(--action-orange); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fa fa-clock-o" style="margin-right: 8px;"></i> Đặt trước toàn bộ ${requestedQty} sản phẩm</span>
+                        <i class="fa fa-arrow-right"></i>
+                    </button>
+                    <button type="button" onclick="closeStockModal()" style="width: 100%; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; text-align: center;">
+                        Hủy giao dịch
+                    </button>
+                `;
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeStockModal() {
+            const modal = document.getElementById('stockModal');
+            if (modal) modal.classList.remove('active');
+            const btnPay = document.getElementById('btnPay');
+            if (btnPay) {
+                btnPay.removeAttribute('disabled');
+                btnPay.innerHTML = '<i class="fa fa-lock"></i> Xác nhận thanh toán';
+            }
+        }
+
+        async function handleStockOption1() {
+            if (!currentStockBreach) return;
+            const breach = currentStockBreach;
+            closeStockModal();
+
+            if (checkoutMode === 'cart') {
+                if (checkoutItems[breach.itemIndex]) {
+                    checkoutItems[breach.itemIndex].quantity = breach.actualStock;
+                }
+                try {
+                    const cartKey = typeof window.getCartStorageKey === 'function' ? window.getCartStorageKey() : 'mmoCart';
+                    let cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+                    const targetProdId = Number(breach.item.productId);
+                    const idx = cart.findIndex(c => Number(c.productId) === targetProdId);
+                    if (idx !== -1) {
+                        cart[idx].quantity = breach.actualStock;
+                        localStorage.setItem(cartKey, JSON.stringify(cart));
+                        if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
+                    }
+                } catch (e) {
+                    console.error("Lỗi cập nhật số lượng giỏ hàng:", e);
+                }
+
+                price = checkoutItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                checkoutTotal = price;
+                document.getElementById('unitPriceText').innerText = formatVND(price);
+                document.getElementById('summaryQuantityText').innerText = String(checkoutItems.reduce((sum, item) => sum + item.quantity, 0));
+                document.getElementById('totalPriceText').innerText = formatVND(checkoutTotal);
+                renderCheckoutItems();
+            }
+
+            if (typeof showSuccessToast === 'function') {
+                showSuccessToast(`Đã điều chỉnh số lượng thanh toán về ${breach.actualStock} sản phẩm khả dụng.`);
+            }
+
+            setTimeout(() => {
+                handlePaymentSubmit();
+            }, 500);
+        }
+
+        async function handleStockOption2() {
+            if (!currentStockBreach) return;
+            const breach = currentStockBreach;
+            closeStockModal();
+
+            const token = sessionStorage.getItem("accessToken");
+            if (!token) {
+                if (typeof showWarningToast === 'function') showWarningToast("Vui lòng đăng nhập trước!");
+                window.location.href = "/login";
+                return;
+            }
+
+            const btnPay = document.getElementById('btnPay');
+            btnPay.setAttribute('disabled', 'true');
+            btnPay.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang thanh toán & Tạo đơn đặt trước...';
+
+            try {
+                let successOrders = [];
+                let lastFinalBalance = currentUser ? currentUser.balanceVnd : 0;
+                
+                // 1. Mua số lượng hàng sẵn có (actualStock) nếu > 0
+                if (breach.actualStock > 0) {
+                    const response = await fetch('/api/transactions/purchase', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            productId: Number(breach.item.productId),
+                            variantLabel: breach.item.variantLabel || (breach.item.duration + " Tháng"),
+                            quantity: breach.actualStock
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Lỗi thanh toán sản phẩm có sẵn.');
+                    }
+
+                    successOrders.push({
+                        task: {
+                            productId: Number(breach.item.productId),
+                            variantLabel: breach.item.variantLabel || (breach.item.duration + " Tháng"),
+                            sellerName: breach.item.sellerName || selectedProduct.seller,
+                            duration: breach.item.duration || 1
+                        },
+                        data: data
+                    });
+                    lastFinalBalance = data.finalBalance;
+                }
+
+                // 2. Tạo đơn Pre-Order cho số lượng còn thiếu (missingQty)
+                const preOrderRes = await fetch('/api/v1/pre-orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        productId: Number(breach.item.productId),
+                        quantity: breach.missingQty,
+                        expectedPriceVnd: (breach.price || 0) * breach.missingQty,
+                        notes: `Tự động tạo từ thanh toán giỏ hàng (Mua ${breach.actualStock} sản phẩm có sẵn + Đặt trước ${breach.missingQty} sản phẩm thiếu)`
+                    })
+                });
+
+                const preOrderData = await preOrderRes.json();
+                if (!preOrderRes.ok) {
+                    console.warn("Lỗi tạo đơn đặt trước:", preOrderData);
+                }
+
+                if (currentUser) {
+                    currentUser.balanceVnd = lastFinalBalance;
+                    sessionStorage.setItem('userInfo', JSON.stringify(currentUser));
+                    sessionStorage.setItem('user', JSON.stringify(currentUser));
+                }
+
+                if (checkoutMode === 'cart') {
+                    try {
+                        const cartKey = typeof window.getCartStorageKey === 'function' ? window.getCartStorageKey() : 'mmoCart';
+                        let cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+                        const targetProdId = Number(breach.item.productId);
+                        cart = cart.filter(c => Number(c.productId) !== targetProdId);
+                        localStorage.setItem(cartKey, JSON.stringify(cart));
+                        if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
+                    } catch (e) {}
+                }
+
+                if (successOrders.length > 0) {
+                    const firstOrder = successOrders[0].data;
+                    document.getElementById('invTxnId').innerText = firstOrder.transactionCode;
+                    document.getElementById('invProduct').innerText = `${firstOrder.productName} (Mua ${breach.actualStock} + Đặt trước ${breach.missingQty})`;
+                    document.getElementById('invAmount').innerText = formatVND(firstOrder.amount);
+                    
+                    const credRow = document.getElementById('modalCredentialsRow');
+                    if (credRow) {
+                        document.getElementById('modalCredLabel').innerText = 'Thông tin bàn giao & Đặt trước:';
+                        document.getElementById('modalCredUsername').innerHTML = `<span style="color: var(--brand-dark); font-weight: 600;">Đã thanh toán thành công <strong>${breach.actualStock}</strong> sản phẩm có sẵn. Đồng thời đã gửi yêu cầu Đặt trước thành công cho <strong>${breach.missingQty}</strong> sản phẩm thiếu tới Seller.</span>`;
+                        const passRow = document.getElementById('modalCredPasswordRow');
+                        if (passRow) passRow.style.display = 'none';
+                        credRow.hidden = false;
+                    }
+
+                    const btnViewOrder = document.getElementById('btnViewOrder');
+                    if (btnViewOrder) {
+                        btnViewOrder.outerHTML = `
+                            <button class="btn-modal-close" onclick="window.location.href='/pre-orders'" style="min-width: 180px; background: var(--action-orange); display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                                <i class="fa fa-hourglass-half"></i> Xem Đơn đặt trước
+                            </button>
+                            <button class="btn-modal-close" onclick="goToOrderDetail()" style="min-width: 180px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                                <i class="fa fa-info-circle"></i> Xem Lịch sử đơn hàng
+                            </button>
+                        `;
+                    }
+
+                    const modal = document.getElementById('successModal');
+                    if (modal) modal.classList.add('active');
+                } else {
+                    if (typeof showSuccessToast === 'function') {
+                        showSuccessToast(`Đã gửi yêu cầu đặt trước ${breach.missingQty} sản phẩm thành công!`);
+                    }
+                    setTimeout(() => {
+                        window.location.href = '/pre-orders';
+                    }, 1200);
+                }
+
+            } catch (err) {
+                if (typeof showErrorToast === 'function') showErrorToast(err.message || 'Có lỗi xảy ra trong quá trình đặt hàng.');
+                btnPay.removeAttribute('disabled');
+                btnPay.innerHTML = '<i class="fa fa-lock"></i> Xác nhận thanh toán';
             }
         }
 

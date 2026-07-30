@@ -1,4 +1,4 @@
-﻿package com.mmo.controller;
+package com.mmo.controller;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

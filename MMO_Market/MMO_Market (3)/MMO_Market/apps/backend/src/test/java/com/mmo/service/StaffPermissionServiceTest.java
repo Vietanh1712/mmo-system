@@ -1,4 +1,4 @@
-﻿package com.mmo.service;
+package com.mmo.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,22 +42,6 @@ public class StaffPermissionServiceTest {
     @Test
     void createstaff_sendsInviteAndLogs() {
         // TODO: Triển khai kiểm thử cho createstaff_sendsInviteAndLogs
-    }
-
-    /**
-     * Ca kiểm thử: Reassign employee inactivates old and creates new.
-     */
-    @Test
-    void reassignstaff_inactivatesOldAndCreatesNew() {
-        // TODO: Triển khai kiểm thử cho reassignstaff_inactivatesOldAndCreatesNew
-    }
-
-    /**
-     * Ca kiểm thử: Reassign employee inactivates old and creates new.
-     */
-    @Test
-    void reassignstaff_inactivatesOldAndCreatesNew() {
-        // TODO: Triển khai kiểm thử cho reassignstaff_inactivatesOldAndCreatesNew
     }
 
     /**

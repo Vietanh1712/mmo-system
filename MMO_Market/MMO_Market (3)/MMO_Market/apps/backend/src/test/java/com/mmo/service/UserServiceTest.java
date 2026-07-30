@@ -1,4 +1,4 @@
-﻿package com.mmo.service;
+package com.mmo.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,14 +26,6 @@ public class UserServiceTest {
     @Test
     void updateMyProfile_updatesAllowedFields_keepsEmailRoleStatus() {
         // TODO: Triển khai kiểm thử cho updateMyProfile_updatesAllowedFields_keepsEmailRoleStatus
-    }
-
-    /**
-     * Ca kiểm thử: Cập nhật my profile partial omitted fields unchanged.
-     */
-    @Test
-    void updateMyProfile_partial_omittedFieldsUnchanged() {
-        // TODO: Triển khai kiểm thử cho updateMyProfile_partial_omittedFieldsUnchanged
     }
 
     /**

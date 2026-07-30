@@ -44,5 +44,6 @@ public class ProductDetailDTO {
         private Long oldPrice;
         private Integer duration;
         private String label;
+        private Integer stock;
     }
 }

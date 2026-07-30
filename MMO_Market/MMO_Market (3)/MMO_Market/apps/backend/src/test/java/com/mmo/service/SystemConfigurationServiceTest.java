@@ -99,7 +99,7 @@ public class SystemConfigurationServiceTest {
 
         assertNotNull(response);
         assertEquals(30, response.getSystemConfig().getSessionTimeout());
-        assertFalse(response.getSystemConfig().isAllowRegister());
+        assertFalse(response.getSystemConfig().getAllowRegister());
     }
 
     /**

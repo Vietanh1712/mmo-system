@@ -2302,12 +2302,22 @@
         }
 
         const wrap = document.getElementById('notifMaintToggleWrap');
+        const toggle = document.getElementById('notifMaintToggle');
         if (wrap) {
-            if (item.type === 'maintenance') wrap.classList.remove('ds-hidden');
-            else wrap.classList.add('ds-hidden');
+            if (item.type === 'maintenance') {
+                wrap.classList.remove('ds-hidden');
+                authFetch('/admin/notifications/maintenance-status').then(res => res.json()).then(st => {
+                    if (toggle) {
+                        const isActive = st && Boolean(st.active);
+                        toggle.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                        toggle.className = 'ds-toggle ds-toggle-system ' + (isActive ? 'ds-toggle-active' : 'ds-toggle-inactive');
+                    }
+                }).catch(() => {});
+            } else {
+                wrap.classList.add('ds-hidden');
+            }
         }
 
-        const toggle = document.getElementById('notifMaintToggle');
         if (toggle) toggle.disabled = isPublished;
 
         const modal = document.getElementById('createNotifModal');
@@ -2516,7 +2526,9 @@
         }
         try {
             const response = await authFetch(`/admin/notifications/drafts/${id}/publish`, {
-                method: 'POST'
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ activateMaintenance: true })
             });
             const data = await response.json();
             if (response.ok && data.success) {

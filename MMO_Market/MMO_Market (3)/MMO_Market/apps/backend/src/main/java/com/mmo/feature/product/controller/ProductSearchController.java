@@ -138,6 +138,7 @@ public class ProductSearchController {
                                             .oldPrice((long) (v.getPriceVnd() * 1.5)) // High-fidelity mock old price
                                             .duration(v.getVariantName().contains("Năm") || v.getVariantName().contains("12 Tháng") ? 12 : (v.getVariantName().contains("6 Tháng") ? 6 : (v.getVariantName().contains("3 Tháng") ? 3 : 1)))
                                             .label(v.getVariantName())
+                                            .stock(v.getStock() != null ? v.getStock() : 0)
                                             .build());
                                 });
                     }
