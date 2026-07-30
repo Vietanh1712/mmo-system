@@ -75,7 +75,7 @@ public class NotificationService {
         Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by(direction, "createdAt"));
         Page<Notification> notifPage = notificationRepository.searchNotifications(
                 (type == null || type.isBlank()) ? null : type,
-                (status == null || status.isBlank()) ? "ALL" : status.trim(),
+                (status == null || status.isBlank()) ? "PUBLISHED" : status.trim(),
                 (search == null || search.isBlank()) ? null : search.trim(),
                 startAt,
                 endAt,
@@ -231,8 +231,12 @@ public class NotificationService {
         diff.put("title", notif.getTitle());
         saveAuditLog(operator, "Notification_Publish", "Phát hành bản nháp: " + notif.getTitle(), ipAddress, diff);
 
-        if (activateMaintenance && "maintenance".equalsIgnoreCase(notif.getType())) {
+        if (activateMaintenance || "maintenance".equalsIgnoreCase(notif.getType())) {
             updateMaintenanceConfig("TRUE", operator.getId());
+
+            Map<String, Object> maintDiff = new HashMap<>();
+            maintDiff.put("maintenance_mode", "FALSE -> TRUE");
+            saveAuditLog(operator, "Maintenance_Toggle", "Kích hoạt chế độ bảo trì hệ thống qua phát hành bản nháp", ipAddress, maintDiff);
         }
     }
 
