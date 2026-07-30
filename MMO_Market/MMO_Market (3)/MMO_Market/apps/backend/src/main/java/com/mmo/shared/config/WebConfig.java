@@ -25,28 +25,28 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Bean
     public ITemplateResolver customTemplateResolver() {
-        FileTemplateResolver resolver = new FileTemplateResolver();
         File f1 = new File("apps/frontend/templates");
         File f2 = new File("../frontend/templates");
         File f3 = new File("frontend/templates");
-        
-        String prefixPath;
-        if (f1.exists()) {
-            prefixPath = f1.getAbsolutePath() + File.separator;
-        } else if (f2.exists()) {
-            prefixPath = f2.getAbsolutePath() + File.separator;
-        } else if (f3.exists()) {
-            prefixPath = f3.getAbsolutePath() + File.separator;
-        } else {
-            prefixPath = "apps/frontend/templates/";
+
+        File targetDir = f1.exists() ? f1 : (f2.exists() ? f2 : (f3.exists() ? f3 : null));
+        if (targetDir != null) {
+            FileTemplateResolver resolver = new FileTemplateResolver();
+            resolver.setPrefix(targetDir.getAbsolutePath() + File.separator);
+            resolver.setSuffix(".html");
+            resolver.setTemplateMode(TemplateMode.HTML);
+            resolver.setCharacterEncoding("UTF-8");
+            resolver.setCacheable(false);
+            resolver.setCheckExistence(true);
+            return resolver;
         }
 
-        resolver.setPrefix(prefixPath);
+        org.thymeleaf.templateresolver.ClassLoaderTemplateResolver resolver = new org.thymeleaf.templateresolver.ClassLoaderTemplateResolver();
+        resolver.setPrefix("templates/");
         resolver.setSuffix(".html");
         resolver.setTemplateMode(TemplateMode.HTML);
         resolver.setCharacterEncoding("UTF-8");
         resolver.setCacheable(false);
-        resolver.setCheckExistence(true);
         return resolver;
     }
 
@@ -59,20 +59,20 @@ public class WebConfig implements WebMvcConfigurer {
         File static1 = new File("apps/frontend/static");
         File static2 = new File("../frontend/static");
         File static3 = new File("frontend/static");
-        
-        String staticPath;
-        if (static1.exists()) {
-            staticPath = static1.getAbsolutePath();
-        } else if (static2.exists()) {
-            staticPath = static2.getAbsolutePath();
-        } else if (static3.exists()) {
-            staticPath = static3.getAbsolutePath();
-        } else {
-            staticPath = "apps/frontend/static";
-        }
 
-        registry.addResourceHandler("/**")
-                .addResourceLocations("file:" + staticPath + File.separator, "classpath:/static/");
+        if (static1.exists()) {
+            registry.addResourceHandler("/**")
+                    .addResourceLocations("file:" + static1.getAbsolutePath() + File.separator, "classpath:/static/");
+        } else if (static2.exists()) {
+            registry.addResourceHandler("/**")
+                    .addResourceLocations("file:" + static2.getAbsolutePath() + File.separator, "classpath:/static/");
+        } else if (static3.exists()) {
+            registry.addResourceHandler("/**")
+                    .addResourceLocations("file:" + static3.getAbsolutePath() + File.separator, "classpath:/static/");
+        } else {
+            registry.addResourceHandler("/**")
+                    .addResourceLocations("classpath:/static/");
+        }
     }
 
     @Override
