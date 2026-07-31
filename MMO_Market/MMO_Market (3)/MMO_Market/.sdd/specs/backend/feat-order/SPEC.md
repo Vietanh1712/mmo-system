@@ -30,8 +30,8 @@ Người mua sản phẩm số cần được đảm bảo sẽ nhận được 
 |---|---|
 | FR-ORD-01 | WHEN a Customer purchases a product variant, THE SYSTEM SHALL verify that available stock exists. |
 | FR-ORD-02 | WHEN purchase is executed, THE SYSTEM SHALL subtract the amount from buyer's available balance and store it in Escrow. |
-| FR-ORD-03 | THE SYSTEM SHALL set `escrow_release_date` to exactly 72 hours from the order creation time. |
-| FR-ORD-04 | WHEN the buyer confirms delivery OR 72h elapsed with no complaint, THE SYSTEM SHALL add the funds to seller's available balance. |
+| FR-ORD-03 | THE SYSTEM SHALL set `escrow_release_date` dynamically: 168 hours (7 days) if the seller has warning Level 0, completed orders < 20 (successfully passed lock with no dispute), or dispute rate >= 2%; and 72 hours (3 days) standard otherwise. |
+| FR-ORD-04 | WHEN the escrow release date is reached, THE SYSTEM SHALL run a background scheduled task every 60 seconds to automatically transfer the funds (minus commission) to the seller's available balance and mark the transaction as Completed. |
 | FR-ORD-05 | THE SYSTEM SHALL NOT charge any buyer service fee (flat buyer fee is 0 VND) from the buyer's balance. |
 
 ---

@@ -361,6 +361,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const passwordInput = document.getElementById('password');
     const passwordToggle = document.querySelector('[data-toggle-password="password"]');
 
+
+
     function showLoginAlert(message, type) {
         alertBox.textContent = message;
         alertBox.className = `message ${type}`;

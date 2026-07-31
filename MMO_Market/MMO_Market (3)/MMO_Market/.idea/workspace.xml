@@ -6,26 +6,22 @@
   <component name="ChangeListManager">
     <list default="true" id="cc5262a2-5922-4af2-8358-144285f2178e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/PLAN.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/PLAN.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/SPEC.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/SPEC.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/features/SPEC-05_STAFF.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/features/SPEC-05_STAFF.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/frontend/feat-staff/SPEC.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/frontend/feat-staff/SPEC.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/controller/ComplaintController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/controller/ComplaintController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/service/ComplaintService.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/service/ComplaintService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/auth/service/AuthenticationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/auth/service/AuthenticationService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/service/impl/ComplaintServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/service/impl/ComplaintServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/ComplaintRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/ComplaintRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/ProductSpecification.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/ProductSpecification.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/SellerRegistrationRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/SellerRegistrationRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/EmailVerificationRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/EmailVerificationRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/apps/backend/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-complaints.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-complaints.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-support-tickets.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-support-tickets.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/complaints.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/complaints.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/support-tickets.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/support-tickets.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/customer/auth.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/customer/auth.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/auth/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/auth/login.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_C:/Users/pc/MMO_new1/MMO_Market/MMO_Market (3)/MMO_Market" value="3GwC9XRUBB0vJAcrRC9muF6dmrZ" />
+    </persistenceIdMap>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../../.." />
@@ -39,7 +35,7 @@
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/Vietanh1712/mmo-system.git&quot;,
-    &quot;accountId&quot;: &quot;7db50a0a-cdf5-4d58-bfe7-069485175bdd&quot;
+    &quot;accountId&quot;: &quot;1ee2d10c-384f-410f-bd13-e8d78ad0bb07&quot;
   }
 }</component>
   <component name="ProjectColorInfo">{
@@ -47,27 +43,44 @@
   &quot;fromUser&quot;: false
 }</component>
   <component name="ProjectId" id="3GwC9XRUBB0vJAcrRC9muF6dmrZ" />
+  <component name="ProjectSessionTemplates">
+    <option name="panelTemplate">
+      <template>
+        <option name="modeId" value="Agent" />
+        <option name="model">
+          <model>
+            <option name="modelType" value="builtin_id" />
+            <option name="modelValue" value="auto" />
+          </model>
+        </option>
+        <option name="targetType" value="BACKGROUND" />
+        <option name="worktreeMode" value="WORKSPACE" />
+      </template>
+    </option>
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "Spring Boot.MMOMarketApplication.executor": "Run",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "cuong2k3",
-    "junie.onboarding.icon.badge.shown": "true",
-    "kotlin-language-version-configured": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "to.speed.mode.migration.done": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;Spring Boot.MMOMarketApplication.executor&quot;: &quot;Run&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;copilot.chat.legacySessionMetadata.migrated&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;linh&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\pc\MMO_new1\MMO_Market\MMO_Market (3)\MMO_Market" />
@@ -98,7 +111,6 @@
     <attachedChunks>
       <set>
         <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.24374.151" />
-        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-IU-261.24374.151" />
       </set>
     </attachedChunks>
   </component>
