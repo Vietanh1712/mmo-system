@@ -37,6 +37,18 @@ public class PreOrderService {
     private final com.mmo.shared.dal.DigitalAssetRepository digitalAssetRepository;
     private final NotificationRepository notificationRepository;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mmo.shared.dal.TransactionRepository transactionRepository;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mmo.shared.dal.ComplaintRepository complaintRepository;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mmo.feature.wallet.service.WalletService walletService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mmo.shared.dal.SystemConfigurationRepository systemConfigurationRepository;
+
     public PreOrderService(PreOrderRepository preOrderRepository,
                            UserRepository userRepository,
                            ProductRepository productRepository,
@@ -77,6 +89,18 @@ public class PreOrderService {
 
         ProductVariant variant = resolveRequestedVariant(product, request.getVariantId());
 
+        // Kiểm tra số dư ví của khách hàng
+        long expectedPrice = request.getExpectedPriceVnd();
+        long currentBalance = customer.getBalanceVnd() != null ? customer.getBalanceVnd() : 0L;
+        if (currentBalance < expectedPrice) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Số dư ví không đủ để thực hiện đặt trước.");
+        }
+
+        // Khấu trừ tiền ví khách hàng
+        long newBalance = currentBalance - expectedPrice;
+        customer.setBalanceVnd(newBalance);
+        userRepository.save(customer);
+
         PreOrder preOrder = new PreOrder();
         preOrder.setCustomer(customer);
         preOrder.setProduct(product);
@@ -86,6 +110,22 @@ public class PreOrderService {
         preOrder.setNotes(request.getNotes() == null ? null : request.getNotes().trim());
 
         PreOrder saved = preOrderRepository.save(preOrder);
+
+        // Ghi log giao dịch ví đóng băng cho đơn Pre-order
+        try {
+            walletService.recordTransaction(
+                    customer,
+                    "PREORDER",
+                    -expectedPrice,
+                    "SUCCESS",
+                    "Giam tiền đặt trước sản phẩm " + product.getName() + " (Đơn PO-" + saved.getId() + ")",
+                    "PO-HOLD-" + saved.getId(),
+                    newBalance,
+                    saved.getId()
+            );
+        } catch (Exception e) {
+            log.error("Lỗi ghi giao dịch ví PreOrder: {}", e.getMessage());
+        }
 
         if (product.getSeller() != null) {
             try {
@@ -198,6 +238,33 @@ public class PreOrderService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền cập nhật đơn này.");
         }
 
+        // Nếu chuyển trạng thái sang CANCELLED hoặc REJECTED, thực hiện hoàn tiền cho khách hàng
+        boolean isCancellation = "CANCELLED".equalsIgnoreCase(newStatus) || "REJECTED".equalsIgnoreCase(newStatus) || "Bị từ chối".equalsIgnoreCase(newStatus) || "Đã hủy".equalsIgnoreCase(newStatus);
+        
+        if (isCancellation && !"CANCELLED".equalsIgnoreCase(preOrder.getStatus()) && !"REJECTED".equalsIgnoreCase(preOrder.getStatus())) {
+            User customer = preOrder.getCustomer();
+            long refundAmount = preOrder.getExpectedPriceVnd();
+            long oldBalance = customer.getBalanceVnd() != null ? customer.getBalanceVnd() : 0L;
+            long newBalance = oldBalance + refundAmount;
+            customer.setBalanceVnd(newBalance);
+            userRepository.save(customer);
+
+            try {
+                walletService.recordTransaction(
+                        customer,
+                        "REFUND",
+                        refundAmount,
+                        "SUCCESS",
+                        "Seller hủy/từ chối đơn đặt trước sản phẩm " + preOrder.getProduct().getName() + " (Đơn PO-" + preOrder.getId() + ")",
+                        "PO-REFUND-" + preOrder.getId(),
+                        newBalance,
+                        preOrder.getId()
+                );
+            } catch (Exception e) {
+                log.error("Lỗi ghi giao dịch hoàn tiền khi Seller hủy PreOrder: {}", e.getMessage());
+            }
+        }
+
         preOrder.setStatus(newStatus);
         PreOrder saved = preOrderRepository.save(preOrder);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -221,6 +288,93 @@ public class PreOrderService {
     }
 
     @Transactional
+    public PreOrderResponse cancelPreOrder(Long customerId, Long preOrderId) {
+        if (customerId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Chưa đăng nhập.");
+        }
+        PreOrder preOrder = preOrderRepository.findById(preOrderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy đơn đặt trước."));
+
+        if (!preOrder.getCustomer().getId().equals(customerId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền hủy đơn này.");
+        }
+
+        String status = preOrder.getStatus();
+        boolean canCancel = "PENDING".equalsIgnoreCase(status) 
+                || "Chờ xử lý".equalsIgnoreCase(status);
+
+        if (!canCancel) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Chỉ có thể hủy đơn đặt trước ở trạng thái chờ xử lý.");
+        }
+
+        // Cancel the pre-order status
+        preOrder.setStatus("CANCELLED");
+        PreOrder saved = preOrderRepository.save(preOrder);
+
+        // Refund customer wallet balance
+        User customer = preOrder.getCustomer();
+        long refundAmount = preOrder.getExpectedPriceVnd();
+        long oldBalance = customer.getBalanceVnd() != null ? customer.getBalanceVnd() : 0L;
+        long newBalance = oldBalance + refundAmount;
+        customer.setBalanceVnd(newBalance);
+        userRepository.save(customer);
+
+        // Record the refund wallet transaction
+        try {
+            walletService.recordTransaction(
+                    customer,
+                    "REFUND",
+                    refundAmount,
+                    "SUCCESS",
+                    "Hoàn tiền hủy đơn đặt trước sản phẩm " + preOrder.getProduct().getName() + " (Đơn PO-" + saved.getId() + ")",
+                    "PO-REFUND-" + saved.getId(),
+                    newBalance,
+                    saved.getId()
+            );
+        } catch (Exception e) {
+            log.error("Lỗi ghi giao dịch hoàn tiền PreOrder: {}", e.getMessage());
+        }
+
+        // Thông báo cho Seller
+        if (saved.getProduct().getSeller() != null) {
+            try {
+                Notification sellerNotification = Notification.builder()
+                        .userId(saved.getProduct().getSeller().getId())
+                        .title("Khách hàng đã hủy đơn đặt trước")
+                        .content("Khách hàng " + saved.getCustomer().getEmail() 
+                                + " đã hủy đơn đặt trước PO-" + saved.getId() 
+                                + " cho sản phẩm '" + saved.getProduct().getName() + "'.")
+                        .type("ORDER")
+                        .severity("WARNING")
+                        .isRead(false)
+                        .isDelete(false)
+                        .createdAt(java.time.LocalDateTime.now())
+                        .targetUrl("/seller/console")
+                        .build();
+                notificationRepository.save(sellerNotification);
+            } catch (Exception e) {
+                log.warn("Lỗi gửi thông báo hủy đơn cho seller: {}", e.getMessage());
+            }
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return PreOrderResponse.builder()
+                .success(true)
+                .message("Hủy đơn đặt trước và hoàn tiền thành công.")
+                .id(saved.getId())
+                .productId(saved.getProduct().getId())
+                .productName(saved.getProduct().getName())
+                .variantId(saved.getVariant() != null ? saved.getVariant().getId() : null)
+                .variantName(saved.getVariant() != null ? saved.getVariant().getVariantName() : null)
+                .quantity(saved.getQuantity())
+                .expectedPriceVnd(saved.getExpectedPriceVnd())
+                .status(saved.getStatus())
+                .notes(saved.getNotes())
+                .createdAt(saved.getCreatedAt() != null ? saved.getCreatedAt().format(formatter) : "")
+                .build();
+    }
+
+    @Transactional
     public PreOrderResponse deliverPreOrder(Long sellerId, Long preOrderId, com.mmo.shared.dto.PreOrderDeliveryRequest request) {
         PreOrder preOrder = preOrderRepository.findById(preOrderId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn đặt trước"));
@@ -229,8 +383,11 @@ public class PreOrderService {
             throw new RuntimeException("Bạn không có quyền thực hiện thao tác này");
         }
 
-        if (!preOrder.getStatus().equalsIgnoreCase("PENDING") && !preOrder.getStatus().equalsIgnoreCase("Chờ xử lý")) {
-            throw new RuntimeException("Chỉ có thể trả hàng cho đơn đang chờ xử lý");
+        if (!preOrder.getStatus().equalsIgnoreCase("PENDING") 
+                && !preOrder.getStatus().equalsIgnoreCase("Chờ xử lý")
+                && !preOrder.getStatus().equalsIgnoreCase("APPROVED")
+                && !preOrder.getStatus().equalsIgnoreCase("Đã duyệt")) {
+            throw new RuntimeException("Chỉ có thể giao hàng cho đơn đang chờ xử lý hoặc đã duyệt");
         }
 
         preOrder.setStatus("COMPLETED");
@@ -240,6 +397,14 @@ public class PreOrderService {
         }
         
         PreOrder saved = preOrderRepository.save(preOrder);
+
+        // Tạo giao dịch Escrow thực tế cho Seller
+        try {
+            createEscrowTransactionForPreOrder(saved);
+        } catch (Exception e) {
+            log.error("Lỗi tạo giao dịch Escrow khi giao hàng PreOrder thủ công: {}", e.getMessage());
+        }
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         return PreOrderResponse.builder()
@@ -264,11 +429,17 @@ public class PreOrderService {
         if (variant == null) return;
 
         Product product = variant.getProduct();
-        List<PreOrder> pendingPreOrders = preOrderRepository.findByProductAndStatusIgnoreCaseAndIsDeleteFalseOrderByCreatedAtAsc(product, "Pending");
-
-        if (pendingPreOrders.isEmpty()) {
-            pendingPreOrders = preOrderRepository.findByProductAndStatusIgnoreCaseAndIsDeleteFalseOrderByCreatedAtAsc(product, "Chờ xử lý");
-        }
+        List<PreOrder> allPreOrders = preOrderRepository.findByProductAndIsDeleteFalseOrderByCreatedAtAsc(product);
+        List<PreOrder> pendingPreOrders = allPreOrders.stream()
+                .filter(po -> {
+                    String s = po.getStatus();
+                    return "PENDING".equalsIgnoreCase(s) 
+                            || "Chờ xử lý".equalsIgnoreCase(s) 
+                            || "APPROVED".equalsIgnoreCase(s) 
+                            || "Đã duyệt".equalsIgnoreCase(s)
+                            || "ACCEPTED".equalsIgnoreCase(s);
+                })
+                .collect(Collectors.toList());
 
         if (pendingPreOrders.isEmpty()) return;
 
@@ -309,10 +480,20 @@ public class PreOrderService {
 
             if (availableAssets.size() >= needed) {
                 // Fulfill this preorder
+                Transaction tx = null;
+                try {
+                    tx = createEscrowTransactionForPreOrder(preOrder);
+                } catch (Exception e) {
+                    log.error("Lỗi tạo giao dịch Escrow khi tự động giao hàng PreOrder: {}", e.getMessage());
+                }
+
                 List<String> deliveryDataList = new java.util.ArrayList<>();
                 for (int i = 0; i < needed; i++) {
                     com.mmo.shared.model.DigitalAsset asset = availableAssets.remove(0);
                     asset.setIsUsed(true);
+                    if (tx != null) {
+                        asset.setTransaction(tx);
+                    }
                     digitalAssetRepository.save(asset);
 
                     String data = "Tài khoản " + (i + 1) + "\n";
@@ -429,5 +610,55 @@ public class PreOrderService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vui lòng chọn chính xác biến thể cần đặt trước.");
         }
         return null;
+    }
+
+    private Transaction createEscrowTransactionForPreOrder(PreOrder preOrder) {
+        User seller = preOrder.getProduct().getSeller();
+        
+        // 1. Đọc các số liệu shop level & dispute rate
+        int shopLevel = seller.getShopLevel() != null ? seller.getShopLevel() : 1;
+        long completedCount = transactionRepository.countCompletedSalesBySeller(seller);
+        long totalSold = transactionRepository.countTotalSalesBySeller(seller);
+        long resolvedComplaints = complaintRepository.countResolvedComplaintsBySeller(seller);
+        
+        double disputeRate = totalSold > 0 ? (double) resolvedComplaints / totalSold : 0.0;
+        
+        // 2. Tính toán số giờ giam tiền
+        int escrowHoldHours = 72;
+        if (shopLevel == 0 || completedCount < 20 || disputeRate >= 0.02) {
+            escrowHoldHours = 168; // 7 ngày
+        } else {
+            escrowHoldHours = systemConfigurationRepository.findByConfigKey("ESCROW_HOLD_HOURS")
+                    .map(c -> {
+                        try { return Integer.parseInt(c.getConfigValue()); }
+                        catch (NumberFormatException e) { return 72; }
+                    }).orElse(72);
+        }
+
+        // 3. Tính phí hoa hồng động
+        double basePercent = systemConfigurationRepository.findByConfigKey("DEFAULT_COMMISSION_PERCENT")
+                .map(c -> {
+                    try { return Double.parseDouble(c.getConfigValue()); }
+                    catch (NumberFormatException e) { return 5.0; }
+                }).orElse(5.0);
+        long totalAmount = preOrder.getExpectedPriceVnd();
+        long commission = (long) (totalAmount * (basePercent / 100.0));
+
+        // 4. Tạo thực thể Transaction mới
+        Transaction transaction = Transaction.builder()
+                .customer(preOrder.getCustomer())
+                .seller(seller)
+                .product(preOrder.getProduct())
+                .variant(preOrder.getVariant())
+                .amountVnd(totalAmount)
+                .commissionVnd(commission)
+                .quantity(preOrder.getQuantity())
+                .status("Held")
+                .paymentMethod("Wallet")
+                .escrowReleaseDate(java.time.LocalDateTime.now().plusHours(escrowHoldHours))
+                .isDelete(false)
+                .build();
+
+        return transactionRepository.save(transaction);
     }
 }

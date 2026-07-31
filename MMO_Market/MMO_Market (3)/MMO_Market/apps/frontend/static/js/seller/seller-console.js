@@ -1,4 +1,4 @@
-﻿// ==============================================================================
+// ==============================================================================
 // SELLER CONSOLE JS
 // File: seller-console.js
 // Description: Controls all dynamic operations and REST API data binding
@@ -1051,7 +1051,11 @@ async function initVariantForm() {
             // Set global productType and refresh layout
             window.productType = productType;
             if (typeof updateProductDisplay === 'function') updateProductDisplay(productType, v.productName);
-            if (typeof renderAssetFields === 'function') renderAssetFields(productType);
+            if (typeof window.switchAssetInputType === 'function') {
+                window.switchAssetInputType(productType);
+            } else if (typeof renderAssetFields === 'function') {
+                renderAssetFields(productType);
+            }
 
             // Update title to Edit variant mode
             const titleEl = document.querySelector('.seller-card__title');
@@ -1118,7 +1122,11 @@ async function initVariantForm() {
             // Set global productType and refresh layout
             window.productType = productType;
             if (typeof updateProductDisplay === 'function') updateProductDisplay(productType);
-            if (typeof renderAssetFields === 'function') renderAssetFields(productType);
+            if (typeof window.switchAssetInputType === 'function') {
+                window.switchAssetInputType(productType);
+            } else if (typeof renderAssetFields === 'function') {
+                renderAssetFields(productType);
+            }
         }
 
         // Back link update
@@ -2135,7 +2143,8 @@ async function initPreOrders() {
         tbody.innerHTML = orders.map(o => {
             const st = (o.status || '').toUpperCase();
             const statusClass = (st === 'PENDING' || o.status === 'Chờ xử lý') ? 'pending' 
-                              : (st === 'COMPLETED' || o.status === 'Hoàn thành') ? 'ok' 
+                              : (st === 'APPROVED' || st === 'ACCEPTED' || o.status === 'Đã duyệt') ? 'pending'
+                              : (st === 'COMPLETED' || o.status === 'Hoàn tất') ? 'ok' 
                               : 'locked';
 
             return `
@@ -2147,17 +2156,20 @@ async function initPreOrders() {
                     <td>${o.notes || ''}</td>
                     <td><span class="badge ${statusClass}">${translateStatus(o.status)}</span></td>
                     <td>${o.createdAt ? new Date(o.createdAt).toLocaleString('vi-VN') : ''}</td>
-                    <td class="text-right">
-                        ${(st === 'PENDING' || o.status === 'Chờ xử lý') ? `
-                        <button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px; margin-right: 4px; background: var(--seller-primary); color: white; border: none;" onclick="openDeliveryModal(${o.id})">
-                            <i class="fa fa-paper-plane"></i> Trả hàng
+                    <td class="text-center">
+                        ${(st === 'PENDING' || st === 'APPROVED' || o.status === 'Chờ xử lý' || o.status === 'Đã duyệt') ? `
+                        <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
+                            <select class="ds-select" style="padding: 6px 12px; font-size: 13px; border-radius: 6px; border: 1px solid var(--seller-border); height: auto; width: 110px; font-weight: 500; background-color: #fff;" onchange="onPreOrderStatusSelect(${o.id}, this, '${o.status}')">
+                                <option value="PENDING" ${(st === 'PENDING' || o.status === 'Chờ xử lý') ? 'selected' : ''}>Chờ xử lý</option>
+                                <option value="APPROVED" ${(st === 'APPROVED' || o.status === 'Đã duyệt') ? 'selected' : ''}>Đã duyệt</option>
+                                <option value="CANCELLED">Hủy đơn</option>
+                            </select>
+                        </div>
+                        ` : `
+                        <button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px;" onclick="openPreOrderDetailModal(${o.id})">
+                            <i class="fa fa-eye"></i> Chi tiết
                         </button>
-                        <button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px; color: var(--seller-danger); border-color: var(--seller-danger);" onclick="updatePreOrderStatus(${o.id}, 'CANCELLED')">
-                            <i class="fa fa-times"></i> Hủy
-                        </button>
-                        ` : `<button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px;" onclick="openPreOrderDetailModal(${o.id})">
-                                <i class="fa fa-eye"></i> Chi tiết
-                             </button>`}
+                        `}
                     </td>
                 </tr>
             `;
@@ -2228,8 +2240,43 @@ async function copyPreOrderDetailDelivery() {
     }
 }
 
-async function updatePreOrderStatus(id, status) {
-    if (!confirm('Bạn có chắc chắn muốn cập nhật trạng thái đơn này?')) return;
+function showCustomConfirm(title, message) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('customConfirmModal');
+        const titleEl = document.getElementById('confirmModalTitle');
+        const msgEl = document.getElementById('confirmModalMessage');
+        const confirmBtn = document.getElementById('btnConfirmAction');
+
+        if (titleEl) titleEl.textContent = title;
+        if (msgEl) msgEl.textContent = message;
+
+        const handleConfirm = () => {
+            modal.hidden = true;
+            cleanup();
+            resolve(true);
+        };
+
+        const cleanup = () => {
+            confirmBtn.removeEventListener('click', handleConfirm);
+        };
+
+        confirmBtn.addEventListener('click', handleConfirm);
+        
+        window.closeConfirmModal = () => {
+            modal.hidden = true;
+            cleanup();
+            resolve(false);
+        };
+
+        modal.hidden = false;
+    });
+}
+
+async function updatePreOrderStatus(id, status, skipConfirm = false) {
+    if (!skipConfirm) {
+        const ok = await showCustomConfirm('Xác nhận thao tác', 'Bạn có chắc chắn muốn cập nhật trạng thái đơn này?');
+        if (!ok) return;
+    }
     
     try {
         const token = sessionStorage.getItem('accessToken');
@@ -2254,68 +2301,44 @@ async function updatePreOrderStatus(id, status) {
     }
 }
 
-let currentDeliveryPreOrderId = null;
+async function onPreOrderStatusSelect(id, selectElement, currentStatus) {
+    const newStatus = selectElement.value;
+    if (newStatus.toUpperCase() === currentStatus.toUpperCase()) return;
 
-function openDeliveryModal(id) {
-    currentDeliveryPreOrderId = id;
-    const modal = document.getElementById('deliveryModal');
-    if (modal) {
-        document.getElementById('deliveryDataInput').value = '';
-        modal.style.display = 'flex';
+    let confirmTitle = "Xác nhận thao tác";
+    let confirmMsg = "";
+    if (newStatus === "APPROVED") {
+        confirmTitle = "Phê duyệt đơn hàng";
+        confirmMsg = `Xác nhận phê duyệt đơn đặt trước #PO-${id}?\nTrạng thái của đơn hàng phía người mua sẽ đổi sang "Đã duyệt - Chuẩn bị hàng".`;
+    } else if (newStatus === "CANCELLED") {
+        confirmTitle = "Cảnh báo hủy đơn";
+        confirmMsg = `CẢNH BÁO: Xác nhận HỦY đơn đặt trước #PO-${id}?\nHệ thống sẽ tự động hoàn trả 100% tiền đặt trước về ví của khách hàng ngay lập tức! Thao tác này không thể hoàn tác.`;
+    } else if (newStatus === "PENDING") {
+        confirmTitle = "Khôi phục trạng thái";
+        confirmMsg = `Xác nhận chuyển đơn đặt trước #PO-${id} trở lại trạng thái "Chờ xử lý"?`;
+    }
+
+    const ok = await showCustomConfirm(confirmTitle, confirmMsg);
+    if (!ok) {
+        selectElement.value = currentStatus.toUpperCase();
+        return;
+    }
+
+    try {
+        await updatePreOrderStatus(id, newStatus, true);
+    } catch (err) {
+        selectElement.value = currentStatus.toUpperCase();
     }
 }
-
-function closeDeliveryModal() {
-    currentDeliveryPreOrderId = null;
-    const modal = document.getElementById('deliveryModal');
-    if (modal) modal.style.display = 'none';
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const btnSubmitDelivery = document.getElementById('btnSubmitDelivery');
-    if (btnSubmitDelivery) {
-        btnSubmitDelivery.addEventListener('click', async () => {
-            const data = document.getElementById('deliveryDataInput').value.trim();
-            if (!data) {
-                showToast('Vui lòng nhập nội dung trả hàng.', 'error');
-                return;
-            }
-            if (!currentDeliveryPreOrderId) return;
-            
-            try {
-                const token = sessionStorage.getItem('accessToken');
-                const res = await fetch(`/api/v1/pre-orders/seller/${currentDeliveryPreOrderId}/deliver`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ deliveryData: data })
-                });
-                
-                if (!res.ok) {
-                    const errData = await res.json().catch(() => ({}));
-                    throw new Error(errData.message || 'Trả hàng thất bại.');
-                }
-                
-                showToast('Đã trả hàng cho khách thành công!');
-                closeDeliveryModal();
-                initPreOrders();
-            } catch (err) {
-                showToast(err.message, 'error');
-            }
-        });
-    }
-});
 
 document.addEventListener('keydown', event => {
     if (event.key === 'Escape') closePreOrderDetailModal();
 });
 
 window.initPreOrders = initPreOrders;
+window.showCustomConfirm = showCustomConfirm;
+window.onPreOrderStatusSelect = onPreOrderStatusSelect;
 window.updatePreOrderStatus = updatePreOrderStatus;
-window.openDeliveryModal = openDeliveryModal;
-window.closeDeliveryModal = closeDeliveryModal;
 window.openPreOrderDetailModal = openPreOrderDetailModal;
 window.closePreOrderDetailModal = closePreOrderDetailModal;
 window.handlePreOrderDetailBackdrop = handlePreOrderDetailBackdrop;

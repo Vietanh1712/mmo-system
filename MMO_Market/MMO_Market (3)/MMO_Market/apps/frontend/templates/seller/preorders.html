@@ -76,6 +76,18 @@
                 grid-column: auto;
             }
         }
+        #preOrdersTable {
+            table-layout: fixed;
+            width: 100%;
+        }
+        #preOrdersTable th {
+            white-space: nowrap;
+        }
+        #preOrdersTable td {
+            word-wrap: break-word;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
     </style>
 </head>
 <body>
@@ -122,14 +134,14 @@
                         <table class="admin-table seller-table" id="preOrdersTable">
                             <thead>
                                 <tr>
-                                    <th>Mã Đơn</th>
-                                    <th>Khách hàng</th>
-                                    <th>Sản phẩm</th>
-                                    <th class="text-center">Số lượng</th>
-                                    <th>Ghi chú</th>
-                                    <th>Trạng thái</th>
-                                    <th>Ngày đặt</th>
-                                    <th class="text-right">Thao tác</th>
+                                    <th style="width: 10%;">Mã Đơn</th>
+                                    <th style="width: 18%;">Khách hàng</th>
+                                    <th style="width: 25%;">Sản phẩm</th>
+                                    <th style="width: 8%;" class="text-center">Số lượng</th>
+                                    <th style="width: 15%;">Ghi chú</th>
+                                    <th style="width: 10%;">Trạng thái</th>
+                                    <th style="width: 14%;">Ngày đặt</th>
+                                    <th style="width: 10%;" class="text-center">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -149,20 +161,32 @@
 
     <footer th:replace="fragments/footer :: footer"></footer>
     
-    <!-- Modal Trả Hàng (Delivery Modal) -->
-    <div id="deliveryModal" class="asset-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-        <div class="asset-modal-content" style="background: white; border-radius: 8px; width: 500px; max-width: 90%; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <h3 style="margin: 0; font-size: 18px; color: var(--seller-ink);">Trả hàng cho khách</h3>
-                <button type="button" onclick="closeDeliveryModal()" style="background: transparent; border: none; font-size: 20px; cursor: pointer; color: var(--seller-muted);">&times;</button>
+
+
+    <!-- Modal Xác Nhận Tùy Chỉnh (Custom Confirm Modal) -->
+    <div id="customConfirmModal" class="ds-modal-backdrop" hidden
+         onclick="if(event.target === event.currentTarget) closeConfirmModal()">
+        <div class="ds-modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle" style="width: min(520px, 100%); max-width: 95%; margin: 10% auto; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+            <div class="ds-modal-header ds-cluster-between" style="padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f1f5f9;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="width: 42px; height: 42px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; color: #ea580c; background: #fff7ed; border: 1px solid #fed7aa; font-size: 18px;">
+                        <i class="fa fa-question-circle"></i>
+                    </span>
+                    <div>
+                        <h2 id="confirmModalTitle" style="margin: 0; color: #0f172a; font-size: 18px; font-weight: 700;">Xác nhận thao tác</h2>
+                        <p style="margin: 4px 0 0; color: #64748b; font-size: 13px;">Hệ thống đơn đặt trước PO</p>
+                    </div>
+                </div>
+                <button type="button" class="ds-btn ds-btn-text" onclick="closeConfirmModal()" aria-label="Đóng cửa sổ" style="padding: 6px; font-size: 18px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 6px; border: none; cursor: pointer; color: #0f172a;">
+                    <i class="fa fa-times"></i>
+                </button>
             </div>
-            <div style="margin-bottom: 16px;">
-                <label style="display: block; font-weight: 500; margin-bottom: 8px; color: var(--seller-ink);">Nội dung trả hàng (Key, Tài khoản, Thẻ nạp, v.v.) <span style="color: #ef4444;">*</span></label>
-                <textarea id="deliveryDataInput" rows="5" style="width: 100%; padding: 12px; border: 1px solid var(--seller-border); border-radius: 6px; font-family: monospace; font-size: 14px;" placeholder="Ví dụ: \nUsername: admin\nPassword: 123456\nHoặc mã thẻ: XXXX-YYYY-ZZZZ"></textarea>
+            <div class="ds-modal-body" style="padding: 24px 24px;">
+                <p id="confirmModalMessage" style="margin: 0; font-size: 14px; color: #334155; line-height: 1.6; white-space: pre-line; font-weight: 500;">Bạn có chắc chắn muốn thực hiện thao tác này?</p>
             </div>
-            <div style="display: flex; justify-content: flex-end; gap: 12px;">
-                <button type="button" class="ds-btn ds-btn-outline" onclick="closeDeliveryModal()">Hủy</button>
-                <button type="button" class="ds-btn ds-btn-primary" id="btnSubmitDelivery" style="background: var(--seller-primary); color: white; border: none;">Xác nhận trả hàng</button>
+            <div class="ds-modal-footer" style="padding: 16px 24px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f1f5f9;">
+                <button type="button" class="ds-btn ds-btn-secondary" onclick="closeConfirmModal()" style="background: #475569; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; min-height: 38px; display: inline-flex; align-items: center; justify-content: center;">Hủy bỏ</button>
+                <button type="button" class="ds-btn ds-btn-primary" id="btnConfirmAction" style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; min-height: 38px; display: inline-flex; align-items: center; justify-content: center;">Xác nhận</button>
             </div>
         </div>
     </div>

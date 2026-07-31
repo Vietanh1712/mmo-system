@@ -1015,7 +1015,8 @@
                                     requestedQty: item.quantity,
                                     actualStock: actualStock,
                                     missingQty: item.quantity - actualStock,
-                                    price: item.price || (matchedVariant ? matchedVariant.price : price)
+                                    price: item.price || (matchedVariant ? matchedVariant.price : price),
+                                    variantId: matchedVariant ? matchedVariant.id : null
                                 };
                                 break;
                             }
@@ -1559,6 +1560,7 @@
                     },
                     body: JSON.stringify({
                         productId: Number(breach.item.productId),
+                        variantId: breach.variantId || null,
                         quantity: breach.missingQty,
                         expectedPriceVnd: (breach.price || 0) * breach.missingQty,
                         notes: customNotes.trim() !== '' ? customNotes.trim() : `Tự động tạo từ thanh toán giỏ hàng (Mua ${breach.actualStock} sản phẩm có sẵn + Đặt trước ${breach.missingQty} sản phẩm thiếu)`
