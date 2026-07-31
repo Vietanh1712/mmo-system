@@ -336,14 +336,15 @@ public class PreOrderService {
         }
 
         // Thông báo cho Seller
-        if (saved.getProduct().getSeller() != null) {
-            try {
+        try {
+            Product product = productRepository.findById(saved.getProduct().getId()).orElse(null);
+            if (product != null && product.getSeller() != null) {
                 Notification sellerNotification = Notification.builder()
-                        .userId(saved.getProduct().getSeller().getId())
+                        .userId(product.getSeller().getId())
                         .title("Khách hàng đã hủy đơn đặt trước")
                         .content("Khách hàng " + saved.getCustomer().getEmail() 
                                 + " đã hủy đơn đặt trước PO-" + saved.getId() 
-                                + " cho sản phẩm '" + saved.getProduct().getName() + "'.")
+                                + " cho sản phẩm '" + product.getName() + "'.")
                         .type("ORDER")
                         .severity("WARNING")
                         .isRead(false)
@@ -352,9 +353,12 @@ public class PreOrderService {
                         .targetUrl("/seller/console")
                         .build();
                 notificationRepository.save(sellerNotification);
-            } catch (Exception e) {
-                log.warn("Lỗi gửi thông báo hủy đơn cho seller: {}", e.getMessage());
+                log.info("Đã tạo thông báo hủy đơn Pre-Order cho seller ID: {}", product.getSeller().getId());
+            } else {
+                log.warn("Không thể gửi thông báo hủy đơn đặt trước: product hoặc seller bị null");
             }
+        } catch (Exception e) {
+            log.error("Lỗi gửi thông báo hủy đơn cho seller: {}", e.getMessage(), e);
         }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");

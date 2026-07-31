@@ -48,6 +48,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwt == null || jwt.isBlank()) {
                 jwt = request.getParameter("token");
             }
+            if ((jwt == null || jwt.isBlank()) && request.getCookies() != null) {
+                for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+                    if ("accessToken".equalsIgnoreCase(cookie.getName()) || "token".equalsIgnoreCase(cookie.getName()) || "jwt".equalsIgnoreCase(cookie.getName())) {
+                        jwt = cookie.getValue();
+                        break;
+                    }
+                }
+            }
 
             if (jwt != null && jwtTokenProvider.validateToken(jwt) && jwtTokenProvider.isAccessToken(jwt)) {
                 Long userId = jwtTokenProvider.getUserIdFromToken(jwt);

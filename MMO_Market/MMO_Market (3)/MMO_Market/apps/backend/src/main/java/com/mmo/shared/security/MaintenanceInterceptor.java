@@ -37,7 +37,8 @@ public class MaintenanceInterceptor implements HandlerInterceptor {
                 .map(com.mmo.shared.model.SystemConfiguration::getConfigValue)
                 .orElse("FALSE");
 
-        if (!"TRUE".equalsIgnoreCase(val)) {
+        boolean isMaintenance = "TRUE".equalsIgnoreCase(val) || "1".equals(val) || "YES".equalsIgnoreCase(val);
+        if (!isMaintenance) {
             return true; // Not in maintenance mode
         }
 
@@ -56,17 +57,20 @@ public class MaintenanceInterceptor implements HandlerInterceptor {
 
         String uri = request.getRequestURI();
 
-        // Allow static resources, auth, admin, public search
+        // Allow static resources, auth, admin (web & API), staff, notifications, login
         if (uri.startsWith("/css/") || uri.startsWith("/js/") || uri.startsWith("/images/") || uri.equals("/error")) {
             return true;
         }
-        if (uri.startsWith("/api/auth/") || uri.startsWith("/api/admin/") || uri.startsWith("/api/search/")) {
+        if (uri.startsWith("/api/auth/") || uri.startsWith("/api/admin/") || uri.startsWith("/admin") || uri.equals("/admin")) {
+            return true; // Admin web pages and APIs are always allowed
+        }
+        if (uri.startsWith("/staff") || uri.startsWith("/api/staff")) {
+            return true; // Staff web pages and APIs are always allowed
+        }
+        if (uri.equals("/notifications") || uri.equals("/api/notifications") || uri.startsWith("/api/notifications/")) {
             return true;
         }
-        if (uri.equals("/notifications") || uri.equals("/api/notifications")) {
-            return true;
-        }
-        if (uri.equals("/") || uri.equals("/login") || uri.equals("/register") || uri.equals("/support")) {
+        if (uri.equals("/login") || uri.equals("/register")) {
             return true;
         }
 

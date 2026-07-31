@@ -2235,7 +2235,17 @@
 
         if (titleEl) { titleEl.value = ''; titleEl.disabled = false; }
         if (contentEl) { contentEl.value = ''; contentEl.disabled = false; }
-        if (typeEl) { typeEl.value = 'info'; typeEl.disabled = false; }
+        if (typeEl) {
+            typeEl.value = 'info';
+            typeEl.disabled = false;
+            typeEl.onchange = function () {
+                const wrap = document.getElementById('notifMaintToggleWrap');
+                if (wrap) {
+                    if (typeEl.value === 'maintenance') wrap.classList.remove('ds-hidden');
+                    else wrap.classList.add('ds-hidden');
+                }
+            };
+        }
 
         const titleHeader = document.getElementById('notifModalTitle');
         if (titleHeader) titleHeader.textContent = 'Soạn thông báo mới';
@@ -2302,13 +2312,33 @@
         }
 
         const wrap = document.getElementById('notifMaintToggleWrap');
+        const toggle = document.getElementById('notifMaintToggle');
         if (wrap) {
-            if (item.type === 'maintenance') wrap.classList.remove('ds-hidden');
-            else wrap.classList.add('ds-hidden');
+            // For published notifications, hide the maintenance toggle completely to avoid confusion
+            if (!isPublished && item.type === 'maintenance') {
+                wrap.classList.remove('ds-hidden');
+                const isActive = item.activateMaintenance !== undefined && item.activateMaintenance !== null
+                    ? Boolean(item.activateMaintenance)
+                    : false;
+                if (toggle) {
+                    toggle.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                    toggle.className = 'ds-toggle ds-toggle-system ' + (isActive ? 'ds-toggle-active' : 'ds-toggle-inactive');
+                }
+            } else {
+                wrap.classList.add('ds-hidden');
+            }
         }
 
-        const toggle = document.getElementById('notifMaintToggle');
-        if (toggle) toggle.disabled = isPublished;
+        if (typeEl) {
+            typeEl.onchange = function () {
+                const isMaint = typeEl.value === 'maintenance';
+                if (!isPublished && isMaint) {
+                    if (wrap) wrap.classList.remove('ds-hidden');
+                } else {
+                    if (wrap) wrap.classList.add('ds-hidden');
+                }
+            };
+        }
 
         const modal = document.getElementById('createNotifModal');
         if (modal) modal.classList.remove('ds-hidden');
@@ -2356,7 +2386,7 @@
         params.append('size', notifPageSize);
         if (keyword) params.append('search', keyword);
         if (typeFilter) params.append('type', typeFilter);
-        if (statusFilter && statusFilter !== 'ALL') params.append('status', statusFilter);
+        if (statusFilter) params.append('status', statusFilter);
         if (startDate) params.append('startDate', startDate);
         if (endDate) params.append('endDate', endDate);
         if (sortOrder) params.append('sort', sortOrder);
@@ -2516,7 +2546,9 @@
         }
         try {
             const response = await authFetch(`/admin/notifications/drafts/${id}/publish`, {
-                method: 'POST'
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ activateMaintenance: false })
             });
             const data = await response.json();
             if (response.ok && data.success) {

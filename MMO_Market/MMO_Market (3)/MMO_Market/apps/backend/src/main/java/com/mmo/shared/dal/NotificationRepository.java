@@ -15,10 +15,10 @@ import java.util.List;
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
     @Query("SELECT n FROM Notification n WHERE n.isDelete = false AND " +
-           "n.userId IN (SELECT u.id FROM User u WHERE LOWER(u.role) LIKE '%admin%' OR LOWER(u.role) LIKE '%staff%') AND " +
+           "(n.userId IS NULL OR n.userId = 0 OR n.userId IN (SELECT u.id FROM User u WHERE LOWER(u.role) LIKE '%admin%' OR LOWER(u.role) LIKE '%staff%')) AND " +
            "LOWER(n.type) IN ('info', 'warning', 'maintenance', 'policy') AND " +
            "(:type IS NULL OR :type = '' OR n.type = :type) AND " +
-           "(:status IS NULL OR :status = '' OR UPPER(n.status) = UPPER(:status)) AND " +
+           "(:status IS NULL OR :status = '' OR :status = 'ALL' OR UPPER(n.status) = UPPER(:status)) AND " +
            "(:startDate IS NULL OR n.createdAt >= :startDate) AND " +
            "(:endDate IS NULL OR n.createdAt <= :endDate) AND " +
            "(:search IS NULL OR :search = '' OR LOWER(n.title) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(n.content) LIKE LOWER(CONCAT('%', :search, '%')) OR " +

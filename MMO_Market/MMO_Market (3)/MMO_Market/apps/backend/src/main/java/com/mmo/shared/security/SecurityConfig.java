@@ -57,6 +57,8 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/api/auth/check-reset-otp"),
                                 new AntPathRequestMatcher("/api/sepay/config"),
                                 new AntPathRequestMatcher("/api/sepay/webhook"),
+                                new AntPathRequestMatcher("/api/notifications"),
+                                new AntPathRequestMatcher("/api/notifications/**"),
                                 new AntPathRequestMatcher("/api/public/**")
                         ).permitAll()
 
