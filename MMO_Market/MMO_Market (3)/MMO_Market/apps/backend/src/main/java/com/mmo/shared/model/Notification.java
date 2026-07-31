@@ -45,6 +45,9 @@ public class Notification {
     @Column(length = 20)
     private String status = "PUBLISHED"; // DRAFT, PUBLISHED
 
+    @Column(name = "activate_maintenance")
+    private Boolean activateMaintenance;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
@@ -64,6 +67,9 @@ public class Notification {
         }
         if (status == null) {
             status = "PUBLISHED";
+        }
+        if (activateMaintenance == null) {
+            activateMaintenance = false;
         }
     }
 }

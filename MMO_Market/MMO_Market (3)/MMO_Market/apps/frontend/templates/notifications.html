@@ -103,6 +103,19 @@
             </p>
         </section>
 
+        <!-- Active Maintenance Alert Banner -->
+        <div id="publicMaintBanner" style="display: none; margin-bottom: 20px; padding: 18px 24px; border-radius: var(--ds-radius-md); background: rgba(239, 68, 68, 0.08); border: 1.5px solid var(--ds-danger); color: var(--ds-danger);">
+            <div style="display: flex; align-items: flex-start; gap: 14px;">
+                <i class="fa fa-exclamation-triangle" style="font-size: 24px; margin-top: 2px;"></i>
+                <div>
+                    <strong style="font-size: 16px; font-weight: 700; display: block; margin-bottom: 4px;">⚠️ HỆ THỐNG ĐANG TRONG THỜI GIAN BẢO TRÌ!</strong>
+                    <p id="publicMaintMessage" style="margin: 0; font-size: 14px; line-height: 1.5; color: #b91c1c;">
+                        Hệ thống đang được nâng cấp bảo trì định kỳ. Một số tính năng tạm ngưng hoạt động.
+                    </p>
+                </div>
+            </div>
+        </div>
+
         <section class="ds-card ds-card-lg" style="margin-top: 20px; padding: 0; overflow: hidden;">
             <form class="ds-filter-panel" id="publicNotifFilterForm" onsubmit="event.preventDefault(); applyFilters();">
                 <div>
@@ -229,8 +242,28 @@
         ];
 
         document.addEventListener('DOMContentLoaded', () => {
+            checkMaintenanceStatus();
             loadAnnouncements();
         });
+
+        async function checkMaintenanceStatus() {
+            try {
+                const res = await fetch('/api/notifications/maintenance-status');
+                if (res.ok) {
+                    const data = await res.json();
+                    const banner = document.getElementById('publicMaintBanner');
+                    const msgEl = document.getElementById('publicMaintMessage');
+                    if (data && data.active) {
+                        if (banner) banner.style.display = 'block';
+                        if (msgEl && data.message) msgEl.textContent = data.message;
+                    } else {
+                        if (banner) banner.style.display = 'none';
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to fetch maintenance status', e);
+            }
+        }
 
         async function loadAnnouncements() {
             const keyword = document.getElementById('publicNotifSearchInput').value.trim();
