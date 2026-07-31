@@ -34,7 +34,7 @@ public class NotificationController {
         return notificationService.getNotifications(search, type, status, startDate, endDate, sort, page, size);
     }
 
-    @GetMapping("/api/admin/notifications/maintenance-status")
+    @GetMapping({"/api/notifications/maintenance-status", "/api/admin/notifications/maintenance-status"})
     public Map<String, Object> getMaintenanceStatus() {
         return notificationService.getMaintenanceStatus();
     }
@@ -77,11 +77,13 @@ public class NotificationController {
             @RequestBody NotificationCreateRequest request,
             HttpServletRequest servletRequest) {
         try {
+            boolean shouldActivate = request.getActivateMaintenance() != null && request.getActivateMaintenance();
             notificationService.saveDraft(
                     operatorId,
                     request.getTitle(),
                     request.getContent(),
                     request.getType(),
+                    shouldActivate,
                     getClientIp(servletRequest)
             );
             return AdminActionResponse.builder()
@@ -108,12 +110,14 @@ public class NotificationController {
             @RequestBody NotificationCreateRequest request,
             HttpServletRequest servletRequest) {
         try {
+            boolean shouldActivate = request.getActivateMaintenance() != null && request.getActivateMaintenance();
             notificationService.updateDraft(
                     operatorId,
                     id,
                     request.getTitle(),
                     request.getContent(),
                     request.getType(),
+                    shouldActivate,
                     getClientIp(servletRequest)
             );
             return AdminActionResponse.builder()
