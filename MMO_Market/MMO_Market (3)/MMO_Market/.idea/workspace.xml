@@ -6,26 +6,42 @@
   <component name="ChangeListManager">
     <list default="true" id="cc5262a2-5922-4af2-8358-144285f2178e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/PLAN.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/PLAN.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/SPEC.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/SPEC.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/features/SPEC-05_STAFF.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/features/SPEC-05_STAFF.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/frontend/feat-staff/SPEC.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/frontend/feat-staff/SPEC.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/controller/ComplaintController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/controller/ComplaintController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/service/ComplaintService.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/service/ComplaintService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/service/impl/ComplaintServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/service/impl/ComplaintServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/ComplaintRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/ComplaintRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/ProductSpecification.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/ProductSpecification.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/SellerRegistrationRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/SellerRegistrationRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-complaints.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-complaints.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-support-tickets.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-support-tickets.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/complaints.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/complaints.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/support-tickets.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/support-tickets.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/notification/controller/NotificationController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/notification/controller/NotificationController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/notification/service/NotificationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/notification/service/NotificationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/NotificationRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/NotificationRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/model/Notification.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/model/Notification.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/security/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/feature/notification/service/NotificationServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/test/java/com/mmo/feature/notification/service/NotificationServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/admin/admin-console.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/admin/admin-console.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/notifications.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/notifications.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CopilotChats">
+    <option name="panelChat">
+      <chat>
+        <option name="activeSessionId" value="2d444b4a-a2ca-4ced-ab89-84b63c44a7e2" />
+        <option name="sessions">
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="2d444b4a-a2ca-4ced-ab89-84b63c44a7e2" />
+            <option name="modeId" value="Ask" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="auto" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+        </option>
+        <option name="type" value="PANEL" />
+      </chat>
+    </option>
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_C:/SU26/SWP/mmo-market1/MMO_Market/MMO_Market (3)/MMO_Market" value="3GwC9XRUBB0vJAcrRC9muF6dmrZ" />
+    </persistenceIdMap>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../../.." />
@@ -42,6 +58,10 @@
     &quot;accountId&quot;: &quot;7db50a0a-cdf5-4d58-bfe7-069485175bdd&quot;
   }
 }</component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 8,
   &quot;fromUser&quot;: false
@@ -53,19 +73,25 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "Spring Boot.MMOMarketApplication.executor": "Run",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "cuong2k3",
+    "git-widget-placeholder": "NhatVL",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
     "node.js.detected.package.eslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
-    "to.speed.mode.migration.done": "true"
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -109,10 +135,19 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1784873095601</updated>
+      <workItem from="1785485419929" duration="2368000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="github-copilot-workspace">
+    <instructionFileLocations>
+      <option value=".github/instructions" />
+    </instructionFileLocations>
+    <promptFileLocations>
+      <option value=".github/prompts" />
+    </promptFileLocations>
   </component>
 </project>
