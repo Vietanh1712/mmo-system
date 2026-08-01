@@ -191,16 +191,17 @@ function renderOrders() {
 
     tableWrap.hidden = false;
     emptyState.hidden = true;
-    pagination.hidden = totalPages <= 1;
+    pagination.hidden = false;
     summary.textContent = `Hiển thị ${startIndex + 1}-${startIndex + pagedOrders.length}/${filtered.length} đơn hàng.`;
 
-    tableBody.innerHTML = pagedOrders.map(order => {
+    tableBody.innerHTML = pagedOrders.map((order, index) => {
         const orderDate = parseVietnameseDateTime(order.createdAt);
         const sellerLink = order.sellerId 
             ? `<a href="/shop/${order.sellerId}" style="text-decoration: underline; color: inherit;">${escapeHtml(order.sellerName)}</a>`
             : escapeHtml(order.sellerName);
         return `
             <tr>
+                <td class="ds-table-center">${startIndex + index + 1}</td>
                 <td>${escapeHtml(order.orderCode)}</td>
                 <td>
                     <div class="ds-flex ds-align-center ds-gap-sm">

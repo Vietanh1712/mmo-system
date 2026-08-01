@@ -17,7 +17,7 @@
     <header th:replace="fragments/header :: header"></header>
 
     <main class="profile-page ds-page">
-        <div class="ds-container">
+        <div class="ds-container ds-container--wide">
             <div class="profile-layout ds-two-column">
                 <aside th:replace="~{fragments/account-sidebar :: accountSidebar('orders')}"></aside>
 
@@ -155,6 +155,7 @@
                                 <table class="ds-table">
                                     <thead>
                                         <tr>
+                                            <th class="ds-table-center">STT</th>
                                             <th>Mã đơn</th>
                                             <th>Sản phẩm</th>
                                             <th>Số tiền</th>
@@ -177,6 +178,8 @@
                                         <option value="10">10</option>
                                         <option value="20">20</option>
                                         <option value="50">50</option>
+                                        <option value="200">200</option>
+                                        <option value="500">500</option>
                                     </select>
                                 </div>
                             </div>
