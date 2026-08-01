@@ -49,7 +49,7 @@ async function loadShopDetail() {
                 document.getElementById('shopRejectionReason').textContent = data.rejectionReason || 'Không ghi rõ lý do.';
             } else if (shopStUpper === 'WITHDRAWN' || shopStUpper === 'DELETED') {
                 badge.className = 'ds-badge ds-badge-danger';
-                badge.textContent = 'Đã đóng Shop (Hoàn cọc)';
+                badge.textContent = 'Đã đóng Shop (Hoàn phí)';
             } else if (shopStUpper === 'SUSPENDED' || shopStUpper === 'TEMP_LOCKED') {
                 badge.className = 'ds-badge ds-badge-warning';
                 badge.textContent = 'Tạm ngưng';
