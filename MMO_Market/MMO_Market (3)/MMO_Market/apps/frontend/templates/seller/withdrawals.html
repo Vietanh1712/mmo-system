@@ -122,6 +122,30 @@
             </div>
         </div>
     </div>
+
+    <!-- OTP Verification Modal -->
+    <div id="otpWithdrawModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 8px; width: 400px; max-width: 90%; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="margin: 0; font-size: 18px; color: #1e293b;">Xác thực mã OTP</h3>
+                <button type="button" onclick="document.getElementById('otpWithdrawModal').style.display='none'" style="background: transparent; border: none; font-size: 20px; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+            <div style="margin-bottom: 16px; font-size: 14px; color: #475569; line-height: 1.5;">
+                Mã OTP xác thực đã được gửi về email của bạn. Vui lòng nhập mã để hoàn tất yêu cầu rút tiền.
+            </div>
+            <div style="margin-bottom: 20px;">
+                <input type="text" id="withdrawOtpInput" class="ds-input" placeholder="Nhập mã OTP 6 chữ số" style="width: 100%; text-align: center; font-size: 18px; letter-spacing: 4px; font-weight: 600;" maxlength="6">
+                <span class="ds-validation" id="withdrawOtpError" style="color: #ef4444; font-size: 13px; display: block; margin-top: 6px;"></span>
+                <div style="text-align: right; margin-top: 8px;">
+                    <button type="button" id="btnResendOtp" style="background: transparent; border: none; color: #2563eb; font-size: 13px; cursor: pointer; text-decoration: underline; font-weight: 500;">Gửi lại mã</button>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="ds-btn ds-btn-outline" onclick="document.getElementById('otpWithdrawModal').style.display='none'" style="padding: 8px 16px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; cursor: pointer;">Hủy</button>
+                <button type="button" class="ds-btn ds-btn-primary" id="btnSubmitWithdrawalWithOtp" style="padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">Xác nhận</button>
+            </div>
+        </div>
+    </div>
     <script th:src="@{/js/customer/auth.js}"></script>
     <script th:src="@{/js/seller/seller-console.js(v=1.2)}"></script>
 </body>

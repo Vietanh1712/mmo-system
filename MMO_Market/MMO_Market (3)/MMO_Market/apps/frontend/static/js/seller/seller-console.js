@@ -1465,38 +1465,149 @@ async function initWithdrawals() {
                 }
 
                 if (require2FA) {
-                    const confirmOtpSend = confirm(`Yêu cầu rút tiền này bắt buộc xác thực 2FA qua email. Bấm OK để gửi mã OTP về email: ${dashData.email}.`);
-                    if (!confirmOtpSend) return;
+                    const otpModalEl = document.getElementById('otpWithdrawModal');
+                    const otpInputEl = document.getElementById('withdrawOtpInput');
+                    const otpErrorEl = document.getElementById('withdrawOtpError');
+                    const btnOtpConfirm = document.getElementById('btnSubmitWithdrawalWithOtp');
 
-                    try {
-                        // Request OTP
-                        const otpRes = await sellerFetch('/withdrawals/send-otp', { method: 'POST' });
-                        const otpData = await otpRes.json();
-                        if (!otpRes.ok) throw new Error(otpData.message || 'Không thể gửi mã OTP.');
+                    if (otpModalEl && otpInputEl && btnOtpConfirm) {
+                        try {
+                            showToast('Đang gửi mã OTP đến email của bạn...', 'info');
 
-                        showToast(otpData.message || 'Mã OTP đã được gửi về email của bạn.');
+                            // Request OTP instantly
+                            const otpRes = await sellerFetch('/withdrawals/send-otp', { method: 'POST' });
+                            const otpData = await otpRes.json();
+                            if (!otpRes.ok) throw new Error(otpData.message || 'Không thể gửi mã OTP.');
 
-                        const otpText = prompt('Vui lòng nhập mã OTP 6 chữ số được gửi tới email của bạn để hoàn tất:');
-                        if (otpText === null) return;
-                        const otp = otpText.trim();
-                        if (!otp) {
-                            showToast('Bạn chưa nhập mã OTP.', 'error');
-                            return;
+                            showToast(otpData.message || 'Mã OTP đã được gửi về email của bạn.', 'success');
+
+                            // Reset modal inputs
+                            otpInputEl.value = '';
+                            if (otpErrorEl) otpErrorEl.textContent = '';
+                            btnOtpConfirm.disabled = false;
+                            btnOtpConfirm.innerHTML = 'Xác nhận';
+
+                            // Show OTP modal
+                            otpModalEl.style.display = 'flex';
+
+                            // Setup Resend Button logic with 30s cooldown
+                            const btnResend = document.getElementById('btnResendOtp');
+                            if (btnResend) {
+                                let countdown = 30;
+                                let timer = null;
+                                const startCountdown = () => {
+                                    btnResend.disabled = true;
+                                    btnResend.style.color = '#94a3b8';
+                                    btnResend.style.cursor = 'not-allowed';
+                                    btnResend.style.textDecoration = 'none';
+                                    btnResend.textContent = `Gửi lại mã (${countdown}s)`;
+                                    if (timer) clearInterval(timer);
+                                    timer = setInterval(() => {
+                                        countdown--;
+                                        if (countdown <= 0) {
+                                            clearInterval(timer);
+                                            btnResend.disabled = false;
+                                            btnResend.style.color = '#2563eb';
+                                            btnResend.style.cursor = 'pointer';
+                                            btnResend.style.textDecoration = 'underline';
+                                            btnResend.textContent = 'Gửi lại mã';
+                                        } else {
+                                            btnResend.textContent = `Gửi lại mã (${countdown}s)`;
+                                        }
+                                    }, 1000);
+                                };
+
+                                // Clean old listeners
+                                const newBtnResend = btnResend.cloneNode(true);
+                                btnResend.parentNode.replaceChild(newBtnResend, btnResend);
+
+                                newBtnResend.addEventListener('click', async () => {
+                                    try {
+                                        showToast('Đang gửi lại mã OTP đến email của bạn...', 'info');
+                                        const resendRes = await sellerFetch('/withdrawals/send-otp', { method: 'POST' });
+                                        const resendData = await resendRes.json();
+                                        if (!resendRes.ok) throw new Error(resendData.message || 'Không thể gửi lại mã OTP.');
+
+                                        showToast(resendData.message || 'Mã OTP đã được gửi lại về email của bạn.', 'success');
+                                        countdown = 30;
+                                        startCountdown();
+                                    } catch (err) {
+                                        showToast(err.message, 'error');
+                                    }
+                                });
+
+                                countdown = 30;
+                                startCountdown();
+                            }
+
+                            // Clean old event listeners
+                            const newBtnOtpConfirm = btnOtpConfirm.cloneNode(true);
+                            btnOtpConfirm.parentNode.replaceChild(newBtnOtpConfirm, btnOtpConfirm);
+
+                            newBtnOtpConfirm.addEventListener('click', async () => {
+                                const otp = otpInputEl.value.trim();
+                                if (!otp) {
+                                    if (otpErrorEl) otpErrorEl.textContent = 'Vui lòng nhập mã OTP.';
+                                    return;
+                                }
+                                if (otp.length < 6) {
+                                    if (otpErrorEl) otpErrorEl.textContent = 'Mã OTP phải có 6 chữ số.';
+                                    return;
+                                }
+
+                                newBtnOtpConfirm.disabled = true;
+                                newBtnOtpConfirm.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xác thực...';
+
+                                try {
+                                    const postRes = await sellerFetch('/withdrawals', {
+                                        method: 'POST',
+                                        body: JSON.stringify({ amountVnd: amount, otp: otp })
+                                    });
+                                    const postData = await postRes.json();
+                                    if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
+
+                                    showToast(postData.message || 'Đã tạo yêu cầu rút tiền thành công!', 'success');
+                                    otpModalEl.style.display = 'none';
+                                    setTimeout(() => window.location.reload(), 1500);
+                                } catch (err) {
+                                    if (otpErrorEl) otpErrorEl.textContent = err.message;
+                                    newBtnOtpConfirm.disabled = false;
+                                    newBtnOtpConfirm.innerHTML = 'Xác nhận';
+                                }
+                            });
+
+                        } catch (err) {
+                            showToast(err.message, 'error');
                         }
+                    } else {
+                        // Fallback to native confirm/prompt if modal HTML is missing
+                        try {
+                            const otpRes = await sellerFetch('/withdrawals/send-otp', { method: 'POST' });
+                            const otpData = await otpRes.json();
+                            if (!otpRes.ok) throw new Error(otpData.message || 'Không thể gửi mã OTP.');
 
-                        // Submit with OTP
-                        const postRes = await sellerFetch('/withdrawals', {
-                            method: 'POST',
-                            body: JSON.stringify({ amountVnd: amount, otp: otp })
-                        });
-                        const postData = await postRes.json();
-                        if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
+                            showToast(otpData.message || 'Mã OTP đã được gửi về email của bạn.', 'success');
 
-                        showToast(postData.message || 'Đã tạo yêu cầu rút tiền thành công!');
-                        setTimeout(() => window.location.reload(), 1500);
+                            const otpText = prompt('Vui lòng nhập mã OTP 6 chữ số được gửi tới email của bạn để hoàn tất:');
+                            if (otpText === null) return;
+                            const otp = otpText.trim();
+                            if (!otp) {
+                                showToast('Bạn chưa nhập mã OTP.', 'error');
+                                return;
+                            }
 
-                    } catch (err) {
-                        showToast(err.message, 'error');
+                            const postRes = await sellerFetch('/withdrawals', {
+                                method: 'POST',
+                                body: JSON.stringify({ amountVnd: amount, otp: otp })
+                            });
+                            const postData = await postRes.json();
+                            if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
+
+                            showToast(postData.message || 'Đã tạo yêu cầu rút tiền thành công!', 'success');
+                            setTimeout(() => window.location.reload(), 1500);
+                        } catch (err) {
+                            showToast(err.message, 'error');
+                        }
                     }
                 } else {
                     const modalEl = document.getElementById('confirmWithdrawModal');

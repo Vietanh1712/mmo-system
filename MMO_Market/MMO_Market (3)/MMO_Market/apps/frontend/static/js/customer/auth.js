@@ -414,7 +414,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             googleClient = google.accounts.oauth2.initCodeClient({
-                client_id: '175000936199-7dd5vpm7hgbi31e88tafadongu0395du.apps.googleusercontent.com',
+                client_id: window.googleClientId || '468839510302-5p2tjt8ljsgg1qqrrh3mqf9chjdrifl9.apps.googleusercontent.com',
                 scope: 'openid email profile',
                 ux_mode: 'popup',
                 callback: (response) => {

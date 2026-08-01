@@ -24,8 +24,12 @@ public class AuthController {
     // PHẦN 1: ĐIỀU HƯỚNG GIAO DIỆN WEB (TRẢ VỀ FILE HTML)
     // ==============================================================================
 
+    @org.springframework.beans.factory.annotation.Value("${google.oauth2.client-id}")
+    private String googleClientId;
+
     @GetMapping("/login")
-    public String loginPage() {
+    public String loginPage(org.springframework.ui.Model model) {
+        model.addAttribute("googleClientId", googleClientId);
         return "auth/login";
     }
 

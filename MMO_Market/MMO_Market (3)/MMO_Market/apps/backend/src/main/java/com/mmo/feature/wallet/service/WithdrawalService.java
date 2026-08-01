@@ -99,7 +99,9 @@ public class WithdrawalService {
                     catch (NumberFormatException e) { return 50000000L; }
                 }).orElse(50000000L);
 
-        boolean requireWithdraw2FA = false;
+        boolean requireWithdraw2FA = systemConfigurationRepository.findByConfigKey("REQUIRE_WITHDRAW_2FA")
+                .map(c -> Boolean.parseBoolean(c.getConfigValue()))
+                .orElse(false);
 
         // Validate amounts
         if (amount < minWithdrawalLimit) {

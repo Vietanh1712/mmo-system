@@ -4,20 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="cc5262a2-5922-4af2-8358-144285f2178e" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/staff/controller/mvc/StaffController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/staff/controller/mvc/StaffController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/css/customer/order-detail.css" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/css/customer/order-detail.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-kyc.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-kyc.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-order-detail.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-order-detail.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-orders.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-orders.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-kyc-detail.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-kyc-detail.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/account/kyc.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/account/kyc.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/account/order-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/account/order-detail.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/account/orders.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/account/orders.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/kyc-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/kyc-detail.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/withdrawal-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/withdrawal-detail.html" afterDir="false" />
-    </list>
+    <list default="true" id="cc5262a2-5922-4af2-8358-144285f2178e" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -47,29 +34,29 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RequestMappingsPanelOrder0": "0",
-    "RequestMappingsPanelOrder1": "1",
-    "RequestMappingsPanelWidth0": "75",
-    "RequestMappingsPanelWidth1": "75",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "Spring Boot.MMOMarketApplication.executor": "Run",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "AnhTV",
-    "junie.onboarding.icon.badge.shown": "true",
-    "kotlin-language-version-configured": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "to.speed.mode.migration.done": "true",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;Spring Boot.MMOMarketApplication.executor&quot;: &quot;Run&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;AnhTV&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\pc\MMO_new1\MMO_Market\MMO_Market (3)\MMO_Market" />
@@ -112,6 +99,7 @@
       <option name="presentableId" value="Default" />
       <updated>1784873095601</updated>
       <workItem from="1785578381887" duration="4211000" />
+      <workItem from="1785599996984" duration="4012000" />
     </task>
     <servers />
   </component>

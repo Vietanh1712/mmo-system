@@ -444,6 +444,8 @@ function formatStatus(status) {
     const upperStatus = status.toUpperCase().trim();
     const map = {
         SUCCESS: 'Thành công',
+        COMPLETED: 'Thành công',
+        APPROVED: 'Thành công',
         PENDING: 'Đang xử lý',
         FAILED: 'Thất bại'
     };
@@ -453,7 +455,7 @@ function formatStatus(status) {
 function getStatusBadgeClass(status) {
     if (!status) return 'ds-badge-muted';
     const upperStatus = status.toUpperCase().trim();
-    if (upperStatus === 'SUCCESS') return 'ds-badge-success';
+    if (upperStatus === 'SUCCESS' || upperStatus === 'COMPLETED' || upperStatus === 'APPROVED') return 'ds-badge-success';
     if (upperStatus === 'PENDING') return 'ds-badge-warning';
     if (upperStatus === 'FAILED') return 'ds-badge-danger';
     return 'ds-badge-muted';

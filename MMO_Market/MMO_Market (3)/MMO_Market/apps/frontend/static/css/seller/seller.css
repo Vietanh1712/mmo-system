@@ -437,6 +437,10 @@
     border-bottom: none;
 }
 
+.text-right {
+    text-align: right !important;
+}
+
 .seller-table td.text-right,
 .seller-table th.text-right {
     text-align: right;
