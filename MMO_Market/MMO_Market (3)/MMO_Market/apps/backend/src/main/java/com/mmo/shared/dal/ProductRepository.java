@@ -39,7 +39,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
           AND p.seller_id IN (
               SELECT id FROM Users
               WHERE isDelete = 0
-                AND (shop_status IS NULL OR shop_status NOT IN ('Locked', 'Banned', 'Pending'))
+                AND (shop_status IS NULL OR shop_status NOT IN ('Locked', 'Banned', 'Pending', 'Suspended', 'TEMP_LOCKED', 'Withdrawn', 'DELETED', 'INDEFINITE_LOCKED', 'PERMANENT_BANNED'))
           )
         ORDER BY COALESCE(t.sales_count, 0) DESC, p.created_at DESC
         """, nativeQuery = true)

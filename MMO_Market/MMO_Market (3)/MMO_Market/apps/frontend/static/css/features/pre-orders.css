@@ -304,6 +304,109 @@
     color: #94a3b8;
 }
 
+.preorder-card__variant {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.preorder-card__actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 18px;
+}
+
+.preorder-card__delivery-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+}
+
+body.preorder-modal-open {
+    overflow: hidden;
+}
+
+.preorder-delivery-modal {
+    width: min(620px, 100%);
+}
+
+.preorder-delivery-modal__heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.preorder-delivery-modal__icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    color: var(--brand-accent, #ea580c);
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    font-size: 18px;
+}
+
+.preorder-delivery-modal__heading h2 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.preorder-delivery-modal__heading p {
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.preorder-delivery-modal__close {
+    padding: 6px;
+    font-size: 20px;
+}
+
+.preorder-delivery-modal__notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    color: #166534;
+    background: #f0fdf4;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.preorder-delivery-modal__notice i {
+    margin-top: 2px;
+}
+
+.preorder-delivery-modal__content {
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+
+.preorder-delivery-modal__content pre {
+    margin: 10px 0 0;
+    padding: 14px;
+    overflow-x: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    color: #0f172a;
+    background: #ffffff;
+    font: 600 14px/1.7 "Roboto Mono", Consolas, monospace;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
 @media (max-width: 640px) {
     .preorders-panel-card {
         padding: 20px;
@@ -339,5 +442,14 @@
 
     .workflow-step__label {
         text-align: left;
+    }
+
+    .preorder-card__actions,
+    .preorder-card__delivery-btn {
+        width: 100%;
+    }
+
+    .preorder-card__delivery-btn {
+        justify-content: center;
     }
 }

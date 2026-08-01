@@ -153,6 +153,7 @@ class NotificationServiceTest {
                 .id(100L)
                 .title("Notice 1")
                 .content("Content 1")
+                .status("DRAFT")
                 .isDelete(false)
                 .build();
 
@@ -189,17 +190,19 @@ class NotificationServiceTest {
 
         List<Notification> list = new ArrayList<>();
         list.add(Notification.builder()
-                .title("Báº£o trÃ¬")
+                .id(999L)
+                .title("Bảo trì")
                 .content("Server maintenance message")
                 .type("maintenance")
                 .build());
-        Page<Notification> page = new PageImpl<>(list, PageRequest.of(0, 1), 1);
-        when(notificationRepository.searchNotifications("maintenance", "PUBLISHED", null, null, null, PageRequest.of(0, 1))).thenReturn(page);
+        Page<Notification> page = new PageImpl<>(list, PageRequest.of(0, 1, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt")), 1);
+        when(notificationRepository.searchNotifications(eq("maintenance"), eq("PUBLISHED"), eq(null), eq(null), eq(null), any(Pageable.class))).thenReturn(page);
 
         Map<String, Object> result = notificationService.getMaintenanceStatus();
 
         assertTrue((Boolean) result.get("active"));
         assertEquals("Server maintenance message", result.get("message"));
+        assertEquals(999L, result.get("latestNotifId"));
     }
 
     @Test

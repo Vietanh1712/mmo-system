@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/features/home.css}">
+    <th:block th:replace="~{fragments/design-system-styles :: designSystemStyles}"></th:block>
     <link rel="stylesheet" th:href="@{/css/features/pre-orders.css}">
 </head>
 <body>
@@ -43,10 +44,51 @@
         </section>
     </main>
 
+    <div class="ds-modal-backdrop" id="preOrderDeliveryModal" hidden
+         role="dialog" aria-modal="true" aria-labelledby="preOrderDeliveryModalTitle">
+        <div class="ds-modal preorder-delivery-modal">
+            <div class="ds-modal-header ds-cluster-between">
+                <div class="preorder-delivery-modal__heading">
+                    <span class="preorder-delivery-modal__icon" aria-hidden="true">
+                        <i class="fa fa-user-circle"></i>
+                    </span>
+                    <div>
+                        <h2 id="preOrderDeliveryModalTitle">Thông tin tài khoản đã giao</h2>
+                        <p id="preOrderDeliveryModalMeta">Đơn đặt trước</p>
+                    </div>
+                </div>
+                <button type="button" class="ds-btn ds-btn-text preorder-delivery-modal__close"
+                        onclick="closePreOrderDeliveryModal()" aria-label="Đóng cửa sổ">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="ds-modal-body">
+                <div class="preorder-delivery-modal__notice">
+                    <i class="fa fa-shield"></i>
+                    <span>Vui lòng bảo mật thông tin và đổi mật khẩu sau khi đăng nhập thành công.</span>
+                </div>
+                <div class="preorder-delivery-modal__content">
+                    <span class="preorder-card__label">Thông tin nhận được</span>
+                    <pre id="preOrderDeliveryContent"></pre>
+                </div>
+            </div>
+            <div class="ds-modal-footer">
+                <button class="ds-btn ds-btn-secondary" type="button" onclick="closePreOrderDeliveryModal()">
+                    Đóng lại
+                </button>
+                <button class="ds-btn ds-btn-primary" type="button" onclick="copyPreOrderDeliveryData()">
+                    <i class="fa fa-copy"></i> Sao chép thông tin
+                </button>
+            </div>
+        </div>
+    </div>
+
     <footer th:replace="fragments/footer :: footer"></footer>
 
     <script th:src="@{/js/customer/auth.js}"></script>
     <script>
+        const preOrderDeliveryById = new Map();
+
         document.addEventListener('DOMContentLoaded', () => {
             const token = sessionStorage.getItem("accessToken");
             if (!token || token === "null" || token === "undefined") {
@@ -56,6 +98,15 @@
 
             fetchPreOrders(token);
         });
+        
+        function escapeHtml(unsafe) {
+            return (unsafe || '').toString()
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
 
         function fetchPreOrders(token) {
             const messageEl = document.getElementById('preOrdersMessage');
@@ -82,6 +133,7 @@
             })
             .then(data => {
                 messageEl.hidden = true;
+                preOrderDeliveryById.clear();
                 if (!data || data.length === 0) {
                     emptyEl.hidden = false;
                     listEl.hidden = true;
@@ -92,6 +144,11 @@
                 listEl.hidden = false;
 
                 listEl.innerHTML = data.map(po => {
+                    preOrderDeliveryById.set(String(po.id), {
+                        deliveryData: po.deliveryData || '',
+                        productName: po.productName || 'Sản phẩm',
+                        orderCode: `#PO-${po.id}`
+                    });
                     const formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(po.expectedPriceVnd || 0);
                     const formattedDate = po.createdAt ? po.createdAt : '-';
                     const notes = po.notes ? po.notes : '<span style="color: #94a3b8; font-style: italic;">Không có ghi chú</span>';
@@ -140,6 +197,18 @@
                         step3Label = 'Đơn hàng đã hủy';
                     }
 
+                    const deliveryAction = status === 'completed'
+                        ? `
+                            <div class="preorder-card__actions">
+                                <button type="button" class="ds-btn ds-btn-primary preorder-card__delivery-btn"
+                                        onclick="openPreOrderDeliveryModal('${po.id}')">
+                                    <i class="fa fa-eye"></i>
+                                    Xem tài khoản
+                                </button>
+                            </div>
+                        `
+                        : '';
+
                     return `
                         <article class="preorder-card">
                             <div class="preorder-card__header">
@@ -152,6 +221,7 @@
                                     <div class="preorder-card__info-item">
                                         <span class="preorder-card__label">Sản phẩm</span>
                                         <a href="/products/${po.productId}" class="preorder-card__value preorder-card__link">${po.productName}</a>
+                                        ${po.variantName ? `<span class="preorder-card__variant">${po.variantName}</span>` : ''}
                                     </div>
                                     <div class="preorder-card__info-item">
                                         <span class="preorder-card__label">Số lượng</span>
@@ -167,6 +237,13 @@
                                     <span class="preorder-card__label">Ghi chú của bạn</span>
                                     <p class="preorder-card__notes-text">${notes}</p>
                                 </div>
+                                ${po.status === 'COMPLETED' || po.status === 'Hoàn thành' ? `
+                                <div class="preorder-card__delivery" style="margin-top: 16px; padding: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
+                                    <span class="preorder-card__label" style="color: #166534; font-weight: 600;"><i class="fa fa-check-circle"></i> Kết quả trả hàng từ người bán</span>
+                                    <p class="preorder-card__notes-text" style="color: #14532d; font-family: monospace; white-space: pre-wrap; margin-top: 8px;">${po.deliveryData ? escapeHtml(po.deliveryData) : 'Đã hoàn thành'}</p>
+                                    ${po.proofImage ? `<div style="margin-top: 12px;"><img src="${po.proofImage}" alt="Ảnh bằng chứng" style="max-width: 100%; max-height: 300px; border-radius: 6px; border: 1px solid #bbf7d0; cursor: pointer;" onclick="window.open(this.src)"></div>` : ''}
+                                </div>
+                                ` : ''}
                             </div>
                             
                             <div class="preorder-card__workflow" aria-label="Quy trình đơn hàng">
@@ -185,6 +262,7 @@
                                     <span class="workflow-step__label">${step3Label}</span>
                                 </div>
                             </div>
+                            ${deliveryAction}
                         </article>
                     `;
                 }).join('');
@@ -195,6 +273,53 @@
                 messageEl.innerText = err.message || 'Không thể tải danh sách đơn đặt trước. Vui lòng thử lại sau.';
             });
         }
+
+        function openPreOrderDeliveryModal(preOrderId) {
+            const order = preOrderDeliveryById.get(String(preOrderId));
+            if (!order) return;
+
+            document.getElementById('preOrderDeliveryModalMeta').textContent =
+                `${order.orderCode} • ${order.productName}`;
+            document.getElementById('preOrderDeliveryContent').textContent =
+                order.deliveryData || 'Người bán chưa cung cấp thông tin tài khoản.';
+
+            const modal = document.getElementById('preOrderDeliveryModal');
+            modal.hidden = false;
+            document.body.classList.add('preorder-modal-open');
+            modal.querySelector('.preorder-delivery-modal__close').focus();
+        }
+
+        function closePreOrderDeliveryModal() {
+            const modal = document.getElementById('preOrderDeliveryModal');
+            modal.hidden = true;
+            document.body.classList.remove('preorder-modal-open');
+        }
+
+        async function copyPreOrderDeliveryData() {
+            const content = document.getElementById('preOrderDeliveryContent').textContent;
+            try {
+                await navigator.clipboard.writeText(content);
+                if (typeof showSuccessToast === 'function') {
+                    showSuccessToast('Đã sao chép thông tin tài khoản.');
+                }
+            } catch (error) {
+                if (typeof showErrorToast === 'function') {
+                    showErrorToast('Không thể sao chép. Vui lòng sao chép thủ công.');
+                }
+            }
+        }
+
+        document.getElementById('preOrderDeliveryModal').addEventListener('click', event => {
+            if (event.target.id === 'preOrderDeliveryModal') {
+                closePreOrderDeliveryModal();
+            }
+        });
+
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && !document.getElementById('preOrderDeliveryModal').hidden) {
+                closePreOrderDeliveryModal();
+            }
+        });
     </script>
 </body>
 </html>

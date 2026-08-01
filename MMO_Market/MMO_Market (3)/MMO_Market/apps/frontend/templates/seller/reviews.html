@@ -52,17 +52,27 @@
                 </div>
 
                 <div class="admin-card">
-                    <div class="card-header-flex ds-cluster-between">
+                    <div class="card-header-flex" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
                         <h3>Danh sách đánh giá</h3>
-                        <select id="ratingFilter" class="ds-select" style="min-width: 200px; padding: 6px 10px; font-size: 13px;">
-                            <option value="all">Tất cả đánh giá</option>
-                            <option value="5">5 sao ★★★★★</option>
-                            <option value="4">4 sao ★★★★</option>
-                            <option value="3">3 sao ★★★</option>
-                            <option value="2">2 sao ★★</option>
-                            <option value="1">1 sao ★</option>
-                            <option value="low">1-2 sao (Cần theo dõi)</option>
-                        </select>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <div style="position: relative; width: 250px;">
+                                <i class="fa fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #64748b;"></i>
+                                <input type="text" class="ds-input" placeholder="Tìm kiếm nội dung, mã SP..." style="padding-left: 36px; width: 100%; border-radius: 6px; border: 1px solid #cbd5e1; padding-top: 8px; padding-bottom: 8px;">
+                            </div>
+                            <select id="ratingFilter" class="ds-select" style="min-width: 150px; padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; font-size: 13px;">
+                                <option value="all">Tất cả sao</option>
+                                <option value="5">5 sao ★★★★★</option>
+                                <option value="4">4 sao ★★★★</option>
+                                <option value="3">3 sao ★★★</option>
+                                <option value="2">2 sao ★★</option>
+                                <option value="1">1 sao ★</option>
+                                <option value="low">1-2 sao</option>
+                            </select>
+                            <select class="ds-select" style="min-width: 120px; padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; font-size: 13px;">
+                                <option value="newest">Mới nhất</option>
+                                <option value="oldest">Cũ nhất</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="table-wrap">
                         <table class="admin-table">

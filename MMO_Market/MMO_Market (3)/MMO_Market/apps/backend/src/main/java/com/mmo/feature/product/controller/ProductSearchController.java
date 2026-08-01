@@ -77,6 +77,9 @@ public class ProductSearchController {
     @Autowired
     private ComplaintRepository complaintRepository;
 
+    @Autowired
+    private com.mmo.shared.dal.ChatRepository chatRepository;
+
     @GetMapping("/products")
     public ResponseEntity<Page<ProductSearchResultDTO>> searchProducts(
             @RequestParam(required = false) String keyword,
@@ -101,6 +104,21 @@ public class ProductSearchController {
     @GetMapping("/products/{productId}")
     public ResponseEntity<com.mmo.shared.dto.ProductDetailDTO> getProductDetail(@PathVariable Long productId) {
         return productRepository.findByIdAndIsDeleteFalse(productId)
+                .filter(product -> {
+                    com.mmo.shared.model.User seller = product.getSeller();
+                    if (seller == null || Boolean.TRUE.equals(seller.getIsDelete())) return false;
+                    String status = seller.getShopStatus();
+                    if (status == null) return true;
+                    return !status.equalsIgnoreCase("Locked") && 
+                           !status.equalsIgnoreCase("Banned") && 
+                           !status.equalsIgnoreCase("Pending") && 
+                           !status.equalsIgnoreCase("Suspended") && 
+                           !status.equalsIgnoreCase("TEMP_LOCKED") && 
+                           !status.equalsIgnoreCase("Withdrawn") && 
+                           !status.equalsIgnoreCase("DELETED") && 
+                           !status.equalsIgnoreCase("INDEFINITE_LOCKED") && 
+                           !status.equalsIgnoreCase("PERMANENT_BANNED");
+                })
                 .map(product -> {
                     // Query statistics from DB
                     Double avgRating = reviewRepository.findAverageRatingByProductId(product.getId());
@@ -120,6 +138,7 @@ public class ProductSearchController {
                                             .oldPrice((long) (v.getPriceVnd() * 1.5)) // High-fidelity mock old price
                                             .duration(v.getVariantName().contains("Năm") || v.getVariantName().contains("12 Tháng") ? 12 : (v.getVariantName().contains("6 Tháng") ? 6 : (v.getVariantName().contains("3 Tháng") ? 3 : 1)))
                                             .label(v.getVariantName())
+                                            .stock(v.getStock() != null ? v.getStock() : 0)
                                             .build());
                                 });
                     }
@@ -344,7 +363,22 @@ public class ProductSearchController {
                     profile.put("totalProducts", productCount);
                     Double avgSellerRating = reviewRepository.findAverageRatingBySellerId(sellerId);
                     profile.put("rating", avgSellerRating != null ? avgSellerRating : 0.0);
-                    profile.put("responseTime", "Trong vài giờ"); // High-fidelity mock response time
+                    
+                    Double avgMinutes = chatRepository.findAverageResponseTimeInMinutes(sellerId, java.time.LocalDateTime.now().minusDays(30));
+                    String responseTimeStr = "Trong vài giờ";
+                    if (avgMinutes != null) {
+                        if (avgMinutes <= 60) {
+                            responseTimeStr = "Trong vài phút";
+                        } else if (avgMinutes <= 300) {
+                            responseTimeStr = "Trong vài giờ";
+                        } else if (avgMinutes <= 1440) {
+                            responseTimeStr = "Trong vòng 1 ngày";
+                        } else {
+                            responseTimeStr = "Trong vài ngày";
+                        }
+                    }
+                    profile.put("responseTime", responseTimeStr);
+
                     profile.put("email", user.getEmail());
                     profile.put("followerCount", followerCount);
                     profile.put("isFollowing", isFollowing);

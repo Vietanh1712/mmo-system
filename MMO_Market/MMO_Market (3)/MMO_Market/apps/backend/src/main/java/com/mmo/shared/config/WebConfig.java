@@ -23,38 +23,56 @@ public class WebConfig implements WebMvcConfigurer {
         this.maintenanceInterceptor = maintenanceInterceptor;
     }
 
-    // @Bean
-    // public ITemplateResolver customTemplateResolver() {
-    //     FileTemplateResolver resolver = new FileTemplateResolver();
-    //     File f1 = new File("apps/frontend/templates");
-    //     File f2 = new File("../frontend/templates");
-    //     if (f1.exists()) {
-    //         resolver.setPrefix(f1.getAbsolutePath() + File.separator);
-    //     } else if (f2.exists()) {
-    //         resolver.setPrefix(f2.getAbsolutePath() + File.separator);
-    //     } else {
-    //         resolver.setPrefix("apps/frontend/templates/");
-    //     }
-    //     resolver.setSuffix(".html");
-    //     resolver.setTemplateMode(TemplateMode.HTML);
-    //     resolver.setCharacterEncoding("UTF-8");
-    //     resolver.setCacheable(false);
-    //     resolver.setCheckExistence(true);
-    //     return resolver;
-    // }
+    @Bean
+    public ITemplateResolver customTemplateResolver() {
+        File f1 = new File("apps/frontend/templates");
+        File f2 = new File("../frontend/templates");
+        File f3 = new File("frontend/templates");
+
+        File targetDir = f1.exists() ? f1 : (f2.exists() ? f2 : (f3.exists() ? f3 : null));
+        if (targetDir != null) {
+            FileTemplateResolver resolver = new FileTemplateResolver();
+            resolver.setPrefix(targetDir.getAbsolutePath() + File.separator);
+            resolver.setSuffix(".html");
+            resolver.setTemplateMode(TemplateMode.HTML);
+            resolver.setCharacterEncoding("UTF-8");
+            resolver.setCacheable(false);
+            resolver.setCheckExistence(true);
+            return resolver;
+        }
+
+        org.thymeleaf.templateresolver.ClassLoaderTemplateResolver resolver = new org.thymeleaf.templateresolver.ClassLoaderTemplateResolver();
+        resolver.setPrefix("templates/");
+        resolver.setSuffix(".html");
+        resolver.setTemplateMode(TemplateMode.HTML);
+        resolver.setCharacterEncoding("UTF-8");
+        resolver.setCacheable(false);
+        return resolver;
+    }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        String uploadPath = new File("uploads").getAbsolutePath();
+        String uploadPath = new File("uploads").toURI().toString();
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + uploadPath + "/");
+                .addResourceLocations(uploadPath);
 
-        // Use application.properties (spring.web.resources.static-locations) instead of hardcoding
-        // File static1 = new File("apps/frontend/static");
-        // File static2 = new File("../frontend/static");
-        // String staticPath = static1.exists() ? static1.getAbsolutePath() : (static2.exists() ? static2.getAbsolutePath() : "apps/frontend/static");
-        // registry.addResourceHandler("/**")
-        //         .addResourceLocations("file:" + staticPath + "/");
+        File static1 = new File("apps/frontend/static");
+        File static2 = new File("../frontend/static");
+        File static3 = new File("frontend/static");
+
+        if (static1.exists()) {
+            registry.addResourceHandler("/**")
+                    .addResourceLocations("file:" + static1.getAbsolutePath() + File.separator, "classpath:/static/");
+        } else if (static2.exists()) {
+            registry.addResourceHandler("/**")
+                    .addResourceLocations("file:" + static2.getAbsolutePath() + File.separator, "classpath:/static/");
+        } else if (static3.exists()) {
+            registry.addResourceHandler("/**")
+                    .addResourceLocations("file:" + static3.getAbsolutePath() + File.separator, "classpath:/static/");
+        } else {
+            registry.addResourceHandler("/**")
+                    .addResourceLocations("classpath:/static/");
+        }
     }
 
     @Override

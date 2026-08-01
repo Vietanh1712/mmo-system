@@ -65,7 +65,7 @@ public class PreOrderController {
     public ResponseEntity<PreOrderResponse> deliverPreOrder(@AuthenticationPrincipal Long userId,
                                                             @PathVariable Long preOrderId,
                                                             @Valid @RequestBody PreOrderDeliveryRequest request) {
-        PreOrderResponse response = preOrderService.deliverPreOrder(userId, preOrderId, request.getDeliveryData());
+        PreOrderResponse response = preOrderService.deliverPreOrder(userId, preOrderId, request);
         return ResponseEntity.ok(response);
     }
 }

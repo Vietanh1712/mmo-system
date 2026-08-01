@@ -179,8 +179,8 @@ public class StaffController {
         model.addAttribute("totalFilteredTransactions", txPage.getTotalElements());
         long overallTotalCount = transactionRepository.countByIsDeleteFalse();
         model.addAttribute("totalTransactions",     overallTotalCount);
-        long completedCount = transactionRepository.countByStatusesAndNotDeleted(java.util.List.of("Success", "success", "Completed", "completed", "Held", "held", "Approved", "approved"));
-        long pendingCount = transactionRepository.countByStatusesAndNotDeleted(java.util.List.of("Pending", "pending", "Processing", "processing"));
+        long completedCount = transactionRepository.countByStatusesAndNotDeleted(java.util.List.of("Success", "success", "Completed", "completed", "Approved", "approved"));
+        long pendingCount = transactionRepository.countByStatusesAndNotDeleted(java.util.List.of("Pending", "pending", "Processing", "processing", "Held", "held", "Holding", "holding", "Hold", "hold"));
         long failCount = transactionRepository.countByStatusesAndNotDeleted(java.util.List.of("Failed", "failed", "Fail", "fail", "Rejected", "rejected", "Cancelled", "cancelled", "Cancel", "cancel"));
 
         model.addAttribute("completedTransactions", completedCount);

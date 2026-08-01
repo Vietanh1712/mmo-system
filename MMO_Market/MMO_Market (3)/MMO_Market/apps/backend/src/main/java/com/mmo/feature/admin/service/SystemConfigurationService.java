@@ -141,7 +141,7 @@ public class SystemConfigurationService {
         SystemConfigResponse.CommissionsDto comm = SystemConfigResponse.CommissionsDto.builder()
                 .basePercent(getDouble(map, "DEFAULT_COMMISSION_PERCENT", 5.0))
                 .withdrawalPercent(getDouble(map, "WITHDRAWAL_FEE_PERCENT", 1.5))
-                .shopOpeningFee(getLong(map, "SHOP_OPENING_FEE_VND", 50000L))
+                .shopOpeningFee(getLong(map, "SHOP_OPENING_FEE_VND", 500000L))
                 .minWithdrawLimit(getLong(map, "MIN_WITHDRAWAL_VND", 50000L))
                 .maxWithdrawLimit(getLong(map, "MAX_WITHDRAWAL_VND", 50000000L))
                 .minDepositLimit(getLong(map, "MIN_DEPOSIT_LIMIT_VND", 10000L))
@@ -284,7 +284,7 @@ public class SystemConfigurationService {
         Map<String, Object> diff = new HashMap<>();
         checkAndAddDiff(diff, "basePercent", getDouble(original, "DEFAULT_COMMISSION_PERCENT", 5.0), request.getBasePercent());
         checkAndAddDiff(diff, "withdrawalPercent", getDouble(original, "WITHDRAWAL_FEE_PERCENT", 1.5), request.getWithdrawalPercent());
-        checkAndAddDiff(diff, "shopOpeningFee", getLong(original, "SHOP_OPENING_FEE_VND", 50000L), request.getShopOpeningFee());
+        checkAndAddDiff(diff, "shopOpeningFee", getLong(original, "SHOP_OPENING_FEE_VND", 500000L), request.getShopOpeningFee());
         checkAndAddDiff(diff, "minWithdrawLimit", getLong(original, "MIN_WITHDRAWAL_VND", 50000L), request.getMinWithdrawLimit());
         checkAndAddDiff(diff, "maxWithdrawLimit", getLong(original, "MAX_WITHDRAWAL_VND", 50000000L), request.getMaxWithdrawLimit());
         checkAndAddDiff(diff, "minDepositLimit", getLong(original, "MIN_DEPOSIT_LIMIT_VND", 10000L), request.getMinDepositLimit());

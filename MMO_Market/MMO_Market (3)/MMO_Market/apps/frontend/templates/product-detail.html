@@ -1221,7 +1221,6 @@
                         const style = document.createElement('style');
                         style.innerHTML = `
                             #buyActionButton, #cartActionButton, .btn-pdp-buy, .btn-pdp-cart {
-                                pointer-events: none !important;
                                 opacity: 0.5 !important;
                                 cursor: not-allowed !important;
                             }
@@ -1229,9 +1228,9 @@
                         document.head.appendChild(style);
                         setTimeout(() => {
                             const buyBtn = document.getElementById('buyActionButton');
-                            if (buyBtn) { buyBtn.onclick = () => alert("Quản trị viên và nhân viên không được phép mua hàng."); buyBtn.title = "Quản trị viên và nhân viên không được phép mua hàng"; }
+                            if (buyBtn) { buyBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); }; buyBtn.title = "Quản trị viên và nhân viên không được phép mua hàng"; }
                             const cartBtn = document.getElementById('cartActionButton');
-                            if (cartBtn) { cartBtn.onclick = () => alert("Quản trị viên và nhân viên không được phép mua hàng."); cartBtn.title = "Quản trị viên và nhân viên không được phép mua hàng"; }
+                            if (cartBtn) { cartBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); }; cartBtn.title = "Quản trị viên và nhân viên không được phép mua hàng"; }
                         }, 500); // wait for initProductDetails to replace innerHTML if any
                     }
                 } catch(e){}
@@ -1359,6 +1358,9 @@
 
         // Buy Now Button Handler
         function buyNow() {
+            if (typeof window.isEmployeeUser === 'function' && window.isEmployeeUser()) {
+                return; // Do nothing for staff/admin
+            }
             if (!productHasStock) {
                 openPreOrderRequest();
                 return;
@@ -1386,6 +1388,9 @@
         }
 
         function openPreOrderRequest() {
+            if (typeof window.isEmployeeUser === 'function' && window.isEmployeeUser()) {
+                return; // Do nothing for staff/admin
+            }
             const token = sessionStorage.getItem("accessToken");
             if (!token) {
                 showWarningToast("Vui lòng đăng nhập để gửi yêu cầu đặt trước!");
@@ -1408,6 +1413,9 @@
 
         // Add to Cart Button Handler
         function addToCart() {
+            if (typeof window.isEmployeeUser === 'function' && window.isEmployeeUser()) {
+                return; // Do nothing for staff/admin
+            }
             if (!productHasStock) {
                 showWarningToast('Sản phẩm đã hết hàng, vui lòng đặt trước.');
                 openPreOrderRequest();

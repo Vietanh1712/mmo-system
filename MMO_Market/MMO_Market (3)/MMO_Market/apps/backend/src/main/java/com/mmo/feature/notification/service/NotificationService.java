@@ -75,7 +75,7 @@ public class NotificationService {
         Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by(direction, "createdAt"));
         Page<Notification> notifPage = notificationRepository.searchNotifications(
                 (type == null || type.isBlank()) ? null : type,
-                (status == null || status.isBlank()) ? "ALL" : status.trim(),
+                (status == null || status.isBlank()) ? "PUBLISHED" : status.trim(),
                 (search == null || search.isBlank()) ? null : search.trim(),
                 startAt,
                 endAt,
@@ -92,6 +92,7 @@ public class NotificationService {
             map.put("content", n.getContent());
             map.put("type", n.getType());
             map.put("status", n.getStatus() != null ? n.getStatus() : "PUBLISHED");
+            map.put("activateMaintenance", Boolean.TRUE.equals(n.getActivateMaintenance()));
 
             String authorName = "Hệ thống";
             if (n.getUserId() != null) {
@@ -135,6 +136,7 @@ public class NotificationService {
                 .isDelete(false)
                 .isRead(false)
                 .severity("INFO")
+                .activateMaintenance(activateMaintenance)
                 .build();
         notificationRepository.save(notif);
 
@@ -155,6 +157,11 @@ public class NotificationService {
 
     @Transactional
     public void saveDraft(Long operatorId, String title, String content, String type, String ipAddress) {
+        saveDraft(operatorId, title, content, type, false, ipAddress);
+    }
+
+    @Transactional
+    public void saveDraft(Long operatorId, String title, String content, String type, boolean activateMaintenance, String ipAddress) {
         User operator = requireAdminOrStaff(operatorId);
 
         if (title == null || title.trim().isBlank()) {
@@ -176,6 +183,7 @@ public class NotificationService {
                 .isDelete(false)
                 .isRead(false)
                 .severity("INFO")
+                .activateMaintenance(activateMaintenance)
                 .build();
         notificationRepository.save(notif);
 
@@ -186,6 +194,11 @@ public class NotificationService {
 
     @Transactional
     public void updateDraft(Long operatorId, Long draftId, String title, String content, String type, String ipAddress) {
+        updateDraft(operatorId, draftId, title, content, type, false, ipAddress);
+    }
+
+    @Transactional
+    public void updateDraft(Long operatorId, Long draftId, String title, String content, String type, Boolean activateMaintenance, String ipAddress) {
         User operator = requireAdminOrStaff(operatorId);
         Notification notif = notificationRepository.findById(draftId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy thông báo."));
@@ -205,6 +218,9 @@ public class NotificationService {
         notif.setContent(content.trim());
         if (type != null && !type.trim().isBlank()) {
             notif.setType(type.trim().toLowerCase());
+        }
+        if (activateMaintenance != null) {
+            notif.setActivateMaintenance(activateMaintenance);
         }
         notificationRepository.save(notif);
 
@@ -231,8 +247,14 @@ public class NotificationService {
         diff.put("title", notif.getTitle());
         saveAuditLog(operator, "Notification_Publish", "Phát hành bản nháp: " + notif.getTitle(), ipAddress, diff);
 
-        if (activateMaintenance && "maintenance".equalsIgnoreCase(notif.getType())) {
+        boolean shouldActivate = activateMaintenance || Boolean.TRUE.equals(notif.getActivateMaintenance());
+
+        if (shouldActivate && "maintenance".equalsIgnoreCase(notif.getType())) {
             updateMaintenanceConfig("TRUE", operator.getId());
+
+            Map<String, Object> maintDiff = new HashMap<>();
+            maintDiff.put("maintenance_mode", "FALSE -> TRUE");
+            saveAuditLog(operator, "Maintenance_Toggle", "Kích hoạt chế độ bảo trì hệ thống qua phát hành bản nháp", ipAddress, maintDiff);
         }
     }
 
@@ -276,6 +298,30 @@ public class NotificationService {
         Map<String, Object> diff = new HashMap<>();
         diff.put("maintenance_mode", oldVal + " -> " + val);
         saveAuditLog(operator, "Maintenance_Toggle", active ? "Kích hoạt chế độ bảo trì hệ thống" : "Tắt chế độ bảo trì hệ thống", ipAddress, diff);
+
+        if (active) {
+            Page<Notification> existing = notificationRepository.searchNotifications(
+                    "maintenance",
+                    "PUBLISHED",
+                    null,
+                    null,
+                    null,
+                    org.springframework.data.domain.PageRequest.of(0, 1, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"))
+            );
+            if (existing == null || existing.isEmpty()) {
+                Notification notif = Notification.builder()
+                        .userId(operator.getId())
+                        .title("Thông báo bảo trì hệ thống")
+                        .content("Hệ thống đang thực hiện bảo trì nâng cấp định kỳ. Xin lỗi vì sự bất tiện.")
+                        .type("maintenance")
+                        .status("PUBLISHED")
+                        .isDelete(false)
+                        .isRead(false)
+                        .severity("DANGER")
+                        .build();
+                notificationRepository.save(notif);
+            }
+        }
     }
 
     @Transactional(readOnly = true)
@@ -285,24 +331,28 @@ public class NotificationService {
                 .orElse("FALSE");
 
         Map<String, Object> result = new HashMap<>();
-        result.put("active", "TRUE".equalsIgnoreCase(val));
+        boolean active = "TRUE".equalsIgnoreCase(val);
+        result.put("active", active);
 
-        if ("TRUE".equalsIgnoreCase(val)) {
+        if (active) {
             Page<Notification> latest = notificationRepository.searchNotifications(
                     "maintenance",
                     "PUBLISHED",
                     null,
                     null,
                     null,
-                    org.springframework.data.domain.PageRequest.of(0, 1)
+                    org.springframework.data.domain.PageRequest.of(0, 1, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"))
             );
             if (!latest.isEmpty()) {
                 result.put("message", latest.getContent().get(0).getContent());
+                result.put("latestNotifId", latest.getContent().get(0).getId());
             } else {
                 result.put("message", "Hệ thống đang bảo trì nâng cấp định kỳ. Xin lỗi vì sự bất tiện.");
+                result.put("latestNotifId", null);
             }
         } else {
             result.put("message", "");
+            result.put("latestNotifId", null);
         }
         return result;
     }

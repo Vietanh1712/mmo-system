@@ -2,15 +2,20 @@
 
 ## 1. Mục tiêu (Goals)
 
-Triển khai quy trình đăng ký gian hàng trực tuyến (Shop) dành cho người dùng đã KYC (`isVerified = 1`) và xây dựng hệ thống quản lý kênh bán hàng (Seller Console) theo đặc tả `SPEC.md` (feat-seller). Các nghiệp vụ hỗ trợ:
-- Gửi hồ sơ đăng ký mở gian hàng (tên Shop, mô tả, thông tin ngân hàng thụ hưởng).
-- Quản lý kênh bán hàng (Seller Console): đăng bán và cập nhật sản phẩm số, quản lý tồn kho, quản lý đơn hàng bán được, xem thống kê doanh thu và quản lý thông tin ví (rút tiền).
+Triển khai quy trình đăng ký gian hàng trực tuyến (Shop) tự động dành cho người dùng đã KYC (`isVerified = 1`) và xây dựng hệ thống quản lý kênh bán hàng toàn diện (Seller Console). Các nghiệp vụ hỗ trợ bao gồm:
+- Tự động duyệt hồ sơ đăng ký mở gian hàng và nâng cấp tài khoản lên `SELLER`.
+- Cung cấp Dashboard theo dõi doanh thu, khiếu nại, và đơn hàng hoàn thành.
+- Quản lý kênh bán hàng: đăng bán và cập nhật sản phẩm số (Products), quản lý biến thể (Variants), và quản lý tồn kho (Digital Assets).
+- Theo dõi giao dịch bán hàng (Transactions), số dư tạm giữ, và thống kê doanh thu (Statistics).
+- Tích hợp tính năng tạo yêu cầu Rút tiền (Withdrawals) và yêu cầu gửi mã OTP bảo mật.
+- Quản lý trạng thái hoạt động của Shop (`Active` / `Suspended`).
+- Đọc thông báo lỗi/vi phạm từ Staff (Shop Flags) và xem các Đánh giá (Reviews), Khiếu nại (Complaints) của khách hàng.
 
 ## 2. Kiến trúc & Công nghệ
 
 - **Backend:** Java 17, Spring Boot 3.1, Spring Data JPA, SQL Server (T-SQL).
 - **Frontend:** Thymeleaf template engine kết hợp CSS & JS thuần (giao tiếp qua REST API bằng `authFetch`).
-- **Tuân thủ:** Mô hình phân lớp Controller → Service → Repository → Entity; DTO Pattern cho dữ liệu đăng ký; phân quyền nghiêm ngặt: chỉ tài khoản đã xác minh KYC (`isVerified = 1`) mới được đăng ký shop, và chỉ tài khoản có role `SELLER` mới được phép truy cập Seller Console.
+- **Tuân thủ:** Mô hình phân lớp Controller → Service → Repository → Entity; phân quyền nghiêm ngặt: chỉ tài khoản đã xác minh KYC (`isVerified = 1`) mới được đăng ký shop, và chỉ tài khoản có role `SELLER` mới được phép truy cập Seller Console.
 
 ## 3. Các thành phần Backend
 
@@ -20,60 +25,41 @@ Triển khai quy trình đăng ký gian hàng trực tuyến (Shop) dành cho ng
   - `userId` (ManyToOne -> User): Người gửi yêu cầu.
   - `shopName` (NVARCHAR): Tên gian hàng.
   - `description` (NVARCHAR): Mô tả gian hàng.
-  - `status` (VARCHAR): Trạng thái xét duyệt (`PENDING`, `APPROVED`, `REJECTED`).
-  - `isDelete` (BIT): Soft delete.
+  - `status` (VARCHAR): Trạng thái xét duyệt (`APPROVED`).
 - **Entity `SellerBankInfo`** (bảng `SellerBankInfo`):
-  - `userId` (ManyToOne -> User): Liên kết tới Seller.
-  - `bankName` (NVARCHAR): Tên ngân hàng thụ hưởng.
-  - `accountNumber` (VARCHAR): Số tài khoản ngân hàng.
+  - Thông tin ngân hàng của Seller (`bankName`, `accountNumber`, `branch`).
 
 ### 3.2. Repositories (Spring Data JPA)
 
-- `SellerRegistrationRepository`:
-  - `findByUserIdAndIsDeleteFalse(userId)`: Lấy thông tin đăng ký của user.
-  - `existsByUserIdAndStatusAndIsDeleteFalse(userId, status)`: Kiểm tra đăng ký trùng lặp.
-- `SellerBankInfoRepository`:
-  - `findByUserIdAndIsDeleteFalse(userId)`: Tìm cấu hình tài khoản ngân hàng của Seller.
+- `SellerRegistrationRepository`, `SellerBankInfoRepository`
+- Các Repository phục vụ thống kê & quản lý tài nguyên Seller: `ProductRepository`, `ProductVariantRepository`, `DigitalAssetRepository`, `TransactionRepository`, `WithdrawalRepository`, `ComplaintRepository`, `ShopFlagRepository`, `ReviewRepository`, `ChatRepository`.
 
-### 3.3. DTOs
-
-- Request: `ShopRegistrationRequest` (gồm `shopName`, `description`, `bankName`, `accountNumber`).
-- Response: `ShopRegistrationResponse`. Mapping ở Service.
-
-### 3.4. Services (Business Logic)
+### 3.3. Services (Business Logic)
 
 - **`ShopRegistrationService`**:
-  - `registerShop(userId, request)`:
-    - Xác thực User đã KYC thành công (`isVerified = 1`).
-    - Kiểm tra xem đã có hồ sơ đăng ký shop nào đang chờ xử lý (`PENDING`) hoặc đã được duyệt (`APPROVED`) không.
-    - Lưu thông tin đăng ký `SellerRegistration` và thông tin ngân hàng `SellerBankInfo`.
-    - Trừ phí đăng ký shop nếu có quy định, cập nhật vai trò người dùng thành `SELLER` khi duyệt thành công.
+  - `submitRegistration(userId, request)`: Xác thực User đã KYC, tạo bản ghi `SellerRegistration` với trạng thái `APPROVED`, đồng thời cập nhật role `SELLER` và `shopStatus` thành `Active`.
+  - Quản lý đóng/mở Shop tạm thời (`toggleShopStatus`, `updateShopStatus`) và cronjob khôi phục Shop bị khóa tạm thời (`autoRevertSuspendedShops`).
+- **`WithdrawalService`** (từ `feat-wallet`): 
+  - `requestWithdrawal(userId, amount, otp)`: Tạo yêu cầu rút tiền cho Seller.
 
-### 3.5. Controllers & Security
+### 3.4. Controllers & Security
 
-- **`ShopRegistrationController`** (`/api/v1/shop-registrations`):
-  - `POST /`: Đăng ký mở shop (`@PreAuthorize("hasAuthority('ROLE_CUSTOMER')")`).
-  - `GET /me`: Lấy thông tin đăng ký shop cá nhân.
-- **`SellerController`** (MVC `@RequestMapping("/seller")`):
-  - Render giao diện Seller Console (`/dashboard`, `/products`, `/orders`, `/wallet`, `/settings`).
-  - API `GET /api/v1/seller/shop-info`: Trả về thông tin Shop, cấp độ Shop, ngân hàng và mốc thời gian tạm ngưng `suspendedUntil`. Tự động khôi phục trạng thái `Active` khi quá hạn.
-  - API `PUT /api/v1/seller/shop-status`: Cho phép thay đổi trạng thái hoạt động `Active` / `Suspended` (rào chắn đối với Shop bị hạn chế `Banned` / `Locked`).
-  - Áp dụng phương thức repository an toàn `findFirstByUserAndIsDeleteFalseOrderByIdDesc` cho `SellerRegistrationRepository` và `SellerBankInfoRepository` tránh lỗi `NonUniqueResultException` khi có nhiều bản ghi lịch sử.
-
----
+- **`ShopRegistrationController`** (`/api/v1/shop-registrations`): API cho phép Customer tự động đăng ký mở shop.
+- **`SellerController`** (`/api/seller/**`): Bao quát toàn bộ nghiệp vụ của Seller Console:
+  - `/dashboard`, `/statistics`: Lấy thông số tổng quan và biểu đồ.
+  - `/shop-info`, `/shop-status`: Quản lý thông tin và trạng thái cửa hàng.
+  - `/products`, `/variants`, `/digital-assets`: Full CRUD cho quản lý danh mục sản phẩm số, biến thể, và kho tài khoản/key.
+  - `/transactions`: Lịch sử giao dịch.
+  - `/withdrawals`: Tạo yêu cầu rút tiền và lấy lịch sử rút tiền.
+  - `/complaints`, `/reviews`, `/shop-flags`: Truy vấn dữ liệu tương tác với khách hàng và kiểm duyệt từ Admin.
 
 ## 4. Các thành phần Frontend
 
-- **Trang đăng ký Shop của Customer:**
-  - File: `templates/account/register-shop.html` và JS `static/js/customer/account-register-shop.js`.
-  - Hiển thị form điền tên Shop và thông tin tài khoản ngân hàng. Gọi API `POST /api/v1/shop-registrations` (thực tế thông qua endpoint `/v1/shop-registrations` trên `authFetch`).
+- **Trang đăng ký Shop của Customer:** Form đăng ký tự động xét duyệt (`POST /api/v1/shop-registrations`).
 - **Giao diện Seller Console (Bảng điều khiển người bán):**
-  - File: `templates/seller/dashboard.html`, `templates/seller/products.html` và các template liên quan.
-
----
+  - Các trang Dashboard, Quản lý sản phẩm, Rút tiền, Quản lý khiếu nại gọi trực tiếp đến API `/api/seller/**`.
 
 ## 5. Definition of Done
 
-- Chỉ cho phép người dùng có `isVerified = 1` đăng ký Shop.
-- Khi phê duyệt đăng ký thành công, role của User trong DB phải được cập nhật sang `SELLER` và xoá cache / cập nhật Token tương ứng.
-- Toàn bộ endpoint `/seller/**` bắt buộc phải kiểm duyệt quyền hạn `ROLE_SELLER` chặt chẽ.
+- Hệ thống đăng ký Shop duyệt tự động hoạt động ổn định và thay đổi chính xác Role người dùng.
+- Tất cả API của `SellerController` (bao gồm CRUD Products, Variants, Assets, Withdrawals) được bảo mật chặt chẽ bằng Role `SELLER` và cơ chế kiểm tra sở hữu (Ownership check).

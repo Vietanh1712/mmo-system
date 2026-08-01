@@ -428,7 +428,7 @@
             const catSelect = document.getElementById('category-filter');
             if (!catSelect) return;
             try {
-                const res = await fetch('/api/v1/categories');
+                const res = await fetch('/api/search/categories?parentOnly=true');
                 if (!res.ok) return;
                 const categories = await res.json();
                 
@@ -523,7 +523,8 @@
             const term = subCategory.toLowerCase().trim();
             const name = (product.productName || '').toLowerCase();
             const cat = (product.categoryName || '').toLowerCase();
-            return name.includes(term) || cat.includes(term);
+            const subCatName = (product.subCategoryName || '').toLowerCase();
+            return name.includes(term) || cat.includes(term) || subCatName.includes(term) || (product.categoryId && String(product.categoryId) === term);
         }
 
         function getSearchDisplayLabel() {
@@ -808,7 +809,7 @@
                         </div>
                         <div class="product-info">
                             <div class="category-rating">
-                                <span class="category-badge">${getParentCategoryName(product.categoryName, product.productName)}</span>
+                                <span class="category-badge">${product.categoryName || 'Khác'}</span>
                                 <span class="rating-stars">${starHtml}</span>
                             </div>
                             <h4 class="product-title">${product.productName}</h4>
@@ -895,14 +896,23 @@
 
         // Buy Now handler redirects to PDP first, carrying filter context
         function buyNow(productId) {
+            if (typeof window.isEmployeeUser === 'function' && window.isEmployeeUser()) {
+                return; // Do nothing for staff/admin
+            }
             window.location.href = `/products/${productId}` + window.location.search;
         }
 
         function preOrderNow(productId) {
+            if (typeof window.isEmployeeUser === 'function' && window.isEmployeeUser()) {
+                return; // Do nothing for staff/admin
+            }
             window.location.href = `/products/${productId}` + window.location.search;
         }
 
         function addToCartFromCard(productId) {
+            if (typeof window.isEmployeeUser === 'function' && window.isEmployeeUser()) {
+                return; // Do nothing for staff/admin
+            }
             const product = (window.currentRenderedProducts || []).find(item => item.productId === productId);
             if (!product) {
                 showWarningToast('Không tìm thấy thông tin sản phẩm để thêm vào giỏ hàng.');

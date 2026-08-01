@@ -24,11 +24,15 @@ public class ProductSpecification {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // --- Keyword Search (in product name only) ---
+            // --- Keyword Search (in product name, seller full name, or shop code) ---
             if (keyword != null && !keyword.trim().isEmpty()) {
                 String likePattern = "%" + keyword.toLowerCase() + "%";
                 Predicate namePredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), likePattern);
-                predicates.add(namePredicate);
+                Predicate sellerNamePredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("seller").get("fullName")), likePattern);
+                Predicate sellerIdPredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("seller").get("id").as(String.class)), likePattern);
+                Predicate shopCodePredicate = criteriaBuilder.like(criteriaBuilder.lower(criteriaBuilder.concat("shop-", root.get("seller").get("id").as(String.class))), likePattern);
+                
+                predicates.add(criteriaBuilder.or(namePredicate, sellerNamePredicate, sellerIdPredicate, shopCodePredicate));
             }
 
             // --- Category Filter ---
@@ -103,9 +107,11 @@ public class ProductSpecification {
                 criteriaBuilder.equal(variantJoin.get("isDelete"), false)
             ));
 
-            // --- Exclude products from Locked, Banned, or Pending shops, or deleted sellers ---
+            // --- Exclude products from Locked, Banned, Pending, Suspended, etc. shops, or deleted sellers ---
             predicates.add(criteriaBuilder.equal(root.get("seller").get("isDelete"), false));
-            predicates.add(criteriaBuilder.not(root.get("seller").get("shopStatus").in("Locked", "Banned", "Pending")));
+            predicates.add(criteriaBuilder.not(root.get("seller").get("shopStatus").in(
+                    "Locked", "Banned", "Pending", "Suspended", "TEMP_LOCKED", "Withdrawn", "DELETED", "INDEFINITE_LOCKED", "PERMANENT_BANNED"
+            )));
 
             // --- Avoid duplicates when joining with a one-to-many relationship ---
             query.distinct(true);

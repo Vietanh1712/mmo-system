@@ -28,4 +28,9 @@ public class ProductSearchResultDTO {
     // Actual statistics from DB
     private Long salesCount = 0L;
     private Long reviewsCount = 0L;
+
+    // Category Hierarchy IDs and Names
+    private Long categoryId;
+    private String subCategoryName;
+    private Long parentCategoryId;
 }

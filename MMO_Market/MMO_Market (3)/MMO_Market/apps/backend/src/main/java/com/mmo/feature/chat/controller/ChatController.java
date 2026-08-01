@@ -211,6 +211,8 @@ public class ChatController {
             map.put("online", true);
             map.put("unreadCount", unread);
             map.put("isComplaint", true);
+            map.put("sellerId", comp.getSeller().getId());
+            map.put("customerId", comp.getCustomer().getId());
             responseList.add(map);
         }
         // Sort combined list by newest first
@@ -281,6 +283,9 @@ public class ChatController {
             result.put("isComplaint", true);
             result.put("complaintId", complaint.getId());
             result.put("userRole", complaint.getCustomer().getId().equals(userId) ? "customer" : "seller");
+            result.put("sellerId", complaint.getSeller().getId());
+            result.put("customerId", complaint.getCustomer().getId());
+            result.put("complaintDescription", complaint.getDescription());
             if (complaint.getTransaction() != null) {
                 result.put("transactionId", complaint.getTransaction().getId());
             }

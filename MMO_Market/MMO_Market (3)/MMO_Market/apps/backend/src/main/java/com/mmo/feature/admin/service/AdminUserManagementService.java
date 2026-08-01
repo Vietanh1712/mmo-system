@@ -224,12 +224,8 @@ public class AdminUserManagementService {
         String oldNationalId = staff.getNationalId();
         Boolean oldActive = !Boolean.TRUE.equals(staff.getIsLocked());
 
-        staff.setFullName(request.getFullName().trim());
-        staff.setPhone(blankToNull(request.getPhone()));
-        staff.setGender(normalizeGender(request.getGender()));
-        staff.setAddress(blankToNull(request.getAddress()));
-        staff.setNationalId(blankToNull(request.getNationalId()));
-        staff.setDateOfBirth(request.getDateOfBirth());
+        // The admin should only be able to update password and active status of staff
+        // Other fields like name, phone, etc., are managed by the staff themselves
         if (request.getActive() != null) {
             staff.setIsLocked(!Boolean.TRUE.equals(request.getActive()));
         }

@@ -440,6 +440,8 @@ function setBadge(elementId, text, badgeClass) {
 }
 
 function formatOrderStatus(status) {
+    if (!status) return '-';
+    const upperStatus = status.toUpperCase().trim();
     const map = {
         PENDING: 'Chờ xử lý',
         HELD: 'Tạm giữ',
@@ -450,32 +452,38 @@ function formatOrderStatus(status) {
         DISPUTED: 'Tranh chấp',
         REFUNDED: 'Đã hoàn tiền'
     };
-    return map[status] || status || '-';
+    return map[upperStatus] || status || '-';
 }
 
 function getOrderStatusBadgeClass(status) {
-    if (status === 'COMPLETED' || status === 'DELIVERED') return 'ds-badge-success';
-    if (status === 'DISPUTED' || status === 'CANCELLED') return 'ds-badge-danger';
-    if (status === 'PENDING' || status === 'PAID') return 'ds-badge-warning';
-    if (status === 'HELD' || status === 'REFUNDED') return 'ds-badge-info';
+    if (!status) return 'ds-badge-muted';
+    const upperStatus = status.toUpperCase().trim();
+    if (upperStatus === 'COMPLETED' || upperStatus === 'DELIVERED') return 'ds-badge-success';
+    if (upperStatus === 'DISPUTED' || upperStatus === 'CANCELLED') return 'ds-badge-danger';
+    if (upperStatus === 'PENDING' || upperStatus === 'PAID') return 'ds-badge-warning';
+    if (upperStatus === 'HELD' || upperStatus === 'REFUNDED') return 'ds-badge-info';
     return 'ds-badge-muted';
 }
 
 function formatPaymentStatus(status) {
+    if (!status) return '-';
+    const upperStatus = status.toUpperCase().trim();
     const map = {
         PAID: 'Đã thanh toán',
         PENDING: 'Chờ thanh toán',
         FAILED: 'Thất bại',
         REFUNDED: 'Đã hoàn tiền'
     };
-    return map[status] || status || '-';
+    return map[upperStatus] || status || '-';
 }
 
 function getPaymentBadgeClass(status) {
-    if (status === 'PAID') return 'ds-badge-success';
-    if (status === 'PENDING') return 'ds-badge-warning';
-    if (status === 'FAILED') return 'ds-badge-danger';
-    if (status === 'REFUNDED') return 'ds-badge-info';
+    if (!status) return 'ds-badge-muted';
+    const upperStatus = status.toUpperCase().trim();
+    if (upperStatus === 'PAID') return 'ds-badge-success';
+    if (upperStatus === 'PENDING') return 'ds-badge-warning';
+    if (upperStatus === 'FAILED') return 'ds-badge-danger';
+    if (upperStatus === 'REFUNDED') return 'ds-badge-info';
     return 'ds-badge-muted';
 }
 
@@ -650,35 +658,54 @@ async function loadCustomerDisputeChats(complaintId) {
         }
         
         container.innerHTML = chats.map(msg => {
-            if (msg.senderRole === 'Staff' || msg.message.startsWith('Hệ thống:')) {
+            if (msg.message && msg.message.startsWith('Hệ thống:')) {
                 return `
-                    <div style="text-align: center; margin: 12px 0; width: 100%; box-sizing: border-box;">
-                        <span style="font-size: 12px; background: #e2e8f0; color: #475569; padding: 6px 14px; border-radius: 6px; border: 1px solid #cbd5e1; display: inline-block; font-weight: 500; text-align: left;">
+                    <div style="text-align: center; margin: 12px 0; width: 100%; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <div style="width: 24px; height: 24px; border-radius: 50%; background: #64748b; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 11px;"><i class="fa fa-cog"></i></div>
+                        <span style="font-size: 12px; background: #f1f5f9; color: #334155; padding: 6px 14px; border-radius: 6px; border: 1px solid #cbd5e1; display: inline-block; font-weight: 500; text-align: left;">
                             ${escapeHtml(msg.message)}
                         </span>
                     </div>
                 `;
             }
 
-            let roleLabel = 'Khách hàng (Bạn)';
+            let roleLabel = 'Khách hàng';
             let bg = 'rgba(37, 99, 235, 0.08)';
             let border = '1px solid rgba(37, 99, 235, 0.15)';
             let titleColor = '#2563eb';
+            let avatarBg = '#2563eb';
+            let initials = msg.senderName ? msg.senderName.trim().split(/\s+/).map(w => w[0]).join('').substring(0, 2).toUpperCase() : 'KH';
+            let avatarContent = escapeHtml(initials);
             
             if (msg.senderRole === 'Seller') {
                 roleLabel = 'Người bán';
                 bg = 'rgba(217, 119, 6, 0.08)';
                 border = '1px solid rgba(217, 119, 6, 0.15)';
                 titleColor = '#d97706';
+                avatarBg = '#d97706';
+                initials = msg.senderName ? msg.senderName.trim().split(/\s+/).map(w => w[0]).join('').substring(0, 2).toUpperCase() : 'NB';
+                avatarContent = escapeHtml(initials);
+            } else if (msg.senderRole === 'Staff' || msg.senderRole === 'Admin') {
+                roleLabel = 'Nhân viên hỗ trợ';
+                bg = 'rgba(124, 58, 237, 0.08)';
+                border = '1px solid rgba(124, 58, 237, 0.15)';
+                titleColor = '#7c3aed';
+                avatarBg = '#7c3aed';
+                avatarContent = '<i class="fa fa-user-shield"></i>';
             }
             
             return `
-                <div style="background: ${bg}; border: ${border}; border-radius: 8px; padding: 12px; font-size: 13px; line-height: 1.5; text-align: left;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <span style="font-weight: 700; color: ${titleColor};">${escapeHtml(msg.senderName)} <small style="font-weight: 500; opacity: 0.85;">(${roleLabel})</small></span>
-                        <small style="color: #64748b; font-size: 11px;">${msg.createdAt ? msg.createdAt.replace('T', ' ').substring(0, 16) : ''}</small>
+                <div style="display: flex; gap: 10px; align-items: flex-start; background: ${bg}; border: ${border}; border-radius: 8px; padding: 12px; font-size: 13px; line-height: 1.5; text-align: left;">
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: ${avatarBg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0; margin-top: 2px;" title="${escapeHtml(msg.senderName)} (${roleLabel})">
+                        ${avatarContent}
                     </div>
-                    <div style="color: #1e293b; white-space: pre-wrap;">${escapeHtml(msg.message)}</div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <span style="font-weight: 700; color: ${titleColor};">${escapeHtml(msg.senderName)} <small style="font-weight: 500; opacity: 0.85;">(${roleLabel})</small></span>
+                            <small style="color: #64748b; font-size: 11px;">${msg.createdAt ? msg.createdAt.replace('T', ' ').substring(0, 16) : ''}</small>
+                        </div>
+                        <div style="color: #1e293b; white-space: pre-wrap;">${escapeHtml(msg.message)}</div>
+                    </div>
                 </div>
             `;
         }).join('');

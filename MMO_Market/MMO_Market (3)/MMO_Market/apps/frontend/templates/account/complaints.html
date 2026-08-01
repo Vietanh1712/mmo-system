@@ -147,12 +147,17 @@
 
             tbody.innerHTML = list.map(c => {
                 let statusBadge = '';
-                if (c.status === 'Resolved') {
+                const cleanStatus = (c.status || '').toUpperCase().replace('_', '').trim();
+                if (cleanStatus === 'RESOLVED') {
                     statusBadge = '<span class="ds-badge ds-badge-success">Chấp nhận hoàn tiền</span>';
-                } else if (c.status === 'Rejected') {
+                } else if (cleanStatus === 'REJECTED') {
                     statusBadge = '<span class="ds-badge ds-badge-danger">Bác đơn (Giải ngân)</span>';
-                } else if (c.status === 'InProgress') {
+                } else if (cleanStatus === 'INPROGRESS') {
                     statusBadge = '<span class="ds-badge ds-badge-warning"><i class="fa fa-spinner fa-spin"></i> Đang tranh chấp</span>';
+                } else if (cleanStatus === 'OPEN') {
+                    statusBadge = '<span class="ds-badge ds-badge-info">Chờ xử lý</span>';
+                } else if (cleanStatus === 'CLOSED') {
+                    statusBadge = '<span class="ds-badge ds-badge-muted">Đã đóng</span>';
                 } else {
                     statusBadge = `<span class="ds-badge ds-badge-muted">${c.status}</span>`;
                 }
