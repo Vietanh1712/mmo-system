@@ -369,58 +369,81 @@ function createAccessInfo(order) {
     if (order.status === 'CANCELLED') return '<div class="cred-status-msg cred-status-danger"><i class="fa fa-times-circle"></i> Đơn hàng đã hủy, không có thông tin nhận hàng.</div>';
     if (order.status === 'DISPUTED') return '<div class="cred-status-msg cred-status-warning"><i class="fa fa-shield"></i> Thông tin nhận hàng đang được giữ để xử lý tranh chấp.</div>';
 
-    let creds = order.credentials;
+    let list = [];
+    if (order.credentialsList && order.credentialsList.length > 0) {
+        list = order.credentialsList;
+    } else if (order.credentials) {
+        list = [order.credentials];
+    }
 
-    if (creds) {
-        const isKeyOnly = creds.password === '(Product Key)';
-        return `
-            <div class="cred-card">
-                <div class="cred-card__header">
-                    <span class="cred-card__icon"><i class="fa fa-key"></i></span>
-                    <span class="cred-card__title">Thông tin đăng nhập</span>
-                    <span class="cred-card__badge">Bảo mật</span>
-                </div>
-
-                <div class="cred-field">
-                    <span class="cred-field__label">${isKeyOnly ? 'Mã kích hoạt (Key):' : 'Tài khoản (Email/Username):'}</span>
-                    <div class="cred-field__row">
-                        <code class="cred-field__value" id="credUsername">${escapeHtml(creds.username)}</code>
-                        <button class="cred-copy-btn" onclick="copyToClipboard('${escapeHtml(creds.username).replace(/'/g, '&#039;')}', '${isKeyOnly ? 'M\u00e3 k\u00edch ho\u1ea1t' : 'T\u00e0i kho\u1ea3n'}', this)" title="Sao chép">
-                            <i class="fa fa-copy"></i><span>Copy</span>
-                        </button>
+    if (list.length > 0) {
+        let html = '';
+        list.forEach((creds, index) => {
+            const isKeyOnly = creds.password === '(Product Key)';
+            const itemNum = list.length > 1 ? ` #${index + 1}` : '';
+            html += `
+                <div class="cred-card" style="margin-bottom: 16px;">
+                    <div class="cred-card__header">
+                        <span class="cred-card__icon"><i class="fa fa-key"></i></span>
+                        <span class="cred-card__title">Thông tin nhận hàng${itemNum}</span>
+                        <span class="cred-card__badge">Bảo mật</span>
                     </div>
-                </div>
 
-                ${isKeyOnly ? '' : `
-                <div class="cred-field">
-                    <span class="cred-field__label">Mật khẩu:</span>
-                    <div class="cred-field__row">
-                        <code class="cred-field__value" id="credPassword">${escapeHtml(creds.password)}</code>
-                        <button class="cred-copy-btn" onclick="copyToClipboard('${escapeHtml(creds.password).replace(/'/g, '&#039;')}', 'M\u1eadt kh\u1ea9u', this)" title="Sao chép">
-                            <i class="fa fa-copy"></i><span>Copy</span>
-                        </button>
+                    <div class="cred-field">
+                        <span class="cred-field__label">${isKeyOnly ? 'Mã kích hoạt (Key):' : 'Tài khoản (Email/Username):'}</span>
+                        <div class="cred-field__row">
+                            <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; background: var(--ds-surface-muted, #f1f5f9); border: 1px solid var(--ds-border, #e2e8f0); border-radius: 6px; padding: 4px 10px;">
+                                <code class="cred-field__value" id="credUsername_${index}" style="flex: 1; border: none; background: transparent; padding: 0; font-family: monospace; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">••••••••••••</code>
+                                <button class="cred-toggle-btn" onclick="toggleCredVisibility('credUsername_${index}', '${escapeHtml(creds.username).replace(/'/g, '&#039;')}', this)" type="button" title="Hiện/Ẩn" style="background: none; border: none; cursor: pointer; color: var(--ds-text-muted, #64748b); padding: 4px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                            </div>
+                            <button class="cred-copy-btn" onclick="copyToClipboard('${escapeHtml(creds.username).replace(/'/g, '&#039;')}', '${isKeyOnly ? 'M\u00e3 k\u00edch ho\u1ea1t' : 'T\u00e0i kho\u1ea3n'}', this)" title="Sao chép">
+                                <i class="fa fa-copy"></i><span>Copy</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
-                `}
 
-                ${creds.note ? `
-                <div class="cred-field">
-                    <span class="cred-field__label">Ghi chú:</span>
-                    <div class="cred-field__row">
-                        <code class="cred-field__value" id="credNote">${escapeHtml(creds.note)}</code>
-                        <button class="cred-copy-btn" onclick="copyToClipboard('${escapeHtml(creds.note).replace(/'/g, '&#039;')}', 'Ghi ch\u00fa', this)" title="Sao chép">
-                            <i class="fa fa-copy"></i><span>Copy</span>
-                        </button>
+                    ${isKeyOnly ? '' : `
+                    <div class="cred-field">
+                        <span class="cred-field__label">Mật khẩu:</span>
+                        <div class="cred-field__row">
+                            <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; background: var(--ds-surface-muted, #f1f5f9); border: 1px solid var(--ds-border, #e2e8f0); border-radius: 6px; padding: 4px 10px;">
+                                <code class="cred-field__value" id="credPassword_${index}" style="flex: 1; border: none; background: transparent; padding: 0; font-family: monospace; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">••••••••••••</code>
+                                <button class="cred-toggle-btn" onclick="toggleCredVisibility('credPassword_${index}', '${escapeHtml(creds.password).replace(/'/g, '&#039;')}', this)" type="button" title="Hiện/Ẩn" style="background: none; border: none; cursor: pointer; color: var(--ds-text-muted, #64748b); padding: 4px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                            </div>
+                            <button class="cred-copy-btn" onclick="copyToClipboard('${escapeHtml(creds.password).replace(/'/g, '&#039;')}', 'M\u1eadt kh\u1ea9u', this)" title="Sao chép">
+                                <i class="fa fa-copy"></i><span>Copy</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
-                ` : ''}
+                    `}
 
-                <div class="cred-card__warning">
-                    <i class="fa fa-exclamation-triangle"></i>
-                    Vui lòng không thay đổi mật khẩu hoặc thông tin bảo mật để tránh ảnh hưởng đến thời gian bảo hành.
+                    ${creds.note ? `
+                    <div class="cred-field">
+                        <span class="cred-field__label">Ghi chú:</span>
+                        <div class="cred-field__row">
+                            <code class="cred-field__value" id="credNote_${index}">${escapeHtml(creds.note)}</code>
+                            <button class="cred-copy-btn" onclick="copyToClipboard('${escapeHtml(creds.note).replace(/'/g, '&#039;')}', 'Ghi ch\u00fa', this)" title="Sao chép">
+                                <i class="fa fa-copy"></i><span>Copy</span>
+                            </button>
+                        </div>
+                    </div>
+                    ` : ''}
                 </div>
+            `;
+        });
+
+        // Thêm cảnh báo ở cuối cùng
+        html += `
+            <div class="cred-card__warning" style="margin-top: 12px;">
+                <i class="fa fa-exclamation-triangle"></i>
+                Vui lòng không thay đổi mật khẩu hoặc thông tin bảo mật để tránh ảnh hưởng đến thời gian bảo hành.
             </div>
         `;
+        return html;
     }
 
     return '<div class="cred-status-msg"><i class="fa fa-info-circle"></i> Thông tin nhận hàng sẽ được hiển thị tại đây khi sản phẩm được giao thành công.</div>';
@@ -470,7 +493,6 @@ function formatPaymentStatus(status) {
     const upperStatus = status.toUpperCase().trim();
     const map = {
         PAID: 'Đã thanh toán',
-        PENDING: 'Chờ thanh toán',
         FAILED: 'Thất bại',
         REFUNDED: 'Đã hoàn tiền'
     };
@@ -532,6 +554,25 @@ window.copyToClipboard = async function (text, label, btn) {
         showSuccessToast(`Đã sao chép ${label} vào bộ nhớ tạm.`);
     } catch {
         showWarningToast('Không thể copy tự động. Vui lòng chọn và sao chép thủ công.');
+    }
+};
+
+window.toggleCredVisibility = function (elementId, actualValue, btn) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    const icon = btn.querySelector('i');
+    const isHidden = element.textContent === '••••••••••••';
+    
+    if (isHidden) {
+        element.textContent = actualValue;
+        if (icon) {
+            icon.className = 'fa fa-eye-slash';
+        }
+    } else {
+        element.textContent = '••••••••••••';
+        if (icon) {
+            icon.className = 'fa fa-eye';
+        }
     }
 };
 
