@@ -156,14 +156,12 @@
                                     <input type="text" id="productSearch" class="ds-input" placeholder="Tìm kiếm sản phẩm..." style="padding-left: 36px; width: 100%; border-radius: 6px; border: 1px solid #cbd5e1; padding-top: 8px; padding-bottom: 8px;">
                                 </div>
                                 <!-- Lọc theo danh mục -->
-                                <select id="productCategory" class="ds-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; min-width: 150px;">
-                                    <option value="">Tất cả danh mục</option>
-                                    <option value="Email">Email</option>
-                                    <option value="Tài khoản">Tài khoản</option>
-                                    <option value="Phần mềm">Phần mềm</option>
-                                    <option value="Tương tác">Tăng tương tác</option>
-                                    <option value="Dịch vụ">Dịch vụ phần mềm</option>
-                                    <option value="Blockchain">Blockchain</option>
+                                <select id="productCategory" class="ds-select" style="display:none;"></select>
+                                <select id="mainCategoryFilter" class="ds-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; min-width: 130px;">
+                                    <option value="">Tất cả danh mục chính</option>
+                                </select>
+                                <select id="subCategoryFilter" class="ds-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; min-width: 130px;" disabled>
+                                    <option value="">Tất cả danh mục phụ</option>
                                 </select>
                                 <!-- Sắp xếp -->
                                 <select id="productSort" class="ds-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; min-width: 150px;">
@@ -202,145 +200,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Row 1: ACCOUNT Product -->
                                 <tr>
-                                    <td>
-                                        <img src="https://via.placeholder.com/50x50/ef4444/ffffff?text=Netflix" class="product-image" alt="Netflix">
-                                    </td>
-                                    <td>
-                                        <div class="product-cell">
-                                            <div>
-                                                <strong>Netflix Premium</strong>
-                                                <div style="color: var(--ds-text-muted); font-size: 12px;">ID #101</div>
-                                                <span class="asset-badge"><i class="fa fa-database"></i> 47 tài sản</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>Streaming</td>
-                                    <td>
-                                        <span style="background: #f0f7ff; color: #1e40af; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">
-                                            <i class="fa fa-user-circle"></i> Tài khoản
-                                        </span>
-                                    </td>
-                                    <td style="text-align: right;">3</td>
-                                    <td style="text-align: right;">47</td>
-                                    <td><span class="ds-badge ds-badge-success">Active</span></td>
-                                    <td style="text-align: right;">
-                                        <button class="view-assets-btn" onclick="viewAssets(1)"><i class="fa fa-eye"></i> Xem</button>
-                                    </td>
-                                </tr>
-
-                                <!-- Row 2: ACCOUNT Product with low stock -->
-                                <tr>
-                                    <td>
-                                        <img src="https://via.placeholder.com/50x50/1db954/ffffff?text=Spotify" class="product-image" alt="Spotify">
-                                    </td>
-                                    <td>
-                                        <div class="product-cell">
-                                            <div>
-                                                <strong>Spotify Family</strong>
-                                                <div style="color: var(--ds-text-muted); font-size: 12px;">ID #102</div>
-                                                <span class="asset-badge"><i class="fa fa-database"></i> 12 tài sản</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>Streaming</td>
-                                    <td>
-                                        <span style="background: #f0f7ff; color: #1e40af; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">
-                                            <i class="fa fa-user-circle"></i> Tài khoản
-                                        </span>
-                                    </td>
-                                    <td style="text-align: right;">2</td>
-                                    <td style="text-align: right;">
-                                        <span style="color: #f59e0b; font-weight: 600;">12</span>
-                                    </td>
-                                    <td><span class="ds-badge ds-badge-success">Active</span></td>
-                                    <td style="text-align: right;">
-                                        <button class="view-assets-btn" onclick="viewAssets(2)"><i class="fa fa-eye"></i> Xem</button>
-                                    </td>
-                                </tr>
-
-                                <!-- Row 3: KEY Product -->
-                                <tr>
-                                    <td>
-                                        <img src="https://via.placeholder.com/50x50/8b5cf6/ffffff?text=Tool" class="product-image" alt="Tool">
-                                    </td>
-                                    <td>
-                                        <div class="product-cell">
-                                            <div>
-                                                <strong>Tool Auto Nuôi Clone Facebook Pro</strong>
-                                                <div style="color: var(--ds-text-muted); font-size: 12px;">ID #103</div>
-                                                <span class="asset-badge"><i class="fa fa-database"></i> 28 key</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>Công cụ</td>
-                                    <td>
-                                        <span style="background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">
-                                            <i class="fa fa-key"></i> Mã Key
-                                        </span>
-                                    </td>
-                                    <td style="text-align: right;">1</td>
-                                    <td style="text-align: right;">28</td>
-                                    <td><span class="ds-badge ds-badge-success">Active</span></td>
-                                    <td style="text-align: right;">
-                                        <button class="view-assets-btn" onclick="viewAssets(3)"><i class="fa fa-eye"></i> Xem</button>
-                                    </td>
-                                </tr>
-
-                                <!-- Row 4: GAME_CARD Product (Out of stock) -->
-                                <tr>
-                                    <td>
-                                        <img src="https://via.placeholder.com/50x50/3b82f6/ffffff?text=Garena" class="product-image" alt="Garena">
-                                    </td>
-                                    <td>
-                                        <div class="product-cell">
-                                            <div>
-                                                <strong>Garena VCoin Card 100K</strong>
-                                                <div style="color: var(--ds-text-muted); font-size: 12px;">ID #104</div>
-                                                <span class="asset-badge"><i class="fa fa-database"></i> 0 thẻ</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>Game</td>
-                                    <td>
-                                        <span style="background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">
-                                            <i class="fa fa-credit-card"></i> Thẻ nạp
-                                        </span>
-                                    </td>
-                                    <td style="text-align: right;">2</td>
-                                    <td style="text-align: right;">0</td>
-                                    <td><span class="ds-badge ds-badge-danger"><i class="fa fa-lock"></i> Hết hàng</span></td>
-                                    <td style="text-align: right;">
-                                        <button class="view-assets-btn" onclick="viewAssets(4)" disabled><i class="fa fa-eye"></i> Xem</button>
-                                    </td>
-                                </tr>
-
-                                <!-- Row 5: Canva (Inactive) -->
-                                <tr>
-                                    <td>
-                                        <img src="https://via.placeholder.com/50x50/5b21b6/ffffff?text=Canva" class="product-image" alt="Canva">
-                                    </td>
-                                    <td>
-                                        <div class="product-cell">
-                                            <div>
-                                                <strong>Canva Pro</strong>
-                                                <div style="color: var(--ds-text-muted); font-size: 12px;">ID #105</div>
-                                                <span class="asset-badge"><i class="fa fa-database"></i> 5 tài sản</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>Phần mềm</td>
-                                    <td>
-                                        <span style="background: #f0f7ff; color: #1e40af; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">
-                                            <i class="fa fa-user-circle"></i> Tài khoản
-                                        </span>
-                                    </td>
-                                    <td style="text-align: right;">1</td>
-                                    <td style="text-align: right;">5</td>
-                                    <td><span class="ds-badge ds-badge-warning"><i class="fa fa-pause"></i> Inactive</span></td>
-                                    <td style="text-align: right;">
-                                        <button class="view-assets-btn" onclick="viewAssets(5)"><i class="fa fa-eye"></i> Xem</button>
+                                    <td colspan="8" style="text-align: center; padding: 40px; color: var(--seller-muted);">
+                                        <i class="fa fa-spinner fa-spin" style="font-size: 24px; display: block; margin-bottom: 8px;"></i> Đang tải danh sách sản phẩm...
                                     </td>
                                 </tr>
                             </tbody>

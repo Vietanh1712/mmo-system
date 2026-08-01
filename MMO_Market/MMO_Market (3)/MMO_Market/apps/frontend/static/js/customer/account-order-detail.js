@@ -327,11 +327,11 @@ function renderTimeline(order) {
                 if (descEl) descEl.textContent = 'Đơn hàng đã bị hủy bỏ.';
             } else if (status === 'COMPLETED') {
                 step.classList.add('order-timeline-item--active');
-                if (titleEl) titleEl.textContent = 'Hoàn tất';
-                if (descEl) descEl.textContent = 'Đơn hàng đã hoàn tất thành công.';
+                if (titleEl) titleEl.textContent = 'Hoàn thành';
+                if (descEl) descEl.textContent = 'Đơn hàng đã hoàn thành thành công.';
             } else {
                 // Các trạng thái khác (PENDING, PAID, DELIVERED, HELD)
-                if (titleEl) titleEl.textContent = 'Hoàn tất / tranh chấp';
+                if (titleEl) titleEl.textContent = 'Hoàn thành / tranh chấp';
                 if (descEl) descEl.textContent = 'Kết thúc đơn hoặc mở xử lý khiếu nại.';
             }
         } else {
@@ -658,7 +658,7 @@ function renderMultipleCredentialsTable(credsList) {
 }
 
 function getActionHint(order) {
-    if (order.status === 'COMPLETED') return 'Đơn hàng đã hoàn tất. Bạn có thể xem lại thông tin mua hàng.';
+    if (order.status === 'COMPLETED') return 'Đơn hàng đã hoàn thành. Bạn có thể xem lại thông tin mua hàng.';
     if (order.status === 'DISPUTED') return 'Đơn hàng đang trong trạng thái tranh chấp.';
     if (order.status === 'CANCELLED') return 'Đơn hàng đã hủy, không còn thao tác xử lý.';
     return 'Bạn có thể theo dõi đơn hoặc gửi khiếu nại khi cần.';
@@ -678,7 +678,7 @@ function formatOrderStatus(status) {
         HELD: 'Tạm giữ',
         PAID: 'Đã thanh toán',
         DELIVERED: 'Đã giao',
-        COMPLETED: 'Hoàn tất',
+        COMPLETED: 'Hoàn thành',
         CANCELLED: 'Đã hủy',
         DISPUTED: 'Tranh chấp',
         REFUNDED: 'Đã hoàn tiền'

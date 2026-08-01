@@ -410,7 +410,7 @@ function formatOrderStatus(status) {
         HELD: 'Tạm giữ',
         PAID: 'Đã thanh toán',
         DELIVERED: 'Đã giao',
-        COMPLETED: 'Hoàn tất',
+        COMPLETED: 'Hoàn thành',
         CANCELLED: 'Đã hủy',
         DISPUTED: 'Tranh chấp',
         REFUNDED: 'Đã hoàn tiền'

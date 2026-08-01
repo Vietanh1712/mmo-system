@@ -315,6 +315,12 @@ public class SellerController {
                 map.put("id", p.getId());
                 map.put("name", p.getName());
                 map.put("categoryName", p.getCategory().getName());
+                map.put("categoryId", p.getCategory().getId());
+                if (p.getCategory().getParent() != null) {
+                    map.put("mainCategoryId", p.getCategory().getParent().getId());
+                } else {
+                    map.put("mainCategoryId", p.getCategory().getId());
+                }
                 map.put("description", p.getDescription());
                 map.put("image", p.getImage());
                 map.put("productType", p.getProductType());
@@ -1093,6 +1099,16 @@ public class SellerController {
                 map.put("amountVnd", c.getTransaction().getAmountVnd());
                 map.put("status", c.getStatus());
                 map.put("createdAt", c.getCreatedAt().toString());
+                
+                Category cat = c.getTransaction().getProduct().getCategory();
+                if (cat != null) {
+                    map.put("categoryId", cat.getId());
+                    if (cat.getParent() != null) {
+                        map.put("mainCategoryId", cat.getParent().getId());
+                    } else {
+                        map.put("mainCategoryId", cat.getId());
+                    }
+                }
                 return map;
             }).collect(Collectors.toList());
 

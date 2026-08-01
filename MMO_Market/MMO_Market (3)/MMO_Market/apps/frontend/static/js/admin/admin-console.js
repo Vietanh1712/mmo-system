@@ -215,7 +215,7 @@
     };
 
     const TX_STATUS_LABELS = {
-        Completed: 'Hoàn tất',
+        Completed: 'Hoàn thành',
         Pending: 'Đang chờ',
         Failed: 'Thất bại',
         Held: 'Tạm giữ'
