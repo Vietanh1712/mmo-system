@@ -433,7 +433,6 @@ function formatPaymentStatus(status) {
     const upperStatus = status.toUpperCase().trim();
     const map = {
         PAID: 'Đã thanh toán',
-        PENDING: 'Chờ thanh toán',
         FAILED: 'Thất bại',
         REFUNDED: 'Đã hoàn tiền'
     };

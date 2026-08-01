@@ -6,21 +6,17 @@
   <component name="ChangeListManager">
     <list default="true" id="cc5262a2-5922-4af2-8358-144285f2178e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/PLAN.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/PLAN.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/SPEC.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-staff/SPEC.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/features/SPEC-05_STAFF.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/features/SPEC-05_STAFF.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/frontend/feat-staff/SPEC.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/frontend/feat-staff/SPEC.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/controller/ComplaintController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/controller/ComplaintController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/service/ComplaintService.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/service/ComplaintService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/service/impl/ComplaintServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/complaint/service/impl/ComplaintServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/ComplaintRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/ComplaintRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/ProductSpecification.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/ProductSpecification.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/SellerRegistrationRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/shared/dal/SellerRegistrationRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-complaints.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-complaints.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-support-tickets.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-support-tickets.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/complaints.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/complaints.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/support-tickets.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/support-tickets.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/staff/controller/mvc/StaffController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/staff/controller/mvc/StaffController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/css/customer/order-detail.css" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/css/customer/order-detail.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-kyc.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-kyc.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-order-detail.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-order-detail.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-orders.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-orders.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-kyc-detail.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/staff/staff-kyc-detail.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/account/kyc.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/account/kyc.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/account/order-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/account/order-detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/account/orders.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/account/orders.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/kyc-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/kyc-detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/staff/withdrawal-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/staff/withdrawal-detail.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,19 +49,25 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "Spring Boot.MMOMarketApplication.executor": "Run",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "cuong2k3",
+    "git-widget-placeholder": "AnhTV",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
     "node.js.detected.package.eslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
-    "to.speed.mode.migration.done": "true"
+    "nodejs_package_manager_path": "npm",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -76,7 +78,7 @@
   <component name="RunManager">
     <configuration name="MMOMarketApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
       <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UnknownPolicyInFreeMode" />
-      <module name="MMO_Market" />
+      <module name="MMO_Market (1) (org.example)" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.mmo.MMOMarketApplication" />
       <extension name="coverage">
         <pattern>
@@ -97,8 +99,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.24374.151" />
-        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-IU-261.24374.151" />
+        <option value="bundled-jdk-9823dce3aa75-fbdcb00ec9e3-intellij.indexing.shared.core-IU-251.26094.121" />
+        <option value="bundled-js-predefined-d6986cc7102b-b26f3e71634d-JavaScript-IU-251.26094.121" />
       </set>
     </attachedChunks>
   </component>
@@ -109,6 +111,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1784873095601</updated>
+      <workItem from="1785578381887" duration="4211000" />
     </task>
     <servers />
   </component>

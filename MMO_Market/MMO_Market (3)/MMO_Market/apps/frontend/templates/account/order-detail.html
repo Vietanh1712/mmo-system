@@ -54,55 +54,7 @@
                         </div>
                     </section>
 
-                    <section class="order-detail-grid" id="orderDetailContent" hidden>
-                        <article class="order-detail-card ds-card">
-                            <h2 class="ds-heading-md">Thông tin đơn hàng</h2>
-                            <dl class="order-detail-list">
-                                <div><dt>Mã đơn</dt><dd id="orderCodeValue">-</dd></div>
-                                <div><dt>Ngày mua</dt><dd id="orderCreatedAt">-</dd></div>
-                                <div><dt>Tổng tiền</dt><dd id="orderAmount">-</dd></div>
-                                <div><dt>Escrow release</dt><dd id="orderEscrowRelease">-</dd></div>
-                            </dl>
-                        </article>
-
-                        <article class="order-detail-card ds-card">
-                            <h2 class="ds-heading-md">Sản phẩm đã mua</h2>
-                            <div class="order-product-box" style="margin-bottom: 14px;">
-                                <span class="order-product-box__icon"><i class="fa fa-shopping-bag" aria-hidden="true"></i></span>
-                                <div style="display: flex; align-items: center; min-height: 44px;">
-                                    <strong id="orderProductTitle">-</strong>
-                                </div>
-                            </div>
-                            <div id="orderAccessInfo">Thông tin nhận hàng sẽ được backend cung cấp sau.</div>
-                        </article>
-
-                        <article class="order-detail-card ds-card">
-                            <h2 class="ds-heading-md">Thanh toán & escrow</h2>
-                            <dl class="order-detail-list">
-                                <div><dt>Mã giao dịch</dt><dd id="orderTransactionCode">-</dd></div>
-                                <div><dt>Thanh toán</dt><dd id="orderPaymentText">-</dd></div>
-                                <div><dt>Số tiền</dt><dd id="orderPaymentAmount">-</dd></div>
-                            </dl>
-                        </article>
-
-                        <article class="order-detail-card ds-card">
-                            <h2 class="ds-heading-md">Thao tác</h2>
-                            <p class="ds-caption" id="orderActionHint">Các thao tác phụ thuộc trạng thái đơn hàng.</p>
-                            <div class="order-detail-actions">
-                                <button class="ds-btn ds-btn-outline" id="orderViewProductButton" type="button">
-                                    <i class="fa fa-eye" aria-hidden="true"></i> Xem sản phẩm
-                                </button>
-                                <a class="ds-btn ds-btn-primary" id="orderFeedbackButton" style="display: none; text-decoration: none;">
-                                    <i class="fa fa-star" aria-hidden="true"></i> Đánh giá sản phẩm
-                                </a>
-                                <button class="ds-btn ds-btn-danger" id="orderComplaintButton" type="button">
-                                    <i class="fa fa-gavel" aria-hidden="true"></i> Khiếu nại
-                                </button>
-                            </div>
-                        </article>
-                    </section>
-
-                    <section class="order-detail-timeline ds-card" id="orderTimeline" hidden>
+                    <section class="order-detail-timeline ds-card" id="orderTimeline" hidden style="margin-bottom: 16px;">
                         <h2 class="ds-heading-md">Tiến trình xử lý</h2>
                         <div class="order-timeline-list">
                             <div class="order-timeline-item" data-order-step="created">
@@ -122,6 +74,45 @@
                                 <div><strong>Hoàn tất / tranh chấp</strong><p>Kết thúc đơn hoặc mở xử lý khiếu nại.</p></div>
                             </div>
                         </div>
+                    </section>
+
+                    <section class="order-detail-grid" id="orderDetailContent" hidden>
+                        <article class="order-detail-card ds-card" style="grid-column: 1 / -1;">
+                            <h2 class="ds-heading-md" style="margin-bottom: 16px;">Thông tin đơn hàng &amp; Sản phẩm đã mua</h2>
+                            
+                            <dl class="order-detail-list" style="margin-bottom: 20px; border-bottom: 1px solid var(--ds-border, #e2e8f0); padding-bottom: 16px;">
+                                <div><dt>Mã đơn</dt><dd id="orderCodeValue">-</dd></div>
+                                <div><dt>Ngày mua</dt><dd id="orderCreatedAt">-</dd></div>
+                                <div><dt>Tổng tiền</dt><dd id="orderAmount">-</dd></div>
+                                <div><dt>Ngày giải ngân</dt><dd id="orderEscrowRelease">-</dd></div>
+                                <div><dt>Mã giao dịch</dt><dd id="orderTransactionCode">-</dd></div>
+                                <div><dt>Thanh toán</dt><dd id="orderPaymentText">-</dd></div>
+                                <div><dt>Số tiền</dt><dd id="orderPaymentAmount">-</dd></div>
+                            </dl>
+
+                            <div class="order-product-box" style="margin-bottom: 14px;">
+                                <span class="order-product-box__icon"><i class="fa fa-shopping-bag" aria-hidden="true"></i></span>
+                                <div style="display: flex; align-items: center; min-height: 44px;">
+                                    <strong id="orderProductTitle">-</strong>
+                                </div>
+                            </div>
+                            <div id="orderAccessInfo" style="margin-bottom: 20px;">Thông tin nhận hàng sẽ được backend cung cấp sau.</div>
+
+                            <div class="order-detail-actions-wrapper" style="border-top: 1px solid var(--ds-border, #e2e8f0); padding-top: 16px; margin-top: 16px;">
+                                <p class="ds-caption" id="orderActionHint" style="margin-bottom: 10px;">Các thao tác phụ thuộc trạng thái đơn hàng.</p>
+                                <div class="order-detail-actions" style="display: flex; gap: 12px; flex-wrap: wrap;">
+                                    <button class="ds-btn ds-btn-outline" id="orderViewProductButton" type="button">
+                                        <i class="fa fa-eye" aria-hidden="true"></i> Xem sản phẩm
+                                    </button>
+                                    <a class="ds-btn ds-btn-primary" id="orderFeedbackButton" style="display: none; text-decoration: none;">
+                                        <i class="fa fa-star" aria-hidden="true"></i> Đánh giá sản phẩm
+                                    </a>
+                                    <button class="ds-btn ds-btn-danger" id="orderComplaintButton" type="button">
+                                        <i class="fa fa-gavel" aria-hidden="true"></i> Khiếu nại
+                                    </button>
+                                </div>
+                            </div>
+                        </article>
                     </section>
 
 
