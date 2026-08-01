@@ -546,7 +546,6 @@ public class SellerController {
             return ResponseEntity.badRequest().body(Map.of("message", "Lỗi tải ảnh: " + e.getMessage()));
         }
     }
-
     // 8. Product PUT (Update)
     @PutMapping("/products/{id}")
     public ResponseEntity<?> updateProduct(@AuthenticationPrincipal Long userId, @PathVariable Long id, @RequestBody Map<String, Object> request) {
@@ -566,6 +565,7 @@ public class SellerController {
             String name = (String) request.get("name");
             String description = (String) request.get("description");
             String userGuide = (String) request.get("userGuide");
+            String image = (String) request.get("image");
             Object catIdObj = request.get("categoryId");
 
             if (name == null || name.trim().isEmpty() || catIdObj == null) {
@@ -580,6 +580,9 @@ public class SellerController {
             p.setDescription(description);
             p.setUserGuide(userGuide);
             p.setCategory(category);
+            if (image != null && !image.trim().isEmpty()) {
+                p.setImage(image);
+            }
             productRepository.save(p);
 
             return ResponseEntity.ok(Map.of("message", "Cập nhật sản phẩm thành công!"));

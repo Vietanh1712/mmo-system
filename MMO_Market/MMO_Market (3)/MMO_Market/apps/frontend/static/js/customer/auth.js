@@ -39,6 +39,9 @@ async function authFetch(url, options = {}) {
         'Authorization': `Bearer ${token}`,
         ...options.headers
     };
+    if (options.body instanceof FormData) {
+        delete headers['Content-Type'];
+    }
 
     const response = await fetch(`${API_BASE}${url}`, { ...options, headers });
 
@@ -387,6 +390,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const passwordInput = document.getElementById('password');
     const passwordToggle = document.querySelector('[data-toggle-password="password"]');
 
+
+
     function showLoginAlert(message, type) {
         alertBox.textContent = message;
         alertBox.className = `message ${type}`;
@@ -440,7 +445,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             googleClient = google.accounts.oauth2.initCodeClient({
-                client_id: '175000936199-7dd5vpm7hgbi31e88tafadongu0395du.apps.googleusercontent.com',
+                client_id: '175000936199-569ln6kaa4mf11prr9guk3kmf8mfnajb.apps.googleusercontent.com',
                 scope: 'openid email profile',
                 ux_mode: 'popup',
                 callback: (response) => {

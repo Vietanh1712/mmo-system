@@ -952,6 +952,31 @@ async function initProductEdit() {
     if (!form || !tbody || !mainSelect || !subSelect) return;
 
     let categoryData = [];
+    let currentProductImageUrl = '';
+    let isImageUpdated = false;
+    let base64ImageData = '';
+
+    // Lắng nghe sự kiện chọn file ảnh sản phẩm
+    const imageInput = document.getElementById('productImageInput');
+    const imagePreview = document.getElementById('productImagePreview');
+    if (imageInput && imagePreview) {
+        imageInput.addEventListener('change', async (e) => {
+            if (imageInput.files && imageInput.files.length > 0) {
+                const file = imageInput.files[0];
+                try {
+                    base64ImageData = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => resolve(ev.target.result);
+                        reader.readAsDataURL(file);
+                    });
+                    imagePreview.src = base64ImageData;
+                    isImageUpdated = true;
+                } catch (err) {
+                    console.error('Lỗi đọc file ảnh sản phẩm:', err);
+                }
+            }
+        });
+    }
 
     try {
         // Load Product Detail
@@ -969,6 +994,14 @@ async function initProductEdit() {
         document.getElementById('description').value = p.description || '';
         if (document.getElementById('userGuide')) {
             document.getElementById('userGuide').value = p.userGuide || '';
+        }
+
+        // Set Product Image Preview
+        if (p.image) {
+            currentProductImageUrl = p.image;
+            if (imagePreview) {
+                imagePreview.src = p.image;
+            }
         }
 
         // Activate variants new link
@@ -1021,11 +1054,34 @@ async function initProductEdit() {
         if (saveBtn) {
             saveBtn.removeAttribute('disabled');
             saveBtn.addEventListener('click', async () => {
+                let finalImageUrl = currentProductImageUrl;
+
+                // Nếu hình ảnh bị thay đổi, thực hiện upload trước
+                if (isImageUpdated && base64ImageData) {
+                    try {
+                        const uploadRes = await sellerFetch('/upload-image', {
+                            method: 'POST',
+                            body: JSON.stringify({ image: base64ImageData })
+                        });
+                        if (uploadRes.ok) {
+                            const uploadData = await uploadRes.json();
+                            finalImageUrl = uploadData.url;
+                        } else {
+                            showToast('Không thể tải lên ảnh sản phẩm mới.', 'error');
+                            return;
+                        }
+                    } catch (err) {
+                        showToast('Lỗi tải lên hình ảnh sản phẩm.', 'error');
+                        return;
+                    }
+                }
+
                 const payload = {
                     name: document.getElementById('productName').value.trim(),
                     description: document.getElementById('description').value.trim(),
                     userGuide: document.getElementById('userGuide') ? document.getElementById('userGuide').value.trim() : '',
-                    categoryId: subSelect.value || mainSelect.value
+                    categoryId: subSelect.value || mainSelect.value,
+                    image: finalImageUrl
                 };
 
                 try {
@@ -1035,6 +1091,8 @@ async function initProductEdit() {
                     });
                     if (!putRes.ok) throw new Error('Cập nhật sản phẩm thất bại.');
                     showToast('Cập nhật sản phẩm thành công!');
+                    currentProductImageUrl = finalImageUrl;
+                    isImageUpdated = false;
                 } catch (err) {
                     showToast(err.message, 'error');
                 }
@@ -1091,7 +1149,11 @@ async function initVariantForm() {
             // Set global productType and refresh layout
             window.productType = productType;
             if (typeof updateProductDisplay === 'function') updateProductDisplay(productType, v.productName);
-            if (typeof renderAssetFields === 'function') renderAssetFields(productType);
+            if (typeof window.switchAssetInputType === 'function') {
+                window.switchAssetInputType(productType);
+            } else if (typeof renderAssetFields === 'function') {
+                renderAssetFields(productType);
+            }
 
             // Update title to Edit variant mode
             const titleEl = document.querySelector('.seller-card__title');
@@ -1104,7 +1166,8 @@ async function initVariantForm() {
             if (assetsRes.ok) {
                 const existingAssets = await assetsRes.json();
                 assets = existingAssets.map(ea => {
-                    if (productType === 'ACCOUNT') {
+                    const type = ea.assetType || productType;
+                    if (type === 'ACCOUNT') {
                         return {
                             id: ea.id,
                             type: 'ACCOUNT',
@@ -1113,7 +1176,7 @@ async function initVariantForm() {
                             notes: ea.notes || '',
                             isUsed: ea.isUsed === true
                         };
-                    } else if (productType === 'KEY') {
+                    } else if (type === 'KEY') {
                         return {
                             id: ea.id,
                             type: 'KEY',
@@ -1121,7 +1184,7 @@ async function initVariantForm() {
                             notes: ea.notes || '',
                             isUsed: ea.isUsed === true
                         };
-                    } else if (productType === 'GAME_CARD') {
+                    } else if (type === 'GAME_CARD') {
                         return {
                             id: ea.id,
                             type: 'GAME_CARD',
@@ -1131,6 +1194,17 @@ async function initVariantForm() {
                         };
                     }
                 }).filter(Boolean);
+
+                // Switch the active tab to match the first asset type if exists
+                if (assets.length > 0) {
+                    const firstType = assets[0].type;
+                    if (firstType && firstType !== productType) {
+                        if (typeof window.switchAssetInputType === 'function') {
+                            window.switchAssetInputType(firstType);
+                        }
+                    }
+                }
+
                 if (typeof updateAssetList === 'function') updateAssetList();
             }
         } else {
@@ -1146,7 +1220,11 @@ async function initVariantForm() {
             // Set global productType and refresh layout
             window.productType = productType;
             if (typeof updateProductDisplay === 'function') updateProductDisplay(productType);
-            if (typeof renderAssetFields === 'function') renderAssetFields(productType);
+            if (typeof window.switchAssetInputType === 'function') {
+                window.switchAssetInputType(productType);
+            } else if (typeof renderAssetFields === 'function') {
+                renderAssetFields(productType);
+            }
         }
 
         // Back link update
@@ -1204,37 +1282,47 @@ async function initVariantForm() {
 
                     // Batch save any new assets
                     if (newAssets.length > 0) {
-                        const mappedAssets = newAssets.map(a => {
-                            if (productType === 'ACCOUNT') {
-                                return {
-                                    accountUsername: a.username,
-                                    accountPassword: a.password,
-                                    notes: a.notes
-                                };
-                            } else if (productType === 'KEY') {
-                                return {
-                                    keyCode: a.keyCode,
-                                    notes: a.notes
-                                };
-                            } else if (productType === 'GAME_CARD') {
-                                return {
-                                    cardCode: a.cardCode,
-                                    cardPin: "",
-                                    notes: a.notes
-                                };
-                            }
+                        const groups = {};
+                        newAssets.forEach(a => {
+                            const type = a.type || 'ACCOUNT';
+                            if (!groups[type]) groups[type] = [];
+                            groups[type].push(a);
                         });
 
-                        const assetRes = await sellerFetch('/digital-assets', {
-                            method: 'POST',
-                            body: JSON.stringify({
-                                variantId: savedVariantId,
-                                assetType: productType,
-                                assets: mappedAssets
-                            })
-                        });
-                        const assetData = await assetRes.json();
-                        if (!assetRes.ok) throw new Error(assetData.message || 'Lưu tài sản thất bại.');
+                        for (const type of Object.keys(groups)) {
+                            const typeAssets = groups[type];
+                            const mappedAssets = typeAssets.map(a => {
+                                if (type === 'ACCOUNT') {
+                                    return {
+                                        accountUsername: a.username,
+                                        accountPassword: a.password,
+                                        notes: a.notes
+                                    };
+                                } else if (type === 'KEY') {
+                                    return {
+                                        keyCode: a.keyCode,
+                                        notes: a.notes
+                                    };
+                                } else if (type === 'GAME_CARD') {
+                                    return {
+                                        cardCode: a.cardCode,
+                                        cardPin: "",
+                                        notes: a.notes
+                                    };
+                                }
+                            });
+
+                            const assetRes = await sellerFetch('/digital-assets', {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    variantId: savedVariantId,
+                                    assetType: type,
+                                    assets: mappedAssets
+                                })
+                            });
+                            const assetData = await assetRes.json();
+                            if (!assetRes.ok) throw new Error(assetData.message || 'LÆ°u tÃ i sáº£n tháº¥t báº¡i.');
+                        }
                     }
 
                     showToast(isEdit ? 'Đã cập nhật biến thể & tài sản!' : 'Đã tạo biến thể & tài sản thành công!');
@@ -1564,92 +1652,158 @@ async function initWithdrawals() {
                     return;
                 }
 
-                if (require2FA) {
-                    const confirmOtpSend = confirm(`Yêu cầu rút tiền này bắt buộc xác thực 2FA qua email. Bấm OK để gửi mã OTP về email: ${dashData.email}.`);
-                    if (!confirmOtpSend) return;
+                // Reset OTP inputs inside modal
+                const modalEl = document.getElementById('confirmWithdrawModal');
+                const modalTextEl = document.getElementById('confirmWithdrawText');
+                const btnConfirm = document.getElementById('btnConfirmWithdrawal');
+                const otpInput = document.getElementById('withdrawOtpInput');
+                const btnSendOtp = document.getElementById('btnSendWithdrawOtp');
+                const otpStatusHint = document.getElementById('otpStatusHint');
 
-                    try {
-                        // Request OTP
-                        const otpRes = await sellerFetch('/withdrawals/send-otp', { method: 'POST' });
-                        const otpData = await otpRes.json();
-                        if (!otpRes.ok) throw new Error(otpData.message || 'Không thể gửi mã OTP.');
+                if (modalEl && modalTextEl && btnConfirm) {
+                    // Reset fields
+                    if (otpInput) {
+                        otpInput.value = '';
+                        // Limit to only numeric characters and max length of 6
+                        otpInput.addEventListener('input', (e) => {
+                            let val = e.target.value.replace(/[^0-9]/g, '');
+                            if (val.length > 6) {
+                                val = val.substring(0, 6);
+                            }
+                            e.target.value = val;
+                        });
+                    }
+                    if (otpStatusHint) {
+                        otpStatusHint.textContent = '';
+                        otpStatusHint.style.color = '#64748b';
+                    }
+                    if (btnSendOtp) {
+                        btnSendOtp.disabled = false;
+                        btnSendOtp.textContent = 'Gửi mã OTP';
+                        btnSendOtp.style.borderColor = '#3b82f6';
+                        btnSendOtp.style.color = '#3b82f6';
+                    }
 
-                        showToast(otpData.message || 'Mã OTP đã được gửi về email của bạn.');
+                    // Set modal text
+                    modalTextEl.innerHTML = `Xác nhận tạo yêu cầu rút tiền <strong>${formatVND(amount)}</strong>?<br><br>Phí rút là: <strong style="color:#ef4444">${formatVND(fee)}</strong><br>Tổng số tiền trừ khỏi ví: <strong style="color:#2563eb">${formatVND(totalDeducted)}</strong>`;
+                    modalEl.style.display = 'flex';
 
-                        const otpText = prompt('Vui lòng nhập mã OTP 6 chữ số được gửi tới email của bạn để hoàn tất:');
-                        if (otpText === null) return;
-                        const otp = otpText.trim();
-                        if (!otp) {
-                            showToast('Bạn chưa nhập mã OTP.', 'error');
+                    // Handler for sending OTP
+                    let otpTimer = null;
+                    if (btnSendOtp) {
+                        // Clone to clear old listeners
+                        const newBtnSendOtp = btnSendOtp.cloneNode(true);
+                        btnSendOtp.parentNode.replaceChild(newBtnSendOtp, btnSendOtp);
+
+                        newBtnSendOtp.addEventListener('click', async () => {
+                            newBtnSendOtp.disabled = true;
+                            newBtnSendOtp.textContent = 'Đang gửi...';
+                            try {
+                                const otpRes = await sellerFetch('/withdrawals/send-otp', { method: 'POST' });
+                                const otpData = await otpRes.json();
+                                if (!otpRes.ok) throw new Error(otpData.message || 'Không thể gửi mã OTP.');
+
+                                showToast(otpData.message || 'Mã OTP đã được gửi về email.');
+                                if (otpStatusHint) {
+                                    otpStatusHint.textContent = 'Mã OTP đã được gửi về email của bạn!';
+                                    otpStatusHint.style.color = '#22c55e';
+                                }
+
+                                // 60s cooldown timer
+                                let secondsLeft = 60;
+                                newBtnSendOtp.textContent = `Gửi lại (${secondsLeft}s)`;
+                                newBtnSendOtp.style.borderColor = '#cbd5e1';
+                                newBtnSendOtp.style.color = '#64748b';
+
+                                if (otpTimer) clearInterval(otpTimer);
+                                otpTimer = setInterval(() => {
+                                    secondsLeft--;
+                                    if (secondsLeft <= 0) {
+                                        clearInterval(otpTimer);
+                                        newBtnSendOtp.disabled = false;
+                                        newBtnSendOtp.textContent = 'Gửi mã OTP';
+                                        newBtnSendOtp.style.borderColor = '#3b82f6';
+                                        newBtnSendOtp.style.color = '#3b82f6';
+                                        if (otpStatusHint) otpStatusHint.textContent = '';
+                                    } else {
+                                        newBtnSendOtp.textContent = `Gửi lại (${secondsLeft}s)`;
+                                    }
+                                }, 1000);
+
+                            } catch (err) {
+                                showToast(err.message, 'error');
+                                newBtnSendOtp.disabled = false;
+                                newBtnSendOtp.textContent = 'Gửi mã OTP';
+                                newBtnSendOtp.style.borderColor = '#3b82f6';
+                                newBtnSendOtp.style.color = '#3b82f6';
+                                if (otpStatusHint) {
+                                    otpStatusHint.textContent = err.message;
+                                    otpStatusHint.style.color = '#ef4444';
+                                }
+                            }
+                        });
+                    }
+
+                    // Remove old listeners from confirm button to avoid multiple submissions
+                    const newBtnConfirm = btnConfirm.cloneNode(true);
+                    btnConfirm.parentNode.replaceChild(newBtnConfirm, btnConfirm);
+
+                    newBtnConfirm.addEventListener('click', async () => {
+                        const otpVal = otpInput ? otpInput.value.trim() : '';
+                        if (!otpVal) {
+                            showToast('Vui lòng nhập mã OTP để xác nhận rút tiền.', 'error');
+                            return;
+                        }
+                        if (!/^\d{6}$/.test(otpVal)) {
+                            showToast('Mã OTP không hợp lệ. Mã OTP phải bao gồm đúng 6 chữ số.', 'error');
                             return;
                         }
 
-                        // Submit with OTP
+                        newBtnConfirm.disabled = true;
+                        newBtnConfirm.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
+
+                        try {
+                            const postRes = await sellerFetch('/withdrawals', {
+                                method: 'POST',
+                                body: JSON.stringify({ amountVnd: amount, otp: otpVal })
+                            });
+                            const postData = await postRes.json();
+                            if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
+                            
+                            showToast(postData.message || 'Đã tạo yêu cầu rút tiền thành công!');
+                            if (otpTimer) clearInterval(otpTimer);
+                            setTimeout(() => window.location.reload(), 1500);
+                        } catch (err) {
+                            showToast(err.message, 'error');
+                            newBtnConfirm.disabled = false;
+                            newBtnConfirm.innerHTML = 'Xác nhận rút tiền';
+                        }
+                    });
+                } else {
+                    // Fallback to prompt if modal HTML is completely missing
+                    const confirmNo2fa = confirm(`Xác nhận tạo yêu cầu rút tiền ${formatVND(amount)}? Phí rút là ${formatVND(fee)}. Tổng số tiền trừ khỏi ví: ${formatVND(totalDeducted)}.`);
+                    if (!confirmNo2fa) return;
+
+                    const otpText = prompt('Vui lòng nhập mã OTP 6 chữ số được gửi tới email của bạn để hoàn tất:');
+                    if (otpText === null) return;
+                    const otp = otpText.trim();
+                    if (!otp) {
+                        showToast('Bạn chưa nhập mã OTP.', 'error');
+                        return;
+                    }
+
+                    try {
                         const postRes = await sellerFetch('/withdrawals', {
                             method: 'POST',
                             body: JSON.stringify({ amountVnd: amount, otp: otp })
                         });
                         const postData = await postRes.json();
                         if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
-
+                        
                         showToast(postData.message || 'Đã tạo yêu cầu rút tiền thành công!');
                         setTimeout(() => window.location.reload(), 1500);
-
                     } catch (err) {
                         showToast(err.message, 'error');
-                    }
-                } else {
-                    const modalEl = document.getElementById('confirmWithdrawModal');
-                    const modalTextEl = document.getElementById('confirmWithdrawText');
-                    const btnConfirm = document.getElementById('btnConfirmWithdrawal');
-
-                    if (modalEl && modalTextEl && btnConfirm) {
-                        modalTextEl.innerHTML = `Xác nhận tạo yêu cầu rút tiền <strong>${formatVND(amount)}</strong>?<br><br>Phí rút là: <strong style="color:#ef4444">${formatVND(fee)}</strong><br>Tổng số tiền trừ khỏi ví: <strong style="color:#2563eb">${formatVND(totalDeducted)}</strong>`;
-                        modalEl.style.display = 'flex';
-
-                        // Remove old listeners to avoid multiple submissions
-                        const newBtnConfirm = btnConfirm.cloneNode(true);
-                        btnConfirm.parentNode.replaceChild(newBtnConfirm, btnConfirm);
-
-                        newBtnConfirm.addEventListener('click', async () => {
-                            newBtnConfirm.disabled = true;
-                            newBtnConfirm.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
-
-                            try {
-                                const postRes = await sellerFetch('/withdrawals', {
-                                    method: 'POST',
-                                    body: JSON.stringify({ amountVnd: amount })
-                                });
-                                const postData = await postRes.json();
-                                if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
-                                
-                                showToast(postData.message || 'Đã tạo yêu cầu rút tiền thành công!');
-                                setTimeout(() => window.location.reload(), 1500);
-                            } catch (err) {
-                                showToast(err.message, 'error');
-                                newBtnConfirm.disabled = false;
-                                newBtnConfirm.innerHTML = 'Xác nhận';
-                                modalEl.style.display = 'none';
-                            }
-                        });
-                    } else {
-                        // Fallback to native confirm if modal HTML is missing
-                        const confirmNo2fa = confirm(`Xác nhận tạo yêu cầu rút tiền ${formatVND(amount)}? Phí rút là ${formatVND(fee)}. Tổng số tiền trừ khỏi ví: ${formatVND(totalDeducted)}.`);
-                        if (!confirmNo2fa) return;
-
-                        try {
-                            const postRes = await sellerFetch('/withdrawals', {
-                                method: 'POST',
-                                body: JSON.stringify({ amountVnd: amount })
-                            });
-                            const postData = await postRes.json();
-                            if (!postRes.ok) throw new Error(postData.message || 'Rút tiền thất bại.');
-                            
-                            showToast(postData.message || 'Đã tạo yêu cầu rút tiền thành công!');
-                            setTimeout(() => window.location.reload(), 1500);
-                        } catch (err) {
-                            showToast(err.message, 'error');
-                        }
                     }
                 }
             });
@@ -2213,7 +2367,8 @@ async function initPreOrders() {
         tbody.innerHTML = orders.map(o => {
             const st = (o.status || '').toUpperCase();
             const statusClass = (st === 'PENDING' || o.status === 'Chờ xử lý') ? 'pending' 
-                              : (st === 'COMPLETED' || o.status === 'Hoàn thành') ? 'ok' 
+                              : (st === 'APPROVED' || st === 'ACCEPTED' || o.status === 'Đã duyệt') ? 'pending'
+                              : (st === 'COMPLETED' || o.status === 'Hoàn tất') ? 'ok' 
                               : 'locked';
 
             return `
@@ -2225,17 +2380,20 @@ async function initPreOrders() {
                     <td>${o.notes || ''}</td>
                     <td><span class="badge ${statusClass}">${translateStatus(o.status)}</span></td>
                     <td>${o.createdAt ? new Date(o.createdAt).toLocaleString('vi-VN') : ''}</td>
-                    <td class="text-right">
-                        ${(st === 'PENDING' || o.status === 'Chờ xử lý') ? `
-                        <button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px; margin-right: 4px; background: var(--seller-primary); color: white; border: none;" onclick="openDeliveryModal(${o.id})">
-                            <i class="fa fa-paper-plane"></i> Trả hàng
+                    <td class="text-center">
+                        ${(st === 'PENDING' || st === 'APPROVED' || o.status === 'Chờ xử lý' || o.status === 'Đã duyệt') ? `
+                        <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
+                            <select class="ds-select" style="padding: 6px 12px; font-size: 13px; border-radius: 6px; border: 1px solid var(--seller-border); height: auto; width: 110px; font-weight: 500; background-color: #fff;" onchange="onPreOrderStatusSelect(${o.id}, this, '${o.status}')">
+                                <option value="PENDING" ${(st === 'PENDING' || o.status === 'Chờ xử lý') ? 'selected' : ''}>Chờ xử lý</option>
+                                <option value="APPROVED" ${(st === 'APPROVED' || o.status === 'Đã duyệt') ? 'selected' : ''}>Đã duyệt</option>
+                                <option value="CANCELLED">Hủy đơn</option>
+                            </select>
+                        </div>
+                        ` : `
+                        <button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px;" onclick="openPreOrderDetailModal(${o.id})">
+                            <i class="fa fa-eye"></i> Chi tiết
                         </button>
-                        <button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px; color: var(--seller-danger); border-color: var(--seller-danger);" onclick="updatePreOrderStatus(${o.id}, 'CANCELLED')">
-                            <i class="fa fa-times"></i> Hủy
-                        </button>
-                        ` : `<button class="ds-btn ds-btn-outline" style="padding: 4px 8px; font-size: 12px;" onclick="openPreOrderDetailModal(${o.id})">
-                                <i class="fa fa-eye"></i> Chi tiết
-                             </button>`}
+                        `}
                     </td>
                 </tr>
             `;
@@ -2306,8 +2464,43 @@ async function copyPreOrderDetailDelivery() {
     }
 }
 
-async function updatePreOrderStatus(id, status) {
-    if (!confirm('Bạn có chắc chắn muốn cập nhật trạng thái đơn này?')) return;
+function showCustomConfirm(title, message) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('customConfirmModal');
+        const titleEl = document.getElementById('confirmModalTitle');
+        const msgEl = document.getElementById('confirmModalMessage');
+        const confirmBtn = document.getElementById('btnConfirmAction');
+
+        if (titleEl) titleEl.textContent = title;
+        if (msgEl) msgEl.textContent = message;
+
+        const handleConfirm = () => {
+            modal.hidden = true;
+            cleanup();
+            resolve(true);
+        };
+
+        const cleanup = () => {
+            confirmBtn.removeEventListener('click', handleConfirm);
+        };
+
+        confirmBtn.addEventListener('click', handleConfirm);
+        
+        window.closeConfirmModal = () => {
+            modal.hidden = true;
+            cleanup();
+            resolve(false);
+        };
+
+        modal.hidden = false;
+    });
+}
+
+async function updatePreOrderStatus(id, status, skipConfirm = false) {
+    if (!skipConfirm) {
+        const ok = await showCustomConfirm('Xác nhận thao tác', 'Bạn có chắc chắn muốn cập nhật trạng thái đơn này?');
+        if (!ok) return;
+    }
     
     try {
         const token = sessionStorage.getItem('accessToken');
@@ -2332,68 +2525,44 @@ async function updatePreOrderStatus(id, status) {
     }
 }
 
-let currentDeliveryPreOrderId = null;
+async function onPreOrderStatusSelect(id, selectElement, currentStatus) {
+    const newStatus = selectElement.value;
+    if (newStatus.toUpperCase() === currentStatus.toUpperCase()) return;
 
-function openDeliveryModal(id) {
-    currentDeliveryPreOrderId = id;
-    const modal = document.getElementById('deliveryModal');
-    if (modal) {
-        document.getElementById('deliveryDataInput').value = '';
-        modal.style.display = 'flex';
+    let confirmTitle = "Xác nhận thao tác";
+    let confirmMsg = "";
+    if (newStatus === "APPROVED") {
+        confirmTitle = "Phê duyệt đơn hàng";
+        confirmMsg = `Xác nhận phê duyệt đơn đặt trước #PO-${id}?\nTrạng thái của đơn hàng phía người mua sẽ đổi sang "Đã duyệt - Chuẩn bị hàng".`;
+    } else if (newStatus === "CANCELLED") {
+        confirmTitle = "Cảnh báo hủy đơn";
+        confirmMsg = `CẢNH BÁO: Xác nhận HỦY đơn đặt trước #PO-${id}?\nHệ thống sẽ tự động hoàn trả 100% tiền đặt trước về ví của khách hàng ngay lập tức! Thao tác này không thể hoàn tác.`;
+    } else if (newStatus === "PENDING") {
+        confirmTitle = "Khôi phục trạng thái";
+        confirmMsg = `Xác nhận chuyển đơn đặt trước #PO-${id} trở lại trạng thái "Chờ xử lý"?`;
+    }
+
+    const ok = await showCustomConfirm(confirmTitle, confirmMsg);
+    if (!ok) {
+        selectElement.value = currentStatus.toUpperCase();
+        return;
+    }
+
+    try {
+        await updatePreOrderStatus(id, newStatus, true);
+    } catch (err) {
+        selectElement.value = currentStatus.toUpperCase();
     }
 }
-
-function closeDeliveryModal() {
-    currentDeliveryPreOrderId = null;
-    const modal = document.getElementById('deliveryModal');
-    if (modal) modal.style.display = 'none';
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const btnSubmitDelivery = document.getElementById('btnSubmitDelivery');
-    if (btnSubmitDelivery) {
-        btnSubmitDelivery.addEventListener('click', async () => {
-            const data = document.getElementById('deliveryDataInput').value.trim();
-            if (!data) {
-                showToast('Vui lòng nhập nội dung trả hàng.', 'error');
-                return;
-            }
-            if (!currentDeliveryPreOrderId) return;
-            
-            try {
-                const token = sessionStorage.getItem('accessToken');
-                const res = await fetch(`/api/v1/pre-orders/seller/${currentDeliveryPreOrderId}/deliver`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ deliveryData: data })
-                });
-                
-                if (!res.ok) {
-                    const errData = await res.json().catch(() => ({}));
-                    throw new Error(errData.message || 'Trả hàng thất bại.');
-                }
-                
-                showToast('Đã trả hàng cho khách thành công!');
-                closeDeliveryModal();
-                initPreOrders();
-            } catch (err) {
-                showToast(err.message, 'error');
-            }
-        });
-    }
-});
 
 document.addEventListener('keydown', event => {
     if (event.key === 'Escape') closePreOrderDetailModal();
 });
 
 window.initPreOrders = initPreOrders;
+window.showCustomConfirm = showCustomConfirm;
+window.onPreOrderStatusSelect = onPreOrderStatusSelect;
 window.updatePreOrderStatus = updatePreOrderStatus;
-window.openDeliveryModal = openDeliveryModal;
-window.closeDeliveryModal = closeDeliveryModal;
 window.openPreOrderDetailModal = openPreOrderDetailModal;
 window.closePreOrderDetailModal = closePreOrderDetailModal;
 window.handlePreOrderDetailBackdrop = handlePreOrderDetailBackdrop;

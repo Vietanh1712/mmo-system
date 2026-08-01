@@ -11,7 +11,7 @@ MMO Market yêu cầu một hệ thống ví điện tử (Wallet) để quản 
 
 ## 2. Actors
 - **Customer / Seller**: Nạp tiền, rút tiền, xem lịch sử giao dịch.
-- **System**: Tự động xác nhận nạp tiền qua webhook của SePay, tự động giải phóng tiền Escrow sau thời gian chờ.
+- **System**: Tự động xác nhận nạp tiền qua webhook của SePay, chạy tác vụ quét định kỳ mỗi 60 giây để tự động giải phóng tiền Escrow sau thời gian chờ.
 - **Staff / Admin**: Duyệt yêu cầu rút tiền thủ công.
 
 ---
@@ -19,7 +19,7 @@ MMO Market yêu cầu một hệ thống ví điện tử (Wallet) để quản 
 ## 3. Functional Requirements
 - **FR-WALL-01**: WHEN a User tops up via SePay webhook, THE SYSTEM SHALL automatically add funds to their available balance and record a Transaction.
 - **FR-WALL-02**: WHEN a Customer buys a product, THE SYSTEM SHALL deduct the `priceVnd` from their available balance and add the `netRevenue` to the Seller's `escrowBalance`.
-- **FR-WALL-03**: WHEN the escrow period expires (default 3 days), THE SYSTEM SHALL automatically transfer funds from the Seller's `escrowBalance` to their `availableBalance`.
+- **FR-WALL-03**: WHEN the escrow period expires (default 3 days / 72 hours, or 7 days / 168 hours based on shop level and dispute rate), THE SYSTEM SHALL automatically scan and transfer funds from the Seller's escrow (Held status) to their available balance and mark the transaction as Completed.
 - **FR-WALL-04**: WHEN a Seller submits a withdrawal request, THE SYSTEM SHALL verify OTP and sufficient balance, deduct the balance, and create a `PENDING` withdrawal record.
 - **FR-WALL-05**: WHEN Staff approves a withdrawal, THE SYSTEM SHALL update status to `COMPLETED` and record the bank transfer detail.
 

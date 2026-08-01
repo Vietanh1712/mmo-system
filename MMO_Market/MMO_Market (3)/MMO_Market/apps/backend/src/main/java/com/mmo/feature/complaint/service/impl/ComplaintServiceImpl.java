@@ -444,6 +444,12 @@ public class ComplaintServiceImpl implements ComplaintService {
                 .filter(c -> c.getIsDelete() == null || !c.getIsDelete())
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khiếu nại."));
 
+        if ("Resolved".equalsIgnoreCase(complaint.getStatus()) 
+                || "Rejected".equalsIgnoreCase(complaint.getStatus()) 
+                || "Completed".equalsIgnoreCase(complaint.getStatus())) {
+            throw new IllegalArgumentException("Khiếu nại này đã được xử lý trước đó.");
+        }
+
         complaint.setStatus(status);
         complaint.setResolution(resolution);
         
@@ -748,7 +754,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         }
 
         // Tự động tính toán lại và cập nhật shop_level vào DB cho Seller
-        if ("Resolved".equalsIgnoreCase(status) || "Completed".equalsIgnoreCase(status)) {
+        if ("Resolved".equalsIgnoreCase(status) || "Completed".equalsIgnoreCase(status) || "Rejected".equalsIgnoreCase(status)) {
             User seller = complaint.getSeller();
             if (seller != null) {
                 try {

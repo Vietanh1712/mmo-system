@@ -146,4 +146,6 @@ WHERE t.id = :id
 AND t.isDelete = false
 """)
     Transaction findDetailById(@Param("id") Long id);
+
+    List<Transaction> findByStatusAndEscrowReleaseDateBeforeAndIsDeleteFalse(String status, LocalDateTime date);
 }

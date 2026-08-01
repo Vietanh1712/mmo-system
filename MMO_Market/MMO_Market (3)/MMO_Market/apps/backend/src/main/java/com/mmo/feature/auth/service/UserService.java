@@ -228,7 +228,47 @@ public class UserService {
                 .is2faEnabled(user.getIs2faEnabled())
                 .kycStatus(kycStatus)
                 .dateOfBirth(user.getDateOfBirth() != null ? user.getDateOfBirth().toString() : null)
+                .avatar(user.getAvatar())
                 .build();
+    }
+
+    @Transactional
+    public String uploadAvatar(Long userId, org.springframework.web.multipart.MultipartFile file) throws java.io.IOException {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File không được rỗng");
+        }
+
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new IllegalArgumentException("Kích thước file tối đa là 5MB");
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || (!contentType.equals("image/jpeg") && !contentType.equals("image/png") && !contentType.equals("image/gif") && !contentType.equals("image/webp"))) {
+            throw new IllegalArgumentException("Chỉ chấp nhận các định dạng ảnh: JPEG, PNG, GIF, WEBP");
+        }
+
+        User user = findActiveUser(userId);
+
+        java.nio.file.Path uploadPath = java.nio.file.Paths.get("uploads/avatars").toAbsolutePath().normalize();
+        if (!java.nio.file.Files.exists(uploadPath)) {
+            java.nio.file.Files.createDirectories(uploadPath);
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        String extension = ".jpg";
+        if (originalFilename != null && originalFilename.lastIndexOf(".") != -1) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+
+        String filename = userId + "_" + System.currentTimeMillis() + extension;
+        java.nio.file.Path targetLocation = uploadPath.resolve(filename);
+        java.nio.file.Files.copy(file.getInputStream(), targetLocation, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+        String avatarUrl = "/uploads/avatars/" + filename;
+        user.setAvatar(avatarUrl);
+        userRepository.save(user);
+
+        return avatarUrl;
     }
 
     private boolean hasApprovedKyc(Long userId) {

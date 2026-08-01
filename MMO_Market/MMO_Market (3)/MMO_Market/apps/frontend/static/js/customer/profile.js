@@ -14,7 +14,67 @@ function initializeProfilePage() {
         btn.addEventListener('click', toggleFieldVisibility);
     });
 
+    const avatarInput = document.getElementById('avatarFileInput');
+    if (avatarInput) {
+        avatarInput.addEventListener('change', handleAvatarUpload);
+    }
+
     loadProfile();
+}
+
+async function handleAvatarUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+        showProfileMessage('Kích thước ảnh tối đa là 5MB.', 'danger');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const overlay = document.querySelector('.avatar-upload-overlay');
+    const originalOverlayHtml = overlay ? overlay.innerHTML : '';
+    if (overlay) {
+        overlay.style.opacity = '1';
+        overlay.innerHTML = '<i class="fa fa-spinner fa-spin" style="color: #fff; font-size: 18px;"></i>';
+    }
+
+    try {
+        const response = await authFetch('/v1/profile/avatar', {
+            method: 'POST',
+            body: formData
+        });
+
+        const resBody = await response.json();
+        if (!response.ok) {
+            throw new Error(resBody.message || 'Không thể tải ảnh đại diện lên.');
+        }
+
+        currentProfile.avatar = resBody.avatar;
+        renderProfile(currentProfile);
+        updateCachedProfile(currentProfile);
+
+        const headerAvatar = document.querySelector('.user-profile__avatar');
+        if (headerAvatar) {
+            headerAvatar.style.backgroundImage = `url('${resBody.avatar}')`;
+            headerAvatar.style.backgroundSize = 'cover';
+            headerAvatar.style.backgroundPosition = 'center';
+            headerAvatar.style.fontSize = '0';
+            headerAvatar.textContent = '';
+        }
+
+        showProfileMessage('Cập nhật ảnh đại diện thành công.', 'success');
+    } catch (error) {
+        showProfileMessage(error.message || 'Không thể tải ảnh đại diện lên.', 'danger');
+    } finally {
+        if (overlay) {
+            overlay.style.opacity = '';
+            overlay.innerHTML = originalOverlayHtml;
+        }
+        event.target.value = '';
+    }
 }
 
 function toggleFieldVisibility(event) {
@@ -286,7 +346,16 @@ function renderProfile(profile) {
     const isSeller = String(profile.role || '').toLowerCase().includes('seller') || rawRole.toLowerCase().includes('seller');
     const balance = formatProfileBalance(profile.balanceVnd);
 
-    document.getElementById('profileAvatar').textContent = fullName.charAt(0).toUpperCase();
+    const avatarEl = document.getElementById('profileAvatar');
+    if (avatarEl) {
+        if (profile.avatar) {
+            avatarEl.style.backgroundImage = `url('${profile.avatar}')`;
+            avatarEl.textContent = '';
+        } else {
+            avatarEl.style.backgroundImage = 'none';
+            avatarEl.textContent = fullName.charAt(0).toUpperCase();
+        }
+    }
     document.getElementById('profileFullName').textContent = fullName;
     document.getElementById('profileGender').textContent = profile.gender || '-';
     
@@ -458,7 +527,8 @@ function updateCachedProfile(profile) {
         phone: profile.phone,
         role: profile.role,
         shopStatus: profile.shopStatus,
-        balanceVnd: profile.balanceVnd
+        balanceVnd: profile.balanceVnd,
+        avatar: profile.avatar
     };
 
     sessionStorage.setItem('userInfo', JSON.stringify(cachedProfile));
