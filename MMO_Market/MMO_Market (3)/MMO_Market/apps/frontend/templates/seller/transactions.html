@@ -32,23 +32,28 @@
                     <div class="card-header-flex" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
                         <h3>Danh sách giao dịch</h3>
                         <div style="display: flex; gap: 12px; align-items: center;">
+                            <!-- Ô tìm kiếm -->
                             <div style="position: relative; width: 250px;">
                                 <i class="fa fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #64748b;"></i>
-                                <input type="text" class="ds-input" placeholder="Tìm kiếm giao dịch..." style="padding-left: 36px; width: 100%; border-radius: 6px; border: 1px solid #cbd5e1; padding-top: 8px; padding-bottom: 8px;">
+                                <input type="text" id="transactionSearch" class="ds-input" placeholder="Tìm kiếm giao dịch..." style="padding-left: 36px; width: 100%; border-radius: 6px; border: 1px solid #cbd5e1; padding-top: 8px; padding-bottom: 8px;">
                             </div>
-                            <select class="ds-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; min-width: 150px;">
+                            <!-- Lọc theo trạng thái đơn hàng -->
+                            <select id="transactionStatus" class="ds-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; min-width: 150px;">
                                 <option value="">Tất cả trạng thái</option>
                                 <option value="pending">Chờ xử lý</option>
                                 <option value="held">Tạm giữ</option>
                                 <option value="completed">Hoàn tất</option>
                                 <option value="complaint">Khiếu nại</option>
                             </select>
-                            <select class="ds-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; min-width: 150px;">
+                            <!-- Sắp xếp -->
+                            <select id="transactionSort" class="ds-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; min-width: 150px;">
                                 <option value="newest">Mới nhất</option>
                                 <option value="oldest">Cũ nhất</option>
                                 <option value="highest_amount">Số tiền: Cao đến thấp</option>
                                 <option value="lowest_amount">Số tiền: Thấp đến cao</option>
                             </select>
+                            <!-- Nút xác nhận lọc -->
+                            <button id="btnFilterTransaction" class="ds-btn ds-btn-primary" style="padding: 8px 16px;">Lọc</button>
                         </div>
                     </div>
                     <div class="table-wrap">

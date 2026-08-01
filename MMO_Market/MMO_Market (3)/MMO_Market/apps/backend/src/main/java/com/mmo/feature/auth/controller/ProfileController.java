@@ -17,6 +17,10 @@ import com.mmo.feature.auth.service.UserService;
 
 import org.springframework.web.bind.annotation.PostMapping;
 
+/**
+ * Controller quản lý Hồ sơ cá nhân (Profile), Bảo mật (2FA, Đổi mật khẩu)
+ * và Đăng ký mở Shop dành cho người dùng chung (Customer/Seller).
+ */
 @RestController
 @RequestMapping("/api/v1/profile")
 public class ProfileController {
@@ -29,11 +33,19 @@ public class ProfileController {
         this.authenticationService = authenticationService;
     }
 
+    /**
+     * Lấy thông tin hồ sơ cá nhân hiện tại.
+     * @param userId ID của người dùng (từ JWT Token)
+     */
     @GetMapping
     public ProfileResponse viewProfile(@AuthenticationPrincipal Long userId) {
         return userService.getMyProfile(userId);
     }
 
+    /**
+     * Cập nhật thông tin hồ sơ cá nhân (Họ tên, giới tính, avatar, SĐT).
+     * @param request Dữ liệu cập nhật
+     */
     @PutMapping
     public ProfileResponse updateProfile(
             @AuthenticationPrincipal Long userId,
@@ -41,6 +53,10 @@ public class ProfileController {
         return userService.updateMyProfile(userId, request);
     }
 
+    /**
+     * Thay đổi mật khẩu người dùng.
+     * @param request Yêu cầu nhập mật khẩu cũ và mật khẩu mới.
+     */
     @PutMapping("/password")
     public org.springframework.http.ResponseEntity<?> changePassword(
             @AuthenticationPrincipal Long userId,
@@ -66,6 +82,9 @@ public class ProfileController {
         }
     }
 
+    /**
+     * Gửi mã OTP về email để thực hiện thiết lập Bảo mật 2 lớp (2FA).
+     */
     @org.springframework.web.bind.annotation.PostMapping("/2fa/send-otp")
     public org.springframework.http.ResponseEntity<?> send2faOtp(@AuthenticationPrincipal Long userId) {
         try {
@@ -83,6 +102,10 @@ public class ProfileController {
         }
     }
 
+    /**
+     * Kích hoạt bảo mật 2 lớp (2FA) bằng cách xác thực mã OTP vừa gửi.
+     * @param request Chứa mã OTP do người dùng nhập.
+     */
     @org.springframework.web.bind.annotation.PostMapping("/2fa/enable")
     public org.springframework.http.ResponseEntity<?> enable2fa(
             @AuthenticationPrincipal Long userId,
@@ -102,6 +125,9 @@ public class ProfileController {
         }
     }
 
+    /**
+     * Hủy bỏ (Tắt) bảo mật 2 lớp (2FA).
+     */
     @org.springframework.web.bind.annotation.PostMapping("/2fa/disable")
     public org.springframework.http.ResponseEntity<?> disable2fa(@AuthenticationPrincipal Long userId) {
         try {
@@ -119,6 +145,10 @@ public class ProfileController {
         }
     }
 
+    /**
+     * Gửi yêu cầu Đăng ký trở thành Người bán (Mở Shop).
+     * @param request Dữ liệu tên shop và mô tả.
+     */
     @PostMapping("/register-shop")
     public org.springframework.http.ResponseEntity<?> registerShop(
             @AuthenticationPrincipal Long userId,

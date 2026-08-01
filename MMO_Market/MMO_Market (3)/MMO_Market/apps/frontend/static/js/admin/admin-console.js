@@ -1,5 +1,7 @@
 /**
- * Admin console — frontend only for config/reports; dashboard & accounts use API.
+ * Giao diện điều khiển dành cho Quản trị viên (Admin console)
+ * File này chỉ xử lý phần frontend (hiển thị UI) cho các trang cấu hình (config) và báo cáo (reports).
+ * Các chức năng Dashboard (thống kê) & Tài khoản được lấy trực tiếp thông qua API.
  */
 (function () {
     const ENDPOINT = '/admin/user-management';
@@ -227,14 +229,21 @@
 
     const ICON_DELETE = `<svg class="ds-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 7L7 20C7.08 21.1 7.9 22 9 22H15C16.1 22 16.92 21.1 17 20L18 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 7V4C9 3.45 9.45 3 10 3H14C14.55 3 15 3.45 15 4V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
+    // Biến lưu trữ sự kiện khởi tạo trang khi DOM đã load xong
     document.addEventListener('DOMContentLoaded', () => {
+        // Kiểm tra quyền truy cập của Admin, nếu không phải Admin sẽ chặn lại
         if (!guardAdminAccess()) return;
-        initMock();
-        initSystemConfig();
-        bindEvents();
-        navigateFromHash();
+        
+        initMock(); // Khởi tạo dữ liệu giả lập (mock data) nếu cần
+        initSystemConfig(); // Khởi tạo cấu hình hệ thống từ API
+        bindEvents(); // Gán sự kiện click/input cho các thành phần UI
+        navigateFromHash(); // Xử lý điều hướng trang dựa trên URL Hash (#)
     });
 
+    /**
+     * Hàm gọi API để lấy cấu hình hệ thống và hoa hồng hiện tại từ DB
+     * Nếu lỗi sẽ giữ lại dữ liệu mock mặc định.
+     */
     async function initSystemConfig() {
         try {
             const response = await authFetch('/admin/system-config');

@@ -15,6 +15,13 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Controller trung tâm quản lý toàn bộ tính năng của Người bán (Seller).
+ * Bao gồm: Dashboard thống kê, Quản lý thông tin Shop, Quản lý Sản phẩm/Biến thể,
+ * Rút tiền, Quản lý đơn hàng (Transactions), Đơn pre-order, Giải quyết khiếu nại (Complaints)
+ * và Thống kê doanh thu Shop.
+ * File này hiện đang đóng vai trò như một "God Controller" chứa hầu hết logic của Seller.
+ */
 @RestController
 @RequestMapping("/api/seller")
 @Slf4j
@@ -91,7 +98,10 @@ public class SellerController {
 
 
 
-    // 1. Dashboard API
+    /**
+     * API Lấy dữ liệu Dashboard cho trang chủ của người bán.
+     * Thống kê tổng doanh thu, số đơn hoàn thành, số khiếu nại, tỉ lệ hoàn tiền, danh sách đơn hàng gần nhất.
+     */
     @GetMapping("/dashboard")
     public ResponseEntity<?> getDashboard(@AuthenticationPrincipal Long userId) {
         try {
@@ -144,7 +154,9 @@ public class SellerController {
         }
     }
 
-    // 2. Shop Info GET
+    /**
+     * API Lấy thông tin chi tiết của Shop (Tên shop, trạng thái, cấp độ, thông tin liên hệ).
+     */
     @GetMapping("/shop-info")
     public ResponseEntity<?> getShopInfo(@AuthenticationPrincipal Long userId) {
         try {

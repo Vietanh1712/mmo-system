@@ -150,25 +150,30 @@
                         <div style="display: flex; gap: 12px; align-items: center; width: 100%; justify-content: space-between;">
                             <h3 style="margin: 0; font-size: 16px; font-weight: 600;">Danh sách sản phẩm</h3>
                             <div style="display: flex; gap: 12px;">
+                                <!-- Ô tìm kiếm -->
                                 <div style="position: relative; width: 250px;">
                                     <i class="fa fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #64748b;"></i>
-                                    <input type="text" class="ds-input" placeholder="Tìm kiếm sản phẩm..." style="padding-left: 36px; width: 100%; border-radius: 6px; border: 1px solid #cbd5e1; padding-top: 8px; padding-bottom: 8px;">
+                                    <input type="text" id="productSearch" class="ds-input" placeholder="Tìm kiếm sản phẩm..." style="padding-left: 36px; width: 100%; border-radius: 6px; border: 1px solid #cbd5e1; padding-top: 8px; padding-bottom: 8px;">
                                 </div>
-                                <select class="ds-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; min-width: 150px;">
+                                <!-- Lọc theo danh mục -->
+                                <select id="productCategory" class="ds-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; min-width: 150px;">
                                     <option value="">Tất cả danh mục</option>
-                                    <option value="email">Email</option>
-                                    <option value="account">Tài khoản</option>
-                                    <option value="software">Phần mềm</option>
-                                    <option value="engagement">Tăng tương tác</option>
-                                    <option value="software_service">Dịch vụ phần mềm</option>
-                                    <option value="blockchain">Blockchain</option>
+                                    <option value="Email">Email</option>
+                                    <option value="Tài khoản">Tài khoản</option>
+                                    <option value="Phần mềm">Phần mềm</option>
+                                    <option value="Tương tác">Tăng tương tác</option>
+                                    <option value="Dịch vụ">Dịch vụ phần mềm</option>
+                                    <option value="Blockchain">Blockchain</option>
                                 </select>
-                                <select class="ds-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; min-width: 150px;">
+                                <!-- Sắp xếp -->
+                                <select id="productSort" class="ds-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #fff; min-width: 150px;">
                                     <option value="newest">Mới nhất</option>
                                     <option value="oldest">Cũ nhất</option>
                                     <option value="stock_desc">Tồn kho: Nhiều nhất</option>
                                     <option value="stock_asc">Tồn kho: Ít nhất</option>
                                 </select>
+                                <!-- Nút xác nhận lọc -->
+                                <button id="btnFilterProduct" class="ds-btn ds-btn-primary" style="padding: 8px 16px;">Lọc</button>
                             </div>
                         </div>
                     </div>

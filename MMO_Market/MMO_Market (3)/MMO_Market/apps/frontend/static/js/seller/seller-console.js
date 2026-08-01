@@ -412,15 +412,55 @@ async function initInventory() {
         if (!res.ok) throw new Error('Không thể tải danh sách kho hàng.');
         const products = await res.json();
 
-        let activeTab = 'all';
+        let activeTab = 'all'; // Biến lưu trạng thái tab hiện tại (tất cả, sắp hết, tạm khóa)
+        let searchQuery = '';  // Biến lưu từ khóa tìm kiếm
+        let categoryFilter = ''; // Biến lưu danh mục cần lọc
+        let sortMode = 'newest'; // Biến lưu tiêu chí sắp xếp
 
+        // Lấy nút Lọc và gán sự kiện click
+        const btnFilter = document.getElementById('btnFilterProduct');
+        if (btnFilter) {
+            btnFilter.addEventListener('click', () => {
+                const searchInput = document.getElementById('productSearch');
+                const catSelect = document.getElementById('productCategory');
+                const sortSelect = document.getElementById('productSort');
+                
+                // Cập nhật giá trị lọc từ các ô input/select
+                searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+                categoryFilter = catSelect ? catSelect.value : '';
+                sortMode = sortSelect ? sortSelect.value : 'newest';
+                
+                // Gọi hàm render lại danh sách sản phẩm
+                renderProducts();
+            });
+        }
+
+        // Hàm xử lý lọc, sắp xếp và hiển thị sản phẩm
         function renderProducts() {
-            // Apply filtering criteria
-            let filteredProducts = products;
-            if (activeTab === 'low-stock') {
-                filteredProducts = products.filter(p => p.totalStock <= 5);
-            } else if (activeTab === 'inactive') {
-                filteredProducts = products.filter(p => p.status !== 'Active');
+            // Bước 1: Lọc sản phẩm theo các tiêu chí
+            let filteredProducts = products.filter(p => {
+                // Lọc theo tab
+                if (activeTab === 'low-stock' && p.totalStock > 5) return false;
+                if (activeTab === 'inactive' && p.status === 'Active') return false;
+                
+                // Lọc theo từ khóa tìm kiếm (tên hoặc ID sản phẩm)
+                if (searchQuery && !p.name.toLowerCase().includes(searchQuery) && !(p.id + '').includes(searchQuery)) return false;
+                
+                // Lọc theo danh mục
+                if (categoryFilter && p.categoryName !== categoryFilter) return false;
+                
+                return true;
+            });
+
+            // Bước 2: Sắp xếp sản phẩm
+            if (sortMode === 'newest') {
+                filteredProducts.sort((a, b) => b.id - a.id); // Mới nhất (ID lớn nhất)
+            } else if (sortMode === 'oldest') {
+                filteredProducts.sort((a, b) => a.id - b.id); // Cũ nhất (ID nhỏ nhất)
+            } else if (sortMode === 'stock_desc') {
+                filteredProducts.sort((a, b) => b.totalStock - a.totalStock); // Tồn kho giảm dần
+            } else if (sortMode === 'stock_asc') {
+                filteredProducts.sort((a, b) => a.totalStock - b.totalStock); // Tồn kho tăng dần
             }
 
             const emptyState = document.getElementById('emptyState');
@@ -1224,38 +1264,98 @@ async function initTransactions() {
         if (!res.ok) throw new Error('Không thể tải lịch sử bán hàng.');
         const transactions = await res.json();
 
-        if (transactions.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Chưa có lịch sử bán hàng.</td></tr>';
-            return;
+        let searchQuery = ''; // Từ khóa tìm kiếm giao dịch
+        let statusFilter = ''; // Trạng thái giao dịch cần lọc
+        let sortMode = 'newest'; // Tiêu chí sắp xếp mặc định
+
+        // Lấy nút Lọc giao dịch và gán sự kiện
+        const btnFilter = document.getElementById('btnFilterTransaction');
+        if (btnFilter) {
+            btnFilter.addEventListener('click', () => {
+                const searchInput = document.getElementById('transactionSearch');
+                const statusSelect = document.getElementById('transactionStatus');
+                const sortSelect = document.getElementById('transactionSort');
+                
+                // Cập nhật giá trị lọc
+                searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+                statusFilter = statusSelect ? statusSelect.value : '';
+                sortMode = sortSelect ? sortSelect.value : 'newest';
+                
+                // Gọi hàm hiển thị lại danh sách
+                renderTransactions();
+            });
         }
 
-        tbody.innerHTML = transactions.map(t => {
-            let badgeClass = 'pending';
-            if (t.status === 'Completed') badgeClass = 'ok';
-            else if (t.status === 'Held') badgeClass = 'held';
-            else if (t.status === 'Refunded' || t.status === 'Cancelled') badgeClass = 'locked';
+        // Hàm xử lý lọc, sắp xếp và render danh sách giao dịch
+        function renderTransactions() {
+            // Bước 1: Lọc giao dịch
+            let filteredTx = transactions.filter(t => {
+                // Lọc theo từ khóa (ID, Tên sản phẩm, Tên biến thể, Email KH)
+                if (searchQuery) {
+                    const matchId = (t.id + '').includes(searchQuery);
+                    const matchProduct = t.productName && t.productName.toLowerCase().includes(searchQuery);
+                    const matchVariant = t.variantName && t.variantName.toLowerCase().includes(searchQuery);
+                    const matchEmail = t.customerEmail && t.customerEmail.toLowerCase().includes(searchQuery);
+                    if (!matchId && !matchProduct && !matchVariant && !matchEmail) return false;
+                }
+                
+                // Lọc theo trạng thái đơn hàng
+                if (statusFilter) {
+                    const st = t.status.toLowerCase();
+                    if (statusFilter === 'pending' && !st.includes('pending')) return false;
+                    if (statusFilter === 'held' && !st.includes('held')) return false;
+                    if (statusFilter === 'completed' && !st.includes('completed')) return false;
+                    if (statusFilter === 'complaint' && !st.includes('disputed') && !st.includes('khiếu nại')) return false;
+                }
+                return true;
+            });
 
-            return `
-                <tr>
-                    <td>#TX-${t.id}</td>
-                    <td>
-                        <strong>${t.productName}</strong>
-                        <div class="muted">${t.variantName}</div>
-                    </td>
-                    <td>${t.customerEmail}</td>
-                    <td class="text-right">${formatVND(t.amountVnd)}</td>
-                    <td class="text-right text-success">+${formatVND(t.netEarningVnd)}</td>
-                    <td><span class="badge ${badgeClass}">${translateStatus(t.status)}</span></td>
-                    <td>${t.createdAt.replace('T', ' ').substring(0, 16)}</td>
-                    <td class="text-right">
-                        ${(t.status === 'Disputed' || t.status === 'Khiếu nại')
-                            ? `<a class="icon-button" href="/seller/complaints" title="Xem khiếu nại"><i class="fa fa-warning"></i></a>`
-                            : `<a class="icon-button" href="/messages?to=${t.customerEmail}" title="Nhắn tin"><i class="fa fa-envelope"></i></a>
-                               <a class="icon-button" href="#" title="Chi tiết" onclick="showToast('Tính năng đang phát triển', 'info'); return false;"><i class="fa fa-info-circle"></i></a>`}
-                    </td>
-                </tr>
-            `;
-        }).join('');
+            // Bước 2: Sắp xếp giao dịch
+            if (sortMode === 'newest') {
+                filteredTx.sort((a, b) => b.id - a.id); // Mới nhất
+            } else if (sortMode === 'oldest') {
+                filteredTx.sort((a, b) => a.id - b.id); // Cũ nhất
+            } else if (sortMode === 'highest_amount') {
+                filteredTx.sort((a, b) => b.amountVnd - a.amountVnd); // Số tiền cao đến thấp
+            } else if (sortMode === 'lowest_amount') {
+                filteredTx.sort((a, b) => a.amountVnd - b.amountVnd); // Số tiền thấp đến cao
+            }
+
+            if (filteredTx.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 40px; color: var(--seller-muted);"><i class="fa fa-inbox" style="font-size: 24px; display: block; margin-bottom: 8px;"></i> Không tìm thấy giao dịch nào.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filteredTx.map(t => {
+                let badgeClass = 'pending';
+                if (t.status === 'Completed') badgeClass = 'ok';
+                else if (t.status === 'Held') badgeClass = 'held';
+                else if (t.status === 'Refunded' || t.status === 'Cancelled') badgeClass = 'locked';
+
+                return `
+                    <tr>
+                        <td>#TX-${t.id}</td>
+                        <td>
+                            <strong>${t.productName}</strong>
+                            <div class="muted">${t.variantName}</div>
+                        </td>
+                        <td>${t.customerEmail}</td>
+                        <td class="text-right">${formatVND(t.amountVnd)}</td>
+                        <td class="text-right text-success">+${formatVND(t.netEarningVnd)}</td>
+                        <td><span class="badge ${badgeClass}">${translateStatus(t.status)}</span></td>
+                        <td>${t.createdAt.replace('T', ' ').substring(0, 16)}</td>
+                        <td class="text-right">
+                            ${(t.status === 'Disputed' || t.status === 'Khiếu nại')
+                                ? `<a class="icon-button" href="/seller/complaints" title="Xem khiếu nại"><i class="fa fa-warning"></i></a>`
+                                : `<a class="icon-button" href="/messages?to=${t.customerEmail}" title="Nhắn tin"><i class="fa fa-envelope"></i></a>
+                                   <a class="icon-button" href="#" title="Chi tiết" onclick="showToast('Tính năng đang phát triển', 'info'); return false;"><i class="fa fa-info-circle"></i></a>`}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        renderTransactions();
     } catch (err) {
         showToast(err.message, 'error');
     }
