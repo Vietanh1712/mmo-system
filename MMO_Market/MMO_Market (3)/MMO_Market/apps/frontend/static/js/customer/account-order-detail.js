@@ -69,7 +69,7 @@ async function handleComplaintSubmit(e) {
 
     const fileInput = document.getElementById('complaintEvidenceFile');
     const statusText = document.getElementById('uploadStatusText');
-    
+
     if (!fileInput || fileInput.files.length === 0) {
         showWarningToast('Vui lòng cung cấp ảnh hoặc video bằng chứng.');
         return;
@@ -218,7 +218,7 @@ function renderOrderDetail(order) {
     const variantText = order.variantLabel ? ` (${order.variantLabel})` : '';
     document.getElementById('orderDetailCode').textContent = order.orderCode;
     document.getElementById('orderProductName').textContent = `${order.productName}${variantText}`;
-    
+
     const sellerNameEl = document.getElementById('orderSellerName');
     if (sellerNameEl) {
         if (order.sellerId) {
@@ -227,7 +227,7 @@ function renderOrderDetail(order) {
             sellerNameEl.textContent = `Người bán: ${order.sellerName}`;
         }
     }
-    
+
     setBadge('orderStatusBadge', formatOrderStatus(order.status), getOrderStatusBadgeClass(order.status));
     setBadge('orderPaymentBadge', formatPaymentStatus(order.paymentStatus), getPaymentBadgeClass(order.paymentStatus));
 
@@ -302,18 +302,18 @@ function showNotFound(orderCode) {
 
 function renderTimeline(order) {
     const activeSteps = getActiveSteps(order);
-    
+
     document.querySelectorAll('[data-order-step]').forEach(step => {
         const stepName = step.dataset.orderStep;
-        
+
         // Reset classes
         step.classList.remove('order-timeline-item--active', 'order-timeline-item--disputed', 'order-timeline-item--failed');
-        
+
         if (stepName === 'completed') {
             const titleEl = step.querySelector('strong');
             const descEl = step.querySelector('p');
             const status = (order.status || '').toUpperCase();
-            
+
             if (status === 'DISPUTED') {
                 step.classList.add('order-timeline-item--disputed');
                 if (titleEl) titleEl.textContent = 'Tranh chấp / Khiếu nại';
@@ -351,12 +351,12 @@ function getActiveSteps(order) {
     if (['HELD', 'COMPLETED', 'DISPUTED', 'REFUNDED', 'PAID'].includes(status) || payStatus === 'PAID') {
         steps.push('paid');
     }
-    
+
     // Bước 3 (Seller giao hàng): Khi đã ở trạng thái tạm giữ bảo lãnh (HELD) hoặc các trạng thái sau đó
     if (['HELD', 'COMPLETED', 'DISPUTED', 'REFUNDED'].includes(status)) {
         steps.push('delivered');
     }
-    
+
     // Bước 4 (Hoàn tất): Đơn hàng hoàn tất giải ngân thành công
     if (status === 'COMPLETED') {
         steps.push('completed');
@@ -369,61 +369,198 @@ function createAccessInfo(order) {
     if (order.status === 'CANCELLED') return '<div class="cred-status-msg cred-status-danger"><i class="fa fa-times-circle"></i> Đơn hàng đã hủy, không có thông tin nhận hàng.</div>';
     if (order.status === 'DISPUTED') return '<div class="cred-status-msg cred-status-warning"><i class="fa fa-shield"></i> Thông tin nhận hàng đang được giữ để xử lý tranh chấp.</div>';
 
+    let credsList = order.credentialsList;
     let creds = order.credentials;
+
+    if (credsList && credsList.length > 0) {
+        if (credsList.length === 1) {
+            const singleCred = credsList[0];
+            const isKeyOnly = singleCred.password === '(Product Key)';
+            return renderSingleCredentialCard(singleCred, isKeyOnly);
+        }
+        return renderMultipleCredentialsTable(credsList);
+    }
 
     if (creds) {
         const isKeyOnly = creds.password === '(Product Key)';
-        return `
-            <div class="cred-card">
-                <div class="cred-card__header">
-                    <span class="cred-card__icon"><i class="fa fa-key"></i></span>
-                    <span class="cred-card__title">Thông tin đăng nhập</span>
-                    <span class="cred-card__badge">Bảo mật</span>
-                </div>
-
-                <div class="cred-field">
-                    <span class="cred-field__label">${isKeyOnly ? 'Mã kích hoạt (Key):' : 'Tài khoản (Email/Username):'}</span>
-                    <div class="cred-field__row">
-                        <code class="cred-field__value" id="credUsername">${escapeHtml(creds.username)}</code>
-                        <button class="cred-copy-btn" onclick="copyToClipboard('${escapeHtml(creds.username).replace(/'/g, '&#039;')}', '${isKeyOnly ? 'M\u00e3 k\u00edch ho\u1ea1t' : 'T\u00e0i kho\u1ea3n'}', this)" title="Sao chép">
-                            <i class="fa fa-copy"></i><span>Copy</span>
-                        </button>
-                    </div>
-                </div>
-
-                ${isKeyOnly ? '' : `
-                <div class="cred-field">
-                    <span class="cred-field__label">Mật khẩu:</span>
-                    <div class="cred-field__row">
-                        <code class="cred-field__value" id="credPassword">${escapeHtml(creds.password)}</code>
-                        <button class="cred-copy-btn" onclick="copyToClipboard('${escapeHtml(creds.password).replace(/'/g, '&#039;')}', 'M\u1eadt kh\u1ea9u', this)" title="Sao chép">
-                            <i class="fa fa-copy"></i><span>Copy</span>
-                        </button>
-                    </div>
-                </div>
-                `}
-
-                ${creds.note ? `
-                <div class="cred-field">
-                    <span class="cred-field__label">Ghi chú:</span>
-                    <div class="cred-field__row">
-                        <code class="cred-field__value" id="credNote">${escapeHtml(creds.note)}</code>
-                        <button class="cred-copy-btn" onclick="copyToClipboard('${escapeHtml(creds.note).replace(/'/g, '&#039;')}', 'Ghi ch\u00fa', this)" title="Sao chép">
-                            <i class="fa fa-copy"></i><span>Copy</span>
-                        </button>
-                    </div>
-                </div>
-                ` : ''}
-
-                <div class="cred-card__warning">
-                    <i class="fa fa-exclamation-triangle"></i>
-                    Vui lòng không thay đổi mật khẩu hoặc thông tin bảo mật để tránh ảnh hưởng đến thời gian bảo hành.
-                </div>
-            </div>
-        `;
+        return renderSingleCredentialCard(creds, isKeyOnly);
     }
 
     return '<div class="cred-status-msg"><i class="fa fa-info-circle"></i> Thông tin nhận hàng sẽ được hiển thị tại đây khi sản phẩm được giao thành công.</div>';
+}
+
+function renderSingleCredentialCard(creds, isKeyOnly) {
+    return `
+        <div class="cred-card">
+            <div class="cred-card__header">
+                <span class="cred-card__icon"><i class="fa fa-key"></i></span>
+                <span class="cred-card__title">Thông tin đăng nhập</span>
+                <span class="cred-card__badge">Bảo mật</span>
+            </div>
+
+            <div class="cred-field">
+                <span class="cred-field__label">${isKeyOnly ? 'Mã kích hoạt (Key):' : 'Tài khoản (Email/Username):'}</span>
+                <div class="cred-field__row">
+                    <code class="cred-field__value" id="credUsername">${escapeHtml(creds.username)}</code>
+                    <button class="cred-copy-btn" onclick="copyToClipboard('${escapeHtml(creds.username).replace(/'/g, '&#039;')}', '${isKeyOnly ? 'M\u00e3 k\u00edch ho\u1ea1t' : 'T\u00e0i kho\u1ea3n'}', this)" title="Sao chép">
+                        <i class="fa fa-copy"></i><span>Copy</span>
+                    </button>
+                </div>
+            </div>
+
+            ${isKeyOnly ? '' : `
+            <div class="cred-field">
+                <span class="cred-field__label">Mật khẩu:</span>
+                <div class="cred-field__row">
+                    <code class="cred-field__value" id="credPassword">${escapeHtml(creds.password)}</code>
+                    <button class="cred-copy-btn" onclick="copyToClipboard('${escapeHtml(creds.password).replace(/'/g, '&#039;')}', 'M\u1eadt kh\u1ea9u', this)" title="Sao chép">
+                        <i class="fa fa-copy"></i><span>Copy</span>
+                    </button>
+                </div>
+            </div>
+            `}
+
+            ${creds.note ? `
+            <div class="cred-field">
+                <span class="cred-field__label">Ghi chú:</span>
+                <div class="cred-field__row">
+                    <code class="cred-field__value" id="credNote">${escapeHtml(creds.note)}</code>
+                    <button class="cred-copy-btn" onclick="copyToClipboard('${escapeHtml(creds.note).replace(/'/g, '&#039;')}', 'Ghi ch\u00fa', this)" title="Sao chép">
+                        <i class="fa fa-copy"></i><span>Copy</span>
+                    </button>
+                </div>
+            </div>
+            ` : ''}
+
+            <div class="cred-card__warning">
+                <i class="fa fa-exclamation-triangle"></i>
+                Vui lòng không thay đổi mật khẩu hoặc thông tin bảo mật để tránh ảnh hưởng đến thời gian bảo hành.
+            </div>
+        </div>
+    `;
+}
+
+let activeCredsList = [];
+let renderedCredsCount = 0;
+const CREDS_CHUNK_SIZE = 20;
+
+window.loadMoreCredentials = function () {
+    const container = document.getElementById('credTableContainer');
+    if (!container) return;
+    const tbody = container.querySelector('tbody');
+    if (!tbody) return;
+
+    const total = activeCredsList.length;
+    if (renderedCredsCount >= total) return;
+
+    const isKeyOnly = activeCredsList[0].password === '(Product Key)';
+    const nextBatch = activeCredsList.slice(renderedCredsCount, renderedCredsCount + CREDS_CHUNK_SIZE);
+
+    let newRowsHtml = nextBatch.map((c, index) => {
+        const idx = renderedCredsCount + index;
+        let usernameCopyVal = escapeHtml(c.username).replace(/'/g, '&#039;');
+        let passwordCopyVal = escapeHtml(c.password).replace(/'/g, '&#039;');
+
+        let actionsHtml = '';
+        if (isKeyOnly) {
+            actionsHtml = `
+                <button class="ds-btn ds-btn-text" style="padding: 4px 8px; font-size: 13px;" onclick="copyToClipboard('${usernameCopyVal}', 'M\u00e3 k\u00edch ho\u1ea1t', this)">
+                    <i class="fa fa-copy"></i> Copy Key
+                </button>
+            `;
+        } else {
+            actionsHtml = `
+                <button class="ds-btn ds-btn-text" style="padding: 4px 8px; font-size: 13px; margin-right: 6px;" onclick="copyToClipboard('${usernameCopyVal}', 'T\u00e0i kho\u1ea1t', this)" title="Copy tài khoản">
+                    <i class="fa fa-user"></i> Copy User
+                </button>
+                <button class="ds-btn ds-btn-text" style="padding: 4px 8px; font-size: 13px;" onclick="copyToClipboard('${passwordCopyVal}', 'M\u1eadt kh\u1ea9u', this)" title="Copy mật khẩu">
+                    <i class="fa fa-lock"></i> Copy Pass
+                </button>
+            `;
+        }
+
+        return `
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="text-align: center; font-weight: 600; color: #64748b; padding: 12px 10px;">${idx + 1}</td>
+                <td style="font-family: monospace; font-weight: 600; color: #0f172a; word-break: break-all; padding: 12px 10px;">${escapeHtml(c.username)}</td>
+                ${isKeyOnly ? '' : `<td style="font-family: monospace; font-weight: 600; color: #0f172a; word-break: break-all; padding: 12px 10px;">${escapeHtml(c.password)}</td>`}
+                <td style="font-size: 13px; color: #475569; padding: 12px 10px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(c.note || '')}">${escapeHtml(c.note || '-')}</td>
+                <td style="text-align: center; padding: 12px 10px; white-space: nowrap;">
+                    ${actionsHtml}
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    tbody.insertAdjacentHTML('beforeend', newRowsHtml);
+    renderedCredsCount += nextBatch.length;
+};
+
+function renderMultipleCredentialsTable(credsList) {
+    activeCredsList = credsList;
+    renderedCredsCount = 0;
+    const isKeyOnly = credsList[0].password === '(Product Key)';
+
+    let copyAllText = '';
+    credsList.forEach((c) => {
+        if (isKeyOnly) {
+            copyAllText += `${c.username}\n`;
+        } else {
+            copyAllText += `${c.username} | ${c.password}${c.note ? ' | ' + c.note : ''}\n`;
+        }
+    });
+    copyAllText = copyAllText.trim();
+
+    setTimeout(() => {
+        window.loadMoreCredentials();
+
+        const container = document.getElementById('credTableContainer');
+        if (container) {
+            container.addEventListener('scroll', () => {
+                if (container.scrollHeight - container.scrollTop - container.clientHeight < 50) {
+                    window.loadMoreCredentials();
+                }
+            });
+        }
+    }, 50);
+
+    return `
+        <div class="cred-card" style="border-color: #2563eb; box-shadow: 0 4px 20px rgba(37,99,235,0.12);">
+            <div class="cred-card__header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="cred-card__icon"><i class="fa fa-list"></i></span>
+                    <div>
+                        <span class="cred-card__title" style="display: block;">Danh sách tài khoản đã mua (${credsList.length})</span>
+                    </div>
+                </div>
+                <button class="ds-btn ds-btn-secondary" style="padding: 6px 12px; font-size: 12.5px; border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.15); color: #fff; border-radius: 6px;" onclick="copyToClipboard('${copyAllText.replace(/'/g, '&#039;').replace(/\n/g, '\\n')}', 'T\u1ea5t c\u1ea3 tài khoản', this)">
+                    <i class="fa fa-clone"></i> Sao chép tất cả
+                </button>
+            </div>
+            
+            <div id="credTableContainer" style="overflow-x: auto; max-height: 400px; overflow-y: auto; width: 100%; padding: 0; border-bottom: 1px solid #e2e8f0;">
+                <table style="width: 100%; border-collapse: collapse; margin: 0; font-size: 13.5px; border-spacing: 0;">
+                    <thead style="position: sticky; top: 0; z-index: 10; background: #f8fafc; box-shadow: 0 1px 0 #e2e8f0;">
+                        <tr style="text-align: left;">
+                            <th style="width: 50px; text-align: center; padding: 10px 10px; font-weight: 700; color: #475569; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">STT</th>
+                            <th style="padding: 10px 10px; font-weight: 700; color: #475569; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">${isKeyOnly ? 'Mã kích hoạt (Key)' : 'Tài khoản (Username)'}</th>
+                            ${isKeyOnly ? '' : `<th style="padding: 10px 10px; font-weight: 700; color: #475569; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">Mật khẩu</th>`}
+                            <th style="padding: 10px 10px; font-weight: 700; color: #475569; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">Ghi chú</th>
+                            <th style="width: 150px; text-align: center; padding: 10px 10px; font-weight: 700; color: #475569; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody style="background: #fff;">
+                        <!-- Rows rendered dynamically by infinite scroll -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="cred-card__warning" style="border-top: 1px solid #e2e8f0;">
+                <i class="fa fa-exclamation-triangle"></i>
+                Vui lòng không thay đổi thông tin bảo mật để tránh ảnh hưởng đến thời gian bảo hành sản phẩm.
+            </div>
+        </div>
+    `;
 }
 
 function getActionHint(order) {
@@ -591,25 +728,25 @@ async function checkAndLoadDisputeChat(transactionId) {
             if (statusVal === 'in_progress' || statusVal === 'inprogress' || statusVal === 'resolved' || statusVal === 'rejected' || statusVal === 'completed') {
                 const chatCard = document.getElementById('customer-dispute-chat-card');
                 if (chatCard) chatCard.style.display = 'block';
-                
+
                 loadCustomerDisputeChats(complaint.id);
-                
+
                 if (chatIntervalId) clearInterval(chatIntervalId);
                 if (statusVal === 'in_progress' || statusVal === 'inprogress') {
                     chatIntervalId = setInterval(() => loadCustomerDisputeChats(complaint.id), 5000);
                 }
-                
+
                 const chatForm = document.getElementById('customer-dispute-chat-form');
                 if (chatForm) {
                     const newForm = chatForm.cloneNode(true);
                     chatForm.parentNode.replaceChild(newForm, chatForm);
-                    
+
                     newForm.addEventListener('submit', async (e) => {
                         e.preventDefault();
                         const inputEl = document.getElementById('customer-dispute-chat-input');
                         const text = inputEl.value.trim();
                         if (!text) return;
-                        
+
                         try {
                             const sendRes = await fetch(`/api/complaints/${complaint.id}/chats`, {
                                 method: 'POST',
@@ -632,7 +769,7 @@ async function checkAndLoadDisputeChat(transactionId) {
                 }
             }
         }
-    } catch(err) {
+    } catch (err) {
         console.error('Error checking dispute chat:', err);
     }
 }
@@ -651,12 +788,12 @@ async function loadCustomerDisputeChats(complaintId) {
         const chats = await res.json();
         const container = document.getElementById('customer-dispute-chat-messages');
         if (!container) return;
-        
+
         if (chats.length === 0) {
             container.innerHTML = `<div style="text-align: center; color: #94a3b8; font-size: 13px; font-style: italic;">Chưa có tin nhắn đối chất nào.</div>`;
             return;
         }
-        
+
         container.innerHTML = chats.map(msg => {
             if (msg.message && msg.message.startsWith('Hệ thống:')) {
                 return `
@@ -676,7 +813,7 @@ async function loadCustomerDisputeChats(complaintId) {
             let avatarBg = '#2563eb';
             let initials = msg.senderName ? msg.senderName.trim().split(/\s+/).map(w => w[0]).join('').substring(0, 2).toUpperCase() : 'KH';
             let avatarContent = escapeHtml(initials);
-            
+
             if (msg.senderRole === 'Seller') {
                 roleLabel = 'Người bán';
                 bg = 'rgba(217, 119, 6, 0.08)';
@@ -693,7 +830,7 @@ async function loadCustomerDisputeChats(complaintId) {
                 avatarBg = '#7c3aed';
                 avatarContent = '<i class="fa fa-user-shield"></i>';
             }
-            
+
             return `
                 <div style="display: flex; gap: 10px; align-items: flex-start; background: ${bg}; border: ${border}; border-radius: 8px; padding: 12px; font-size: 13px; line-height: 1.5; text-align: left;">
                     <div style="width: 32px; height: 32px; border-radius: 50%; background: ${avatarBg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0; margin-top: 2px;" title="${escapeHtml(msg.senderName)} (${roleLabel})">
@@ -709,9 +846,9 @@ async function loadCustomerDisputeChats(complaintId) {
                 </div>
             `;
         }).join('');
-        
+
         container.scrollTop = container.scrollHeight;
-    } catch(err) {
+    } catch (err) {
         console.error('Error rendering dispute chats for customer:', err);
     }
 }

@@ -6,11 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="cc5262a2-5922-4af2-8358-144285f2178e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdd/specs/backend/feat-preorder/SPEC.md" beforeDir="false" afterPath="$PROJECT_DIR$/.sdd/specs/backend/feat-preorder/SPEC.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/preorder/controller/PreOrderController.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/preorder/controller/PreOrderController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/preorder/service/PreOrderService.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/mmo/feature/preorder/service/PreOrderService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/seller/seller-console.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/seller/seller-console.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/seller/preorders.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/seller/preorders.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-order-detail.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/static/js/customer/account-order-detail.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/templates/account/order-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/templates/account/order-detail.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
