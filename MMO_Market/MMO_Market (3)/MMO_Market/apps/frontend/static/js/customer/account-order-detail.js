@@ -234,7 +234,6 @@ function renderOrderDetail(order) {
     document.getElementById('orderCodeValue').textContent = order.orderCode;
     document.getElementById('orderCreatedAt').textContent = order.createdAt;
     document.getElementById('orderAmount').textContent = formatMoney(order.amount);
-    document.getElementById('orderEscrowRelease').textContent = order.escrowReleaseDate;
     document.getElementById('orderProductTitle').textContent = `${order.productName}${variantText}`;
     document.getElementById('orderAccessInfo').innerHTML = createAccessInfo(order);
     document.getElementById('orderTransactionCode').textContent = `TX-${order.orderCode.replace('MMO-ORD-', '')}`;
@@ -442,7 +441,77 @@ function renderSingleCredentialCard(creds, isKeyOnly) {
 
 let activeCredsList = [];
 let renderedCredsCount = 0;
-const CREDS_CHUNK_SIZE = 20;
+const CREDS_CHUNK_SIZE = 10;
+
+window.exportCredentialsToExcel = function () {
+    if (!activeCredsList || activeCredsList.length === 0) return;
+
+    const isKeyOnly = activeCredsList[0].password === '(Product Key)';
+    let html = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+            <!--[if gte mso 9]>
+            <xml>
+                <x:ExcelWorkbook>
+                    <x:ExcelWorksheets>
+                        <x:ExcelWorksheet>
+                            <x:Name>MMO_Market_Credentials</x:Name>
+                            <x:WorksheetOptions>
+                                <x:DisplayGridlines/>
+                            </x:WorksheetOptions>
+                        </x:ExcelWorksheet>
+                    </x:ExcelWorksheets>
+                </x:ExcelWorkbook>
+            </xml>
+            <![endif]-->
+            <meta http-equiv="content-type" content="text/plain; charset=UTF-8"/>
+        </head>
+        <body>
+            <table border="1">
+                <thead>
+                    <tr style="background-color: #f2f2f2; font-weight: bold;">
+                        <th>STT</th>
+                        <th>${isKeyOnly ? 'Mã kích hoạt (Key)' : 'Tài khoản (Username)'}</th>
+                        ${isKeyOnly ? '' : '<th>Mật khẩu</th>'}
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    activeCredsList.forEach((c, idx) => {
+        html += `
+            <tr>
+                <td>${idx + 1}</td>
+                <td>${escapeHtml(c.username)}</td>
+                ${isKeyOnly ? '' : `<td>${escapeHtml(c.password)}</td>`}
+                <td>${escapeHtml(c.note || '')}</td>
+            </tr>
+        `;
+    });
+
+    html += `
+                </tbody>
+            </table>
+        </body>
+        </html>
+    `;
+
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const link = document.createElement('a');
+    const orderCode = currentOrder ? currentOrder.orderCode : 'MMO-ORDER';
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', `${orderCode}_tai_khoan.xls`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    if (typeof showSuccessToast === 'function') {
+        showSuccessToast('Đã xuất file excel thành công.');
+    } else {
+        alert('Đã xuất file excel thành công.');
+    }
+};
 
 window.loadMoreCredentials = function () {
     const container = document.getElementById('credTableContainer');
@@ -533,12 +602,17 @@ function renderMultipleCredentialsTable(credsList) {
                         <span class="cred-card__title" style="display: block;">Danh sách tài khoản đã mua (${credsList.length})</span>
                     </div>
                 </div>
-                <button class="ds-btn ds-btn-secondary" style="padding: 6px 12px; font-size: 12.5px; border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.15); color: #fff; border-radius: 6px;" onclick="copyToClipboard('${copyAllText.replace(/'/g, '&#039;').replace(/\n/g, '\\n')}', 'T\u1ea5t c\u1ea3 tài khoản', this)">
-                    <i class="fa fa-clone"></i> Sao chép tất cả
-                </button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="ds-btn ds-btn-secondary" style="padding: 6px 12px; font-size: 12.5px; border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.15); color: #fff; border-radius: 6px;" onclick="copyToClipboard('${copyAllText.replace(/'/g, '&#039;').replace(/\n/g, '\\n')}', 'T\u1ea5t c\u1ea3 tài khoản', this)">
+                        <i class="fa fa-clone"></i> Sao chép tất cả
+                    </button>
+                    <button class="ds-btn ds-btn-secondary" style="padding: 6px 12px; font-size: 12.5px; border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.15); color: #fff; border-radius: 6px;" onclick="window.exportCredentialsToExcel()">
+                        <i class="fa fa-file-excel-o"></i> Xuất Excel
+                    </button>
+                </div>
             </div>
             
-            <div id="credTableContainer" style="overflow-x: auto; max-height: 400px; overflow-y: auto; width: 100%; padding: 0; border-bottom: 1px solid #e2e8f0;">
+            <div id="credTableContainer" style="overflow-x: auto; max-height: 220px; overflow-y: auto; width: 100%; padding: 0; border-bottom: 1px solid #e2e8f0;">
                 <table style="width: 100%; border-collapse: collapse; margin: 0; font-size: 13.5px; border-spacing: 0;">
                     <thead style="position: sticky; top: 0; z-index: 10; background: #f8fafc; box-shadow: 0 1px 0 #e2e8f0;">
                         <tr style="text-align: left;">

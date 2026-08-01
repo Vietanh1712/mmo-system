@@ -140,4 +140,29 @@ public class ProfileController {
                     });
         }
     }
+
+    @PostMapping("/avatar")
+    public org.springframework.http.ResponseEntity<?> uploadAvatar(
+            @AuthenticationPrincipal Long userId,
+            @org.springframework.web.bind.annotation.RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        try {
+            String avatarUrl = userService.uploadAvatar(userId, file);
+            return org.springframework.http.ResponseEntity.ok(new Object() {
+                public final boolean success = true;
+                public final String avatar = avatarUrl;
+                public final String message = "Cập nhật ảnh đại diện thành công";
+            });
+        } catch (IllegalArgumentException e) {
+            return org.springframework.http.ResponseEntity.badRequest().body(new Object() {
+                public final boolean success = false;
+                public final String message = e.getMessage();
+            });
+        } catch (Exception e) {
+            return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Object() {
+                        public final boolean success = false;
+                        public final String message = "Lỗi hệ thống: " + e.getMessage();
+                    });
+        }
+    }
 }
