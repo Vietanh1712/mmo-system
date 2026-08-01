@@ -109,8 +109,15 @@
 
 .order-timeline-list {
     display: grid;
+    grid-template-columns: repeat(4, 1fr);
     gap: 14px;
     margin-top: 18px;
+}
+
+@media (max-width: 768px) {
+    .order-timeline-list {
+        grid-template-columns: 1fr;
+    }
 }
 
 .order-timeline-item {

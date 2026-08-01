@@ -410,7 +410,7 @@ function formatOrderStatus(status) {
         HELD: 'Đã giao',
         PAID: 'Đã thanh toán',
         DELIVERED: 'Đã giao',
-        COMPLETED: 'Hoàn tất',
+        COMPLETED: 'Hoàn thành',
         CANCELLED: 'Đã hủy',
         DISPUTED: 'Tranh chấp',
         REFUNDED: 'Đã hoàn tiền'
@@ -433,7 +433,6 @@ function formatPaymentStatus(status) {
     const upperStatus = status.toUpperCase().trim();
     const map = {
         PAID: 'Đã thanh toán',
-        PENDING: 'Chờ thanh toán',
         FAILED: 'Thất bại',
         REFUNDED: 'Đã hoàn tiền'
     };

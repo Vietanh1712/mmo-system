@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     loadKycDetail();
+    setupKycLightbox();
 });
 
 let currentKycId = new URLSearchParams(window.location.search).get('id');
@@ -177,4 +178,56 @@ function showToast(message, type) {
             container.remove();
         }
     }, 3200);
+}
+
+function setupKycLightbox() {
+    const lightbox = document.getElementById('kycImageLightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+    const closeBtn = document.getElementById('lightboxClose');
+    if (!lightbox || !lightboxImg) return;
+
+    function openLightbox(src) {
+        lightboxImg.src = src;
+        lightbox.style.display = 'flex';
+        lightbox.offsetHeight; // Force reflow
+        lightbox.style.opacity = '1';
+        lightboxImg.style.transform = 'scale(1)';
+    }
+
+    function closeLightbox() {
+        lightbox.style.opacity = '0';
+        lightboxImg.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            if (lightbox.style.opacity === '0') {
+                lightbox.style.display = 'none';
+                lightboxImg.src = '';
+            }
+        }, 250);
+    }
+
+    // Bind to the staff page images
+    ['frontImage', 'backImage', 'selfieImage'].forEach(id => {
+        const img = document.getElementById(id);
+        if (img) {
+            img.addEventListener('click', () => {
+                if (img.src) {
+                    openLightbox(img.src);
+                }
+            });
+        }
+    });
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeLightbox);
+    }
+    lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) {
+            closeLightbox();
+        }
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && lightbox.style.display === 'flex') {
+            closeLightbox();
+        }
+    });
 }

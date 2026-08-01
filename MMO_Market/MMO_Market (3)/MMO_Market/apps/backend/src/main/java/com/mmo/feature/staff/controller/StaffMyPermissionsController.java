@@ -9,6 +9,10 @@ import com.mmo.feature.staff.service.StaffPermissionService;
 
 import java.util.List;
 
+/**
+ * Controller cung cấp API cho phép Nhân viên (Staff) tự kiểm tra các quyền hiện có của mình.
+ * API này được Frontend sử dụng để ẩn/hiện các menu chức năng trên giao diện tùy thuộc vào quyền của nhân viên.
+ */
 @RestController
 @RequestMapping("/api/staff")
 public class StaffMyPermissionsController {
@@ -19,6 +23,11 @@ public class StaffMyPermissionsController {
         this.staffPermissionService = staffPermissionService;
     }
 
+    /**
+     * Lấy danh sách các quyền (Permissions) mà nhân viên đang đăng nhập được cấp.
+     * @param userId ID của nhân viên (lấy từ Security Context JWT)
+     * @return Danh sách các chuỗi định danh quyền (VD: ["APPROVE_KYC", "MANAGE_SHOPS"]).
+     */
     @GetMapping("/my-permissions")
     public ResponseEntity<List<String>> getMyPermissions(@AuthenticationPrincipal Long userId) {
         if (userId == null) {

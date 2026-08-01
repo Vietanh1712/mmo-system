@@ -129,17 +129,20 @@
                                 <div class="kyc-view-image-box">
                                     <strong>Ảnh mặt trước</strong>
                                     <img id="kycViewFrontImage" src="" alt="Mặt trước"
-                                        style="width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: var(--ds-radius-lg); margin-top: 8px; border: 1px solid var(--ds-border);">
+                                        style="width: 100%; aspect-ratio: 16/10; object-fit: contain; background-color: var(--ds-surface-muted, #f8fafc); border-radius: var(--ds-radius-lg); margin-top: 8px; border: 1px solid var(--ds-border); cursor: pointer; transition: opacity 0.2s;"
+                                        onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
                                 </div>
                                 <div class="kyc-view-image-box">
                                     <strong>Ảnh mặt sau</strong>
                                     <img id="kycViewBackImage" src="" alt="Mặt sau"
-                                        style="width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: var(--ds-radius-lg); margin-top: 8px; border: 1px solid var(--ds-border);">
+                                        style="width: 100%; aspect-ratio: 16/10; object-fit: contain; background-color: var(--ds-surface-muted, #f8fafc); border-radius: var(--ds-radius-lg); margin-top: 8px; border: 1px solid var(--ds-border); cursor: pointer; transition: opacity 0.2s;"
+                                        onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
                                 </div>
                                 <div class="kyc-view-image-box">
                                     <strong>Ảnh chân dung</strong>
                                     <img id="kycViewSelfieImage" src="" alt="Chân dung"
-                                        style="width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: var(--ds-radius-lg); margin-top: 8px; border: 1px solid var(--ds-border);">
+                                        style="width: 100%; aspect-ratio: 16/10; object-fit: contain; background-color: var(--ds-surface-muted, #f8fafc); border-radius: var(--ds-radius-lg); margin-top: 8px; border: 1px solid var(--ds-border); cursor: pointer; transition: opacity 0.2s;"
+                                        onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
                                 </div>
                             </div>
                         </div>
@@ -242,6 +245,12 @@
     </main>
 
     <footer th:replace="fragments/footer :: footer"></footer>
+
+    <!-- Image Lightbox Modal -->
+    <div id="kycImageLightbox" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); z-index: 10000; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.25s ease;" role="dialog" aria-modal="true">
+        <button type="button" id="lightboxClose" style="position: absolute; top: 20px; right: 25px; background: transparent; border: none; font-size: 40px; color: #fff; cursor: pointer; z-index: 10001; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;" aria-label="Đóng">&times;</button>
+        <img id="lightboxImg" src="" style="max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 4px; box-shadow: 0 4px 30px rgba(0,0,0,0.5); transform: scale(0.95); transition: transform 0.25s ease;" alt="Ảnh xem trước">
+    </div>
 
     <script th:src="@{/js/customer/auth.js}"></script>
     <script th:src="@{/js/customer/account-sidebar.js}"></script>

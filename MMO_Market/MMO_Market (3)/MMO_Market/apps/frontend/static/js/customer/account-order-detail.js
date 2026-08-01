@@ -327,11 +327,11 @@ function renderTimeline(order) {
                 if (descEl) descEl.textContent = 'Đơn hàng đã bị hủy bỏ.';
             } else if (status === 'COMPLETED') {
                 step.classList.add('order-timeline-item--active');
-                if (titleEl) titleEl.textContent = 'Hoàn tất';
-                if (descEl) descEl.textContent = 'Đơn hàng đã hoàn tất thành công.';
+                if (titleEl) titleEl.textContent = 'Hoàn thành';
+                if (descEl) descEl.textContent = 'Đơn hàng đã hoàn thành thành công.';
             } else {
                 // Các trạng thái khác (PENDING, PAID, DELIVERED, HELD)
-                if (titleEl) titleEl.textContent = 'Hoàn tất / tranh chấp';
+                if (titleEl) titleEl.textContent = 'Hoàn thành / tranh chấp';
                 if (descEl) descEl.textContent = 'Kết thúc đơn hoặc mở xử lý khiếu nại.';
             }
         } else {
@@ -388,6 +388,12 @@ function createAccessInfo(order) {
     return '<div class="cred-status-msg"><i class="fa fa-info-circle"></i> Thông tin nhận hàng sẽ được hiển thị tại đây khi sản phẩm được giao thành công.</div>';
 }
 
+/**
+ * Tạo giao diện hiển thị cho một tài khoản (Credential) duy nhất dưới dạng Card.
+ * @param {Object} creds - Đối tượng chứa thông tin tài khoản (username, password, note)
+ * @param {boolean} isKeyOnly - Biểu thị đây là dạng Product Key hay dạng Tài khoản/Mật khẩu
+ * @returns {string} - Mã HTML của Card hiển thị tài khoản
+ */
 function renderSingleCredentialCard(creds, isKeyOnly) {
     return `
         <div class="cred-card">
@@ -443,6 +449,10 @@ let activeCredsList = [];
 let renderedCredsCount = 0;
 const CREDS_CHUNK_SIZE = 10;
 
+/**
+ * Chức năng xuất toàn bộ danh sách tài khoản (Credentials) ra file Excel (.xls).
+ * Hữu ích khi người dùng mua số lượng lớn tài khoản.
+ */
 window.exportCredentialsToExcel = function () {
     if (!activeCredsList || activeCredsList.length === 0) return;
 
@@ -513,6 +523,10 @@ window.exportCredentialsToExcel = function () {
     }
 };
 
+/**
+ * Tải thêm (Lazy load) một số lượng tài khoản nhất định vào bảng HTML (Table).
+ * Chống đơ trình duyệt khi hiển thị hàng ngàn tài khoản cùng lúc.
+ */
 window.loadMoreCredentials = function () {
     const container = document.getElementById('credTableContainer');
     if (!container) return;
@@ -565,6 +579,12 @@ window.loadMoreCredentials = function () {
     renderedCredsCount += nextBatch.length;
 };
 
+/**
+ * Tạo giao diện hiển thị cho nhiều tài khoản dưới dạng Bảng (Table).
+ * Kèm theo các chức năng tiện ích như: Copy tất cả, Xuất file Excel, Cuộn để tải thêm (Infinite Scroll).
+ * @param {Array} credsList - Danh sách các đối tượng tài khoản
+ * @returns {string} - Mã HTML của Bảng hiển thị danh sách tài khoản
+ */
 function renderMultipleCredentialsTable(credsList) {
     activeCredsList = credsList;
     renderedCredsCount = 0;
@@ -638,7 +658,7 @@ function renderMultipleCredentialsTable(credsList) {
 }
 
 function getActionHint(order) {
-    if (order.status === 'COMPLETED') return 'Đơn hàng đã hoàn tất. Bạn có thể xem lại thông tin mua hàng.';
+    if (order.status === 'COMPLETED') return 'Đơn hàng đã hoàn thành. Bạn có thể xem lại thông tin mua hàng.';
     if (order.status === 'DISPUTED') return 'Đơn hàng đang trong trạng thái tranh chấp.';
     if (order.status === 'CANCELLED') return 'Đơn hàng đã hủy, không còn thao tác xử lý.';
     return 'Bạn có thể theo dõi đơn hoặc gửi khiếu nại khi cần.';
@@ -658,7 +678,7 @@ function formatOrderStatus(status) {
         HELD: 'Đã giao',
         PAID: 'Đã thanh toán',
         DELIVERED: 'Đã giao',
-        COMPLETED: 'Hoàn tất',
+        COMPLETED: 'Hoàn thành',
         CANCELLED: 'Đã hủy',
         DISPUTED: 'Tranh chấp',
         REFUNDED: 'Đã hoàn tiền'
@@ -681,7 +701,6 @@ function formatPaymentStatus(status) {
     const upperStatus = status.toUpperCase().trim();
     const map = {
         PAID: 'Đã thanh toán',
-        PENDING: 'Chờ thanh toán',
         FAILED: 'Thất bại',
         REFUNDED: 'Đã hoàn tiền'
     };
@@ -743,6 +762,25 @@ window.copyToClipboard = async function (text, label, btn) {
         showSuccessToast(`Đã sao chép ${label} vào bộ nhớ tạm.`);
     } catch {
         showWarningToast('Không thể copy tự động. Vui lòng chọn và sao chép thủ công.');
+    }
+};
+
+window.toggleCredVisibility = function (elementId, actualValue, btn) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    const icon = btn.querySelector('i');
+    const isHidden = element.textContent === '••••••••••••';
+    
+    if (isHidden) {
+        element.textContent = actualValue;
+        if (icon) {
+            icon.className = 'fa fa-eye-slash';
+        }
+    } else {
+        element.textContent = '••••••••••••';
+        if (icon) {
+            icon.className = 'fa fa-eye';
+        }
     }
 };
 

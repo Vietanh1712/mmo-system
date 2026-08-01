@@ -12,6 +12,10 @@ import com.mmo.feature.admin.service.AuditLogService;
 
 import java.util.Map;
 
+/**
+ * Controller truy xuất Nhật ký hệ thống (Audit Logs) dành cho Admin.
+ * Lưu vết và trả về các lịch sử thao tác quan trọng của hệ thống (như thay đổi quyền, duyệt rút tiền, duyệt KYC).
+ */
 @RestController
 @RequestMapping("/api/admin/audit-logs")
 public class AuditLogController {
@@ -22,6 +26,16 @@ public class AuditLogController {
         this.auditLogService = auditLogService;
     }
 
+    /**
+     * Lấy danh sách nhật ký hệ thống kèm các tiêu chí lọc.
+     * @param operatorId ID của Admin (người đang thao tác xem log)
+     * @param search Từ khóa tìm kiếm (theo tên người thao tác, IP, nội dung)
+     * @param action Mã hành động cụ thể (ví dụ: KYC_Approve, Fund_Withdraw)
+     * @param category Nhóm hành động (ví dụ: FINANCE, SHOP, USER_MGMT)
+     * @param startDate Ngày bắt đầu (để lọc theo khoảng thời gian)
+     * @param endDate Ngày kết thúc
+     * @return Map chứa content (danh sách log) và thông tin phân trang.
+     */
     @GetMapping
     public Map<String, Object> getAuditLogs(
             @AuthenticationPrincipal Long operatorId,
@@ -36,6 +50,11 @@ public class AuditLogController {
         return auditLogService.getAuditLogs(operatorId, search, action, category, startDate, endDate, sort, page, size);
     }
 
+    /**
+     * Xuất dữ liệu nhật ký hệ thống ra file CSV để Admin tải về.
+     * Các tham số lọc tương tự như API lấy danh sách log.
+     * @return File CSV chứa dữ liệu log.
+     */
     @GetMapping("/export")
     public ResponseEntity<byte[]> exportAuditLogsCsv(
             @AuthenticationPrincipal Long operatorId,
