@@ -19,7 +19,13 @@ Customer sử dụng Marketplace để tìm kiếm sản phẩm số, xem đánh
 ## 3. Functional Requirements
 - **FR-CUST-01**: WHEN a Customer views the marketplace, THE SYSTEM SHALL display active products with pagination and category filters.
 - **FR-CUST-02**: WHEN a Customer submits a purchase request, THE SYSTEM SHALL check wallet balance, deduct the amount, and create an Order.
-- **FR-CUST-03**: AFTER an Order is created, THE SYSTEM SHALL assign exactly 1 unused `DigitalAsset` to the order item and mark it as used.
+- **FR-CUST-02a**: IF the requested purchase quantity exceeds the available stock:
+  - THE SYSTEM SHALL present a choices dialog offering:
+    - **Option A (Buy remaining stock)**: Purchase only the available `stock` quantity immediately.
+    - **Option B (Buy remaining + Pre-order deficit)**: Purchase `stock` immediately AND submit a Pre-Order request for the deficit `(quantity - stock)`.
+    - **Option C (Pre-order full quantity)**: Transfer the entire `quantity` into a Pre-Order request.
+    - **Cancel**: Close the modal without performing any transactions.
+- **FR-CUST-03**: AFTER an Order is created, THE SYSTEM SHALL assign exactly the purchased quantity of unused `DigitalAsset`s to the order item and mark them as used.
 - **FR-CUST-04**: IF the digital asset is invalid, THE SYSTEM SHALL allow the Customer to open a Complaint within 3 days (Escrow period).
 - **FR-CUST-05**: WHEN an Order is successfully completed without complaint, THE SYSTEM SHALL allow the Customer to leave a 1 to 5 star Review.
 
@@ -28,6 +34,7 @@ Customer sử dụng Marketplace để tìm kiếm sản phẩm số, xem đánh
 ## 4. Non-Functional Requirements
 - **Concurrency**: Khi nhiều người cùng mua 1 tài sản cuối cùng, hệ thống phải xử lý khóa dòng để chỉ 1 người mua thành công (Pessimistic Locking / Optimistic Locking).
 - **Performance**: Việc tìm kiếm tài sản số chưa sử dụng để giao cho khách phải có độ trễ < 100ms.
+- **UX/Responsiveness**: Trải nghiệm chọn lựa mua/pre-order khi kho hàng thiếu hụt phải được thông báo trực quan qua Dialog/Modal không gây gián đoạn khó hiểu cho người dùng.
 
 ---
 

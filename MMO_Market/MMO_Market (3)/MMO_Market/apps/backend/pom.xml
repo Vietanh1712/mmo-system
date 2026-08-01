@@ -134,11 +134,22 @@
             <artifactId>specification-arg-resolver</artifactId>
             <version>3.1.1</version>
         </dependency>
-        <!-- Spring Boot Starter Mail -->
+        <!-- Jakarta Mail is used to build RFC-compliant MIME messages for Gmail API -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
             <version>${spring-boot.version}</version>
+        </dependency>
+        <!-- Gmail API over HTTPS (works on hosts that block outbound SMTP) -->
+        <dependency>
+            <groupId>com.google.apis</groupId>
+            <artifactId>google-api-services-gmail</artifactId>
+            <version>v1-rev20260525-2.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.auth</groupId>
+            <artifactId>google-auth-library-oauth2-http</artifactId>
+            <version>1.49.0</version>
         </dependency>
     </dependencies>
 

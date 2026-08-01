@@ -12,6 +12,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.mmo.feature.admin.service.SystemConfigurationService;
 
+/**
+ * Controller xử lý cấu hình hệ thống dành cho Admin.
+ * Bao gồm các API để thiết lập các thông số chung (như Tên web, timeout đăng nhập, bảo trì)
+ * và các thông số về Tài chính (phí hoa hồng sàn, hạn mức nạp rút tối thiểu/tối đa).
+ */
 @RestController
 @RequestMapping("/api/admin/system-config")
 public class SystemConfigurationController {
@@ -22,11 +27,21 @@ public class SystemConfigurationController {
         this.systemConfigurationService = systemConfigurationService;
     }
 
+    /**
+     * Lấy toàn bộ cấu hình hệ thống hiện tại (bao gồm cấu hình chung và cấu hình phí hoa hồng).
+     * @param operatorId ID của Admin đang thực hiện lấy dữ liệu.
+     * @return Dữ liệu cấu hình hệ thống tổng hợp.
+     */
     @GetMapping
     public SystemConfigResponse getConfigurations(@AuthenticationPrincipal Long operatorId) {
         return systemConfigurationService.getConfigurations(operatorId);
     }
 
+    /**
+     * Cập nhật thông số cấu hình chung của hệ thống.
+     * Ví dụ: Thời gian timeout session, Bật/tắt đăng ký, Cấu hình bảo trì.
+     * @param request Chứa các thông số cấu hình chung cần cập nhật.
+     */
     @PutMapping("/general")
     public AdminActionResponse updateGeneralConfig(
             @AuthenticationPrincipal Long operatorId,
@@ -50,6 +65,11 @@ public class SystemConfigurationController {
         }
     }
 
+    /**
+     * Cập nhật thông số cấu hình về mức Phí và Hoa hồng (Commissions) của sàn.
+     * Ví dụ: Phần trăm phí bán hàng, Phí rút tiền, Hạn mức nạp/rút tiền, Phí mở Shop.
+     * @param request Chứa các thông số mức phí cần cập nhật.
+     */
     @PutMapping("/commissions")
     public AdminActionResponse updateCommissionsConfig(
             @AuthenticationPrincipal Long operatorId,

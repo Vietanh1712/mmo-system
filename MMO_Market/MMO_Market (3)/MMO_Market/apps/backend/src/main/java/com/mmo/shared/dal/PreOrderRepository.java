@@ -17,5 +17,7 @@ public interface PreOrderRepository extends JpaRepository<PreOrder, Long> {
 
     List<PreOrder> findByProductAndStatusIgnoreCaseAndIsDeleteFalseOrderByCreatedAtAsc(com.mmo.shared.model.Product product, String status);
 
+    List<PreOrder> findByProductAndIsDeleteFalseOrderByCreatedAtAsc(com.mmo.shared.model.Product product);
+
     List<PreOrder> findByIsDeleteFalseOrderByCreatedAtAsc();
 }

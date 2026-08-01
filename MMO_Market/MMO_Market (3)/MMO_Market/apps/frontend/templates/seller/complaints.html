@@ -66,15 +66,16 @@
                                 <option value="resolved">Đã giải quyết</option>
                                 <option value="closed">Đã đóng</option>
                             </select>
-                            <select aria-label="Lọc sản phẩm" class="ds-select" style="min-width: 150px; padding: 6px 10px; font-size: 13px;">
-                                <option value="">Tất cả danh mục</option>
-                                <option value="email">Email</option>
-                                <option value="account">Tài khoản</option>
-                                <option value="software">Phần mềm</option>
-                                <option value="engagement">Tăng tương tác</option>
-                                <option value="software_service">Dịch vụ phần mềm</option>
-                                <option value="blockchain">Blockchain</option>
+                            <select id="mainCategoryFilter" class="ds-select" style="min-width: 150px; padding: 6px 10px; font-size: 13px;">
+                                <option value="">Tất cả danh mục chính</option>
                             </select>
+                            <select id="subCategoryFilter" class="ds-select" style="min-width: 150px; padding: 6px 10px; font-size: 13px;" disabled>
+                                <option value="">Tất cả danh mục phụ</option>
+                            </select>
+                            <!-- Nút xác nhận tìm kiếm/lọc -->
+                            <button id="btnFilterComplaint" class="ds-btn ds-btn-primary" style="padding: 6px 16px; font-size: 13px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                                <i class="fa fa-filter" style="margin-right: 6px;"></i> Lọc
+                            </button>
                         </div>
                     </div>
                     <div class="table-wrap">
@@ -94,66 +95,9 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>#CMP-204</td>
-                                    <td>#TX-10458</td>
-                                    <td>
-                                        Canva Pro<br>
-                                        <span style="color: var(--ds-text-muted); font-size: 12px;">1 năm</span>
+                                    <td colspan="9" style="text-align: center; padding: 40px; color: var(--seller-muted);">
+                                        <i class="fa fa-spinner fa-spin" style="font-size: 24px; display: block; margin-bottom: 8px;"></i> Đang tải danh sách khiếu nại...
                                     </td>
-                                    <td>le.van.c@email.com</td>
-                                    <td>Tài khoản không đăng nhập được sau 2 ngày.</td>
-                                    <td style="text-align: right;">350.000 ₫</td>
-                                    <td><span class="ds-badge ds-badge-warning"><i class="fa fa-warning"></i> Open</span></td>
-                                    <td>03/06/2026</td>
-                                    <td style="text-align: right;">
-                                        <div th:replace="~{fragments/seller-actions :: complaintRowActions(@{/seller/complaints/detail})}"></div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>#CMP-198</td>
-                                    <td>#TX-10412</td>
-                                    <td>
-                                        Netflix Premium<br>
-                                        <span style="color: var(--ds-text-muted); font-size: 12px;">1 tháng</span>
-                                    </td>
-                                    <td>hoang.e@email.com</td>
-                                    <td>Sai gói, chỉ có 1 màn hình thay vì 4.</td>
-                                    <td style="text-align: right;">89.000 ₫</td>
-                                    <td><span class="ds-badge ds-badge-warning"><i class="fa fa-warning"></i> Open</span></td>
-                                    <td>01/06/2026</td>
-                                    <td style="text-align: right;">
-                                        <div th:replace="~{fragments/seller-actions :: complaintRowActions(@{/seller/complaints/detail})}"></div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>#CMP-190</td>
-                                    <td>#TX-10388</td>
-                                    <td>
-                                        Spotify Family<br>
-                                        <span style="color: var(--ds-text-muted); font-size: 12px;">1 tháng</span>
-                                    </td>
-                                    <td>tran.thi.b@email.com</td>
-                                    <td>Khách yêu cầu đổi tài khoản mới.</td>
-                                    <td style="text-align: right;">120.000 ₫</td>
-                                    <td><span class="ds-badge ds-badge-info"><i class="fa fa-clock-o"></i> InProgress</span></td>
-                                    <td>28/05/2026</td>
-                                    <td style="text-align: right;">
-                                        <div th:replace="~{fragments/seller-actions :: complaintRowActions(@{/seller/complaints/detail})}"></div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>#CMP-175</td>
-                                    <td>#TX-10340</td>
-                                    <td>
-                                        ChatGPT Plus<br>
-                                        <span style="color: var(--ds-text-muted); font-size: 12px;">1 tháng</span>
-                                    </td>
-                                    <td>pham.d@email.com</td>
-                                    <td>Đã được shop hỗ trợ đăng nhập thành công.</td>
-                                    <td style="text-align: right;">199.000 ₫</td>
-                                    <td><span class="ds-badge ds-badge-success"><i class="fa fa-check"></i> Resolved</span></td>
-                                    <td>20/05/2026</td>
-                                    <td style="text-align: right;"><span style="color: var(--ds-text-muted);">—</span></td>
                                 </tr>
                             </tbody>
                         </table>

@@ -260,7 +260,7 @@ function getFilteredOrders() {
         const orderDate = parseVietnameseDateTime(order.createdAt);
 
         if (keyword && !text.includes(keyword)) return false;
-        if (status && order.status !== status) return false;
+        if (status && (order.status || '').toUpperCase() !== status.toUpperCase()) return false;
         if (paymentStatus && order.paymentStatus !== paymentStatus) return false;
         if (fromDate && orderDate && orderDate < fromDate) return false;
         if (toDate && orderDate && orderDate > endOfDay(toDate)) return false;
@@ -408,10 +408,10 @@ function formatOrderStatus(status) {
     const upperStatus = status.toUpperCase().trim();
     const map = {
         PENDING: 'Chờ xử lý',
-        HELD: 'Tạm giữ',
+        HELD: 'Đã giao',
         PAID: 'Đã thanh toán',
         DELIVERED: 'Đã giao',
-        COMPLETED: 'Hoàn tất',
+        COMPLETED: 'Hoàn thành',
         CANCELLED: 'Đã hủy',
         DISPUTED: 'Tranh chấp',
         REFUNDED: 'Đã hoàn tiền'
@@ -422,10 +422,10 @@ function formatOrderStatus(status) {
 function getOrderStatusBadgeClass(status) {
     if (!status) return 'ds-badge-muted';
     const upperStatus = status.toUpperCase().trim();
-    if (upperStatus === 'COMPLETED' || upperStatus === 'DELIVERED') return 'ds-badge-success';
+    if (upperStatus === 'COMPLETED' || upperStatus === 'DELIVERED' || upperStatus === 'HELD') return 'ds-badge-success';
     if (upperStatus === 'DISPUTED' || upperStatus === 'CANCELLED') return 'ds-badge-danger';
     if (upperStatus === 'PENDING' || upperStatus === 'PAID') return 'ds-badge-warning';
-    if (upperStatus === 'HELD' || upperStatus === 'REFUNDED') return 'ds-badge-info';
+    if (upperStatus === 'REFUNDED') return 'ds-badge-info';
     return 'ds-badge-muted';
 }
 

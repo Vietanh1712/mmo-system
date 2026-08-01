@@ -16,6 +16,11 @@ import com.mmo.feature.seller.service.ShopRegistrationService;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller phục vụ cho quy trình Mở Shop (Đăng ký gian hàng).
+ * Cung cấp API cho Khách hàng nộp đơn đăng ký mở Shop,
+ * và API cho Nhân viên (Staff)/Admin xem danh sách, duyệt đơn và quản lý trạng thái Shop.
+ */
 @RestController
 @RequestMapping("/api/v1/shop-registrations")
 public class ShopRegistrationController {
@@ -23,6 +28,11 @@ public class ShopRegistrationController {
     @Autowired
     private ShopRegistrationService shopRegistrationService;
 
+    /**
+     * Nộp yêu cầu đăng ký mở Shop mới.
+     * Áp dụng cho người dùng phổ thông (Customer) hoặc người bán (Seller) muốn sửa hồ sơ.
+     * @param request Chứa tên Shop, mô tả Shop, v.v.
+     */
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER') or hasRole('SELLER')")
     public ResponseEntity<ShopRegistrationResponseDto> submitRegistration(
@@ -37,6 +47,10 @@ public class ShopRegistrationController {
         }
     }
 
+    /**
+     * Lấy thông tin hồ sơ đăng ký mở Shop của chính người dùng đang đăng nhập.
+     * Giúp người dùng biết trạng thái hồ sơ của mình (Chờ duyệt, Đã duyệt, Từ chối).
+     */
     @GetMapping("/me")
     @PreAuthorize("hasRole('CUSTOMER') or hasRole('SELLER')")
     public ResponseEntity<ShopRegistrationResponseDto> getMyRegistration(@AuthenticationPrincipal Long userId) {
@@ -48,6 +62,12 @@ public class ShopRegistrationController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Lấy danh sách các đơn đăng ký mở Shop dành cho Staff/Admin (hỗ trợ phân trang và tìm kiếm).
+     * @param status Trạng thái của Đơn đăng ký (PENDING, APPROVED, REJECTED)
+     * @param shopStatus Trạng thái hoạt động của Shop (ACTIVE, SUSPENDED, BLOCKED)
+     * @param keyword Tìm kiếm theo tên Shop hoặc Email chủ Shop
+     */
     @GetMapping
     @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<Page<ShopRegistrationResponseDto>> getAllRegistrations(
@@ -60,6 +80,9 @@ public class ShopRegistrationController {
         return ResponseEntity.ok(shopRegistrationService.getAllRegistrations(status, shopStatus, keyword, page, size));
     }
 
+    /**
+     * Thống kê tổng số lượng các Đơn đăng ký theo từng trạng thái.
+     */
     @GetMapping("/stats")
     @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<Map<String, Long>> getRegistrationStats() {
@@ -78,6 +101,10 @@ public class ShopRegistrationController {
         return ResponseEntity.ok(shopRegistrationService.getDistinctStatuses());
     }
 
+    /**
+     * Xem chi tiết một hồ sơ đăng ký mở Shop thông qua ID.
+     * Dành cho Staff/Admin xem trước khi đưa ra quyết định Duyệt hay Từ chối.
+     */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<ShopRegistrationResponseDto> getRegistrationById(@PathVariable Long id) {
@@ -90,6 +117,10 @@ public class ShopRegistrationController {
     }
 
 
+    /**
+     * Phê duyệt (Approve) hoặc Từ chối (Reject) đơn đăng ký mở Shop.
+     * Nếu được phê duyệt, Role của người dùng sẽ tự động nâng lên thành SELLER.
+     */
     @PutMapping("/{id}/review")
     @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<ShopRegistrationResponseDto> reviewRegistration(@PathVariable Long id, @RequestBody ShopRegistrationReviewDto review) {
@@ -101,6 +132,10 @@ public class ShopRegistrationController {
         }
     }
 
+    /**
+     * Kích hoạt hoặc Tạm ngưng hoạt động nhanh một gian hàng (Shop).
+     * @param active true: Kích hoạt, false: Tạm ngưng.
+     */
     @PutMapping("/{id}/toggle-status")
     @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<ShopRegistrationResponseDto> toggleShopStatus(
@@ -114,6 +149,12 @@ public class ShopRegistrationController {
         }
     }
 
+    /**
+     * Cập nhật trạng thái chi tiết của Shop (Khóa vĩnh viễn, Tạm đình chỉ có thời hạn).
+     * Dành cho việc xử lý vi phạm của người bán.
+     * @param status Mã trạng thái mới (Ví dụ: BLOCKED, SUSPENDED)
+     * @param suspendedUntil Nếu bị đình chỉ, thời hạn đình chỉ đến bao giờ.
+     */
     @PutMapping("/{id}/update-status")
     @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<ShopRegistrationResponseDto> updateShopStatus(

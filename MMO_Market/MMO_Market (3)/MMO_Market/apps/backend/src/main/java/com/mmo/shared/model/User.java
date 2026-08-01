@@ -32,6 +32,9 @@ public class User {
     @Column(columnDefinition = "NVARCHAR(500)")
     private String address;
 
+    @Column(name = "avatar", columnDefinition = "NVARCHAR(255)")
+    private String avatar;
+
     @Column(name = "national_id")
     private String nationalId;
 

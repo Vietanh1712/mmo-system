@@ -12,6 +12,7 @@ import com.mmo.shared.model.ProductVariant;
 import com.mmo.shared.model.Transaction;
 import com.mmo.shared.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +41,12 @@ public class TransactionService {
 
     @Autowired
     private com.mmo.shared.dal.ComplaintRepository complaintRepository;
+
+    @Autowired
+    private com.mmo.shared.dal.NotificationRepository notificationRepository;
+
+    @Autowired
+    private com.mmo.feature.seller.service.ShopLevelService shopLevelService;
 
     /**
      * Thực hiện mua sản phẩm và trừ tiền từ số dư của người mua, bọc trong Transaction.
@@ -150,14 +157,12 @@ public class TransactionService {
         long totalSold = transactionRepository.countTotalSalesBySeller(seller);
         long resolvedComplaints = complaintRepository.countResolvedComplaintsBySeller(seller);
         
-        if (shopLevel == 1) {
-            // Giai đoạn thử thách (Shop mới Level 1)
-            escrowHoldHours = 168; // 7 ngày
-        } else if (shopLevel == 0) {
-            // Giai đoạn thắt chặt (Shop Cảnh cáo Level 0)
-            escrowHoldHours = 168; // 7 ngày
+        double disputeRate = totalSold > 0 ? (double) resolvedComplaints / totalSold : 0.0;
+        
+        if (shopLevel == 0 || completedCount < 20 || disputeRate >= 0.02) {
+            escrowHoldHours = 168; // Giam tiền 7 ngày (168 giờ)
         } else {
-            // Giai đoạn tiêu chuẩn (Shop Uy tín Level 2)
+            // Giao dịch tiêu chuẩn
             escrowHoldHours = systemConfigurationRepository.findByConfigKey("ESCROW_HOLD_HOURS")
                     .map(c -> {
                         try { return Integer.parseInt(c.getConfigValue()); }
@@ -216,5 +221,89 @@ public class TransactionService {
         }
         
         return transaction;
+    }
+
+    @Scheduled(fixedRate = 60000)
+    @Transactional
+    public void autoReleaseEscrowTransactions() {
+        LocalDateTime now = LocalDateTime.now();
+        java.util.List<Transaction> expiredTransactions = transactionRepository.findByStatusAndEscrowReleaseDateBeforeAndIsDeleteFalse("Held", now);
+        for (Transaction tx : expiredTransactions) {
+            try {
+                releaseEscrowFunds(tx);
+            } catch (Exception e) {
+                org.slf4j.LoggerFactory.getLogger(TransactionService.class)
+                    .error("Failed to auto-release escrow for transaction ID " + tx.getId() + ": " + e.getMessage(), e);
+            }
+        }
+    }
+
+    @Transactional
+    public void releaseEscrowFunds(Transaction tx) {
+        if (!"Held".equals(tx.getStatus())) {
+            return;
+        }
+
+        tx.setStatus("Completed");
+        transactionRepository.save(tx);
+
+        User seller = tx.getSeller();
+        if (seller != null) {
+            long totalAmount = tx.getAmountVnd() != null ? tx.getAmountVnd() : 0L;
+            long commission = tx.getCommissionVnd() != null ? tx.getCommissionVnd() : 0L;
+            long payout = totalAmount - commission;
+            if (payout < 0) payout = 0;
+
+            long oldBalance = seller.getBalanceVnd() != null ? seller.getBalanceVnd() : 0L;
+            long newBalance = oldBalance + payout;
+            seller.setBalanceVnd(newBalance);
+            userRepository.save(seller);
+
+            String referenceCode = "PAYOUT-AUTO-RELEASE-TX-" + tx.getId();
+            walletService.recordTransaction(
+                    seller,
+                    "PAYMENT",
+                    payout,
+                    "SUCCESS",
+                    "Giải ngân tự động đơn hàng MMO-ORD-" + tx.getId() + " do hết hạn Escrow",
+                    referenceCode,
+                    newBalance,
+                    tx.getId()
+            );
+
+            com.mmo.shared.model.Notification sellerNotif = com.mmo.shared.model.Notification.builder()
+                    .userId(seller.getId())
+                    .title("Giải ngân đơn hàng thành công")
+                    .content(String.format("Đơn hàng MMO-ORD-%d đã hết thời gian tạm giữ. Số tiền %,d VNĐ đã được giải ngân vào ví.", tx.getId(), payout))
+                    .type("WALLET")
+                    .severity("SUCCESS")
+                    .isRead(false)
+                    .isDelete(false)
+                    .targetUrl("/account/transactions")
+                    .build();
+            notificationRepository.save(sellerNotif);
+
+            try {
+                shopLevelService.evaluateSellerLevel(seller.getId());
+            } catch (Exception e) {
+                org.slf4j.LoggerFactory.getLogger(TransactionService.class)
+                    .error("Failed to evaluate shop level for seller ID " + seller.getId() + " after escrow release: " + e.getMessage(), e);
+            }
+        }
+
+        User buyer = tx.getCustomer();
+        if (buyer != null) {
+            com.mmo.shared.model.Notification buyerNotif = com.mmo.shared.model.Notification.builder()
+                    .userId(buyer.getId())
+                    .title("Đơn hàng hoàn tất")
+                    .content(String.format("Đơn hàng MMO-ORD-%d của bạn đã hoàn tất giai đoạn tạm giữ bảo lãnh.", tx.getId()))
+                    .type("WALLET")
+                    .severity("INFO")
+                    .isRead(false)
+                    .isDelete(false)
+                    .targetUrl("/account/transactions")
+                    .build();
+            notificationRepository.save(buyerNotif);
+        }
     }
 }

@@ -1,3 +1,8 @@
+/**
+ * File xử lý các logic nền tảng cho Khách hàng và Hệ thống chung.
+ * Bao gồm: Xác thực đăng nhập (Authentication), Quản lý Token, Lấy danh sách sản phẩm hiển thị chung
+ * và các tiện ích liên quan đến vai trò (Role), chuyển hướng trang (Redirect).
+ */
 const API_BASE = '/api';
 const AUTH_STORAGE_KEYS = ['accessToken', 'refreshToken', 'loginTimestamp', 'userInfo', 'user', 'redirectPath'];
 
@@ -20,8 +25,13 @@ if (!sessionStorage.getItem('accessToken') && localStorage.getItem('accessToken'
 }
 
 // =======================================================
-// 1. UTILITIES & AUTH FETCH
+// 1. TIỆN ÍCH XÁC THỰC (UTILITIES & AUTH FETCH)
 // =======================================================
+/**
+ * Hàm gọi API thay thế cho fetch() mặc định.
+ * Tự động đính kèm `accessToken` vào Header (Bearer Token).
+ * Tự động đăng xuất nếu token hết hạn (mã lỗi 401).
+ */
 async function authFetch(url, options = {}) {
     const token = sessionStorage.getItem('accessToken');
     const headers = {
@@ -29,6 +39,9 @@ async function authFetch(url, options = {}) {
         'Authorization': `Bearer ${token}`,
         ...options.headers
     };
+    if (options.body instanceof FormData) {
+        delete headers['Content-Type'];
+    }
 
     const response = await fetch(`${API_BASE}${url}`, { ...options, headers });
 
@@ -49,6 +62,10 @@ async function authFetch(url, options = {}) {
     return response;
 }
 
+/**
+ * Xử lý đăng xuất tài khoản.
+ * Xóa toàn bộ token khỏi Storage và gọi API đăng xuất để backend hủy phiên làm việc.
+ */
 function logout() {
     const refreshToken = sessionStorage.getItem('refreshToken');
     if (refreshToken) {
@@ -70,8 +87,12 @@ function logout() {
 }
 
 // =======================================================
-// 2. PRODUCT LOGIC
+// 2. LOGIC HIỂN THỊ SẢN PHẨM (PRODUCT LOGIC)
 // =======================================================
+/**
+ * Tải danh sách sản phẩm từ backend và render ra giao diện (dành cho trang chủ khách hàng).
+ * @param {string} category - ID hoặc tên danh mục để lọc (tùy chọn)
+ */
 async function loadProducts(category = '') {
     const container = document.getElementById('product-container');
     if (!container) return;
@@ -113,8 +134,12 @@ async function loadProducts(category = '') {
 }
 
 // =======================================================
-// 3. TRANSACTION LOGIC (NẠP TIỀN / MUA HÀNG)
+// 3. LOGIC GIAO DỊCH (NẠP TIỀN)
 // =======================================================
+/**
+ * Gửi yêu cầu nạp tiền vào ví của người dùng.
+ * @param {number} amount - Số tiền muốn nạp
+ */
 async function topUp(amount) {
     if (!amount || isNaN(amount) || amount <= 0) {
         showWarningToast("Số tiền nạp không hợp lệ!");
@@ -215,6 +240,10 @@ function resolvePostLoginRedirect(roleValue, redirectPathFromApi) {
     return roleTarget;
 }
 
+/**
+ * Tự động chuyển hướng (Redirect) nếu người dùng đã đăng nhập (có Token).
+ * Nếu đang ở trang /login thì sẽ bị đẩy về trang chủ hoặc trang đích đã lưu trước đó.
+ */
 function applyAuthenticatedRedirect() {
     const token = sessionStorage.getItem('accessToken');
     if (!token || token === 'null' || token === 'undefined') return;
@@ -361,6 +390,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const passwordInput = document.getElementById('password');
     const passwordToggle = document.querySelector('[data-toggle-password="password"]');
 
+
+
     function showLoginAlert(message, type) {
         alertBox.textContent = message;
         alertBox.className = `message ${type}`;
@@ -414,7 +445,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             googleClient = google.accounts.oauth2.initCodeClient({
-                client_id: window.googleClientId || '468839510302-5p2tjt8ljsgg1qqrrh3mqf9chjdrifl9.apps.googleusercontent.com',
+                client_id: window.googleClientId || '',
                 scope: 'openid email profile',
                 ux_mode: 'popup',
                 callback: (response) => {

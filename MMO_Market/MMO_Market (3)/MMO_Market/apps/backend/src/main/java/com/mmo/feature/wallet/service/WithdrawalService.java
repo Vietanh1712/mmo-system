@@ -101,9 +101,8 @@ public class WithdrawalService {
 
         boolean requireWithdraw2FA = systemConfigurationRepository.findByConfigKey("REQUIRE_WITHDRAW_2FA")
                 .map(c -> Boolean.parseBoolean(c.getConfigValue()))
-                .orElse(false);
+                .orElse(true);
 
-        // Validate amounts
         if (amount < minWithdrawalLimit) {
             throw new IllegalArgumentException("Số tiền rút tối thiểu phải là " + String.format("%,d", minWithdrawalLimit) + " VNĐ.");
         }
@@ -123,6 +122,9 @@ public class WithdrawalService {
         if (requireWithdraw2FA) {
             if (otp == null || otp.trim().isEmpty()) {
                 throw new IllegalArgumentException("Giao dịch rút tiền yêu cầu xác thực 2FA. Vui lòng nhập mã OTP.");
+            }
+            if (!otp.trim().matches("\\d{6}")) {
+                throw new IllegalArgumentException("Mã OTP không hợp lệ. Mã OTP phải bao gồm đúng 6 chữ số.");
             }
             authenticationService.verifyWithdrawalOtp(seller.getId(), otp.trim());
         }

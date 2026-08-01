@@ -22,6 +22,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
+/**
+ * Controller phục vụ cho quy trình Định danh khách hàng (KYC).
+ * Cho phép người dùng (Customer, Seller) nộp hồ sơ KYC, xem lịch sử và xem lại tài liệu định danh của mình.
+ */
 @RestController
 @RequestMapping("/api/v1/kyc")
 @Slf4j
@@ -33,6 +37,17 @@ public class KycController {
     @Autowired
     private KycStorageService kycStorageService;
 
+    /**
+     * Nộp hồ sơ xác minh danh tính (KYC).
+     * @param fullName Họ và tên đầy đủ
+     * @param dateOfBirth Ngày sinh
+     * @param address Địa chỉ
+     * @param idNumber Số CMND/CCCD/Hộ chiếu
+     * @param idType Loại giấy tờ
+     * @param frontImage Ảnh mặt trước
+     * @param backImage Ảnh mặt sau
+     * @param selfieImage Ảnh chụp chân dung (selfie)
+     */
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER', 'ROLE_SELLER')")
     public ResponseEntity<?> submitKyc(
@@ -70,6 +85,9 @@ public class KycController {
         }
     }
 
+    /**
+     * Lấy lịch sử các lần nộp hồ sơ KYC của chính người dùng đang đăng nhập.
+     */
     @GetMapping("/me")
     @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER', 'ROLE_SELLER')")
     public ResponseEntity<List<KycResponseDto>> getMyKyc(Authentication authentication) {
@@ -78,6 +96,12 @@ public class KycController {
         return ResponseEntity.ok(history);
     }
 
+    /**
+     * Lấy file ảnh tài liệu KYC đã nộp.
+     * Cấp quyền cho chủ sở hữu hồ sơ hoặc nhân viên/quản trị viên (Staff, Admin).
+     * @param id ID của bản ghi KYC
+     * @param docType Loại ảnh cần lấy (front, back, selfie)
+     */
     @GetMapping("/{id}/documents/{docType}")
     @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER', 'ROLE_SELLER', 'ROLE_STAFF', 'ROLE_ADMIN')")
     public ResponseEntity<Resource> getKycDocument(
