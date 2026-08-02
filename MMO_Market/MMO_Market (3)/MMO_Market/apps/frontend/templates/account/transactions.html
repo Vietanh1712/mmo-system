@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lịch sử giao dịch ví - MMO Market</title>
+    <title>Quản lý ví và giao dịch - MMO Market</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" th:href="@{/css/features/home.css}">
@@ -16,7 +16,7 @@
     <header th:replace="fragments/header :: header"></header>
 
     <main class="profile-page ds-page">
-        <div class="ds-container">
+        <div class="ds-container ds-container--wide">
             <div class="profile-layout ds-two-column">
                 <aside th:replace="~{fragments/account-sidebar :: accountSidebar('transactions')}"></aside>
 
@@ -24,16 +24,12 @@
                     <section class="transactions-hero ds-card">
                         <div>
                             <p class="ds-caption">Ví & giao dịch</p>
-                            <h1 class="ds-heading-lg">Lịch sử giao dịch ví</h1>
+                            <h1 class="ds-heading-lg">Quản lý ví và giao dịch</h1>
                             <p class="ds-body transactions-hero__subtitle">
                                 Theo dõi toàn bộ biến động số dư, yêu cầu nạp tiền và các giao dịch đang xử lý.
                             </p>
                         </div>
                         <div class="transactions-hero__actions">
-                            <a class="ds-btn ds-btn-outline" th:href="@{/wallet}">
-                                <i class="fa fa-credit-card" aria-hidden="true"></i>
-                                Về ví
-                            </a>
                             <a class="ds-btn ds-btn-primary" th:href="@{/wallet/topup}">
                                 <i class="fa fa-plus-circle" aria-hidden="true"></i>
                                 Nạp tiền
@@ -176,6 +172,8 @@
                                         <option value="10">10</option>
                                         <option value="20">20</option>
                                         <option value="50">50</option>
+                                        <option value="200">200</option>
+                                        <option value="500">500</option>
                                     </select>
                                 </div>
                             </div>

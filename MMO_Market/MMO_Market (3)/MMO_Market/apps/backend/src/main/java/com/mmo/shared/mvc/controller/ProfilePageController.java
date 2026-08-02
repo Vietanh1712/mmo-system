@@ -36,7 +36,7 @@ public class ProfilePageController {
 
     @GetMapping("/wallet")
     public String showWalletPage() {
-        return "account/wallet";
+        return "redirect:/wallet/transactions";
     }
 
     @GetMapping("/wallet/topup")

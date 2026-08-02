@@ -4,6 +4,10 @@
     background: var(--ds-bg);
 }
 
+.profile-page .ds-container {
+    max-width: 1600px;
+}
+
 .profile-layout {
     align-items: start;
 }

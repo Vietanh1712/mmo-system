@@ -787,6 +787,10 @@ public class AuthenticationService {
                     .message("Đăng nhập bằng Google thành công")
                     .build();
 
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            String responseBody = e.getResponseBodyAsString();
+            log.error("Google login HTTP error (Status {}): {}", e.getStatusCode(), responseBody, e);
+            throw new RuntimeException("Đăng nhập bằng Google thất bại: " + e.getStatusCode() + " - " + responseBody);
         } catch (Exception e) {
             log.error("Google login failed: {}", e.getMessage(), e);
             throw new RuntimeException("Đăng nhập bằng Google thất bại: " + e.getMessage());
