@@ -111,52 +111,63 @@
                         </div>
 
                         <div id="dispute-decision-section" style="padding: 32px 40px; display: flex; flex-direction: column; gap: 24px;">
-                            <div class="ds-alert ds-alert-info">Chế độ giả lập Staff — Cập nhật sẽ đồng bộ tức thì sang người dùng.</div>
-                            <button id="view-dispute-chat-btn" class="ds-btn ds-btn-outline" type="button" style="width: 100%; border: 1px solid var(--brand-accent, #f97316); color: var(--brand-accent, #f97316); font-weight: 600;">
-                                <i class="fa fa-comments"></i> Mở phòng chat đối chất...
-                            </button>
-
-                             <div class="ds-form-field">
-                                 <label class="ds-label" for="complaintStatus">Phán quyết khiếu nại</label>
-                                 <select class="ds-select" id="complaintStatus" style="background-color: #f8fafc; font-weight: 600;">
-                                     <option value="InProgress">Đang xử lý (Chưa có phán quyết)</option>
-                                     <option value="Resolved">Chấp nhận khiếu nại (Hoàn tiền cho Buyer)</option>
-                                     <option value="Rejected">Từ chối khiếu nại (Giải ngân cho Seller)</option>
-                                 </select>
-                             </div>
-                             <div class="ds-form-field">
-                                 <label class="ds-label" for="complaintResolution">Kết quả / ghi chú</label>
-                                 <textarea class="ds-textarea" id="complaintResolution" placeholder="Mô tả chi tiết phán quyết, kết quả hoàn tiền..." style="min-height: 120px;"></textarea>
-                             </div>
-
-                             <!-- Gắn cờ phạt Shop vi phạm -->
-                             <div class="ds-field" style="margin-top: 16px;">
-                                 <label class="ds-checkbox-label" style="display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer;">
-                                     <input type="checkbox" id="enableFlagging" onchange="toggleFlaggingFields()" style="width: 16px; height: 16px; cursor: pointer;">
-                                     <span>Gắn cờ phạt Shop vi phạm</span>
-                                 </label>
-                             </div>
-
-                             <div id="flaggingFields" style="display: none; flex-direction: column; gap: 12px; margin-top: 12px; padding: 12px; background: #fff8f6; border: 1px solid #fee2e2; border-radius: 8px; box-sizing: border-box;">
-                                 <div class="ds-field">
-                                     <label class="ds-label" for="flagLevel">Mức độ phạt</label>
-                                     <select class="ds-select" id="flagLevel" style="width: 100%; border: 1px solid var(--ds-border); padding: 8px 12px; border-radius: 6px;">
-                                         <option value="Warning">Mức độ 1: Cảnh cáo (Warning - Giam tiền 7 ngày)</option>
-                                         <option value="Suspension">Mức độ 2: Tạm khóa cửa hàng (Suspension)</option>
-                                         <option value="Ban">Mức độ 3: Khóa vĩnh viễn (Ban)</option>
+                            <div id="decision-form-fields" style="display: flex; flex-direction: column; gap: 24px;">
+                                 <div class="ds-alert ds-alert-info" style="margin: 0;">Chế độ giả lập Staff — Cập nhật sẽ đồng bộ tức thì sang người dùng.</div>
+                                 <button id="view-dispute-chat-btn" class="ds-btn ds-btn-outline" type="button" style="width: 100%; border: 1px solid var(--brand-accent, #f97316); color: var(--brand-accent, #f97316); font-weight: 600;">
+                                     <i class="fa fa-comments"></i> Mở phòng chat đối chất...
+                                 </button>
+                                 
+                                 <div class="ds-form-field">
+                                     <label class="ds-label" for="complaintStatus">Phán quyết khiếu nại</label>
+                                     <select class="ds-select" id="complaintStatus" style="background-color: #f8fafc; font-weight: 600;">
+                                         <option value="InProgress">Đang xử lý (Chưa có phán quyết)</option>
+                                         <option value="Resolved">Chấp nhận khiếu nại (Hoàn tiền cho Buyer)</option>
+                                         <option value="Rejected">Từ chối khiếu nại (Giải ngân cho Seller)</option>
                                      </select>
                                  </div>
-                                 <div class="ds-field">
-                                     <label class="ds-label" for="flagReason">Lý do phạt</label>
-                                     <textarea class="ds-textarea" id="flagReason" placeholder="Nhập lý do phạt, ví dụ: Shop vi phạm nhưng không đổi tài khoản/hoàn tiền..." style="min-height: 80px;"></textarea>
+                                 <div class="ds-form-field">
+                                     <label class="ds-label" for="complaintResolution">Kết quả / ghi chú</label>
+                                     <textarea class="ds-textarea" id="complaintResolution" placeholder="Mô tả chi tiết phán quyết, kết quả hoàn tiền..." style="min-height: 120px;"></textarea>
+                                 </div>
+
+                                 <!-- Gắn cờ phạt Shop vi phạm -->
+                                 <div class="ds-field" style="margin-top: 16px;">
+                                     <label class="ds-checkbox-label" style="display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer;">
+                                         <input type="checkbox" id="enableFlagging" onchange="toggleFlaggingFields()" style="width: 16px; height: 16px; cursor: pointer;">
+                                         <span>Gắn cờ phạt Shop vi phạm</span>
+                                     </label>
+                                 </div>
+
+                                  <div id="flaggingFields" style="display: none; flex-direction: column; gap: 12px; margin-top: 12px; padding: 12px; background: #fff8f6; border: 1px solid #fee2e2; border-radius: 8px; box-sizing: border-box;">
+                                      <div class="ds-field">
+                                          <label class="ds-label" for="flagLevel">Mức độ phạt</label>
+                                          <select class="ds-select" id="flagLevel" onchange="handleFlagLevelChange()" style="width: 100%; border: 1px solid var(--ds-border); padding: 8px 12px; border-radius: 6px;">
+                                              <option value="Warning">Mức độ 1: Cảnh cáo (Warning)</option>
+                                              <option value="Suspension">Mức độ 2: Tạm khóa cửa hàng (Suspension)</option>
+                                              <option value="Ban">Mức độ 3: Khóa vĩnh viễn (Ban)</option>
+                                          </select>
+                                      </div>
+                                      <div class="ds-field" id="suspensionDurationField" style="display: none;">
+                                          <label class="ds-label" for="suspendedUntil">Thời hạn đình chỉ đến (Mở khóa lúc)</label>
+                                          <input type="datetime-local" class="ds-input" id="suspendedUntil" style="width: 100%; border: 1px solid var(--ds-border); padding: 8px 12px; border-radius: 6px; box-sizing: border-box;">
+                                      </div>
+                                      <div class="ds-field">
+                                          <label class="ds-label" for="flagReason">Lý do phạt</label>
+                                          <textarea class="ds-textarea" id="flagReason" placeholder="Nhập lý do phạt, ví dụ: Shop vi phạm nhưng không đổi tài khoản/hoàn tiền..." style="min-height: 80px;"></textarea>
+                                      </div>
+                                  </div>
+
+                                 <div style="margin-top: 16px;">
+                                     <button class="ds-btn ds-btn-primary" type="button" onclick="submitDecision()" style="width: 100%; font-weight: 700; background: var(--brand-accent, #ea580c); color: #ffffff; height: 44px; font-size: 15px; border-radius: 8px; border: none; cursor: pointer;">
+                                         <i class="fa fa-gavel"></i> Xác nhận phán quyết (Submit)
+                                     </button>
                                  </div>
                              </div>
 
-                             <div style="margin-top: 16px;">
-                                 <button class="ds-btn ds-btn-primary" type="button" onclick="submitDecision()" style="width: 100%; font-weight: 700; background: var(--brand-accent, #ea580c); color: #ffffff; height: 44px; font-size: 15px; border-radius: 8px; border: none; cursor: pointer;">
-                                     <i class="fa fa-gavel"></i> Xác nhận phán quyết (Submit)
-                                 </button>
+                             <div id="decision-completed-banner" style="display: none;" class="ds-alert ds-alert-success">
+                                 Khiếu nại này đã hoàn tất xử lý phán quyết.
                              </div>
+
                             <div style="border-top: 1px solid var(--ds-border); padding-top: 16px; margin-top: 4px;">
                                 <a class="ds-btn ds-btn-outline" href="/staff/complaints" style="width: 100%; box-sizing: border-box;">
                                     <i class="fa fa-arrow-left"></i> Quay lại danh sách

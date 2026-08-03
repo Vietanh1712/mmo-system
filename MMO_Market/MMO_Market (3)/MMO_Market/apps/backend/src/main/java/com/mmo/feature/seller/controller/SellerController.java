@@ -387,13 +387,18 @@ public class SellerController {
     }
 
     private String validateShopActiveStatus(User seller) {
-        if (seller.getShopStatus() != null &&
-                ("Suspended".equalsIgnoreCase(seller.getShopStatus()) || "TEMP_LOCKED".equalsIgnoreCase(seller.getShopStatus())) &&
-                seller.getSuspendedUntil() != null &&
-                java.time.LocalDateTime.now().isAfter(seller.getSuspendedUntil())) {
-            seller.setShopStatus("Active");
-            seller.setSuspendedUntil(null);
-            userRepository.save(seller);
+        if (seller.getSuspendedUntil() != null) {
+            if (java.time.LocalDateTime.now().isBefore(seller.getSuspendedUntil())) {
+                return "Cửa hàng của bạn đang bị đình chỉ hoạt động đến " + 
+                        seller.getSuspendedUntil().toString().replace("T", " ").substring(0, 16) + 
+                        ", không thể thực hiện thao tác này.";
+            } else {
+                seller.setSuspendedUntil(null);
+                if ("Suspended".equalsIgnoreCase(seller.getShopStatus()) || "TEMP_LOCKED".equalsIgnoreCase(seller.getShopStatus())) {
+                    seller.setShopStatus("Active");
+                }
+                userRepository.save(seller);
+            }
         }
 
         String status = seller.getShopStatus();

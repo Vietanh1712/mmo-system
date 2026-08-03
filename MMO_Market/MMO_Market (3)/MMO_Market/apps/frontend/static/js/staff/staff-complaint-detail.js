@@ -80,6 +80,22 @@ async function loadComplaintDetails() {
         currentComplaint = list.find(c => c.id === id);
     }
 
+    if (currentComplaint) {
+        // Tự động đồng bộ số cờ phạt giả lập ở sessionStorage để phục vụ việc test/giả lập
+        const flagKey = 'mmoMarketShopFlagsMockGlobal';
+        let flagsList = [];
+        try {
+            flagsList = JSON.parse(sessionStorage.getItem(flagKey)) || [];
+        } catch(e) {}
+        const sellerId = currentComplaint.sellerId || 14;
+        const activeFlags = flagsList.filter(f => f.sellerId === sellerId && f.status === 'Effect');
+        
+        // Nếu giá trị cờ từ backend là 0 thì dùng cờ giả lập làm fallback
+        if (!currentComplaint.sellerActiveFlagsCount) {
+            currentComplaint.sellerActiveFlagsCount = activeFlags.length;
+        }
+    }
+
     if (!currentComplaint) {
         showErrorToast('Không tìm thấy thông tin khiếu nại!');
         window.location.href = '/staff/complaints';
@@ -121,6 +137,16 @@ async function loadComplaintDetails() {
     badge.className = `ds-badge ${badgeClass}`;
     badge.textContent = statusText;
 
+    const formFields = document.getElementById('decision-form-fields');
+    const completedBanner = document.getElementById('decision-completed-banner');
+    if (statusVal === 'resolved' || statusVal === 'rejected' || statusVal === 'completed' || statusVal === 'success' || statusVal === 'fail' || statusVal === 'failed') {
+        if (formFields) formFields.style.display = 'none';
+        if (completedBanner) completedBanner.style.display = 'block';
+    } else {
+        if (formFields) formFields.style.display = 'block';
+        if (completedBanner) completedBanner.style.display = 'none';
+    }
+
 
     // Populate table fields (Overwrite the list to add preferred solution row)
     const dlList = document.querySelector('.staff-info-list');
@@ -137,6 +163,12 @@ async function loadComplaintDetails() {
             <div class="staff-info-row">
                 <dt>Đối tượng</dt>
                 <dd id="detail-target">${escapeHtml(currentComplaint.target)}</dd>
+            </div>
+            <div class="staff-info-row">
+                <dt>Số cờ phạt của Shop</dt>
+                <dd style="font-weight: 700; color: ${currentComplaint.sellerActiveFlagsCount > 0 ? '#ef4444' : '#10b981'};">
+                    ${currentComplaint.sellerActiveFlagsCount || 0} cờ đang hoạt động
+                </dd>
             </div>
             <div class="staff-info-row">
                 <dt>Số tiền liên quan</dt>
@@ -189,17 +221,18 @@ async function loadComplaintDetails() {
     const flagLevelSelect = document.getElementById('flagLevel');
     if (flagLevelSelect) {
         const count = currentComplaint.sellerActiveFlagsCount || 0;
-        const warningOpt = flagLevelSelect.querySelector('option[value="Warning"]');
-        const suspensionOpt = flagLevelSelect.querySelector('option[value="Suspension"]');
         
-        if (warningOpt) {
-            warningOpt.disabled = (count >= 1);
-            if (count >= 1) warningOpt.style.display = 'none';
+        // Tạo các tùy chọn mức phạt động để khắc phục tương thích trình duyệt (Chrome không ẩn option)
+        let optionsHtml = '';
+        if (count < 1) {
+            optionsHtml += '<option value="Warning">Mức độ 1: Cảnh cáo (Warning)</option>';
         }
-        if (suspensionOpt) {
-            suspensionOpt.disabled = (count >= 2);
-            if (count >= 2) suspensionOpt.style.display = 'none';
+        if (count < 2) {
+            optionsHtml += '<option value="Suspension">Mức độ 2: Tạm khóa cửa hàng (Suspension)</option>';
         }
+        optionsHtml += '<option value="Ban">Mức độ 3: Khóa vĩnh viễn (Ban)</option>';
+        
+        flagLevelSelect.innerHTML = optionsHtml;
         
         if (count === 1) {
             flagLevelSelect.value = 'Suspension';
@@ -207,6 +240,9 @@ async function loadComplaintDetails() {
             flagLevelSelect.value = 'Ban';
         } else {
             flagLevelSelect.value = 'Warning';
+        }
+        if (typeof handleFlagLevelChange === 'function') {
+            handleFlagLevelChange();
         }
     }
 
@@ -302,6 +338,7 @@ async function handleStaffAction(status) {
 
     let flagLevel = null;
     let flagReason = null;
+    let suspendedUntil = null;
     const enableFlagging = document.getElementById('enableFlagging').checked;
     if (enableFlagging) {
         flagLevel = document.getElementById('flagLevel').value;
@@ -309,6 +346,13 @@ async function handleStaffAction(status) {
         if (!flagReason) {
             showWarningToast('Vui lòng nhập lý do gắn cờ phạt shop!');
             return;
+        }
+        if (flagLevel === 'Suspension') {
+            suspendedUntil = document.getElementById('suspendedUntil').value;
+            if (!suspendedUntil) {
+                showWarningToast('Vui lòng chọn ngày giờ hết hạn đình chỉ hoạt động!');
+                return;
+            }
         }
     }
 
@@ -328,7 +372,8 @@ async function handleStaffAction(status) {
                     status: status,
                     resolution: resolution || (status === 'Resolved' ? 'Đã xử lý & hoàn tất hỗ trợ.' : (status === 'InProgress' ? 'Đang trong quá trình xử lý.' : 'Khiếu nại không hợp lệ.')),
                     flagLevel: flagLevel,
-                    flagReason: flagReason
+                    flagReason: flagReason,
+                    suspendedUntil: suspendedUntil
                 })
             });
             
@@ -352,6 +397,24 @@ async function handleStaffAction(status) {
     if (index !== -1) {
         list[index].status = status;
         list[index].resolution = resolution || (status === 'Resolved' ? 'Đã xử lý & hoàn tất hỗ trợ.' : (status === 'InProgress' ? 'Đang trong quá trình xử lý.' : 'Khiếu nại không hợp lệ.'));
+        
+        // Mock flagging save
+        if (enableFlagging && flagLevel) {
+            const flagKey = 'mmoMarketShopFlagsMockGlobal';
+            let flagsList = [];
+            try {
+                flagsList = JSON.parse(sessionStorage.getItem(flagKey)) || [];
+            } catch(e) {}
+            
+            flagsList.push({
+                sellerId: currentComplaint.sellerId || 14,
+                flagLevel: flagLevel,
+                status: 'Effect',
+                createdAt: new Date().toISOString()
+            });
+            sessionStorage.setItem(flagKey, JSON.stringify(flagsList));
+        }
+
         sessionStorage.setItem(key, JSON.stringify(list));
     }
 
@@ -497,3 +560,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadComplaintDetails();
 });
+
+window.handleFlagLevelChange = function() {
+    const flagLevel = document.getElementById('flagLevel').value;
+    const durField = document.getElementById('suspensionDurationField');
+    if (durField) {
+        if (flagLevel === 'Suspension') {
+            durField.style.display = 'block';
+        } else {
+            durField.style.display = 'none';
+        }
+    }
+};

@@ -16,6 +16,7 @@ import java.util.Optional;
 @Repository
 public interface ShopFlagRepository extends JpaRepository<ShopFlag, Long> {
     List<ShopFlag> findBySellerAndIsDeleteFalseOrderByCreatedAtDesc(User seller);
+    List<ShopFlag> findBySellerIdAndIsDeleteFalseOrderByCreatedAtDesc(Long sellerId);
 
     // thêm
     long countByIsDeleteFalse();

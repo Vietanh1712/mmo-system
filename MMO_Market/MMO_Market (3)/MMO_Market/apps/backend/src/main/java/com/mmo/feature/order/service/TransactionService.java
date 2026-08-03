@@ -56,6 +56,17 @@ public class TransactionService {
         User customer = userRepository.findByIdAndIsDeleteFalse(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Người mua không tồn tại."));
 
+        if (customer.getSuspendedUntil() != null) {
+            if (LocalDateTime.now().isBefore(customer.getSuspendedUntil())) {
+                throw new IllegalArgumentException("Tài khoản của bạn đang bị đình chỉ hoạt động đến " + 
+                        customer.getSuspendedUntil().toString().replace("T", " ").substring(0, 16) + 
+                        ", không thể thực hiện mua hàng.");
+            } else {
+                customer.setSuspendedUntil(null);
+                userRepository.save(customer);
+            }
+        }
+
         Product product = productRepository.findByIdAndIsDeleteFalse(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Sản phẩm không tồn tại."));
 

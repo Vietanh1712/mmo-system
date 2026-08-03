@@ -439,7 +439,7 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Override
     @Transactional
-    public Complaint updateComplaintStatus(Long complaintId, String status, String resolution, String flagLevel, String flagReason, Long staffId) {
+    public Complaint updateComplaintStatus(Long complaintId, String status, String resolution, String flagLevel, String flagReason, String suspendedUntil, Long staffId) {
         Complaint complaint = complaintRepository.findById(complaintId)
                 .filter(c -> c.getIsDelete() == null || !c.getIsDelete())
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khiếu nại."));
@@ -487,6 +487,35 @@ public class ComplaintServiceImpl implements ComplaintService {
                         .createdAt(LocalDateTime.now())
                         .build();
                 shopFlagRepository.save(flag);
+
+                // Áp dụng hình phạt theo mức độ cờ
+                String trimmedFlag = flagLevel.trim();
+                if ("Suspension".equalsIgnoreCase(trimmedFlag) || "Critical".equalsIgnoreCase(trimmedFlag)) {
+                    seller.setShopStatus("Suspended");
+                    seller.setWithdrawalLocked(true);
+                    seller.setShopLevel(0);
+                    if (suspendedUntil != null && !suspendedUntil.trim().isEmpty()) {
+                        try {
+                            String sUntil = suspendedUntil.trim();
+                            if (!sUntil.contains("T") && sUntil.contains(" ")) {
+                                sUntil = sUntil.replace(" ", "T");
+                            }
+                            seller.setSuspendedUntil(LocalDateTime.parse(sUntil));
+                        } catch (Exception e) {
+                            seller.setSuspendedUntil(LocalDateTime.now().plusDays(7));
+                        }
+                    } else {
+                        seller.setSuspendedUntil(LocalDateTime.now().plusDays(7));
+                    }
+                    userRepository.save(seller);
+                } else if ("Ban".equalsIgnoreCase(trimmedFlag) || "Danger".equalsIgnoreCase(trimmedFlag)) {
+                    seller.setShopStatus("Banned");
+                    userRepository.save(seller);
+                } else if ("Warning".equalsIgnoreCase(trimmedFlag)) {
+                    seller.setShopLevel(0);
+                    userRepository.save(seller);
+                }
+
                 log.info("Staff ID {} đã gắn cờ {} cho Seller ID {} từ khiếu nại #{}", staffId, flagLevel, seller.getId(), complaintId);
             }
         }

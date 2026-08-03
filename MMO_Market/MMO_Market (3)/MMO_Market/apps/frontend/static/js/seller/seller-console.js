@@ -1017,9 +1017,12 @@ async function initProductEdit() {
         const subtitleEl = document.querySelector('.seller-card__subtitle') || document.querySelector('.view-header p');
         if (subtitleEl) subtitleEl.textContent = `Sản phẩm #${p.id} — ${p.name}`;
         document.getElementById('productName').value = p.name || '';
+        document.getElementById('productName').placeholder = 'Nhập tên sản phẩm...';
         document.getElementById('description').value = p.description || '';
+        document.getElementById('description').placeholder = 'Nhập mô tả sản phẩm...';
         if (document.getElementById('userGuide')) {
             document.getElementById('userGuide').value = p.userGuide || '';
+            document.getElementById('userGuide').placeholder = 'Nhập hướng dẫn sử dụng sản phẩm...';
         }
 
         // Set Product Image Preview
