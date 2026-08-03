@@ -96,6 +96,9 @@ public class KycService {
         IdType idType;
         try {
             idType = IdType.valueOf(idTypeStr.toUpperCase());
+            if (idType == IdType.DRIVER_LICENSE) {
+                throw new IllegalArgumentException("Loại giấy tờ bằng lái xe không còn được hỗ trợ.");
+            }
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Loại giấy tờ không hợp lệ.");
         }
@@ -136,11 +139,14 @@ public class KycService {
                 .build();
         notificationRepository.save(customerNotif);
 
-        // 2. Tạo thông báo cho Staff có quyền duyệt KYC (APPROVE_KYC)
+        // 2. Tạo thông báo cho Staff có quyền duyệt KYC (APPROVE_KYC) - Bỏ qua Admin
         List<User> staffAndAdmins = userRepository.findUsersByPermission("APPROVE_KYC");
         for (User staff : staffAndAdmins) {
             if (staff.getId().equals(user.getId())) {
                 continue;
+            }
+            if (staff.getRole() != null && staff.getRole().toLowerCase().contains("admin")) {
+                continue; // Admin không nhận thông báo tác nghiệp duyệt KYC của Staff
             }
             Notification staffNotif = Notification.builder()
                     .userId(staff.getId())
@@ -284,6 +290,8 @@ public class KycService {
             request.setActiveUserId(null); // Giải phóng active_user_id để user có thể gửi lại
         } else if (reviewRequest.getStatus() == KycStatus.APPROVED) {
             User user = request.getUser();
+            user.setNationalId(request.getIdNumber());
+            userRepository.save(user);
             // Không còn tự động nâng cấp role lên Seller ở bước này nữa.
             // Role Seller sẽ được cấp khi User đăng ký Shop và được duyệt.
         }

@@ -175,6 +175,7 @@ public class SystemConfigurationServiceTest {
         request.setEscrowHoldHours(72);
         request.setAllowGoogleLogin(true);
         request.setAllowRegister(true);
+        request.setRequireWithdraw2FA(true);
 
         assertDoesNotThrow(() -> 
             systemConfigurationService.updateGeneralConfig(1L, request)
@@ -211,6 +212,7 @@ public class SystemConfigurationServiceTest {
         request.setEscrowHoldHours(72);
         request.setAllowGoogleLogin(true);
         request.setAllowRegister(true);
+        request.setRequireWithdraw2FA(true);
 
         assertDoesNotThrow(() -> 
             systemConfigurationService.updateGeneralConfig(1L, request)
@@ -232,6 +234,7 @@ public class SystemConfigurationServiceTest {
         request.setEscrowHoldHours(72);
         request.setAllowGoogleLogin(true);
         request.setAllowRegister(true);
+        request.setRequireWithdraw2FA(true);
 
         assertDoesNotThrow(() -> 
             systemConfigurationService.updateGeneralConfig(1L, request)

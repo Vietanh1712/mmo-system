@@ -133,6 +133,9 @@ public class SystemConfigurationService {
                 .maxLoginRetries(getInt(map, "MAX_LOGIN_RETRIES", 5))
                 .lockDurationMins(getInt(map, "LOCK_DURATION_MINS", 15))
                 .escrowHoldHours(getInt(map, "ESCROW_HOLD_HOURS", 72))
+                .escrowHoldHoursLevel0(getInt(map, "ESCROW_HOLD_HOURS_LEVEL_0", 168))
+                .escrowHoldHoursLevel1(getInt(map, "ESCROW_HOLD_HOURS_LEVEL_1", 72))
+                .escrowHoldHoursLevel2(getInt(map, "ESCROW_HOLD_HOURS_LEVEL_2", 48))
                 .allowGoogleLogin(getBool(map, "ALLOW_GOOGLE_LOGIN", true))
                 .allowRegister(getBool(map, "ALLOW_REGISTER", true))
                 .requireWithdraw2FA(getBool(map, "REQUIRE_WITHDRAW_2FA", true))
@@ -186,11 +189,12 @@ public class SystemConfigurationService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thời gian khóa tài khoản tối thiểu phải là 1 phút.");
         }
 
-        if (request.getEscrowHoldHours() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thời gian giam tiền Escrow không được để trống.");
-        }
-        if (request.getEscrowHoldHours() < 1) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thời gian giam tiền Escrow tối thiểu phải là 1 giờ.");
+        Integer lvl0 = request.getEscrowHoldHoursLevel0() != null ? request.getEscrowHoldHoursLevel0() : request.getEscrowHoldHours();
+        Integer lvl1 = request.getEscrowHoldHoursLevel1() != null ? request.getEscrowHoldHoursLevel1() : request.getEscrowHoldHours();
+        Integer lvl2 = request.getEscrowHoldHoursLevel2() != null ? request.getEscrowHoldHoursLevel2() : request.getEscrowHoldHours();
+
+        if (lvl0 == null || lvl0 < 1 || lvl1 == null || lvl1 < 1 || lvl2 == null || lvl2 < 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thời gian giam tiền Escrow cho các Level Shop tối thiểu phải từ 1 giờ trở lên.");
         }
 
         if (request.getAllowGoogleLogin() == null) {
@@ -209,7 +213,9 @@ public class SystemConfigurationService {
         checkAndAddDiff(diff, "otpTimeout", getInt(original, "OTP_TIMEOUT_MINS", 5), request.getOtpTimeout());
         checkAndAddDiff(diff, "maxLoginRetries", getInt(original, "MAX_LOGIN_RETRIES", 5), request.getMaxLoginRetries());
         checkAndAddDiff(diff, "lockDurationMins", getInt(original, "LOCK_DURATION_MINS", 15), request.getLockDurationMins());
-        checkAndAddDiff(diff, "escrowHoldHours", getInt(original, "ESCROW_HOLD_HOURS", 72), request.getEscrowHoldHours());
+        checkAndAddDiff(diff, "escrowHoldHoursLevel0", getInt(original, "ESCROW_HOLD_HOURS_LEVEL_0", 168), lvl0);
+        checkAndAddDiff(diff, "escrowHoldHoursLevel1", getInt(original, "ESCROW_HOLD_HOURS_LEVEL_1", 72), lvl1);
+        checkAndAddDiff(diff, "escrowHoldHoursLevel2", getInt(original, "ESCROW_HOLD_HOURS_LEVEL_2", 48), lvl2);
         checkAndAddDiff(diff, "allowGoogleLogin", getBool(original, "ALLOW_GOOGLE_LOGIN", true), request.getAllowGoogleLogin());
         checkAndAddDiff(diff, "allowRegister", getBool(original, "ALLOW_REGISTER", true), request.getAllowRegister());
         checkAndAddDiff(diff, "requireWithdraw2FA", getBool(original, "REQUIRE_WITHDRAW_2FA", true), request.getRequireWithdraw2FA());
@@ -218,7 +224,10 @@ public class SystemConfigurationService {
         updateKey("OTP_TIMEOUT_MINS", String.valueOf(request.getOtpTimeout()), "Thời gian OTP (phút)", operator.getId());
         updateKey("MAX_LOGIN_RETRIES", String.valueOf(request.getMaxLoginRetries()), "Số lần đăng nhập sai tối đa", operator.getId());
         updateKey("LOCK_DURATION_MINS", String.valueOf(request.getLockDurationMins()), "Thời gian khóa tài khoản tạm thời (phút)", operator.getId());
-        updateKey("ESCROW_HOLD_HOURS", String.valueOf(request.getEscrowHoldHours()), "Thời gian giam tiền Escrow (giờ)", operator.getId());
+        updateKey("ESCROW_HOLD_HOURS", String.valueOf(lvl1), "Thời gian giam tiền Escrow mặc định (giờ)", operator.getId());
+        updateKey("ESCROW_HOLD_HOURS_LEVEL_0", String.valueOf(lvl0), "Thời gian giam tiền Escrow Level 0 (giờ)", operator.getId());
+        updateKey("ESCROW_HOLD_HOURS_LEVEL_1", String.valueOf(lvl1), "Thời gian giam tiền Escrow Level 1 (giờ)", operator.getId());
+        updateKey("ESCROW_HOLD_HOURS_LEVEL_2", String.valueOf(lvl2), "Thời gian giam tiền Escrow Level 2 (giờ)", operator.getId());
         updateKey("ALLOW_GOOGLE_LOGIN", String.valueOf(request.getAllowGoogleLogin()), "Cho phép đăng nhập bằng Google", operator.getId());
         updateKey("ALLOW_REGISTER", String.valueOf(request.getAllowRegister()), "Cho phép người dùng đăng ký mới", operator.getId());
         updateKey("REQUIRE_WITHDRAW_2FA", String.valueOf(request.getRequireWithdraw2FA()), "Bắt buộc dùng xác thực 2 bước (2FA) khi rút tiền", operator.getId());

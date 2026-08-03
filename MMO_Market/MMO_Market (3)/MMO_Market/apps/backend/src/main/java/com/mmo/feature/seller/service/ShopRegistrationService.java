@@ -98,6 +98,7 @@ public class ShopRegistrationService {
                         reg.setStatus("APPROVED");
                         reg.setCategory("Chung");
                         reg.setDescription("Shop được tạo tự động từ hệ thống.");
+                        reg.setFeeVnd(500000L);
                         sellerRegistrationRepository.save(reg);
                     }
                 }
@@ -125,6 +126,12 @@ public class ShopRegistrationService {
             throw new IllegalStateException("Bạn đã có Shop đang hoạt động.");
         }
 
+        long shopOpeningFee = systemConfigurationRepository.findByConfigKey("SHOP_OPENING_FEE_VND")
+                .map(c -> {
+                    try { return Long.parseLong(c.getConfigValue()); }
+                    catch (NumberFormatException e) { return 500000L; }
+                }).orElse(500000L);
+
         // Tự động duyệt mở shop sau khi đã xác minh KYC
         registration.setUser(user);
         registration.setShopName(request.getShopName());
@@ -133,6 +140,9 @@ public class ShopRegistrationService {
         registration.setSupportEmail(request.getSupportEmail());
         registration.setSupportPhone(request.getSupportPhone());
         registration.setStatus("APPROVED");
+        if (registration.getFeeVnd() == null) {
+            registration.setFeeVnd(shopOpeningFee);
+        }
 
         // Nâng cấp vai trò người dùng thành Seller và kích hoạt shopStatus
         String currentRole = user.getRole();

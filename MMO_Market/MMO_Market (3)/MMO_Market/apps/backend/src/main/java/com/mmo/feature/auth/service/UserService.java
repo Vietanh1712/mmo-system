@@ -64,45 +64,69 @@ public class UserService {
     @Transactional
     public ProfileResponse updateMyProfile(Long userId, UpdateProfileRequest request) {
         User user = findActiveUser(userId);
-        String fullName = request.getFullName() == null ? "" : request.getFullName().trim();
-        String phone = normalizePhone(request.getPhone());
+        
+        boolean isKycApproved = kycRequestRepository.findByUser_IdAndIsDeleteFalseOrderByCreatedAtDesc(user.getId())
+                .stream().anyMatch(r -> r.getStatus() == KycStatus.APPROVED);
 
-        if (fullName.length() < 3 || fullName.length() > 255) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Họ tên phải từ 3 đến 255 ký tự"
-            );
-        }
+        if (isKycApproved) {
+            // KYC Approved: Only allow editing phone and gender. Keep existing personal fields.
+            String phone = normalizePhone(request.getPhone());
+            user.setPhone(phone);
 
-        user.setFullName(fullName);
-        user.setPhone(phone);
-
-        if (request.getGender() != null) {
-            user.setGender(request.getGender().trim());
-        } else {
-            user.setGender(null);
-        }
-
-        if (request.getNationalId() != null) {
-            user.setNationalId(request.getNationalId().trim());
-        } else {
-            user.setNationalId(null);
-        }
-
-        if (request.getAddress() != null) {
-            user.setAddress(request.getAddress().trim());
-        } else {
-            user.setAddress(null);
-        }
-
-        if (request.getDateOfBirth() != null && !request.getDateOfBirth().isBlank()) {
-            try {
-                user.setDateOfBirth(java.time.LocalDate.parse(request.getDateOfBirth()));
-            } catch (Exception e) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ngày sinh không hợp lệ");
+            if (request.getGender() != null) {
+                user.setGender(request.getGender().trim());
+            } else {
+                user.setGender(null);
             }
+
+            // Sync nationalId just in case
+            kycRequestRepository.findByUser_IdAndIsDeleteFalseOrderByCreatedAtDesc(user.getId())
+                    .stream()
+                    .filter(r -> r.getStatus() == KycStatus.APPROVED)
+                    .findFirst()
+                    .ifPresent(r -> user.setNationalId(r.getIdNumber()));
         } else {
-            user.setDateOfBirth(null);
+            // Not KYC Approved: Allow modifying all fields
+            String fullName = request.getFullName() == null ? "" : request.getFullName().trim();
+            String phone = normalizePhone(request.getPhone());
+
+            if (fullName.length() < 3 || fullName.length() > 255) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Họ tên phải từ 3 đến 255 ký tự"
+                );
+            }
+
+            user.setFullName(fullName);
+            user.setPhone(phone);
+
+            if (request.getGender() != null) {
+                user.setGender(request.getGender().trim());
+            } else {
+                user.setGender(null);
+            }
+
+            if (request.getNationalId() != null) {
+                user.setNationalId(request.getNationalId().trim());
+            } else {
+                user.setNationalId(null);
+            }
+
+            if (request.getAddress() != null) {
+                user.setAddress(request.getAddress().trim());
+            } else {
+                user.setAddress(null);
+            }
+
+            if (request.getDateOfBirth() != null && !request.getDateOfBirth().isBlank()) {
+                try {
+                    user.setDateOfBirth(java.time.LocalDate.parse(request.getDateOfBirth()));
+                } catch (Exception e) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ngày sinh không hợp lệ");
+                }
+            } else {
+                user.setDateOfBirth(null);
+            }
         }
 
         return toProfileResponse(userRepository.save(user));
@@ -202,6 +226,7 @@ public class UserService {
                 .category(category != null ? category.trim() : "")
                 .supportEmail(supportEmail != null ? supportEmail.trim() : "")
                 .supportPhone(supportPhone != null ? supportPhone.trim() : "")
+                .feeVnd(shopOpeningFee)
                 .status("Pending")
                 .isDelete(false)
                 .build();
@@ -220,12 +245,19 @@ public class UserService {
 
     private ProfileResponse toProfileResponse(User user) {
         String kycStatus = null;
+        String kycDocumentType = null;
         java.util.List<com.mmo.shared.model.KycRequest> kycRequests = kycRequestRepository.findByUser_IdAndIsDeleteFalseOrderByCreatedAtDesc(user.getId());
         if (!kycRequests.isEmpty()) {
-            kycStatus = kycRequests.stream()
-                    .anyMatch(kycRequest -> kycRequest.getStatus() == KycStatus.APPROVED)
-                    ? KycStatus.APPROVED.name()
-                    : kycRequests.get(0).getStatus().name();
+            java.util.Optional<com.mmo.shared.model.KycRequest> approvedKyc = kycRequests.stream()
+                    .filter(kycRequest -> kycRequest.getStatus() == KycStatus.APPROVED)
+                    .findFirst();
+            if (approvedKyc.isPresent()) {
+                kycStatus = KycStatus.APPROVED.name();
+                kycDocumentType = approvedKyc.get().getIdType().name();
+            } else {
+                kycStatus = kycRequests.get(0).getStatus().name();
+                kycDocumentType = kycRequests.get(0).getIdType().name();
+            }
         }
 
         return ProfileResponse.builder()
@@ -241,6 +273,7 @@ public class UserService {
                 .address(user.getAddress())
                 .is2faEnabled(user.getIs2faEnabled())
                 .kycStatus(kycStatus)
+                .kycDocumentType(kycDocumentType)
                 .dateOfBirth(user.getDateOfBirth() != null ? user.getDateOfBirth().toString() : null)
                 .avatar(user.getAvatar())
                 .build();

@@ -150,8 +150,15 @@ public class TransactionService {
         long commission = (long) (totalAmount * (basePercent / 100.0));
 
         // Tính toán thời gian giam tiền Escrow (Escrow Hold Hours) động
-        int escrowHoldHours = 72; // Mặc định 3 ngày
-        
+        int hLevel0 = systemConfigurationRepository.findByConfigKey("ESCROW_HOLD_HOURS_LEVEL_0")
+                .map(c -> { try { return Integer.parseInt(c.getConfigValue()); } catch (Exception e) { return 168; } }).orElse(168);
+        int hLevel1 = systemConfigurationRepository.findByConfigKey("ESCROW_HOLD_HOURS_LEVEL_1")
+                .map(c -> { try { return Integer.parseInt(c.getConfigValue()); } catch (Exception e) { return 72; } })
+                .orElseGet(() -> systemConfigurationRepository.findByConfigKey("ESCROW_HOLD_HOURS")
+                        .map(c -> { try { return Integer.parseInt(c.getConfigValue()); } catch (Exception e) { return 72; } }).orElse(72));
+        int hLevel2 = systemConfigurationRepository.findByConfigKey("ESCROW_HOLD_HOURS_LEVEL_2")
+                .map(c -> { try { return Integer.parseInt(c.getConfigValue()); } catch (Exception e) { return 48; } }).orElse(48);
+
         int shopLevel = seller.getShopLevel() != null ? seller.getShopLevel() : 1;
         long completedCount = transactionRepository.countCompletedSalesBySeller(seller);
         long totalSold = transactionRepository.countTotalSalesBySeller(seller);
@@ -159,15 +166,13 @@ public class TransactionService {
         
         double disputeRate = totalSold > 0 ? (double) resolvedComplaints / totalSold : 0.0;
         
+        int escrowHoldHours;
         if (shopLevel == 0 || completedCount < 20 || disputeRate >= 0.02) {
-            escrowHoldHours = 168; // Giam tiền 7 ngày (168 giờ)
+            escrowHoldHours = hLevel0;
+        } else if (shopLevel == 2) {
+            escrowHoldHours = hLevel2;
         } else {
-            // Giao dịch tiêu chuẩn
-            escrowHoldHours = systemConfigurationRepository.findByConfigKey("ESCROW_HOLD_HOURS")
-                    .map(c -> {
-                        try { return Integer.parseInt(c.getConfigValue()); }
-                        catch (NumberFormatException e) { return 72; }
-                    }).orElse(72);
+            escrowHoldHours = hLevel1;
         }
 
         // Tạo giao dịch mới (trạng thái Held để bảo lãnh Escrow)

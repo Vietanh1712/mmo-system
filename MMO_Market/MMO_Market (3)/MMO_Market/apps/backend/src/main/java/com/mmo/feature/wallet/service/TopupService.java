@@ -56,7 +56,7 @@ public class TopupService {
     @Autowired
     private NotificationRepository notificationRepository;
 
-    private static final Pattern TRANSFER_CONTENT_PATTERN_NEW = Pattern.compile("MMO[\\s-]*TOPUP[\\s-]*(\\d+)[\\s-]*(\\d+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern TRANSFER_CONTENT_PATTERN_NEW = Pattern.compile("MMO[\\s-]*TOPUP[\\s-]*(\\d+)[\\s-]+(\\d+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern TRANSFER_CONTENT_PATTERN_OLD = Pattern.compile("MMO[\\s-]*TOPUP[\\s-]*(\\d+)", Pattern.CASE_INSENSITIVE);
 
     @EventListener(ApplicationReadyEvent.class)
@@ -124,21 +124,56 @@ public class TopupService {
             return false;
         }
 
-        Matcher matcherNew = TRANSFER_CONTENT_PATTERN_NEW.matcher(content);
-        Matcher matcherOld = TRANSFER_CONTENT_PATTERN_OLD.matcher(content);
+        String clean = content.toUpperCase().replaceAll("[\\s-]+", "");
+        int idx = clean.indexOf("MMOTOPUP");
+        if (idx == -1) {
+            log.warn("Transaction content '{}' does not match pattern 'MMO-TOPUP'.", content);
+            saveFailedTopup(sepayCode, amount, content, 0L, "Nội dung chuyển khoản không đúng cú pháp MMO-TOPUP-<userID>[-<requestID>]");
+            return false;
+        }
+
+        String digitsSuffix = clean.substring(idx + "MMOTOPUP".length());
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < digitsSuffix.length(); i++) {
+            char c = digitsSuffix.charAt(i);
+            if (Character.isDigit(c)) {
+                sb.append(c);
+            } else {
+                break;
+            }
+        }
+        String digits = sb.toString();
 
         Long userId = null;
         Long transactionId = null;
 
-        if (matcherNew.find()) {
-            try {
-                userId = Long.parseLong(matcherNew.group(1));
-                transactionId = Long.parseLong(matcherNew.group(2));
-            } catch (NumberFormatException ignored) {}
-        } else if (matcherOld.find()) {
-            try {
-                userId = Long.parseLong(matcherOld.group(1));
-            } catch (NumberFormatException ignored) {}
+        if (!digits.isEmpty()) {
+            // Try to split digits into userId and transactionId to match a pending transaction (New flow)
+            for (int i = 1; i < digits.length(); i++) {
+                String userIdPart = digits.substring(0, i);
+                String txIdPart = digits.substring(i);
+                try {
+                    Long uId = Long.parseLong(userIdPart);
+                    Long tId = Long.parseLong(txIdPart);
+                    
+                    Optional<TopupTransaction> txOpt = topupTransactionRepository.findById(tId);
+                    if (txOpt.isPresent()) {
+                        TopupTransaction tx = txOpt.get();
+                        if (tx.getUserId().equals(uId) && "Pending".equalsIgnoreCase(tx.getStatus())) {
+                            userId = uId;
+                            transactionId = tId;
+                            break;
+                        }
+                    }
+                } catch (NumberFormatException ignored) {}
+            }
+
+            // Fallback: Parse the entire sequence as userId (Old flow)
+            if (userId == null) {
+                try {
+                    userId = Long.parseLong(digits);
+                } catch (NumberFormatException ignored) {}
+            }
         }
 
         if (userId == null) {

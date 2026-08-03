@@ -42,46 +42,45 @@ public class MaintenanceInterceptor implements HandlerInterceptor {
             return true; // Not in maintenance mode
         }
 
-        // Check if logged in user is Admin or Staff
+        // Check if logged in user is Admin -> Admin is allowed full access to ALL pages & APIs during maintenance
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof Long) {
             Long userId = (Long) auth.getPrincipal();
             User user = userRepository.findByIdAndIsDeleteFalse(userId).orElse(null);
             if (user != null) {
                 String role = normalizeRole(user.getRole());
-                if ("Admin".equalsIgnoreCase(role) || "Staff".equalsIgnoreCase(role)) {
-                    return true; // Admin and Staff are bypassed
+                if ("Admin".equalsIgnoreCase(role)) {
+                    return true; // Admin has unrestricted access to all pages (Home, Products, Account, Notifications, Admin, etc.)
                 }
             }
         }
 
         String uri = request.getRequestURI();
 
-        // Allow static resources, auth, admin (web & API), staff, notifications, login
-        if (uri.startsWith("/css/") || uri.startsWith("/js/") || uri.startsWith("/images/") || uri.equals("/error")) {
-            return true;
-        }
-        if (uri.startsWith("/api/auth/") || uri.startsWith("/api/admin/") || uri.startsWith("/admin") || uri.equals("/admin")) {
-            return true; // Admin web pages and APIs are always allowed
-        }
-        if (uri.startsWith("/staff") || uri.startsWith("/api/staff")) {
-            return true; // Staff web pages and APIs are always allowed
-        }
-        if (uri.equals("/notifications") || uri.equals("/api/notifications") || uri.startsWith("/api/notifications/")) {
-            return true;
-        }
-        if (uri.equals("/login") || uri.equals("/register")) {
+        // 1. Allow static resources, error page, and the dedicated maintenance page itself
+        if (uri.startsWith("/css/") || uri.startsWith("/js/") || uri.startsWith("/images/") ||
+                uri.equals("/error") || uri.equals("/favicon.ico") || uri.equals("/maintenance")) {
             return true;
         }
 
-        // Block API endpoints under maintenance
+        // 2. Allow public maintenance status API for JS checking
+        if (uri.equals("/api/notifications/maintenance-status")) {
+            return true;
+        }
+
+        // 3. Allow login / register & auth endpoints so Admin can authenticate when logged out
+        if (uri.equals("/login") || uri.equals("/register") || uri.startsWith("/api/auth/")) {
+            return true;
+        }
+
+        // 4. Block all non-admin API requests with 503 JSON response
         if (uri.startsWith("/api/")) {
             sendMaintenanceJsonResponse(response);
             return false;
         }
 
-        // Block web page endpoints by redirecting to public notifications page
-        response.sendRedirect("/notifications");
+        // 5. Block all non-admin web pages by redirecting to dedicated /maintenance page
+        response.sendRedirect("/maintenance");
         return false;
     }
 

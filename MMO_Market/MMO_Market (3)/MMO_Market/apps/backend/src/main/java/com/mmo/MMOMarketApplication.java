@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 public class MMOMarketApplication {
 
     static {
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         try {
             java.io.File envFile = null;
             String[] pathsToCheck = {

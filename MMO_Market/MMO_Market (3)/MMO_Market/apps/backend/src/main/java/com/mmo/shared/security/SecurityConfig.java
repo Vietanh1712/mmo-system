@@ -97,6 +97,7 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/seller/**"),
                                 new AntPathRequestMatcher("/staff/**"),
                                 new AntPathRequestMatcher("/shop/**"),
+                                new AntPathRequestMatcher("/maintenance"),
                                 new AntPathRequestMatcher("/error")
                         ).permitAll()
 

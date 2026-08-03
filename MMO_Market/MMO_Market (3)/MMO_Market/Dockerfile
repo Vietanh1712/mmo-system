@@ -9,7 +9,7 @@ COPY apps/frontend ./apps/frontend
 # Build the executable Spring Boot JAR.
 # Test compilation is skipped because deployment should not depend on test sources.
 WORKDIR /app/apps/backend
-RUN mvn clean package -Dmaven.test.skip=true
+RUN mvn clean package -DskipTests=true -Dmaven.test.skip=true
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
