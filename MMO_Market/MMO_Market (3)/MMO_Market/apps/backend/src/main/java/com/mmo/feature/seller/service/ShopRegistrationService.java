@@ -429,7 +429,56 @@ public class ShopRegistrationService {
         }
         
         user.setShopStatus(shopStatus);
-        if (("Suspended".equalsIgnoreCase(shopStatus) || "TEMP_LOCKED".equalsIgnoreCase(shopStatus))
+        user.setIsLocked(false);
+
+        // XỬ LÝ TRẠNG THÁI "ĐÃ ĐÓNG SHOP (HOÀN PHÍ)" (Withdrawn):
+        if ("Withdrawn".equalsIgnoreCase(shopStatus) || "WITHDRAWN".equalsIgnoreCase(shopStatus)) {
+            // 1. Hoàn lại phí mở shop về số dư ví khả dụng (balanceVnd)
+            long feeToRefund = registration.getFeeVnd() != null ? registration.getFeeVnd() : (user.getDepositVnd() != null && user.getDepositVnd() > 0 ? user.getDepositVnd() : 500000L);
+            long currentBalance = user.getBalanceVnd() != null ? user.getBalanceVnd() : 0L;
+            long newBalance = currentBalance + feeToRefund;
+            user.setBalanceVnd(newBalance);
+            user.setDepositVnd(0L);
+
+            if (walletTransactionRepository != null) {
+                WalletTransaction tx = WalletTransaction.builder()
+                        .user(user)
+                        .type("REFUND")
+                        .transactionType("REFUND")
+                        .amountVnd(feeToRefund)
+                        .balanceAfter(newBalance)
+                        .status("SUCCESS")
+                        .description("Hoàn phí mở Shop do đóng cửa hàng (Withdrawn)")
+                        .referenceCode("REFUND_SHOP_" + registration.getId())
+                        .createdAt(LocalDateTime.now())
+                        .isDelete(false)
+                        .build();
+                walletTransactionRepository.save(tx);
+            }
+
+            // 2. Hạ quyền người dùng từ Role Seller xuống Role Customer
+            user.setRole("{\"role\": \"Customer\"}");
+            user.setSuspendedUntil(null);
+
+            // 3. Đánh dấu đóng/hủy tất cả hồ sơ đăng ký Shop cũ của user với trạng thái WITHDRAWN (vẫn giữ isDelete = false để Staff xem lịch sử)
+            List<SellerRegistration> userRegs = sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc().stream()
+                    .filter(r -> r.getUser() != null && r.getUser().getId().equals(user.getId()))
+                    .collect(Collectors.toList());
+            for (SellerRegistration r : userRegs) {
+                r.setStatus("WITHDRAWN");
+                r.setIsDelete(false);
+                sellerRegistrationRepository.save(r);
+            }
+            registration.setStatus("WITHDRAWN");
+            registration.setIsDelete(false);
+            sellerRegistrationRepository.save(registration);
+        } else if ("Banned".equalsIgnoreCase(shopStatus) || "PERMANENT_BANNED".equalsIgnoreCase(shopStatus)) {
+            user.setIsLocked(false);
+            user.setSuspendedUntil(null);
+        } else if ("Active".equalsIgnoreCase(shopStatus)) {
+            user.setIsLocked(false);
+            user.setSuspendedUntil(null);
+        } else if (("Suspended".equalsIgnoreCase(shopStatus) || "TEMP_LOCKED".equalsIgnoreCase(shopStatus) || "Locked".equalsIgnoreCase(shopStatus))
                 && suspendedUntilStr != null && !suspendedUntilStr.isBlank()) {
             try {
                 user.setSuspendedUntil(java.time.LocalDateTime.parse(suspendedUntilStr.trim()));

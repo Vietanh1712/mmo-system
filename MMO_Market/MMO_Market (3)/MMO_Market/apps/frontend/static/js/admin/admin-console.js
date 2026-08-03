@@ -3360,6 +3360,7 @@
         if (str === 'Completed' || str === 'COMPLETED' || str === 'SUCCESS') return 'Hoàn thành';
         if (str === 'Pending' || str === 'PENDING') return 'Đang xử lý';
         if (str === 'Held' || str === 'HELD' || str === 'ESCROW') return 'Tạm giữ';
+        if (str === 'Refunded' || str === 'REFUNDED' || str === 'Refund' || str === 'REFUND') return 'Hoàn tiền';
         if (str === 'Failed' || str === 'FAILED' || str === 'REJECTED') return 'Thất bại';
         return str;
     }
