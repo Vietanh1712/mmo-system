@@ -97,7 +97,7 @@ function readWalletTransactions() {
         // ignore
     }
 
-    const seeded = isDemo ? createSeedTransactions() : [];
+    const seeded = [];
     localStorage.setItem(key, JSON.stringify(seeded));
     sessionStorage.setItem(key, JSON.stringify(seeded));
     return seeded;

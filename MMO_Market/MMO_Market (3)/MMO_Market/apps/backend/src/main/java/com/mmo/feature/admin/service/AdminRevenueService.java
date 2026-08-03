@@ -110,7 +110,7 @@ public class AdminRevenueService {
         List<SellerRegistration> approvedRegistrations = sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc();
         long shopOpeningFees = approvedRegistrations.stream()
                 .filter(reg -> "Approved".equalsIgnoreCase(reg.getStatus()))
-                .mapToLong(reg -> reg.getFeeVnd() != null ? reg.getFeeVnd() : shopOpeningFeeConfig)
+                .mapToLong(reg -> reg.getFeeVnd() != null ? reg.getFeeVnd() : 500000L)
                 .sum();
 
         // 3. Phí rút tiền: từ các Withdrawals có trạng thái 'Completed'
@@ -219,7 +219,7 @@ public class AdminRevenueService {
         if (shopRegistrations != null) {
             for (SellerRegistration reg : shopRegistrations) {
                 if ("Approved".equalsIgnoreCase(reg.getStatus())) {
-                    long actualFee = reg.getFeeVnd() != null ? reg.getFeeVnd() : shopOpeningFee;
+                    long actualFee = reg.getFeeVnd() != null ? reg.getFeeVnd() : 500000L;
                     allCashflow.add(CashflowTransactionDto.builder()
                             .id("SHOP" + reg.getId())
                             .timestamp(reg.getCreatedAt())

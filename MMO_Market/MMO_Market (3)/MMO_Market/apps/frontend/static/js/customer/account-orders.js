@@ -112,8 +112,7 @@ function readOrders() {
         // ignore
     }
 
-    const seeded = isDemo ? createSeedOrders() : [];
-    // Seed vào cả hai storage
+    const seeded = [];
     localStorage.setItem(key, JSON.stringify(seeded));
     sessionStorage.setItem(key, JSON.stringify(seeded));
     return seeded;
