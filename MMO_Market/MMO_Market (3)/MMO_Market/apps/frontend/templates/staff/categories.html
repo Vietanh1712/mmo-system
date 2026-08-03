@@ -50,9 +50,9 @@
                         <div class="ds-filter-grid">
                             <input class="ds-input" type="text" id="keywordFilter" placeholder="Tìm theo tên hoặc mô tả danh mục...">
                             <select class="ds-input" id="typeFilter">
+                                <option value="CHILD" selected>Chỉ danh mục Phụ</option>
+                                <option value="PARENT">Chỉ danh mục Chính (Gốc)</option>
                                 <option value="ALL">Tất cả loại danh mục</option>
-                                <option value="PARENT">Chỉ danh mục Cha (Gốc)</option>
-                                <option value="CHILD">Chỉ danh mục Phụ</option>
                             </select>
                             <select class="ds-input" id="sortByFilter">
                                 <option value="newest">Sắp xếp: Mới nhất</option>
@@ -75,7 +75,7 @@
                             <tr>
                                 <th class="ds-table-center" style="width: 60px;">STT</th>
                                 <th>Mã DM</th>
-                                <th>Danh mục cha</th>
+                                <th>Danh mục chính</th>
                                 <th>Danh mục phụ</th>
                                 <th>Mô tả</th>
                                 <th class="ds-table-center">Số sản phẩm</th>
@@ -115,9 +115,9 @@
                 </div>
 
                 <div class="ds-form-field">
-                    <label class="ds-label" for="categoryParentInput">Danh mục cha</label>
+                    <label class="ds-label" for="categoryParentInput">Danh mục chính</label>
                     <div class="ds-combobox-wrapper" style="position: relative;">
-                        <input class="ds-input" type="text" id="categoryParentInput" placeholder="Chọn hoặc nhập tên Danh mục cha (Email, Tài khoản...)" autocomplete="off" style="padding-right: 36px;">
+                        <input class="ds-input" type="text" id="categoryParentInput" placeholder="Chọn hoặc nhập tên Danh mục chính (Email, Tài khoản...)" autocomplete="off" style="padding-right: 36px;">
                         <button type="button" class="ds-combobox-arrow" id="btnToggleParentDropdown" tabindex="-1" title="Xem danh sách gợi ý" style="position: absolute; right: 0; top: 0; bottom: 0; width: 36px; background: transparent; border: none; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center;">
                             <i class="fa fa-chevron-down" style="font-size: 11px;"></i>
                         </button>
