@@ -231,6 +231,7 @@ public class UserService {
         reg.setCategory(category != null ? category.trim() : "");
         reg.setSupportEmail(supportEmail != null ? supportEmail.trim() : "");
         reg.setSupportPhone(supportPhone != null ? supportPhone.trim() : "");
+        reg.setFeeVnd(shopOpeningFee); // Lưu phí mở shop vào bảng SellerRegistrations để Staff xem
         reg.setStatus("Approved");
         reg.setIsDelete(false);
 

@@ -346,7 +346,7 @@ public class ShopRegistrationService {
                 .rejectionReason(registration.getRejectionReason())
                 .shopStatus(user != null ? user.getShopStatus() : null)
                 .suspendedUntil(user != null && user.getSuspendedUntil() != null ? user.getSuspendedUntil().toString() : null)
-                .depositVnd(user != null && user.getDepositVnd() != null ? user.getDepositVnd() : 0L)
+                .depositVnd(registration.getFeeVnd() != null ? registration.getFeeVnd() : 0L)
                 .balanceVnd(user != null && user.getBalanceVnd() != null ? user.getBalanceVnd() : 0L)
                 .ownerName(user != null ? user.getFullName() : null)
                 .bankAccountNumber(bank != null ? bank.getAccountNumber() : null)
