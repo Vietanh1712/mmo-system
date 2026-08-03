@@ -166,6 +166,7 @@ public class TransactionService {
         
         double disputeRate = totalSold > 0 ? (double) resolvedComplaints / totalSold : 0.0;
         
+        int escrowHoldHours;
         if (shopLevel == 0 || completedCount < 20 || disputeRate >= 0.02) {
             escrowHoldHours = hLevel0;
         } else if (shopLevel == 2) {
