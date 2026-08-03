@@ -93,52 +93,7 @@ public class TopupService {
                 }
             }
 
-            if (topupTransactionRepository.countTotalTopups() == 0) {
-                log.info("Seeding initial TopupTransactions into database...");
-                User firstUser = userRepository.findAll().stream().findFirst().orElse(null);
-                Long uId = (firstUser != null && firstUser.getId() != null) ? firstUser.getId() : 0L;
 
-                TopupTransaction t1 = TopupTransaction.builder()
-                        .userId(uId)
-                        .amountVnd(500000L)
-                        .sepayCode("SEPAY-20260723-001")
-                        .transferContent("MMO TOPUP " + uId)
-                        .balanceBefore(0L)
-                        .balanceAfter(500000L)
-                        .status("Success")
-                        .build();
-
-                TopupTransaction t2 = TopupTransaction.builder()
-                        .userId(uId)
-                        .amountVnd(200000L)
-                        .sepayCode("SEPAY-20260723-002")
-                        .transferContent("MMO-TOPUP-" + uId)
-                        .balanceBefore(500000L)
-                        .balanceAfter(700000L)
-                        .status("Success")
-                        .build();
-
-                TopupTransaction t3 = TopupTransaction.builder()
-                        .userId(0L)
-                        .amountVnd(100000L)
-                        .sepayCode("SEPAY-20260723-003")
-                        .transferContent("NAP TIEN TK MMO CHUYEN KHOAN KHONG GO ID")
-                        .failureReason("Nội dung chuyển khoản không đúng cú pháp MMO-TOPUP-<userID>")
-                        .status("Failed")
-                        .build();
-
-                TopupTransaction t4 = TopupTransaction.builder()
-                        .userId(uId)
-                        .amountVnd(5000L)
-                        .sepayCode("SEPAY-20260723-004")
-                        .transferContent("MMO TOPUP " + uId)
-                        .failureReason("Số tiền nạp (5,000 đ) nhỏ hơn hạn mức tối thiểu cấu hình (10,000 đ)")
-                        .status("Failed")
-                        .build();
-
-                topupTransactionRepository.saveAll(List.of(t1, t2, t3, t4));
-                log.info("Successfully seeded 4 initial TopupTransactions into database.");
-            }
         } catch (Exception e) {
             log.error("Lỗi khởi tạo/đồng bộ dữ liệu nạp tiền: {}", e.getMessage(), e);
         }
