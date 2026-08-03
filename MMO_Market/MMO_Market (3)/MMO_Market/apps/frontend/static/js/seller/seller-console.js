@@ -2142,17 +2142,18 @@ async function initComplaints() {
             }
         }
 
-        // Filter states
-        let searchQuery = '';
-        let statusFilter = '';
-        let mainCategoryFilter = '';
-        let subCategoryFilter = '';
-
         const searchInput = document.querySelector('input[placeholder="Tìm kiếm khiếu nại, mã GD..."]');
         const statusSelect = document.querySelector('select[aria-label="Lọc trạng thái"]');
         
         const mainSelect = document.getElementById('mainCategoryFilter');
         const subSelect = document.getElementById('subCategoryFilter');
+
+        // Filter states
+        let searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        let statusFilter = statusSelect ? statusSelect.value : '';
+        let mainCategoryFilter = mainSelect ? mainSelect.value : '';
+        let subCategoryFilter = subSelect ? subSelect.value : '';
+
         if (mainSelect && subSelect) {
             setupCategorySelectors(mainSelect, subSelect, null, true);
         }
@@ -2236,6 +2237,8 @@ async function initComplaints() {
             `;
         }).join('');
     }
+
+    renderComplaints();
     } catch (err) {
         showToast(err.message, 'error');
     }
