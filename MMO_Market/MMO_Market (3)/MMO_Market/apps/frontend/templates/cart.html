@@ -629,8 +629,11 @@
             price: Number(item.price || 0),
             icon: item.icon || 'fa-cube',
             iconColor: item.iconColor || '#ea580c',
+            imageUrl: item.imageUrl || '',
             quantity: Math.max(1, Number(item.quantity || 1)),
-            selected: item.selected !== false
+            selected: item.selected !== false,
+            categoryName: item.categoryName || '',
+            variantLabel: item.variantLabel || ''
         }));
     }
 
@@ -683,16 +686,15 @@
                 <div class="cart-item__check">
                     <input class="cart-item__checkbox" type="checkbox" ${item.selected !== false ? 'checked' : ''} onchange="toggleSelected(${index}, this.checked)">
                 </div>
-                <div class="cart-item__thumb">
+                <div class="cart-item__thumb" onclick="window.location.href='/products/${item.productId}'" style="cursor:pointer;">
                     ${item.imageUrl && !item.imageUrl.includes('placeholder.com')
                         ? `<img src="${item.imageUrl}" alt="${item.productName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">`
                         : `<i class="fa ${item.icon}" style="color: ${item.iconColor}"></i>`}
                 </div>
                 <div class="cart-item__info">
-                    <div class="cart-item__tag"><i class="fa fa-tag"></i>${getProductTag(item)}</div>
-                    <h2 class="cart-item__name">${item.productName}</h2>
+                    <h2 class="cart-item__name" onclick="window.location.href='/products/${item.productId}'" style="cursor:pointer;">${item.productName}</h2>
                     <div class="cart-item__seller">Bán bởi: <strong>${item.sellerName}</strong></div>
-                    <div class="cart-item__variant" style="font-size: 12px; margin-top: 4px; color: var(--text-muted);">Phân loại: <strong style="color: var(--brand-accent);">${item.variantLabel || 'Mặc định'}</strong></div>
+                    ${(item.categoryName) ? `<div class="cart-item__variant" style="font-size: 12px; margin-top: 4px; color: var(--text-muted);">Danh mục: <strong style="color: var(--brand-accent);">${item.categoryName}</strong></div>` : ''}
                 </div>
                 <div class="cart-item__side">
                     <div class="qty-control" aria-label="Điều chỉnh số lượng">
@@ -707,6 +709,47 @@
         `).join('');
 
         updateSummary();
+        enrichCartWithImages();
+    }
+
+    // Enrich cart items with product images from API if not already stored
+    function enrichCartWithImages() {
+        const itemsWithoutImage = cart.filter(item => !item.imageUrl);
+        if (itemsWithoutImage.length === 0) return;
+
+        const uniqueIds = [...new Set(itemsWithoutImage.map(item => item.productId))];
+        uniqueIds.forEach(async (productId) => {
+            try {
+                const res = await fetch(`/api/products/${productId}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                const imageUrl = data.imageUrl || '';
+                if (!imageUrl) return;
+
+                // Update in-memory cart
+                cart.forEach(item => {
+                    if (item.productId === productId) {
+                        item.imageUrl = imageUrl;
+                        item.categoryName = item.categoryName || data.categoryName || '';
+                    }
+                });
+
+                // Save updated cart back
+                saveCart();
+
+                // Update DOM without full re-render
+                cart.forEach((item, idx) => {
+                    if (item.productId === productId) {
+                        const thumbs = document.querySelectorAll('.cart-item__thumb');
+                        if (thumbs[idx]) {
+                            thumbs[idx].innerHTML = `<img src="${imageUrl}" alt="${item.productName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">`;
+                        }
+                    }
+                });
+            } catch (e) {
+                // silent fail — keep icon fallback
+            }
+        });
     }
 
     function updateSummary() {
