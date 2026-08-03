@@ -2,6 +2,7 @@ package com.mmo.feature.seller.controller;
 
 import com.mmo.shared.dal.*;
 import com.mmo.shared.model.*;
+import com.mmo.shared.utils.EncryptionUtils;
 import com.mmo.feature.auth.service.EmailService;
 import com.mmo.feature.auth.service.AuthenticationService;
 import com.mmo.feature.wallet.service.WithdrawalService;
@@ -43,9 +44,10 @@ public class SellerController {
     private final SystemConfigurationRepository systemConfigurationRepository;
     private final EmailVerificationRepository emailVerificationRepository;
     private final EmailService emailService;
-    private final AuthenticationService authenticationService;
+     private final AuthenticationService authenticationService;
     private final WithdrawalService withdrawalService;
     private final com.mmo.feature.preorder.service.PreOrderService preOrderService;
+    private final EncryptionUtils encryptionUtils;
 
     public SellerController(UserRepository userRepository, ProductRepository productRepository,
                             ProductVariantRepository productVariantRepository, CategoryRepository categoryRepository,
@@ -60,7 +62,8 @@ public class SellerController {
                             EmailService emailService,
                             AuthenticationService authenticationService,
                             WithdrawalService withdrawalService,
-                            com.mmo.feature.preorder.service.PreOrderService preOrderService) {
+                            com.mmo.feature.preorder.service.PreOrderService preOrderService,
+                            EncryptionUtils encryptionUtils) {
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.productVariantRepository = productVariantRepository;
@@ -80,6 +83,7 @@ public class SellerController {
         this.authenticationService = authenticationService;
         this.withdrawalService = withdrawalService;
         this.preOrderService = preOrderService;
+        this.encryptionUtils = encryptionUtils;
     }
 
 
@@ -653,8 +657,8 @@ public class SellerController {
                 amap.put("id", asset.getId());
                 amap.put("assetType", asset.getAssetType());
                 amap.put("accountUsername", asset.getAccountUsername());
-                amap.put("accountPassword", asset.getAccountPassword()); // We need to return password so seller can view it
-                amap.put("keyCode", asset.getKeyCode());
+                amap.put("accountPassword", encryptionUtils.decrypt(asset.getAccountPassword())); // We need to return password so seller can view it
+                amap.put("keyCode", encryptionUtils.decrypt(asset.getKeyCode()));
                 amap.put("cardCode", asset.getCardCode());
                 amap.put("cardPin", asset.getCardPin());
                 amap.put("notes", asset.getNotes());
@@ -1226,7 +1230,7 @@ public class SellerController {
                 map.put("id", asset.getId());
                 map.put("assetType", asset.getAssetType());
                 map.put("accountUsername", asset.getAccountUsername());
-                map.put("keyCode", asset.getKeyCode());
+                map.put("keyCode", encryptionUtils.decrypt(asset.getKeyCode()));
                 map.put("cardCode", asset.getCardCode());
                 map.put("notes", asset.getNotes());
                 map.put("isUsed", asset.getIsUsed());
@@ -1273,6 +1277,9 @@ public class SellerController {
                 asset.setIsUsed(false);
                 asset.setIsDelete(false);
 
+                // Create a copy to encrypt values in the assetData JSON backup
+                Map<String, Object> encAssetData = new HashMap<>(assetData);
+
                 // Validate and set fields based on asset type
                 if ("ACCOUNT".equals(assetType)) {
                     String username = (String) assetData.get("accountUsername");
@@ -1281,7 +1288,8 @@ public class SellerController {
                         return ResponseEntity.badRequest().body(Map.of("message", "Tài khoản ACCOUNT phải có username và password."));
                     }
                     asset.setAccountUsername(username);
-                    asset.setAccountPassword(password);
+                    asset.setAccountPassword(encryptionUtils.encrypt(password));
+                    encAssetData.put("accountPassword", encryptionUtils.encrypt(password));
                 } else if ("KEY".equals(assetType)) {
                     String keyCode = (String) assetData.get("keyCode");
                     if (keyCode == null || keyCode.trim().isEmpty()) {
@@ -1290,12 +1298,13 @@ public class SellerController {
                     // Check for duplicate key
                     long existingCount = digitalAssetRepository.findByVariantAndIsDeleteFalse(variant)
                             .stream()
-                            .filter(a -> "KEY".equals(a.getAssetType()) && keyCode.equals(a.getKeyCode()))
+                            .filter(a -> "KEY".equals(a.getAssetType()) && keyCode.equals(encryptionUtils.decrypt(a.getKeyCode())))
                             .count();
                     if (existingCount > 0) {
                         return ResponseEntity.badRequest().body(Map.of("message", "Mã key này đã tồn tại trong kho."));
                     }
-                    asset.setKeyCode(keyCode);
+                    asset.setKeyCode(encryptionUtils.encrypt(keyCode));
+                    encAssetData.put("keyCode", encryptionUtils.encrypt(keyCode));
                 } else if ("GAME_CARD".equals(assetType)) {
                     String cardCode = (String) assetData.get("cardCode");
                     String cardPin = (String) assetData.get("cardPin");
@@ -1316,7 +1325,7 @@ public class SellerController {
 
                 // Set JSON data for backward compatibility
                 com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-                asset.setAssetData(mapper.writeValueAsString(assetData));
+                asset.setAssetData(mapper.writeValueAsString(encAssetData));
 
                 savedAssets.add(digitalAssetRepository.save(asset));
             }

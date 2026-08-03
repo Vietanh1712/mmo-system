@@ -49,6 +49,9 @@ public class PreOrderService {
     @org.springframework.beans.factory.annotation.Autowired
     private com.mmo.shared.dal.SystemConfigurationRepository systemConfigurationRepository;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mmo.shared.utils.EncryptionUtils encryptionUtils;
+
     public PreOrderService(PreOrderRepository preOrderRepository,
                            UserRepository userRepository,
                            ProductRepository productRepository,
@@ -502,9 +505,9 @@ public class PreOrderService {
 
                     String data = "Tài khoản " + (i + 1) + "\n";
                     if (asset.getAssetType().equalsIgnoreCase("ACCOUNT")) {
-                        data += "Tên đăng nhập: " + asset.getAccountUsername() + "\nMật khẩu: " + asset.getAccountPassword();
+                        data += "Tên đăng nhập: " + asset.getAccountUsername() + "\nMật khẩu: " + encryptionUtils.decrypt(asset.getAccountPassword());
                     } else if (asset.getAssetType().equalsIgnoreCase("KEY")) {
-                        data += "Mã Key: " + asset.getKeyCode();
+                        data += "Mã Key: " + encryptionUtils.decrypt(asset.getKeyCode());
                     } else if (asset.getAssetType().equalsIgnoreCase("CARD")
                             || asset.getAssetType().equalsIgnoreCase("GAME_CARD")) {
                         data += "Mã thẻ: " + asset.getCardCode() + "\nMã PIN/Seri: " + asset.getCardPin();

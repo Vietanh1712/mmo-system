@@ -45,6 +45,9 @@ public class TransactionController {
     @Autowired
     private DigitalAssetRepository digitalAssetRepository;
 
+    @Autowired
+    private com.mmo.shared.utils.EncryptionUtils encryptionUtils;
+
     /**
      * API thực hiện thanh toán mua sản phẩm.
      * Trừ tiền trong ví khách hàng và cộng tiền vào ví tạm giữ (Escrow) của người bán.
@@ -84,14 +87,14 @@ public class TransactionController {
                 DigitalAsset asset = assignedAssets.get(0);
                 if ("KEY".equalsIgnoreCase(asset.getAssetType()) || "GAME_CARD".equalsIgnoreCase(asset.getAssetType())) {
                     credentialsDTO = PurchaseResponse.CredentialsDTO.builder()
-                            .username(asset.getKeyCode() != null ? asset.getKeyCode() : asset.getCardCode())
+                            .username(asset.getKeyCode() != null ? encryptionUtils.decrypt(asset.getKeyCode()) : asset.getCardCode())
                             .password("(Product Key)")
                             .note(asset.getNotes())
                             .build();
                 } else {
                     credentialsDTO = PurchaseResponse.CredentialsDTO.builder()
                             .username(asset.getAccountUsername())
-                            .password(asset.getAccountPassword())
+                            .password(encryptionUtils.decrypt(asset.getAccountPassword()))
                             .note(asset.getNotes())
                             .build();
                 }
@@ -231,11 +234,11 @@ public class TransactionController {
                 for (DigitalAsset asset : assignedAssets) {
                     java.util.Map<String, String> creds = new java.util.HashMap<>();
                     if ("KEY".equalsIgnoreCase(asset.getAssetType()) || "GAME_CARD".equalsIgnoreCase(asset.getAssetType())) {
-                        creds.put("username", asset.getKeyCode() != null ? asset.getKeyCode() : asset.getCardCode());
+                        creds.put("username", asset.getKeyCode() != null ? encryptionUtils.decrypt(asset.getKeyCode()) : asset.getCardCode());
                         creds.put("password", "(Product Key)");
                     } else {
                         creds.put("username", asset.getAccountUsername());
-                        creds.put("password", asset.getAccountPassword());
+                        creds.put("password", encryptionUtils.decrypt(asset.getAccountPassword()));
                     }
                     if (asset.getNotes() != null && !asset.getNotes().trim().isEmpty()) {
                         creds.put("note", asset.getNotes());
