@@ -107,6 +107,9 @@ public class ProductSearchController {
                 .filter(product -> {
                     com.mmo.shared.model.User seller = product.getSeller();
                     if (seller == null || Boolean.TRUE.equals(seller.getIsDelete())) return false;
+                    if (seller.getSuspendedUntil() != null && java.time.LocalDateTime.now().isBefore(seller.getSuspendedUntil())) {
+                        return false;
+                    }
                     String status = seller.getShopStatus();
                     if (status == null) return true;
                     return !status.equalsIgnoreCase("Locked") && 

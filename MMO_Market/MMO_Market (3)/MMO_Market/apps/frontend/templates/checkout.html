@@ -1187,35 +1187,7 @@
                     document.getElementById('invAmount').innerText = formatVND(firstOrder.amount);
 
                     const credRow = document.getElementById('modalCredentialsRow');
-                    if (firstOrder.credentials) {
-                        const isKey = firstOrder.credentials.password === '(Product Key)';
-                        document.getElementById('modalCredLabel').innerText = isKey ? 'Mã kích hoạt (Key):' : 'Tài khoản (Email/Username):';
-                        document.getElementById('modalCredUsername').innerText = firstOrder.credentials.username;
-
-                        const passRow = document.getElementById('modalCredPasswordRow');
-                        if (isKey) {
-                            if (passRow) passRow.style.display = 'none';
-                        } else {
-                            if (passRow) {
-                                passRow.style.display = 'flex';
-                                document.getElementById('modalCredPassword').innerText = firstOrder.credentials.password;
-                            }
-                        }
-
-                        const noteRow = document.getElementById('modalCredNoteRow');
-                        if (noteRow) {
-                            if (firstOrder.credentials.note && firstOrder.credentials.note.trim() !== '') {
-                                noteRow.hidden = false;
-                                noteRow.style.display = 'flex';
-                                document.getElementById('modalCredNote').innerText = firstOrder.credentials.note;
-                            } else {
-                                noteRow.hidden = true;
-                                noteRow.style.display = 'none';
-                            }
-                        }
-
-                        credRow.hidden = false;
-                    } else {
+                    if (credRow) {
                         credRow.hidden = true;
                     }
                     currentCreatedOrderCode = firstOrder.orderCode;

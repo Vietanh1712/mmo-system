@@ -185,7 +185,7 @@ public class AdminRevenueService {
         for (int i = 0; i < transactions.size(); i++) {
             CashflowTransactionDto tx = transactions.get(i);
             String txTypeLabel = "Shop_Opening".equals(tx.getType()) ? "Phí mở shop" : ("Withdrawal".equals(tx.getType()) ? "Rút tiền" : "Giao dịch C2C");
-            String statusLabel = "Completed".equals(tx.getStatus()) ? "Hoàn tất" : ("Held".equals(tx.getStatus()) ? "Tạm giữ (Escrow)" : ("Pending".equals(tx.getStatus()) ? "Đang xử lý" : "Thất bại"));
+            String statusLabel = "Completed".equals(tx.getStatus()) ? "Hoàn tất" : ("Held".equals(tx.getStatus()) ? "Tạm giữ" : ("Pending".equals(tx.getStatus()) ? "Đang xử lý" : "Thất bại"));
             csv.append(i + 1).append(",")
                     .append(tx.getId()).append(",")
                     .append(tx.getTimestamp().format(formatter)).append(",")

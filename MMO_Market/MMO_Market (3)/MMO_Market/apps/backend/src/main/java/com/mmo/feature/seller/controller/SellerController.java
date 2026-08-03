@@ -2,6 +2,7 @@ package com.mmo.feature.seller.controller;
 
 import com.mmo.shared.dal.*;
 import com.mmo.shared.model.*;
+import com.mmo.shared.utils.EncryptionUtils;
 import com.mmo.feature.auth.service.EmailService;
 import com.mmo.feature.auth.service.AuthenticationService;
 import com.mmo.feature.wallet.service.WithdrawalService;
@@ -43,9 +44,10 @@ public class SellerController {
     private final SystemConfigurationRepository systemConfigurationRepository;
     private final EmailVerificationRepository emailVerificationRepository;
     private final EmailService emailService;
-    private final AuthenticationService authenticationService;
+     private final AuthenticationService authenticationService;
     private final WithdrawalService withdrawalService;
     private final com.mmo.feature.preorder.service.PreOrderService preOrderService;
+    private final EncryptionUtils encryptionUtils;
 
     public SellerController(UserRepository userRepository, ProductRepository productRepository,
                             ProductVariantRepository productVariantRepository, CategoryRepository categoryRepository,
@@ -60,7 +62,8 @@ public class SellerController {
                             EmailService emailService,
                             AuthenticationService authenticationService,
                             WithdrawalService withdrawalService,
-                            com.mmo.feature.preorder.service.PreOrderService preOrderService) {
+                            com.mmo.feature.preorder.service.PreOrderService preOrderService,
+                            EncryptionUtils encryptionUtils) {
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.productVariantRepository = productVariantRepository;
@@ -80,6 +83,7 @@ public class SellerController {
         this.authenticationService = authenticationService;
         this.withdrawalService = withdrawalService;
         this.preOrderService = preOrderService;
+        this.encryptionUtils = encryptionUtils;
     }
 
 
@@ -93,45 +97,6 @@ public class SellerController {
         if (!role.contains("seller")) {
             throw new IllegalArgumentException("Tài khoản không có quyền truy cập Seller Portal.");
         }
-
-        String shopStatus = user.getShopStatus() != null ? user.getShopStatus().trim() : "";
-
-        // Tự động kiểm tra hết hạn tạm khóa / ngưng
-        if (("Suspended".equalsIgnoreCase(shopStatus) || "TEMP_LOCKED".equalsIgnoreCase(shopStatus) || "Locked".equalsIgnoreCase(shopStatus)) &&
-                user.getSuspendedUntil() != null &&
-                LocalDateTime.now().isAfter(user.getSuspendedUntil())) {
-            user.setShopStatus("Active");
-            user.setSuspendedUntil(null);
-            userRepository.save(user);
-            shopStatus = "Active";
-        }
-
-        // Chặn hoàn toàn truy cập Seller Dashboard nếu tài khoản bị khóa hoặc Shop bị Khóa vĩnh viễn
-        if (Boolean.TRUE.equals(user.getIsLocked()) ||
-                "Banned".equalsIgnoreCase(shopStatus) ||
-                "PERMANENT_BANNED".equalsIgnoreCase(shopStatus)) {
-            throw new IllegalStateException("SHOP_BANNED:Shop của bạn đã bị khóa vĩnh viễn do vi phạm chính sách.");
-        }
-
-        // Chặn truy cập Seller Dashboard nếu Shop đã đóng cửa / Withdrawn
-        if ("Withdrawn".equalsIgnoreCase(shopStatus) ||
-                "Closed".equalsIgnoreCase(shopStatus) ||
-                "Deleted".equalsIgnoreCase(shopStatus)) {
-            throw new IllegalStateException("SHOP_WITHDRAWN:Shop của bạn đã đóng cửa và hoàn phí.");
-        }
-        
-        // Chặn hoàn toàn truy cập Seller Dashboard nếu bị Tạm khóa
-        if ("TEMP_LOCKED".equalsIgnoreCase(shopStatus) || "Locked".equalsIgnoreCase(shopStatus) || "INDEFINITE_LOCKED".equalsIgnoreCase(shopStatus)) {
-            if (user.getSuspendedUntil() != null) {
-                java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
-                throw new IllegalStateException("SHOP_TEMPORARILY_LOCKED:" + user.getSuspendedUntil().format(dtf));
-            } else {
-                throw new IllegalStateException("SHOP_TEMPORARILY_LOCKED:Thời hạn chưa xác định (Vui lòng liên hệ Staff)");
-            }
-        }
-
-        // Nếu shopStatus là "Suspended" (Tạm ngưng): Cho phép vào Seller Dashboard xem thông tin, 
-        // nhưng các thao tác đăng/sửa sản phẩm sẽ bị validateShopActiveStatus ngăn lại.
         return user;
     }
 
@@ -426,13 +391,18 @@ public class SellerController {
     }
 
     private String validateShopActiveStatus(User seller) {
-        if (seller.getShopStatus() != null &&
-                ("Suspended".equalsIgnoreCase(seller.getShopStatus()) || "TEMP_LOCKED".equalsIgnoreCase(seller.getShopStatus()) || "Locked".equalsIgnoreCase(seller.getShopStatus())) &&
-                seller.getSuspendedUntil() != null &&
-                java.time.LocalDateTime.now().isAfter(seller.getSuspendedUntil())) {
-            seller.setShopStatus("Active");
-            seller.setSuspendedUntil(null);
-            userRepository.save(seller);
+        if (seller.getSuspendedUntil() != null) {
+            if (java.time.LocalDateTime.now().isBefore(seller.getSuspendedUntil())) {
+                return "Cửa hàng của bạn đang bị đình chỉ hoạt động đến " + 
+                        seller.getSuspendedUntil().toString().replace("T", " ").substring(0, 16) + 
+                        ", không thể thực hiện thao tác này.";
+            } else {
+                seller.setSuspendedUntil(null);
+                if ("Suspended".equalsIgnoreCase(seller.getShopStatus()) || "TEMP_LOCKED".equalsIgnoreCase(seller.getShopStatus())) {
+                    seller.setShopStatus("Active");
+                }
+                userRepository.save(seller);
+            }
         }
 
         String status = seller.getShopStatus();
@@ -692,8 +662,8 @@ public class SellerController {
                 amap.put("id", asset.getId());
                 amap.put("assetType", asset.getAssetType());
                 amap.put("accountUsername", asset.getAccountUsername());
-                amap.put("accountPassword", asset.getAccountPassword()); // We need to return password so seller can view it
-                amap.put("keyCode", asset.getKeyCode());
+                amap.put("accountPassword", encryptionUtils.decrypt(asset.getAccountPassword())); // We need to return password so seller can view it
+                amap.put("keyCode", encryptionUtils.decrypt(asset.getKeyCode()));
                 amap.put("cardCode", asset.getCardCode());
                 amap.put("cardPin", asset.getCardPin());
                 amap.put("notes", asset.getNotes());
@@ -873,6 +843,10 @@ public class SellerController {
                 map.put("status", t.getStatus());
                 map.put("createdAt", t.getCreatedAt().toString());
                 map.put("escrowReleaseDate", t.getEscrowReleaseDate() != null ? t.getEscrowReleaseDate().toString() : "");
+                if ("Disputed".equalsIgnoreCase(t.getStatus())) {
+                    complaintRepository.findFirstByTransactionIdAndIsDeleteFalseOrderByIdDesc(t.getId())
+                            .ifPresent(c -> map.put("complaintId", c.getId()));
+                }
                 return map;
             }).collect(Collectors.toList());
 
@@ -1136,6 +1110,7 @@ public class SellerController {
                 map.put("productName", c.getTransaction().getProduct().getName());
                 map.put("variantName", c.getTransaction().getVariant().getVariantName());
                 map.put("customerEmail", c.getCustomer().getEmail());
+                map.put("customerId", c.getCustomer().getId());
                 map.put("description", c.getDescription());
                 map.put("amountVnd", c.getTransaction().getAmountVnd());
                 map.put("status", c.getStatus());
@@ -1193,6 +1168,7 @@ public class SellerController {
             details.put("productName", c.getTransaction().getProduct().getName());
             details.put("variantName", c.getTransaction().getVariant().getVariantName());
             details.put("amountVnd", c.getTransaction().getAmountVnd());
+            details.put("customerId", c.getCustomer().getId());
             details.put("customerName", c.getCustomer().getFullName());
             details.put("customerEmail", c.getCustomer().getEmail());
             details.put("description", c.getDescription());
@@ -1265,7 +1241,7 @@ public class SellerController {
                 map.put("id", asset.getId());
                 map.put("assetType", asset.getAssetType());
                 map.put("accountUsername", asset.getAccountUsername());
-                map.put("keyCode", asset.getKeyCode());
+                map.put("keyCode", encryptionUtils.decrypt(asset.getKeyCode()));
                 map.put("cardCode", asset.getCardCode());
                 map.put("notes", asset.getNotes());
                 map.put("isUsed", asset.getIsUsed());
@@ -1312,6 +1288,9 @@ public class SellerController {
                 asset.setIsUsed(false);
                 asset.setIsDelete(false);
 
+                // Create a copy to encrypt values in the assetData JSON backup
+                Map<String, Object> encAssetData = new HashMap<>(assetData);
+
                 // Validate and set fields based on asset type
                 if ("ACCOUNT".equals(assetType)) {
                     String username = (String) assetData.get("accountUsername");
@@ -1320,7 +1299,8 @@ public class SellerController {
                         return ResponseEntity.badRequest().body(Map.of("message", "Tài khoản ACCOUNT phải có username và password."));
                     }
                     asset.setAccountUsername(username);
-                    asset.setAccountPassword(password);
+                    asset.setAccountPassword(encryptionUtils.encrypt(password));
+                    encAssetData.put("accountPassword", encryptionUtils.encrypt(password));
                 } else if ("KEY".equals(assetType)) {
                     String keyCode = (String) assetData.get("keyCode");
                     if (keyCode == null || keyCode.trim().isEmpty()) {
@@ -1329,12 +1309,13 @@ public class SellerController {
                     // Check for duplicate key
                     long existingCount = digitalAssetRepository.findByVariantAndIsDeleteFalse(variant)
                             .stream()
-                            .filter(a -> "KEY".equals(a.getAssetType()) && keyCode.equals(a.getKeyCode()))
+                            .filter(a -> "KEY".equals(a.getAssetType()) && keyCode.equals(encryptionUtils.decrypt(a.getKeyCode())))
                             .count();
                     if (existingCount > 0) {
                         return ResponseEntity.badRequest().body(Map.of("message", "Mã key này đã tồn tại trong kho."));
                     }
-                    asset.setKeyCode(keyCode);
+                    asset.setKeyCode(encryptionUtils.encrypt(keyCode));
+                    encAssetData.put("keyCode", encryptionUtils.encrypt(keyCode));
                 } else if ("GAME_CARD".equals(assetType)) {
                     String cardCode = (String) assetData.get("cardCode");
                     String cardPin = (String) assetData.get("cardPin");
@@ -1355,7 +1336,7 @@ public class SellerController {
 
                 // Set JSON data for backward compatibility
                 com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-                asset.setAssetData(mapper.writeValueAsString(assetData));
+                asset.setAssetData(mapper.writeValueAsString(encAssetData));
 
                 savedAssets.add(digitalAssetRepository.save(asset));
             }

@@ -29,7 +29,7 @@ function cacheSellerSidebar(data) {
     localStorage.setItem(key, value);
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
     // 1. Guard check for authentication
     const token = sessionStorage.getItem('accessToken');
     if (!token || token === 'null' || token === 'undefined') {
@@ -38,12 +38,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // 2. Initialize layout / sidebar stats & check lock/ban status
-    const isBlocked = await initSellerLayout();
-    if (isBlocked) {
-        // If shop is locked or banned, stop all page-specific scripts!
-        return;
-    }
+    // 2. Initialize layout / sidebar stats
+    initSellerLayout();
 
     // 3. Page-specific routing
     const path = window.location.pathname;
@@ -113,6 +109,7 @@ function translateStatus(status) {
         'rejected': 'Bị từ chối',
         'approved': 'Đã duyệt',
         'open': 'Chờ xử lý',
+        'pending_review': 'Chờ duyệt',
         'in_progress': 'Đang giải quyết',
         'inprogress': 'Đang giải quyết',
         'resolved': 'Đã giải quyết',
@@ -213,197 +210,16 @@ function formatShopStatusVi(st) {
     return 'Hoạt động';
 }
 
-function showShopLockedOverlay(lockTimeStr) {
-    document.body.innerHTML = '';
-    const overlay = document.createElement('div');
-    overlay.id = 'shopLockedOverlay';
-    overlay.style.cssText = `
-        position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
-        background: #0f172a;
-        z-index: 999999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        box-sizing: border-box;
-    `;
-    overlay.innerHTML = `
-        <div style="background: #ffffff; width: 100%; max-width: 520px; border-radius: 16px; padding: 36px 32px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
-            <div style="width: 72px; height: 72px; background: #fff7ed; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: #ea580c; font-size: 36px;">
-                <i class="fa fa-lock"></i>
-            </div>
-            <h2 style="font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 12px;">Shop Của Bạn Đang Bị Tạm Khóa</h2>
-            <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 20px;">
-                Tài khoản cửa hàng hiện đang bị tạm khóa hoạt động theo quyết định từ ban quản trị hệ thống. Bạn không thể truy cập Seller Dashboard trong thời gian này.
-            </p>
-            <div style="background: #fff7ed; border: 1px solid #ffedd5; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
-                <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: #c2410c; margin-bottom: 4px;">Thời Gian Hết Hạn Tạm Khóa</div>
-                <div style="font-size: 20px; font-weight: 700; color: #9a3412;" id="lockTimeDisplay">${lockTimeStr || 'Thời hạn chưa xác định (Vui lòng liên hệ Staff)'}</div>
-                <div style="font-size: 12px; color: #ea580c; margin-top: 6px;">Sau thời gian trên, hệ thống sẽ tự động mở khóa để bạn truy cập lại.</div>
-            </div>
-            <div style="display: flex; gap: 12px; justify-content: center;">
-                <a href="/" style="display: inline-flex; align-items: center; justify-content: center; padding: 12px 24px; background: #0f172a; color: #ffffff; font-weight: 600; border-radius: 8px; text-decoration: none; font-size: 14px; width: 100%;">
-                    <i class="fa fa-home" style="margin-right: 8px;"></i> Quay về trang chủ
-                </a>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-}
-
-function showShopBannedOverlay(reason) {
-    document.body.innerHTML = '';
-    const overlay = document.createElement('div');
-    overlay.id = 'shopBannedOverlay';
-    overlay.style.cssText = `
-        position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
-        background: #0f172a;
-        z-index: 999999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        box-sizing: border-box;
-    `;
-    overlay.innerHTML = `
-        <div style="background: #ffffff; width: 100%; max-width: 520px; border-radius: 16px; padding: 36px 32px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
-            <div style="width: 72px; height: 72px; background: #fef2f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: #dc2626; font-size: 36px;">
-                <i class="fa fa-ban"></i>
-            </div>
-            <h2 style="font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 12px;">Shop Của Bạn Đã Bị Khóa Vĩnh Viễn</h2>
-            <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 20px;">
-                Tài khoản cửa hàng này đã bị khóa hoạt động vĩnh viễn do vi phạm chính sách của sàn giao dịch. Bạn không thể truy cập Seller Dashboard.
-            </p>
-            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 14px; margin-bottom: 24px;">
-                <div style="font-size: 13px; font-weight: 700; color: #991b1b;"><i class="fa fa-exclamation-circle" style="margin-right: 6px;"></i> Trạng thái: Khóa vĩnh viễn (Banned)</div>
-            </div>
-            <div style="display: flex; gap: 12px; justify-content: center;">
-                <a href="/" style="display: inline-flex; align-items: center; justify-content: center; padding: 12px 24px; background: #0f172a; color: #ffffff; font-weight: 600; border-radius: 8px; text-decoration: none; font-size: 14px; width: 100%;">
-                    <i class="fa fa-home" style="margin-right: 8px;"></i> Quay về trang chủ
-                </a>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-}
-
-function showShopWithdrawnOverlay(reason) {
-    document.body.innerHTML = '';
-    const overlay = document.createElement('div');
-    overlay.id = 'shopWithdrawnOverlay';
-    overlay.style.cssText = `
-        position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
-        background: #0f172a;
-        z-index: 999999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        box-sizing: border-box;
-    `;
-    overlay.innerHTML = `
-        <div style="background: #ffffff; width: 100%; max-width: 540px; border-radius: 16px; padding: 36px 32px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
-            <div style="width: 72px; height: 72px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: #2563eb; font-size: 36px;">
-                <i class="fa fa-info-circle"></i>
-            </div>
-            <h2 style="font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 12px;">Shop Của Bạn Đã Đóng Cửa (Hoàn Phí)</h2>
-            <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 20px;">
-                Cửa hàng cũ của bạn đã được đóng và hoàn trả 100% tiền cọc về ví tài khoản. Bạn có thể đăng ký mở Shop mới bất kỳ lúc nào!
-            </p>
-            <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 14px; margin-bottom: 24px;">
-                <div style="font-size: 13px; font-weight: 700; color: #1e40af;"><i class="fa fa-check-circle" style="margin-right: 6px;"></i> Trạng thái: Đã đóng Shop & Hoàn cọc</div>
-            </div>
-            <div style="display: flex; gap: 12px; justify-content: center;">
-                <a href="/account/register-shop" style="display: inline-flex; align-items: center; justify-content: center; padding: 12px 24px; background: #2563eb; color: #ffffff; font-weight: 600; border-radius: 8px; text-decoration: none; font-size: 14px; flex: 1;">
-                    <i class="fa fa-shopping-bag" style="margin-right: 8px;"></i> Đăng ký Mở Shop Mới
-                </a>
-                <a href="/" style="display: inline-flex; align-items: center; justify-content: center; padding: 12px 24px; background: #f1f5f9; color: #334155; font-weight: 600; border-radius: 8px; text-decoration: none; font-size: 14px; flex: 1;">
-                    <i class="fa fa-home" style="margin-right: 8px;"></i> Trang chủ
-                </a>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-}
-
 async function initSellerLayout() {
     try {
-        let res, dashRes;
-        try {
-            const results = await Promise.all([
-                sellerFetch('/shop-info'),
-                sellerFetch('/dashboard')
-            ]);
-            res = results[0];
-            dashRes = results[1];
-        } catch (fetchErr) {
-            const errMsg = fetchErr.message || '';
-            if (errMsg.includes('SHOP_TEMPORARILY_LOCKED:')) {
-                showShopLockedOverlay(errMsg.split('SHOP_TEMPORARILY_LOCKED:')[1]);
-                return true;
-            }
-            if (errMsg.includes('SHOP_WITHDRAWN:')) {
-                showShopWithdrawnOverlay(errMsg.split('SHOP_WITHDRAWN:')[1]);
-                return true;
-            }
-            if (errMsg.includes('SHOP_BANNED:')) {
-                showShopBannedOverlay(errMsg.split('SHOP_BANNED:')[1]);
-                return true;
-            }
-            showShopBannedOverlay(errMsg || 'Shop của bạn đã bị khóa vĩnh viễn.');
-            return true;
-        }
-
-        if (!res.ok || !dashRes.ok) {
-            const errObj = !res.ok ? await res.json().catch(()=>({})) : await dashRes.json().catch(()=>({}));
-            const msg = errObj.message || errObj.description || '';
-            if (msg.includes('SHOP_TEMPORARILY_LOCKED:')) {
-                const lockTime = msg.split('SHOP_TEMPORARILY_LOCKED:')[1];
-                showShopLockedOverlay(lockTime);
-                return true;
-            } else if (msg.includes('SHOP_WITHDRAWN:')) {
-                showShopWithdrawnOverlay(msg.split('SHOP_WITHDRAWN:')[1]);
-                return true;
-            } else if (msg.includes('SHOP_BANNED:')) {
-                showShopBannedOverlay(msg.split('SHOP_BANNED:')[1]);
-                return true;
-            }
-            showShopBannedOverlay(msg || 'Shop của bạn đã bị khóa vĩnh viễn.');
-            return true;
-        }
-
+        // Load independent sidebar data concurrently so no stale placeholder is
+        // visible and the balance does not wait for shop info to finish first.
+        const [res, dashRes] = await Promise.all([
+            sellerFetch('/shop-info'),
+            sellerFetch('/dashboard')
+        ]);
+        if (!res.ok) return;
         const data = await res.json();
-        const stLower = String(data.shopStatus || '').toLowerCase();
-        if (stLower === 'withdrawn' || stLower === 'closed' || stLower === 'deleted') {
-            showShopWithdrawnOverlay('Shop đã được đóng và hoàn phí.');
-            return true;
-        }
-        if (stLower === 'banned' || stLower === 'permanent_banned') {
-            showShopBannedOverlay('Shop đã bị khóa vĩnh viễn.');
-            return true;
-        }
-
-        if (stLower === 'locked' || stLower === 'temp_locked' || stLower === 'indefinite_locked') {
-            if (data.suspendedUntil) {
-                const untilDate = new Date(data.suspendedUntil);
-                if (untilDate > new Date()) {
-                    const day = String(untilDate.getDate()).padStart(2, '0');
-                    const month = String(untilDate.getMonth() + 1).padStart(2, '0');
-                    const year = untilDate.getFullYear();
-                    const hours = String(untilDate.getHours()).padStart(2, '0');
-                    const minutes = String(untilDate.getMinutes()).padStart(2, '0');
-                    const dateStr = `${hours}:${minutes} ${day}/${month}/${year}`;
-                    showShopLockedOverlay(dateStr);
-                    return true;
-                }
-            } else {
-                showShopLockedOverlay('Thời hạn chưa xác định (Theo quyết định Ban quản trị)');
-                return true;
-            }
-        }
 
         // Update sidebar
         const nameEl = document.querySelector('.seller-sidebar__name');
@@ -449,8 +265,7 @@ async function initSellerLayout() {
         }
         cacheSellerSidebar(sidebarCache);
     } catch (err) {
-        showShopBannedOverlay('Không thể kết nối thông tin cửa hàng.');
-        return true;
+        console.error('Lỗi khởi tạo layout người bán:', err);
     }
 }
 
@@ -1202,9 +1017,12 @@ async function initProductEdit() {
         const subtitleEl = document.querySelector('.seller-card__subtitle') || document.querySelector('.view-header p');
         if (subtitleEl) subtitleEl.textContent = `Sản phẩm #${p.id} — ${p.name}`;
         document.getElementById('productName').value = p.name || '';
+        document.getElementById('productName').placeholder = 'Nhập tên sản phẩm...';
         document.getElementById('description').value = p.description || '';
+        document.getElementById('description').placeholder = 'Nhập mô tả sản phẩm...';
         if (document.getElementById('userGuide')) {
             document.getElementById('userGuide').value = p.userGuide || '';
+            document.getElementById('userGuide').placeholder = 'Nhập hướng dẫn sử dụng sản phẩm...';
         }
 
         // Set Product Image Preview
@@ -1562,6 +1380,7 @@ async function initTransactions() {
         const res = await sellerFetch('/transactions');
         if (!res.ok) throw new Error('Không thể tải lịch sử bán hàng.');
         const transactions = await res.json();
+        window.allTransactions = transactions;
 
         let searchQuery = ''; // Từ khóa tìm kiếm giao dịch
         let statusFilter = ''; // Trạng thái giao dịch cần lọc
@@ -1647,16 +1466,13 @@ async function initTransactions() {
                             <strong>${t.productName}</strong>
                             <div class="muted">${t.variantName}</div>
                         </td>
-                        <td>${t.customerEmail}</td>
+                        <td><a href="/messages?sellerId=${t.customerId}" style="text-decoration: underline; color: inherit; cursor: pointer;" title="Nhắn tin với khách hàng">${t.customerEmail}</a></td>
                         <td class="text-right">${formatVND(t.amountVnd)}</td>
                         <td class="text-right text-success">+${formatVND(t.netEarningVnd)}</td>
                         <td><span class="badge ${badgeClass}">${translateStatus(t.status)}</span></td>
                         <td>${t.createdAt.replace('T', ' ').substring(0, 16)}</td>
                         <td class="text-right">
-                            ${(t.status === 'Disputed' || t.status === 'Khiếu nại')
-                                ? `<a class="icon-button" href="/seller/complaints" title="Xem khiếu nại"><i class="fa fa-warning"></i></a>`
-                                : `<a class="icon-button" href="/messages?to=${t.customerEmail}" title="Nhắn tin"><i class="fa fa-envelope"></i></a>
-                                   <a class="icon-button" href="#" title="Chi tiết" onclick="showToast('Tính năng đang phát triển', 'info'); return false;"><i class="fa fa-info-circle"></i></a>`}
+                            <a class="icon-button" href="#" title="Chi tiết" onclick="showTxDetail('${t.id}'); return false;"><i class="fa fa-eye"></i></a>
                         </td>
                     </tr>
                 `;
@@ -2313,12 +2129,27 @@ async function initComplaints() {
         // Bind stats card values
         const statCards = document.querySelectorAll('.stats-grid-4 .stat-card-value');
         if (statCards.length >= 4) {
-            const openCount = complaints.filter(c => c.status === 'Open').length;
-            const inProgressCount = complaints.filter(c => c.status === 'In_Progress' || c.status === 'In_progress' || c.status === 'IN_PROGRESS').length;
-            const resolvedCount = complaints.filter(c => c.status === 'Resolved' || c.status === 'Closed').length;
+            const openCount = complaints.filter(c => {
+                const s = (c.status || '').toLowerCase();
+                return s === 'open' || s === 'pending_review' || s === 'pending';
+            }).length;
+            const inProgressCount = complaints.filter(c => {
+                const s = (c.status || '').toLowerCase();
+                return s === 'in_progress' || s === 'inprogress';
+            }).length;
+            const resolvedCount = complaints.filter(c => {
+                const s = (c.status || '').toLowerCase();
+                return s === 'resolved' || s === 'closed';
+            }).length;
             
-            const heldCount = complaints.filter(c => c.status !== 'Resolved' && c.status !== 'Closed').length;
-            const heldAmount = complaints.filter(c => c.status !== 'Resolved' && c.status !== 'Closed').reduce((sum, c) => sum + c.amountVnd, 0);
+            const heldCount = complaints.filter(c => {
+                const s = (c.status || '').toLowerCase();
+                return s !== 'resolved' && s !== 'closed';
+            }).length;
+            const heldAmount = complaints.filter(c => {
+                const s = (c.status || '').toLowerCase();
+                return s !== 'resolved' && s !== 'closed';
+            }).reduce((sum, c) => sum + c.amountVnd, 0);
 
             statCards[0].textContent = openCount;
             statCards[1].textContent = inProgressCount;
@@ -2331,17 +2162,18 @@ async function initComplaints() {
             }
         }
 
-        // Filter states
-        let searchQuery = '';
-        let statusFilter = '';
-        let mainCategoryFilter = '';
-        let subCategoryFilter = '';
-
         const searchInput = document.querySelector('input[placeholder="Tìm kiếm khiếu nại, mã GD..."]');
         const statusSelect = document.querySelector('select[aria-label="Lọc trạng thái"]');
         
         const mainSelect = document.getElementById('mainCategoryFilter');
         const subSelect = document.getElementById('subCategoryFilter');
+
+        // Filter states
+        let searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        let statusFilter = statusSelect ? statusSelect.value : '';
+        let mainCategoryFilter = mainSelect ? mainSelect.value : '';
+        let subCategoryFilter = subSelect ? subSelect.value : '';
+
         if (mainSelect && subSelect) {
             setupCategorySelectors(mainSelect, subSelect, null, true);
         }
@@ -2380,10 +2212,15 @@ async function initComplaints() {
                 // Lọc theo trạng thái
                 if (statusFilter) {
                     const st = c.status.toLowerCase();
-                    if (statusFilter === 'open' && st !== 'open') return false;
-                    if (statusFilter === 'in_progress' && st !== 'in_progress') return false;
-                    if (statusFilter === 'resolved' && st !== 'resolved') return false;
-                    if (statusFilter === 'closed' && st !== 'closed') return false;
+                    if (statusFilter === 'open') {
+                        if (st !== 'open' && st !== 'pending_review' && st !== 'pending') return false;
+                    } else if (statusFilter === 'in_progress') {
+                        if (st !== 'in_progress' && st !== 'inprogress') return false;
+                    } else if (statusFilter === 'resolved') {
+                        if (st !== 'resolved') return false;
+                    } else if (statusFilter === 'closed') {
+                        if (st !== 'closed') return false;
+                    }
                 }
 
                 // Lọc theo danh mục
@@ -2425,6 +2262,8 @@ async function initComplaints() {
             `;
         }).join('');
     }
+
+    renderComplaints();
     } catch (err) {
         showToast(err.message, 'error');
     }
@@ -2508,7 +2347,7 @@ async function initComplaintDetail() {
         const chatBtn = document.getElementById('chatDisputeBtn');
         if (chatBtn) {
             chatBtn.style.display = 'inline-flex';
-            chatBtn.href = `/messages?sellerView=true&complaintId=${c.id}`;
+            chatBtn.href = `/messages?sellerId=${c.customerId}`;
         }
 
     } catch (err) {
@@ -2895,8 +2734,70 @@ async function onPreOrderStatusSelect(id, selectElement, currentStatus) {
 }
 
 document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') closePreOrderDetailModal();
+    if (event.key === 'Escape') {
+        closePreOrderDetailModal();
+        closeTxDetailModal();
+    }
 });
+
+function showTxDetail(txId) {
+    const t = (window.allTransactions || []).find(x => String(x.id) === String(txId));
+    if (!t) return;
+
+    document.getElementById('modalTxId').textContent = `#TX-${t.id}`;
+    document.getElementById('modalTxDate').textContent = t.createdAt.replace('T', ' ').substring(0, 16);
+    document.getElementById('modalTxProduct').textContent = t.productName || 'N/A';
+    document.getElementById('modalTxVariant').textContent = t.variantName || 'N/A';
+    const customerEl = document.getElementById('modalTxCustomer');
+    if (t.customerEmail) {
+        customerEl.innerHTML = `<a href="/messages?sellerId=${t.customerId}" style="text-decoration: underline; color: #2563eb; cursor: pointer;" title="Nhắn tin với khách hàng">${t.customerEmail}</a>`;
+    } else {
+        customerEl.textContent = 'N/A';
+    }
+    
+    // Status badge
+    let badgeClass = 'ds-badge-neutral';
+    let statusText = t.status || 'N/A';
+    if (t.status === 'Completed') {
+        badgeClass = 'ds-badge-success';
+        statusText = 'Hoàn tất';
+    } else if (t.status === 'Held') {
+        badgeClass = 'ds-badge-warning';
+        statusText = 'Tạm giữ (Escrow)';
+    } else if (t.status === 'Disputed') {
+        badgeClass = 'ds-badge-danger';
+        statusText = 'Tranh chấp (Khiếu nại)';
+    } else if (t.status === 'Cancelled' || t.status === 'Refunded') {
+        badgeClass = 'ds-badge-danger';
+        statusText = 'Đã hủy/Hoàn tiền';
+    }
+    
+    const statusEl = document.getElementById('modalTxStatus');
+    statusEl.innerHTML = `<span class="ds-badge ${badgeClass}">${statusText}</span>`;
+    
+    document.getElementById('modalTxAmount').textContent = formatVND(t.amountVnd);
+    document.getElementById('modalTxCommission').textContent = `-${formatVND(t.commissionVnd || 0)}`;
+    document.getElementById('modalTxNet').textContent = formatVND(t.amountVnd - (t.commissionVnd || 0));
+    
+    const escrowEl = document.getElementById('modalTxEscrowRelease');
+    if (t.escrowReleaseDate) {
+        escrowEl.textContent = t.escrowReleaseDate.replace('T', ' ').substring(0, 16);
+    } else {
+        escrowEl.textContent = 'N/A';
+    }
+
+    const modal = document.getElementById('txDetailModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+function closeTxDetailModal() {
+    const modal = document.getElementById('txDetailModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
 
 window.initPreOrders = initPreOrders;
 window.showCustomConfirm = showCustomConfirm;
@@ -2906,3 +2807,5 @@ window.openPreOrderDetailModal = openPreOrderDetailModal;
 window.closePreOrderDetailModal = closePreOrderDetailModal;
 window.handlePreOrderDetailBackdrop = handlePreOrderDetailBackdrop;
 window.copyPreOrderDetailDelivery = copyPreOrderDetailDelivery;
+window.showTxDetail = showTxDetail;
+window.closeTxDetailModal = closeTxDetailModal;
