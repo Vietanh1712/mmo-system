@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import com.mmo.feature.staff.service.StaffDashboardService;
 import com.mmo.shared.dal.ComplaintRepository;
+import com.mmo.shared.dal.SellerRegistrationRepository;
+import com.mmo.shared.model.SellerRegistration;
 import com.mmo.shared.dal.TransactionRepository;
 import com.mmo.shared.dal.WithdrawalRepository;
 import com.mmo.shared.dal.ShopFlagRepository;
@@ -60,6 +62,9 @@ public class StaffController {
 
     @Autowired
     private NotificationRepository notificationRepository;
+
+    @Autowired
+    private SellerRegistrationRepository sellerRegistrationRepository;
 
 
 
@@ -263,6 +268,35 @@ public class StaffController {
         Withdrawal withdrawal = withdrawalRepository.findDetailById(id)
                 .orElseThrow(() -> new RuntimeException("Withdrawal request not found"));
         model.addAttribute("withdrawal", withdrawal);
+
+        // Fetch seller's shop name
+        String shopName = withdrawal.getSeller().getFullName() + " Shop";
+        if (sellerRegistrationRepository != null) {
+            SellerRegistration registration = sellerRegistrationRepository.findFirstByUserAndIsDeleteFalseOrderByIdDesc(withdrawal.getSeller()).orElse(null);
+            if (registration != null && registration.getShopName() != null && !registration.getShopName().trim().isEmpty()) {
+                shopName = registration.getShopName().trim();
+            }
+        }
+        model.addAttribute("shopName", shopName);
+
+        // Normalize bank code and description for VietQR
+        String qrBankCode = getVietQrBankCode(withdrawal.getBankInfo().getBankName());
+        String rawDesc = "MMO SYSTEM HOAN TIEN SHOP " + shopName;
+        String qrDesc = removeDiacritics(rawDesc).toUpperCase();
+        model.addAttribute("qrDesc", qrDesc);
+
+        try {
+            String qrUrl = String.format("https://img.vietqr.io/image/%s-%s-compact2.png?amount=%d&addInfo=%s&accountName=%s",
+                    qrBankCode,
+                    withdrawal.getBankInfo().getAccountNumber(),
+                    withdrawal.getAmountVnd(),
+                    java.net.URLEncoder.encode(qrDesc, "UTF-8"),
+                    java.net.URLEncoder.encode(removeDiacritics(withdrawal.getSeller().getFullName()).toUpperCase(), "UTF-8")
+            );
+            model.addAttribute("qrUrl", qrUrl);
+        } catch (Exception e) {
+            model.addAttribute("qrUrl", "");
+        }
 
         List<String> statuses = withdrawalRepository.findAllStatus();
         if (statuses.isEmpty()) {
@@ -514,5 +548,64 @@ public class StaffController {
     public String topupDetail() {
         return "staff/topup-detail";
     }
+
+    public static String removeDiacritics(String str) {
+        if (str == null) return "";
+        String nfdNormalizedString = java.text.Normalizer.normalize(str, java.text.Normalizer.Form.NFD);
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        return pattern.matcher(nfdNormalizedString).replaceAll("")
+                .replaceAll("Đ", "D")
+                .replaceAll("đ", "d");
+    }
+
+    public static String getVietQrBankCode(String bankName) {
+        if (bankName == null) return "";
+        String normalized = bankName.trim().replaceAll("\\s+", "").toLowerCase();
+        switch (normalized) {
+            case "mbbank":
+            case "mb":
+                return "MB";
+            case "tpbank":
+            case "tpb":
+                return "TPBank";
+            case "vietcombank":
+            case "vcb":
+                return "Vietcombank";
+            case "techcombank":
+            case "tcb":
+                return "Techcombank";
+            case "vietinbank":
+            case "ctg":
+                return "VietinBank";
+            case "bidv":
+                return "BIDV";
+            case "agribank":
+            case "vba":
+                return "Agribank";
+            case "vpbank":
+            case "vpb":
+                return "VPBank";
+            case "sacombank":
+            case "stb":
+                return "Sacombank";
+            case "acb":
+                return "ACB";
+            case "vib":
+                return "VIB";
+            case "hdbank":
+            case "hdb":
+                return "HDBank";
+            case "shb":
+                return "SHB";
+            case "ocb":
+                return "OCB";
+            case "msb":
+                return "MSB";
+            default:
+                return bankName.trim().replaceAll("\\s+", "");
+        }
+    }
 }
+
+
 

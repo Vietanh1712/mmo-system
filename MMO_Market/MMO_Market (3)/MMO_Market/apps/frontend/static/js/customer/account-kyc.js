@@ -11,6 +11,7 @@ function initializeKycPage() {
     accountSidebar = new AccountSidebar();
     bindKycEvents();
     loadKycPage();
+    setupKycLightbox();
 }
 
 function bindKycEvents() {
@@ -459,8 +460,9 @@ function bindFileNamePreview(inputId, targetName) {
             const url = URL.createObjectURL(file);
             box._previewUrl = url;
             box.style.backgroundImage = `url('${url}')`;
-            box.style.backgroundSize = 'cover';
+            box.style.backgroundSize = 'contain';
             box.style.backgroundPosition = 'center';
+            box.style.backgroundRepeat = 'no-repeat';
             box.classList.add('has-preview');
         } else {
             box.style.backgroundImage = 'none';
@@ -525,6 +527,59 @@ function setKycModeInUrl(mode) {
 function setText(id, value) {
     const el = document.getElementById(id);
     if(el) { el.textContent = value; }
+}
+
+function setupKycLightbox() {
+    const lightbox = document.getElementById('kycImageLightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+    const closeBtn = document.getElementById('lightboxClose');
+    if (!lightbox || !lightboxImg) return;
+
+    function openLightbox(src) {
+        lightboxImg.src = src;
+        lightbox.style.display = 'flex';
+        // Force reflow
+        lightbox.offsetHeight;
+        lightbox.style.opacity = '1';
+        lightboxImg.style.transform = 'scale(1)';
+    }
+
+    function closeLightbox() {
+        lightbox.style.opacity = '0';
+        lightboxImg.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            if (lightbox.style.opacity === '0') {
+                lightbox.style.display = 'none';
+                lightboxImg.src = '';
+            }
+        }, 250);
+    }
+
+    // Bind to the submitted images
+    ['kycViewFrontImage', 'kycViewBackImage', 'kycViewSelfieImage'].forEach(id => {
+        const img = document.getElementById(id);
+        if (img) {
+            img.addEventListener('click', () => {
+                if (img.src) {
+                    openLightbox(img.src);
+                }
+            });
+        }
+    });
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeLightbox);
+    }
+    lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) {
+            closeLightbox();
+        }
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && lightbox.style.display === 'flex') {
+            closeLightbox();
+        }
+    });
 }
 
 function registerAccountPage(scriptPath, initializer) {
