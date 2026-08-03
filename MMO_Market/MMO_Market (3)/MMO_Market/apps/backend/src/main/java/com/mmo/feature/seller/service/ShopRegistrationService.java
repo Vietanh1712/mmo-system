@@ -17,6 +17,8 @@ import com.mmo.shared.model.SellerBankInfo;
 import com.mmo.shared.dal.SellerBankInfoRepository;
 import com.mmo.shared.model.Notification;
 import com.mmo.shared.dal.SystemConfigurationRepository;
+import com.mmo.shared.dal.WalletTransactionRepository;
+import com.mmo.shared.model.WalletTransaction;
 import com.mmo.feature.wallet.service.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -66,6 +68,9 @@ public class ShopRegistrationService {
 
     @Autowired
     private NotificationRepository notificationRepository;
+
+    @Autowired
+    private WalletTransactionRepository walletTransactionRepository;
 
     @jakarta.annotation.PostConstruct
     public void autoApproveExistingRegistrations() {
