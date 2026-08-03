@@ -43,6 +43,10 @@ import lombok.extern.slf4j.Slf4j;
 import com.mmo.shared.dal.WalletTransactionRepository;
 import com.mmo.shared.model.WalletTransaction;
 
+/**
+ * Service xử lý toàn bộ nghiệp vụ liên quan đến Đăng ký, Duyệt mở gian hàng (Shop),
+ * quản lý trạng thái hoạt động và thống kê các gian hàng dành cho người bán (Seller).
+ */
 @Service
 @EnableScheduling
 @Slf4j
@@ -71,6 +75,12 @@ public class ShopRegistrationService {
 
     @Autowired
     private NotificationRepository notificationRepository;
+
+
+    /**
+     * Tự động phê duyệt các hồ sơ đăng ký mở Shop đang chờ phê duyệt ở trạng thái PENDING
+     * và tự động bổ sung hồ sơ đăng ký cho những tài khoản đã mang vai trò Seller nhưng chưa có thông tin đăng ký Shop.
+     */
 
     @Autowired
     private WalletTransactionRepository walletTransactionRepository;
@@ -113,6 +123,15 @@ public class ShopRegistrationService {
         } catch (Exception ignored) {}
     }
 
+    /**
+     * Khách hàng gửi đơn đăng ký mở Shop mới.
+     * Kiểm tra điều kiện KYC đã được phê duyệt hay chưa trước khi tiến hành tạo Shop.
+     * Tự động duyệt mở Shop khi KYC hợp lệ và nâng cấp vai trò của người dùng thành Seller.
+     *
+     * @param userId ID người dùng nộp đơn
+     * @param request Thông tin đăng ký Shop
+     * @return DTO phản hồi kết quả đăng ký Shop
+     */
     @Transactional
     public ShopRegistrationResponseDto submitRegistration(Long userId, ShopRegistrationRequestDto request) {
         User user = userRepository.findByIdAndIsDeleteFalse(userId)
@@ -168,6 +187,12 @@ public class ShopRegistrationService {
         return mapToDto(saved);
     }
 
+    /**
+     * Lấy thông tin đăng ký Shop của người dùng hiện tại đang đăng nhập.
+     *
+     * @param userId ID người dùng
+     * @return DTO phản hồi chứa thông tin đăng ký Shop
+     */
     @Transactional(readOnly = true)
     public ShopRegistrationResponseDto getMyRegistration(Long userId) {
         User user = userRepository.findByIdAndIsDeleteFalse(userId)
@@ -178,6 +203,12 @@ public class ShopRegistrationService {
                 .orElse(null);
     }
 
+    /**
+     * Lấy thông tin đăng ký Shop thông qua ID của đơn đăng ký.
+     *
+     * @param id ID của hồ sơ đăng ký Shop
+     * @return DTO phản hồi chứa thông tin đăng ký Shop
+     */
     @Transactional(readOnly = true)
     public ShopRegistrationResponseDto getRegistrationById(Long id) {
         SellerRegistration registration = sellerRegistrationRepository.findById(id)
@@ -187,6 +218,9 @@ public class ShopRegistrationService {
 
 
 
+    /**
+     * Lấy danh sách tất cả các đơn đăng ký mở Shop đang ở trạng thái chờ duyệt (PENDING).
+     */
     @Transactional(readOnly = true)
     public List<ShopRegistrationResponseDto> getAllPendingRegistrations() {
         return sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc().stream()
@@ -195,6 +229,15 @@ public class ShopRegistrationService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Lấy danh sách tất cả các đơn đăng ký mở Shop có bộ lọc tìm kiếm và phân trang (Dành cho Staff/Admin).
+     *
+     * @param status Trạng thái phê duyệt đơn (APPROVED, PENDING, REJECTED)
+     * @param shopStatus Trạng thái hoạt động của Shop (Active, Suspended, Locked, Banned)
+     * @param keyword Từ khóa tìm kiếm (tên shop, email, số điện thoại, danh mục,...)
+     * @param page Số trang hiện tại (0-indexed)
+     * @param size Số lượng bản ghi trên một trang
+     */
     @Transactional(readOnly = true)
     public Page<ShopRegistrationResponseDto> getAllRegistrations(String status, String shopStatus, String keyword, int page, int size) {
         org.springframework.data.domain.Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
@@ -207,6 +250,11 @@ public class ShopRegistrationService {
         return regPage.map(this::mapToDto);
     }
 
+    /**
+     * Thống kê tổng số lượng các gian hàng trên sàn theo từng trạng thái hoạt động
+     * (Hoạt động, Bị khóa vĩnh viễn, Tạm khóa không thời hạn, Tạm khóa có thời hạn, Đã rút,...)
+     * và tổng số tiền đặt cọc của các Shop.
+     */
     @Transactional(readOnly = true)
     public Map<String, Long> getRegistrationStats() {
         Map<String, Long> stats = new HashMap<>();
@@ -257,6 +305,13 @@ public class ShopRegistrationService {
         return stats;
     }
 
+    /**
+     * Phê duyệt hoặc từ chối yêu cầu đăng ký mở Shop của người dùng.
+     * Cập nhật vai trò người dùng thành Seller nếu được duyệt, tạo thông báo hệ thống và lưu nhật ký AuditLog.
+     *
+     * @param registrationId ID đơn đăng ký
+     * @param review DTO chứa kết quả duyệt đơn (approved và lý do từ chối nếu có)
+     */
     @Transactional
     public ShopRegistrationResponseDto reviewRegistration(Long registrationId, ShopRegistrationReviewDto review) {
         SellerRegistration registration = sellerRegistrationRepository.findById(registrationId)
@@ -327,6 +382,9 @@ public class ShopRegistrationService {
         return mapToDto(updated);
     }
 
+    /**
+     * Ghi nhận nhật ký hệ thống (AuditLog) về các thao tác quản trị trên gian hàng.
+     */
     private void saveAuditLog(User operator, String action, String desc, Map<String, Object> diff) {
         try {
             Map<String, Object> payload = new HashMap<>();
@@ -343,6 +401,10 @@ public class ShopRegistrationService {
         }
     }
 
+    /**
+     * Chuyển đổi đối tượng thực thể SellerRegistration sang Response DTO để trả về cho người dùng.
+     * Đồng thời tự động cập nhật trạng thái hoạt động của Shop thành Active nếu thời gian tạm khóa đã trôi qua.
+     */
     private ShopRegistrationResponseDto mapToDto(SellerRegistration registration) {
         User user = registration.getUser();
         if (user != null && user.getShopStatus() != null &&
@@ -380,16 +442,29 @@ public class ShopRegistrationService {
                 .build();
     }
 
+    /**
+     * Lấy danh sách các trạng thái hoạt động độc nhất của các Shop đang có trong hệ thống.
+     */
     @Transactional(readOnly = true)
     public List<String> getDistinctShopStatuses() {
         return userRepository.findDistinctShopStatuses();
     }
 
+    /**
+     * Lấy danh sách các trạng thái duyệt đơn đăng ký độc nhất đang có trong hệ thống.
+     */
     @Transactional(readOnly = true)
     public List<String> getDistinctStatuses() {
         return sellerRegistrationRepository.findDistinctStatuses();
     }
 
+    /**
+     * Bật/Tắt nhanh trạng thái hoạt động của Shop (Kích hoạt thành Active hoặc Cấm thành Banned).
+     * Gửi thông báo hệ thống về việc thay đổi trạng thái tới tài khoản chủ Shop.
+     *
+     * @param registrationId ID đơn đăng ký Shop
+     * @param active true để kích hoạt hoạt động, false để cấm hoạt động
+     */
     @Transactional
     public ShopRegistrationResponseDto toggleShopStatus(Long registrationId, boolean active) {
         SellerRegistration registration = sellerRegistrationRepository.findById(registrationId)
@@ -422,6 +497,13 @@ public class ShopRegistrationService {
         return mapToDto(registration);
     }
 
+    /**
+     * Cập nhật trạng thái hoạt động chi tiết của Shop kèm theo thời hạn kết thúc hình phạt (nếu bị tạm đóng/tạm khóa).
+     *
+     * @param registrationId ID đơn đăng ký Shop
+     * @param shopStatus Trạng thái hoạt động mới (Active, Suspended, Locked, Banned, v.v.)
+     * @param suspendedUntilStr Thời hạn kết thúc tạm khóa (định dạng ngày giờ)
+     */
     @Transactional
     public ShopRegistrationResponseDto updateShopStatus(Long registrationId, String shopStatus, String suspendedUntilStr) {
         SellerRegistration registration = sellerRegistrationRepository.findById(registrationId)
@@ -563,6 +645,10 @@ public class ShopRegistrationService {
         return mapToDto(registration);
     }
 
+    /**
+     * Tự động khôi phục trạng thái hoạt động bình thường (Active) cho các gian hàng đã hết thời gian tạm ngưng.
+     * Scheduled job tự động quét toàn bộ cơ sở dữ liệu định kỳ mỗi 30 giây.
+     */
     @Scheduled(fixedRate = 30000)
     @Transactional
     public void autoRevertSuspendedShops() {

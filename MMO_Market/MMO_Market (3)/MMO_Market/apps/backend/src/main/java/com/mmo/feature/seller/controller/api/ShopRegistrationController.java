@@ -89,12 +89,18 @@ public class ShopRegistrationController {
         return ResponseEntity.ok(shopRegistrationService.getRegistrationStats());
     }
 
+    /**
+     * Lấy danh sách tất cả các trạng thái hoạt động độc nhất của các Shop đang có trong hệ thống.
+     */
     @GetMapping("/shop-statuses")
     @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<List<String>> getDistinctShopStatuses() {
         return ResponseEntity.ok(shopRegistrationService.getDistinctShopStatuses());
     }
 
+    /**
+     * Lấy danh sách tất cả các trạng thái duyệt đơn đăng ký độc nhất đang có trong hệ thống.
+     */
     @GetMapping("/statuses")
     @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<List<String>> getDistinctStatuses() {

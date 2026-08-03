@@ -108,6 +108,11 @@ public class ShopLevelService {
         log.info("Đánh giá Shop Level hoàn tất. Số Seller được xử lý: {}", updated);
     }
 
+    /**
+     * Cập nhật trạng thái khóa/mở khóa của gian hàng dựa trên cấp độ và số dư ví mới.
+     * Đối với Shop Level 0 hoặc 1, nếu ví bị âm tiền, gian hàng sẽ tự động bị khóa (Locked).
+     * Đối với Shop Level 2, nếu ví bị âm tiền, tính năng rút tiền sẽ tự động bị khóa (WithdrawalLocked).
+     */
     @Transactional
     public void updateShopLockStatus(Long sellerId) {
         User seller = userRepository.findByIdAndIsDeleteFalse(sellerId).orElse(null);
