@@ -1851,7 +1851,7 @@
                 if (lowerStr === 'pending') return 'Đang chờ';
                 if (lowerStr === 'completed') return 'Đã hoàn thành';
                 if (lowerStr === 'failed') return 'Thất bại';
-                if (lowerStr === 'held') return 'Tạm giữ (Escrow)';
+                if (lowerStr === 'held') return 'Tạm giữ';
             }
 
             // 6b. Loại thông báo
@@ -3277,7 +3277,7 @@
         const str = String(status).trim();
         if (str === 'Completed' || str === 'COMPLETED' || str === 'SUCCESS') return 'Hoàn thành';
         if (str === 'Pending' || str === 'PENDING') return 'Đang xử lý';
-        if (str === 'Held' || str === 'HELD' || str === 'ESCROW') return 'Tạm giữ (Escrow)';
+        if (str === 'Held' || str === 'HELD' || str === 'ESCROW') return 'Tạm giữ';
         if (str === 'Failed' || str === 'FAILED' || str === 'REJECTED') return 'Thất bại';
         return str;
     }
