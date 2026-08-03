@@ -15,6 +15,9 @@ public class SystemConfigUpdateRequest {
     private Integer maxLoginRetries;
     private Integer lockDurationMins;
     private Integer escrowHoldHours;
+    private Integer escrowHoldHoursLevel0;
+    private Integer escrowHoldHoursLevel1;
+    private Integer escrowHoldHoursLevel2;
     private Boolean allowGoogleLogin;
     private Boolean allowRegister;
     private Boolean requireWithdraw2FA;

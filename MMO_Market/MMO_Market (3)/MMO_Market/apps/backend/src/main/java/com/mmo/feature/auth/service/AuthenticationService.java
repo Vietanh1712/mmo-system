@@ -877,6 +877,13 @@ public class AuthenticationService {
 
     @Transactional
     public void sendWithdrawalOtp(User user) {
+        boolean requireWithdraw2FA = systemConfigurationRepository.findByConfigKey("REQUIRE_WITHDRAW_2FA")
+                .map(c -> Boolean.parseBoolean(c.getConfigValue()))
+                .orElse(true);
+        if (!requireWithdraw2FA) {
+            throw new IllegalArgumentException("Hệ thống hiện tại đang tắt cấu hình xác thực 2FA rút tiền. Không thể gửi mã OTP về Email.");
+        }
+
         int otpTimeout = getOtpTimeoutMins();
 
         // Kiểm tra giới hạn tần suất gửi lại mã (Rate Limiting)

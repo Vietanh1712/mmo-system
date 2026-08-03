@@ -1691,31 +1691,35 @@ async function initWithdrawals() {
                     return;
                 }
 
-                if (require2FA) {
-                    const otpModalEl = document.getElementById('otpWithdrawModal');
-                    const otpInputEl = document.getElementById('withdrawOtpInput');
-                    const otpErrorEl = document.getElementById('withdrawOtpError');
-                    const btnOtpConfirm = document.getElementById('btnSubmitWithdrawalWithOtp');
+                const otpModalEl = document.getElementById('otpWithdrawModal');
+                const otpInputEl = document.getElementById('withdrawOtpInput');
+                const otpErrorEl = document.getElementById('withdrawOtpError');
+                const btnOtpConfirm = document.getElementById('btnSubmitWithdrawalWithOtp');
 
-                    if (otpModalEl && otpInputEl && btnOtpConfirm) {
-                        try {
-                            showToast('Đang gửi mã OTP đến email của bạn...', 'info');
+                if (otpModalEl && otpInputEl && btnOtpConfirm) {
+                    try {
+                        showToast('Đang gửi mã OTP đến email của bạn...', 'info');
 
-                            // Request OTP instantly
-                            const otpRes = await sellerFetch('/withdrawals/send-otp', { method: 'POST' });
-                            const otpData = await otpRes.json();
-                            if (!otpRes.ok) throw new Error(otpData.message || 'Không thể gửi mã OTP.');
+                        // Reset modal inputs and display modal immediately
+                        otpInputEl.value = '';
+                        btnOtpConfirm.disabled = false;
+                        btnOtpConfirm.innerHTML = 'Xác nhận';
+                        otpModalEl.style.display = 'flex';
 
-                            showToast(otpData.message || 'Mã OTP đã được gửi về email của bạn.', 'success');
-
-                            // Reset modal inputs
-                            otpInputEl.value = '';
+                        // Request OTP
+                        const otpRes = await sellerFetch('/withdrawals/send-otp', { method: 'POST' });
+                        const otpData = await otpRes.json();
+                        if (!otpRes.ok) {
+                            const errText = otpData.message || 'Không thể gửi mã OTP.';
+                            if (otpErrorEl) {
+                                otpErrorEl.textContent = errText;
+                                otpErrorEl.style.color = '#ef4444';
+                            }
+                            showToast(errText, 'error');
+                        } else {
                             if (otpErrorEl) otpErrorEl.textContent = '';
-                            btnOtpConfirm.disabled = false;
-                            btnOtpConfirm.innerHTML = 'Xác nhận';
-
-                            // Show OTP modal
-                            otpModalEl.style.display = 'flex';
+                            showToast(otpData.message || 'Mã OTP đã được gửi về email của bạn.', 'success');
+                        }
 
                              // Setup Resend Button logic with 60s cooldown
                              const btnResend = document.getElementById('btnResendOtp');
@@ -1843,7 +1847,6 @@ async function initWithdrawals() {
                             showToast(err.message, 'error');
                         }
                     }
-                }
             });
         }
 
