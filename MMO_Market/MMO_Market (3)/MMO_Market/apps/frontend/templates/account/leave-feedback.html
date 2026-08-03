@@ -76,16 +76,6 @@
                 <div class="upload-preview-container" id="previewContainer"></div>
             </section>
 
-            <!-- 5. Card 4 - Tùy chọn ẩn danh (Anonymous Toggle Card) -->
-            <section class="feedback-card anonymous-card">
-                <div class="anonymous-card__left">
-                    <h2 class="anonymous-card__title">Đăng ẩn danh</h2>
-                    <p class="anonymous-card__desc">Tên của bạn sẽ không hiển thị công khai trên đánh giá sản phẩm.</p>
-                </div>
-                <button type="button" id="anonymousToggle" class="ds-toggle ds-toggle-inactive" aria-pressed="false" onclick="toggleAnonymous()">
-                    <span class="ds-toggle-track"><span class="ds-toggle-knob"></span></span>
-                </button>
-            </section>
 
             <!-- 6. Thanh nút bấm hành động (Action Buttons) -->
             <footer class="feedback-actions">
@@ -115,7 +105,6 @@
         const ACCOUNT_ORDERS_MOCK_KEY = 'mmoMarketMyOrdersMock';
         let selectedScore = 0;
         let uploadedFiles = [];
-        let isAnonymous = false;
         let orderCode = '';
         let productId = 1;
         let transactionId = null; // ID giao dịch cụ thể để cho phép review nhiều đơn cùng sản phẩm
@@ -215,11 +204,7 @@
                         dropzone.style.display = 'none';
                     }
 
-                    const anonymousToggle = document.getElementById('anonymousToggle');
-                    if (anonymousToggle) {
-                        anonymousToggle.style.pointerEvents = 'none';
-                        anonymousToggle.style.opacity = '0.5';
-                    }
+
                 }
             } catch (err) {
                 console.error('Lỗi khi tải thông tin đơn hàng:', err);
@@ -407,13 +392,7 @@
             container.appendChild(wrapper);
         }
 
-        // --- 4. Anonymous Toggle Switch ---
-        function toggleAnonymous() {
-            const toggle = document.getElementById('anonymousToggle');
-            isAnonymous = !isAnonymous;
-            toggle.classList.toggle('ds-toggle-inactive', !isAnonymous);
-            toggle.setAttribute('aria-pressed', isAnonymous ? 'true' : 'false');
-        }
+
 
         // --- 5. Actions / Submission ---
         function cancelFeedback() {
@@ -442,17 +421,13 @@
             try {
                 // 1. Upload files first
                 const urls = [];
-                const token = sessionStorage.getItem('accessToken');
                 
                 for (const file of uploadedFiles) {
                     const formData = new FormData();
                     formData.append('file', file);
                     
-                    const uploadRes = await fetch('/api/upload', {
+                    const uploadRes = await authFetch('/upload', {
                         method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        },
                         body: formData
                     });
                     const uploadData = await uploadRes.json();
