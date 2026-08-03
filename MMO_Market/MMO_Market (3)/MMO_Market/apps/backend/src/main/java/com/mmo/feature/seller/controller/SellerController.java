@@ -87,6 +87,10 @@ public class SellerController {
     }
 
 
+    /**
+     * Helper method để lấy thông tin Người bán (User) từ cơ sở dữ liệu dựa trên ID người dùng đăng nhập.
+     * Xác nhận người dùng tồn tại và có vai trò hợp lệ là Seller.
+     */
     private User getSeller(Long userId) {
         if (userId == null) {
             throw new IllegalArgumentException("Phiên đăng nhập không hợp lệ.");
@@ -204,7 +208,9 @@ public class SellerController {
         }
     }
 
-    // 3. Shop Info PUT
+    /**
+     * API Cập nhật thông tin chi tiết của gian hàng (Tên shop, mô tả, thông tin tài khoản ngân hàng).
+     */
     @PutMapping("/shop-info")
     public ResponseEntity<?> updateShopInfo(@AuthenticationPrincipal Long userId, @RequestBody Map<String, String> request) {
         try {
@@ -242,7 +248,10 @@ public class SellerController {
         }
     }
 
-    // 3.1 Toggle / Update Shop Operating Status for Seller
+    /**
+     * API Tự động Bật/Tắt (Toggle) trạng thái hoạt động của Shop của người bán (Active hoặc Tạm ngưng).
+     * Chỉ cho phép thay đổi nếu Shop không ở trạng thái bị kỷ luật (như Banned, Locked).
+     */
     @PutMapping("/shop-status")
     public ResponseEntity<?> toggleSellerShopStatus(@AuthenticationPrincipal Long userId, @RequestBody(required = false) Map<String, String> request) {
         try {
@@ -277,7 +286,10 @@ public class SellerController {
         }
     }
 
-    // 4. Load Categories for dropdown filter/product creation
+    /**
+     * API Lấy danh sách các danh mục sản phẩm (bao gồm danh mục cha và các danh mục con liên kết)
+     * để làm bộ lọc hoặc sử dụng khi đăng/chỉnh sửa sản phẩm.
+     */
     @GetMapping("/categories")
     public ResponseEntity<?> getCategories() {
         // Return only sub-categories
@@ -307,7 +319,9 @@ public class SellerController {
         return ResponseEntity.ok(result);
     }
 
-    // 5. Products GET
+    /**
+     * API Lấy danh sách tất cả sản phẩm của Shop hiện tại (kèm theo số lượng biến thể, tồn kho và trạng thái).
+     */
     @GetMapping("/products")
     public ResponseEntity<?> getProducts(@AuthenticationPrincipal Long userId) {
         try {
@@ -349,7 +363,9 @@ public class SellerController {
         }
     }
 
-    // 6. Product GET by ID
+    /**
+     * API Lấy chi tiết thông tin của một sản phẩm và tất cả các biến thể tương ứng dựa theo ID sản phẩm.
+     */
     @GetMapping("/products/{id}")
     public ResponseEntity<?> getProductById(@AuthenticationPrincipal Long userId, @PathVariable Long id) {
         try {
@@ -390,6 +406,10 @@ public class SellerController {
         }
     }
 
+    /**
+     * Helper method kiểm tra trạng thái hoạt động của Shop trước khi thực hiện các hoạt động kinh doanh (đăng bán, chỉnh sửa).
+     * Nếu Shop bị khóa, tạm ngưng hoặc cấm, trả về thông báo lỗi chi tiết tương ứng.
+     */
     private String validateShopActiveStatus(User seller) {
         if (seller.getShopStatus() != null &&
                 ("Suspended".equalsIgnoreCase(seller.getShopStatus()) || "TEMP_LOCKED".equalsIgnoreCase(seller.getShopStatus())) &&
@@ -418,7 +438,10 @@ public class SellerController {
         return null;
     }
 
-    // 7. Product POST (Create)
+    /**
+     * API Đăng bán sản phẩm mới cùng với danh sách các biến thể ban đầu.
+     * Áp dụng các điều kiện ràng buộc dựa theo cấp độ gian hàng (Shop Level) và số dư ví (không được âm đối với Level 0, 1).
+     */
     @PostMapping("/products")
     public ResponseEntity<?> createProduct(@AuthenticationPrincipal Long userId, @RequestBody Map<String, Object> request) {
         try {
@@ -520,7 +543,10 @@ public class SellerController {
         }
     }
 
-    // 7.5 Image Upload POST
+    /**
+     * API Hỗ trợ tải ảnh lên hệ thống từ chuỗi dữ liệu ảnh Base64.
+     * Lưu ảnh vào thư mục cấu hình và trả về đường dẫn tệp ảnh URL.
+     */
     @PostMapping("/upload-image")
     public ResponseEntity<?> uploadImage(@RequestBody Map<String, String> request) {
         try {
@@ -556,7 +582,9 @@ public class SellerController {
             return ResponseEntity.badRequest().body(Map.of("message", "Lỗi tải ảnh: " + e.getMessage()));
         }
     }
-    // 8. Product PUT (Update)
+    /**
+     * API Cập nhật thông tin cơ bản của sản phẩm (Tên, mô tả, danh mục, hướng dẫn sử dụng, hình ảnh).
+     */
     @PutMapping("/products/{id}")
     public ResponseEntity<?> updateProduct(@AuthenticationPrincipal Long userId, @PathVariable Long id, @RequestBody Map<String, Object> request) {
         try {
@@ -601,7 +629,9 @@ public class SellerController {
         }
     }
 
-    // 9. Product DELETE
+    /**
+     * API Xóa sản phẩm (Soft delete) và xóa toàn bộ các biến thể liên quan.
+     */
     @DeleteMapping("/products/{id}")
     public ResponseEntity<?> deleteProduct(@AuthenticationPrincipal Long userId, @PathVariable Long id) {
         try {
@@ -629,7 +659,9 @@ public class SellerController {
         }
     }
 
-    // 10. Variant GET by ID
+    /**
+     * API Lấy thông tin chi tiết một biến thể sản phẩm cụ thể, bao gồm cả danh sách các tài sản số (Digital Asset) đính kèm.
+     */
     @GetMapping("/variants/{id}")
     public ResponseEntity<?> getVariantById(@AuthenticationPrincipal Long userId, @PathVariable Long id) {
         try {
@@ -674,7 +706,9 @@ public class SellerController {
         }
     }
 
-    // 11. Variant POST (Create)
+    /**
+     * API Tạo mới một biến thể sản phẩm cho một sản phẩm hiện có.
+     */
     @PostMapping("/variants")
     public ResponseEntity<?> createVariant(@AuthenticationPrincipal Long userId, @RequestBody Map<String, Object> request) {
         try {
@@ -734,7 +768,9 @@ public class SellerController {
         }
     }
 
-    // 12. Variant PUT (Update)
+    /**
+     * API Cập nhật thông tin một biến thể (Tên biến thể, giá bán, tồn kho, hình ảnh, trạng thái).
+     */
     @PutMapping("/variants/{id}")
     public ResponseEntity<?> updateVariant(@AuthenticationPrincipal Long userId, @PathVariable Long id, @RequestBody Map<String, Object> request) {
         try {
@@ -790,7 +826,9 @@ public class SellerController {
         }
     }
 
-    // 13. Variant DELETE
+    /**
+     * API Xóa biến thể sản phẩm (Soft delete) và xóa toàn bộ tài sản số đính kèm chưa bán.
+     */
     @DeleteMapping("/variants/{id}")
     public ResponseEntity<?> deleteVariant(@AuthenticationPrincipal Long userId, @PathVariable Long id) {
         try {
@@ -818,7 +856,9 @@ public class SellerController {
         }
     }
 
-    // 14. Transactions GET (Sales history)
+    /**
+     * API Lấy lịch sử giao dịch bán hàng (đơn hàng) của Shop hiện tại.
+     */
     @GetMapping("/transactions")
     public ResponseEntity<?> getTransactions(@AuthenticationPrincipal Long userId) {
         try {
@@ -847,7 +887,9 @@ public class SellerController {
         }
     }
 
-    // 15. Withdrawals GET
+    /**
+     * API Lấy danh sách tất cả các yêu cầu rút tiền của Shop.
+     */
     @GetMapping("/withdrawals")
     public ResponseEntity<?> getWithdrawals(@AuthenticationPrincipal Long userId) {
         try {
@@ -873,7 +915,9 @@ public class SellerController {
         }
     }
 
-    // 15.5. Withdrawal GET by ID
+    /**
+     * API Lấy chi tiết thông tin một yêu cầu rút tiền cụ thể dựa theo ID.
+     */
     @GetMapping("/withdrawals/{id}")
     public ResponseEntity<?> getWithdrawalById(@AuthenticationPrincipal Long userId, @PathVariable Long id) {
         try {
@@ -904,7 +948,9 @@ public class SellerController {
         }
     }
 
-    // 15.6. Withdrawal Config GET
+    /**
+     * API Lấy cấu hình rút tiền từ hệ thống (Phần trăm phí rút, giới hạn rút tối thiểu/tối đa, yêu cầu xác thực OTP 2FA).
+     */
     @GetMapping("/withdrawals/config")
     public ResponseEntity<?> getWithdrawalConfig(@AuthenticationPrincipal Long userId) {
         try {
@@ -940,7 +986,9 @@ public class SellerController {
         }
     }
 
-    // 15.7. Send Withdrawal OTP (2FA)
+    /**
+     * API Gửi mã OTP xác thực rút tiền về Email của người bán để bảo mật.
+     */
     @PostMapping("/withdrawals/send-otp")
     public ResponseEntity<?> sendWithdrawalOtp(@AuthenticationPrincipal Long userId) {
         try {
@@ -952,7 +1000,9 @@ public class SellerController {
         }
     }
 
-    // 16. Withdrawal POST (Create request)
+    /**
+     * API Gửi yêu cầu rút tiền từ số dư Shop về tài khoản ngân hàng liên kết.
+     */
     @PostMapping("/withdrawals")
     public ResponseEntity<?> requestWithdrawal(@AuthenticationPrincipal Long userId, @RequestBody Map<String, Object> request) {
         try {
@@ -973,7 +1023,9 @@ public class SellerController {
     }
 
 
-    // 17. Statistics GET
+    /**
+     * API Lấy báo cáo thống kê doanh thu (doanh số 7 ngày gần nhất, số đơn hoàn thành, số dư đang tạm giữ, top sản phẩm bán chạy).
+     */
     @GetMapping("/statistics")
     public ResponseEntity<?> getStatistics(@AuthenticationPrincipal Long userId) {
         try {
@@ -1039,7 +1091,9 @@ public class SellerController {
         }
     }
 
-    // 18. Shop Flags GET
+    /**
+     * API Lấy danh sách các cảnh cáo (Shop Flags) từ sàn đối với gian hàng hiện tại.
+     */
     @GetMapping("/shop-flags")
     public ResponseEntity<?> getShopFlags(@AuthenticationPrincipal Long userId) {
         try {
@@ -1063,7 +1117,9 @@ public class SellerController {
         }
     }
 
-    // 19. Reviews GET
+    /**
+     * API Lấy danh sách đánh giá của khách hàng đối với các sản phẩm của Shop.
+     */
     @GetMapping("/reviews")
     public ResponseEntity<?> getReviews(@AuthenticationPrincipal Long userId) {
         try {
@@ -1087,7 +1143,9 @@ public class SellerController {
         }
     }
 
-    // 20. Complaints GET
+    /**
+     * API Lấy danh sách các khiếu nại (Complaints) từ khách hàng đối với giao dịch của Shop.
+     */
     @GetMapping("/complaints")
     public ResponseEntity<?> getComplaints(@AuthenticationPrincipal Long userId) {
         try {
@@ -1124,7 +1182,9 @@ public class SellerController {
         }
     }
 
-    // 21. Complaint GET Details
+    /**
+     * API Lấy chi tiết khiếu nại cùng toàn bộ lịch sử trò chuyện đối chất trong phòng chat của khiếu nại đó.
+     */
     @GetMapping("/complaints/{id}")
     public ResponseEntity<?> getComplaintDetails(@AuthenticationPrincipal Long userId, @PathVariable Long id) {
         try {
@@ -1174,7 +1234,9 @@ public class SellerController {
         }
     }
 
-    // 22. Send chat in Complaint
+    /**
+     * API Gửi tin nhắn chat đối chất trong phòng khiếu nại.
+     */
     @PostMapping("/complaints/{id}/chat")
     public ResponseEntity<?> sendComplaintChat(@AuthenticationPrincipal Long userId, @PathVariable Long id, @RequestBody Map<String, String> request) {
         try {
@@ -1212,7 +1274,9 @@ public class SellerController {
 
     // ========== DIGITAL ASSETS ENDPOINTS ==========
 
-    // 23. Get Digital Assets for a Variant
+    /**
+     * API Lấy danh sách các tài sản số (Digital Asset) của một biến thể sản phẩm cụ thể.
+     */
     @GetMapping("/variants/{variantId}/assets")
     public ResponseEntity<?> getVariantAssets(@AuthenticationPrincipal Long userId, @PathVariable Long variantId) {
         try {
@@ -1244,7 +1308,10 @@ public class SellerController {
         }
     }
 
-    // 24. Create Digital Assets (Batch or Single)
+    /**
+     * API Thêm mới tài sản số (Account, Key, Card) hàng loạt hoặc đơn lẻ vào biến thể sản phẩm.
+     * Tự động kích hoạt cơ chế bàn giao đơn đặt trước (Pre-Order Fulfill) nếu có đơn hàng pre-order đang chờ.
+     */
     @PostMapping("/digital-assets")
     public ResponseEntity<?> createDigitalAssets(@AuthenticationPrincipal Long userId, @RequestBody Map<String, Object> request) {
         try {
@@ -1354,7 +1421,9 @@ public class SellerController {
         }
     }
 
-    // 25. Delete Digital Asset
+    /**
+     * API Xóa tài sản số (Soft delete) khỏi biến thể sản phẩm và cập nhật lại số lượng tồn kho.
+     */
     @DeleteMapping("/digital-assets/{id}")
     public ResponseEntity<?> deleteDigitalAsset(@AuthenticationPrincipal Long userId, @PathVariable Long id) {
         try {
@@ -1388,7 +1457,9 @@ public class SellerController {
         }
     }
 
-    // 26. Update Product Type and Image
+    /**
+     * API Cập nhật phân loại sản phẩm (ACCOUNT, KEY, GAME_CARD, SERVICE) và hình ảnh đại diện của sản phẩm.
+     */
     @PutMapping("/products/{id}/details")
     public ResponseEntity<?> updateProductDetails(@AuthenticationPrincipal Long userId, @PathVariable Long id, @RequestBody Map<String, Object> request) {
         try {
