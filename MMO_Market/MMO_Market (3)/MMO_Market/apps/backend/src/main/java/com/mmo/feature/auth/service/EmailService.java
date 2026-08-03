@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.mail.javamail.JavaMailSender;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -34,6 +35,16 @@ public class EmailService {
     private final String fromName;
 
     private volatile Gmail gmailClient;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private JavaMailSender mailSender;
+
+    private boolean isGmailApiConfigured() {
+        return StringUtils.hasText(googleClientId)
+                && StringUtils.hasText(googleClientSecret)
+                && StringUtils.hasText(googleRefreshToken)
+                && StringUtils.hasText(fromEmail);
+    }
 
     public EmailService(
             SystemConfigurationRepository systemConfigurationRepository,
@@ -105,22 +116,40 @@ public class EmailService {
     }
 
     private void sendEmail(String toEmail, String subject, String content) {
-        validateConfiguration();
         validateEmailAddress(toEmail, "Địa chỉ email người nhận không hợp lệ");
 
-        try {
-            MimeMessage mimeMessage = createMimeMessage(toEmail, subject, content);
-            Message gmailMessage = new Message().setRaw(encodeMessage(mimeMessage));
-            Message sentMessage = getGmailClient()
-                    .users()
-                    .messages()
-                    .send("me", gmailMessage)
-                    .execute();
+        if (isGmailApiConfigured()) {
+            try {
+                log.info("Sending email via Gmail API to {}", toEmail);
+                validateConfiguration();
+                MimeMessage mimeMessage = createMimeMessage(toEmail, subject, content);
+                Message gmailMessage = new Message().setRaw(encodeMessage(mimeMessage));
+                Message sentMessage = getGmailClient()
+                        .users()
+                        .messages()
+                        .send("me", gmailMessage)
+                        .execute();
 
-            log.info("Gmail API sent email successfully to {} with message ID {}", toEmail, sentMessage.getId());
-        } catch (Exception exception) {
-            log.error("Gmail API failed to send email to {}: {}", toEmail, exception.getMessage(), exception);
-            throw new IllegalStateException("Không thể gửi email OTP. Vui lòng thử lại sau.", exception);
+                log.info("Gmail API sent email successfully to {} with message ID {}", toEmail, sentMessage.getId());
+            } catch (Exception exception) {
+                log.error("Gmail API failed to send email to {}: {}", toEmail, exception.getMessage(), exception);
+                throw new IllegalStateException("Không thể gửi email OTP via Gmail API. Vui lòng thử lại sau.", exception);
+            }
+        } else if (mailSender != null) {
+            try {
+                log.info("Gmail API credentials missing. Falling back to SMTP JavaMailSender to send email to {}", toEmail);
+                MimeMessage mimeMessage = createMimeMessage(toEmail, subject, content);
+                mailSender.send(mimeMessage);
+                log.info("SMTP sent email successfully to {}", toEmail);
+            } catch (Exception exception) {
+                log.error("SMTP failed to send email to {}: {}", toEmail, exception.getMessage(), exception);
+                throw new IllegalStateException("Không thể gửi email OTP via SMTP. Vui lòng thử lại sau.", exception);
+            }
+        } else {
+            log.error("Neither Gmail API credentials nor SMTP JavaMailSender is configured/available.");
+            throw new IllegalStateException(
+                    "Thiếu cấu hình gửi email. Vui lòng cấu hình GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, "
+                            + "GOOGLE_REFRESH_TOKEN hoặc cấu hình spring.mail.");
         }
     }
 
