@@ -303,7 +303,7 @@
                                     <p class="user-profile__name">${fullName}</p>
                                     <p class="user-profile__balance">${balanceText}</p>
                                 </div>
-                                <div class="user-profile__avatar">${initial}</div>
+                                <div class="user-profile__avatar" style="${user.avatar ? `background-image: url('${user.avatar}'); background-size: cover; background-position: center; font-size: 0;` : ''}">${user.avatar ? '' : initial}</div>
                             </div>
                         </div>
                     `;

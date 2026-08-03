@@ -10,7 +10,18 @@ class AccountSidebar {
         }
 
         const fullName = profile.fullName || 'Người dùng';
-        this.setText('avatar', fullName.charAt(0).toUpperCase());
+        const avatarEl = this.root.querySelector(`[data-account-sidebar="avatar"]`);
+        if (avatarEl) {
+            if (profile.avatar) {
+                avatarEl.style.backgroundImage = `url('${profile.avatar}')`;
+                avatarEl.style.backgroundSize = 'cover';
+                avatarEl.style.backgroundPosition = 'center';
+                avatarEl.textContent = '';
+            } else {
+                avatarEl.style.backgroundImage = 'none';
+                avatarEl.textContent = fullName.charAt(0).toUpperCase();
+            }
+        }
         this.setText('name', fullName);
         this.setText('email', profile.email || '-');
         this.setText('balance', this.formatBalance(profile.balanceVnd));
@@ -91,7 +102,8 @@ class AccountSidebar {
             phone: profile.phone,
             role: profile.role,
             shopStatus: profile.shopStatus,
-            balanceVnd: profile.balanceVnd
+            balanceVnd: profile.balanceVnd,
+            avatar: profile.avatar
         };
         const serializedProfile = JSON.stringify(cachedProfile);
 

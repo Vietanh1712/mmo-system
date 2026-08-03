@@ -15,4 +15,6 @@ public interface EmailVerificationRepository extends JpaRepository<EmailVerifica
     // 2. Hàm này dùng cho luồng Quên mật khẩu (Không check điều kiện IsUsedFalse)
     Optional<EmailVerification> findByUserIdAndVerificationCode(Long userId, String verificationCode);
 
+    // 3. Lấy mã OTP mới nhất của User để phục vụ kiểm tra giới hạn tần suất (Rate Limiting)
+    Optional<EmailVerification> findFirstByUserIdOrderByExpiryDateDesc(Long userId);
 }

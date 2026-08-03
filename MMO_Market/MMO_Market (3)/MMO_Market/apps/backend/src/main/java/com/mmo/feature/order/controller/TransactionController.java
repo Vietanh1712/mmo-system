@@ -22,6 +22,10 @@ import java.util.Map;
 import com.mmo.shared.dal.ComplaintRepository;
 import com.mmo.shared.model.Complaint;
 
+/**
+ * Controller xử lý Giao dịch mua hàng (Purchase) dành cho Khách hàng (Customer).
+ * Cung cấp API mua sản phẩm số, xem lịch sử đơn hàng đã mua và xem chi tiết một đơn hàng.
+ */
 @RestController
 @RequestMapping("/api/transactions")
 public class TransactionController {
@@ -41,6 +45,12 @@ public class TransactionController {
     @Autowired
     private DigitalAssetRepository digitalAssetRepository;
 
+    /**
+     * API thực hiện thanh toán mua sản phẩm.
+     * Trừ tiền trong ví khách hàng và cộng tiền vào ví tạm giữ (Escrow) của người bán.
+     * Trả về thông tin đơn hàng cùng với tài khoản/mã kích hoạt số (Credentials).
+     * @param request Chứa ID sản phẩm, Biến thể và Số lượng mua.
+     */
     @PostMapping("/purchase")
     public ResponseEntity<?> purchaseProduct(
             @AuthenticationPrincipal Long userId,
@@ -110,6 +120,10 @@ public class TransactionController {
         }
     }
 
+    /**
+     * Lấy danh sách các đơn hàng (lịch sử mua hàng) của Khách hàng hiện tại.
+     * @return Danh sách OrderDto chứa thông tin tổng quan các đơn hàng.
+     */
     @GetMapping("/me")
     public ResponseEntity<?> getMyOrders(@AuthenticationPrincipal Long userId) {
         if (userId == null) {
@@ -161,6 +175,11 @@ public class TransactionController {
         }
     }
 
+    /**
+     * Xem chi tiết một đơn hàng đã mua (bao gồm cả tài khoản/mã kích hoạt số).
+     * @param id ID của đơn hàng (Transaction ID).
+     * @return Dữ liệu chi tiết đơn hàng (OrderDto).
+     */
     @GetMapping("/{id}")
     public ResponseEntity<?> getTransactionDetail(@AuthenticationPrincipal Long userId, @PathVariable Long id) {
         if (userId == null) {

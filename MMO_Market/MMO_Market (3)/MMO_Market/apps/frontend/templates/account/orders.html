@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,11 +12,12 @@
     <link rel="stylesheet" th:href="@{/css/customer/profile.css}">
     <link rel="stylesheet" th:href="@{/css/customer/orders.css}">
 </head>
+
 <body>
     <header th:replace="fragments/header :: header"></header>
 
     <main class="profile-page ds-page">
-        <div class="ds-container">
+        <div class="ds-container ds-container--wide">
             <div class="profile-layout ds-two-column">
                 <aside th:replace="~{fragments/account-sidebar :: accountSidebar('orders')}"></aside>
 
@@ -39,28 +41,32 @@
 
                     <section class="orders-stat-grid" aria-label="Tổng quan đơn hàng">
                         <article class="orders-stat-card ds-card">
-                            <span class="orders-stat-icon orders-stat-icon--primary"><i class="fa fa-shopping-bag" aria-hidden="true"></i></span>
+                            <span class="orders-stat-icon orders-stat-icon--primary"><i class="fa fa-shopping-bag"
+                                    aria-hidden="true"></i></span>
                             <div>
                                 <p>Tổng đơn</p>
                                 <strong id="ordersTotalCount">0 đơn</strong>
                             </div>
                         </article>
                         <article class="orders-stat-card ds-card">
-                            <span class="orders-stat-icon orders-stat-icon--success"><i class="fa fa-check" aria-hidden="true"></i></span>
+                            <span class="orders-stat-icon orders-stat-icon--success"><i class="fa fa-check"
+                                    aria-hidden="true"></i></span>
                             <div>
                                 <p>Hoàn tất</p>
                                 <strong id="ordersCompletedCount">0 đơn</strong>
                             </div>
                         </article>
                         <article class="orders-stat-card ds-card">
-                            <span class="orders-stat-icon orders-stat-icon--info"><i class="fa fa-clock-o" aria-hidden="true"></i></span>
+                            <span class="orders-stat-icon orders-stat-icon--info"><i class="fa fa-clock-o"
+                                    aria-hidden="true"></i></span>
                             <div>
                                 <p>Đang xử lý</p>
                                 <strong id="ordersProcessingCount">0 đơn</strong>
                             </div>
                         </article>
                         <article class="orders-stat-card ds-card">
-                            <span class="orders-stat-icon orders-stat-icon--warning"><i class="fa fa-flag" aria-hidden="true"></i></span>
+                            <span class="orders-stat-icon orders-stat-icon--warning"><i class="fa fa-flag"
+                                    aria-hidden="true"></i></span>
                             <div>
                                 <p>Tranh chấp</p>
                                 <strong id="ordersDisputedCount">0 đơn</strong>
@@ -78,15 +84,15 @@
                             <div class="orders-filter-grid">
                                 <div class="ds-form-field">
                                     <label class="ds-label" for="ordersSearchInput">Tìm kiếm</label>
-                                    <input class="ds-input" id="ordersSearchInput" type="search" placeholder="Mã đơn, sản phẩm hoặc người bán">
+                                    <input class="ds-input" id="ordersSearchInput" type="search"
+                                        placeholder="Mã đơn, sản phẩm hoặc người bán">
                                 </div>
                                 <div class="ds-form-field">
                                     <label class="ds-label" for="ordersStatusFilter">Trạng thái đơn</label>
                                     <select class="ds-select" id="ordersStatusFilter">
                                         <option value="">Tất cả trạng thái</option>
                                         <option value="PENDING">Chờ xử lý</option>
-                                        <option value="PAID">Đã thanh toán</option>
-                                        <option value="DELIVERED">Đã giao</option>
+                                        <option value="HELD">Đã giao</option>
                                         <option value="COMPLETED">Hoàn tất</option>
                                         <option value="CANCELLED">Đã hủy</option>
                                         <option value="DISPUTED">Tranh chấp</option>
@@ -110,8 +116,10 @@
                                     <div class="ds-datepicker" data-ds-datepicker data-ds-daterange="true">
                                         <input id="ordersDateRange" type="hidden" data-ds-date-value>
                                         <div class="ds-datepicker-field">
-                                            <input class="ds-datepicker-input" id="ordersDateRangeDisplay" type="text" placeholder="dd/mm/yyyy - dd/mm/yyyy" data-ds-date-display>
-                                            <button class="ds-datepicker-button" type="button" data-ds-date-toggle aria-label="Chọn khoảng ngày">
+                                            <input class="ds-datepicker-input" id="ordersDateRangeDisplay" type="text"
+                                                placeholder="dd/mm/yyyy - dd/mm/yyyy" data-ds-date-display>
+                                            <button class="ds-datepicker-button" type="button" data-ds-date-toggle
+                                                aria-label="Chọn khoảng ngày">
                                                 <i class="fa fa-calendar" aria-hidden="true"></i>
                                             </button>
                                         </div>
@@ -147,6 +155,7 @@
                                 <table class="ds-table">
                                     <thead>
                                         <tr>
+                                            <th class="ds-table-center">STT</th>
                                             <th>Mã đơn</th>
                                             <th>Sản phẩm</th>
                                             <th>Số tiền</th>
@@ -169,6 +178,8 @@
                                         <option value="10">10</option>
                                         <option value="20">20</option>
                                         <option value="50">50</option>
+                                        <option value="200">200</option>
+                                        <option value="500">500</option>
                                     </select>
                                 </div>
                             </div>
@@ -186,4 +197,5 @@
     <script th:src="@{/js/components/datepicker.js}"></script>
     <script th:src="@{/js/customer/account-orders.js}"></script>
 </body>
+
 </html>

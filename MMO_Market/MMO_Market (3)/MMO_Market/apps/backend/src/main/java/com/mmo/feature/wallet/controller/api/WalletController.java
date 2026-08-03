@@ -30,6 +30,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Controller quản lý Ví (Wallet) chung cho người dùng (Customer, Seller).
+ * Bao gồm các chức năng xem số dư, xem lịch sử giao dịch (nạp, rút, mua sắm),
+ * cập nhật thông tin ngân hàng và gửi yêu cầu rút tiền.
+ */
 @RestController
 @RequestMapping("/api/v1/wallet")
 public class WalletController {
@@ -52,6 +57,11 @@ public class WalletController {
     @Autowired
     private SystemConfigurationRepository systemConfigurationRepository;
 
+    /**
+     * Lấy thống kê số dư ví hiện tại của người dùng.
+     * @param userId ID của người dùng đang đăng nhập.
+     * @return Dữ liệu số dư ví.
+     */
     @GetMapping("/stats")
     public ResponseEntity<?> getWalletStats(@AuthenticationPrincipal Long userId) {
         if (userId == null) {
@@ -61,6 +71,13 @@ public class WalletController {
         return ResponseEntity.ok(stats);
     }
 
+    /**
+     * Lấy danh sách lịch sử biến động số dư (giao dịch nạp, rút, trừ tiền mua hàng, cộng tiền bán hàng).
+     * @param userId ID người dùng.
+     * @param page Số trang
+     * @param size Số bản ghi / trang
+     * @return Danh sách giao dịch được phân trang.
+     */
     @GetMapping("/transactions")
     public ResponseEntity<?> getWalletTransactions(
             @AuthenticationPrincipal Long userId,
@@ -76,8 +93,11 @@ public class WalletController {
         return ResponseEntity.ok(transactions);
     }
 
-    // --- BANK INFO ---
+    // --- THÔNG TIN NGÂN HÀNG (BANK INFO) ---
 
+    /**
+     * Lấy thông tin tài khoản ngân hàng của người dùng để nhận tiền khi Rút.
+     */
     @GetMapping("/bank-info")
     public ResponseEntity<?> getBankInfo(@AuthenticationPrincipal Long userId) {
         if (userId == null) return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
@@ -97,6 +117,10 @@ public class WalletController {
         }
     }
 
+    /**
+     * Cập nhật thông tin ngân hàng của người dùng.
+     * @param request Dữ liệu chứa Tên ngân hàng, Số tài khoản, Chi nhánh.
+     */
     @PutMapping("/bank-info")
     public ResponseEntity<?> updateBankInfo(@AuthenticationPrincipal Long userId, @RequestBody Map<String, String> request) {
         if (userId == null) return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
@@ -125,8 +149,11 @@ public class WalletController {
         }
     }
 
-    // --- WITHDRAWALS ---
+    // --- YÊU CẦU RÚT TIỀN (WITHDRAWALS) ---
 
+    /**
+     * Lấy lịch sử các yêu cầu rút tiền của người dùng.
+     */
     @GetMapping("/withdrawals")
     public ResponseEntity<?> getWithdrawals(@AuthenticationPrincipal Long userId) {
         if (userId == null) return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
@@ -154,6 +181,11 @@ public class WalletController {
         }
     }
 
+    /**
+     * Tạo một yêu cầu rút tiền từ Ví về Tài khoản ngân hàng.
+     * Yêu cầu xác thực OTP nếu hệ thống yêu cầu.
+     * @param request Chứa số tiền cần rút và OTP (nếu có).
+     */
     @PostMapping("/withdrawals")
     public ResponseEntity<?> requestWithdrawal(@AuthenticationPrincipal Long userId, @RequestBody Map<String, Object> request) {
         if (userId == null) return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
@@ -173,6 +205,10 @@ public class WalletController {
         }
     }
 
+    /**
+     * Lấy các thông số cấu hình rút tiền từ hệ thống (Phí rút, mức tối thiểu/tối đa, Yêu cầu OTP).
+     * Để hiển thị cho người dùng biết trước khi đặt lệnh rút.
+     */
     @GetMapping("/withdrawals/config")
     public ResponseEntity<?> getWithdrawalConfig(@AuthenticationPrincipal Long userId) {
         if (userId == null) return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));

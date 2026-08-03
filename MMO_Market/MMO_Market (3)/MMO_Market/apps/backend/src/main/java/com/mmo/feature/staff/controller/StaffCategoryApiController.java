@@ -15,6 +15,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller API phục vụ chức năng quản lý danh mục sản phẩm (Categories) cho Nhân viên (Staff).
+ * Cung cấp các thao tác xem, thêm, sửa, ẩn/hiện danh mục trên hệ thống.
+ * Yêu cầu quyền ROLE_STAFF, ROLE_ADMIN hoặc quyền đặc biệt MANAGE_CATEGORIES.
+ */
 @RestController
 @RequestMapping("/api/v1/staff/categories")
 @PreAuthorize("hasAnyAuthority('ROLE_STAFF', 'ROLE_ADMIN', 'MANAGE_CATEGORIES') or hasAnyRole('STAFF', 'ADMIN')")
@@ -23,6 +28,17 @@ public class StaffCategoryApiController {
     @Autowired
     private CategoryService categoryService;
 
+    /**
+     * Tìm kiếm và hiển thị danh sách các danh mục (hỗ trợ phân trang).
+     * @param keyword Từ khóa tìm kiếm theo tên danh mục
+     * @param parentId ID danh mục cha (để lọc các danh mục con)
+     * @param type Loại danh mục (tài khoản, phần mềm, dịch vụ, v.v)
+     * @param isDelete Trạng thái (đang hoạt động hoặc đã bị ẩn)
+     * @param sortBy Tiêu chí sắp xếp (VD: mới nhất)
+     * @param page Số trang hiện tại
+     * @param size Số bản ghi trên mỗi trang
+     * @return Map chứa danh sách các danh mục và metadata phân trang
+     */
     @GetMapping
     public ResponseEntity<Map<String, Object>> searchCategories(
             @RequestParam(required = false) String keyword,
@@ -55,16 +71,26 @@ public class StaffCategoryApiController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Lấy dữ liệu thống kê tổng quát về số lượng Danh mục.
+     */
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getStats() {
         return ResponseEntity.ok(categoryService.getCategoryStats());
     }
 
+    /**
+     * Lấy danh sách các danh mục cha (không có parentId) để làm dữ liệu dropdown.
+     */
     @GetMapping("/parents")
     public ResponseEntity<List<Category>> getParentCategories() {
         return ResponseEntity.ok(categoryService.getParentCategories());
     }
 
+    /**
+     * Lấy chi tiết thông tin của một danh mục dựa theo ID.
+     * @param id ID của danh mục.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<?> getCategoryById(@PathVariable Long id) {
         try {
@@ -77,6 +103,10 @@ public class StaffCategoryApiController {
         }
     }
 
+    /**
+     * Tạo mới một danh mục sản phẩm.
+     * @param request Object chứa tên, mô tả, hình ảnh và loại danh mục mới.
+     */
     @PostMapping
     public ResponseEntity<?> createCategory(@Valid @RequestBody CategoryRequest request) {
         try {
@@ -92,6 +122,11 @@ public class StaffCategoryApiController {
         }
     }
 
+    /**
+     * Cập nhật thông tin một danh mục đã có.
+     * @param id ID danh mục cần sửa.
+     * @param request Thông tin mới của danh mục.
+     */
     @PutMapping("/{id}")
     public ResponseEntity<?> updateCategory(
             @PathVariable Long id,
@@ -109,6 +144,10 @@ public class StaffCategoryApiController {
         }
     }
 
+    /**
+     * Ẩn hoặc Khôi phục hoạt động của một danh mục (Toggle status).
+     * @param id ID danh mục cần thay đổi trạng thái.
+     */
     @PatchMapping("/{id}/toggle-status")
     public ResponseEntity<?> toggleCategoryStatus(@PathVariable Long id) {
         try {

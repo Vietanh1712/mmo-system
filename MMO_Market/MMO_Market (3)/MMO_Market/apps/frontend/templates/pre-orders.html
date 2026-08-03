@@ -70,6 +70,10 @@
                 <div class="preorder-delivery-modal__content">
                     <span class="preorder-card__label">Thông tin nhận được</span>
                     <pre id="preOrderDeliveryContent"></pre>
+                    <div id="preOrderDeliveryProofContainer" style="margin-top: 12px; display: none;">
+                        <span class="preorder-card__label" style="display: block; margin-bottom: 6px;">Ảnh bằng chứng từ người bán</span>
+                        <img id="preOrderDeliveryProofImg" src="" alt="Ảnh bằng chứng" style="max-width: 100%; max-height: 300px; border-radius: 6px; border: 1px solid var(--border-color); cursor: pointer;" onclick="window.open(this.src)">
+                    </div>
                 </div>
             </div>
             <div class="ds-modal-footer">
@@ -79,6 +83,34 @@
                 <button class="ds-btn ds-btn-primary" type="button" onclick="copyPreOrderDeliveryData()">
                     <i class="fa fa-copy"></i> Sao chép thông tin
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Xác Nhận Tùy Chỉnh (Custom Confirm Modal) -->
+    <div id="customConfirmModal" class="ds-modal-backdrop" hidden
+         onclick="if(event.target === event.currentTarget) closeConfirmModal()">
+        <div class="ds-modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle" style="width: min(520px, 100%); max-width: 95%; margin: 10% auto; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+            <div class="ds-modal-header ds-cluster-between" style="padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f1f5f9;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="width: 42px; height: 42px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; color: #ea580c; background: #fff7ed; border: 1px solid #fed7aa; font-size: 18px;">
+                        <i class="fa fa-question-circle"></i>
+                    </span>
+                    <div>
+                        <h2 id="confirmModalTitle" style="margin: 0; color: #0f172a; font-size: 18px; font-weight: 700;">Xác nhận thao tác</h2>
+                        <p style="margin: 4px 0 0; color: #64748b; font-size: 13px;">Hệ thống đơn đặt trước PO</p>
+                    </div>
+                </div>
+                <button type="button" class="ds-btn ds-btn-text" onclick="closeConfirmModal()" aria-label="Đóng cửa sổ" style="padding: 6px; font-size: 18px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 6px; border: none; cursor: pointer; color: #0f172a;">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="ds-modal-body" style="padding: 24px 24px;">
+                <p id="confirmModalMessage" style="margin: 0; font-size: 14px; color: #334155; line-height: 1.6; white-space: pre-line; font-weight: 500;">Bạn có chắc chắn muốn thực hiện thao tác này?</p>
+            </div>
+            <div class="ds-modal-footer" style="padding: 16px 24px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f1f5f9;">
+                <button type="button" class="ds-btn ds-btn-secondary" onclick="closeConfirmModal()" style="background: #475569; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; min-height: 38px; display: inline-flex; align-items: center; justify-content: center;">Hủy bỏ</button>
+                <button type="button" class="ds-btn ds-btn-primary" id="btnConfirmAction" style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; min-height: 38px; display: inline-flex; align-items: center; justify-content: center;">Xác nhận</button>
             </div>
         </div>
     </div>
@@ -147,11 +179,13 @@
                     preOrderDeliveryById.set(String(po.id), {
                         deliveryData: po.deliveryData || '',
                         productName: po.productName || 'Sản phẩm',
-                        orderCode: `#PO-${po.id}`
+                        orderCode: `#PO-${po.id}`,
+                        proofImage: po.proofImage || ''
                     });
                     const formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(po.expectedPriceVnd || 0);
                     const formattedDate = po.createdAt ? po.createdAt : '-';
-                    const notes = po.notes ? po.notes : '<span style="color: #94a3b8; font-style: italic;">Không có ghi chú</span>';
+                    const rawNotes = po.notes ? po.notes.trim() : '';
+                    const hasUserNotes = rawNotes !== '' && !rawNotes.startsWith('Tự động tạo từ thanh toán giỏ hàng');
                     
                     // Determine workflow classes based on status
                     const status = (po.status || 'pending').toLowerCase();
@@ -207,6 +241,16 @@
                                 </button>
                             </div>
                         `
+                        : (status === 'pending')
+                        ? `
+                            <div class="preorder-card__actions">
+                                <button type="button" class="ds-btn ds-btn-outline" style="color: #ef4444; border-color: #ef4444; background: transparent; padding: 8px 16px; border-radius: 6px; font-weight: 500;"
+                                        onclick="customerCancelPreOrder('${po.id}')">
+                                    <i class="fa fa-times"></i>
+                                    Hủy đơn đặt trước
+                                </button>
+                            </div>
+                        `
                         : '';
 
                     return `
@@ -233,17 +277,14 @@
                                     </div>
                                 </div>
                                 
-                                <div class="preorder-card__notes">
-                                    <span class="preorder-card__label">Ghi chú của bạn</span>
-                                    <p class="preorder-card__notes-text">${notes}</p>
-                                </div>
-                                ${po.status === 'COMPLETED' || po.status === 'Hoàn thành' ? `
-                                <div class="preorder-card__delivery" style="margin-top: 16px; padding: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
-                                    <span class="preorder-card__label" style="color: #166534; font-weight: 600;"><i class="fa fa-check-circle"></i> Kết quả trả hàng từ người bán</span>
-                                    <p class="preorder-card__notes-text" style="color: #14532d; font-family: monospace; white-space: pre-wrap; margin-top: 8px;">${po.deliveryData ? escapeHtml(po.deliveryData) : 'Đã hoàn thành'}</p>
-                                    ${po.proofImage ? `<div style="margin-top: 12px;"><img src="${po.proofImage}" alt="Ảnh bằng chứng" style="max-width: 100%; max-height: 300px; border-radius: 6px; border: 1px solid #bbf7d0; cursor: pointer;" onclick="window.open(this.src)"></div>` : ''}
-                                </div>
-                                ` : ''}
+                                 ${hasUserNotes ? `
+                                 <div class="preorder-card__notes">
+                                     <span class="preorder-card__label">Ghi chú của bạn</span>
+                                     <p class="preorder-card__notes-text">${escapeHtml(po.notes)}</p>
+                                 </div>
+                                 ` : ''}
+                                
+
                             </div>
                             
                             <div class="preorder-card__workflow" aria-label="Quy trình đơn hàng">
@@ -283,10 +324,92 @@
             document.getElementById('preOrderDeliveryContent').textContent =
                 order.deliveryData || 'Người bán chưa cung cấp thông tin tài khoản.';
 
+            const imgContainer = document.getElementById('preOrderDeliveryProofContainer');
+            const img = document.getElementById('preOrderDeliveryProofImg');
+            if (imgContainer && img) {
+                if (order.proofImage) {
+                    img.src = order.proofImage;
+                    imgContainer.style.display = 'block';
+                } else {
+                    img.src = '';
+                    imgContainer.style.display = 'none';
+                }
+            }
+
             const modal = document.getElementById('preOrderDeliveryModal');
             modal.hidden = false;
             document.body.classList.add('preorder-modal-open');
             modal.querySelector('.preorder-delivery-modal__close').focus();
+        }
+
+        function showCustomConfirm(title, message) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('customConfirmModal');
+                const titleEl = document.getElementById('confirmModalTitle');
+                const msgEl = document.getElementById('confirmModalMessage');
+                const confirmBtn = document.getElementById('btnConfirmAction');
+
+                if (titleEl) titleEl.textContent = title;
+                if (msgEl) msgEl.textContent = message;
+
+                const handleConfirm = () => {
+                    modal.hidden = true;
+                    cleanup();
+                    resolve(true);
+                };
+
+                const cleanup = () => {
+                    confirmBtn.removeEventListener('click', handleConfirm);
+                };
+
+                confirmBtn.addEventListener('click', handleConfirm);
+                
+                window.closeConfirmModal = () => {
+                    modal.hidden = true;
+                    cleanup();
+                    resolve(false);
+                };
+
+                modal.hidden = false;
+            });
+        }
+
+        async function customerCancelPreOrder(preOrderId) {
+            const confirmTitle = "Hủy đơn đặt trước";
+            const confirmMsg = "Bạn có chắc chắn muốn HỦY đơn đặt trước này?\nSố tiền đã thanh toán sẽ được hoàn trả 100% về ví của bạn ngay lập tức! Thao tác này không thể hoàn tác.";
+            const ok = await showCustomConfirm(confirmTitle, confirmMsg);
+            if (!ok) return;
+
+            const token = sessionStorage.getItem("accessToken");
+            try {
+                const res = await fetch(`/api/v1/pre-orders/${preOrderId}/cancel`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.message || 'Hủy đơn hàng thất bại');
+                }
+                
+                if (typeof showSuccessToast === 'function') {
+                    showSuccessToast('Đã hủy đơn đặt trước và hoàn tiền thành công.');
+                } else {
+                    alert('Đã hủy đơn đặt trước và hoàn tiền thành công.');
+                }
+                
+                fetchPreOrders(token);
+            } catch (err) {
+                console.error(err);
+                if (typeof showErrorToast === 'function') {
+                    showErrorToast(err.message);
+                } else {
+                    alert(err.message);
+                }
+            }
         }
 
         function closePreOrderDeliveryModal() {

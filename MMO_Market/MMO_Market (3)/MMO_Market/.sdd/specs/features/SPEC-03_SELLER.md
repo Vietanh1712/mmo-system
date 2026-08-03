@@ -23,6 +23,7 @@ Seller Console là trung tâm quản lý dành cho người bán (Seller) trên 
 - **FR-SELL-04**: WHEN a Seller creates a Product, THE SYSTEM SHALL require at least 1 Variant with `priceVnd` > 0.
 - **FR-SELL-05**: WHEN a Seller uploads DigitalAssets (batch) for a Variant, THE SYSTEM SHALL update the variant's `stock` automatically.
 - **FR-SELL-06**: WHEN a Seller views their dashboard, THE SYSTEM SHALL return total revenue, completed sales, and active products.
+- **FR-SELL-07**: WHEN a transaction (order) is completed, resolved, or when a dispute/complaint is rejected, THE SYSTEM SHALL automatically evaluate and update the Seller's Shop Level in real-time.
 
 ---
 

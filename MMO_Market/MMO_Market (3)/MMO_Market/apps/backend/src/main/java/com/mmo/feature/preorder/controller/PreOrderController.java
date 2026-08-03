@@ -68,4 +68,11 @@ public class PreOrderController {
         PreOrderResponse response = preOrderService.deliverPreOrder(userId, preOrderId, request);
         return ResponseEntity.ok(response);
     }
+
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<PreOrderResponse> cancelPreOrder(@AuthenticationPrincipal Long userId,
+                                                           @PathVariable("id") Long preOrderId) {
+        PreOrderResponse response = preOrderService.cancelPreOrder(userId, preOrderId);
+        return ResponseEntity.ok(response);
+    }
 }

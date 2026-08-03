@@ -32,3 +32,5 @@ target/
 .vscode/
 *.code-workspace
 .history/
+# Environment variables (contains sensitive local credentials)
+# MMO_Market/MMO_Market (3)/MMO_Market/apps/backend/.env

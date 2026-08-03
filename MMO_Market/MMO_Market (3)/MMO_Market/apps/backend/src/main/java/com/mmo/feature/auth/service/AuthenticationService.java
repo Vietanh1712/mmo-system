@@ -54,11 +54,23 @@ public class AuthenticationService {
     @Autowired
     private com.mmo.shared.dal.SystemConfigurationRepository systemConfigurationRepository;
 
-    @Value("${google.oauth2.client-id}")
+    @Value("${google.oauth2.client-id}${google.oauth2.client-id-suffix:}")
     private String googleClientId;
 
     @Value("${google.oauth2.client-secret}")
     private String googleClientSecret;
+
+    @jakarta.annotation.PostConstruct
+    public void init() {
+        if (googleClientId != null && org.springframework.util.StringUtils.hasText(googleClientId)) {
+            googleClientId = googleClientId.trim();
+            if (googleClientId.endsWith(".apps.googleusercontent.com.apps.googleusercontent.com")) {
+                googleClientId = googleClientId.substring(0, googleClientId.length() - ".apps.googleusercontent.com".length());
+            } else if (!googleClientId.endsWith(".apps.googleusercontent.com")) {
+                googleClientId += ".apps.googleusercontent.com";
+            }
+        }
+    }
 
     /**
      * Đăng ký người dùng mới
@@ -212,12 +224,22 @@ public class AuthenticationService {
         }
         User user = userOptional.get();
 
+        int otpTimeout = getOtpTimeoutMins();
+
+        // Kiểm tra giới hạn tần suất gửi lại mã (Rate Limiting 60s)
+        emailVerificationRepository.findFirstByUserIdOrderByExpiryDateDesc(user.getId())
+                .ifPresent(lastOtp -> {
+                    if (lastOtp.getExpiryDate().isAfter(LocalDateTime.now().plusMinutes(otpTimeout - 1))) {
+                        throw new RuntimeException("Vui lòng chờ ít nhất 60 giây trước khi yêu cầu gửi lại mã.");
+                    }
+                });
+
         String newOtp = generateOtp();
 
         EmailVerification emailVerification = EmailVerification.builder()
                 .userId(user.getId())
                 .verificationCode(newOtp)
-                .expiryDate(LocalDateTime.now().plusMinutes(getOtpTimeoutMins()))
+                .expiryDate(LocalDateTime.now().plusMinutes(otpTimeout))
                 .isUsed(false)
                 .build();
         emailVerificationRepository.save(emailVerification);
@@ -236,12 +258,22 @@ public class AuthenticationService {
         }
         User user = userOptional.get();
 
+        int otpTimeout = getOtpTimeoutMins();
+
+        // Kiểm tra giới hạn tần suất yêu cầu khôi phục (Rate Limiting 60s)
+        emailVerificationRepository.findFirstByUserIdOrderByExpiryDateDesc(user.getId())
+                .ifPresent(lastOtp -> {
+                    if (lastOtp.getExpiryDate().isAfter(LocalDateTime.now().plusMinutes(otpTimeout - 1))) {
+                        throw new RuntimeException("Vui lòng chờ ít nhất 60 giây trước khi yêu cầu khôi phục mật khẩu.");
+                    }
+                });
+
         String newOtp = generateOtp();
 
         EmailVerification emailVerification = EmailVerification.builder()
                 .userId(user.getId())
                 .verificationCode(newOtp)
-                .expiryDate(LocalDateTime.now().plusMinutes(getOtpTimeoutMins()))
+                .expiryDate(LocalDateTime.now().plusMinutes(otpTimeout))
                 .isUsed(false)
                 .build();
         emailVerificationRepository.save(emailVerification);
@@ -717,8 +749,24 @@ public class AuthenticationService {
             } else {
                 user = userOptional.get();
                 if (Boolean.TRUE.equals(user.getIsLocked())) {
-                    log.warn("Tài khoản Google đã bị khóa cố gắng đăng nhập: {}", email);
-                    throw new RuntimeException("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.");
+                    if (user.getLockTime() != null) {
+                        if (user.getLockTime().isAfter(LocalDateTime.now())) {
+                            log.warn("Tài khoản Google {} đang bị khóa tạm thời.", email);
+                            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy");
+                            String unlockTimeStr = user.getLockTime().format(formatter);
+                            throw new RuntimeException("Tài khoản bị khóa tạm thời do nhập sai quá nhiều lần. Sẽ mở khóa vào: " + unlockTimeStr);
+                        } else {
+                            // Quá hạn khóa tạm thời -> Tự động mở khóa
+                            user.setIsLocked(false);
+                            user.setFailedAttempts(0);
+                            user.setLockTime(null);
+                            user = userRepository.save(user);
+                            log.info("Tài khoản Google {} đã hết hạn khóa tạm thời, tự động mở khóa.", email);
+                        }
+                    } else {
+                        log.warn("Tài khoản Google đã bị khóa cố gắng đăng nhập: {}", email);
+                        throw new RuntimeException("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.");
+                    }
                 }
                 log.info("Google user logged in: {}", email);
             }
@@ -751,6 +799,10 @@ public class AuthenticationService {
                     .message("Đăng nhập bằng Google thành công")
                     .build();
 
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            String responseBody = e.getResponseBodyAsString();
+            log.error("Google login HTTP error (Status {}): {}", e.getStatusCode(), responseBody, e);
+            throw new RuntimeException("Đăng nhập bằng Google thất bại: " + e.getStatusCode() + " - " + responseBody);
         } catch (Exception e) {
             log.error("Google login failed: {}", e.getMessage(), e);
             throw new RuntimeException("Đăng nhập bằng Google thất bại: " + e.getMessage());

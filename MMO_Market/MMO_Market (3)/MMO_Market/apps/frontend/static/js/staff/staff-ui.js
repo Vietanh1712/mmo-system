@@ -1,3 +1,8 @@
+/**
+ * File UI chính cho phân hệ Nhân viên (Staff).
+ * Chứa các hàm dùng chung: hiển thị thông báo (toast), xử lý phân trang (pagination),
+ * load danh sách quyền (permissions) để kiểm soát hiển thị menu.
+ */
 (function () {
     let myPermissions = [];
 
@@ -45,6 +50,10 @@
         }, 3500);
     }
 
+    /**
+     * Tải danh sách quyền của nhân viên đang đăng nhập từ Backend.
+     * Sử dụng để ẩn/hiện hoặc vô hiệu hóa các menu chức năng không được phép.
+     */
     async function loadMyPermissions() {
         try {
             // authFetch tự động đính kèm Authorization header Bearer token
@@ -58,6 +67,11 @@
         }
     }
 
+    /**
+     * Dựa trên danh sách quyền đã load, hàm này sẽ quét toàn bộ menu sidebar.
+     * Nếu menu nào yêu cầu quyền (data-required-permission) mà nhân viên không có,
+     * liên kết đó sẽ bị vô hiệu hóa (disabled) và hiện thông báo từ chối truy cập khi click.
+     */
     function applyMenuPermissions() {
         const links = document.querySelectorAll('.staff-sidebar__link[data-required-permission]');
         links.forEach(function (link) {
@@ -84,6 +98,10 @@
         });
     }
 
+    /**
+     * Gắn sự kiện cho các nút hành động của nhân viên (duyệt KYC, từ chối, v.v).
+     * Trích xuất thông tin ID động từ giao diện và gọi API tương ứng.
+     */
     function bindActionButtons() {
         document.querySelectorAll('[data-staff-action]').forEach(function (button) {
             button.addEventListener('click', function () {
@@ -137,6 +155,12 @@
         });
     }
 
+    /**
+     * Hàm dùng chung để tạo bộ phân trang (pagination) cho các bảng dữ liệu của Staff.
+     * @param {string} containerId - ID của thẻ chứa bộ phân trang.
+     * @param {object} state - Trạng thái phân trang hiện tại (page, totalPages, totalElements, pageSize).
+     * @param {object} handlers - Các hàm xử lý sự kiện khi đổi trang (onPage) hoặc đổi kích thước (onSize).
+     */
     function mountStaffPagination(containerId, state, handlers) {
         const root = document.getElementById(containerId);
         if (!root) return;

@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
 
 let accountSidebar = null;
 let walletProfile = null;
@@ -56,7 +56,10 @@ function renderWalletDashboard(profile, stats, recentTransactions) {
     document.getElementById('walletTotalTopup').textContent = formatMoney(stats.totalTopup || 0);
     document.getElementById('walletTotalSpent').textContent = formatMoney(stats.totalSpent || 0);
     document.getElementById('walletPendingCount').textContent = `${stats.pendingCount || 0} giao dịch`;
-    document.getElementById('walletEscrowAmount').textContent = formatMoney(stats.escrowAmount || 0);
+    const escrowEl = document.getElementById('walletEscrowAmount');
+    if (escrowEl) {
+        escrowEl.textContent = formatMoney(stats.escrowAmount || 0);
+    }
 
     renderKycNotice();
     renderRecentTransactions(recentTransactions);

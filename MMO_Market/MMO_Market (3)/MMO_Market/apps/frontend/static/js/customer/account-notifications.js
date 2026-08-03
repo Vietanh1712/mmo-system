@@ -296,7 +296,7 @@ function getFilteredNotifications() {
         const notificationDate = parseVietnameseDateTime(notification.createdAt);
 
         if (keyword && !text.includes(keyword)) return false;
-        if (type && notification.type !== type) return false;
+        if (type && (notification.type || '').toUpperCase() !== type.toUpperCase()) return false;
         if (status && notification.status !== status) return false;
         if (fromDate && notificationDate && notificationDate < fromDate) return false;
         if (toDate && notificationDate && notificationDate > endOfDay(toDate)) return false;
@@ -392,33 +392,47 @@ function createPageButton(label, page, disabled, active = false) {
 }
 
 function getNotificationIcon(type) {
+    if (!type) return 'fa fa-bell-o';
+    const upperType = type.toUpperCase().trim();
     const map = {
         SYSTEM: 'fa fa-info-circle',
         ORDER: 'fa fa-shopping-bag',
         WALLET: 'fa fa-credit-card',
         KYC: 'fa fa-id-card-o',
         SECURITY: 'fa fa-shield',
-        COMPLAINT: 'fa fa-flag'
+        COMPLAINT: 'fa fa-flag',
+        MAINTENANCE: 'fa fa-wrench',
+        POLICY: 'fa fa-file-text-o',
+        INFO: 'fa fa-info-circle',
+        WARNING: 'fa fa-exclamation-triangle'
     };
-    return map[type] || 'fa fa-bell-o';
+    return map[upperType] || 'fa fa-bell-o';
 }
 
 function formatNotificationType(type) {
+    if (!type) return '-';
+    const upperType = type.toUpperCase().trim();
     const map = {
         SYSTEM: 'Hệ thống',
         ORDER: 'Đơn hàng',
         WALLET: 'Ví',
         KYC: 'KYC',
         SECURITY: 'Bảo mật',
-        COMPLAINT: 'Khiếu nại'
+        COMPLAINT: 'Khiếu nại',
+        MAINTENANCE: 'Bảo trì',
+        POLICY: 'Chính sách',
+        INFO: 'Thông tin',
+        WARNING: 'Cảnh báo'
     };
-    return map[type] || type || '-';
+    return map[upperType] || type || '-';
 }
 
 function getTypeBadgeClass(type) {
-    if (type === 'ORDER' || type === 'WALLET') return 'ds-badge-info';
-    if (type === 'KYC' || type === 'SECURITY') return 'ds-badge-warning';
-    if (type === 'COMPLAINT') return 'ds-badge-danger';
+    if (!type) return 'ds-badge-muted';
+    const upperType = type.toUpperCase().trim();
+    if (upperType === 'ORDER' || upperType === 'WALLET' || upperType === 'POLICY' || upperType === 'INFO') return 'ds-badge-info';
+    if (upperType === 'KYC' || upperType === 'SECURITY' || upperType === 'WARNING') return 'ds-badge-warning';
+    if (upperType === 'COMPLAINT' || upperType === 'MAINTENANCE') return 'ds-badge-danger';
     return 'ds-badge-muted';
 }
 

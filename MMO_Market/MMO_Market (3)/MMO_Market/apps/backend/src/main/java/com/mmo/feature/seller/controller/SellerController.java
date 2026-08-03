@@ -15,6 +15,13 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Controller trung tâm quản lý toàn bộ tính năng của Người bán (Seller).
+ * Bao gồm: Dashboard thống kê, Quản lý thông tin Shop, Quản lý Sản phẩm/Biến thể,
+ * Rút tiền, Quản lý đơn hàng (Transactions), Đơn pre-order, Giải quyết khiếu nại (Complaints)
+ * và Thống kê doanh thu Shop.
+ * File này hiện đang đóng vai trò như một "God Controller" chứa hầu hết logic của Seller.
+ */
 @RestController
 @RequestMapping("/api/seller")
 @Slf4j
@@ -91,7 +98,10 @@ public class SellerController {
 
 
 
-    // 1. Dashboard API
+    /**
+     * API Lấy dữ liệu Dashboard cho trang chủ của người bán.
+     * Thống kê tổng doanh thu, số đơn hoàn thành, số khiếu nại, tỉ lệ hoàn tiền, danh sách đơn hàng gần nhất.
+     */
     @GetMapping("/dashboard")
     public ResponseEntity<?> getDashboard(@AuthenticationPrincipal Long userId) {
         try {
@@ -144,7 +154,9 @@ public class SellerController {
         }
     }
 
-    // 2. Shop Info GET
+    /**
+     * API Lấy thông tin chi tiết của Shop (Tên shop, trạng thái, cấp độ, thông tin liên hệ).
+     */
     @GetMapping("/shop-info")
     public ResponseEntity<?> getShopInfo(@AuthenticationPrincipal Long userId) {
         try {
@@ -303,6 +315,12 @@ public class SellerController {
                 map.put("id", p.getId());
                 map.put("name", p.getName());
                 map.put("categoryName", p.getCategory().getName());
+                map.put("categoryId", p.getCategory().getId());
+                if (p.getCategory().getParent() != null) {
+                    map.put("mainCategoryId", p.getCategory().getParent().getId());
+                } else {
+                    map.put("mainCategoryId", p.getCategory().getId());
+                }
                 map.put("description", p.getDescription());
                 map.put("image", p.getImage());
                 map.put("productType", p.getProductType());
@@ -534,7 +552,6 @@ public class SellerController {
             return ResponseEntity.badRequest().body(Map.of("message", "Lỗi tải ảnh: " + e.getMessage()));
         }
     }
-
     // 8. Product PUT (Update)
     @PutMapping("/products/{id}")
     public ResponseEntity<?> updateProduct(@AuthenticationPrincipal Long userId, @PathVariable Long id, @RequestBody Map<String, Object> request) {
@@ -554,6 +571,7 @@ public class SellerController {
             String name = (String) request.get("name");
             String description = (String) request.get("description");
             String userGuide = (String) request.get("userGuide");
+            String image = (String) request.get("image");
             Object catIdObj = request.get("categoryId");
 
             if (name == null || name.trim().isEmpty() || catIdObj == null) {
@@ -568,6 +586,9 @@ public class SellerController {
             p.setDescription(description);
             p.setUserGuide(userGuide);
             p.setCategory(category);
+            if (image != null && !image.trim().isEmpty()) {
+                p.setImage(image);
+            }
             productRepository.save(p);
 
             return ResponseEntity.ok(Map.of("message", "Cập nhật sản phẩm thành công!"));
@@ -900,7 +921,9 @@ public class SellerController {
                         try { return Long.parseLong(c.getConfigValue()); }
                         catch (NumberFormatException e) { return 50000000L; }
                     }).orElse(50000000L);
-            boolean requireWithdraw2FA = false;
+            boolean requireWithdraw2FA = systemConfigurationRepository.findByConfigKey("REQUIRE_WITHDRAW_2FA")
+                    .map(c -> Boolean.parseBoolean(c.getConfigValue()))
+                    .orElse(false);
 
             return ResponseEntity.ok(Map.of(
                     "withdrawalFeePercent", withdrawalFeePercent,
@@ -1078,6 +1101,16 @@ public class SellerController {
                 map.put("amountVnd", c.getTransaction().getAmountVnd());
                 map.put("status", c.getStatus());
                 map.put("createdAt", c.getCreatedAt().toString());
+                
+                Category cat = c.getTransaction().getProduct().getCategory();
+                if (cat != null) {
+                    map.put("categoryId", cat.getId());
+                    if (cat.getParent() != null) {
+                        map.put("mainCategoryId", cat.getParent().getId());
+                    } else {
+                        map.put("mainCategoryId", cat.getId());
+                    }
+                }
                 return map;
             }).collect(Collectors.toList());
 
