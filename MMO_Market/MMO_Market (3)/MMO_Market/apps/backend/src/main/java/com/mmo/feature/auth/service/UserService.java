@@ -188,6 +188,7 @@ public class UserService {
                 .category(category != null ? category.trim() : "")
                 .supportEmail(supportEmail != null ? supportEmail.trim() : "")
                 .supportPhone(supportPhone != null ? supportPhone.trim() : "")
+                .feeVnd(shopOpeningFee)
                 .status("Pending")
                 .isDelete(false)
                 .build();

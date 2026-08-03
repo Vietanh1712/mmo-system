@@ -72,10 +72,13 @@ class AdminRevenueServiceTest {
 
         when(userRepository.findByIdAndIsDeleteFalse(1L)).thenReturn(Optional.of(admin));
         when(transactionRepository.sumCommissionForCompletedOrHeldTransactions()).thenReturn(500000L);
-        when(sellerRegistrationRepository.countByStatusAndIsDeleteFalse("Approved")).thenReturn(10L);
-        when(systemConfigurationRepository.findByConfigKey("SHOP_OPENING_FEE_VND")).thenReturn(Optional.empty()); // default 50000L
+
+        SellerRegistration reg1 = SellerRegistration.builder().id(1L).status("Approved").feeVnd(300000L).build();
+        SellerRegistration reg2 = SellerRegistration.builder().id(2L).status("Approved").feeVnd(200000L).build();
+        when(sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc()).thenReturn(List.of(reg1, reg2));
+
+        when(systemConfigurationRepository.findByConfigKey("SHOP_OPENING_FEE_VND")).thenReturn(Optional.of(new SystemConfiguration(1, "SHOP_OPENING_FEE_VND", "1000000", "Phí mở shop", null, null)));
         when(systemConfigurationRepository.findByConfigKey("WITHDRAWAL_FEE_PERCENT")).thenReturn(Optional.empty()); // default 1.5
-        when(systemConfigurationRepository.findByConfigKey("MIN_WITHDRAW_FEE_VND")).thenReturn(Optional.empty()); // default 10000L
 
         Withdrawal completedWithdrawal = Withdrawal.builder()
                 .id(1L)
@@ -90,7 +93,7 @@ class AdminRevenueServiceTest {
 
         assertNotNull(summary);
         assertEquals(500000L, summary.getCommissions());
-        assertEquals(500000L, summary.getShopOpeningFees()); // 10 * 50000
+        assertEquals(500000L, summary.getShopOpeningFees()); // 300000 + 200000 (Uses historical feeVnd, ignores current config 1,000,000)
         assertEquals(15000L, summary.getWithdrawalFees());
         assertEquals(1015000L, summary.getNetTotal());
     }
@@ -108,9 +111,7 @@ class AdminRevenueServiceTest {
         when(userRepository.findByIdAndIsDeleteFalse(2L)).thenReturn(Optional.of(customer));
 
         assertThrows(ResponseStatusException.class, () -> service.getRevenueSummary(2L));
-    }
-
-    @Test
+    }    @Test
     void getCashflowTransactionsFetchesAllTypesCorrectly() {
         User admin = User.builder()
                 .id(1L)
@@ -122,22 +123,19 @@ class AdminRevenueServiceTest {
 
         when(userRepository.findByIdAndIsDeleteFalse(1L)).thenReturn(Optional.of(admin));
 
-        TopupTransaction topup = TopupTransaction.builder()
-                .id(10L)
-                .userId(3L)
-                .amountVnd(100000L)
-                .status("Completed")
+        SellerRegistration reg = SellerRegistration.builder()
+                .id(100L)
+                .status("Approved")
+                .feeVnd(500000L)
                 .createdAt(LocalDateTime.now())
-                .isDelete(false)
                 .build();
-        when(topupTransactionRepository.findAllByIsDeleteFalse()).thenReturn(List.of(topup));
+        when(sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc()).thenReturn(List.of(reg));
 
         User seller = User.builder()
                 .id(3L)
                 .email("seller@mmo.com")
                 .isDelete(false)
                 .build();
-        when(userRepository.findAllById(Collections.singleton(3L))).thenReturn(List.of(seller));
 
         Withdrawal withdrawal = Withdrawal.builder()
                 .id(20L)
@@ -161,8 +159,8 @@ class AdminRevenueServiceTest {
                 .build();
         when(transactionRepository.findAllWithCustomerByIsDeleteFalse()).thenReturn(List.of(transaction));
 
+        when(systemConfigurationRepository.findByConfigKey("SHOP_OPENING_FEE_VND")).thenReturn(Optional.empty());
         when(systemConfigurationRepository.findByConfigKey("WITHDRAWAL_FEE_PERCENT")).thenReturn(Optional.empty());
-        when(systemConfigurationRepository.findByConfigKey("MIN_WITHDRAW_FEE_VND")).thenReturn(Optional.empty());
 
         Map<String, Object> result = service.getCashflowTransactions(1L, "", "", "", "", 0, 10);
 
@@ -186,30 +184,29 @@ class AdminRevenueServiceTest {
 
         LocalDateTime now = LocalDateTime.of(2026, 6, 25, 12, 0, 0);
 
-        TopupTransaction topup1 = TopupTransaction.builder()
+        SellerRegistration reg1 = SellerRegistration.builder()
                 .id(10L)
-                .userId(3L)
-                .amountVnd(100000L)
-                .status("Completed")
+                .status("Approved")
+                .feeVnd(500000L)
                 .createdAt(now.minusDays(5)) // 2026-06-20
                 .isDelete(false)
                 .build();
 
-        TopupTransaction topup2 = TopupTransaction.builder()
+        SellerRegistration reg2 = SellerRegistration.builder()
                 .id(11L)
-                .userId(3L)
-                .amountVnd(200000L)
-                .status("Completed")
+                .status("Approved")
+                .feeVnd(500000L)
                 .createdAt(now) // 2026-06-25
                 .isDelete(false)
                 .build();
 
-        when(topupTransactionRepository.findAllByIsDeleteFalse()).thenReturn(List.of(topup1, topup2));
-        when(userRepository.findAllById(any())).thenReturn(Collections.emptyList());
+        when(sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc()).thenReturn(List.of(reg1, reg2));
         when(withdrawalRepository.findAllWithSellerByIsDeleteFalse()).thenReturn(Collections.emptyList());
         when(transactionRepository.findAllWithCustomerByIsDeleteFalse()).thenReturn(Collections.emptyList());
+        when(systemConfigurationRepository.findByConfigKey("SHOP_OPENING_FEE_VND")).thenReturn(Optional.empty());
+        when(systemConfigurationRepository.findByConfigKey("WITHDRAWAL_FEE_PERCENT")).thenReturn(Optional.empty());
 
-        // Lá»c trong khoáº£ng 2026-06-21 Ä‘áº¿n 2026-06-26 -> chá»‰ cÃ³ topup2
+        // Lọc trong khoảng 2026-06-21 đến 2026-06-26 -> chỉ có reg2
         Map<String, Object> result = service.getCashflowTransactions(1L, "", "", "2026-06-21", "2026-06-26", 0, 10);
 
         assertNotNull(result);

@@ -100,15 +100,18 @@ public class AdminRevenueService {
         // 1. Phí hoa hồng: từ các C2C Transactions có trạng thái 'Completed' hoặc 'Held'
         long commissions = transactionRepository.sumCommissionForCompletedOrHeldTransactions();
 
-        // 2. Phí mở Shop: từ số lượng SellerRegistrations có trạng thái 'Approved'
-        long shopOpeningFee = systemConfigurationRepository.findByConfigKey("SHOP_OPENING_FEE_VND")
+        // 2. Phí mở Shop: Tổng phí ghi nhận của các SellerRegistrations có trạng thái 'Approved'
+        long shopOpeningFeeConfig = systemConfigurationRepository.findByConfigKey("SHOP_OPENING_FEE_VND")
                 .map(c -> {
                     try { return Long.parseLong(c.getConfigValue()); }
-                    catch (NumberFormatException e) { return 50000L; }
-                }).orElse(50000L);
+                    catch (NumberFormatException e) { return 500000L; }
+                }).orElse(500000L);
 
-        long approvedSellers = sellerRegistrationRepository.countByStatusAndIsDeleteFalse("Approved");
-        long shopOpeningFees = approvedSellers * shopOpeningFee;
+        List<SellerRegistration> approvedRegistrations = sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc();
+        long shopOpeningFees = approvedRegistrations.stream()
+                .filter(reg -> "Approved".equalsIgnoreCase(reg.getStatus()))
+                .mapToLong(reg -> reg.getFeeVnd() != null ? reg.getFeeVnd() : shopOpeningFeeConfig)
+                .sum();
 
         // 3. Phí rút tiền: từ các Withdrawals có trạng thái 'Completed'
         double withdrawalPercent = systemConfigurationRepository.findByConfigKey("WITHDRAWAL_FEE_PERCENT")
@@ -213,17 +216,20 @@ public class AdminRevenueService {
 
         // 1. Phí mở Shop (SellerRegistrations được phê duyệt)
         List<SellerRegistration> shopRegistrations = sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc();
-        for (SellerRegistration reg : shopRegistrations) {
-            if ("Approved".equalsIgnoreCase(reg.getStatus())) {
-                allCashflow.add(CashflowTransactionDto.builder()
-                        .id("SHOP" + reg.getId())
-                        .timestamp(reg.getCreatedAt())
-                        .email(reg.getUser() != null ? reg.getUser().getEmail() : "unknown@mmo.com")
-                        .type("Shop_Opening")
-                        .amount(shopOpeningFee)
-                        .fee(shopOpeningFee)
-                        .status("Completed")
-                        .build());
+        if (shopRegistrations != null) {
+            for (SellerRegistration reg : shopRegistrations) {
+                if ("Approved".equalsIgnoreCase(reg.getStatus())) {
+                    long actualFee = reg.getFeeVnd() != null ? reg.getFeeVnd() : shopOpeningFee;
+                    allCashflow.add(CashflowTransactionDto.builder()
+                            .id("SHOP" + reg.getId())
+                            .timestamp(reg.getCreatedAt())
+                            .email(reg.getUser() != null ? reg.getUser().getEmail() : "unknown@mmo.com")
+                            .type("Shop_Opening")
+                            .amount(actualFee)
+                            .fee(actualFee)
+                            .status("Completed")
+                            .build());
+                }
             }
         }
 
