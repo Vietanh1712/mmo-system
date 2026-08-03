@@ -62,7 +62,8 @@ async function loadComplaintDetails() {
                     evidence: item.evidence || 'Không có',
                     detail: item.description || '',
                     resolution: item.resolution || '',
-                    preferredSolution: item.preferredSolution === 'REPLACEMENT' ? 'Đổi tài khoản mới' : (item.preferredSolution === 'REFUND' ? 'Hoàn tiền' : 'N/A')
+                    preferredSolution: item.preferredSolution === 'REPLACEMENT' ? 'Đổi tài khoản mới' : (item.preferredSolution === 'REFUND' ? 'Hoàn tiền' : 'N/A'),
+                    sellerActiveFlagsCount: item.seller ? item.seller.activeFlagsCount : 0
                 };
             }
         } catch (err) {
@@ -184,6 +185,30 @@ async function loadComplaintDetails() {
     if (cmpStatusSelect) cmpStatusSelect.value = selectStatus;
     const cmpResText = document.getElementById('complaintResolution');
     if (cmpResText) cmpResText.value = currentComplaint.resolution || '';
+
+    const flagLevelSelect = document.getElementById('flagLevel');
+    if (flagLevelSelect) {
+        const count = currentComplaint.sellerActiveFlagsCount || 0;
+        const warningOpt = flagLevelSelect.querySelector('option[value="Warning"]');
+        const suspensionOpt = flagLevelSelect.querySelector('option[value="Suspension"]');
+        
+        if (warningOpt) {
+            warningOpt.disabled = (count >= 1);
+            if (count >= 1) warningOpt.style.display = 'none';
+        }
+        if (suspensionOpt) {
+            suspensionOpt.disabled = (count >= 2);
+            if (count >= 2) suspensionOpt.style.display = 'none';
+        }
+        
+        if (count === 1) {
+            flagLevelSelect.value = 'Suspension';
+        } else if (count >= 2) {
+            flagLevelSelect.value = 'Ban';
+        } else {
+            flagLevelSelect.value = 'Warning';
+        }
+    }
 
     // Timeline
     renderTimeline();

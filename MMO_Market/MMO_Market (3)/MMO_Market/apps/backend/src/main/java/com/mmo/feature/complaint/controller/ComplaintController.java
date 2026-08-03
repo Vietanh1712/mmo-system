@@ -37,6 +37,9 @@ public class ComplaintController {
     @Autowired
     private ComplaintRepository complaintRepository;
 
+    @Autowired
+    private com.mmo.shared.dal.ShopFlagRepository shopFlagRepository;
+
     private boolean isStaffOrAdmin(Long userId) {
         if (userId == null) return false;
         return userRepository.findByIdAndIsDeleteFalse(userId)
@@ -81,6 +84,11 @@ public class ComplaintController {
             sellerMap.put("id", c.getSeller().getId());
             sellerMap.put("email", c.getSeller().getEmail());
             sellerMap.put("fullName", c.getSeller().getFullName());
+            long activeFlagsCount = shopFlagRepository.findBySellerAndIsDeleteFalseOrderByCreatedAtDesc(c.getSeller())
+                .stream()
+                .filter(f -> "Effect".equalsIgnoreCase(f.getStatus()))
+                .count();
+            sellerMap.put("activeFlagsCount", activeFlagsCount);
             map.put("seller", sellerMap);
         }
 
