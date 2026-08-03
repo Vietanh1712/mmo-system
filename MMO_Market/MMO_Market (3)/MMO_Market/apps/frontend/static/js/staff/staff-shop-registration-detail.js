@@ -74,6 +74,15 @@ async function loadShopDetail() {
             }
         }
 
+        const updateSec = document.getElementById('updateStatusSection');
+        if (updateSec) {
+            if (shopStUpper === 'WITHDRAWN' || shopStUpper === 'DELETED') {
+                updateSec.style.display = 'none';
+            } else {
+                updateSec.style.display = 'block';
+            }
+        }
+
         if (data.suspendedUntil) {
             startCountdown(data.suspendedUntil);
         } else {
@@ -138,25 +147,33 @@ function startCountdown(suspendedUntilStr) {
     countdownInterval = setInterval(update, 1000);
 }
 
+let pendingStatusToUpdate = 'Suspended';
+
 async function submitShopStatusUpdate() {
     if (!currentShopId) return;
     const select = document.getElementById('shopStatusSelect');
     const newStatus = select ? select.value : '';
     if (!newStatus) return;
 
-    if (newStatus === 'Suspended' || newStatus === 'TEMP_LOCKED') {
-        openSuspendShopModal();
+    if (newStatus === 'Suspended' || newStatus === 'Locked' || newStatus === 'TEMP_LOCKED' || newStatus === 'INDEFINITE_LOCKED') {
+        openSuspendShopModal(newStatus);
         return;
     }
 
     executeStatusUpdate(newStatus, null);
 }
 
-function openSuspendShopModal() {
+function openSuspendShopModal(status) {
+    pendingStatusToUpdate = status || 'Locked';
     const modal = document.getElementById('suspendShopModal');
     const input = document.getElementById('modalSuspendUntilInput');
     const err = document.getElementById('modalSuspendUntilError');
     if (err) err.textContent = '';
+
+    const modalTitle = modal ? modal.querySelector('h3') : null;
+    if (modalTitle) {
+        modalTitle.innerHTML = `<i class="fa fa-clock-o"></i> ${pendingStatusToUpdate === 'Locked' ? 'Tạm khóa' : 'Tạm ngưng'} hoạt động Shop`;
+    }
     
     // Set default datetime-local to 1 day from now
     const now = new Date();
@@ -182,7 +199,7 @@ function confirmSuspendShop() {
     const val = input ? input.value : '';
 
     if (!val) {
-        if (err) err.textContent = 'Vui lòng chọn ngày, giờ, phút hết hạn tạm ngưng.';
+        if (err) err.textContent = 'Vui lòng chọn ngày, giờ, phút hết hạn.';
         return;
     }
 
@@ -193,7 +210,7 @@ function confirmSuspendShop() {
     }
 
     closeSuspendShopModal();
-    executeStatusUpdate('Suspended', val);
+    executeStatusUpdate(pendingStatusToUpdate, val);
 }
 
 async function executeStatusUpdate(status, suspendedUntil) {
@@ -205,10 +222,8 @@ async function executeStatusUpdate(status, suspendedUntil) {
         const response = await authFetch(url, { method: 'PUT' });
         const res = await response.json();
         if (response.ok) {
-            showToast(res.description || 'Cập nhật trạng thái Shop thành công!', "success");
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
+            showToast('Cập nhật trạng thái Shop thành công!', "success");
+            loadShopDetail();
         } else {
             showToast(res.description || 'Lỗi khi cập nhật trạng thái Shop.', "danger");
         }

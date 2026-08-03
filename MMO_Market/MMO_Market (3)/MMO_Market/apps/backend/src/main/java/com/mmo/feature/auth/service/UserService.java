@@ -22,6 +22,10 @@ import com.mmo.shared.dal.SystemConfigurationRepository;
 import com.mmo.shared.model.SellerRegistration;
 import java.time.LocalDateTime;
 
+import com.mmo.shared.dal.WalletTransactionRepository;
+import com.mmo.shared.model.WalletTransaction;
+import org.springframework.beans.factory.annotation.Autowired;
+
 @Service
 public class UserService {
 
@@ -32,6 +36,9 @@ public class UserService {
     private final com.mmo.shared.dal.KycRequestRepository kycRequestRepository;
     private final SellerRegistrationRepository sellerRegistrationRepository;
     private final SystemConfigurationRepository systemConfigurationRepository;
+
+    @Autowired(required = false)
+    private WalletTransactionRepository walletTransactionRepository;
 
     public UserService(UserRepository userRepository, 
                        org.springframework.security.crypto.password.PasswordEncoder passwordEncoder,
@@ -158,8 +165,8 @@ public class UserService {
         long shopOpeningFee = systemConfigurationRepository.findByConfigKey("SHOP_OPENING_FEE_VND")
                 .map(c -> {
                     try { return Long.parseLong(c.getConfigValue()); }
-                    catch (NumberFormatException e) { return 50000L; }
-                }).orElse(50000L);
+                    catch (NumberFormatException e) { return 500000L; }
+                }).orElse(500000L);
                 
         // 3. Kiểm tra số dư ví
         long userBalance = user.getBalanceVnd() != null ? user.getBalanceVnd() : 0L;
@@ -176,31 +183,62 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tên cửa hàng không được để trống.");
         }
         
-        // 4. Trừ tiền ví của user
-        user.setBalanceVnd(userBalance - shopOpeningFee);
+        // 4. Trừ tiền ví của user và nâng quyền thành Seller
+        long newBalance = userBalance - shopOpeningFee;
+        user.setBalanceVnd(newBalance);
+        user.setDepositVnd(shopOpeningFee);
+        user.setRole("{\"role\": \"Seller\"}");
+        user.setShopStatus("Active");
         userRepository.save(user);
+
+        // Ghi lịch sử WalletTransaction cho phí mở shop
+        if (walletTransactionRepository != null) {
+            WalletTransaction feeTx = WalletTransaction.builder()
+                    .user(user)
+                    .type("SHOP_OPEN_FEE")
+                    .transactionType("SHOP_OPEN_FEE")
+                    .amountVnd(shopOpeningFee)
+                    .balanceAfter(newBalance)
+                    .status("SUCCESS")
+                    .description("Phí mở Shop: " + shopName.trim())
+                    .referenceCode("SHOP_OPEN_FEE_USER_" + userId)
+                    .createdAt(LocalDateTime.now())
+                    .isDelete(false)
+                    .build();
+            walletTransactionRepository.save(feeTx);
+        }
         
-        // 5. Lưu đăng ký shop (Tạo Pending -> chuyển thành Approved để kích hoạt trigger đổi role)
-        SellerRegistration reg = SellerRegistration.builder()
-                .user(user)
-                .shopName(shopName.trim())
-                .description(description != null ? description.trim() : "")
-                .category(category != null ? category.trim() : "")
-                .supportEmail(supportEmail != null ? supportEmail.trim() : "")
-                .supportPhone(supportPhone != null ? supportPhone.trim() : "")
-                .status("Pending")
-                .isDelete(false)
-                .build();
-        
-        reg = sellerRegistrationRepository.saveAndFlush(reg);
-        
-        // Cập nhật trạng thái thành Approved để trigger trg_UpdateShopStatus chạy
+        // 5. Lưu hoặc cập nhật đăng ký shop
+        java.util.List<SellerRegistration> allUserRegs = sellerRegistrationRepository
+                .findAllByIsDeleteFalseOrderByCreatedAtDesc()
+                .stream()
+                .filter(r -> r.getUser() != null && r.getUser().getId().equals(userId))
+                .collect(java.util.stream.Collectors.toList());
+
+        SellerRegistration reg;
+        if (!allUserRegs.isEmpty()) {
+            reg = allUserRegs.get(0);
+            for (int i = 1; i < allUserRegs.size(); i++) {
+                allUserRegs.get(i).setIsDelete(true);
+                sellerRegistrationRepository.save(allUserRegs.get(i));
+            }
+        } else {
+            reg = new SellerRegistration();
+            reg.setUser(user);
+        }
+
+        reg.setShopName(shopName.trim());
+        reg.setDescription(description != null ? description.trim() : "");
+        reg.setCategory(category != null ? category.trim() : "");
+        reg.setSupportEmail(supportEmail != null ? supportEmail.trim() : "");
+        reg.setSupportPhone(supportPhone != null ? supportPhone.trim() : "");
+        reg.setFeeVnd(shopOpeningFee);
         reg.setStatus("Approved");
+        reg.setIsDelete(false);
+
         sellerRegistrationRepository.saveAndFlush(reg);
         
-        // Reload user mới để lấy thông tin đã cập nhật role và shopStatus bởi trigger
         User updatedUser = userRepository.findById(userId).orElse(user);
-        
         return toProfileResponse(updatedUser);
     }
 

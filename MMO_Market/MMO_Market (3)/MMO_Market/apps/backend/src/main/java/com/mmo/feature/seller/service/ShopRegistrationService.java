@@ -40,6 +40,9 @@ import com.mmo.shared.model.AuditLog;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
+import com.mmo.shared.dal.WalletTransactionRepository;
+import com.mmo.shared.model.WalletTransaction;
+
 /**
  * Service xử lý toàn bộ nghiệp vụ liên quan đến Đăng ký, Duyệt mở gian hàng (Shop),
  * quản lý trạng thái hoạt động và thống kê các gian hàng dành cho người bán (Seller).
@@ -521,7 +524,7 @@ public class ShopRegistrationService {
         // XỬ LÝ TRẠNG THÁI "ĐÃ ĐÓNG SHOP (HOÀN PHÍ)" (Withdrawn):
         if ("Withdrawn".equalsIgnoreCase(shopStatus) || "WITHDRAWN".equalsIgnoreCase(shopStatus)) {
             // 1. Hoàn lại phí mở shop về số dư ví khả dụng (balanceVnd)
-            long feeToRefund = registration.getFeeVnd() != null ? registration.getFeeVnd() : (user.getDepositVnd() != null && user.getDepositVnd() > 0 ? user.getDepositVnd() : 500000L);
+            long feeToRefund = registration.getFeeVnd() != null && registration.getFeeVnd() >= 500000L ? registration.getFeeVnd() : (user.getDepositVnd() != null && user.getDepositVnd() >= 500000L ? user.getDepositVnd() : 500000L);
             long currentBalance = user.getBalanceVnd() != null ? user.getBalanceVnd() : 0L;
             long newBalance = currentBalance + feeToRefund;
             user.setBalanceVnd(newBalance);
@@ -579,7 +582,66 @@ public class ShopRegistrationService {
         } else {
             user.setSuspendedUntil(null);
         }
+
         userRepository.save(user);
+
+        // 4. Gửi thông báo tới người dùng
+        String shopNameStr = registration.getShopName() != null ? registration.getShopName() : "Shop của bạn";
+        String notifTitle;
+        String notifContent;
+        String notifSeverity;
+        String notifTargetUrl;
+
+        if ("Withdrawn".equalsIgnoreCase(shopStatus)) {
+            long depositRef = registration.getFeeVnd() != null && registration.getFeeVnd() >= 500000L ? registration.getFeeVnd() : 500000L;
+            notifTitle = "⚠️ Shop của bạn đã bị đóng cửa (Hoàn phí)";
+            notifContent = String.format(
+                "Shop \"%s\" đã bị đóng cửa theo quyết định của Ban quản trị. " +
+                "Tiền cọc mở Shop (%s VNĐ) đã được hoàn trả vào ví của bạn. " +
+                "Tài khoản của bạn đã được chuyển về quyền Customer. Bạn có thể đăng ký mở Shop mới bất kỳ lúc nào tại /account/register-shop.",
+                shopNameStr, String.format("%,d", depositRef));
+            notifSeverity = "WARNING";
+            notifTargetUrl = "/account/register-shop";
+        } else if ("Banned".equalsIgnoreCase(shopStatus) || "PERMANENT_BANNED".equalsIgnoreCase(shopStatus)) {
+            notifTitle = "🔴 Shop của bạn đã bị khóa vĩnh viễn";
+            notifContent = String.format(
+                "Shop \"%s\" đã bị khóa vĩnh viễn do vi phạm chính sách sàn giao dịch MMO Market. " +
+                "Tài khoản của bạn vẫn có thể đăng nhập để mua hàng nhưng không thể bán hàng.",
+                shopNameStr);
+            notifSeverity = "DANGER";
+            notifTargetUrl = "/profile";
+        } else if ("Suspended".equalsIgnoreCase(shopStatus) || "TEMP_LOCKED".equalsIgnoreCase(shopStatus) || "Locked".equalsIgnoreCase(shopStatus)) {
+            String untilStr = "";
+            if (user.getSuspendedUntil() != null) {
+                java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("HH:mm ngày dd/MM/yyyy");
+                untilStr = " đến " + user.getSuspendedUntil().format(dtf);
+            }
+            notifTitle = "🔒 Shop của bạn bị tạm khóa";
+            notifContent = String.format(
+                "Shop \"%s\" đã bị tạm khóa%s do vi phạm chính sách sàn giao dịch MMO Market.",
+                shopNameStr, untilStr);
+            notifSeverity = "WARNING";
+            notifTargetUrl = "/profile";
+        } else {
+            notifTitle = "✅ Shop của bạn đã được mở khóa";
+            notifContent = String.format("Shop \"%s\" đã được mở khóa và hoạt động trở lại bình thường.", shopNameStr);
+            notifSeverity = "SUCCESS";
+            notifTargetUrl = "/seller/dashboard";
+        }
+
+        Notification notification = Notification.builder()
+                .userId(user.getId())
+                .title(notifTitle)
+                .content(notifContent)
+                .type("SYSTEM")
+                .severity(notifSeverity)
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl(notifTargetUrl)
+                .createdAt(LocalDateTime.now())
+                .build();
+        notificationRepository.save(notification);
+
         return mapToDto(registration);
     }
 

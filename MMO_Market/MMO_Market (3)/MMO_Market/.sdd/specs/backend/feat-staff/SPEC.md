@@ -35,7 +35,7 @@ Hỗ trợ Staff kiểm duyệt KYC, phê duyệt/từ chối các yêu cầu m�
 | **FR-STF-12** | WHEN a Staff searches KYC requests, THE SYSTEM SHALL perform a multi-field search across request code, ID number, user full name, and email, automatically stripping any leading '#' character. |
 | **FR-STF-13** | WHEN a Staff requests KYC statistics, THE SYSTEM SHALL return aggregated counts for total, pending, approved, and rejected KYC requests. |
 | **FR-STF-14** | WHEN a Staff changes KYC filter dropdown options, THE SYSTEM SHALL NOT auto-trigger search until the Staff clicks the Search button or presses Enter. |
-| **FR-STF-15** | WHEN a Staff manages shop account statuses, THE SYSTEM SHALL support 5 distinct status values with standardized Vietnamese display labels: Active ("Hoạt động"), Suspended ("Tạm ngưng"), Locked ("Tạm khóa"), Banned ("Khóa vĩnh viễn"), and Withdrawn ("Đã đóng Shop (Hoàn cọc)"). |
+| **FR-STF-15** | WHEN a Staff manages shop account statuses, THE SYSTEM SHALL support 3 distinct status values with standardized Vietnamese display labels: Active ("Hoạt động"), Suspended ("Tạm ngưng"), and Withdrawn ("Đã đóng Shop (Hoàn cọc)"). |
 | **FR-STF-16** | WHEN a Staff accesses category management, THE SYSTEM SHALL allow Staff to view, search, create, update, and toggle active/deleted status (`is_delete`) of parent and child product categories. |
 | **FR-STF-17** | WHEN a Staff manages support tickets, THE SYSTEM SHALL display all support requests, allow filtering by status and category, and enable Staff to respond and transition ticket statuses (`OPEN`, `IN_PROGRESS`, `RESOLVED`, `CLOSED`). |
 | **FR-STF-18** | WHEN a Staff updates a shop status to 'Suspended' with an expiration timestamp (`suspendedUntil`), THE SYSTEM SHALL save `suspended_until` in the Users table and automatically revert the shop status to 'Active' once the timestamp expires via scheduled job or read-trigger. |
@@ -43,6 +43,7 @@ Hỗ trợ Staff kiểm duyệt KYC, phê duyệt/từ chối các yêu cầu m�
 | **FR-STF-20** | WHEN SePay webhook fails due to incorrect syntax, missing user ID, or amount outside configured min/max deposit limits, THE SYSTEM SHALL save a `TopupTransaction` record with status `Failed` recording the raw transfer content and failure reason. |
 | **FR-STF-21** | WHEN a Staff manually retries/activates a `Failed` or `Pending` top-up transaction via `POST /api/v1/staff/topups/{id}/retry`, THE SYSTEM SHALL validate the target user, credit the user balance, record a `WalletTransaction` ledger, update the top-up status to `Success`, log staff note and staff ID, and send a notification to the target user. |
 | **FR-STF-22** | WHEN a Staff searches shop registrations, THE SYSTEM SHALL perform a multi-field search across shop name, support email, support phone, category, registration ID, shop code format (e.g., `SHOP-1`), seller full name, and seller email. |
+| **FR-STF-23** | WHEN a shop's status is already 'Withdrawn' or 'Deleted' (permanently closed and refunded), THE SYSTEM SHALL prevent further status updates by hiding or disabling the status update controls and displaying a notice. |
 
 ---
 

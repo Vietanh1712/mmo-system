@@ -3362,6 +3362,7 @@
         if (str === 'Held' || str === 'HELD' || str === 'ESCROW') return 'Tạm giữ';
         if (str === 'Refunded' || str === 'REFUNDED' || str === 'Refund' || str === 'REFUND') return 'Hoàn tiền';
         if (str === 'Failed' || str === 'FAILED' || str === 'REJECTED') return 'Thất bại';
+        if (str === 'Disputed' || str === 'DISPUTED' || str === 'Complaint' || str === 'COMPLAINT') return 'Khiếu nại';
         return str;
     }
 

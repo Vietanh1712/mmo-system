@@ -241,11 +241,8 @@ Bổ sung cột STT (Sequence Number) được tính toán theo phân trang (`cu
   - Cập nhật câu lệnh JPQL trong `searchRegistrations` hỗ trợ tìm kiếm đa trường: Mã Shop (`SHOP-1`, `SHOP-2`...), ID số, Tên hiển thị chủ shop (`user.fullName`) và Email chủ shop (`user.email`).
   - Cập nhật `ProductSpecification` hỗ trợ tìm kiếm sản phẩm theo tên shop và mã shop (`SHOP-x`).
 
-
-
-
-
-
-
-
+## 22. Ngăn chặn chỉnh sửa trạng thái khi Shop đã đóng/xóa (phiên bản 3.8)
+- **Cập nhật giao diện và logic kiểm soát**:
+  - Khi xem chi tiết đăng ký Shop (`/staff/shop-registrations/detail`) hoặc thay đổi trạng thái (`/staff/shop-registrations/update-status`), nếu trạng thái hoạt động hiện tại là `Withdrawn` hoặc `Deleted`, hệ thống sẽ ẩn bảng điều khiển cập nhật trạng thái để ngăn chặn việc sửa đổi không hợp lệ.
+  - Trên trang cập nhật trạng thái, hiển thị một cảnh báo đỏ thông báo rằng Shop đã được đóng vĩnh viễn và hoàn tiền.
 

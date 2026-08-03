@@ -24,6 +24,8 @@ Seller Console là trung tâm quản lý dành cho người bán (Seller) trên 
 - **FR-SELL-05**: WHEN a Seller uploads DigitalAssets (batch) for a Variant, THE SYSTEM SHALL update the variant's `stock` automatically.
 - **FR-SELL-06**: WHEN a Seller views their dashboard, THE SYSTEM SHALL return total revenue, completed sales, and active products.
 - **FR-SELL-07**: WHEN a transaction (order) is completed, resolved, or when a dispute/complaint is rejected, THE SYSTEM SHALL automatically evaluate and update the Seller's Shop Level in real-time.
+- **FR-SELL-08**: WHEN a Seller's shop status is not Active (e.g., Suspended, Locked, Banned, Withdrawn), THE SYSTEM SHALL block the Seller from creating new products by disabling the post product form and showing an alert notice.
+- **FR-SELL-09**: WHEN a Seller is assigned 3 active violation flags, THE SYSTEM SHALL automatically change their shop status to Banned ("Khóa vĩnh viễn"), clear any temporary suspension timer, and block access to the Seller Console (Seller Dashboard).
 
 ---
 

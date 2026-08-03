@@ -33,10 +33,10 @@ public class PublicSystemConfigController {
                     try {
                         return Long.parseLong(config.getConfigValue());
                     } catch (NumberFormatException e) {
-                        return 50000L;
+                        return 500000L;
                     }
                 })
-                .orElse(50000L);
+                .orElse(500000L);
         
         Map<String, Long> response = new HashMap<>();
         response.put("shopOpeningFee", fee);

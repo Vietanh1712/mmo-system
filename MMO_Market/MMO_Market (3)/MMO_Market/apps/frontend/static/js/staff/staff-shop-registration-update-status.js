@@ -39,6 +39,20 @@ async function loadShopDetail() {
             selectEl.value = valToSet;
         }
 
+        const shopStUpper = (data.shopStatus || '').toUpperCase();
+        if (shopStUpper === 'WITHDRAWN' || shopStUpper === 'DELETED') {
+            const formFields = document.getElementById('updateStatusFormFields');
+            if (formFields) {
+                formFields.style.display = 'none';
+                
+                const notice = document.createElement('div');
+                notice.className = 'ds-alert ds-alert-danger';
+                notice.style.marginBottom = '16px';
+                notice.innerHTML = '<i class="fa fa-info-circle"></i> Shop này đã đóng và hoàn phí, không thể cập nhật trạng thái khác.';
+                formFields.parentNode.insertBefore(notice, formFields);
+            }
+        }
+
     } catch (e) {
         console.error("Lỗi", e);
         showToast(e.message, "danger");
@@ -62,9 +76,7 @@ async function submitShopStatusUpdate() {
 
         if (response.ok) {
             showToast("Cập nhật trạng thái Shop thành công", "success");
-            setTimeout(() => {
-                window.location.href = '/staff/shop-registrations';
-            }, 1500);
+            loadShopDetail();
         } else {
             const res = await response.json();
             showToast(res.description || 'Lỗi khi cập nhật trạng thái Shop.', "danger");
