@@ -56,7 +56,7 @@ public class TopupService {
     @Autowired
     private NotificationRepository notificationRepository;
 
-    private static final Pattern TRANSFER_CONTENT_PATTERN_NEW = Pattern.compile("MMO[\\s-]*TOPUP[\\s-]*(\\d+)[\\s-]*(\\d+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern TRANSFER_CONTENT_PATTERN_NEW = Pattern.compile("MMO[\\s-]*TOPUP[\\s-]*(\\d+)[\\s-]+(\\d+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern TRANSFER_CONTENT_PATTERN_OLD = Pattern.compile("MMO[\\s-]*TOPUP[\\s-]*(\\d+)", Pattern.CASE_INSENSITIVE);
 
     @EventListener(ApplicationReadyEvent.class)

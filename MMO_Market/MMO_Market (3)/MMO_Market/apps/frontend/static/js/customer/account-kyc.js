@@ -254,7 +254,7 @@ function closeKycFormMode(event) {
 
 function prefillKycForm() {
     document.getElementById('kycFullName').value = currentProfile?.fullName || '';
-    document.getElementById('kycDocumentNumber').value = currentKyc.documentNumber || '';
+    document.getElementById('kycDocumentNumber').value = currentKyc.documentNumber || currentProfile?.nationalId || '';
     
     // Format YYYY-MM-DD to DD/MM/YYYY
     const dob = currentProfile?.dateOfBirth;
