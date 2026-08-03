@@ -73,7 +73,7 @@
         if (btnResetFilter) {
             btnResetFilter.addEventListener('click', function () {
                 document.getElementById('keywordFilter').value = '';
-                document.getElementById('typeFilter').value = 'ALL';
+                document.getElementById('typeFilter').value = 'CHILD';
                 document.getElementById('sortByFilter').value = 'newest';
                 currentPage = 0;
                 loadCategories();
@@ -187,7 +187,7 @@
         tbody.innerHTML = '<tr><td colspan="8" class="ds-table-center"><i class="fa fa-spinner fa-spin"></i> Đang tải dữ liệu danh mục...</td></tr>';
 
         const keyword = document.getElementById('keywordFilter')?.value?.trim() || '';
-        const type = document.getElementById('typeFilter')?.value || 'ALL';
+        const type = document.getElementById('typeFilter')?.value || 'CHILD';
         const sortBy = document.getElementById('sortByFilter')?.value || 'newest';
 
         const params = new URLSearchParams();

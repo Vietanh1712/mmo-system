@@ -87,10 +87,9 @@
             <section class="admin-workspace ds-page-shell" style="padding-right: 120px;">
                 <div class="view-header">
                     <div>
-                        <h2>Chỉnh sửa sản phẩm</h2>
-                        <p>Sản phẩm #101 — Netflix Premium</p>
+                        <h2>Chỉnh sửa s�                        <p>Đang tải thông tin sản phẩm...</p>
                     </div>
-                    <a class="ds-btn ds-btn-outline" th:href="@{/seller/inventory}" style="text-decoration: none;">← Quảy lại kho</a>
+                    <a class="ds-btn ds-btn-outline" th:href="@{/seller/inventory}" style="text-decoration: none;">← Quay lại kho</a>
                 </div>
 
                 <form class="profile-edit-form seller-form-panel" novalidate>
@@ -107,33 +106,33 @@
                     </div>
                     <div class="profile-edit-form__group">
                         <label for="productName">Tên sản phẩm</label>
-                        <input id="productName" type="text" value="Tài khoản Netflix Premium">
+                        <input id="productName" type="text" value="" placeholder="Đang tải...">
                     </div>
                     <div class="ds-two-column" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
                         <div class="profile-edit-form__group" style="margin-bottom: 0;">
                             <label for="mainCategory">Danh mục chính</label>
                             <select id="mainCategory" style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;">
-                                <option value="">-- Chọn danh mục chính --</option>
+                                <option value="">Đang tải...</option>
                             </select>
                         </div>
                         <div class="profile-edit-form__group" style="margin-bottom: 0;">
                             <label for="subCategory">Danh mục phụ</label>
                             <select id="subCategory" style="width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;" disabled>
-                                <option value="">-- Chọn danh mục chính trước --</option>
+                                <option value="">Đang tải...</option>
                             </select>
                         </div>
                     </div>
                     <div class="profile-edit-form__group">
                         <label for="description">Mô tả</label>
-                        <textarea id="description" style="min-height: 100px; padding: 11px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
+                        <textarea id="description" placeholder="Đang tải..." style="min-height: 100px; padding: 11px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
                     </div>
                     <div class="profile-edit-form__group">
                         <label for="userGuide">Hướng dẫn sử dụng sản phẩm</label>
-                        <textarea id="userGuide" style="min-height: 100px; padding: 11px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
+                        <textarea id="userGuide" placeholder="Đang tải..." style="min-height: 100px; padding: 11px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
                     </div>
 
                     <div class="profile-actions">
-                        <button class="profile-button profile-button--primary" type="button" disabled>Lưu sản phẩm</button>
+                        <button class="profile-button profile-button--primary" type="button" disabled>Đang tải...</button>        <button class="profile-button profile-button--primary" type="button" disabled>Lưu sản phẩm</button>
                     </div>
                 </form>
 
