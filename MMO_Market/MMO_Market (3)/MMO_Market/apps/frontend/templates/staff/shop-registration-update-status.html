@@ -63,34 +63,13 @@
                         <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px;">
                             <div class="ds-form-field">
                                 <label class="ds-label" for="shopStatusSelect">Trạng thái mới</label>
-                                <select class="ds-input" id="shopStatusSelect" onchange="onShopStatusChange()">
+                                <select class="ds-input" id="shopStatusSelect">
                                     <option value="Active">Hoạt động</option>
                                     <option value="Suspended">Tạm ngưng</option>
                                     <option value="Locked">Tạm khóa</option>
                                     <option value="Banned">Khóa vĩnh viễn</option>
                                     <option value="Withdrawn">Đã đóng Shop (Hoàn phí)</option>
                                 </select>
-                            </div>
-
-                            <div class="ds-form-field" id="lockDurationContainer" style="display: none; background: #f8fafc; border: 1px solid var(--ds-border, #e2e8f0); border-radius: 8px; padding: 14px; margin-top: -4px;">
-                                <label class="ds-label" for="lockPresetsSelect" style="font-weight: 600; color: #1e293b; display: flex; align-items: center; gap: 6px;">
-                                    <i class="fa fa-clock-o" style="color: #ea580c;"></i> Thời hạn tạm khóa / ngưng
-                                </label>
-                                <select class="ds-input" id="lockPresetsSelect" style="margin-bottom: 10px;" onchange="handleLockPresetChange()">
-                                    <option value="1">1 Ngày</option>
-                                    <option value="3">3 Ngày</option>
-                                    <option value="7" selected>7 Ngày</option>
-                                    <option value="30">30 Ngày</option>
-                                    <option value="custom">Tùy chọn ngày & giờ...</option>
-                                </select>
-                                
-                                <label class="ds-label" for="suspendedUntilInput" style="font-size: 12px; color: #64748b; margin-top: 4px;">
-                                    Thời điểm tự động mở khóa (Ngày & Giờ):
-                                </label>
-                                <input type="datetime-local" class="ds-input" id="suspendedUntilInput" style="background: #ffffff;">
-                                <p style="font-size: 11px; color: #64748b; margin-top: 6px; margin-bottom: 0; line-height: 1.4;">
-                                    * Hết thời gian trên, hệ thống sẽ tự động chuyển trạng thái về <b>Hoạt động</b> và Seller mới có thể truy cập Seller Dashboard.
-                                </p>
                             </div>
                             <button class="ds-btn ds-btn-primary" type="button" onclick="submitShopStatusUpdate()" style="width: 100%;">
                                 <i class="fa fa-save"></i> Lưu cập nhật

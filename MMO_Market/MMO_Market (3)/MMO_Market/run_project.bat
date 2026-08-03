@@ -6,4 +6,4 @@ echo ==========================================
 
 echo Dang khoi dong MMO Market Backend (Spring Boot)...
 cd apps\backend
-mvn spring-boot:run "-Dmaven.test.skip=true"
+"C:\Users\pc\Downloads\apache-maven-3.9.11-bin\apache-maven-3.9.11\bin\mvn.cmd" spring-boot:run "-Dmaven.test.skip=true"
