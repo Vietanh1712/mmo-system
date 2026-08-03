@@ -416,29 +416,27 @@ public class ShopRegistrationService {
 
         // XỬ LÝ TRẠNG THÁI "ĐÃ ĐÓNG SHOP (HOÀN PHÍ)" (Withdrawn):
         if ("Withdrawn".equalsIgnoreCase(shopStatus) || "WITHDRAWN".equalsIgnoreCase(shopStatus)) {
-            // 1. Hoàn lại tiền cọc (depositVnd) về số dư ví khả dụng (balanceVnd) nếu có
-            long deposit = user.getDepositVnd() != null ? user.getDepositVnd() : 0L;
-            if (deposit > 0) {
-                long currentBalance = user.getBalanceVnd() != null ? user.getBalanceVnd() : 0L;
-                long newBalance = currentBalance + deposit;
-                user.setBalanceVnd(newBalance);
-                user.setDepositVnd(0L);
+            // 1. Hoàn lại phí mở shop về số dư ví khả dụng (balanceVnd)
+            long feeToRefund = registration.getFeeVnd() != null ? registration.getFeeVnd() : (user.getDepositVnd() != null && user.getDepositVnd() > 0 ? user.getDepositVnd() : 500000L);
+            long currentBalance = user.getBalanceVnd() != null ? user.getBalanceVnd() : 0L;
+            long newBalance = currentBalance + feeToRefund;
+            user.setBalanceVnd(newBalance);
+            user.setDepositVnd(0L);
 
-                if (walletTransactionRepository != null) {
-                    WalletTransaction tx = WalletTransaction.builder()
-                            .user(user)
-                            .type("REFUND")
-                            .transactionType("REFUND")
-                            .amountVnd(deposit)
-                            .balanceAfter(newBalance)
-                            .status("SUCCESS")
-                            .description("Hoàn cọc mở Shop do đóng cửa hàng (Withdrawn)")
-                            .referenceCode("REFUND_DEPOSIT_" + registration.getId())
-                            .createdAt(LocalDateTime.now())
-                            .isDelete(false)
-                            .build();
-                    walletTransactionRepository.save(tx);
-                }
+            if (walletTransactionRepository != null) {
+                WalletTransaction tx = WalletTransaction.builder()
+                        .user(user)
+                        .type("REFUND")
+                        .transactionType("REFUND")
+                        .amountVnd(feeToRefund)
+                        .balanceAfter(newBalance)
+                        .status("SUCCESS")
+                        .description("Hoàn phí mở Shop do đóng cửa hàng (Withdrawn)")
+                        .referenceCode("REFUND_SHOP_" + registration.getId())
+                        .createdAt(LocalDateTime.now())
+                        .isDelete(false)
+                        .build();
+                walletTransactionRepository.save(tx);
             }
 
             // 2. Hạ quyền người dùng từ Role Seller xuống Role Customer

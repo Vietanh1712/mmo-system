@@ -108,10 +108,15 @@ public class AdminRevenueService {
                 }).orElse(500000L);
 
         List<SellerRegistration> approvedRegistrations = sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc();
-        long shopOpeningFees = approvedRegistrations.stream()
-                .filter(reg -> "Approved".equalsIgnoreCase(reg.getStatus()))
+        long approvedFees = approvedRegistrations.stream()
+                .filter(reg -> "Approved".equalsIgnoreCase(reg.getStatus()) || "Withdrawn".equalsIgnoreCase(reg.getStatus()))
                 .mapToLong(reg -> reg.getFeeVnd() != null ? reg.getFeeVnd() : 500000L)
                 .sum();
+        long refundedFees = approvedRegistrations.stream()
+                .filter(reg -> "Withdrawn".equalsIgnoreCase(reg.getStatus()))
+                .mapToLong(reg -> reg.getFeeVnd() != null ? reg.getFeeVnd() : 500000L)
+                .sum();
+        long shopOpeningFees = approvedFees - refundedFees;
 
         // 3. Phí rút tiền: từ các Withdrawals có trạng thái 'Completed'
         double withdrawalPercent = systemConfigurationRepository.findByConfigKey("WITHDRAWAL_FEE_PERCENT")
@@ -214,12 +219,12 @@ public class AdminRevenueService {
                     catch (NumberFormatException e) { return 50000L; }
                 }).orElse(50000L);
 
-        // 1. Phí mở Shop (SellerRegistrations được phê duyệt)
+        // 1. Phí mở Shop (SellerRegistrations được phê duyệt hoặc hoàn phí do đóng shop)
         List<SellerRegistration> shopRegistrations = sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc();
         if (shopRegistrations != null) {
             for (SellerRegistration reg : shopRegistrations) {
-                if ("Approved".equalsIgnoreCase(reg.getStatus())) {
-                    long actualFee = reg.getFeeVnd() != null ? reg.getFeeVnd() : 500000L;
+                long actualFee = reg.getFeeVnd() != null ? reg.getFeeVnd() : 500000L;
+                if ("Approved".equalsIgnoreCase(reg.getStatus()) || "Withdrawn".equalsIgnoreCase(reg.getStatus())) {
                     allCashflow.add(CashflowTransactionDto.builder()
                             .id("SHOP" + reg.getId())
                             .timestamp(reg.getCreatedAt())
@@ -228,6 +233,17 @@ public class AdminRevenueService {
                             .amount(actualFee)
                             .fee(actualFee)
                             .status("Completed")
+                            .build());
+                }
+                if ("Withdrawn".equalsIgnoreCase(reg.getStatus())) {
+                    allCashflow.add(CashflowTransactionDto.builder()
+                            .id("REFUND_SHOP" + reg.getId())
+                            .timestamp(reg.getCreatedAt())
+                            .email(reg.getUser() != null ? reg.getUser().getEmail() : "unknown@mmo.com")
+                            .type("Shop_Opening")
+                            .amount(-actualFee)
+                            .fee(-actualFee)
+                            .status("Refunded")
                             .build());
                 }
             }
