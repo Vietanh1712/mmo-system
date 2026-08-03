@@ -89,6 +89,13 @@ public class DatabaseSeeder implements CommandLineRunner {
                     "END;";
             jdbcTemplate.execute(sqlTrigger);
             System.out.println("Auto-fixed SQL Server trigger trg_UpdateShopStatus and user roles.");
+
+            try {
+                jdbcTemplate.execute("IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_name = 'SellerRegistrations' AND column_name = 'fee_vnd') " +
+                        "ALTER TABLE SellerRegistrations ADD fee_vnd BIGINT NULL;");
+            } catch (Exception ex) {
+                System.err.println("DatabaseSeeder: notice adding fee_vnd column: " + ex.getMessage());
+            }
         } catch (Exception e) {
             System.err.println("DatabaseSeeder: notice fixing trigger: " + e.getMessage());
         }

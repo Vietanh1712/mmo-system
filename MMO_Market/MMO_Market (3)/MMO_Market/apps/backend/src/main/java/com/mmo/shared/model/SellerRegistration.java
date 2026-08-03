@@ -46,6 +46,9 @@ public class SellerRegistration {
     @Column(name = "rejection_reason", columnDefinition = "NVARCHAR(MAX)")
     private String rejectionReason;
 
+    @Column(name = "fee_vnd")
+    private Long feeVnd;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Đang Bảo Trì - MMO Market</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            --card-bg: rgba(30, 41, 59, 0.75);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --primary-color: #38bdf8;
+            --warning-color: #f59e0b;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .maintenance-container {
+            max-width: 600px;
+            width: 100%;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 48px 36px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            animation: fadeIn 0.8s ease-out;
+            position: relative;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .maintenance-icon-wrap {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(56, 189, 248, 0.1);
+            border-radius: 50%;
+            border: 2px solid rgba(56, 189, 248, 0.2);
+        }
+
+        .maintenance-icon-wrap i.main-icon {
+            font-size: 48px;
+            color: var(--primary-color);
+            animation: rotateGear 12s linear infinite;
+        }
+
+        .maintenance-icon-wrap i.sub-icon {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            font-size: 20px;
+            color: var(--warning-color);
+            background: #0f172a;
+            border-radius: 50%;
+            padding: 4px;
+        }
+
+        @keyframes rotateGear {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fbbf24;
+            border-radius: 9999px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .status-pulse {
+            width: 8px;
+            height: 8px;
+            background-color: #fbbf24;
+            border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7);
+            animation: pulse 1.8s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(251, 191, 36, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #ffffff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .description {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-sub);
+            margin-bottom: 32px;
+            background: rgba(15, 23, 42, 0.4);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn-admin-login {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+        }
+
+        .btn-admin-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.5);
+            background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+        }
+
+        .auto-refresh-note {
+            margin-top: 24px;
+            font-size: 13px;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .auto-refresh-note i {
+            animation: spin 3s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="maintenance-container">
+        <div class="status-badge">
+            <span class="status-pulse"></span>
+            Hệ thống đang bảo trì
+        </div>
+
+        <div class="maintenance-icon-wrap">
+            <i class="fa fa-cog main-icon" aria-hidden="true"></i>
+            <i class="fa fa-wrench sub-icon" aria-hidden="true"></i>
+        </div>
+
+        <h1>Hệ Thống Đang Được Nâng Cấp</h1>
+
+        <div class="description" id="maintenanceMsg">
+            Hệ thống MMO Market đang thực hiện bảo trì nâng cấp hạ tầng định kỳ. 
+            Vui lòng quay lại sau ít phút. Xin cảm ơn sự kiên nhẫn của bạn!
+        </div>
+
+        <div class="actions">
+            <a href="/login" class="btn-admin-login">
+                <i class="fa fa-user-circle" aria-hidden="true"></i> Đăng Nhập Quản Trị Viên (Admin)
+            </a>
+        </div>
+
+        <div class="auto-refresh-note">
+            <i class="fa fa-refresh" aria-hidden="true"></i>
+            <span>Trang sẽ tự động chuyển hướng lại ngay khi hoàn tất bảo trì</span>
+        </div>
+    </div>
+
+    <script>
+        async function fetchMaintenanceDetails() {
+            try {
+                const res = await fetch('/api/notifications/maintenance-status');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.active === false) {
+                        // Maintenance turned off -> redirect back to homepage
+                        window.location.href = '/';
+                        return;
+                    }
+                    if (data && data.message) {
+                        document.getElementById('maintenanceMsg').textContent = data.message;
+                    }
+                }
+            } catch (e) {
+                console.warn('Network error checking maintenance status:', e);
+            }
+        }
+
+        // Fetch immediately and poll every 5 seconds
+        fetchMaintenanceDetails();
+        setInterval(fetchMaintenanceDetails, 5000);
+    </script>
+</body>
+</html>
