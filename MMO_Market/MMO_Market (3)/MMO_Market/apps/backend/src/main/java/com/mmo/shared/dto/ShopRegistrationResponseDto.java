@@ -20,6 +20,7 @@ public class ShopRegistrationResponseDto {
     private String shopStatus;
     private String suspendedUntil;
     private Long depositVnd;
+    private Long feeVnd;
     private Long balanceVnd;
     private String ownerName;
     private String bankAccountNumber;
