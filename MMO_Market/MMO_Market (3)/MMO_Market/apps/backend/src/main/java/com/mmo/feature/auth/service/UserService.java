@@ -32,17 +32,20 @@ public class UserService {
     private final com.mmo.shared.dal.KycRequestRepository kycRequestRepository;
     private final SellerRegistrationRepository sellerRegistrationRepository;
     private final SystemConfigurationRepository systemConfigurationRepository;
+    private final com.mmo.feature.wallet.service.WalletService walletService;
 
     public UserService(UserRepository userRepository, 
                        org.springframework.security.crypto.password.PasswordEncoder passwordEncoder,
                        com.mmo.shared.dal.KycRequestRepository kycRequestRepository,
                        SellerRegistrationRepository sellerRegistrationRepository,
-                       SystemConfigurationRepository systemConfigurationRepository) {
+                       SystemConfigurationRepository systemConfigurationRepository,
+                       com.mmo.feature.wallet.service.WalletService walletService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.kycRequestRepository = kycRequestRepository;
         this.sellerRegistrationRepository = sellerRegistrationRepository;
         this.systemConfigurationRepository = systemConfigurationRepository;
+        this.walletService = walletService;
     }
 
     public Optional<User> findByEmail(String email) {
@@ -179,6 +182,17 @@ public class UserService {
         // 4. Trừ tiền ví của user
         user.setBalanceVnd(userBalance - shopOpeningFee);
         userRepository.save(user);
+        
+        // Ghi nhận lịch sử giao dịch trừ phí mở Shop
+        walletService.recordTransaction(
+                user,
+                "PAYMENT",
+                -shopOpeningFee,
+                "SUCCESS",
+                "Trừ phí đăng ký mở Shop: " + (shopName != null ? shopName.trim() : ""),
+                "SHOP-REG-" + user.getId() + "-" + System.currentTimeMillis(),
+                user.getBalanceVnd()
+        );
         
         // 5. Lưu đăng ký shop (Tạo Pending -> chuyển thành Approved để kích hoạt trigger đổi role)
         SellerRegistration reg = SellerRegistration.builder()

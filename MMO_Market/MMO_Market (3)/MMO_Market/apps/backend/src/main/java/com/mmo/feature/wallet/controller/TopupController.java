@@ -57,6 +57,56 @@ public class TopupController {
         });
     }
 
+    @PostMapping("/request")
+    public ResponseEntity<?> createTopupRequest(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal Long userId,
+            @RequestBody java.util.Map<String, Object> body) {
+        
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Object() {
+                public final boolean success = false;
+                public final String message = "Vui lòng đăng nhập.";
+            });
+        }
+
+        com.mmo.shared.model.User user = userRepository.findById(userId).orElse(null);
+        if (user != null && user.getRole() != null
+                && (user.getRole().contains("Staff") || user.getRole().contains("Admin"))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new Object() {
+                public final boolean success = false;
+                public final String message = "Nhân viên và quản trị viên không được phép nạp tiền.";
+            });
+        }
+
+        Object amountObj = body.get("amountVnd");
+        if (amountObj == null) {
+            return ResponseEntity.badRequest().body(new Object() {
+                public final boolean success = false;
+                public final String message = "Thiếu số tiền nạp.";
+            });
+        }
+
+        long amount;
+        try {
+            amount = Long.parseLong(String.valueOf(amountObj));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(new Object() {
+                public final boolean success = false;
+                public final String message = "Số tiền nạp không hợp lệ.";
+            });
+        }
+
+        try {
+            com.mmo.shared.model.TopupTransaction tx = topupService.createPendingTopup(userId, amount);
+            return ResponseEntity.ok(tx);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Object() {
+                public final boolean success = false;
+                public final String message = "Lỗi khi tạo yêu cầu nạp tiền: " + e.getMessage();
+            });
+        }
+    }
+
     @PostMapping("/webhook")
     public ResponseEntity<?> handleSepayWebhook(
             @RequestHeader(value = "Authorization", required = false) String authHeader,

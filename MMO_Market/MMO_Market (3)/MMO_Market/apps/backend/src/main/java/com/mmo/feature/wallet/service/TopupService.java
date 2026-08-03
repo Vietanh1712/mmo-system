@@ -56,7 +56,8 @@ public class TopupService {
     @Autowired
     private NotificationRepository notificationRepository;
 
-    private static final Pattern TRANSFER_CONTENT_PATTERN = Pattern.compile("MMO[\\s-]*TOPUP[\\s-]*(\\d+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern TRANSFER_CONTENT_PATTERN_NEW = Pattern.compile("MMO[\\s-]*TOPUP[\\s-]*(\\d+)[\\s-]*(\\d+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern TRANSFER_CONTENT_PATTERN_OLD = Pattern.compile("MMO[\\s-]*TOPUP[\\s-]*(\\d+)", Pattern.CASE_INSENSITIVE);
 
     @EventListener(ApplicationReadyEvent.class)
     public void initTopupData() {
@@ -168,20 +169,26 @@ public class TopupService {
             return false;
         }
 
-        Matcher matcher = TRANSFER_CONTENT_PATTERN.matcher(content);
-        if (!matcher.find()) {
-            log.warn("Transaction content '{}' does not match pattern 'MMO-TOPUP-<userId>'.", content);
-            saveFailedTopup(sepayCode, amount, content, 0L, "Nội dung chuyển khoản không đúng cú pháp MMO-TOPUP-<userID>");
-            return false;
+        Matcher matcherNew = TRANSFER_CONTENT_PATTERN_NEW.matcher(content);
+        Matcher matcherOld = TRANSFER_CONTENT_PATTERN_OLD.matcher(content);
+
+        Long userId = null;
+        Long transactionId = null;
+
+        if (matcherNew.find()) {
+            try {
+                userId = Long.parseLong(matcherNew.group(1));
+                transactionId = Long.parseLong(matcherNew.group(2));
+            } catch (NumberFormatException ignored) {}
+        } else if (matcherOld.find()) {
+            try {
+                userId = Long.parseLong(matcherOld.group(1));
+            } catch (NumberFormatException ignored) {}
         }
 
-        String userIdStr = matcher.group(1);
-        Long userId;
-        try {
-            userId = Long.parseLong(userIdStr);
-        } catch (NumberFormatException e) {
-            log.error("Failed to parse user ID: {}", userIdStr);
-            saveFailedTopup(sepayCode, amount, content, 0L, "Không thể đọc ID người dùng từ cú pháp nội dung chuyển khoản: " + userIdStr);
+        if (userId == null) {
+            log.warn("Transaction content '{}' does not match any pattern.", content);
+            saveFailedTopup(sepayCode, amount, content, 0L, "Nội dung chuyển khoản không đúng cú pháp MMO-TOPUP-<userID>[-<requestID>]");
             return false;
         }
 
@@ -229,28 +236,80 @@ public class TopupService {
         }
 
         Long oldBalance = user.getBalanceVnd() != null ? user.getBalanceVnd() : 0L;
-        user.setBalanceVnd(oldBalance + amount);
-        userRepository.save(user);
 
-        shopLevelService.updateShopLockStatus(user.getId());
+        if (transactionId != null) {
+            // New Flow: Check pending transaction by ID and user ID
+            Optional<TopupTransaction> txOpt = topupTransactionRepository.findById(transactionId);
+            if (txOpt.isEmpty() || !txOpt.get().getUserId().equals(userId)) {
+                log.error("Top-up request #{} not found or does not match user ID {}.", transactionId, userId);
+                saveFailedTopup(sepayCode, amount, content, user.getId(), "Mã yêu cầu nạp tiền #" + transactionId + " không hợp lệ cho người dùng này.");
+                return false;
+            }
 
-        TopupTransaction transaction = TopupTransaction.builder()
-                .userId(user.getId())
+            TopupTransaction tx = txOpt.get();
+            if ("Success".equalsIgnoreCase(tx.getStatus())) {
+                log.warn("Top-up request #{} already paid. Rejecting duplicate pay.", transactionId);
+                saveFailedTopup(sepayCode, amount, content, user.getId(), "Yêu cầu nạp tiền #" + transactionId + " đã được thanh toán trước đó. Không thể nạp lại.");
+                return false;
+            }
+
+            // Update user balance
+            user.setBalanceVnd(oldBalance + amount);
+            userRepository.save(user);
+
+            shopLevelService.updateShopLockStatus(user.getId());
+
+            // Update existing pending transaction to Success
+            tx.setStatus("Success");
+            tx.setSepayCode(sepayCode);
+            tx.setBalanceBefore(oldBalance);
+            tx.setBalanceAfter(user.getBalanceVnd());
+            tx.setAmountVnd(amount); // Use actual bank transferred amount
+            topupTransactionRepository.save(tx);
+
+            walletService.recordTransaction(user, "TOPUP", amount, "SUCCESS", "Nạp tiền qua SePay (Mã yêu cầu #" + transactionId + ")", "SEPAY-" + sepayCode, user.getBalanceVnd());
+
+            log.info("Successfully topped up {} VND for User ID {} ({}) via request #{}. New balance: {}", 
+                    amount, user.getId(), user.getEmail(), transactionId, user.getBalanceVnd());
+            return true;
+        } else {
+            // Old Flow: Direct auto-credit (create a new Success transaction)
+            user.setBalanceVnd(oldBalance + amount);
+            userRepository.save(user);
+
+            shopLevelService.updateShopLockStatus(user.getId());
+
+            TopupTransaction transaction = TopupTransaction.builder()
+                    .userId(user.getId())
+                    .amountVnd(amount)
+                    .sepayCode(sepayCode)
+                    .transferContent(content)
+                    .balanceBefore(oldBalance)
+                    .balanceAfter(user.getBalanceVnd())
+                    .status("Success")
+                    .build();
+            topupTransactionRepository.save(transaction);
+
+            walletService.recordTransaction(user, "TOPUP", amount, "SUCCESS", "Nạp tiền qua SePay (Cú pháp cũ)", "SEPAY-" + sepayCode, user.getBalanceVnd());
+
+            log.info("Successfully topped up {} VND for User ID {} ({}) via old flow. New balance: {}", 
+                    amount, user.getId(), user.getEmail(), user.getBalanceVnd());
+            return true;
+        }
+    }
+
+    @Transactional
+    public TopupTransaction createPendingTopup(Long userId, Long amount) {
+        TopupTransaction tx = TopupTransaction.builder()
+                .userId(userId)
                 .amountVnd(amount)
-                .sepayCode(sepayCode)
-                .transferContent(content)
-                .balanceBefore(oldBalance)
-                .balanceAfter(user.getBalanceVnd())
-                .status("Success")
+                .status("Pending")
                 .build();
-        topupTransactionRepository.save(transaction);
-
-        walletService.recordTransaction(user, "TOPUP", amount, "SUCCESS", "Nạp tiền qua SePay", "SEPAY-" + sepayCode, user.getBalanceVnd());
-
-        log.info("Successfully topped up {} VND for User ID {} ({}). New balance: {}", 
-                amount, user.getId(), user.getEmail(), user.getBalanceVnd());
-
-        return true;
+        tx = topupTransactionRepository.save(tx);
+        
+        String transferContent = "MMO-TOPUP-" + userId + "-" + tx.getId();
+        tx.setTransferContent(transferContent);
+        return topupTransactionRepository.save(tx);
     }
 
     private void saveFailedTopup(String sepayCode, Long amount, String content, Long userId, String reason) {
