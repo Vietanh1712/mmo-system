@@ -110,7 +110,8 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/css/**"),
                                 new AntPathRequestMatcher("/js/**"),
                                 new AntPathRequestMatcher("/images/**"),
-                                new AntPathRequestMatcher("/uploads/**")
+                                new AntPathRequestMatcher("/uploads/**"),
+                                new AntPathRequestMatcher("/favicon.ico")
                         ).permitAll()
 
                         // Protected endpoints
