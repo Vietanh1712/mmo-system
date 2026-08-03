@@ -140,10 +140,20 @@ function openEditMode(event) {
         return;
     }
 
-    document.getElementById('profileFullNameInput').value = currentProfile.fullName || '';
+    const isKycApproved = currentProfile.kycStatus === 'APPROVED';
+
+    const fullNameInput = document.getElementById('profileFullNameInput');
+    fullNameInput.value = currentProfile.fullName || '';
+    fullNameInput.readOnly = isKycApproved;
+    setReadOnlyStyle(fullNameInput, isKycApproved);
+
     document.getElementById('profileEmailInput').value = currentProfile.email || '';
     document.getElementById('profilePhoneInput').value = currentProfile.phone || '';
-    document.getElementById('profileNationalIdInput').value = currentProfile.nationalId || '';
+
+    const nationalIdInput = document.getElementById('profileNationalIdInput');
+    nationalIdInput.value = currentProfile.nationalId || '';
+    nationalIdInput.readOnly = isKycApproved;
+    setReadOnlyStyle(nationalIdInput, isKycApproved);
     
     const genderValue = currentProfile.gender || '';
     const genderRadio = document.querySelector(`input[name="gender"][value="${genderValue}"]`);
@@ -168,15 +178,39 @@ function openEditMode(event) {
     const dobDisplayInput = document.getElementById('profileDateOfBirthDisplay');
     if (dobDisplayInput) {
         dobDisplayInput.value = dobDisplay;
+        dobDisplayInput.readOnly = isKycApproved;
+        setReadOnlyStyle(dobDisplayInput, isKycApproved);
     }
 
-    document.getElementById('profileAddressInput').value = currentProfile.address || '';
+    const datepickerBtn = document.querySelector('[data-ds-date-toggle]');
+    if (datepickerBtn) {
+        datepickerBtn.disabled = isKycApproved;
+        datepickerBtn.style.cursor = isKycApproved ? 'not-allowed' : '';
+    }
+
+    const addressInput = document.getElementById('profileAddressInput');
+    addressInput.value = currentProfile.address || '';
+    addressInput.readOnly = isKycApproved;
+    setReadOnlyStyle(addressInput, isKycApproved);
+
     clearFormErrors();
 
     document.getElementById('profileDetails').hidden = true;
     document.getElementById('profileActions').hidden = true;
     document.getElementById('profileEditForm').hidden = false;
     setProfileModeInUrl('edit');
+}
+
+function setReadOnlyStyle(element, isReadOnly) {
+    if (isReadOnly) {
+        element.style.backgroundColor = '#f1f5f9';
+        element.style.color = '#64748b';
+        element.style.cursor = 'not-allowed';
+    } else {
+        element.style.backgroundColor = '';
+        element.style.color = '';
+        element.style.cursor = '';
+    }
 }
 
 function closeEditMode() {
@@ -359,6 +393,17 @@ function renderProfile(profile) {
     document.getElementById('profileFullName').textContent = fullName;
     document.getElementById('profileGender').textContent = profile.gender || '-';
     
+    // Dynamic label for Passport
+    const isPassport = profile.kycStatus === 'APPROVED' && profile.kycDocumentType === 'PASSPORT';
+    const nationalIdLabel = document.querySelector('#profileNationalIdRow dt');
+    if (nationalIdLabel) {
+        nationalIdLabel.textContent = isPassport ? 'Số Hộ chiếu' : 'Số CCCD/CMND';
+    }
+    const nationalIdFieldLabel = document.querySelector('#profileNationalIdField .ds-label');
+    if (nationalIdFieldLabel) {
+        nationalIdFieldLabel.textContent = isPassport ? 'Số Hộ chiếu' : 'Số CCCD/CMND';
+    }
+
     renderMaskedField('profileEmail', profile.email, maskEmail);
     renderMaskedField('profilePhone', profile.phone, maskString);
     renderMaskedField('profileNationalId', profile.nationalId, maskString);
