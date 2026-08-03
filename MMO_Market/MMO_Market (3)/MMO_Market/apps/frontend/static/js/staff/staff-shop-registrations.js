@@ -108,7 +108,7 @@
             const stt = page * size + index + 1;
 
             const shopStatusBadge = getShopStatusBadge(item.shopStatus);
-            const depositFormatted = formatVnd(item.depositVnd);
+            const depositFormatted = formatVnd(item.feeVnd || item.depositVnd || 500000);
             const balanceFormatted = formatVnd(item.balanceVnd);
 
             const tr = document.createElement('tr');

@@ -76,9 +76,13 @@ public class ShopRegistrationResponseDto {
      */
     private Long depositVnd;
 
+
     /**
      * Số dư tài khoản hiện tại của người bán trong hệ thống.
      */
+
+    private Long feeVnd;
+
     private Long balanceVnd;
 
     /**

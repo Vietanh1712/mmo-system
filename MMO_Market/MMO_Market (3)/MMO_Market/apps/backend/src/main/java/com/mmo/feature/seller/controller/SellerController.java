@@ -411,13 +411,18 @@ public class SellerController {
      * Nếu Shop bị khóa, tạm ngưng hoặc cấm, trả về thông báo lỗi chi tiết tương ứng.
      */
     private String validateShopActiveStatus(User seller) {
-        if (seller.getShopStatus() != null &&
-                ("Suspended".equalsIgnoreCase(seller.getShopStatus()) || "TEMP_LOCKED".equalsIgnoreCase(seller.getShopStatus())) &&
-                seller.getSuspendedUntil() != null &&
-                java.time.LocalDateTime.now().isAfter(seller.getSuspendedUntil())) {
-            seller.setShopStatus("Active");
-            seller.setSuspendedUntil(null);
-            userRepository.save(seller);
+        if (seller.getSuspendedUntil() != null) {
+            if (java.time.LocalDateTime.now().isBefore(seller.getSuspendedUntil())) {
+                return "Cửa hàng của bạn đang bị đình chỉ hoạt động đến " + 
+                        seller.getSuspendedUntil().toString().replace("T", " ").substring(0, 16) + 
+                        ", không thể thực hiện thao tác này.";
+            } else {
+                seller.setSuspendedUntil(null);
+                if ("Suspended".equalsIgnoreCase(seller.getShopStatus()) || "TEMP_LOCKED".equalsIgnoreCase(seller.getShopStatus())) {
+                    seller.setShopStatus("Active");
+                }
+                userRepository.save(seller);
+            }
         }
 
         String status = seller.getShopStatus();
@@ -878,6 +883,10 @@ public class SellerController {
                 map.put("status", t.getStatus());
                 map.put("createdAt", t.getCreatedAt().toString());
                 map.put("escrowReleaseDate", t.getEscrowReleaseDate() != null ? t.getEscrowReleaseDate().toString() : "");
+                if ("Disputed".equalsIgnoreCase(t.getStatus())) {
+                    complaintRepository.findFirstByTransactionIdAndIsDeleteFalseOrderByIdDesc(t.getId())
+                            .ifPresent(c -> map.put("complaintId", c.getId()));
+                }
                 return map;
             }).collect(Collectors.toList());
 
@@ -1159,6 +1168,7 @@ public class SellerController {
                 map.put("productName", c.getTransaction().getProduct().getName());
                 map.put("variantName", c.getTransaction().getVariant().getVariantName());
                 map.put("customerEmail", c.getCustomer().getEmail());
+                map.put("customerId", c.getCustomer().getId());
                 map.put("description", c.getDescription());
                 map.put("amountVnd", c.getTransaction().getAmountVnd());
                 map.put("status", c.getStatus());
@@ -1218,6 +1228,7 @@ public class SellerController {
             details.put("productName", c.getTransaction().getProduct().getName());
             details.put("variantName", c.getTransaction().getVariant().getVariantName());
             details.put("amountVnd", c.getTransaction().getAmountVnd());
+            details.put("customerId", c.getCustomer().getId());
             details.put("customerName", c.getCustomer().getFullName());
             details.put("customerEmail", c.getCustomer().getEmail());
             details.put("description", c.getDescription());

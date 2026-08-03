@@ -37,6 +37,9 @@ public class ComplaintController {
     @Autowired
     private ComplaintRepository complaintRepository;
 
+    @Autowired
+    private com.mmo.shared.dal.ShopFlagRepository shopFlagRepository;
+
     private boolean isStaffOrAdmin(Long userId) {
         if (userId == null) return false;
         return userRepository.findByIdAndIsDeleteFalse(userId)
@@ -81,6 +84,11 @@ public class ComplaintController {
             sellerMap.put("id", c.getSeller().getId());
             sellerMap.put("email", c.getSeller().getEmail());
             sellerMap.put("fullName", c.getSeller().getFullName());
+            long activeFlagsCount = shopFlagRepository.findBySellerIdAndIsDeleteFalseOrderByCreatedAtDesc(c.getSeller().getId())
+                .stream()
+                .filter(f -> "Effect".equalsIgnoreCase(f.getStatus()))
+                .count();
+            sellerMap.put("activeFlagsCount", activeFlagsCount);
             map.put("seller", sellerMap);
         }
 
@@ -211,6 +219,7 @@ public class ComplaintController {
         String resolution = request.get("resolution");
         String flagLevel = request.get("flagLevel");
         String flagReason = request.get("flagReason");
+        String suspendedUntil = request.get("suspendedUntil");
 
         if (status == null || status.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "Trạng thái status không được để trống."));
@@ -223,6 +232,7 @@ public class ComplaintController {
                     resolution != null ? resolution.trim() : null,
                     flagLevel,
                     flagReason,
+                    suspendedUntil,
                     userId
             );
             return ResponseEntity.ok(mapComplaintToDto(complaint));
