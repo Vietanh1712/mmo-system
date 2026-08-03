@@ -84,6 +84,12 @@ public class TransactionService {
             userRepository.save(seller);
         }
 
+        if (seller.getSuspendedUntil() != null && LocalDateTime.now().isBefore(seller.getSuspendedUntil())) {
+            throw new IllegalArgumentException("Cửa hàng của người bán đang bị đình chỉ hoạt động đến " +
+                    seller.getSuspendedUntil().toString().replace("T", " ").substring(0, 16) +
+                    ", không thể mua sản phẩm.");
+        }
+
         String sellerShopStatus = seller.getShopStatus();
         if (sellerShopStatus != null) {
             if ("Suspended".equalsIgnoreCase(sellerShopStatus) || "TEMP_LOCKED".equalsIgnoreCase(sellerShopStatus)) {

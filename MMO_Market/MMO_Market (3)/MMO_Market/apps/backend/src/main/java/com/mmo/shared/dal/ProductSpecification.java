@@ -112,6 +112,10 @@ public class ProductSpecification {
             predicates.add(criteriaBuilder.not(root.get("seller").get("shopStatus").in(
                     "Locked", "Banned", "Pending", "Suspended", "TEMP_LOCKED", "Withdrawn", "DELETED", "INDEFINITE_LOCKED", "PERMANENT_BANNED"
             )));
+            predicates.add(criteriaBuilder.or(
+                    criteriaBuilder.isNull(root.get("seller").get("suspendedUntil")),
+                    criteriaBuilder.lessThanOrEqualTo(root.get("seller").get("suspendedUntil"), java.time.LocalDateTime.now())
+            ));
 
             // --- Avoid duplicates when joining with a one-to-many relationship ---
             query.distinct(true);
