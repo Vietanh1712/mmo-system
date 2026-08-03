@@ -60,6 +60,23 @@ public class AuthenticationService {
     @Value("${google.oauth2.client-secret}")
     private String googleClientSecret;
 
+    public static final String OTP_REGISTRATION = "REGISTRATION";
+    public static final String OTP_PASSWORD_RESET = "PASSWORD_RESET";
+    public static final String OTP_ENABLE_2FA = "ENABLE_2FA";
+    public static final String OTP_LOGIN_2FA = "LOGIN_2FA";
+    public static final String OTP_WITHDRAWAL = "WITHDRAWAL";
+
+    private void invalidateOldOtps(Long userId, String otpType) {
+        java.util.List<EmailVerification> oldOtps = emailVerificationRepository
+                .findByUserIdAndOtpTypeAndIsUsedFalse(userId, otpType);
+        if (oldOtps != null && !oldOtps.isEmpty()) {
+            for (EmailVerification oldOtp : oldOtps) {
+                oldOtp.setIsUsed(true);
+            }
+            emailVerificationRepository.saveAll(oldOtps);
+        }
+    }
+
     @jakarta.annotation.PostConstruct
     public void init() {
         if (googleClientId != null && org.springframework.util.StringUtils.hasText(googleClientId)) {
@@ -116,11 +133,14 @@ public class AuthenticationService {
 
         String otp = generateOtp();
 
+        invalidateOldOtps(savedUser.getId(), OTP_REGISTRATION);
+
         EmailVerification emailVerification = EmailVerification.builder()
                 .userId(savedUser.getId())
                 .verificationCode(otp)
                 .expiryDate(LocalDateTime.now().plusMinutes(getOtpTimeoutMins()))
                 .isUsed(false)
+                .otpType(OTP_REGISTRATION)
                 .build();
         emailVerificationRepository.save(emailVerification);
 
@@ -150,7 +170,7 @@ public class AuthenticationService {
         User user = userOptional.get();
 
         Optional<EmailVerification> otpOptional = emailVerificationRepository
-                .findByUserIdAndVerificationCodeAndIsUsedFalse(user.getId(), request.getOtp());
+                .findByUserIdAndVerificationCodeAndOtpTypeAndIsUsedFalse(user.getId(), request.getOtp(), OTP_REGISTRATION);
 
         if (otpOptional.isEmpty()) {
             return VerifyOtpResponse.builder().success(false).message("Mã OTP không hợp lệ hoặc đã được sử dụng").build();
@@ -191,7 +211,7 @@ public class AuthenticationService {
 
         // Tìm mã OTP
         Optional<EmailVerification> otpOptional = emailVerificationRepository
-                .findByUserIdAndVerificationCode(user.getId(), request.getOtp());
+                .findByUserIdAndVerificationCodeAndOtpType(user.getId(), request.getOtp(), OTP_PASSWORD_RESET);
 
         if (otpOptional.isEmpty()) {
             return VerifyOtpResponse.builder().success(false).message("Mã OTP không hợp lệ").build();
@@ -226,21 +246,27 @@ public class AuthenticationService {
 
         int otpTimeout = getOtpTimeoutMins();
 
-        // Kiểm tra giới hạn tần suất gửi lại mã (Rate Limiting 60s)
-        emailVerificationRepository.findFirstByUserIdOrderByExpiryDateDesc(user.getId())
+        // Kiểm tra giới hạn tần suất gửi lại mã (Rate Limiting)
+        emailVerificationRepository.findFirstByUserIdAndOtpTypeOrderByExpiryDateDesc(user.getId(), OTP_REGISTRATION)
                 .ifPresent(lastOtp -> {
-                    if (lastOtp.getExpiryDate().isAfter(LocalDateTime.now().plusMinutes(otpTimeout - 1))) {
-                        throw new RuntimeException("Vui lòng chờ ít nhất 60 giây trước khi yêu cầu gửi lại mã.");
+                    LocalDateTime targetTime = lastOtp.getExpiryDate().minusMinutes(otpTimeout - 1);
+                    LocalDateTime now = LocalDateTime.now();
+                    if (targetTime.isAfter(now)) {
+                        long secondsRemaining = java.time.Duration.between(now, targetTime).getSeconds();
+                        throw new RuntimeException("Vui lòng chờ " + secondsRemaining + " giây trước khi yêu cầu gửi lại mã.");
                     }
                 });
 
         String newOtp = generateOtp();
+
+        invalidateOldOtps(user.getId(), OTP_REGISTRATION);
 
         EmailVerification emailVerification = EmailVerification.builder()
                 .userId(user.getId())
                 .verificationCode(newOtp)
                 .expiryDate(LocalDateTime.now().plusMinutes(otpTimeout))
                 .isUsed(false)
+                .otpType(OTP_REGISTRATION)
                 .build();
         emailVerificationRepository.save(emailVerification);
 
@@ -260,21 +286,27 @@ public class AuthenticationService {
 
         int otpTimeout = getOtpTimeoutMins();
 
-        // Kiểm tra giới hạn tần suất yêu cầu khôi phục (Rate Limiting 60s)
-        emailVerificationRepository.findFirstByUserIdOrderByExpiryDateDesc(user.getId())
+        // Kiểm tra giới hạn tần suất yêu cầu khôi phục (Rate Limiting)
+        emailVerificationRepository.findFirstByUserIdAndOtpTypeOrderByExpiryDateDesc(user.getId(), OTP_PASSWORD_RESET)
                 .ifPresent(lastOtp -> {
-                    if (lastOtp.getExpiryDate().isAfter(LocalDateTime.now().plusMinutes(otpTimeout - 1))) {
-                        throw new RuntimeException("Vui lòng chờ ít nhất 60 giây trước khi yêu cầu khôi phục mật khẩu.");
+                    LocalDateTime targetTime = lastOtp.getExpiryDate().minusMinutes(otpTimeout - 1);
+                    LocalDateTime now = LocalDateTime.now();
+                    if (targetTime.isAfter(now)) {
+                        long secondsRemaining = java.time.Duration.between(now, targetTime).getSeconds();
+                        throw new RuntimeException("Vui lòng chờ " + secondsRemaining + " giây trước khi yêu cầu khôi phục mật khẩu.");
                     }
                 });
 
         String newOtp = generateOtp();
+
+        invalidateOldOtps(user.getId(), OTP_PASSWORD_RESET);
 
         EmailVerification emailVerification = EmailVerification.builder()
                 .userId(user.getId())
                 .verificationCode(newOtp)
                 .expiryDate(LocalDateTime.now().plusMinutes(otpTimeout))
                 .isUsed(false)
+                .otpType(OTP_PASSWORD_RESET)
                 .build();
         emailVerificationRepository.save(emailVerification);
 
@@ -297,7 +329,7 @@ public class AuthenticationService {
 
         // Sử dụng findByUserIdAndVerificationCode (Không kèm điều kiện isUsedFalse ở tên hàm)
         Optional<EmailVerification> otpOptional = emailVerificationRepository
-                .findByUserIdAndVerificationCode(user.getId(), otp);
+                .findByUserIdAndVerificationCodeAndOtpType(user.getId(), otp, OTP_PASSWORD_RESET);
 
         if (otpOptional.isEmpty()) {
             throw new RuntimeException("Mã OTP không hợp lệ.");
@@ -334,11 +366,16 @@ public class AuthenticationService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
         
         String otp = generateOtp();
+        int otpTimeout = getOtpTimeoutMins();
+
+        invalidateOldOtps(user.getId(), OTP_ENABLE_2FA);
+
         EmailVerification emailVerification = EmailVerification.builder()
                 .userId(user.getId())
                 .verificationCode(otp)
-                .expiryDate(LocalDateTime.now().plusMinutes(5))
+                .expiryDate(LocalDateTime.now().plusMinutes(otpTimeout))
                 .isUsed(false)
+                .otpType(OTP_ENABLE_2FA)
                 .build();
         emailVerificationRepository.save(emailVerification);
         
@@ -355,7 +392,7 @@ public class AuthenticationService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
         
         Optional<EmailVerification> otpOptional = emailVerificationRepository
-                .findByUserIdAndVerificationCodeAndIsUsedFalse(userId, otp);
+                .findByUserIdAndVerificationCodeAndOtpTypeAndIsUsedFalse(userId, otp, OTP_ENABLE_2FA);
                 
         if (otpOptional.isEmpty()) {
             throw new RuntimeException("Mã OTP không hợp lệ hoặc đã được sử dụng.");
@@ -466,11 +503,16 @@ public class AuthenticationService {
         if (Boolean.TRUE.equals(user.getIs2faEnabled())) {
             // Gửi OTP và yêu cầu 2FA
             String otp = generateOtp();
+            int otpTimeout = getOtpTimeoutMins();
+
+            invalidateOldOtps(user.getId(), OTP_LOGIN_2FA);
+
             EmailVerification emailVerification = EmailVerification.builder()
                     .userId(user.getId())
                     .verificationCode(otp)
-                    .expiryDate(LocalDateTime.now().plusMinutes(5))
+                    .expiryDate(LocalDateTime.now().plusMinutes(otpTimeout))
                     .isUsed(false)
+                    .otpType(OTP_LOGIN_2FA)
                     .build();
             emailVerificationRepository.save(emailVerification);
             
@@ -535,7 +577,7 @@ public class AuthenticationService {
         }
 
         Optional<EmailVerification> otpOptional = emailVerificationRepository
-                .findByUserIdAndVerificationCodeAndIsUsedFalse(user.getId(), request.getOtp());
+                .findByUserIdAndVerificationCodeAndOtpTypeAndIsUsedFalse(user.getId(), request.getOtp(), OTP_LOGIN_2FA);
 
         if (otpOptional.isEmpty()) {
             return LoginResponse.builder().message("Mã OTP không hợp lệ hoặc đã được sử dụng").build();
@@ -835,14 +877,29 @@ public class AuthenticationService {
 
     @Transactional
     public void sendWithdrawalOtp(User user) {
-        String otp = generateOtp();
         int otpTimeout = getOtpTimeoutMins();
+
+        // Kiểm tra giới hạn tần suất gửi lại mã (Rate Limiting)
+        emailVerificationRepository.findFirstByUserIdAndOtpTypeOrderByExpiryDateDesc(user.getId(), OTP_WITHDRAWAL)
+                .ifPresent(lastOtp -> {
+                    LocalDateTime targetTime = lastOtp.getExpiryDate().minusMinutes(otpTimeout - 1);
+                    LocalDateTime now = LocalDateTime.now();
+                    if (targetTime.isAfter(now)) {
+                        long secondsRemaining = java.time.Duration.between(now, targetTime).getSeconds();
+                        throw new RuntimeException("Vui lòng chờ " + secondsRemaining + " giây trước khi yêu cầu gửi lại mã.");
+                    }
+                });
+
+        String otp = generateOtp();
+
+        invalidateOldOtps(user.getId(), OTP_WITHDRAWAL);
 
         EmailVerification emailVerification = EmailVerification.builder()
                 .userId(user.getId())
                 .verificationCode(otp)
                 .expiryDate(LocalDateTime.now().plusMinutes(otpTimeout))
                 .isUsed(false)
+                .otpType(OTP_WITHDRAWAL)
                 .build();
         emailVerificationRepository.save(emailVerification);
 
@@ -853,7 +910,7 @@ public class AuthenticationService {
     @Transactional
     public void verifyWithdrawalOtp(Long userId, String otp) {
         Optional<EmailVerification> otpOpt = emailVerificationRepository
-                .findByUserIdAndVerificationCodeAndIsUsedFalse(userId, otp);
+                .findByUserIdAndVerificationCodeAndOtpTypeAndIsUsedFalse(userId, otp, OTP_WITHDRAWAL);
         if (otpOpt.isEmpty()) {
             throw new IllegalArgumentException("Mã xác thực OTP không chính xác hoặc đã được sử dụng.");
         }

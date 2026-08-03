@@ -32,6 +32,9 @@ public class EmailVerification {
     @Column(name = "is_used")
     private Boolean isUsed;
 
+    @Column(name = "otp_type", length = 50)
+    private String otpType;
+
     @PrePersist
     protected void onCreate() {
         if (isUsed == null) {
