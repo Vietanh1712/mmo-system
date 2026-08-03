@@ -55,11 +55,14 @@ public class SupportTicketService {
                 .build();
         notificationRepository.save(customerNotif);
 
-        // 2. Tạo thông báo cho Staff có quyền quản lý hỗ trợ (MANAGE_SUPPORT)
+        // 2. Tạo thông báo cho Staff có quyền quản lý hỗ trợ (MANAGE_SUPPORT) - Bỏ qua Admin
         List<User> staffAndAdmins = userRepository.findUsersByPermission("MANAGE_SUPPORT");
         for (User staff : staffAndAdmins) {
             if (staff.getId().equals(user.getId())) {
                 continue;
+            }
+            if (staff.getRole() != null && staff.getRole().toLowerCase().contains("admin")) {
+                continue; // Admin không nhận thông báo tác nghiệp hỗ trợ của Staff
             }
             Notification staffNotif = Notification.builder()
                     .userId(staff.getId())
