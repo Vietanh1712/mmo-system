@@ -561,11 +561,14 @@ document.addEventListener('DOMContentLoaded', () => {
     loadComplaintDetails();
 });
 
+// Hàm xử lý ẩn/hiện trường thời gian tạm ngưng khi Staff chọn mức độ cờ vi phạm:
+// - Mở ra khi chọn Mức độ 2: Nguy hiểm (Danger / Suspension) để đặt thời hạn mở khóa.
+// - Ẩn đi đối với Mức độ 1: Cảnh cáo (Warning) và Mức độ 3: Cấm (Ban).
 window.handleFlagLevelChange = function() {
     const flagLevel = document.getElementById('flagLevel').value;
     const durField = document.getElementById('suspensionDurationField');
     if (durField) {
-        if (flagLevel === 'Suspension') {
+        if (flagLevel === 'Danger' || flagLevel === 'Suspension') {
             durField.style.display = 'block';
         } else {
             durField.style.display = 'none';

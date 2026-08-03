@@ -25,7 +25,7 @@
                     </div>
                     <span class="ds-badge"
                           th:classappend="${flag.flagLevel == 'Warning' ? 'ds-badge-warning' : (flag.flagLevel == 'Danger' or flag.flagLevel == 'Critical' ? 'ds-badge-danger' : 'ds-badge-info')}"
-                          th:text="${flag.flagLevel == 'Warning' ? 'Cảnh cáo' : (flag.flagLevel == 'Danger' ? 'Nguy hiểm' : (flag.flagLevel == 'Critical' ? 'Phê bình' : (flag.flagLevel == 'Suspension' ? 'Đình chỉ' : (flag.flagLevel == 'Ban' ? 'Cấm' : flag.flagLevel))))}">
+                          th:text="${flag.flagLevel == 'Warning' ? 'Mức độ 1: Cảnh cáo' : (flag.flagLevel == 'Danger' ? 'Mức độ 2: Nguy hiểm' : (flag.flagLevel == 'Ban' ? 'Mức độ 3: Cấm' : flag.flagLevel))}">
                     </span>
                 </div>
 
@@ -98,7 +98,7 @@
                                                     id="flagLevel" style="background-color: #f8fafc; font-weight: 600;">
                                                 <option th:each="l : ${levels}"
                                                         th:value="${l}"
-                                                        th:text="${l == 'Warning' ? 'Cảnh cáo' : (l == 'Danger' ? 'Nguy hiểm' : (l == 'Critical' ? 'Phê bình' : (l == 'Suspension' ? 'Đình chỉ' : (l == 'Ban' ? 'Cấm' : l))))}"
+                                                        th:text="${l == 'Warning' ? 'Mức độ 1: Cảnh cáo' : (l == 'Danger' ? 'Mức độ 2: Nguy hiểm' : (l == 'Ban' ? 'Mức độ 3: Cấm' : l))}"
                                                         th:selected="${flag.flagLevel == l}">
                                                 </option>
                                             </select>

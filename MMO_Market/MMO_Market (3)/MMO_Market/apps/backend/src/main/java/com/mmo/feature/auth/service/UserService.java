@@ -165,8 +165,8 @@ public class UserService {
         long shopOpeningFee = systemConfigurationRepository.findByConfigKey("SHOP_OPENING_FEE_VND")
                 .map(c -> {
                     try { return Long.parseLong(c.getConfigValue()); }
-                    catch (NumberFormatException e) { return 50000L; }
-                }).orElse(50000L);
+                    catch (NumberFormatException e) { return 500000L; }
+                }).orElse(500000L);
                 
         // 3. Kiểm tra số dư ví
         long userBalance = user.getBalanceVnd() != null ? user.getBalanceVnd() : 0L;

@@ -61,19 +61,19 @@
                             <h2 class="ds-card-title">Cập nhật trạng thái hoạt động</h2>
                         </div>
                         <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px;">
-                            <div class="ds-form-field">
-                                <label class="ds-label" for="shopStatusSelect">Trạng thái mới</label>
-                                <select class="ds-input" id="shopStatusSelect">
-                                    <option value="Active">Hoạt động</option>
-                                    <option value="Suspended">Tạm ngưng</option>
-                                    <option value="Locked">Tạm khóa</option>
-                                    <option value="Banned">Khóa vĩnh viễn</option>
-                                    <option value="Withdrawn">Đã đóng Shop (Hoàn phí)</option>
-                                </select>
+                            <div id="updateStatusFormFields" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                                <div class="ds-form-field">
+                                    <label class="ds-label" for="shopStatusSelect">Trạng thái mới</label>
+                                    <select class="ds-input" id="shopStatusSelect">
+                                        <option value="Active">Hoạt động</option>
+                                        <option value="Suspended">Tạm ngưng</option>
+                                        <option value="Withdrawn">Đã đóng Shop (Hoàn phí)</option>
+                                    </select>
+                                </div>
+                                <button class="ds-btn ds-btn-primary" type="button" onclick="submitShopStatusUpdate()" style="width: 100%;">
+                                    <i class="fa fa-save"></i> Lưu cập nhật
+                                </button>
                             </div>
-                            <button class="ds-btn ds-btn-primary" type="button" onclick="submitShopStatusUpdate()" style="width: 100%;">
-                                <i class="fa fa-save"></i> Lưu cập nhật
-                            </button>
                             <div style="border-top: 1px solid var(--ds-border); padding-top: 16px; margin-top: 4px;">
                                 <a class="ds-btn ds-btn-outline" href="/staff/shop-registrations" style="width: 100%;">
                                     <i class="fa fa-arrow-left"></i> Quay lại danh sách

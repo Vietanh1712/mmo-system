@@ -45,16 +45,12 @@
                 const totalEl = document.getElementById('stat-total-shops');
                 const activeEl = document.getElementById('stat-active-shops');
                 const depositEl = document.getElementById('stat-total-deposit');
-                const bannedEl = document.getElementById('stat-banned-shops');
-                const lockedEl = document.getElementById('stat-locked-shops');
                 const suspendedEl = document.getElementById('stat-suspended-shops');
                 const withdrawnEl = document.getElementById('stat-withdrawn-shops');
 
                 if (totalEl) totalEl.textContent = stats.totalShops || 0;
                 if (activeEl) activeEl.textContent = stats.activeShops || 0;
                 if (depositEl) depositEl.textContent = formatVnd(stats.totalDeposit || 0) + ' đ';
-                if (bannedEl) bannedEl.textContent = stats.permanentBannedShops || 0;
-                if (lockedEl) lockedEl.textContent = stats.indefiniteLockedShops || 0;
                 if (suspendedEl) suspendedEl.textContent = stats.temporarySuspendedShops || 0;
                 if (withdrawnEl) withdrawnEl.textContent = stats.withdrawnShops || 0;
             }

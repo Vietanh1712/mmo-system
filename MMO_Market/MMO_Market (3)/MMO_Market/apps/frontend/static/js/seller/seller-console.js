@@ -1083,6 +1083,70 @@ async function initProductAdd() {
     const subSelect = document.getElementById('subCategory');
     if (!mainSelect || !subSelect) return;
 
+    // Check shop status first
+    try {
+        const shopRes = await sellerFetch('/shop-info');
+        if (shopRes.ok) {
+            const shopData = await shopRes.json();
+            const shopStatus = (shopData.shopStatus || '').toUpperCase();
+            if (shopStatus === 'SUSPENDED' || shopStatus === 'TEMP_LOCKED' || shopStatus === 'LOCKED' || shopStatus === 'BANNED' || shopStatus === 'WITHDRAWN') {
+                const form = document.getElementById('productForm');
+                if (form) {
+                    const notice = document.createElement('div');
+                    notice.className = 'ds-alert ds-alert-danger';
+                    notice.style.marginBottom = '20px';
+                    notice.style.padding = '16px';
+                    notice.style.fontSize = '15px';
+                    notice.style.lineHeight = '1.6';
+                    
+                    let msg = 'Cửa hàng của bạn đã bị tạm ngưng hoặc khóa, không thể đăng bán sản phẩm mới.';
+                    if (shopStatus === 'SUSPENDED' || shopStatus === 'TEMP_LOCKED') {
+                        if (shopData.suspendedUntil) {
+                            try {
+                                const dt = new Date(shopData.suspendedUntil);
+                                const formatted = dt.toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+                                msg = `Cửa hàng của bạn đang ở trạng thái <b>Tạm Ngưng</b> đến <b>${formatted}</b>. Bạn không thể nhập thông tin và đăng bán sản phẩm mới cho đến khi hết thời hạn tạm ngưng.`;
+                            } catch (ex) {
+                                msg = 'Cửa hàng của bạn đang ở trạng thái <b>Tạm Ngưng</b>. Bạn không thể nhập thông tin và đăng bán sản phẩm mới lúc này.';
+                            }
+                        } else {
+                            msg = 'Cửa hàng của bạn đang ở trạng thái <b>Tạm Ngưng</b>. Bạn không thể nhập thông tin và đăng bán sản phẩm mới lúc này.';
+                        }
+                    } else if (shopStatus === 'BANNED') {
+                        msg = 'Cửa hàng của bạn đã bị <b>Khóa Vĩnh Viễn</b>. Không thể đăng bán sản phẩm mới.';
+                    } else if (shopStatus === 'WITHDRAWN') {
+                        msg = 'Cửa hàng của bạn đã <b>Đóng Shop (Hoàn cọc)</b>. Không thể đăng bán sản phẩm mới.';
+                    } else if (shopStatus === 'LOCKED') {
+                        msg = 'Cửa hàng của bạn đang bị <b>Tạm Khóa</b>. Không thể đăng bán sản phẩm mới.';
+                    }
+                    
+                    notice.innerHTML = `<i class="fa fa-exclamation-triangle" style="font-size: 18px; margin-right: 8px;"></i> ${msg}`;
+                    form.parentNode.insertBefore(notice, form);
+                    
+                    // Disable all form elements
+                    const elements = form.querySelectorAll('input, select, textarea, button');
+                    elements.forEach(el => {
+                        el.disabled = true;
+                        if (el.tagName !== 'BUTTON') {
+                            el.style.backgroundColor = '#f1f5f9';
+                            el.style.cursor = 'not-allowed';
+                        }
+                    });
+                    
+                    // Also disable variant add button
+                    const btnAddVar = document.getElementById('btnAddVariant');
+                    if (btnAddVar) {
+                        btnAddVar.disabled = true;
+                        btnAddVar.style.cursor = 'not-allowed';
+                        btnAddVar.style.opacity = '0.6';
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        console.error("Lỗi khi kiểm tra trạng thái cửa hàng:", err);
+    }
+
     try {
         await setupCategorySelectors(mainSelect, subSelect);
 

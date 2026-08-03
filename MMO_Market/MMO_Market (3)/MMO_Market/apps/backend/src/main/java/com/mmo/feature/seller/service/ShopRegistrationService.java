@@ -442,7 +442,7 @@ public class ShopRegistrationService {
         // XỬ LÝ TRẠNG THÁI "ĐÃ ĐÓNG SHOP (HOÀN PHÍ)" (Withdrawn):
         if ("Withdrawn".equalsIgnoreCase(shopStatus) || "WITHDRAWN".equalsIgnoreCase(shopStatus)) {
             // 1. Hoàn lại phí mở shop về số dư ví khả dụng (balanceVnd)
-            long feeToRefund = registration.getFeeVnd() != null ? registration.getFeeVnd() : (user.getDepositVnd() != null && user.getDepositVnd() > 0 ? user.getDepositVnd() : 500000L);
+            long feeToRefund = registration.getFeeVnd() != null && registration.getFeeVnd() >= 500000L ? registration.getFeeVnd() : (user.getDepositVnd() != null && user.getDepositVnd() >= 500000L ? user.getDepositVnd() : 500000L);
             long currentBalance = user.getBalanceVnd() != null ? user.getBalanceVnd() : 0L;
             long newBalance = currentBalance + feeToRefund;
             user.setBalanceVnd(newBalance);
@@ -511,7 +511,7 @@ public class ShopRegistrationService {
         String notifTargetUrl;
 
         if ("Withdrawn".equalsIgnoreCase(shopStatus)) {
-            long depositRef = registration.getFeeVnd() != null && registration.getFeeVnd() > 0 ? registration.getFeeVnd() : 50000L;
+            long depositRef = registration.getFeeVnd() != null && registration.getFeeVnd() >= 500000L ? registration.getFeeVnd() : 500000L;
             notifTitle = "⚠️ Shop của bạn đã bị đóng cửa (Hoàn phí)";
             notifContent = String.format(
                 "Shop \"%s\" đã bị đóng cửa theo quyết định của Ban quản trị. " +

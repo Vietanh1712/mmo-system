@@ -110,11 +110,17 @@ public class AdminRevenueService {
         List<SellerRegistration> approvedRegistrations = sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc();
         long approvedFees = approvedRegistrations.stream()
                 .filter(reg -> "Approved".equalsIgnoreCase(reg.getStatus()) || "Withdrawn".equalsIgnoreCase(reg.getStatus()))
-                .mapToLong(reg -> reg.getFeeVnd() != null ? reg.getFeeVnd() : 500000L)
+                .mapToLong(reg -> {
+                    long fee = reg.getFeeVnd() != null ? reg.getFeeVnd() : 500000L;
+                    return fee < 500000L ? 500000L : fee;
+                })
                 .sum();
         long refundedFees = approvedRegistrations.stream()
                 .filter(reg -> "Withdrawn".equalsIgnoreCase(reg.getStatus()))
-                .mapToLong(reg -> reg.getFeeVnd() != null ? reg.getFeeVnd() : 500000L)
+                .mapToLong(reg -> {
+                    long fee = reg.getFeeVnd() != null ? reg.getFeeVnd() : 500000L;
+                    return fee < 500000L ? 500000L : fee;
+                })
                 .sum();
         long shopOpeningFees = approvedFees - refundedFees;
 
@@ -190,7 +196,7 @@ public class AdminRevenueService {
         for (int i = 0; i < transactions.size(); i++) {
             CashflowTransactionDto tx = transactions.get(i);
             String txTypeLabel = "Shop_Opening".equals(tx.getType()) ? "Phí mở shop" : ("Withdrawal".equals(tx.getType()) ? "Rút tiền" : "Giao dịch C2C");
-            String statusLabel = "Completed".equals(tx.getStatus()) ? "Hoàn tất" : ("Held".equals(tx.getStatus()) ? "Tạm giữ" : ("Pending".equals(tx.getStatus()) ? "Đang xử lý" : "Thất bại"));
+            String statusLabel = "Completed".equals(tx.getStatus()) ? "Hoàn tất" : ("Held".equals(tx.getStatus()) ? "Tạm giữ" : ("Pending".equals(tx.getStatus()) ? "Đang xử lý" : ("Disputed".equals(tx.getStatus()) ? "Khiếu nại" : "Thất bại")));
             csv.append(i + 1).append(",")
                     .append(tx.getId()).append(",")
                     .append(tx.getTimestamp().format(formatter)).append(",")
@@ -216,14 +222,17 @@ public class AdminRevenueService {
         long shopOpeningFee = systemConfigurationRepository.findByConfigKey("SHOP_OPENING_FEE_VND")
                 .map(c -> {
                     try { return Long.parseLong(c.getConfigValue()); }
-                    catch (NumberFormatException e) { return 50000L; }
-                }).orElse(50000L);
+                    catch (NumberFormatException e) { return 500000L; }
+                }).orElse(500000L);
 
         // 1. Phí mở Shop (SellerRegistrations được phê duyệt hoặc hoàn phí do đóng shop)
         List<SellerRegistration> shopRegistrations = sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc();
         if (shopRegistrations != null) {
             for (SellerRegistration reg : shopRegistrations) {
                 long actualFee = reg.getFeeVnd() != null ? reg.getFeeVnd() : 500000L;
+                if (actualFee < 500000L) {
+                    actualFee = 500000L;
+                }
                 if ("Approved".equalsIgnoreCase(reg.getStatus()) || "Withdrawn".equalsIgnoreCase(reg.getStatus())) {
                     allCashflow.add(CashflowTransactionDto.builder()
                             .id("SHOP" + reg.getId())

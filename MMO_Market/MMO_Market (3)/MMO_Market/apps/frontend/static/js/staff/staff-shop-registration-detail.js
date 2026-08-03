@@ -74,6 +74,15 @@ async function loadShopDetail() {
             }
         }
 
+        const updateSec = document.getElementById('updateStatusSection');
+        if (updateSec) {
+            if (shopStUpper === 'WITHDRAWN' || shopStUpper === 'DELETED') {
+                updateSec.style.display = 'none';
+            } else {
+                updateSec.style.display = 'block';
+            }
+        }
+
         if (data.suspendedUntil) {
             startCountdown(data.suspendedUntil);
         } else {
@@ -213,10 +222,8 @@ async function executeStatusUpdate(status, suspendedUntil) {
         const response = await authFetch(url, { method: 'PUT' });
         const res = await response.json();
         if (response.ok) {
-            showToast(res.description || 'Cập nhật trạng thái Shop thành công!', "success");
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
+            showToast('Cập nhật trạng thái Shop thành công!', "success");
+            loadShopDetail();
         } else {
             showToast(res.description || 'Lỗi khi cập nhật trạng thái Shop.', "danger");
         }

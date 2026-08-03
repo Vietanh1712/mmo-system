@@ -66,6 +66,9 @@ public class StaffController {
     @Autowired
     private SellerRegistrationRepository sellerRegistrationRepository;
 
+    @Autowired
+    private com.mmo.shared.dal.UserRepository userRepository;
+
 
 
     @GetMapping("/dashboard")
@@ -430,9 +433,26 @@ public class StaffController {
         model.addAttribute("currentPage",    page);
         model.addAttribute("totalPages",     fPage.getTotalPages());
         model.addAttribute("totalFlags",     shopFlagRepository.countByIsDeleteFalse());
-        model.addAttribute("dangerFlags",    shopFlagRepository.countByFlagLevelAndIsDeleteFalse("Danger"));
+        
+        // Đồng bộ hóa thống kê cờ theo 3 mức độ mới:
+        // - Mức độ 1: Cảnh cáo (Warning)
+        // - Mức độ 2: Nguy hiểm (Gộp từ Danger, Critical, Suspension)
+        // - Mức độ 3: Cấm (Ban)
+         
+        // Đếm tổng số cờ mức độ 2 (Nguy hiểm / Đình chỉ / Phê bình)
+        long dangerFlagsCount = shopFlagRepository.countByFlagLevelAndIsDeleteFalse("Danger")
+                + shopFlagRepository.countByFlagLevelAndIsDeleteFalse("Critical")
+                + shopFlagRepository.countByFlagLevelAndIsDeleteFalse("Suspension");
+        model.addAttribute("dangerFlags",    dangerFlagsCount);
+        
+        // Đếm số cờ mức độ 1 (Cảnh cáo)
         model.addAttribute("warningFlags",   shopFlagRepository.countByFlagLevelAndIsDeleteFalse("Warning"));
-        model.addAttribute("criticalFlags",  shopFlagRepository.countByFlagLevelAndIsDeleteFalse("Critical"));
+        
+        // Đếm số cờ mức độ 3 (Cấm)
+        long banFlagsCount = shopFlagRepository.countByFlagLevelAndIsDeleteFalse("Ban");
+        model.addAttribute("banFlags",       banFlagsCount);
+        model.addAttribute("criticalFlags",  0); // thuộc tính cũ, giữ lại để tránh lỗi ở các phần khác
+        
         model.addAttribute("removedFlags",   shopFlagRepository.countRemovedFlags());
         model.addAttribute("activeFlags",    shopFlagRepository.countActiveFlags());
 
@@ -463,10 +483,7 @@ public class StaffController {
         }
         model.addAttribute("flag", flag);
         
-        List<String> levels = shopFlagRepository.findDistinctFlagLevels();
-        if (levels.isEmpty()) {
-            levels = List.of("Warning", "Critical", "Danger");
-        }
+        List<String> levels = List.of("Warning", "Danger", "Ban");
         model.addAttribute("levels", levels);
 
         List<String> statuses = shopFlagRepository.findDistinctStatuses();
@@ -493,6 +510,19 @@ public class StaffController {
             flag.setStatus(status);
             flag.setReason(reason);
             shopFlagRepository.save(flag);
+
+            // Tự động kiểm tra cờ của Seller sau khi Staff chỉnh sửa cờ:
+            com.mmo.shared.model.User seller = flag.getSeller();
+            if (seller != null) {
+                List<ShopFlag> activeFlags = shopFlagRepository.findBySellerAndIsDeleteFalseOrderByCreatedAtDesc(seller);
+                // QUY TẮC SỐNG CÒN: Đạt từ 3 cờ trở lên -> auto Banned
+                if (activeFlags != null && activeFlags.size() >= 3) {
+                    seller.setShopStatus("Banned");
+                    seller.setSuspendedUntil(null);
+                    userRepository.save(seller);
+                }
+            }
+
             redirectAttributes.addFlashAttribute(
                     "success",
                     "Cập nhật cờ thành công"

@@ -491,32 +491,50 @@ public class ComplaintServiceImpl implements ComplaintService {
                         .build();
                 shopFlagRepository.save(flag);
 
-                // Áp dụng hình phạt theo mức độ cờ
-                String trimmedFlag = flagLevel.trim();
-                if ("Suspension".equalsIgnoreCase(trimmedFlag) || "Critical".equalsIgnoreCase(trimmedFlag)) {
-                    seller.setShopStatus("Suspended");
-                    seller.setWithdrawalLocked(true);
-                    seller.setShopLevel(0);
-                    if (suspendedUntil != null && !suspendedUntil.trim().isEmpty()) {
-                        try {
-                            String sUntil = suspendedUntil.trim();
-                            if (!sUntil.contains("T") && sUntil.contains(" ")) {
-                                sUntil = sUntil.replace(" ", "T");
+                // ==========================================
+                // XỬ LÝ HÌNH PHẠT CHO SELLER DỰA TRÊN SỐ CỜ VÀ MỨC ĐỘ
+                // ==========================================
+                 
+                // Lấy danh sách cờ đang có hiệu lực (isDelete = false) của Seller
+                List<ShopFlag> activeFlags = shopFlagRepository.findBySellerAndIsDeleteFalseOrderByCreatedAtDesc(seller);
+                 
+                // QUY TẮC SỐNG CÒN: Nếu Seller bị gắn từ 3 cờ vi phạm trở lên, 
+                // hệ thống tự động khóa vĩnh viễn (Banned) và gỡ thời hạn tạm ngưng.
+                if (activeFlags != null && activeFlags.size() >= 3) {
+                    seller.setShopStatus("Banned");
+                    seller.setSuspendedUntil(null);
+                    userRepository.save(seller);
+                    log.info("Seller ID {} bị gắn từ 3 cờ vi phạm trở lên (Đang có {} cờ). Tự động chuyển trạng thái Shop thành khóa vĩnh viễn (Banned).", seller.getId(), activeFlags.size());
+                } else {
+                    // Nếu dưới 3 cờ, áp dụng hình phạt tương ứng theo mức độ phạt của cờ vừa gắn:
+                    String trimmedFlag = flagLevel.trim();
+                     
+                    // MỨC ĐỘ 2: Tạm khóa cửa hàng (Suspension / Critical / Danger)
+                    if ("Suspension".equalsIgnoreCase(trimmedFlag) || "Critical".equalsIgnoreCase(trimmedFlag) || "Danger".equalsIgnoreCase(trimmedFlag)) {
+                        seller.setShopStatus("Suspended");
+                        seller.setWithdrawalLocked(true);
+                        seller.setShopLevel(0);
+                        if (suspendedUntil != null && !suspendedUntil.trim().isEmpty()) {
+                            try {
+                                String sUntil = suspendedUntil.trim();
+                                if (!sUntil.contains("T") && sUntil.contains(" ")) {
+                                    sUntil = sUntil.replace(" ", "T");
+                                }
+                                seller.setSuspendedUntil(LocalDateTime.parse(sUntil));
+                            } catch (Exception e) {
+                                seller.setSuspendedUntil(LocalDateTime.now().plusDays(7));
                             }
-                            seller.setSuspendedUntil(LocalDateTime.parse(sUntil));
-                        } catch (Exception e) {
+                        } else {
                             seller.setSuspendedUntil(LocalDateTime.now().plusDays(7));
                         }
-                    } else {
-                        seller.setSuspendedUntil(LocalDateTime.now().plusDays(7));
+                        userRepository.save(seller);
+                    } else if ("Ban".equalsIgnoreCase(trimmedFlag)) {
+                        seller.setShopStatus("Banned");
+                        userRepository.save(seller);
+                    } else if ("Warning".equalsIgnoreCase(trimmedFlag)) {
+                        seller.setShopLevel(0);
+                        userRepository.save(seller);
                     }
-                    userRepository.save(seller);
-                } else if ("Ban".equalsIgnoreCase(trimmedFlag) || "Danger".equalsIgnoreCase(trimmedFlag)) {
-                    seller.setShopStatus("Banned");
-                    userRepository.save(seller);
-                } else if ("Warning".equalsIgnoreCase(trimmedFlag)) {
-                    seller.setShopLevel(0);
-                    userRepository.save(seller);
                 }
 
                 log.info("Staff ID {} đã gắn cờ {} cho Seller ID {} từ khiếu nại #{}", staffId, flagLevel, seller.getId(), complaintId);
