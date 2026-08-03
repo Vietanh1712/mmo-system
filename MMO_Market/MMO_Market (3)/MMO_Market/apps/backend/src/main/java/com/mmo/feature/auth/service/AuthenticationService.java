@@ -60,6 +60,18 @@ public class AuthenticationService {
     @Value("${google.oauth2.client-secret}")
     private String googleClientSecret;
 
+    @jakarta.annotation.PostConstruct
+    public void init() {
+        if (googleClientId != null && org.springframework.util.StringUtils.hasText(googleClientId)) {
+            googleClientId = googleClientId.trim();
+            if (googleClientId.endsWith(".apps.googleusercontent.com.apps.googleusercontent.com")) {
+                googleClientId = googleClientId.substring(0, googleClientId.length() - ".apps.googleusercontent.com".length());
+            } else if (!googleClientId.endsWith(".apps.googleusercontent.com")) {
+                googleClientId += ".apps.googleusercontent.com";
+            }
+        }
+    }
+
     /**
      * Đăng ký người dùng mới
      */
