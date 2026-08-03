@@ -515,3 +515,17 @@
 .cred-status-msg.cred-status-pending { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
 .cred-status-msg.cred-status-danger  { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
 .cred-status-msg.cred-status-warning { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+
+/* Chặn icon mắt và nút clear mặc định của trình duyệt */
+input::-ms-reveal,
+input::-ms-clear,
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button,
+input::-webkit-reveal,
+input::-webkit-clear-button {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}

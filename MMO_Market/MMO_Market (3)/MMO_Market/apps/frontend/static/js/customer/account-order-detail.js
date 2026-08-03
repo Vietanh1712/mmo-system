@@ -231,7 +231,10 @@ function renderOrderDetail(order) {
     document.getElementById('orderAccessInfo').innerHTML = createAccessInfo(order);
     document.getElementById('orderTransactionCode').textContent = `TX-${order.orderCode.replace('MMO-ORD-', '')}`;
     document.getElementById('orderPaymentText').textContent = formatPaymentStatus(order.paymentStatus);
-    document.getElementById('orderPaymentAmount').textContent = formatMoney(order.amount);
+    const paymentAmountEl = document.getElementById('orderPaymentAmount');
+    if (paymentAmountEl) {
+        paymentAmountEl.textContent = formatMoney(order.amount);
+    }
     document.getElementById('orderActionHint').textContent = getActionHint(order);
 
     const viewProductBtn = document.getElementById('orderViewProductButton');
@@ -378,6 +381,24 @@ function createAccessInfo(order) {
         return renderSingleCredentialCard(creds, isKeyOnly);
     }
 
+    if (['HELD', 'COMPLETED', 'DELIVERED'].includes(order.status)) {
+        return `
+            <div class="cred-status-msg cred-status-warning" style="display: flex; flex-direction: column; align-items: flex-start; gap: 12px; text-align: left;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fa fa-exclamation-triangle" style="color: #ea580c; font-size: 16px;"></i>
+                    <strong style="color: #ea580c;">Chưa đính kèm thông tin nhận hàng tự động</strong>
+                </div>
+                <p style="margin: 0; font-size: 13.5px; line-height: 1.5; color: #475569;">
+                    Đơn hàng này chưa có tài khoản hoặc key bàn giao tự động từ hệ thống. 
+                    Vui lòng bấm nút <strong>"Chat với người bán"</strong> dưới đây để nhận thông tin trực tiếp từ người bán hoặc kiểm tra lại đơn hàng.
+                </p>
+                <button class="ds-btn ds-btn-primary" onclick="window.location.href='/messages?sellerId=${order.sellerId || 14}'" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; font-size: 13.5px; border-radius: 6px; font-weight: 500; cursor: pointer; border: none; background-color: var(--brand-accent, #ea580c); color: #fff; width: fit-content; text-decoration: none;">
+                    <i class="fa fa-comments"></i> Chat với người bán
+                </button>
+            </div>
+        `;
+    }
+
     return '<div class="cred-status-msg"><i class="fa fa-info-circle"></i> Thông tin nhận hàng sẽ được hiển thị tại đây khi sản phẩm được giao thành công.</div>';
 }
 
@@ -388,6 +409,10 @@ function createAccessInfo(order) {
  * @returns {string} - Mã HTML của Card hiển thị tài khoản
  */
 function renderSingleCredentialCard(creds, isKeyOnly) {
+    let usernameCopyVal = escapeHtml(creds.username).replace(/'/g, '&#039;');
+    let passwordCopyVal = escapeHtml(creds.password).replace(/'/g, '&#039;');
+    let noteCopyVal = escapeHtml(creds.note || '').replace(/'/g, '&#039;');
+
     return `
         <div class="cred-card">
             <div class="cred-card__header">
@@ -399,8 +424,11 @@ function renderSingleCredentialCard(creds, isKeyOnly) {
             <div class="cred-field">
                 <span class="cred-field__label">${isKeyOnly ? 'Mã kích hoạt (Key):' : 'Tài khoản (Email/Username):'}</span>
                 <div class="cred-field__row">
-                    <code class="cred-field__value" id="credUsername">${escapeHtml(creds.username)}</code>
-                    <button class="cred-copy-btn" onclick="copyToClipboard('${escapeHtml(creds.username).replace(/'/g, '&#039;')}', '${isKeyOnly ? 'M\u00e3 k\u00edch ho\u1ea1t' : 'T\u00e0i kho\u1ea3n'}', this)" title="Sao chép">
+                    <code class="cred-field__value" id="credUsername" data-raw-value="${usernameCopyVal}" data-masked="${isKeyOnly ? 'true' : 'false'}">${isKeyOnly ? '••••••••••••' : escapeHtml(creds.username)}</code>
+                    <button class="cred-copy-btn" onclick="toggleCardFieldVisibility('credUsername', this)" title="Hiện/Ẩn" style="padding: 7px 10px; border-color: #cbd5e1; background: #fff; color: #475569; border-radius: 6px; cursor: pointer;">
+                        <i class="fa ${isKeyOnly ? 'fa-eye-slash' : 'fa-eye'}"></i>
+                    </button>
+                    <button class="cred-copy-btn" onclick="copyToClipboard('${usernameCopyVal}', '${isKeyOnly ? 'M\u00e3 k\u00edch ho\u1ea1t' : 'T\u00e0i kho\u1ea3n'}', this)" title="Sao chép">
                         <i class="fa fa-copy"></i><span>Copy</span>
                     </button>
                 </div>
@@ -410,8 +438,11 @@ function renderSingleCredentialCard(creds, isKeyOnly) {
             <div class="cred-field">
                 <span class="cred-field__label">Mật khẩu:</span>
                 <div class="cred-field__row">
-                    <code class="cred-field__value" id="credPassword">${escapeHtml(creds.password)}</code>
-                    <button class="cred-copy-btn" onclick="copyToClipboard('${escapeHtml(creds.password).replace(/'/g, '&#039;')}', 'M\u1eadt kh\u1ea9u', this)" title="Sao chép">
+                    <code class="cred-field__value" id="credPassword" data-raw-value="${passwordCopyVal}" data-masked="true">••••••••••••</code>
+                    <button class="cred-copy-btn" onclick="toggleCardFieldVisibility('credPassword', this)" title="Hiện/Ẩn" style="padding: 7px 10px; border-color: #cbd5e1; background: #fff; color: #475569; border-radius: 6px; cursor: pointer;">
+                        <i class="fa fa-eye-slash"></i>
+                    </button>
+                    <button class="cred-copy-btn" onclick="copyToClipboard('${passwordCopyVal}', 'M\u1eadt kh\u1ea9u', this)" title="Sao chép">
                         <i class="fa fa-copy"></i><span>Copy</span>
                     </button>
                 </div>
@@ -423,7 +454,7 @@ function renderSingleCredentialCard(creds, isKeyOnly) {
                 <span class="cred-field__label">Ghi chú:</span>
                 <div class="cred-field__row">
                     <code class="cred-field__value" id="credNote">${escapeHtml(creds.note)}</code>
-                    <button class="cred-copy-btn" onclick="copyToClipboard('${escapeHtml(creds.note).replace(/'/g, '&#039;')}', 'Ghi ch\u00fa', this)" title="Sao chép">
+                    <button class="cred-copy-btn" onclick="copyToClipboard('${noteCopyVal}', 'Ghi ch\u00fa', this)" title="Sao chép">
                         <i class="fa fa-copy"></i><span>Copy</span>
                     </button>
                 </div>
@@ -537,33 +568,54 @@ window.loadMoreCredentials = function () {
         let usernameCopyVal = escapeHtml(c.username).replace(/'/g, '&#039;');
         let passwordCopyVal = escapeHtml(c.password).replace(/'/g, '&#039;');
 
-        let actionsHtml = '';
+        let usernameCell = '';
         if (isKeyOnly) {
-            actionsHtml = `
-                <button class="ds-btn ds-btn-text" style="padding: 4px 8px; font-size: 13px;" onclick="copyToClipboard('${usernameCopyVal}', 'M\u00e3 k\u00edch ho\u1ea1t', this)">
-                    <i class="fa fa-copy"></i> Copy Key
-                </button>
+            usernameCell = `
+                <td style="padding: 12px 10px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                        <span class="value-text" data-raw-value="${usernameCopyVal}" data-masked="true" style="font-family: monospace; font-weight: 600; color: #0f172a; word-break: break-all;">••••••••••••</span>
+                        <div style="display: flex; gap: 4px; flex-shrink: 0;">
+                            <button class="toggle-visibility-btn" style="background:none; border:none; padding:4px; cursor:pointer; color:#64748b;" onclick="toggleTableFieldVisibility(this)" title="Hiện/Ẩn Key"><i class="fa fa-eye-slash"></i></button>
+                            <button class="copy-field-btn" style="background:none; border:none; padding:4px; cursor:pointer; color:#64748b;" onclick="copyTableFieldValue('${usernameCopyVal}', 'Mã kích hoạt', this)" title="Sao chép Key"><i class="fa fa-copy"></i></button>
+                        </div>
+                    </div>
+                </td>
             `;
         } else {
-            actionsHtml = `
-                <button class="ds-btn ds-btn-text" style="padding: 4px 8px; font-size: 13px; margin-right: 6px;" onclick="copyToClipboard('${usernameCopyVal}', 'T\u00e0i kho\u1ea1t', this)" title="Copy tài khoản">
-                    <i class="fa fa-user"></i> Copy User
-                </button>
-                <button class="ds-btn ds-btn-text" style="padding: 4px 8px; font-size: 13px;" onclick="copyToClipboard('${passwordCopyVal}', 'M\u1eadt kh\u1ea9u', this)" title="Copy mật khẩu">
-                    <i class="fa fa-lock"></i> Copy Pass
-                </button>
+            usernameCell = `
+                <td style="padding: 12px 10px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                        <span class="value-text" data-raw-value="${usernameCopyVal}" data-masked="false" style="font-family: monospace; font-weight: 600; color: #0f172a; word-break: break-all;">${escapeHtml(c.username)}</span>
+                        <div style="display: flex; gap: 4px; flex-shrink: 0;">
+                            <button class="toggle-visibility-btn" style="background:none; border:none; padding:4px; cursor:pointer; color:#64748b;" onclick="toggleTableFieldVisibility(this)" title="Hiện/Ẩn Tài khoản"><i class="fa fa-eye"></i></button>
+                            <button class="copy-field-btn" style="background:none; border:none; padding:4px; cursor:pointer; color:#64748b;" onclick="copyTableFieldValue('${usernameCopyVal}', 'Tài khoản', this)" title="Sao chép Tài khoản"><i class="fa fa-copy"></i></button>
+                        </div>
+                    </div>
+                </td>
+            `;
+        }
+
+        let passwordCell = '';
+        if (!isKeyOnly) {
+            passwordCell = `
+                <td style="padding: 12px 10px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                        <span class="value-text" data-raw-value="${passwordCopyVal}" data-masked="true" style="font-family: monospace; font-weight: 600; color: #0f172a; word-break: break-all;">••••••••••••</span>
+                        <div style="display: flex; gap: 4px; flex-shrink: 0;">
+                            <button class="toggle-visibility-btn" style="background:none; border:none; padding:4px; cursor:pointer; color:#64748b;" onclick="toggleTableFieldVisibility(this)" title="Hiện/Ẩn Mật khẩu"><i class="fa fa-eye-slash"></i></button>
+                            <button class="copy-field-btn" style="background:none; border:none; padding:4px; cursor:pointer; color:#64748b;" onclick="copyTableFieldValue('${passwordCopyVal}', 'Mật khẩu', this)" title="Sao chép Mật khẩu"><i class="fa fa-copy"></i></button>
+                        </div>
+                    </div>
+                </td>
             `;
         }
 
         return `
             <tr style="border-bottom: 1px solid #f1f5f9;">
                 <td style="text-align: center; font-weight: 600; color: #64748b; padding: 12px 10px;">${idx + 1}</td>
-                <td style="font-family: monospace; font-weight: 600; color: #0f172a; word-break: break-all; padding: 12px 10px;">${escapeHtml(c.username)}</td>
-                ${isKeyOnly ? '' : `<td style="font-family: monospace; font-weight: 600; color: #0f172a; word-break: break-all; padding: 12px 10px;">${escapeHtml(c.password)}</td>`}
+                ${usernameCell}
+                ${passwordCell}
                 <td style="font-size: 13px; color: #475569; padding: 12px 10px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(c.note || '')}">${escapeHtml(c.note || '-')}</td>
-                <td style="text-align: center; padding: 12px 10px; white-space: nowrap;">
-                    ${actionsHtml}
-                </td>
             </tr>
         `;
     }).join('');
@@ -633,7 +685,6 @@ function renderMultipleCredentialsTable(credsList) {
                             <th style="padding: 10px 10px; font-weight: 700; color: #475569; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">${isKeyOnly ? 'Mã kích hoạt (Key)' : 'Tài khoản (Username)'}</th>
                             ${isKeyOnly ? '' : `<th style="padding: 10px 10px; font-weight: 700; color: #475569; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">Mật khẩu</th>`}
                             <th style="padding: 10px 10px; font-weight: 700; color: #475569; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">Ghi chú</th>
-                            <th style="width: 150px; text-align: center; padding: 10px 10px; font-weight: 700; color: #475569; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody style="background: #fff;">
@@ -943,3 +994,74 @@ async function loadCustomerDisputeChats(complaintId) {
         console.error('Error rendering dispute chats for customer:', err);
     }
 }
+
+window.toggleTableFieldVisibility = function (btn) {
+    const cell = btn.closest('td');
+    if (!cell) return;
+    const textSpan = cell.querySelector('.value-text');
+    if (!textSpan) return;
+    
+    const rawValue = textSpan.getAttribute('data-raw-value');
+    const isMasked = textSpan.getAttribute('data-masked') === 'true';
+    const icon = btn.querySelector('i');
+    
+    if (isMasked) {
+        textSpan.textContent = rawValue;
+        textSpan.setAttribute('data-masked', 'false');
+        if (icon) {
+            icon.className = 'fa fa-eye';
+        }
+    } else {
+        textSpan.textContent = '••••••••••••';
+        textSpan.setAttribute('data-masked', 'true');
+        if (icon) {
+            icon.className = 'fa fa-eye-slash';
+        }
+    }
+};
+
+window.copyTableFieldValue = async function (value, label, btn) {
+    try {
+        await navigator.clipboard.writeText(value);
+        if (btn) {
+            const icon = btn.querySelector('i');
+            if (icon) {
+                icon.className = 'fa fa-check';
+                icon.style.color = '#16a34a';
+                setTimeout(() => {
+                    icon.className = 'fa fa-copy';
+                    icon.style.color = '';
+                }, 1500);
+            }
+        }
+        if (typeof showSuccessToast === 'function') {
+            showSuccessToast(`Đã sao chép ${label} vào bộ nhớ tạm.`);
+        }
+    } catch {
+        if (typeof showWarningToast === 'function') {
+            showWarningToast('Không thể copy tự động. Vui lòng chọn và sao chép thủ công.');
+        }
+    }
+};
+
+window.toggleCardFieldVisibility = function (elementId, btn) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    const rawValue = element.getAttribute('data-raw-value');
+    const isMasked = element.getAttribute('data-masked') === 'true';
+    const icon = btn.querySelector('i');
+    
+    if (isMasked) {
+        element.textContent = rawValue;
+        element.setAttribute('data-masked', 'false');
+        if (icon) {
+            icon.className = 'fa fa-eye';
+        }
+    } else {
+        element.textContent = '••••••••••••';
+        element.setAttribute('data-masked', 'true');
+        if (icon) {
+            icon.className = 'fa fa-eye-slash';
+        }
+    }
+};
