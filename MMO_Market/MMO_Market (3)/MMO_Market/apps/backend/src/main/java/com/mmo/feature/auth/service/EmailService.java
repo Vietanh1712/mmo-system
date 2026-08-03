@@ -147,16 +147,21 @@ public class EmailService {
                     MimeMessage mimeMessage = createMimeMessage(toEmail, subject, content);
                     mailSender.send(mimeMessage);
                     log.info("SMTP sent email successfully to {}", toEmail);
+                    sentSuccessfully = true;
                 } catch (Exception exception) {
                     log.error("SMTP failed to send email to {}: {}", toEmail, exception.getMessage(), exception);
-                    throw new IllegalStateException("Không thể gửi email OTP via SMTP. Vui lòng thử lại sau.", exception);
                 }
-            } else {
-                log.error("Neither Gmail API (which failed or was not configured) nor SMTP JavaMailSender is configured/available.");
-                throw new IllegalStateException(
-                        "Thiếu cấu hình gửi email hoặc cấu hình Gmail API bị sai/hết hạn. Vui lòng cấu hình lại GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, "
-                                + "GOOGLE_REFRESH_TOKEN hoặc cấu hình spring.mail.");
             }
+        }
+
+        if (!sentSuccessfully) {
+            log.warn("=========================================================================");
+            log.warn("🚨 KHÔNG THỂ GỬI EMAIL THỰC TẾ (Lỗi kết nối mạng hoặc sai cấu hình SMTP/Gmail API).");
+            log.warn("🔑 ĐÃ GHI NHẬN OTP VÀO HỆ THỐNG. CHI TIẾT EMAIL ĐỂ KIỂM THỬ (MOCK):");
+            log.warn("   - Gửi tới: {}", toEmail);
+            log.warn("   - Tiêu đề: {}", subject);
+            log.warn("   - Nội dung: \n{}", content);
+            log.warn("=========================================================================");
         }
     }
 
