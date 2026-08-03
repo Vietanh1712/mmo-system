@@ -45,10 +45,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String authHeader = request.getHeader("Authorization");
             String jwt = jwtTokenProvider.extractTokenFromHeader(authHeader);
-            if (jwt == null || jwt.isBlank()) {
+            if (jwt == null || jwt.isBlank() || "null".equalsIgnoreCase(jwt) || "undefined".equalsIgnoreCase(jwt)) {
                 jwt = request.getParameter("token");
             }
-            if ((jwt == null || jwt.isBlank()) && request.getCookies() != null) {
+            if ((jwt == null || jwt.isBlank() || "null".equalsIgnoreCase(jwt) || "undefined".equalsIgnoreCase(jwt)) && request.getCookies() != null) {
                 for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
                     if ("accessToken".equalsIgnoreCase(cookie.getName()) || "token".equalsIgnoreCase(cookie.getName()) || "jwt".equalsIgnoreCase(cookie.getName())) {
                         jwt = cookie.getValue();
@@ -57,7 +57,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
 
-            if (jwt != null && jwtTokenProvider.validateToken(jwt) && jwtTokenProvider.isAccessToken(jwt)) {
+            if (jwt != null && !"null".equalsIgnoreCase(jwt) && !"undefined".equalsIgnoreCase(jwt) && jwtTokenProvider.validateToken(jwt) && jwtTokenProvider.isAccessToken(jwt)) {
                 Long userId = jwtTokenProvider.getUserIdFromToken(jwt);
                 String email = jwtTokenProvider.getEmailFromToken(jwt);
 

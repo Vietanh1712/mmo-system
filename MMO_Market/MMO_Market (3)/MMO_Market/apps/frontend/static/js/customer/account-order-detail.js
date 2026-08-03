@@ -82,11 +82,8 @@ async function handleComplaintSubmit(e) {
         formData.append('file', file);
 
         try {
-            const uploadRes = await fetch('/api/upload', {
+            const uploadRes = await authFetch('/upload', {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
                 body: formData
             });
             const uploadData = await uploadRes.json();
@@ -110,12 +107,8 @@ async function handleComplaintSubmit(e) {
     btnSubmit.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang gửi...';
 
     try {
-        const response = await fetch('/api/complaints', {
+        const response = await authFetch('/complaints', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
             body: JSON.stringify({
                 transactionId: Number(transactionId),
                 description: description,
@@ -826,12 +819,7 @@ async function checkAndLoadDisputeChat(transactionId) {
     const token = sessionStorage.getItem('accessToken');
     if (!token) return;
     try {
-        const res = await fetch('/api/complaints', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
+        const res = await authFetch('/complaints');
         if (!res.ok) return;
         const list = await res.json();
         const complaint = list.find(c => c.transaction && Number(c.transaction.id) === Number(transactionId));
@@ -860,12 +848,8 @@ async function checkAndLoadDisputeChat(transactionId) {
                         if (!text) return;
 
                         try {
-                            const sendRes = await fetch(`/api/complaints/${complaint.id}/chats`, {
+                            const sendRes = await authFetch(`/complaints/${complaint.id}/chats`, {
                                 method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${token}`
-                                },
                                 body: JSON.stringify({ message: text })
                             });
                             if (!sendRes.ok) {
@@ -890,12 +874,7 @@ async function loadCustomerDisputeChats(complaintId) {
     const token = sessionStorage.getItem('accessToken');
     if (!token) return;
     try {
-        const res = await fetch(`/api/complaints/${complaintId}/chats`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
+        const res = await authFetch(`/complaints/${complaintId}/chats`);
         if (!res.ok) return;
         const chats = await res.json();
         const container = document.getElementById('customer-dispute-chat-messages');

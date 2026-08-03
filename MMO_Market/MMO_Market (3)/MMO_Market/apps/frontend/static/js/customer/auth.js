@@ -36,9 +36,11 @@ async function authFetch(url, options = {}) {
     const token = sessionStorage.getItem('accessToken');
     const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
         ...options.headers
     };
+    if (token && token !== 'null' && token !== 'undefined') {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
     if (options.body instanceof FormData) {
         delete headers['Content-Type'];
     }
