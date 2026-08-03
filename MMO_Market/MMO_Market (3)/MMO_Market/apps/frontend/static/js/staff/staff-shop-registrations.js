@@ -145,10 +145,9 @@
 
         if (stUpper === 'REJECTED') return '<span class="ds-badge ds-badge-danger">Bị từ chối</span>';
         
-        // 4 new statuses mapping
         if (stUpper === 'WITHDRAWN' || stUpper === 'DELETED') return '<span class="ds-badge ds-badge-danger">Đã đóng Shop (Hoàn phí)</span>';
-        if (stUpper === 'SUSPENDED' || stUpper === 'TEMP_LOCKED') return '<span class="ds-badge ds-badge-warning">Tạm ngưng</span>';
-        if (stUpper === 'LOCKED' || stUpper === 'INDEFINITE_LOCKED') return '<span class="ds-badge ds-badge-warning">Tạm khóa</span>';
+        if (stUpper === 'SUSPENDED' || stUpper === 'TEMP_SUSPENDED') return '<span class="ds-badge ds-badge-warning">Tạm ngưng</span>';
+        if (stUpper === 'LOCKED' || stUpper === 'TEMP_LOCKED' || stUpper === 'INDEFINITE_LOCKED') return '<span class="ds-badge ds-badge-warning">Tạm khóa</span>';
         if (stUpper === 'BANNED' || stUpper === 'PERMANENT_BANNED') return '<span class="ds-badge ds-badge-danger">Khóa vĩnh viễn</span>';
         
         return `<span class="ds-badge ds-badge-info">${shopStatus}</span>`;

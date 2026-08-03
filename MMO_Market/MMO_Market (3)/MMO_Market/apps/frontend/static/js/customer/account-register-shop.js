@@ -101,7 +101,7 @@ async function loadShopRegistrationState() {
         const response = await authFetch('/v1/shop-registrations/me');
         if (response.ok) {
             const data = await response.json();
-            if (data && data.status !== 'NOT_SUBMITTED') {
+            if (data && data.status && data.status !== 'NOT_SUBMITTED' && data.status !== 'WITHDRAWN') {
                 shopRegistrationState = data;
                 return;
             }

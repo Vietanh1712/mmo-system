@@ -28,6 +28,7 @@ Customer sử dụng Marketplace để tìm kiếm sản phẩm số, xem đánh
 - **FR-CUST-03**: AFTER an Order is created, THE SYSTEM SHALL assign exactly the purchased quantity of unused `DigitalAsset`s to the order item and mark them as used.
 - **FR-CUST-04**: IF the digital asset is invalid, THE SYSTEM SHALL allow the Customer to open a Complaint within 3 days (Escrow period).
 - **FR-CUST-05**: WHEN an Order is successfully completed without complaint, THE SYSTEM SHALL allow the Customer to leave a 1 to 5 star Review.
+- **FR-CUST-06**: WHEN a Customer with verified KYC visits `/account/register-shop` after having closed a previous shop (status `WITHDRAWN`), THE SYSTEM SHALL ignore the closed shop record (`status = WITHDRAWN`) and display a clean shop registration form allowing the Customer to re-register a new shop.
 
 ---
 

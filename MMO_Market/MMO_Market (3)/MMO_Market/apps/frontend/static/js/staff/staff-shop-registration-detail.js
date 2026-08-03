@@ -50,10 +50,10 @@ async function loadShopDetail() {
             } else if (shopStUpper === 'WITHDRAWN' || shopStUpper === 'DELETED') {
                 badge.className = 'ds-badge ds-badge-danger';
                 badge.textContent = 'Đã đóng Shop (Hoàn phí)';
-            } else if (shopStUpper === 'SUSPENDED' || shopStUpper === 'TEMP_LOCKED') {
+            } else if (shopStUpper === 'SUSPENDED' || shopStUpper === 'TEMP_SUSPENDED') {
                 badge.className = 'ds-badge ds-badge-warning';
                 badge.textContent = 'Tạm ngưng';
-            } else if (shopStUpper === 'LOCKED' || shopStUpper === 'INDEFINITE_LOCKED') {
+            } else if (shopStUpper === 'LOCKED' || shopStUpper === 'TEMP_LOCKED' || shopStUpper === 'INDEFINITE_LOCKED') {
                 badge.className = 'ds-badge ds-badge-warning';
                 badge.textContent = 'Tạm khóa';
             } else if (shopStUpper === 'BANNED' || shopStUpper === 'PERMANENT_BANNED') {
@@ -66,10 +66,17 @@ async function loadShopDetail() {
         }
 
         const statusSelect = document.getElementById('shopStatusSelect');
-        if (statusSelect) {
-            if (data.shopStatus) {
-                statusSelect.value = data.shopStatus;
-            } else if (stUpper === 'APPROVED' || stUpper === 'ACTIVE') {
+        if (statusSelect && data.shopStatus) {
+            let st = String(data.shopStatus).toUpperCase();
+            if (st === 'LOCKED' || st === 'TEMP_LOCKED' || st === 'INDEFINITE_LOCKED') {
+                statusSelect.value = 'Locked';
+            } else if (st === 'SUSPENDED' || st === 'TEMP_SUSPENDED') {
+                statusSelect.value = 'Suspended';
+            } else if (st === 'BANNED' || st === 'PERMANENT_BANNED') {
+                statusSelect.value = 'Banned';
+            } else if (st === 'WITHDRAWN' || st === 'DELETED') {
+                statusSelect.value = 'Withdrawn';
+            } else {
                 statusSelect.value = 'Active';
             }
         }
@@ -144,7 +151,7 @@ async function submitShopStatusUpdate() {
     const newStatus = select ? select.value : '';
     if (!newStatus) return;
 
-    if (newStatus === 'Suspended' || newStatus === 'TEMP_LOCKED') {
+    if (newStatus === 'Suspended' || newStatus === 'TEMP_LOCKED' || newStatus === 'Locked') {
         openSuspendShopModal();
         return;
     }
@@ -158,9 +165,9 @@ function openSuspendShopModal() {
     const err = document.getElementById('modalSuspendUntilError');
     if (err) err.textContent = '';
     
-    // Set default datetime-local to 1 day from now
+    // Set default datetime-local to 7 days from now
     const now = new Date();
-    now.setDate(now.getDate() + 1);
+    now.setDate(now.getDate() + 7);
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
@@ -182,7 +189,7 @@ function confirmSuspendShop() {
     const val = input ? input.value : '';
 
     if (!val) {
-        if (err) err.textContent = 'Vui lòng chọn ngày, giờ, phút hết hạn tạm ngưng.';
+        if (err) err.textContent = 'Vui lòng chọn ngày, giờ, phút hết hạn tạm khóa.';
         return;
     }
 
@@ -192,8 +199,11 @@ function confirmSuspendShop() {
         return;
     }
 
+    const select = document.getElementById('shopStatusSelect');
+    const newStatus = select ? select.value : 'Locked';
+
     closeSuspendShopModal();
-    executeStatusUpdate('Suspended', val);
+    executeStatusUpdate(newStatus, val);
 }
 
 async function executeStatusUpdate(status, suspendedUntil) {

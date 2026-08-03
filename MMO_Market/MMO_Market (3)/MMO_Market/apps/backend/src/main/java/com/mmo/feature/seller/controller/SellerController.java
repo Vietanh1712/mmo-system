@@ -93,6 +93,45 @@ public class SellerController {
         if (!role.contains("seller")) {
             throw new IllegalArgumentException("Tài khoản không có quyền truy cập Seller Portal.");
         }
+
+        String shopStatus = user.getShopStatus() != null ? user.getShopStatus().trim() : "";
+
+        // Tự động kiểm tra hết hạn tạm khóa / ngưng
+        if (("Suspended".equalsIgnoreCase(shopStatus) || "TEMP_LOCKED".equalsIgnoreCase(shopStatus) || "Locked".equalsIgnoreCase(shopStatus)) &&
+                user.getSuspendedUntil() != null &&
+                LocalDateTime.now().isAfter(user.getSuspendedUntil())) {
+            user.setShopStatus("Active");
+            user.setSuspendedUntil(null);
+            userRepository.save(user);
+            shopStatus = "Active";
+        }
+
+        // Chặn hoàn toàn truy cập Seller Dashboard nếu tài khoản bị khóa hoặc Shop bị Khóa vĩnh viễn
+        if (Boolean.TRUE.equals(user.getIsLocked()) ||
+                "Banned".equalsIgnoreCase(shopStatus) ||
+                "PERMANENT_BANNED".equalsIgnoreCase(shopStatus)) {
+            throw new IllegalStateException("SHOP_BANNED:Shop của bạn đã bị khóa vĩnh viễn do vi phạm chính sách.");
+        }
+
+        // Chặn truy cập Seller Dashboard nếu Shop đã đóng cửa / Withdrawn
+        if ("Withdrawn".equalsIgnoreCase(shopStatus) ||
+                "Closed".equalsIgnoreCase(shopStatus) ||
+                "Deleted".equalsIgnoreCase(shopStatus)) {
+            throw new IllegalStateException("SHOP_WITHDRAWN:Shop của bạn đã đóng cửa và hoàn phí.");
+        }
+        
+        // Chặn hoàn toàn truy cập Seller Dashboard nếu bị Tạm khóa
+        if ("TEMP_LOCKED".equalsIgnoreCase(shopStatus) || "Locked".equalsIgnoreCase(shopStatus) || "INDEFINITE_LOCKED".equalsIgnoreCase(shopStatus)) {
+            if (user.getSuspendedUntil() != null) {
+                java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+                throw new IllegalStateException("SHOP_TEMPORARILY_LOCKED:" + user.getSuspendedUntil().format(dtf));
+            } else {
+                throw new IllegalStateException("SHOP_TEMPORARILY_LOCKED:Thời hạn chưa xác định (Vui lòng liên hệ Staff)");
+            }
+        }
+
+        // Nếu shopStatus là "Suspended" (Tạm ngưng): Cho phép vào Seller Dashboard xem thông tin, 
+        // nhưng các thao tác đăng/sửa sản phẩm sẽ bị validateShopActiveStatus ngăn lại.
         return user;
     }
 
@@ -388,7 +427,7 @@ public class SellerController {
 
     private String validateShopActiveStatus(User seller) {
         if (seller.getShopStatus() != null &&
-                ("Suspended".equalsIgnoreCase(seller.getShopStatus()) || "TEMP_LOCKED".equalsIgnoreCase(seller.getShopStatus())) &&
+                ("Suspended".equalsIgnoreCase(seller.getShopStatus()) || "TEMP_LOCKED".equalsIgnoreCase(seller.getShopStatus()) || "Locked".equalsIgnoreCase(seller.getShopStatus())) &&
                 seller.getSuspendedUntil() != null &&
                 java.time.LocalDateTime.now().isAfter(seller.getSuspendedUntil())) {
             seller.setShopStatus("Active");

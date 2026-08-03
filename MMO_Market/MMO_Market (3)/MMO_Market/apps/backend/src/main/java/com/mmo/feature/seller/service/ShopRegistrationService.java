@@ -1,7 +1,4 @@
 package com.mmo.feature.seller.service;
-import com.mmo.shared.model.Transaction;
-import com.mmo.shared.model.Category;
-import com.mmo.shared.model.Review;
 
 import com.mmo.shared.dto.ShopRegistrationRequestDto;
 import com.mmo.shared.dto.ShopRegistrationResponseDto;
@@ -10,14 +7,13 @@ import com.mmo.shared.dal.KycRequestRepository;
 import com.mmo.shared.dal.SellerRegistrationRepository;
 import com.mmo.shared.dal.UserRepository;
 import com.mmo.shared.dal.NotificationRepository;
-import com.mmo.shared.model.KycStatus;
-import com.mmo.shared.model.SellerRegistration;
-import com.mmo.shared.model.User;
-import com.mmo.shared.model.SellerBankInfo;
 import com.mmo.shared.dal.SellerBankInfoRepository;
-import com.mmo.shared.model.Notification;
 import com.mmo.shared.dal.SystemConfigurationRepository;
+import com.mmo.shared.dal.AuditLogRepository;
+import com.mmo.shared.dal.WalletTransactionRepository;
+import com.mmo.shared.model.*;
 import com.mmo.feature.wallet.service.WalletService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,8 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.mmo.shared.dal.AuditLogRepository;
-import com.mmo.shared.model.AuditLog;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,38 +61,27 @@ public class ShopRegistrationService {
     @Autowired
     private NotificationRepository notificationRepository;
 
+    @Autowired
+    private WalletTransactionRepository walletTransactionRepository;
+
     @jakarta.annotation.PostConstruct
     public void autoApproveExistingRegistrations() {
         try {
-            List<SellerRegistration> pendingList = sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc().stream()
-                    .filter(r -> r.getStatus() != null && "PENDING".equalsIgnoreCase(r.getStatus().trim()))
-                    .collect(Collectors.toList());
-            for (SellerRegistration reg : pendingList) {
-                reg.setStatus("APPROVED");
-                sellerRegistrationRepository.save(reg);
-                User u = reg.getUser();
-                if (u != null) {
-                    if (u.getRole() == null || u.getRole().contains("\"Customer\"")) {
-                        u.setRole("{\"role\": \"Seller\"}");
-                    }
-                    u.setShopStatus("Active");
-                    userRepository.save(u);
-                }
-            }
-
-            // Fix missing registrations for existing Sellers
             List<User> allUsers = userRepository.findAll();
             for (User u : allUsers) {
-                if (u.getRole() != null && u.getRole().contains("Seller")) {
-                    boolean hasReg = sellerRegistrationRepository.findByUserAndIsDeleteFalse(u).isPresent();
-                    if (!hasReg) {
-                        SellerRegistration reg = new SellerRegistration();
-                        reg.setUser(u);
-                        reg.setShopName(u.getFullName() != null ? u.getFullName() + " Shop" : "Shop " + u.getId());
-                        reg.setStatus("APPROVED");
-                        reg.setCategory("Chung");
-                        reg.setDescription("Shop được tạo tự động từ hệ thống.");
-                        sellerRegistrationRepository.save(reg);
+                if (Boolean.TRUE.equals(u.getIsLocked()) && u.getLockTime() == null) {
+                    u.setIsLocked(false);
+                    userRepository.save(u);
+                }
+                if ("Withdrawn".equalsIgnoreCase(u.getShopStatus())) {
+                    // Cleanup any leftover active registration records for withdrawn users
+                    List<SellerRegistration> regs = sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc().stream()
+                            .filter(r -> r.getUser() != null && r.getUser().getId().equals(u.getId()))
+                            .collect(Collectors.toList());
+                    for (SellerRegistration r : regs) {
+                        r.setStatus("WITHDRAWN");
+                        r.setIsDelete(false);
+                        sellerRegistrationRepository.save(r);
                     }
                 }
             }
@@ -166,6 +149,7 @@ public class ShopRegistrationService {
                 .orElseThrow(() -> new IllegalArgumentException("Người dùng không tồn tại."));
 
         return sellerRegistrationRepository.findFirstByUserAndIsDeleteFalseOrderByIdDesc(user)
+                .filter(reg -> reg.getStatus() == null || !"WITHDRAWN".equalsIgnoreCase(reg.getStatus().trim()))
                 .map(this::mapToDto)
                 .orElse(null);
     }
@@ -176,8 +160,6 @@ public class ShopRegistrationService {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy yêu cầu đăng ký Shop."));
         return mapToDto(registration);
     }
-
-
 
     @Transactional(readOnly = true)
     public List<ShopRegistrationResponseDto> getAllPendingRegistrations() {
@@ -336,9 +318,10 @@ public class ShopRegistrationService {
     }
 
     private ShopRegistrationResponseDto mapToDto(SellerRegistration registration) {
+        if (registration == null) return null;
         User user = registration.getUser();
         if (user != null && user.getShopStatus() != null &&
-                ("Suspended".equalsIgnoreCase(user.getShopStatus()) || "TEMP_LOCKED".equalsIgnoreCase(user.getShopStatus())) &&
+                ("Suspended".equalsIgnoreCase(user.getShopStatus()) || "TEMP_LOCKED".equalsIgnoreCase(user.getShopStatus()) || "Locked".equalsIgnoreCase(user.getShopStatus())) &&
                 user.getSuspendedUntil() != null &&
                 LocalDateTime.now().isAfter(user.getSuspendedUntil())) {
             user.setShopStatus("Active");
@@ -427,9 +410,60 @@ public class ShopRegistrationService {
         if (shopStatus == null || shopStatus.isBlank()) {
             throw new IllegalArgumentException("Trạng thái không hợp lệ.");
         }
-        
+
         user.setShopStatus(shopStatus);
-        if (("Suspended".equalsIgnoreCase(shopStatus) || "TEMP_LOCKED".equalsIgnoreCase(shopStatus))
+        user.setIsLocked(false);
+
+        // XỬ LÝ TRẠNG THÁI "ĐÃ ĐÓNG SHOP (HOÀN PHÍ)" (Withdrawn):
+        if ("Withdrawn".equalsIgnoreCase(shopStatus) || "WITHDRAWN".equalsIgnoreCase(shopStatus)) {
+            // 1. Hoàn lại tiền cọc (depositVnd) về số dư ví khả dụng (balanceVnd) nếu có
+            long deposit = user.getDepositVnd() != null ? user.getDepositVnd() : 0L;
+            if (deposit > 0) {
+                long currentBalance = user.getBalanceVnd() != null ? user.getBalanceVnd() : 0L;
+                long newBalance = currentBalance + deposit;
+                user.setBalanceVnd(newBalance);
+                user.setDepositVnd(0L);
+
+                if (walletTransactionRepository != null) {
+                    WalletTransaction tx = WalletTransaction.builder()
+                            .user(user)
+                            .type("REFUND")
+                            .transactionType("REFUND")
+                            .amountVnd(deposit)
+                            .balanceAfter(newBalance)
+                            .status("SUCCESS")
+                            .description("Hoàn cọc mở Shop do đóng cửa hàng (Withdrawn)")
+                            .referenceCode("REFUND_DEPOSIT_" + registration.getId())
+                            .createdAt(LocalDateTime.now())
+                            .isDelete(false)
+                            .build();
+                    walletTransactionRepository.save(tx);
+                }
+            }
+
+            // 2. Hạ quyền người dùng từ Role Seller xuống Role Customer
+            user.setRole("{\"role\": \"Customer\"}");
+            user.setSuspendedUntil(null);
+
+            // 3. Đánh dấu đóng/hủy tất cả hồ sơ đăng ký Shop cũ của user với trạng thái WITHDRAWN (vẫn giữ isDelete = false để Staff xem lịch sử)
+            List<SellerRegistration> userRegs = sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc().stream()
+                    .filter(r -> r.getUser() != null && r.getUser().getId().equals(user.getId()))
+                    .collect(Collectors.toList());
+            for (SellerRegistration r : userRegs) {
+                r.setStatus("WITHDRAWN");
+                r.setIsDelete(false);
+                sellerRegistrationRepository.save(r);
+            }
+            registration.setStatus("WITHDRAWN");
+            registration.setIsDelete(false);
+            sellerRegistrationRepository.save(registration);
+        } else if ("Banned".equalsIgnoreCase(shopStatus) || "PERMANENT_BANNED".equalsIgnoreCase(shopStatus)) {
+            user.setIsLocked(false);
+            user.setSuspendedUntil(null);
+        } else if ("Active".equalsIgnoreCase(shopStatus)) {
+            user.setIsLocked(false);
+            user.setSuspendedUntil(null);
+        } else if (("Suspended".equalsIgnoreCase(shopStatus) || "TEMP_LOCKED".equalsIgnoreCase(shopStatus) || "Locked".equalsIgnoreCase(shopStatus))
                 && suspendedUntilStr != null && !suspendedUntilStr.isBlank()) {
             try {
                 user.setSuspendedUntil(java.time.LocalDateTime.parse(suspendedUntilStr.trim()));
@@ -443,7 +477,77 @@ public class ShopRegistrationService {
         } else {
             user.setSuspendedUntil(null);
         }
+
         userRepository.save(user);
+
+        // Gửi thông báo cho Seller về thay đổi trạng thái Shop
+        String notifTitle;
+        String notifContent;
+        String notifSeverity;
+        String notifTargetUrl;
+
+        String shopName = registration.getShopName() != null ? registration.getShopName() : "Shop của bạn";
+
+        if ("Withdrawn".equalsIgnoreCase(shopStatus)) {
+            notifTitle = "⚠️ Shop của bạn đã bị đóng cửa (Hoàn phí)";
+            notifContent = String.format(
+                "Shop \"%s\" đã bị đóng cửa theo yêu cầu của Ban quản trị. " +
+                "Tiền cọc mở Shop đã được hoàn trả vào ví của bạn. " +
+                "Bạn có thể đăng ký mở lại Shop bất cứ lúc nào.",
+                shopName);
+            notifSeverity = "WARNING";
+            notifTargetUrl = "/account/register-shop";
+        } else if ("Banned".equalsIgnoreCase(shopStatus) || "PERMANENT_BANNED".equalsIgnoreCase(shopStatus)) {
+            notifTitle = "🔴 Shop của bạn đã bị khóa vĩnh viễn";
+            notifContent = String.format(
+                "Shop \"%s\" đã bị khóa vĩnh viễn do vi phạm chính sách sàn giao dịch MMO Market. " +
+                "Tài khoản của bạn vẫn có thể đăng nhập để mua hàng nhưng không thể bán hàng. " +
+                "Vui lòng liên hệ hỗ trợ nếu bạn muốn khiếu nại quyết định này.",
+                shopName);
+            notifSeverity = "DANGER";
+            notifTargetUrl = "/profile";
+        } else if ("Suspended".equalsIgnoreCase(shopStatus) || "TEMP_LOCKED".equalsIgnoreCase(shopStatus) || "Locked".equalsIgnoreCase(shopStatus)) {
+            String untilStr = "";
+            if (user.getSuspendedUntil() != null) {
+                java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("HH:mm ngày dd/MM/yyyy");
+                untilStr = " đến " + user.getSuspendedUntil().format(dtf);
+            }
+            notifTitle = "🔒 Shop của bạn bị tạm khóa";
+            notifContent = String.format(
+                "Shop \"%s\" đã bị tạm khóa%s do vi phạm chính sách sàn giao dịch MMO Market. " +
+                "Trong thời gian tạm khóa, bạn không thể truy cập Seller Dashboard hoặc đăng sản phẩm mới. " +
+                "Vui lòng liên hệ Staff để biết thêm chi tiết.",
+                shopName, untilStr);
+            notifSeverity = "WARNING";
+            notifTargetUrl = "/profile";
+        } else if ("Active".equalsIgnoreCase(shopStatus)) {
+            notifTitle = "✅ Shop của bạn đã được mở khóa";
+            notifContent = String.format(
+                "Shop \"%s\" đã được mở khóa và hoạt động trở lại bình thường. " +
+                "Bạn có thể truy cập Seller Dashboard để tiếp tục quản lý sản phẩm.",
+                shopName);
+            notifSeverity = "SUCCESS";
+            notifTargetUrl = "/seller/dashboard";
+        } else {
+            notifTitle = "📋 Trạng thái Shop của bạn đã được cập nhật";
+            notifContent = String.format("Trạng thái Shop \"%s\" đã được cập nhật thành: %s.", shopName, shopStatus);
+            notifSeverity = "INFO";
+            notifTargetUrl = "/seller/dashboard";
+        }
+
+        Notification notification = Notification.builder()
+                .userId(user.getId())
+                .title(notifTitle)
+                .content(notifContent)
+                .type("SYSTEM")
+                .severity(notifSeverity)
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl(notifTargetUrl)
+                .createdAt(LocalDateTime.now())
+                .build();
+        notificationRepository.save(notification);
+
         return mapToDto(registration);
     }
 
@@ -453,7 +557,7 @@ public class ShopRegistrationService {
         try {
             List<User> suspendedUsers = userRepository.findAll().stream()
                     .filter(u -> u.getShopStatus() != null &&
-                            ("Suspended".equalsIgnoreCase(u.getShopStatus()) || "TEMP_LOCKED".equalsIgnoreCase(u.getShopStatus())) &&
+                            ("Suspended".equalsIgnoreCase(u.getShopStatus()) || "TEMP_LOCKED".equalsIgnoreCase(u.getShopStatus()) || "Locked".equalsIgnoreCase(u.getShopStatus())) &&
                             u.getSuspendedUntil() != null &&
                             java.time.LocalDateTime.now().isAfter(u.getSuspendedUntil()))
                     .collect(Collectors.toList());

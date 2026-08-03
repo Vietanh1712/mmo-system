@@ -24,6 +24,10 @@ Seller Console là trung tâm quản lý dành cho người bán (Seller) trên 
 - **FR-SELL-05**: WHEN a Seller uploads DigitalAssets (batch) for a Variant, THE SYSTEM SHALL update the variant's `stock` automatically.
 - **FR-SELL-06**: WHEN a Seller views their dashboard, THE SYSTEM SHALL return total revenue, completed sales, and active products.
 - **FR-SELL-07**: WHEN a transaction (order) is completed, resolved, or when a dispute/complaint is rejected, THE SYSTEM SHALL automatically evaluate and update the Seller's Shop Level in real-time.
+- **FR-SELL-08**: WHEN a Seller attempts to access the Seller Dashboard (`/seller/dashboard`) while shop status is "Locked" (Tạm khóa) before `suspendedUntil`, THE SYSTEM SHALL wipe the dashboard DOM content (`document.body.innerHTML = ''`) and render a full-screen dark lock overlay (`showShopLockedOverlay`) displaying the exact expiration date and time.
+- **FR-SELL-09**: WHEN a Seller attempts to access the Seller Dashboard while shop status is "Banned" / "PERMANENT_BANNED" (Khóa vĩnh viễn), THE SYSTEM SHALL wipe the dashboard DOM content and render a full-screen permanent ban overlay (`showShopBannedOverlay`). The user account (`isLocked = false`) remains active for login and customer operations.
+- **FR-SELL-10**: WHEN a Seller attempts to access the Seller Dashboard while shop status is "Withdrawn" (Đã đóng Shop - Hoàn phí), THE SYSTEM SHALL wipe the dashboard DOM content and render a full-screen shop closed overlay (`showShopWithdrawnOverlay`) with a direct button link to `/account/register-shop` for re-registration.
+- **FR-SELL-11**: WHEN a user whose previous shop was closed (Withdrawn) submits a new shop registration via `/v1/profile/register-shop`, THE SYSTEM SHALL deduct the opening fee (`SHOP_OPENING_FEE_VND`), reinstate the user's role to `SELLER`, activate `shopStatus` to `Active`, and grant immediate access to the Seller Dashboard.
 
 ---
 
