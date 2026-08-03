@@ -1,12 +1,18 @@
 // ==============================================================================
 // SELLER CONSOLE JS
 // File: seller-console.js
-// Description: Controls all dynamic operations and REST API data binding
-//              for the Seller dashboard pages.
+// Mô tả: Điều khiển toàn bộ các hoạt động động và liên kết dữ liệu REST API
+//        cho các trang bảng điều khiển của Người bán (Seller Dashboard).
 // ==============================================================================
 
+// Đường dẫn API cơ sở dành cho các tính năng của người bán
 const SELLER_API_BASE = '/api/seller';
 
+/**
+ * Lấy thông tin tài khoản người bán hiện tại đang đăng nhập từ Session Storage.
+ *
+ * @returns {Object|null} Thông tin người dùng hoặc null nếu không tồn tại
+ */
 function getCurrentSellerStorageUser() {
     try {
         const raw = sessionStorage.getItem('userInfo') || sessionStorage.getItem('user');
@@ -16,11 +22,21 @@ function getCurrentSellerStorageUser() {
     }
 }
 
+/**
+ * Tạo khóa bộ nhớ đệm (Cache Key) cho thanh menu bên cạnh (Sidebar) của người bán.
+ *
+ * @returns {string|null} Khóa cache tương ứng với ID người dùng hoặc null
+ */
 function getSellerSidebarCacheKey() {
     const user = getCurrentSellerStorageUser();
     return user && user.id != null ? `sellerSidebarCache:${user.id}` : null;
 }
 
+/**
+ * Lưu dữ liệu Sidebar của người bán vào bộ nhớ đệm Session Storage và Local Storage.
+ *
+ * @param {Object} data Dữ liệu Sidebar cần lưu
+ */
 function cacheSellerSidebar(data) {
     const key = getSellerSidebarCacheKey();
     if (!key) return;
@@ -29,8 +45,9 @@ function cacheSellerSidebar(data) {
     localStorage.setItem(key, value);
 }
 
+// Đăng ký sự kiện khi trang đã tải xong DOM để kiểm tra bảo mật và khởi tạo trang tương ứng
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Guard check for authentication
+    // 1. Kiểm tra xác thực Token bảo mật (Guard check)
     const token = sessionStorage.getItem('accessToken');
     if (!token || token === 'null' || token === 'undefined') {
         sessionStorage.setItem('redirectPath', window.location.pathname + window.location.search);
@@ -38,10 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // 2. Initialize layout / sidebar stats
+    // 2. Khởi tạo bố cục chung và số liệu thống kê trên Sidebar
     initSellerLayout();
 
-    // 3. Page-specific routing
+    // 3. Định tuyến và xử lý cho từng trang cụ thể dựa theo URL
     const path = window.location.pathname;
     if (path.endsWith('/seller') || path.endsWith('/seller/') || path.endsWith('/dashboard')) {
         initDashboard();
@@ -86,10 +103,23 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==============================================================================
 // HELPERS
 // ==============================================================================
+
+/**
+ * Định dạng số tiền sang chuẩn chuỗi hiển thị VND (Việt Nam Đồng).
+ *
+ * @param {number|string} value Giá trị số cần định dạng
+ * @returns {string} Chuỗi tiền tệ VND đã định dạng
+ */
 function formatVND(value) {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value) || 0);
 }
 
+/**
+ * Dịch các mã trạng thái nghiệp vụ từ hệ thống sang tiếng Việt để hiển thị trực quan.
+ *
+ * @param {string} status Mã trạng thái tiếng Anh
+ * @returns {string} Trạng thái tiếng Việt tương ứng
+ */
 function translateStatus(status) {
     if (!status) return '-';
     const statusLower = status.toLowerCase().trim();
@@ -118,6 +148,12 @@ function translateStatus(status) {
     return map[statusLower] || status;
 }
 
+/**
+ * Lấy tên lớp CSS thích hợp cho huy hiệu trạng thái dựa vào mã trạng thái.
+ *
+ * @param {string} status Mã trạng thái
+ * @returns {string} Tên lớp CSS (ok, pending, held, critical)
+ */
 function getBadgeClassForStatus(status) {
     if (!status) return 'pending';
     const statusLower = status.toLowerCase().trim();
@@ -128,6 +164,14 @@ function getBadgeClassForStatus(status) {
     return 'pending';
 }
 
+/**
+ * Hàm fetch tùy chỉnh dành riêng cho các API của người bán, hỗ trợ tự động đính kèm Token xác thực.
+ * Tự động chuyển hướng về trang đăng nhập nếu gặp mã lỗi 401 hoặc 403.
+ *
+ * @param {string} url Đường dẫn API con (không gồm tiền tố /api/seller)
+ * @param {Object} options Tùy chọn fetch (method, body, headers,...)
+ * @returns {Promise<Response>} Đối tượng phản hồi Response
+ */
 async function sellerFetch(url, options = {}) {
     const token = sessionStorage.getItem('accessToken');
     const headers = {
@@ -145,9 +189,15 @@ async function sellerFetch(url, options = {}) {
     return response;
 }
 
-// Show feedback message
+/**
+ * Hiển thị thông báo Toast nhanh ở góc màn hình.
+ * Tự động sử dụng hàm Toast chung của Design System nếu được tải trước đó.
+ *
+ * @param {string} message Nội dung thông báo
+ * @param {string} type Phân loại thông báo (success, error, danger, warning, primary, info)
+ */
 function showToast(message, type = 'success') {
-    // If the global design system toast is loaded, delegate to it
+    // Sử dụng thông báo Toast của hệ thống thiết kế (Design System) nếu có
     if (type === 'success' && typeof window.showSuccessToast === 'function') {
         window.showSuccessToast(message);
         return;
@@ -165,7 +215,7 @@ function showToast(message, type = 'success') {
         return;
     }
 
-    // Fallback to local element if global system is not present
+    // Dự phòng hiển thị bằng thẻ div cục bộ tự tạo nếu không có Design System Toast
     let toast = document.getElementById('seller-toast');
     if (!toast) {
         toast = document.createElement('div');
@@ -185,10 +235,10 @@ function showToast(message, type = 'success') {
         document.body.appendChild(toast);
     }
     
-    let bgColor = '#10a37f'; // success (DESIGN.md)
-    if (type === 'error' || type === 'danger') bgColor = '#ef4444'; // danger (DESIGN.md)
-    else if (type === 'warning') bgColor = '#f59e0b'; // warning (DESIGN.md)
-    else if (type === 'primary') bgColor = '#ea580c'; // primary (DESIGN.md)
+    let bgColor = '#10a37f'; // success
+    if (type === 'error' || type === 'danger') bgColor = '#ef4444'; // danger
+    else if (type === 'warning') bgColor = '#f59e0b'; // warning
+    else if (type === 'primary') bgColor = '#ea580c'; // primary
     
     toast.style.backgroundColor = bgColor;
     toast.textContent = message;

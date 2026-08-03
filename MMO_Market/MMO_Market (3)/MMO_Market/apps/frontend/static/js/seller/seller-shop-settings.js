@@ -1,7 +1,13 @@
+// Khóa LocalStorage dùng để giả lập trạng thái hoạt động của cửa hàng
 const SHOP_STATUS_STORAGE_KEY = 'mmoMarketShopStatusMock';
 
+// Lắng nghe sự kiện DOMContentLoaded để tiến hành khởi tạo
 document.addEventListener('DOMContentLoaded', initializeShopSettings);
 
+/**
+ * Khởi tạo trang cài đặt gian hàng (Shop Settings).
+ * Đăng ký sự kiện submit form và click nút chuyển trạng thái, đồng thời tải thông tin Shop ban đầu.
+ */
 async function initializeShopSettings() {
     const form = document.getElementById('shopInfoForm');
     if (!form) return;
@@ -12,6 +18,9 @@ async function initializeShopSettings() {
     await loadShopInfo();
 }
 
+/**
+ * Tải thông tin chi tiết của Shop hiện tại (Tên, mô tả, thông tin ngân hàng, cấp độ shop, trạng thái hoạt động).
+ */
 async function loadShopInfo() {
     try {
         const response = await sellerFetch('/shop-info');
@@ -27,6 +36,7 @@ async function loadShopInfo() {
         document.getElementById('accountHolder').value = data.accountHolder || '';
         document.getElementById('branch').value = data.branch || '';
 
+        // Hiển thị huy hiệu cấp độ Shop (Shop Level Badge)
         const lvlBadge = document.getElementById('shop-info-level-badge');
         if (lvlBadge) {
             const lvl = data.shopLevel !== undefined ? data.shopLevel : 1;
@@ -45,6 +55,12 @@ async function loadShopInfo() {
     }
 }
 
+/**
+ * Chuẩn hóa chuỗi trạng thái từ API trả về để hiển thị UI tương ứng.
+ *
+ * @param {string} apiStatus Trạng thái thô từ API
+ * @returns {string} Trạng thái chuẩn hóa (ACTIVE, TEMPORARILY_CLOSED, PENDING, BANNED, CLOSED)
+ */
 function readEffectiveShopStatus(apiStatus) {
     const normalized = String(apiStatus || 'Active').toUpperCase();
     if (normalized === 'BANNED' || normalized === 'PERMANENT_BANNED') return 'BANNED';
@@ -54,6 +70,12 @@ function readEffectiveShopStatus(apiStatus) {
     return 'ACTIVE';
 }
 
+/**
+ * Cập nhật giao diện trạng thái hoạt động của Shop (màu sắc huy hiệu, mô tả chi tiết, nhãn sidebar).
+ *
+ * @param {string} status Trạng thái chuẩn hóa của Shop
+ * @param {string} suspendedUntilStr Thời hạn kết thúc tạm khóa/ngưng hoạt động
+ */
 function renderShopStatus(status, suspendedUntilStr) {
     const badge = document.getElementById('shopStatusBadge');
     const panel = document.querySelector('.shop-status-panel');
@@ -91,8 +113,14 @@ function renderShopStatus(status, suspendedUntilStr) {
     startSellerCountdown(suspendedUntilStr);
 }
 
+// Đối tượng lưu trữ luồng đếm ngược
 let sellerCountdownInterval = null;
 
+/**
+ * Đếm ngược thời gian tự động mở hoạt động lại cho gian hàng đang bị tạm ngưng có thời hạn.
+ *
+ * @param {string} suspendedUntilStr Thời hạn kết thúc tạm ngưng dạng chuỗi thời gian
+ */
 function startSellerCountdown(suspendedUntilStr) {
     if (sellerCountdownInterval) clearInterval(sellerCountdownInterval);
     const alertBox = document.getElementById('sellerSuspendedAlert');
@@ -149,6 +177,9 @@ function startSellerCountdown(suspendedUntilStr) {
     sellerCountdownInterval = setInterval(update, 1000);
 }
 
+/**
+ * Thực hiện yêu cầu API để thay đổi nhanh trạng thái hoạt động của Shop (Active / Suspended).
+ */
 async function toggleShopStatus() {
     const toggleButton = document.getElementById('toggleShopStatusButton');
     toggleButton.disabled = true;
@@ -168,6 +199,11 @@ async function toggleShopStatus() {
     }
 }
 
+/**
+ * Thu thập và gửi yêu cầu API lưu trữ cập nhật thông tin cửa hàng (Tên, mô tả, thông tin ngân hàng).
+ *
+ * @param {Event} event Sự kiện submit form
+ */
 async function saveShopInfo(event) {
     event.preventDefault();
     clearShopMessages();
@@ -202,17 +238,30 @@ async function saveShopInfo(event) {
     }
 }
 
+/**
+ * Xóa toàn bộ thông báo lỗi cũ trên form.
+ */
 function clearShopMessages() {
     document.getElementById('shopNameError').textContent = '';
     document.getElementById('shopSettingsError').hidden = true;
 }
 
+/**
+ * Hiển thị thông báo lỗi cấu hình lên giao diện.
+ *
+ * @param {string} message Nội dung thông báo lỗi
+ */
 function showShopError(message) {
     const error = document.getElementById('shopSettingsError');
     error.textContent = message;
     error.hidden = false;
 }
 
+/**
+ * Hiển thị Toast thông báo lưu thành công.
+ *
+ * @param {string} message Nội dung thông báo
+ */
 function showShopToast(message) {
     const toast = document.createElement('div');
     toast.className = 'ds-toast ds-toast-success';
