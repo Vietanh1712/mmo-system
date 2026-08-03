@@ -152,7 +152,7 @@ function formatTransactionType(type) {
         TOPUP: 'Nạp tiền',
         PAYMENT: 'Thanh toán',
         REFUND: 'Hoàn tiền',
-        ESCROW: 'Escrow'
+        ESCROW: 'Tạm giữ'
     };
     return map[type] || type;
 }

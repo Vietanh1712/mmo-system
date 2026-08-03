@@ -94,16 +94,6 @@ public class AuthenticationService {
      */
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
-        boolean allowRegister = systemConfigurationRepository.findByConfigKey("ALLOW_REGISTER")
-                .map(c -> "true".equalsIgnoreCase(c.getConfigValue()) || "1".equals(c.getConfigValue()))
-                .orElse(true);
-        if (!allowRegister) {
-            return RegisterResponse.builder()
-                    .success(false)
-                    .message("Hệ thống hiện tại đang tạm khóa chức năng đăng ký tài khoản mới.")
-                    .build();
-        }
-
         if (userRepository.existsByEmail(request.getEmail())) {
             return RegisterResponse.builder()
                     .success(false)
@@ -721,12 +711,6 @@ public class AuthenticationService {
 
     @Transactional
     public LoginResponse loginWithGoogle(String authCode) {
-        boolean allowGoogle = systemConfigurationRepository.findByConfigKey("ALLOW_GOOGLE_LOGIN")
-                .map(c -> "true".equalsIgnoreCase(c.getConfigValue()) || "1".equals(c.getConfigValue()))
-                .orElse(true);
-        if (!allowGoogle) {
-            throw new RuntimeException("Chức năng đăng nhập bằng Google hiện đang bị khóa.");
-        }
         try {
             RestTemplate restTemplate = new RestTemplate();
             HttpHeaders headers = new HttpHeaders();
@@ -877,13 +861,6 @@ public class AuthenticationService {
 
     @Transactional
     public void sendWithdrawalOtp(User user) {
-        boolean requireWithdraw2FA = systemConfigurationRepository.findByConfigKey("REQUIRE_WITHDRAW_2FA")
-                .map(c -> Boolean.parseBoolean(c.getConfigValue()))
-                .orElse(true);
-        if (!requireWithdraw2FA) {
-            throw new IllegalArgumentException("Hệ thống hiện tại đang tắt cấu hình xác thực 2FA rút tiền. Không thể gửi mã OTP về Email.");
-        }
-
         int otpTimeout = getOtpTimeoutMins();
 
         // Kiểm tra giới hạn tần suất gửi lại mã (Rate Limiting)

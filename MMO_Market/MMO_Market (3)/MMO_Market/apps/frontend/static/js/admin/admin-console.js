@@ -2124,17 +2124,6 @@
             if (document.getElementById('cfgEscrowHoldHoursLevel0')) document.getElementById('cfgEscrowHoldHoursLevel0').value = c.escrowHoldHoursLevel0 || c.escrowHoldHours || 168;
             if (document.getElementById('cfgEscrowHoldHoursLevel1')) document.getElementById('cfgEscrowHoldHoursLevel1').value = c.escrowHoldHoursLevel1 || c.escrowHoldHours || 72;
             if (document.getElementById('cfgEscrowHoldHoursLevel2')) document.getElementById('cfgEscrowHoldHoursLevel2').value = c.escrowHoldHoursLevel2 || c.escrowHoldHours || 48;
-            
-            const toggleBtn = (id, active) => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.setAttribute('aria-pressed', String(active));
-                    el.classList.toggle('ds-toggle-inactive', !active);
-                }
-            };
-            toggleBtn('cfgAllowGoogle', c.allowGoogleLogin);
-            toggleBtn('cfgAllowRegister', c.allowRegister);
-            toggleBtn('cfgWithdraw2FA', c.requireWithdraw2FA);
         } catch (error) {
             showToast('Lỗi kết nối khi tải cấu hình.', true);
         }
@@ -2153,10 +2142,7 @@
             escrowHoldHours: lvl1,
             escrowHoldHoursLevel0: lvl0,
             escrowHoldHoursLevel1: lvl1,
-            escrowHoldHoursLevel2: lvl2,
-            allowGoogleLogin: document.getElementById('cfgAllowGoogle')?.getAttribute('aria-pressed') === 'true',
-            allowRegister: document.getElementById('cfgAllowRegister')?.getAttribute('aria-pressed') === 'true',
-            requireWithdraw2FA: document.getElementById('cfgWithdraw2FA')?.getAttribute('aria-pressed') === 'true'
+            escrowHoldHoursLevel2: lvl2
         };
         try {
             const response = await authFetch('/admin/system-config/general', {

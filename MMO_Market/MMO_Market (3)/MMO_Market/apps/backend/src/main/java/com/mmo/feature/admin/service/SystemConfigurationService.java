@@ -136,9 +136,6 @@ public class SystemConfigurationService {
                 .escrowHoldHoursLevel0(getInt(map, "ESCROW_HOLD_HOURS_LEVEL_0", 168))
                 .escrowHoldHoursLevel1(getInt(map, "ESCROW_HOLD_HOURS_LEVEL_1", 72))
                 .escrowHoldHoursLevel2(getInt(map, "ESCROW_HOLD_HOURS_LEVEL_2", 48))
-                .allowGoogleLogin(getBool(map, "ALLOW_GOOGLE_LOGIN", true))
-                .allowRegister(getBool(map, "ALLOW_REGISTER", true))
-                .requireWithdraw2FA(getBool(map, "REQUIRE_WITHDRAW_2FA", true))
                 .build();
 
         SystemConfigResponse.CommissionsDto comm = SystemConfigResponse.CommissionsDto.builder()
@@ -194,17 +191,7 @@ public class SystemConfigurationService {
         Integer lvl2 = request.getEscrowHoldHoursLevel2() != null ? request.getEscrowHoldHoursLevel2() : request.getEscrowHoldHours();
 
         if (lvl0 == null || lvl0 < 1 || lvl1 == null || lvl1 < 1 || lvl2 == null || lvl2 < 1) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thời gian giam tiền Escrow cho các Level Shop tối thiểu phải từ 1 giờ trở lên.");
-        }
-
-        if (request.getAllowGoogleLogin() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cấu hình cho phép đăng nhập bằng Google không hợp lệ.");
-        }
-        if (request.getAllowRegister() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cấu hình cho phép người dùng đăng ký mới không hợp lệ.");
-        }
-        if (request.getRequireWithdraw2FA() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cấu hình bắt buộc dùng xác thực 2 bước không hợp lệ.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thời gian giam tiền cho các Level Shop tối thiểu phải từ 1 giờ trở lên.");
         }
 
         Map<String, String> original = getCurrentConfigMap();
@@ -216,21 +203,15 @@ public class SystemConfigurationService {
         checkAndAddDiff(diff, "escrowHoldHoursLevel0", getInt(original, "ESCROW_HOLD_HOURS_LEVEL_0", 168), lvl0);
         checkAndAddDiff(diff, "escrowHoldHoursLevel1", getInt(original, "ESCROW_HOLD_HOURS_LEVEL_1", 72), lvl1);
         checkAndAddDiff(diff, "escrowHoldHoursLevel2", getInt(original, "ESCROW_HOLD_HOURS_LEVEL_2", 48), lvl2);
-        checkAndAddDiff(diff, "allowGoogleLogin", getBool(original, "ALLOW_GOOGLE_LOGIN", true), request.getAllowGoogleLogin());
-        checkAndAddDiff(diff, "allowRegister", getBool(original, "ALLOW_REGISTER", true), request.getAllowRegister());
-        checkAndAddDiff(diff, "requireWithdraw2FA", getBool(original, "REQUIRE_WITHDRAW_2FA", true), request.getRequireWithdraw2FA());
 
         updateKey("SESSION_TIMEOUT_MINS", String.valueOf(request.getSessionTimeout()), "Thời gian phiên (phút)", operator.getId());
         updateKey("OTP_TIMEOUT_MINS", String.valueOf(request.getOtpTimeout()), "Thời gian OTP (phút)", operator.getId());
         updateKey("MAX_LOGIN_RETRIES", String.valueOf(request.getMaxLoginRetries()), "Số lần đăng nhập sai tối đa", operator.getId());
         updateKey("LOCK_DURATION_MINS", String.valueOf(request.getLockDurationMins()), "Thời gian khóa tài khoản tạm thời (phút)", operator.getId());
-        updateKey("ESCROW_HOLD_HOURS", String.valueOf(lvl1), "Thời gian giam tiền Escrow mặc định (giờ)", operator.getId());
-        updateKey("ESCROW_HOLD_HOURS_LEVEL_0", String.valueOf(lvl0), "Thời gian giam tiền Escrow Level 0 (giờ)", operator.getId());
-        updateKey("ESCROW_HOLD_HOURS_LEVEL_1", String.valueOf(lvl1), "Thời gian giam tiền Escrow Level 1 (giờ)", operator.getId());
-        updateKey("ESCROW_HOLD_HOURS_LEVEL_2", String.valueOf(lvl2), "Thời gian giam tiền Escrow Level 2 (giờ)", operator.getId());
-        updateKey("ALLOW_GOOGLE_LOGIN", String.valueOf(request.getAllowGoogleLogin()), "Cho phép đăng nhập bằng Google", operator.getId());
-        updateKey("ALLOW_REGISTER", String.valueOf(request.getAllowRegister()), "Cho phép người dùng đăng ký mới", operator.getId());
-        updateKey("REQUIRE_WITHDRAW_2FA", String.valueOf(request.getRequireWithdraw2FA()), "Bắt buộc dùng xác thực 2 bước (2FA) khi rút tiền", operator.getId());
+        updateKey("ESCROW_HOLD_HOURS", String.valueOf(lvl1), "Thời gian giam tiền mặc định (giờ)", operator.getId());
+        updateKey("ESCROW_HOLD_HOURS_LEVEL_0", String.valueOf(lvl0), "Thời gian giam tiền Level 0 (giờ)", operator.getId());
+        updateKey("ESCROW_HOLD_HOURS_LEVEL_1", String.valueOf(lvl1), "Thời gian giam tiền Level 1 (giờ)", operator.getId());
+        updateKey("ESCROW_HOLD_HOURS_LEVEL_2", String.valueOf(lvl2), "Thời gian giam tiền Level 2 (giờ)", operator.getId());
 
         String details = "Đã cập nhật cấu hình hệ thống chung.";
         saveAuditLog(operator, "Config_Update", details, getClientIp(), diff);
