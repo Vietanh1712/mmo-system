@@ -1064,8 +1064,8 @@
             const balance = formatVnd(user.balanceVnd || 0);
             const createdAt = user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : '—';
             const self = user.id === readCurrentUser()?.id;
-            const isAdmin = role === 'Admin';
-            const canDelete = !self && !isAdmin;
+            const isStaff = String(role).trim().toLowerCase() === 'staff';
+            const canDelete = isStaff && !self;
 
             return `
                 <tr>
@@ -1531,10 +1531,92 @@
         }
     }
 
+    const ACTION_MAP_BY_CATEGORY = {
+        '': [
+            { value: 'CREATE_STAFF', label: 'Thêm nhân viên mới' },
+            { value: 'UPDATE_STAFF', label: 'Cập nhật nhân viên' },
+            { value: 'DELETE_STAFF', label: 'Xóa tài khoản nhân viên' },
+            { value: 'LOCK_USER', label: 'Khóa tài khoản' },
+            { value: 'UNLOCK_USER', label: 'Mở khóa tài khoản' },
+            { value: 'ROLE_UPDATE', label: 'Thay đổi vai trò' },
+            { value: 'PERM_UPDATE', label: 'Cập nhật phân quyền' },
+            { value: 'CONFIG_UPDATE', label: 'Cập nhật cấu hình hệ thống' },
+            { value: 'COMMISSION_UPDATE', label: 'Cập nhật biểu phí' },
+            { value: 'MAINTENANCE_TOGGLE', label: 'Bật/Tắt bảo trì hệ thống' },
+            { value: 'NOTIFICATION_CREATE', label: 'Tạo thông báo' },
+            { value: 'NOTIFICATION_PUBLISH', label: 'Phát hành thông báo' },
+            { value: 'NOTIFICATION_DELETE', label: 'Xóa thông báo' },
+            { value: 'KYC_APPROVE', label: 'Duyệt xác thực KYC' },
+            { value: 'KYC_REJECT', label: 'Từ chối xác thực KYC' },
+            { value: 'SHOP_APPROVE', label: 'Duyệt mở shop' },
+            { value: 'SHOP_REJECT', label: 'Từ chối mở shop' },
+            { value: 'FUND_WITHDRAW', label: 'Duyệt lệnh rút tiền' },
+            { value: 'WITHDRAWAL_REJECT', label: 'Từ chối lệnh rút tiền' },
+            { value: 'COMPLAINT_RESOLVE', label: 'Giải quyết khiếu nại' }
+        ],
+        'FINANCE': [
+            { value: 'FUND_WITHDRAW', label: 'Duyệt lệnh rút tiền' },
+            { value: 'WITHDRAWAL_REJECT', label: 'Từ chối lệnh rút tiền' },
+            { value: 'COMMISSION_UPDATE', label: 'Cập nhật biểu phí' }
+        ],
+        'COMPLAINT': [
+            { value: 'COMPLAINT_RESOLVE', label: 'Giải quyết khiếu nại' }
+        ],
+        'SHOP': [
+            { value: 'SHOP_APPROVE', label: 'Duyệt mở shop' },
+            { value: 'SHOP_REJECT', label: 'Từ chối mở shop' }
+        ],
+        'USER_MGMT': [
+            { value: 'CREATE_STAFF', label: 'Thêm nhân viên mới' },
+            { value: 'UPDATE_STAFF', label: 'Cập nhật nhân viên' },
+            { value: 'DELETE_STAFF', label: 'Xóa tài khoản nhân viên' },
+            { value: 'LOCK_USER', label: 'Khóa tài khoản' },
+            { value: 'UNLOCK_USER', label: 'Mở khóa tài khoản' },
+            { value: 'ROLE_UPDATE', label: 'Thay đổi vai trò' },
+            { value: 'PERM_UPDATE', label: 'Cập nhật phân quyền' },
+            { value: 'KYC_APPROVE', label: 'Duyệt xác thực KYC' },
+            { value: 'KYC_REJECT', label: 'Từ chối xác thực KYC' }
+        ],
+        'SUPPORT': [
+            { value: 'COMPLAINT_RESOLVE', label: 'Giải quyết khiếu nại' }
+        ],
+        'SYSTEM': [
+            { value: 'CONFIG_UPDATE', label: 'Cập nhật cấu hình hệ thống' },
+            { value: 'MAINTENANCE_TOGGLE', label: 'Bật/Tắt bảo trì hệ thống' },
+            { value: 'NOTIFICATION_CREATE', label: 'Tạo thông báo' },
+            { value: 'NOTIFICATION_PUBLISH', label: 'Phát hành thông báo' },
+            { value: 'NOTIFICATION_DELETE', label: 'Xóa thông báo' }
+        ]
+    };
+
+    function populateLogActionFilter(category = '') {
+        const actionSelect = document.getElementById('logActionFilter');
+        if (!actionSelect) return;
+
+        const catSelect = document.getElementById('logCategoryFilter');
+        if (catSelect && !catSelect.hasAttribute('data-action-bound')) {
+            catSelect.setAttribute('data-action-bound', 'true');
+            catSelect.addEventListener('change', () => {
+                populateLogActionFilter(catSelect.value);
+            });
+        }
+
+        const currentVal = actionSelect.value;
+        const actions = ACTION_MAP_BY_CATEGORY[category] || ACTION_MAP_BY_CATEGORY[''];
+
+        let html = '<option value="">Tất cả hành động cụ thể</option>';
+        actions.forEach(a => {
+            const sel = a.value === currentVal ? ' selected' : '';
+            html += `<option value="${a.value}"${sel}>${escapeHtml(a.label)}</option>`;
+        });
+        actionSelect.innerHTML = html;
+    }
+
     /* ---------- API: Audit logs ---------- */
     async function filterAuditLogs() {
         const q = document.getElementById('logSearch')?.value || '';
         const category = document.getElementById('logCategoryFilter')?.value || '';
+        populateLogActionFilter(category);
         const action = document.getElementById('logActionFilter')?.value || '';
         const startDate = document.getElementById('logStartDate')?.value || '';
         const endDate = document.getElementById('logEndDate')?.value || '';
