@@ -38,6 +38,9 @@ import com.mmo.shared.model.AuditLog;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
+import com.mmo.shared.dal.WalletTransactionRepository;
+import com.mmo.shared.model.WalletTransaction;
+
 @Service
 @EnableScheduling
 @Slf4j
@@ -66,6 +69,9 @@ public class ShopRegistrationService {
 
     @Autowired
     private NotificationRepository notificationRepository;
+
+    @Autowired
+    private WalletTransactionRepository walletTransactionRepository;
 
     @jakarta.annotation.PostConstruct
     public void autoApproveExistingRegistrations() {
@@ -429,7 +435,62 @@ public class ShopRegistrationService {
         }
         
         user.setShopStatus(shopStatus);
-        if (("Suspended".equalsIgnoreCase(shopStatus) || "TEMP_LOCKED".equalsIgnoreCase(shopStatus))
+        user.setIsLocked(false);
+
+        // XỬ LÝ TRẠNG THÁI "ĐÃ ĐÓNG SHOP (HOÀN PHÍ)" (Withdrawn):
+        if ("Withdrawn".equalsIgnoreCase(shopStatus) || "WITHDRAWN".equalsIgnoreCase(shopStatus)) {
+            // 1. Hoàn lại tiền cọc (depositVnd / feeVnd) về số dư ví khả dụng (balanceVnd)
+            long deposit = 0L;
+            if (user.getDepositVnd() != null && user.getDepositVnd() > 0) {
+                deposit = user.getDepositVnd();
+            } else if (registration.getFeeVnd() != null && registration.getFeeVnd() > 0) {
+                deposit = registration.getFeeVnd();
+            } else {
+                deposit = 50000L;
+            }
+
+            long currentBalance = user.getBalanceVnd() != null ? user.getBalanceVnd() : 0L;
+            long newBalance = currentBalance + deposit;
+            user.setBalanceVnd(newBalance);
+            user.setDepositVnd(0L);
+
+            if (walletTransactionRepository != null) {
+                WalletTransaction tx = WalletTransaction.builder()
+                        .user(user)
+                        .type("REFUND")
+                        .transactionType("REFUND")
+                        .amountVnd(deposit)
+                        .balanceAfter(newBalance)
+                        .status("SUCCESS")
+                        .description("Hoàn cọc mở Shop do đóng cửa hàng (Withdrawn)")
+                        .referenceCode("REFUND_DEPOSIT_" + registration.getId())
+                        .createdAt(LocalDateTime.now())
+                        .isDelete(false)
+                        .build();
+                walletTransactionRepository.save(tx);
+            }
+
+            // 2. Hạ quyền người dùng từ Role Seller xuống Role Customer
+            user.setRole("{\"role\": \"Customer\"}");
+            user.setSuspendedUntil(null);
+
+            // 3. Đánh dấu tất cả hồ sơ đăng ký Shop cũ của user với trạng thái WITHDRAWN (giữ isDelete = false để Staff xem lịch sử)
+            List<SellerRegistration> userRegs = sellerRegistrationRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc().stream()
+                    .filter(r -> r.getUser() != null && r.getUser().getId().equals(user.getId()))
+                    .collect(Collectors.toList());
+            for (SellerRegistration r : userRegs) {
+                r.setStatus("WITHDRAWN");
+                r.setIsDelete(false);
+                sellerRegistrationRepository.save(r);
+            }
+            registration.setStatus("WITHDRAWN");
+            registration.setIsDelete(false);
+            sellerRegistrationRepository.save(registration);
+        } else if ("Banned".equalsIgnoreCase(shopStatus) || "PERMANENT_BANNED".equalsIgnoreCase(shopStatus)) {
+            user.setSuspendedUntil(null);
+        } else if ("Active".equalsIgnoreCase(shopStatus)) {
+            user.setSuspendedUntil(null);
+        } else if (("Suspended".equalsIgnoreCase(shopStatus) || "TEMP_LOCKED".equalsIgnoreCase(shopStatus) || "Locked".equalsIgnoreCase(shopStatus))
                 && suspendedUntilStr != null && !suspendedUntilStr.isBlank()) {
             try {
                 user.setSuspendedUntil(java.time.LocalDateTime.parse(suspendedUntilStr.trim()));
@@ -443,7 +504,66 @@ public class ShopRegistrationService {
         } else {
             user.setSuspendedUntil(null);
         }
+
         userRepository.save(user);
+
+        // 4. Gửi thông báo tới người dùng
+        String shopNameStr = registration.getShopName() != null ? registration.getShopName() : "Shop của bạn";
+        String notifTitle;
+        String notifContent;
+        String notifSeverity;
+        String notifTargetUrl;
+
+        if ("Withdrawn".equalsIgnoreCase(shopStatus)) {
+            long depositRef = registration.getFeeVnd() != null && registration.getFeeVnd() > 0 ? registration.getFeeVnd() : 50000L;
+            notifTitle = "⚠️ Shop của bạn đã bị đóng cửa (Hoàn phí)";
+            notifContent = String.format(
+                "Shop \"%s\" đã bị đóng cửa theo quyết định của Ban quản trị. " +
+                "Tiền cọc mở Shop (%s VNĐ) đã được hoàn trả vào ví của bạn. " +
+                "Tài khoản của bạn đã được chuyển về quyền Customer. Bạn có thể đăng ký mở Shop mới bất kỳ lúc nào tại /account/register-shop.",
+                shopNameStr, String.format("%,d", depositRef));
+            notifSeverity = "WARNING";
+            notifTargetUrl = "/account/register-shop";
+        } else if ("Banned".equalsIgnoreCase(shopStatus) || "PERMANENT_BANNED".equalsIgnoreCase(shopStatus)) {
+            notifTitle = "🔴 Shop của bạn đã bị khóa vĩnh viễn";
+            notifContent = String.format(
+                "Shop \"%s\" đã bị khóa vĩnh viễn do vi phạm chính sách sàn giao dịch MMO Market. " +
+                "Tài khoản của bạn vẫn có thể đăng nhập để mua hàng nhưng không thể bán hàng.",
+                shopNameStr);
+            notifSeverity = "DANGER";
+            notifTargetUrl = "/profile";
+        } else if ("Suspended".equalsIgnoreCase(shopStatus) || "TEMP_LOCKED".equalsIgnoreCase(shopStatus) || "Locked".equalsIgnoreCase(shopStatus)) {
+            String untilStr = "";
+            if (user.getSuspendedUntil() != null) {
+                java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("HH:mm ngày dd/MM/yyyy");
+                untilStr = " đến " + user.getSuspendedUntil().format(dtf);
+            }
+            notifTitle = "🔒 Shop của bạn bị tạm khóa";
+            notifContent = String.format(
+                "Shop \"%s\" đã bị tạm khóa%s do vi phạm chính sách sàn giao dịch MMO Market.",
+                shopNameStr, untilStr);
+            notifSeverity = "WARNING";
+            notifTargetUrl = "/profile";
+        } else {
+            notifTitle = "✅ Shop của bạn đã được mở khóa";
+            notifContent = String.format("Shop \"%s\" đã được mở khóa và hoạt động trở lại bình thường.", shopNameStr);
+            notifSeverity = "SUCCESS";
+            notifTargetUrl = "/seller/dashboard";
+        }
+
+        Notification notification = Notification.builder()
+                .userId(user.getId())
+                .title(notifTitle)
+                .content(notifContent)
+                .type("SYSTEM")
+                .severity(notifSeverity)
+                .isRead(false)
+                .isDelete(false)
+                .targetUrl(notifTargetUrl)
+                .createdAt(LocalDateTime.now())
+                .build();
+        notificationRepository.save(notification);
+
         return mapToDto(registration);
     }
 

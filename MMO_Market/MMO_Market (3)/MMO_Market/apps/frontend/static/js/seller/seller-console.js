@@ -210,16 +210,265 @@ function formatShopStatusVi(st) {
     return 'Hoạt động';
 }
 
+let shopLockCountdownInterval = null;
+
+function showShopLockedOverlay(lockTimeStr) {
+    const existing = document.getElementById('shopStatusOverlayModal');
+    if (existing) existing.remove();
+
+    const container = document.createElement('div');
+    container.id = 'shopStatusOverlayModal';
+    container.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(8px);
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    `;
+
+    // Parse target lock time
+    let targetDate = null;
+    if (lockTimeStr && lockTimeStr.includes(':')) {
+        if (lockTimeStr.includes('/')) {
+            const parts = lockTimeStr.trim().split(' ');
+            if (parts.length === 2) {
+                const [timePart, datePart] = parts;
+                const [hh, mm] = timePart.split(':');
+                const [dd, MM, yyyy] = datePart.split('/');
+                targetDate = new Date(yyyy, MM - 1, dd, hh, mm);
+            }
+        } else {
+            targetDate = new Date(lockTimeStr);
+        }
+    } else if (lockTimeStr) {
+        targetDate = new Date(lockTimeStr);
+    }
+
+    container.innerHTML = `
+        <div style="background: #ffffff; border-radius: 16px; max-width: 520px; width: 100%; padding: 36px 32px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); text-align: center; border: 1px solid #e2e8f0;">
+            <div style="width: 64px; height: 64px; background: #fffbe6; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; color: #d97706; font-size: 28px;">
+                <i class="fa fa-clock-o"></i>
+            </div>
+            <h2 style="margin: 0 0 12px 0; font-size: 22px; font-weight: 700; color: #1e293b;">Shop Của Bạn Đang Bị Tạm Khóa</h2>
+            <p style="margin: 0 0 20px 0; font-size: 14px; color: #64748b; line-height: 1.6;">
+                Cửa hàng của bạn đang trong thời gian tạm khóa / tạm ngưng theo quyết định của Ban quản trị. Trong thời gian này, bạn không thể truy cập Seller Dashboard.
+            </p>
+            
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+                <div style="font-size: 13px; color: #64748b; margin-bottom: 6px;">Thời điểm mở khóa dự kiến:</div>
+                <div style="font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 12px;" id="overlayLockTargetText">
+                    ${lockTimeStr || 'Đang cập nhật...'}
+                </div>
+                <div style="font-size: 13px; color: #64748b; margin-bottom: 4px;">Thời gian còn lại:</div>
+                <div style="font-size: 20px; font-weight: 800; color: #2563eb; letter-spacing: 0.5px;" id="overlayLockCountdown">
+                    Đang tính toán...
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <a href="/" style="background: #f1f5f9; color: #334155; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px; flex: 1; text-align: center; border: 1px solid #cbd5e1; transition: all 0.2s;">
+                    <i class="fa fa-home"></i> Trang Chủ
+                </a>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(container);
+
+    if (shopLockCountdownInterval) clearInterval(shopLockCountdownInterval);
+
+    function updateCountdown() {
+        const countdownEl = document.getElementById('overlayLockCountdown');
+        if (!countdownEl) return;
+
+        if (!targetDate || isNaN(targetDate.getTime())) {
+            countdownEl.textContent = 'Vui lòng liên hệ Staff';
+            return;
+        }
+
+        const now = new Date();
+        const diff = targetDate.getTime() - now.getTime();
+
+        if (diff <= 0) {
+            countdownEl.innerHTML = '<span style="color: #16a34a;">Đã hết thời gian tạm khóa! Đang tải lại...</span>';
+            clearInterval(shopLockCountdownInterval);
+            setTimeout(() => window.location.reload(), 1500);
+            return;
+        }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        let parts = [];
+        if (days > 0) parts.push(`${days} ngày`);
+        parts.push(`${String(hours).padStart(2, '0')} giờ`);
+        parts.push(`${String(minutes).padStart(2, '0')} phút`);
+        parts.push(`${String(seconds).padStart(2, '0')} giây`);
+
+        countdownEl.textContent = parts.join(' ');
+    }
+
+    updateCountdown();
+    shopLockCountdownInterval = setInterval(updateCountdown, 1000);
+}
+
+function showShopBannedOverlay(reason) {
+    const existing = document.getElementById('shopStatusOverlayModal');
+    if (existing) existing.remove();
+
+    const container = document.createElement('div');
+    container.id = 'shopStatusOverlayModal';
+    container.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(8px);
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    `;
+
+    container.innerHTML = `
+        <div style="background: #ffffff; border-radius: 16px; max-width: 520px; width: 100%; padding: 36px 32px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); text-align: center; border: 1px solid #e2e8f0;">
+            <div style="width: 64px; height: 64px; background: #fef2f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; color: #dc2626; font-size: 28px;">
+                <i class="fa fa-ban"></i>
+            </div>
+            <h2 style="margin: 0 0 12px 0; font-size: 22px; font-weight: 700; color: #991b1b;">Shop Của Bạn Đã Bị Khóa Vĩnh Viễn</h2>
+            <p style="margin: 0 0 20px 0; font-size: 14px; color: #64748b; line-height: 1.6;">
+                ${reason || 'Gian hàng của bạn đã bị khóa vĩnh viễn do vi phạm nghiêm trọng chính sách của sàn giao dịch MMO Market.'}
+            </p>
+            
+            <div style="background: #fff5f5; border: 1px solid #fecaca; border-radius: 12px; padding: 14px 16px; margin-bottom: 24px; text-align: left; font-size: 13px; color: #991b1b; line-height: 1.5;">
+                <i class="fa fa-info-circle"></i> Tài khoản cá nhân của bạn vẫn có thể sử dụng để đăng nhập và mua sắm sản phẩm, nhưng không thể truy cập Seller Dashboard.
+            </div>
+
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <a href="/" style="background: #dc2626; color: #ffffff; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px; flex: 1; text-align: center; border: none; transition: all 0.2s;">
+                    <i class="fa fa-home"></i> Về Trang Chủ
+                </a>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(container);
+}
+
+function showShopWithdrawnOverlay(msg) {
+    const existing = document.getElementById('shopStatusOverlayModal');
+    if (existing) existing.remove();
+
+    const container = document.createElement('div');
+    container.id = 'shopStatusOverlayModal';
+    container.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(8px);
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    `;
+
+    container.innerHTML = `
+        <div style="background: #ffffff; border-radius: 16px; max-width: 520px; width: 100%; padding: 36px 32px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); text-align: center; border: 1px solid #e2e8f0;">
+            <div style="width: 64px; height: 64px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; color: #2563eb; font-size: 28px;">
+                <i class="fa fa-info-circle"></i>
+            </div>
+            <h2 style="margin: 0 0 12px 0; font-size: 22px; font-weight: 700; color: #1e293b;">Shop Của Bạn Đã Đóng Cửa (Hoàn Phí)</h2>
+            <p style="margin: 0 0 20px 0; font-size: 14px; color: #64748b; line-height: 1.6;">
+                Cửa hàng cũ của bạn đã được đóng và hoàn trả 100% tiền cọc về ví tài khoản. Bạn có thể đăng ký mở Shop mới bất kỳ lúc nào!
+            </p>
+            
+            <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 14px 16px; margin-bottom: 24px; font-size: 13px; color: #0369a1; font-weight: 600;">
+                ✔ Trạng thái: Đã đóng Shop & Hoàn cọc
+            </div>
+
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <a href="/account/register-shop" style="background: #2563eb; color: #ffffff; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px; flex: 1; text-align: center; border: none; transition: all 0.2s;">
+                    <i class="fa fa-shopping-bag"></i> Đăng ký Mở Shop Mới
+                </a>
+                <a href="/" style="background: #f1f5f9; color: #334155; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px; flex: 1; text-align: center; border: 1px solid #cbd5e1; transition: all 0.2s;">
+                    <i class="fa fa-home"></i> Trang chủ
+                </a>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(container);
+}
+
 async function initSellerLayout() {
     try {
-        // Load independent sidebar data concurrently so no stale placeholder is
-        // visible and the balance does not wait for shop info to finish first.
         const [res, dashRes] = await Promise.all([
-            sellerFetch('/shop-info'),
-            sellerFetch('/dashboard')
+            sellerFetch('/shop-info').catch(e => null),
+            sellerFetch('/dashboard').catch(e => null)
         ]);
-        if (!res.ok) return;
+
+        let errMsg = '';
+        if (res && !res.ok) {
+            const errObj = await res.json().catch(() => ({}));
+            errMsg = errObj.message || errObj.description || '';
+        } else if (dashRes && !dashRes.ok) {
+            const errObj = await dashRes.json().catch(() => ({}));
+            errMsg = errObj.message || errObj.description || '';
+        }
+
+        if (errMsg.includes('SHOP_TEMPORARILY_LOCKED:')) {
+            showShopLockedOverlay(errMsg.split('SHOP_TEMPORARILY_LOCKED:')[1]);
+            return;
+        }
+        if (errMsg.includes('SHOP_WITHDRAWN:')) {
+            showShopWithdrawnOverlay(errMsg.split('SHOP_WITHDRAWN:')[1]);
+            return;
+        }
+        if (errMsg.includes('SHOP_BANNED:')) {
+            showShopBannedOverlay(errMsg.split('SHOP_BANNED:')[1]);
+            return;
+        }
+
+        if (!res || !res.ok) return;
         const data = await res.json();
+
+        const stLower = String(data.shopStatus || '').toLowerCase();
+        if (stLower === 'locked' || stLower === 'temp_locked' || stLower === 'indefinite_locked') {
+            if (data.suspendedUntil) {
+                showShopLockedOverlay(data.suspendedUntil);
+                return;
+            }
+        }
+        if (stLower === 'banned' || stLower === 'permanent_banned') {
+            showShopBannedOverlay('Shop của bạn đã bị khóa vĩnh viễn.');
+            return;
+        }
+        if (stLower === 'withdrawn' || stLower === 'closed' || stLower === 'deleted') {
+            showShopWithdrawnOverlay('Shop đã được đóng và hoàn phí.');
+            return;
+        }
 
         // Update sidebar
         const nameEl = document.querySelector('.seller-sidebar__name');
@@ -304,10 +553,24 @@ async function initDashboard() {
 
         const alertContainer = document.getElementById('shop-warning-alert-container');
         if (alertContainer) {
+            let htmlAlerts = '';
+            const stLower = String(data.shopStatus || '').toLowerCase();
+            if (stLower === 'suspended') {
+                htmlAlerts += `
+                    <div style="background-color: #fffbe6; border-left: 4px solid #d97706; padding: 16px; border-radius: 6px; margin-bottom: 20px; color: #92400e;">
+                        <h4 style="margin: 0 0 6px 0; font-weight: 700; display: flex; align-items: center; gap: 8px; color: #b45309;">
+                            <i class="fa fa-pause-circle" style="font-size: 18px;"></i> THÔNG BÁO: CỬA HÀNG ĐANG TRONG TRẠNG THÁI TẠM NGƯNG
+                        </h4>
+                        <p style="margin: 0; font-size: 13.5px;">
+                            Cửa hàng của bạn đang tạm ngưng hoạt động theo quyết định của Ban quản trị. Bạn vẫn có thể xem số liệu báo cáo và lịch sử đơn hàng nhưng <strong>không thể đăng bán sản phẩm mới</strong>.
+                        </p>
+                    </div>
+                `;
+            }
             const lvl = data.shopLevel !== undefined ? data.shopLevel : 1;
             if (lvl === 0) {
                 const disputePercent = (data.disputeRate * 100).toFixed(2);
-                alertContainer.innerHTML = `
+                htmlAlerts += `
                     <div style="background-color: #fee2e2; border-left: 4px solid #ef4444; padding: 16px; border-radius: 6px; margin-bottom: 24px; color: #7f1d1d;">
                         <h4 style="margin: 0 0 6px 0; font-weight: 700; display: flex; align-items: center; gap: 8px; color: #dc2626;">
                             <i class="fa fa-exclamation-circle" style="font-size: 18px;"></i> CẢNH BÁO: CỬA HÀNG ĐANG Ở CHẾ ĐỘ THẮT CHẶT (LEVEL 0)
@@ -322,9 +585,8 @@ async function initDashboard() {
                         </ul>
                     </div>
                 `;
-            } else {
-                alertContainer.innerHTML = '';
             }
+            alertContainer.innerHTML = htmlAlerts;
         }
 
         // Bind recent orders/transactions table
