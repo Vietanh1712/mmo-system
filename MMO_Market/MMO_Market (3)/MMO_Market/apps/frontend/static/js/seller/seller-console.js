@@ -109,6 +109,7 @@ function translateStatus(status) {
         'rejected': 'Bị từ chối',
         'approved': 'Đã duyệt',
         'open': 'Chờ xử lý',
+        'pending_review': 'Chờ duyệt',
         'in_progress': 'Đang giải quyết',
         'inprogress': 'Đang giải quyết',
         'resolved': 'Đã giải quyết',
@@ -1376,6 +1377,7 @@ async function initTransactions() {
         const res = await sellerFetch('/transactions');
         if (!res.ok) throw new Error('Không thể tải lịch sử bán hàng.');
         const transactions = await res.json();
+        window.allTransactions = transactions;
 
         let searchQuery = ''; // Từ khóa tìm kiếm giao dịch
         let statusFilter = ''; // Trạng thái giao dịch cần lọc
@@ -1461,16 +1463,13 @@ async function initTransactions() {
                             <strong>${t.productName}</strong>
                             <div class="muted">${t.variantName}</div>
                         </td>
-                        <td>${t.customerEmail}</td>
+                        <td><a href="/messages?sellerId=${t.customerId}" style="text-decoration: underline; color: inherit; cursor: pointer;" title="Nhắn tin với khách hàng">${t.customerEmail}</a></td>
                         <td class="text-right">${formatVND(t.amountVnd)}</td>
                         <td class="text-right text-success">+${formatVND(t.netEarningVnd)}</td>
                         <td><span class="badge ${badgeClass}">${translateStatus(t.status)}</span></td>
                         <td>${t.createdAt.replace('T', ' ').substring(0, 16)}</td>
                         <td class="text-right">
-                            ${(t.status === 'Disputed' || t.status === 'Khiếu nại')
-                                ? `<a class="icon-button" href="/seller/complaints" title="Xem khiếu nại"><i class="fa fa-warning"></i></a>`
-                                : `<a class="icon-button" href="/messages?to=${t.customerEmail}" title="Nhắn tin"><i class="fa fa-envelope"></i></a>
-                                   <a class="icon-button" href="#" title="Chi tiết" onclick="showToast('Tính năng đang phát triển', 'info'); return false;"><i class="fa fa-info-circle"></i></a>`}
+                            <a class="icon-button" href="#" title="Chi tiết" onclick="showTxDetail('${t.id}'); return false;"><i class="fa fa-eye"></i></a>
                         </td>
                     </tr>
                 `;
@@ -2124,12 +2123,27 @@ async function initComplaints() {
         // Bind stats card values
         const statCards = document.querySelectorAll('.stats-grid-4 .stat-card-value');
         if (statCards.length >= 4) {
-            const openCount = complaints.filter(c => c.status === 'Open').length;
-            const inProgressCount = complaints.filter(c => c.status === 'In_Progress' || c.status === 'In_progress' || c.status === 'IN_PROGRESS').length;
-            const resolvedCount = complaints.filter(c => c.status === 'Resolved' || c.status === 'Closed').length;
+            const openCount = complaints.filter(c => {
+                const s = (c.status || '').toLowerCase();
+                return s === 'open' || s === 'pending_review' || s === 'pending';
+            }).length;
+            const inProgressCount = complaints.filter(c => {
+                const s = (c.status || '').toLowerCase();
+                return s === 'in_progress' || s === 'inprogress';
+            }).length;
+            const resolvedCount = complaints.filter(c => {
+                const s = (c.status || '').toLowerCase();
+                return s === 'resolved' || s === 'closed';
+            }).length;
             
-            const heldCount = complaints.filter(c => c.status !== 'Resolved' && c.status !== 'Closed').length;
-            const heldAmount = complaints.filter(c => c.status !== 'Resolved' && c.status !== 'Closed').reduce((sum, c) => sum + c.amountVnd, 0);
+            const heldCount = complaints.filter(c => {
+                const s = (c.status || '').toLowerCase();
+                return s !== 'resolved' && s !== 'closed';
+            }).length;
+            const heldAmount = complaints.filter(c => {
+                const s = (c.status || '').toLowerCase();
+                return s !== 'resolved' && s !== 'closed';
+            }).reduce((sum, c) => sum + c.amountVnd, 0);
 
             statCards[0].textContent = openCount;
             statCards[1].textContent = inProgressCount;
@@ -2192,10 +2206,15 @@ async function initComplaints() {
                 // Lọc theo trạng thái
                 if (statusFilter) {
                     const st = c.status.toLowerCase();
-                    if (statusFilter === 'open' && st !== 'open') return false;
-                    if (statusFilter === 'in_progress' && st !== 'in_progress') return false;
-                    if (statusFilter === 'resolved' && st !== 'resolved') return false;
-                    if (statusFilter === 'closed' && st !== 'closed') return false;
+                    if (statusFilter === 'open') {
+                        if (st !== 'open' && st !== 'pending_review' && st !== 'pending') return false;
+                    } else if (statusFilter === 'in_progress') {
+                        if (st !== 'in_progress' && st !== 'inprogress') return false;
+                    } else if (statusFilter === 'resolved') {
+                        if (st !== 'resolved') return false;
+                    } else if (statusFilter === 'closed') {
+                        if (st !== 'closed') return false;
+                    }
                 }
 
                 // Lọc theo danh mục
@@ -2322,7 +2341,7 @@ async function initComplaintDetail() {
         const chatBtn = document.getElementById('chatDisputeBtn');
         if (chatBtn) {
             chatBtn.style.display = 'inline-flex';
-            chatBtn.href = `/messages?sellerView=true&complaintId=${c.id}`;
+            chatBtn.href = `/messages?sellerId=${c.customerId}`;
         }
 
     } catch (err) {
@@ -2709,8 +2728,70 @@ async function onPreOrderStatusSelect(id, selectElement, currentStatus) {
 }
 
 document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') closePreOrderDetailModal();
+    if (event.key === 'Escape') {
+        closePreOrderDetailModal();
+        closeTxDetailModal();
+    }
 });
+
+function showTxDetail(txId) {
+    const t = (window.allTransactions || []).find(x => String(x.id) === String(txId));
+    if (!t) return;
+
+    document.getElementById('modalTxId').textContent = `#TX-${t.id}`;
+    document.getElementById('modalTxDate').textContent = t.createdAt.replace('T', ' ').substring(0, 16);
+    document.getElementById('modalTxProduct').textContent = t.productName || 'N/A';
+    document.getElementById('modalTxVariant').textContent = t.variantName || 'N/A';
+    const customerEl = document.getElementById('modalTxCustomer');
+    if (t.customerEmail) {
+        customerEl.innerHTML = `<a href="/messages?sellerId=${t.customerId}" style="text-decoration: underline; color: #2563eb; cursor: pointer;" title="Nhắn tin với khách hàng">${t.customerEmail}</a>`;
+    } else {
+        customerEl.textContent = 'N/A';
+    }
+    
+    // Status badge
+    let badgeClass = 'ds-badge-neutral';
+    let statusText = t.status || 'N/A';
+    if (t.status === 'Completed') {
+        badgeClass = 'ds-badge-success';
+        statusText = 'Hoàn tất';
+    } else if (t.status === 'Held') {
+        badgeClass = 'ds-badge-warning';
+        statusText = 'Tạm giữ (Escrow)';
+    } else if (t.status === 'Disputed') {
+        badgeClass = 'ds-badge-danger';
+        statusText = 'Tranh chấp (Khiếu nại)';
+    } else if (t.status === 'Cancelled' || t.status === 'Refunded') {
+        badgeClass = 'ds-badge-danger';
+        statusText = 'Đã hủy/Hoàn tiền';
+    }
+    
+    const statusEl = document.getElementById('modalTxStatus');
+    statusEl.innerHTML = `<span class="ds-badge ${badgeClass}">${statusText}</span>`;
+    
+    document.getElementById('modalTxAmount').textContent = formatVND(t.amountVnd);
+    document.getElementById('modalTxCommission').textContent = `-${formatVND(t.commissionVnd || 0)}`;
+    document.getElementById('modalTxNet').textContent = formatVND(t.amountVnd - (t.commissionVnd || 0));
+    
+    const escrowEl = document.getElementById('modalTxEscrowRelease');
+    if (t.escrowReleaseDate) {
+        escrowEl.textContent = t.escrowReleaseDate.replace('T', ' ').substring(0, 16);
+    } else {
+        escrowEl.textContent = 'N/A';
+    }
+
+    const modal = document.getElementById('txDetailModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+function closeTxDetailModal() {
+    const modal = document.getElementById('txDetailModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
 
 window.initPreOrders = initPreOrders;
 window.showCustomConfirm = showCustomConfirm;
@@ -2720,3 +2801,5 @@ window.openPreOrderDetailModal = openPreOrderDetailModal;
 window.closePreOrderDetailModal = closePreOrderDetailModal;
 window.handlePreOrderDetailBackdrop = handlePreOrderDetailBackdrop;
 window.copyPreOrderDetailDelivery = copyPreOrderDetailDelivery;
+window.showTxDetail = showTxDetail;
+window.closeTxDetailModal = closeTxDetailModal;

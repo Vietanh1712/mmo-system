@@ -83,6 +83,70 @@
             </section>
         </div>
     </main>
+
+    <!-- Modal Chi tiết giao dịch -->
+    <div id="txDetailModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: #fff; width: 100%; max-width: 600px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); display: flex; flex-direction: column; overflow: hidden; animation: modalFadeIn 0.2s ease-out;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid #f1f5f9; background: #fafafa;">
+                <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;"><i class="fa fa-info-circle" style="color: #2563eb; margin-right: 8px;"></i> Chi tiết giao dịch</h3>
+                <button type="button" onclick="closeTxDetailModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #64748b; line-height: 1; padding: 4px;">&times;</button>
+            </div>
+            <div style="padding: 24px; overflow-y: auto; max-height: 70vh;">
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; font-size: 14px; line-height: 1.5;">
+                    <div>
+                        <div style="font-weight: 500; color: #64748b;">Mã giao dịch:</div>
+                        <div id="modalTxId" style="font-weight: 600; color: #0f172a; margin-top: 2px;"></div>
+                    </div>
+                    <div>
+                        <div style="font-weight: 500; color: #64748b;">Thời gian bán:</div>
+                        <div id="modalTxDate" style="font-weight: 600; color: #0f172a; margin-top: 2px;"></div>
+                    </div>
+                    <div style="grid-column: span 2;">
+                        <div style="font-weight: 500; color: #64748b;">Sản phẩm:</div>
+                        <div id="modalTxProduct" style="font-weight: 600; color: #0f172a; margin-top: 2px;"></div>
+                    </div>
+                    <div style="grid-column: span 2;">
+                        <div style="font-weight: 500; color: #64748b;">Biến thể:</div>
+                        <div id="modalTxVariant" style="font-weight: 600; color: #0f172a; margin-top: 2px;"></div>
+                    </div>
+                    <div>
+                        <div style="font-weight: 500; color: #64748b;">Khách hàng:</div>
+                        <div id="modalTxCustomer" style="font-weight: 600; color: #0f172a; margin-top: 2px;"></div>
+                    </div>
+                    <div>
+                        <div style="font-weight: 500; color: #64748b;">Trạng thái:</div>
+                        <div id="modalTxStatus" style="margin-top: 2px;"></div>
+                    </div>
+                    <div>
+                        <div style="font-weight: 500; color: #64748b;">Số tiền giao dịch:</div>
+                        <div id="modalTxAmount" style="font-weight: 600; color: #10b981; margin-top: 2px;"></div>
+                    </div>
+                    <div>
+                        <div style="font-weight: 500; color: #64748b;">Phí hoa hồng:</div>
+                        <div id="modalTxCommission" style="font-weight: 600; color: #ef4444; margin-top: 2px;"></div>
+                    </div>
+                    <div>
+                        <div style="font-weight: 500; color: #64748b;">Thực nhận (Ví):</div>
+                        <div id="modalTxNet" style="font-weight: 600; color: #2563eb; margin-top: 2px;"></div>
+                    </div>
+                    <div>
+                        <div style="font-weight: 500; color: #64748b;">Giải phóng Escrow:</div>
+                        <div id="modalTxEscrowRelease" style="font-weight: 600; color: #0f172a; margin-top: 2px;"></div>
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; padding: 16px 24px; border-top: 1px solid #f1f5f9; background: #fafafa;">
+                <button type="button" class="ds-btn ds-btn-secondary" onclick="closeTxDetailModal()">Đóng</button>
+            </div>
+        </div>
+    </div>
+    <style>
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+
     <script th:src="@{/js/customer/auth.js}"></script>
     <script th:src="@{/js/seller/seller-console.js(v=1.2)}"></script>
 </body>
