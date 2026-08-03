@@ -316,11 +316,14 @@ public class ComplaintServiceImpl implements ComplaintService {
                 .build();
         notificationRepository.save(sellerNotif);
 
-        // 3. Gửi thông báo cho Staff có quyền xử lý khiếu nại (HANDLE_DISPUTES)
+        // 3. Gửi thông báo cho Staff có quyền xử lý khiếu nại (HANDLE_DISPUTES) - Bỏ qua Admin
         List<User> staffAndAdmins = userRepository.findUsersByPermission("HANDLE_DISPUTES");
         for (User staff : staffAndAdmins) {
             if (staff.getId().equals(customer.getId())) {
                 continue;
+            }
+            if (staff.getRole() != null && staff.getRole().toLowerCase().contains("admin")) {
+                continue; // Admin không nhận thông báo tác nghiệp khiếu nại của Staff
             }
             Notification staffNotif = Notification.builder()
                     .userId(staff.getId())

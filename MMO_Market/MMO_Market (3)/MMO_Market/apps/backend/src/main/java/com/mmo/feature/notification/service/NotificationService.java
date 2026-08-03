@@ -370,7 +370,18 @@ public class NotificationService {
 
         List<Map<String, Object>> result = new ArrayList<>();
 
+        String userRole = normalizeRole(user.getRole());
+
         for (Notification n : personal) {
+            // Admin chỉ nhận thông báo hệ thống/an ninh/chính sách, không nhận thông báo tác nghiệp xử lý của Staff (KYC, rút tiền, ticket, khiếu nại)
+            if ("Admin".equalsIgnoreCase(userRole)) {
+                String nType = n.getType() != null ? n.getType().toUpperCase() : "";
+                String targetUrl = n.getTargetUrl() != null ? n.getTargetUrl().toLowerCase() : "";
+                if ("KYC".equals(nType) || targetUrl.contains("/staff/")) {
+                    continue;
+                }
+            }
+
             Map<String, Object> map = new HashMap<>();
             map.put("id", String.valueOf(n.getId()));
             map.put("type", n.getType().toUpperCase());

@@ -17,4 +17,13 @@ public interface EmailVerificationRepository extends JpaRepository<EmailVerifica
 
     // 3. Lấy mã OTP mới nhất của User để phục vụ kiểm tra giới hạn tần suất (Rate Limiting)
     Optional<EmailVerification> findFirstByUserIdOrderByExpiryDateDesc(Long userId);
+
+    // --- Phân loại OTP ---
+    Optional<EmailVerification> findByUserIdAndVerificationCodeAndOtpTypeAndIsUsedFalse(Long userId, String verificationCode, String otpType);
+
+    Optional<EmailVerification> findByUserIdAndVerificationCodeAndOtpType(Long userId, String verificationCode, String otpType);
+
+    Optional<EmailVerification> findFirstByUserIdAndOtpTypeOrderByExpiryDateDesc(Long userId, String otpType);
+
+    java.util.List<EmailVerification> findByUserIdAndOtpTypeAndIsUsedFalse(Long userId, String otpType);
 }

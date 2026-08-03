@@ -114,4 +114,9 @@ public class HomeController {
         model.addAttribute("duration", duration != null ? duration : 1);
         return "checkout";
     }
+
+    @GetMapping("/maintenance")
+    public String showMaintenancePage() {
+        return "maintenance";
+    }
 }

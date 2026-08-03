@@ -90,8 +90,8 @@ public class SystemConfigurationServiceTest {
         config1.setConfigValue("30");
 
         SystemConfiguration config2 = new SystemConfiguration();
-        config2.setConfigKey("ALLOW_REGISTER");
-        config2.setConfigValue("false");
+        config2.setConfigKey("LOCK_DURATION_MINS");
+        config2.setConfigValue("15");
 
         when(systemConfigurationRepository.findAll()).thenReturn(Arrays.asList(config1, config2));
 
@@ -99,7 +99,6 @@ public class SystemConfigurationServiceTest {
 
         assertNotNull(response);
         assertEquals(30, response.getSystemConfig().getSessionTimeout());
-        assertFalse(response.getSystemConfig().getAllowRegister());
     }
 
     /**
@@ -173,8 +172,6 @@ public class SystemConfigurationServiceTest {
         request.setMaxLoginRetries(5);
         request.setLockDurationMins(15);
         request.setEscrowHoldHours(72);
-        request.setAllowGoogleLogin(true);
-        request.setAllowRegister(true);
 
         assertDoesNotThrow(() -> 
             systemConfigurationService.updateGeneralConfig(1L, request)
@@ -209,8 +206,6 @@ public class SystemConfigurationServiceTest {
         request.setMaxLoginRetries(5);
         request.setLockDurationMins(15);
         request.setEscrowHoldHours(72);
-        request.setAllowGoogleLogin(true);
-        request.setAllowRegister(true);
 
         assertDoesNotThrow(() -> 
             systemConfigurationService.updateGeneralConfig(1L, request)
@@ -230,8 +225,6 @@ public class SystemConfigurationServiceTest {
         request.setMaxLoginRetries(5);
         request.setLockDurationMins(15);
         request.setEscrowHoldHours(72);
-        request.setAllowGoogleLogin(true);
-        request.setAllowRegister(true);
 
         assertDoesNotThrow(() -> 
             systemConfigurationService.updateGeneralConfig(1L, request)

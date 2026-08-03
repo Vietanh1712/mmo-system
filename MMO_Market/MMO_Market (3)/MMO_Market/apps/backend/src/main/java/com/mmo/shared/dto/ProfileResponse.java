@@ -20,5 +20,6 @@ public class ProfileResponse {
     private String address;
     private Boolean is2faEnabled;
     private String kycStatus;
+    private String kycDocumentType;
     private String avatar;
 }

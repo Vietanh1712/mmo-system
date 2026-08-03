@@ -36,9 +36,11 @@ async function authFetch(url, options = {}) {
     const token = sessionStorage.getItem('accessToken');
     const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
         ...options.headers
     };
+    if (token && token !== 'null' && token !== 'undefined') {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
     if (options.body instanceof FormData) {
         delete headers['Content-Type'];
     }
@@ -245,6 +247,8 @@ function resolvePostLoginRedirect(roleValue, redirectPathFromApi) {
  * Nếu đang ở trang /login thì sẽ bị đẩy về trang chủ hoặc trang đích đã lưu trước đó.
  */
 function applyAuthenticatedRedirect() {
+    if (window.location.search.includes('force=1')) return;
+
     const token = sessionStorage.getItem('accessToken');
     if (!token || token === 'null' || token === 'undefined') return;
 

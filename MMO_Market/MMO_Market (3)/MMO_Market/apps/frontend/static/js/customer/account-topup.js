@@ -119,7 +119,7 @@ function selectQuickAmount(button) {
     clearAmountError();
 }
 
-function handleTopupSubmit(event) {
+async function handleTopupSubmit(event) {
     event.preventDefault();
 
     const amount = normalizeAmount(document.getElementById('topupAmount').value);
@@ -127,12 +127,31 @@ function handleTopupSubmit(event) {
         return;
     }
 
-    initialBalance = topupProfile ? (topupProfile.balanceVnd || 0) : 0;
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
 
-    renderTransferInstruction(amount);
-    showTopupMessage('Hướng dẫn chuyển khoản đã được tạo. Vui lòng quét mã QR hoặc chuyển khoản để hoàn tất giao dịch.', 'warning');
+    try {
+        const response = await authFetch('/sepay/request', {
+            method: 'POST',
+            body: JSON.stringify({ amountVnd: amount })
+        });
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.message || 'Không thể tạo yêu cầu nạp tiền.');
+        }
+        const tx = await response.json();
 
-    startBalancePolling(amount);
+        initialBalance = topupProfile ? (topupProfile.balanceVnd || 0) : 0;
+
+        renderTransferInstruction(tx.amountVnd, tx.transferContent);
+        showTopupMessage('Hướng dẫn chuyển khoản đã được tạo. Vui lòng quét mã QR hoặc chuyển khoản để hoàn tất giao dịch.', 'warning');
+
+        startBalancePolling(tx.amountVnd);
+    } catch (err) {
+        showTopupMessage(err.message, 'danger');
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
+    }
 }
 
 function startBalancePolling(topupAmount) {
@@ -158,11 +177,26 @@ function startBalancePolling(topupAmount) {
                     topupProfile.balanceVnd = currentBalance;
                     document.getElementById('topupBalance').textContent = formatMoney(currentBalance);
 
-                    const badge = document.querySelector('.topup-instruction .ds-badge');
-                    if (badge) {
-                        badge.textContent = 'Thành công';
-                        badge.className = 'ds-badge ds-badge-success';
-                    }
+                     const badge = document.querySelector('.topup-instruction .ds-badge');
+                     if (badge) {
+                         badge.textContent = 'Thành công';
+                         badge.className = 'ds-badge ds-badge-success';
+                     }
+
+                     const instTitle = document.getElementById('topupInstructionTitle');
+                     if (instTitle) {
+                         instTitle.textContent = 'Nạp tiền thành công';
+                     }
+
+                     const detailsEl = document.getElementById('topupInstructionDetails');
+                     if (detailsEl) {
+                         detailsEl.style.display = 'none';
+                     }
+
+                     const successEl = document.getElementById('topupSuccessState');
+                     if (successEl) {
+                         successEl.style.display = 'block';
+                     }
 
                     if (accountSidebar && topupProfile) {
                         accountSidebar.render(topupProfile);
@@ -218,8 +252,8 @@ function validateAmount(amount) {
     return true;
 }
 
-function renderTransferInstruction(amount) {
-    currentTransferContent = createTransferContent();
+function renderTransferInstruction(amount, transferContent) {
+    currentTransferContent = transferContent;
     
     document.getElementById('topupBankName').textContent = sepayConfig.bankId;
     document.getElementById('topupBankAccountName').textContent = sepayConfig.accountName;
@@ -236,6 +270,21 @@ function renderTransferInstruction(amount) {
     if (badge) {
         badge.textContent = 'Đang chờ thanh toán';
         badge.className = 'ds-badge ds-badge-warning';
+    }
+
+    const instTitle = document.getElementById('topupInstructionTitle');
+    if (instTitle) {
+        instTitle.textContent = 'Hướng dẫn chuyển khoản';
+    }
+
+    const detailsEl = document.getElementById('topupInstructionDetails');
+    if (detailsEl) {
+        detailsEl.style.display = 'block';
+    }
+
+    const successEl = document.getElementById('topupSuccessState');
+    if (successEl) {
+        successEl.style.display = 'none';
     }
 
     document.getElementById('topupInstruction').hidden = false;
@@ -393,7 +442,7 @@ function readMockTransactions() {
         // ignore
     }
 
-    const seeded = isDemo ? createSeedTransactions() : [];
+    const seeded = [];
     localStorage.setItem(key, JSON.stringify(seeded));
     sessionStorage.setItem(key, JSON.stringify(seeded));
     return seeded;

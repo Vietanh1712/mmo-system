@@ -1,4 +1,4 @@
-﻿const SECURITY_STORAGE_KEY = 'mmoMarketSecurityMock';
+const SECURITY_STORAGE_KEY = 'mmoMarketSecurityMock';
 const SECURITY_DEFAULT_STATE = {
     twoFactorEnabled: false,
     lastPasswordChangedAt: null
@@ -8,6 +8,8 @@ var accountSidebar = null;
 let securityState = SECURITY_DEFAULT_STATE;
 let securityMessageTimer = null;
 let pendingTwoFactorAction = null;
+let twoFactorCountdownTimer = null;
+let last2faOtpSentTime = 0;
 
 function registerAccountPage(scriptPath, initializer) {
     window.AccountPageInitializers = window.AccountPageInitializers || {};
@@ -35,7 +37,11 @@ function bindSecurityEvents() {
     document.getElementById('twoFactorToggle').addEventListener('click', requestTwoFactorChange);
     document.getElementById('twoFactorCancelButton').addEventListener('click', closeTwoFactorModal);
     document.getElementById('twoFactorConfirmButton').addEventListener('click', confirmTwoFactorChange);
-
+    
+    const resendBtn = document.getElementById('btnResend2faOtp');
+    if (resendBtn) {
+        resendBtn.addEventListener('click', handleResend2faOtp);
+    }
 }
 
 async function loadSecurityPage() {
@@ -212,16 +218,20 @@ async function requestTwoFactorChange() {
     const isDisable = pendingTwoFactorAction === 'disable';
 
     if (!isDisable) {
-        // Calling API to send OTP
-        try {
-            const response = await authFetch('/v1/profile/2fa/send-otp', { method: 'POST' });
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.message || 'Lỗi gửi OTP');
+        const remaining = Math.ceil((60000 - (Date.now() - last2faOtpSentTime)) / 1000);
+        if (remaining <= 0) {
+            // Calling API to send OTP
+            try {
+                const response = await authFetch('/v1/profile/2fa/send-otp', { method: 'POST' });
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.message || 'Lỗi gửi OTP');
+                }
+                last2faOtpSentTime = Date.now();
+            } catch (error) {
+                showSecurityMessage(error.message || 'Không thể gửi mã OTP.', 'danger');
+                return;
             }
-        } catch (error) {
-            showSecurityMessage(error.message || 'Không thể gửi mã OTP.', 'danger');
-            return;
         }
     }
 
@@ -235,6 +245,11 @@ async function requestTwoFactorChange() {
     document.getElementById('twoFactorOtp').value = '';
     setText('twoFactorOtpError', '');
     document.getElementById('twoFactorModal').hidden = false;
+
+    if (!isDisable) {
+        const remaining = Math.ceil((60000 - (Date.now() - last2faOtpSentTime)) / 1000);
+        startTwoFactorCountdown(remaining > 0 ? remaining : 60);
+    }
 }
 
 async function confirmTwoFactorChange() {
@@ -342,4 +357,55 @@ function showSecurityMessage(message, type) {
 
 function setText(id, value) {
     document.getElementById(id).textContent = value;
+}
+
+function startTwoFactorCountdown(seconds) {
+    const btnResend = document.getElementById('btnResend2faOtp');
+    if (!btnResend) return;
+
+    if (twoFactorCountdownTimer) clearInterval(twoFactorCountdownTimer);
+    let countdown = seconds;
+
+    btnResend.disabled = true;
+    btnResend.style.color = '#94a3b8';
+    btnResend.style.cursor = 'not-allowed';
+    btnResend.style.textDecoration = 'none';
+    btnResend.textContent = `Gửi lại mã (${countdown}s)`;
+
+    twoFactorCountdownTimer = setInterval(() => {
+        countdown--;
+        const currentBtn = document.getElementById('btnResend2faOtp');
+        if (!currentBtn) {
+            clearInterval(twoFactorCountdownTimer);
+            return;
+        }
+        if (countdown <= 0) {
+            clearInterval(twoFactorCountdownTimer);
+            currentBtn.disabled = false;
+            currentBtn.style.color = 'var(--ds-primary, #2563eb)';
+            currentBtn.style.cursor = 'pointer';
+            currentBtn.style.textDecoration = 'underline';
+            currentBtn.textContent = 'Gửi lại mã';
+        } else {
+            currentBtn.textContent = `Gửi lại mã (${countdown}s)`;
+        }
+    }, 1000);
+}
+
+async function handleResend2faOtp() {
+    const btnResend = document.getElementById('btnResend2faOtp');
+    if (btnResend && btnResend.disabled) return;
+
+    try {
+        const response = await authFetch('/v1/profile/2fa/send-otp', { method: 'POST' });
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.message || 'Lỗi gửi lại OTP');
+        }
+        last2faOtpSentTime = Date.now();
+        setText('twoFactorOtpError', 'Đã gửi lại mã OTP về email của bạn.');
+        startTwoFactorCountdown(60);
+    } catch (error) {
+        setText('twoFactorOtpError', error.message || 'Không thể gửi lại mã OTP.');
+    }
 }

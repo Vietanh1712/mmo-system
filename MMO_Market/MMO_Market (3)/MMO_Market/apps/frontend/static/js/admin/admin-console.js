@@ -2121,33 +2121,28 @@
             document.getElementById('cfgOtpTimeout').value = c.otpTimeout;
             document.getElementById('cfgMaxLoginRetries').value = c.maxLoginRetries;
             document.getElementById('cfgLockDurationMins').value = c.lockDurationMins || 15;
-            document.getElementById('cfgEscrowHoldHours').value = c.escrowHoldHours || 72;
-            
-            const toggleBtn = (id, active) => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.setAttribute('aria-pressed', String(active));
-                    el.classList.toggle('ds-toggle-inactive', !active);
-                }
-            };
-            toggleBtn('cfgAllowGoogle', c.allowGoogleLogin);
-            toggleBtn('cfgAllowRegister', c.allowRegister);
-            toggleBtn('cfgWithdraw2FA', c.requireWithdraw2FA);
+            if (document.getElementById('cfgEscrowHoldHoursLevel0')) document.getElementById('cfgEscrowHoldHoursLevel0').value = c.escrowHoldHoursLevel0 || c.escrowHoldHours || 168;
+            if (document.getElementById('cfgEscrowHoldHoursLevel1')) document.getElementById('cfgEscrowHoldHoursLevel1').value = c.escrowHoldHoursLevel1 || c.escrowHoldHours || 72;
+            if (document.getElementById('cfgEscrowHoldHoursLevel2')) document.getElementById('cfgEscrowHoldHoursLevel2').value = c.escrowHoldHoursLevel2 || c.escrowHoldHours || 48;
         } catch (error) {
             showToast('Lỗi kết nối khi tải cấu hình.', true);
         }
     }
 
     window.AdminConsole.saveSystemConfig = async function () {
+        const lvl0 = Number(document.getElementById('cfgEscrowHoldHoursLevel0')?.value || 168);
+        const lvl1 = Number(document.getElementById('cfgEscrowHoldHoursLevel1')?.value || 72);
+        const lvl2 = Number(document.getElementById('cfgEscrowHoldHoursLevel2')?.value || 48);
+
         const payload = {
             sessionTimeout: Number(document.getElementById('cfgSessionTimeout').value),
             otpTimeout: Number(document.getElementById('cfgOtpTimeout').value),
             maxLoginRetries: Number(document.getElementById('cfgMaxLoginRetries').value),
             lockDurationMins: Number(document.getElementById('cfgLockDurationMins').value),
-            escrowHoldHours: Number(document.getElementById('cfgEscrowHoldHours').value),
-            allowGoogleLogin: document.getElementById('cfgAllowGoogle')?.getAttribute('aria-pressed') === 'true',
-            allowRegister: document.getElementById('cfgAllowRegister')?.getAttribute('aria-pressed') === 'true',
-            requireWithdraw2FA: document.getElementById('cfgWithdraw2FA')?.getAttribute('aria-pressed') === 'true'
+            escrowHoldHours: lvl1,
+            escrowHoldHoursLevel0: lvl0,
+            escrowHoldHoursLevel1: lvl1,
+            escrowHoldHoursLevel2: lvl2
         };
         try {
             const response = await authFetch('/admin/system-config/general', {
