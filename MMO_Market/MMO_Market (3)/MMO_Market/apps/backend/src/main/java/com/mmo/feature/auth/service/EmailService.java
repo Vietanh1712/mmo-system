@@ -43,6 +43,16 @@ public class EmailService {
             @Value("${gmail.api.from-email:}") String fromEmail,
             @Value("${gmail.api.from-name:MMO Market}") String fromName) {
         this.systemConfigurationRepository = systemConfigurationRepository;
+        
+        if (googleClientId != null && org.springframework.util.StringUtils.hasText(googleClientId)) {
+            googleClientId = googleClientId.trim();
+            if (googleClientId.endsWith(".apps.googleusercontent.com.apps.googleusercontent.com")) {
+                googleClientId = googleClientId.substring(0, googleClientId.length() - ".apps.googleusercontent.com".length());
+            } else if (!googleClientId.endsWith(".apps.googleusercontent.com")) {
+                googleClientId += ".apps.googleusercontent.com";
+            }
+        }
+        
         this.googleClientId = googleClientId;
         this.googleClientSecret = googleClientSecret;
         this.googleRefreshToken = googleRefreshToken;
