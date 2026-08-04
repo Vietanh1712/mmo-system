@@ -124,6 +124,11 @@ function renderShopRegistrationState() {
         kycApproved ? 'Danh tính đã được xác minh.' : 'Chưa xác minh danh tính.';
     document.getElementById('shopRequirementProgress').textContent = kycApproved ? '3/3 hoàn tất' : '2/3 hoàn tất';
 
+    const requirementsSection = document.getElementById('shopRegistrationRequirements');
+    if (requirementsSection) {
+        requirementsSection.hidden = false;
+    }
+
     const hasRequest = shopRegistrationState.status !== 'NOT_SUBMITTED';
     summary.hidden = !hasRequest;
     form.hidden = hasRequest;
