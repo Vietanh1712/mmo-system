@@ -318,7 +318,10 @@ public class AdminRevenueService {
         final LocalDate finalEnd = parsedEnd;
 
         boolean isAsc = "ASC".equalsIgnoreCase(sort);
-        Comparator<CashflowTransactionDto> comparator = Comparator.comparing(CashflowTransactionDto::getTimestamp);
+        Comparator<CashflowTransactionDto> comparator = Comparator.comparing(
+                CashflowTransactionDto::getTimestamp,
+                Comparator.nullsLast(Comparator.naturalOrder())
+        );
         if (!isAsc) {
             comparator = comparator.reversed();
         }

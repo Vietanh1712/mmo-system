@@ -234,6 +234,7 @@ public class UserService {
         reg.setSupportPhone(supportPhone != null ? supportPhone.trim() : "");
         reg.setFeeVnd(shopOpeningFee);
         reg.setStatus("Approved");
+        reg.setCreatedAt(java.time.LocalDateTime.now());
         reg.setIsDelete(false);
 
         sellerRegistrationRepository.saveAndFlush(reg);
