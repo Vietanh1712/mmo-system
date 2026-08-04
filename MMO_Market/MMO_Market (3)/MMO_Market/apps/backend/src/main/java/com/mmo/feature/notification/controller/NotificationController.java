@@ -12,6 +12,10 @@ import com.mmo.feature.notification.service.NotificationService;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller quản lý và phát hành Thông báo Hệ thống (System Notifications),
+ * quản lý bản nháp, trạng thái bảo trì sàn và đánh dấu thông báo đã đọc.
+ */
 @RestController
 public class NotificationController {
 

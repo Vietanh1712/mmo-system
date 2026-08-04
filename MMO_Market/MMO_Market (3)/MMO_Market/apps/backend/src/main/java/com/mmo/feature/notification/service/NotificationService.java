@@ -26,6 +26,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Dịch vụ xử lý Thông báo Hệ thống (System Notifications) và Chế độ Bảo trì (Maintenance Mode).
+ * Hỗ trợ tạo, lưu bản nháp, phát hành thông báo toàn sàn, ghi nhận nhật ký kiểm toán và gửi thông báo tới người dùng.
+ */
 @Service
 public class NotificationService {
 

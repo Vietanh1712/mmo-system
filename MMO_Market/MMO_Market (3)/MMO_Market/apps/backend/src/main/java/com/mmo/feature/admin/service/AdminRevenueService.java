@@ -17,6 +17,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Dịch vụ xử lý báo cáo Doanh thu (Revenue) và Dòng tiền (Cashflow) dành cho Quản trị viên (Admin).
+ * Thống kê phí hoa hồng C2C, phí mở shop, phí rút tiền, doanh thu ròng và hỗ trợ tìm kiếm, lọc, xuất CSV.
+ */
 @Service
 public class AdminRevenueService {
 
