@@ -187,7 +187,7 @@
                     const rawNotes = po.notes ? po.notes.trim() : '';
                     const hasUserNotes = rawNotes !== '' && !rawNotes.startsWith('Tự động tạo từ thanh toán giỏ hàng');
                     
-                    // Determine workflow classes based on status
+                    // Xác định các CSS classes cho quy trình trạng thái (workflow) dựa trên trạng thái đơn hàng (status)
                     const status = (po.status || 'pending').toLowerCase();
                     let step1Class = 'workflow-step--active';
                     let line1Class = '';
@@ -198,11 +198,13 @@
                     let step3Label = 'Hoàn tất giao dịch';
 
                     if (status === 'pending') {
+                        // Đơn đặt trước đang chờ duyệt
                         step1Class = 'workflow-step--success';
                         line1Class = 'workflow-line--active';
                         step2Class = 'workflow-step--active';
                         step2Label = 'Chờ duyệt yêu cầu';
                     } else if (status === 'approved' || status === 'accept' || status === 'accepted') {
+                        // Đơn đặt trước đã được Seller chấp nhận và đang chuẩn bị giao hàng
                         step1Class = 'workflow-step--success';
                         line1Class = 'workflow-line--success';
                         step2Class = 'workflow-step--success';
@@ -210,6 +212,7 @@
                         step3Class = 'workflow-step--active';
                         step2Label = 'Đã duyệt - Chuẩn bị hàng';
                     } else if (status === 'completed') {
+                        // Đơn đặt trước đã được giao hàng thành công
                         step1Class = 'workflow-step--success';
                         line1Class = 'workflow-line--success';
                         step2Class = 'workflow-step--success';
@@ -218,12 +221,14 @@
                         step2Label = 'Đã duyệt';
                         step3Label = 'Đã giao hàng';
                     } else if (status === 'rejected' || status === 'reject') {
+                        // Đơn đặt trước bị từ chối
                         step1Class = 'workflow-step--success';
                         line1Class = 'workflow-line--error';
                         step2Class = 'workflow-step--error';
                         step2Label = 'Từ chối';
                         step3Label = 'Giao dịch thất bại';
                     } else if (status === 'cancelled' || status === 'cancel') {
+                        // Đơn đặt trước đã bị hủy
                         step1Class = 'workflow-step--success';
                         line1Class = 'workflow-line--error';
                         step2Class = 'workflow-step--error';
