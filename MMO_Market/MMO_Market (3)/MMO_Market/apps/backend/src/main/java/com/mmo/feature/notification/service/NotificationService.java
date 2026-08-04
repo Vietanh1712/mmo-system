@@ -51,16 +51,25 @@ public class NotificationService {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Lấy danh sách thông báo hệ thống có phân trang và lọc (phiên bản thu gọn).
+     */
     @Transactional(readOnly = true)
     public Map<String, Object> getNotifications(String search, String type, int page, int size) {
         return getNotifications(search, type, "ALL", null, null, "DESC", page, size);
     }
 
+    /**
+     * Lấy danh sách thông báo hệ thống có lọc theo khoảng thời gian và thứ tự sắp xếp.
+     */
     @Transactional(readOnly = true)
     public Map<String, Object> getNotifications(String search, String type, String startDateStr, String endDateStr, String sort, int page, int size) {
         return getNotifications(search, type, "ALL", startDateStr, endDateStr, sort, page, size);
     }
 
+    /**
+     * Lấy danh sách thông báo hệ thống đầy đủ tiêu chí (tìm kiếm, loại, trạng thái, ngày tạo, sắp xếp và phân trang).
+     */
     @Transactional(readOnly = true)
     public Map<String, Object> getNotifications(String search, String type, String status, String startDateStr, String endDateStr, String sort, int page, int size) {
         LocalDateTime startAt = null;
@@ -117,6 +126,9 @@ public class NotificationService {
         return result;
     }
 
+    /**
+     * Tạo và phát hành thông báo mới toàn sàn, tự động ghi nhận nhật ký kiểm toán.
+     */
     @Transactional
     public void createNotification(Long operatorId, String title, String content, String type, boolean activateMaintenance, String ipAddress) {
         User operator = requireAdminOrStaff(operatorId);
@@ -159,11 +171,17 @@ public class NotificationService {
         }
     }
 
+    /**
+     * Lưu thông báo hệ thống dưới dạng bản nháp (không kích hoạt bảo trì).
+     */
     @Transactional
     public void saveDraft(Long operatorId, String title, String content, String type, String ipAddress) {
         saveDraft(operatorId, title, content, type, false, ipAddress);
     }
 
+    /**
+     * Lưu thông báo hệ thống dưới dạng bản nháp với đầy đủ tham số.
+     */
     @Transactional
     public void saveDraft(Long operatorId, String title, String content, String type, boolean activateMaintenance, String ipAddress) {
         User operator = requireAdminOrStaff(operatorId);
@@ -196,11 +214,17 @@ public class NotificationService {
         saveAuditLog(operator, "Notification_Draft_Save", "Lưu bản nháp thông báo: " + title, ipAddress, diff);
     }
 
+    /**
+     * Cập nhật thông tin bản nháp (phiên bản thu gọn).
+     */
     @Transactional
     public void updateDraft(Long operatorId, Long draftId, String title, String content, String type, String ipAddress) {
         updateDraft(operatorId, draftId, title, content, type, false, ipAddress);
     }
 
+    /**
+     * Cập nhật tiêu đề, nội dung và cài đặt bảo trì của bản nháp thông báo.
+     */
     @Transactional
     public void updateDraft(Long operatorId, Long draftId, String title, String content, String type, Boolean activateMaintenance, String ipAddress) {
         User operator = requireAdminOrStaff(operatorId);
@@ -233,6 +257,9 @@ public class NotificationService {
         saveAuditLog(operator, "Notification_Draft_Update", "Cập nhật bản nháp: " + title, ipAddress, diff);
     }
 
+    /**
+     * Phát hành bản nháp thông báo thành thông báo chính thức toàn sàn.
+     */
     @Transactional
     public void publishDraft(Long operatorId, Long draftId, boolean activateMaintenance, String ipAddress) {
         User operator = requireAdminOrStaff(operatorId);
@@ -262,6 +289,9 @@ public class NotificationService {
         }
     }
 
+    /**
+     * Đánh dấu xóa mềm (`isDelete = true`) đối với bản nháp thông báo.
+     */
     @Transactional
     public void deleteNotification(Long operatorId, Long notifId, String ipAddress) {
         User operator = requireAdminOrStaff(operatorId);
@@ -284,6 +314,9 @@ public class NotificationService {
         saveAuditLog(operator, "Notification_Delete", "Xóa bản nháp thông báo: " + notif.getTitle(), ipAddress, diff);
     }
 
+    /**
+     * Kích hoạt hoặc tắt Chế độ Bảo trì Hệ thống (MAINTENANCE_MODE) và ghi log audit.
+     */
     @Transactional
     public void toggleMaintenance(Long operatorId, boolean active, String ipAddress) {
         User operator = requireAdminOrStaff(operatorId);
@@ -328,6 +361,9 @@ public class NotificationService {
         }
     }
 
+    /**
+     * Truy xuất trạng thái bảo trì hệ thống hiện tại cùng nội dung thông báo bảo trì gần nhất.
+     */
     @Transactional(readOnly = true)
     public Map<String, Object> getMaintenanceStatus() {
         String val = systemConfigurationRepository.findByConfigKey("MAINTENANCE_MODE")
@@ -361,6 +397,9 @@ public class NotificationService {
         return result;
     }
 
+    /**
+     * Lấy danh sách thông báo cá nhân và thông báo toàn sàn (broadcast) cho người dùng đăng nhập.
+     */
     @Transactional
     public List<Map<String, Object>> getUserNotifications(Long userId) {
         User user = userRepository.findByIdAndIsDeleteFalse(userId)
@@ -442,6 +481,9 @@ public class NotificationService {
         return result;
     }
 
+    /**
+     * Đánh dấu một thông báo cụ thể của người dùng là đã đọc (`isRead = true`).
+     */
     @Transactional
     public void markAsRead(Long userId, Long notifId) {
         Notification notif = notificationRepository.findById(notifId)
@@ -453,6 +495,9 @@ public class NotificationService {
         notificationRepository.save(notif);
     }
 
+    /**
+     * Đánh dấu tất cả thông báo của người dùng là đã đọc.
+     */
     @Transactional
     public void markAllAsRead(Long userId) {
         List<Notification> list = notificationRepository.findAllByUserIdAndIsDeleteFalseOrderByCreatedAtDesc(userId);

@@ -25,6 +25,9 @@ public class NotificationController {
         this.notificationService = notificationService;
     }
 
+    /**
+     * Lấy danh sách thông báo hệ thống có phân trang, lọc và tìm kiếm.
+     */
     @GetMapping("/api/notifications")
     public Map<String, Object> getNotifications(
             @RequestParam(required = false) String search,
@@ -38,11 +41,17 @@ public class NotificationController {
         return notificationService.getNotifications(search, type, status, startDate, endDate, sort, page, size);
     }
 
+    /**
+     * Lấy trạng thái chế độ bảo trì hệ thống hiện tại (bật/tắt).
+     */
     @GetMapping({"/api/notifications/maintenance-status", "/api/admin/notifications/maintenance-status"})
     public Map<String, Object> getMaintenanceStatus() {
         return notificationService.getMaintenanceStatus();
     }
 
+    /**
+     * Tạo và phát hành thông báo mới toàn sàn (Admin/Staff).
+     */
     @PostMapping("/api/admin/notifications")
     public AdminActionResponse createNotification(
             @AuthenticationPrincipal Long operatorId,
@@ -75,6 +84,9 @@ public class NotificationController {
         }
     }
 
+    /**
+     * Lưu thông báo hệ thống dưới dạng bản nháp (Draft).
+     */
     @PostMapping("/api/admin/notifications/drafts")
     public AdminActionResponse saveDraft(
             @AuthenticationPrincipal Long operatorId,
@@ -107,6 +119,9 @@ public class NotificationController {
         }
     }
 
+    /**
+     * Cập nhật nội dung của bản nháp thông báo theo ID.
+     */
     @PutMapping("/api/admin/notifications/drafts/{id}")
     public AdminActionResponse updateDraft(
             @AuthenticationPrincipal Long operatorId,
@@ -141,6 +156,9 @@ public class NotificationController {
         }
     }
 
+    /**
+     * Phát hành chính thức bản nháp thông báo ra toàn sàn.
+     */
     @PostMapping("/api/admin/notifications/drafts/{id}/publish")
     public AdminActionResponse publishDraft(
             @AuthenticationPrincipal Long operatorId,
@@ -167,6 +185,9 @@ public class NotificationController {
         }
     }
 
+    /**
+     * Kích hoạt hoặc tắt Chế độ Bảo trì Hệ thống (Maintenance Mode).
+     */
     @PostMapping("/api/admin/notifications/toggle-maintenance")
     public AdminActionResponse toggleMaintenance(
             @AuthenticationPrincipal Long operatorId,
@@ -195,6 +216,9 @@ public class NotificationController {
         }
     }
 
+    /**
+     * Xóa bản nháp thông báo hệ thống theo ID.
+     */
     @DeleteMapping("/api/admin/notifications/{id}")
     public AdminActionResponse deleteNotification(
             @AuthenticationPrincipal Long operatorId,
@@ -219,12 +243,17 @@ public class NotificationController {
         }
     }
 
-    // User endpoints (logged in)
+    /**
+     * Lấy danh sách thông báo dành riêng cho người dùng đang đăng nhập.
+     */
     @GetMapping("/api/v1/notifications")
     public List<Map<String, Object>> getUserNotifications(@AuthenticationPrincipal Long userId) {
         return notificationService.getUserNotifications(userId);
     }
 
+    /**
+     * Đánh dấu một thông báo cụ thể của người dùng là đã đọc.
+     */
     @PostMapping("/api/v1/notifications/{id}/read")
     public AdminActionResponse markAsRead(@AuthenticationPrincipal Long userId, @PathVariable("id") Long id) {
         try {
@@ -246,6 +275,9 @@ public class NotificationController {
         }
     }
 
+    /**
+     * Đánh dấu tất cả thông báo của người dùng là đã đọc.
+     */
     @PostMapping("/api/v1/notifications/mark-all-read")
     public AdminActionResponse markAllAsRead(@AuthenticationPrincipal Long userId) {
         try {
@@ -267,6 +299,9 @@ public class NotificationController {
         }
     }
 
+    /**
+     * Trích xuất địa chỉ IP thực tế của client từ HTTP Request Headers.
+     */
     private String getClientIp(HttpServletRequest request) {
         if (request == null) {
             return "127.0.0.1";

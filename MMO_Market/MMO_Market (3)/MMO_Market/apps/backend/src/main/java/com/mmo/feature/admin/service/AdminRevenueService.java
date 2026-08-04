@@ -97,6 +97,9 @@ public class AdminRevenueService {
         return "Customer";
     }
 
+    /**
+     * Tính toán tổng quan Doanh thu sàn (Tổng phí hoa hồng C2C, Phí mở Shop, Phí rút tiền và Doanh thu ròng).
+     */
     @Transactional(readOnly = true)
     public RevenueSummaryResponse getRevenueSummary(Long operatorId) {
         requireAdmin(operatorId);
@@ -155,11 +158,17 @@ public class AdminRevenueService {
                 .build();
     }
 
+    /**
+     * Truy xuất danh sách giao dịch dòng tiền (nạp, rút, mua bán C2C) có phân trang (phiên bản thu gọn).
+     */
     @Transactional(readOnly = true)
     public Map<String, Object> getCashflowTransactions(Long operatorId, String keyword, String type, String startDate, String endDate, int page, int size) {
         return getCashflowTransactions(operatorId, keyword, type, "", startDate, endDate, "DESC", page, size);
     }
 
+    /**
+     * Truy xuất danh sách giao dịch dòng tiền đầy đủ tiêu chí lọc (từ khóa, loại giao dịch, trạng thái, khoảng ngày, sắp xếp và phân trang).
+     */
     @Transactional(readOnly = true)
     public Map<String, Object> getCashflowTransactions(Long operatorId, String keyword, String type, String status, String startDate, String endDate, String sort, int page, int size) {
         requireAdmin(operatorId);
@@ -180,11 +189,17 @@ public class AdminRevenueService {
         return result;
     }
 
+    /**
+     * Xuất file báo cáo Doanh thu & Dòng tiền dạng CSV (phiên bản thu gọn).
+     */
     @Transactional(readOnly = true)
     public byte[] exportRevenueCsv(Long operatorId, String keyword, String type, String startDate, String endDate) {
         return exportRevenueCsv(operatorId, keyword, type, "", startDate, endDate, "DESC");
     }
 
+    /**
+     * Xuất file báo cáo Doanh thu & Dòng tiền dạng CSV đầy đủ tiêu chí lọc.
+     */
     @Transactional(readOnly = true)
     public byte[] exportRevenueCsv(Long operatorId, String keyword, String type, String status, String startDate, String endDate, String sort) {
         requireAdmin(operatorId);
@@ -214,6 +229,9 @@ public class AdminRevenueService {
         return csv.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
     }
 
+    /**
+     * Tổng hợp và lọc danh sách tất cả các giao dịch dòng tiền (Phí mở shop, Rút tiền, Giao dịch C2C).
+     */
     private List<CashflowTransactionDto> getFilteredCashflowList(String keyword, String type, String statusFilter, String startDate, String endDate, String sort) {
         double withdrawalPercent = systemConfigurationRepository.findByConfigKey("WITHDRAWAL_FEE_PERCENT")
                 .map(c -> {
