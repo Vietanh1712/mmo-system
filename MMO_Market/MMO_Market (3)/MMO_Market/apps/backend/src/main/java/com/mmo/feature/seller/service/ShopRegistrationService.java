@@ -598,7 +598,7 @@ public class ShopRegistrationService {
             notifContent = String.format(
                 "Shop \"%s\" đã bị đóng cửa theo quyết định của Ban quản trị. " +
                 "Tiền cọc mở Shop (%s VNĐ) đã được hoàn trả vào ví của bạn. " +
-                "Tài khoản của bạn đã được chuyển về quyền Customer. Bạn có thể đăng ký mở Shop mới bất kỳ lúc nào tại /account/register-shop.",
+                "Tài khoản của bạn đã được chuyển về quyền Khách hàng mua sắm. Bạn có thể đăng ký mở Shop mới bất kỳ lúc nào trong mục Đăng ký Shop.",
                 shopNameStr, String.format("%,d", depositRef));
             notifSeverity = "WARNING";
             notifTargetUrl = "/account/register-shop";
