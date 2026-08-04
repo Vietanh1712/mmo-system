@@ -216,7 +216,9 @@
 
     const TX_STATUS_LABELS = {
         Completed: 'Hoàn thành',
-        Pending: 'Đang chờ',
+        Pending: 'Đang xử lý',
+        Disputed: 'Khiếu nại',
+        Refunded: 'Hoàn tiền',
         Failed: 'Thất bại',
         Held: 'Tạm giữ'
     };
@@ -2100,7 +2102,7 @@
                 
                 body.innerHTML = slice.length ? slice.map((t, i) => {
                     const typeClass = t.type === 'Shop_Opening' ? 'ds-badge-info' : (t.type === 'Withdrawal' ? 'ds-badge-warning' : 'ds-badge-success');
-                    const statusClass = t.status === 'Completed' ? 'ds-badge-success' : (t.status === 'Held' ? 'ds-badge-secondary' : (t.status === 'Pending' ? 'ds-badge-warning' : 'ds-badge-danger'));
+                    const statusClass = t.status === 'Completed' ? 'ds-badge-success' : (t.status === 'Held' ? 'ds-badge-secondary' : (t.status === 'Disputed' ? 'ds-badge-warning' : (t.status === 'Refunded' ? 'ds-badge-info' : (t.status === 'Pending' ? 'ds-badge-warning' : 'ds-badge-danger'))));
                     return `
                         <tr>
                             <td class="ds-table-center">${sttNumber(revPage, revPageSize, i)}</td>

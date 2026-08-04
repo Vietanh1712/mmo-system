@@ -196,7 +196,7 @@ public class AdminRevenueService {
         for (int i = 0; i < transactions.size(); i++) {
             CashflowTransactionDto tx = transactions.get(i);
             String txTypeLabel = "Shop_Opening".equals(tx.getType()) ? "Phí mở shop" : ("Withdrawal".equals(tx.getType()) ? "Rút tiền" : "Giao dịch C2C");
-            String statusLabel = "Completed".equals(tx.getStatus()) ? "Hoàn tất" : ("Held".equals(tx.getStatus()) ? "Tạm giữ" : ("Pending".equals(tx.getStatus()) ? "Đang xử lý" : ("Disputed".equals(tx.getStatus()) ? "Khiếu nại" : "Thất bại")));
+            String statusLabel = "Completed".equals(tx.getStatus()) ? "Hoàn thành" : ("Held".equals(tx.getStatus()) ? "Tạm giữ" : ("Pending".equals(tx.getStatus()) ? "Đang xử lý" : ("Disputed".equals(tx.getStatus()) ? "Khiếu nại" : ("Refunded".equals(tx.getStatus()) ? "Hoàn tiền" : "Thất bại"))));
             csv.append(i + 1).append(",")
                     .append(tx.getId()).append(",")
                     .append(tx.getTimestamp().format(formatter)).append(",")
@@ -284,7 +284,7 @@ public class AdminRevenueService {
         List<Transaction> transactions = transactionRepository.findAllWithCustomerByIsDeleteFalse();
         for (Transaction t : transactions) {
             String status = t.getStatus();
-            if ("Refunded".equalsIgnoreCase(status) || "Cancelled".equalsIgnoreCase(status)) {
+            if ("Cancelled".equalsIgnoreCase(status)) {
                 status = "Failed";
             }
             allCashflow.add(CashflowTransactionDto.builder()
