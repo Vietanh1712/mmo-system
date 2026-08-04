@@ -833,14 +833,14 @@
             });
         }
 
-        // Render Pagination
+        // Render bộ nút phân trang (Pagination) động dựa trên tổng số trang và trang hiện tại
         function renderPagination(totalPages, activePage) {
             const container = document.getElementById('pagination-container');
             container.innerHTML = '';
 
             if (totalPages <= 1) return;
 
-            // Previous
+            // Nút "Trang trước" (Previous Page)
             const prevButton = document.createElement('button');
             prevButton.className = 'page-btn';
             prevButton.innerHTML = '<i class="fa fa-angle-left"></i>';
@@ -848,7 +848,7 @@
             prevButton.onclick = () => changePage(activePage - 1);
             container.appendChild(prevButton);
 
-            // Numbers
+            // Các nút số trang cụ thể
             for (let i = 0; i < totalPages; i++) {
                 const pageButton = document.createElement('button');
                 pageButton.className = `page-btn ${i === activePage ? 'active' : ''}`;
@@ -857,7 +857,7 @@
                 container.appendChild(pageButton);
             }
 
-            // Next
+            // Nút "Trang sau" (Next Page)
             const nextButton = document.createElement('button');
             nextButton.className = 'page-btn';
             nextButton.innerHTML = '<i class="fa fa-angle-right"></i>';
@@ -866,7 +866,7 @@
             container.appendChild(nextButton);
         }
 
-        // Page change
+        // Xử lý khi người dùng đổi trang (chuyển sang trang mới)
         function changePage(pageNum) {
             currentPage = pageNum;
             updateBrowserURL();
@@ -878,7 +878,7 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Update result summaries
+        // Cập nhật lại số liệu thống kê kết quả tìm kiếm trên tiêu đề trang
         function updateResultSummary(total, start, end) {
             const summaryTotal = document.getElementById('summary-total');
             if (summaryTotal) summaryTotal.innerText = total;
@@ -894,13 +894,9 @@
             if (descText) descText.innerHTML = `Chúng tôi tìm thấy <strong>${total}</strong> sản phẩm số chất lượng phù hợp với tìm kiếm của bạn.`;
         }
 
-        // Buy Now handler redirects to PDP first, carrying filter context
+        // Xử lý nút "Mua ngay" trên card sản phẩm, chuyển hướng sang trang chi tiết (PDP)
         function buyNow(productId) {
             if (typeof window.isEmployeeUser === 'function' && window.isEmployeeUser()) {
-                return; // Do nothing for staff/admin
-            }
-            window.location.href = `/products/${productId}` + window.location.search;
-        }
 
         function preOrderNow(productId) {
             if (typeof window.isEmployeeUser === 'function' && window.isEmployeeUser()) {

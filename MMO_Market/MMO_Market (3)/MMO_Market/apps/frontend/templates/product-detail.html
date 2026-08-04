@@ -1356,22 +1356,25 @@
             window.location.href = `/search?${params.toString()}`;
         }
 
-        // Buy Now Button Handler
+        // Bộ xử lý sự kiện khi nhấn nút "Mua ngay"
         function buyNow() {
+            // Chặn hành động nếu tài khoản đăng nhập là tài khoản nhân viên (Admin/Staff)
             if (typeof window.isEmployeeUser === 'function' && window.isEmployeeUser()) {
-                return; // Do nothing for staff/admin
+                return; // Không làm gì cả
             }
+            // Nếu sản phẩm đã hết hàng trong kho, chuyển sang luồng đặt hàng trước (Pre-Order)
             if (!productHasStock) {
                 openPreOrderRequest();
                 return;
             }
+            // Kiểm tra trạng thái đăng nhập của người dùng qua AccessToken
             const token = sessionStorage.getItem("accessToken");
             if (!token) {
                 showWarningToast("Vui lòng đăng nhập để thực hiện mua hàng!");
                 window.location.href = "/login";
             } else {
-                // Redirect to checkout with full product details as URL params
-                // so checkout.html displays the exact same product shown here
+                // Chuyển hướng sang trang thanh toán (checkout.html) cùng với đầy đủ tham số sản phẩm
+                // qua URL Query Parameters để trang checkout hiển thị chính xác mặt hàng được chọn
                 const params = new URLSearchParams({
                     productId: productId,
                     duration: currentDuration,
@@ -1387,9 +1390,10 @@
             }
         }
 
+        // Chuyển hướng người dùng sang trang gửi yêu cầu đặt trước sản phẩm (Pre-Order)
         function openPreOrderRequest() {
             if (typeof window.isEmployeeUser === 'function' && window.isEmployeeUser()) {
-                return; // Do nothing for staff/admin
+                return; // Tài khoản nhân viên không được phép gửi yêu cầu đặt trước
             }
             const token = sessionStorage.getItem("accessToken");
             if (!token) {
@@ -1411,11 +1415,12 @@
             window.location.href = `/pre-orders/new?${params.toString()}`;
         }
 
-        // Add to Cart Button Handler
+        // Bộ xử lý sự kiện khi nhấn nút "Thêm vào giỏ hàng"
         function addToCart() {
             if (typeof window.isEmployeeUser === 'function' && window.isEmployeeUser()) {
-                return; // Do nothing for staff/admin
+                return; // Tài khoản nhân viên không được mua hàng
             }
+            // Nếu sản phẩm hết hàng, cảnh báo và tự động hiển thị popup/trang đặt hàng trước
             if (!productHasStock) {
                 showWarningToast('Sản phẩm đã hết hàng, vui lòng đặt trước.');
                 openPreOrderRequest();
@@ -1435,14 +1440,19 @@
             };
             const cartKey = typeof window.getCartStorageKey === 'function' ? window.getCartStorageKey() : 'mmoCart';
             const cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+            
+            // Tìm xem sản phẩm cùng biến thể đã tồn tại trong giỏ hàng chưa
             const existing = cart.find(item => item.productId === cartItem.productId && item.duration === cartItem.duration && item.variantLabel === cartItem.variantLabel);
             if (existing) {
-                existing.quantity += 1;
+                existing.quantity += 1; // Cộng dồn số lượng
             } else {
-                cart.push(cartItem);
+                cart.push(cartItem); // Thêm mới phần tử vào giỏ
             }
+            // Lưu giỏ hàng mới cập nhật vào LocalStorage
             localStorage.setItem(cartKey, JSON.stringify(cart));
             showSuccessToast('Đã thêm sản phẩm vào giỏ hàng thành công!');
+            
+            // Cập nhật lại số lượng sản phẩm hiển thị trên badge của giỏ hàng ở thanh header
             if (typeof window.refreshHeaderCartBadge === 'function') window.refreshHeaderCartBadge();
         }
 

@@ -239,9 +239,11 @@
             document.getElementById('preOrderForm').addEventListener('submit', submitPreOrder);
         });
 
+        // Thực hiện gửi yêu cầu đặt trước sản phẩm lên Server
         async function submitPreOrder(event) {
             event.preventDefault();
 
+            // Kiểm tra Token đăng nhập của người dùng
             const token = getAccessToken();
             if (!token) {
                 showWarningToast('Vui lòng đăng nhập để gửi yêu cầu đặt trước.');
@@ -272,10 +274,11 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang gửi...';
 
-            // Simulate processing time (UX feedback)
+            // Giả lập thời gian xử lý khoảng 900ms để hiển thị hiệu ứng spinner mượt mà (trải nghiệm người dùng)
             await new Promise(resolve => setTimeout(resolve, 900));
 
             try {
+                // Gọi API POST gửi yêu cầu tạo đơn đặt trước mới
                 const response = await fetch('/api/v1/pre-orders', {
                     method: 'POST',
                     headers: {

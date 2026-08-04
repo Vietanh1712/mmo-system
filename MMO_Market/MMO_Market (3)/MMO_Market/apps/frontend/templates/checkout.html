@@ -941,14 +941,14 @@
             }
         }
 
-        // Format Currency Helper
+        // Hàm định dạng hiển thị tiền tệ VNĐ (ví dụ: 100.000 VNĐ)
         function formatVND(value) {
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
                 .format(value)
                 .replace('₫', 'VNĐ');
         }
 
-        // Trigger search from header search input
+        // Thực hiện tìm kiếm sản phẩm từ ô input trên thanh Header
         function triggerHeaderSearch(e) {
             e.preventDefault();
             const keyword = document.getElementById('header-search-input').value.trim();
@@ -959,10 +959,11 @@
             }
         }
 
-        // Handle Submit Button Click
+        // Xử lý sự kiện khi nhấn nút "Xác nhận thanh toán"
         async function handlePaymentSubmit() {
             if (!hasEnoughBalance) {
-                // If insufficient balance, redirect to Top Up (Nạp tiền)
+                // Nếu số dư khả dụng không đủ thanh toán, tự động tính toán số tiền thiếu
+                // và chuyển hướng người dùng sang trang Nạp tiền (/wallet/topup) kèm URL redirect quay lại
                 const missingAmount = checkoutTotal - (currentUser.balanceVnd || 0);
                 const redirectUrl = encodeURIComponent(window.location.pathname + window.location.search);
                 window.location.href = `/wallet/topup?amount=${missingAmount}&redirect=${redirectUrl}`;

@@ -712,7 +712,7 @@
         enrichCartWithImages();
     }
 
-    // Enrich cart items with product images from API if not already stored
+    // Bổ sung hình ảnh sản phẩm thực tế từ API nếu trong giỏ hàng chưa lưu trữ link ảnh
     function enrichCartWithImages() {
         const itemsWithoutImage = cart.filter(item => !item.imageUrl);
         if (itemsWithoutImage.length === 0) return;
@@ -720,13 +720,14 @@
         const uniqueIds = [...new Set(itemsWithoutImage.map(item => item.productId))];
         uniqueIds.forEach(async (productId) => {
             try {
-                const res = await fetch(`/api/products/${productId}`);
+                // Gọi API lấy thông tin chi tiết của sản phẩm để lấy ảnh thực tế
+                const res = await fetch(`/api/search/products/${productId}`);
                 if (!res.ok) return;
                 const data = await res.json();
                 const imageUrl = data.imageUrl || '';
                 if (!imageUrl) return;
 
-                // Update in-memory cart
+                // Cập nhật đường dẫn ảnh và tên danh mục vào biến cart đang lưu trong bộ nhớ
                 cart.forEach(item => {
                     if (item.productId === productId) {
                         item.imageUrl = imageUrl;
@@ -734,10 +735,10 @@
                     }
                 });
 
-                // Save updated cart back
+                // Lưu lại giỏ hàng mới cập nhật vào LocalStorage
                 saveCart();
 
-                // Update DOM without full re-render
+                // Cập nhật lại giao diện hiển thị ảnh (DOM) mà không cần render lại toàn bộ giỏ hàng
                 cart.forEach((item, idx) => {
                     if (item.productId === productId) {
                         const thumbs = document.querySelectorAll('.cart-item__thumb');
@@ -747,11 +748,12 @@
                     }
                 });
             } catch (e) {
-                // silent fail — keep icon fallback
+                // Thất bại trong âm thầm - giữ nguyên biểu tượng icon mặc định
             }
         });
     }
 
+    // Cập nhật tổng số tiền và số lượng sản phẩm được chọn thanh toán trên màn hình
     function updateSummary() {
         const selectedItems = getSelectedItems();
         const subtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -763,22 +765,26 @@
         document.getElementById('totalValue').innerText = formatVND(total);
     }
 
+    // Lấy ra danh sách các sản phẩm đang được tích chọn (checkbox = true)
     function getSelectedItems() {
         return cart.filter(item => item.selected !== false);
     }
 
+    // Bật/tắt trạng thái tích chọn của một sản phẩm trong giỏ hàng
     function toggleSelected(index, checked) {
         cart[index].selected = checked;
         saveCart();
         renderCart();
     }
 
+    // Thay đổi số lượng sản phẩm bằng nút cộng/trừ (+/-)
     function changeQuantity(index, delta) {
         cart[index].quantity = Math.max(1, cart[index].quantity + delta);
         saveCart();
         renderCart();
     }
 
+    // Đặt số lượng sản phẩm cụ thể khi người dùng nhập số trực tiếp vào ô input
     function setQuantity(index, value) {
         let val = parseInt(value, 10);
         if (isNaN(val) || val < 1) {
@@ -789,6 +795,7 @@
         renderCart();
     }
 
+    // Xóa sản phẩm ra khỏi giỏ hàng
     function removeCartItem(index) {
         cart.splice(index, 1);
         saveCart();
@@ -796,6 +803,7 @@
         renderRecommendations();
     }
 
+    // Xử lý khi nhấn nút Thanh toán giỏ hàng
     function checkoutCart() {
         const selectedItems = getSelectedItems();
         if (selectedItems.length === 0) {
@@ -803,15 +811,18 @@
             return;
         }
 
+        // Chuyển hướng sang trang checkout với chế độ thanh toán giỏ hàng (mode=cart)
         window.location.href = `/checkout?mode=cart`;
     }
 
+    // Hàm trích xuất các từ khóa từ tên sản phẩm để phân tích độ liên quan
     function getKeywordsFromProductName(name) {
         if (!name) return [];
         const nameLower = name.toLowerCase();
-        // replace punctuation with spaces
+        // Thay thế các dấu câu bằng khoảng trắng
         const cleanName = nameLower.replace(/[.,()\-+/\[\]:]/g, ' ');
         const words = cleanName.split(/\s+/);
+        // Danh sách các từ dừng (stopwords) cần loại bỏ để lọc ra từ khóa chính xác
         const stopWords = new Set([
             'tài', 'khoản', 'của', 'gói', 'cho', 'giá', 'siêu', 'rẻ', 'bán', 'chính', 'chủ', 
             'bản', 'quyền', 'dịch', 'vụ', 'mua', 'tháng', 'năm', 'ngày', 'thiết', 'bị', 
@@ -822,14 +833,15 @@
         return words.filter(w => w.length >= 3 && !stopWords.has(w));
     }
 
+    // Hiển thị phần "Sản phẩm có thể bạn quan tâm" dựa trên độ liên quan
     function renderRecommendations() {
         const grid = document.getElementById('recommendationGrid');
         if (!grid) return;
 
-        // 1. Get current cart product IDs
+        // 1. Lấy danh sách ID các sản phẩm hiện có trong giỏ hàng
         const cartProductIds = cart.map(item => Number(item.productId));
 
-        // 2. Identify keywords & categories from cart
+        // 2. Tìm kiếm từ khóa và danh mục của các sản phẩm đang có trong giỏ hàng
         const cartKeywords = [];
         const cartCategories = [];
         const cartNames = [];
@@ -837,13 +849,13 @@
         cart.forEach(item => {
             cartNames.push(item.productName.toLowerCase());
             
-            // Try to find matching catalog product to extract official categoryName
+            // Tìm sản phẩm tương ứng trong danh mục để lấy thông tin Category
             const catalogProd = allCatalogProducts.find(p => Number(p.productId) === Number(item.productId));
             if (catalogProd && catalogProd.categoryName) {
                 cartCategories.push(catalogProd.categoryName.toLowerCase());
             }
 
-            // Extract name-based keywords dynamically
+            // Trích xuất động các từ khóa dựa trên tên sản phẩm
             const kws = getKeywordsFromProductName(item.productName);
             kws.forEach(kw => {
                 if (!cartKeywords.includes(kw)) {
@@ -852,25 +864,25 @@
             });
         });
 
-        // 3. Filter and score products
+        // 3. Lọc và tính điểm gợi ý cho các sản phẩm chưa có trong giỏ hàng
         let candidates = allCatalogProducts.filter(p => !cartProductIds.includes(Number(p.productId)));
 
-        // Map candidate to include a relevance score
+        // Ánh xạ từng ứng viên để tính điểm số liên quan
         candidates = candidates.map(p => {
             let score = 0;
             const candidateNameLower = (p.productName || '').toLowerCase();
             
-            // Same category (loại sản phẩm)
+            // Cộng 15 điểm nếu cùng Category (ví dụ: cùng Premium, Email,...)
             if (p.categoryName && cartCategories.includes(p.categoryName.toLowerCase())) {
                 score += 15;
             }
 
-            // Similar product name
+            // Cộng 20 điểm nếu tên sản phẩm chứa cụm từ tương đồng
             if (cartNames.some(n => candidateNameLower.includes(n) || n.includes(candidateNameLower))) {
                 score += 20;
             }
 
-            // Keyword match (cùng keyword)
+            // Cộng 5 điểm cho mỗi từ khóa trùng khớp
             const candKws = getKeywordsFromProductName(p.productName);
             candKws.forEach(kw => {
                 if (cartKeywords.includes(kw)) {
@@ -878,7 +890,7 @@
                 }
             });
 
-            // Stock boost: slightly prioritize available items
+            // Cộng thêm 3 điểm ưu tiên nếu sản phẩm còn hàng trong kho
             if (Number(p.stock || 0) > 0) {
                 score += 3;
             }
@@ -886,16 +898,16 @@
             return { product: p, score };
         });
 
-        // Sort by score descending, then by salesCount descending
+        // Sắp xếp danh sách ứng viên theo điểm số giảm dần, sau đó theo số lượng bán được giảm dần
         candidates.sort((a, b) => {
             if (b.score !== a.score) return b.score - a.score;
             return (b.product.salesCount || 0) - (a.product.salesCount || 0);
         });
 
-        // Take top 4
+        // Lấy ra 4 sản phẩm đứng đầu
         let selectedCandidates = candidates.slice(0, 4).map(c => c.product);
 
-        // If not enough candidates, fill with best products
+        // Nếu không đủ 4 ứng viên, lấy thêm các sản phẩm bán chạy khác để lấp đầy
         if (selectedCandidates.length < 4) {
             const remaining = allCatalogProducts.filter(p => 
                 !cartProductIds.includes(Number(p.productId)) && 
