@@ -43,6 +43,9 @@ public class AdminUserManagementController {
         return adminUserManagementService.getDashboardSummary(operatorId);
     }
 
+    /**
+     * Lấy thông tin chi tiết của một tài khoản người dùng theo ID.
+     */
     @GetMapping("/users/{userId}")
     public AdminUserResponse getUser(
             @AuthenticationPrincipal Long operatorId,
@@ -114,6 +117,9 @@ public class AdminUserManagementController {
         return adminUserManagementService.createStaff(operatorId, request);
     }
 
+    /**
+     * Cập nhật thông tin tài khoản nhân viên (Staff) theo ID.
+     */
     @PutMapping("/staff/{staffId}")
     public AdminUserResponse updateStaff(
             @AuthenticationPrincipal Long operatorId,
@@ -122,6 +128,9 @@ public class AdminUserManagementController {
         return adminUserManagementService.updateStaff(operatorId, staffId, request);
     }
 
+    /**
+     * Xóa mềm (Soft delete) tài khoản nhân viên (Staff) khỏi hệ thống.
+     */
     @DeleteMapping("/staff/{staffId}")
     public AdminActionResponse deleteStaff(
             @AuthenticationPrincipal Long operatorId,
